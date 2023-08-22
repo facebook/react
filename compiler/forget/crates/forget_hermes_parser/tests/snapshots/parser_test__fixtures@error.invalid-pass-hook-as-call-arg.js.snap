@@ -20,10 +20,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -31,10 +31,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 19,
-            "end": 24
-          }
+          "range": [
+            19,
+            24
+          ]
         }
       ],
       "body": {
@@ -49,10 +49,10 @@ Output:
                 "name": "foo",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 37,
-                  "end": 40
-                }
+                "range": [
+                  37,
+                  40
+                ]
               },
               "arguments": [
                 {
@@ -60,49 +60,49 @@ Output:
                   "name": "useFoo",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 41,
-                    "end": 47
-                  }
+                  "range": [
+                    41,
+                    47
+                  ]
                 }
               ],
               "loc": null,
-              "range": {
-                "start": 37,
-                "end": 48
-              }
+              "range": [
+                37,
+                48
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 30,
-              "end": 49
-            }
+            "range": [
+              30,
+              49
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 26,
-          "end": 51
-        }
+        "range": [
+          26,
+          51
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 51
-      },
+      "range": [
+        0,
+        51
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 51
-      }
+      "range": [
+        0,
+        51
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 51
-  }
+  "range": [
+    0,
+    51
+  ]
 }

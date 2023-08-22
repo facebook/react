@@ -28,10 +28,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 276,
-          "end": 285
-        }
+        "range": [
+          276,
+          285
+        ]
       },
       "params": [
         {
@@ -39,10 +39,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 286,
-            "end": 291
-          }
+          "range": [
+            286,
+            291
+          ]
         }
       ],
       "body": {
@@ -59,10 +59,10 @@ Output:
                   "name": "x",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 303,
-                    "end": 304
-                  }
+                  "range": [
+                    303,
+                    304
+                  ]
                 },
                 "init": {
                   "type": "CallExpression",
@@ -71,10 +71,10 @@ Output:
                     "name": "useUnknownHook1",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 307,
-                      "end": 322
-                    }
+                    "range": [
+                      307,
+                      322
+                    ]
                   },
                   "arguments": [
                     {
@@ -82,30 +82,30 @@ Output:
                       "name": "props",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 323,
-                        "end": 328
-                      }
+                      "range": [
+                        323,
+                        328
+                      ]
                     }
                   ],
                   "loc": null,
-                  "range": {
-                    "start": 307,
-                    "end": 329
-                  }
+                  "range": [
+                    307,
+                    329
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 303,
-                  "end": 329
-                }
+                "range": [
+                  303,
+                  329
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 297,
-              "end": 330
-            }
+            "range": [
+              297,
+              330
+            ]
           },
           {
             "type": "VariableDeclaration",
@@ -118,10 +118,10 @@ Output:
                   "name": "y",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 339,
-                    "end": 340
-                  }
+                  "range": [
+                    339,
+                    340
+                  ]
                 },
                 "init": {
                   "type": "CallExpression",
@@ -130,10 +130,10 @@ Output:
                     "name": "useUnknownHook2",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 343,
-                      "end": 358
-                    }
+                    "range": [
+                      343,
+                      358
+                    ]
                   },
                   "arguments": [
                     {
@@ -141,30 +141,30 @@ Output:
                       "name": "x",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 359,
-                        "end": 360
-                      }
+                      "range": [
+                        359,
+                        360
+                      ]
                     }
                   ],
                   "loc": null,
-                  "range": {
-                    "start": 343,
-                    "end": 361
-                  }
+                  "range": [
+                    343,
+                    361
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 339,
-                  "end": 361
-                }
+                "range": [
+                  339,
+                  361
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 333,
-              "end": 362
-            }
+            "range": [
+              333,
+              362
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -173,42 +173,42 @@ Output:
               "name": "y",
               "typeAnnotation": null,
               "loc": null,
-              "range": {
-                "start": 372,
-                "end": 373
-              }
+              "range": [
+                372,
+                373
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 365,
-              "end": 374
-            }
+            "range": [
+              365,
+              374
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 293,
-          "end": 376
-        }
+        "range": [
+          293,
+          376
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 267,
-        "end": 376
-      },
+      "range": [
+        267,
+        376
+      ],
       "loc": null,
-      "range": {
-        "start": 267,
-        "end": 376
-      }
+      "range": [
+        267,
+        376
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 267,
-    "end": 376
-  }
+  "range": [
+    267,
+    376
+  ]
 }

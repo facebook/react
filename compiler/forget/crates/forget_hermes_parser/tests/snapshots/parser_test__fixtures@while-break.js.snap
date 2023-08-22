@@ -23,10 +23,10 @@ Output:
         "name": "foo",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 12
-        }
+        "range": [
+          9,
+          12
+        ]
       },
       "params": [
         {
@@ -34,20 +34,20 @@ Output:
           "name": "a",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 13,
-            "end": 14
-          }
+          "range": [
+            13,
+            14
+          ]
         },
         {
           "type": "Identifier",
           "name": "b",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 16,
-            "end": 17
-          }
+          "range": [
+            16,
+            17
+          ]
         }
       ],
       "body": {
@@ -60,10 +60,10 @@ Output:
               "name": "a",
               "typeAnnotation": null,
               "loc": null,
-              "range": {
-                "start": 30,
-                "end": 31
-              }
+              "range": [
+                30,
+                31
+              ]
             },
             "body": {
               "type": "BlockStatement",
@@ -72,23 +72,23 @@ Output:
                   "type": "BreakStatement",
                   "label": null,
                   "loc": null,
-                  "range": {
-                    "start": 39,
-                    "end": 45
-                  }
+                  "range": [
+                    39,
+                    45
+                  ]
                 }
               ],
               "loc": null,
-              "range": {
-                "start": 33,
-                "end": 49
-              }
+              "range": [
+                33,
+                49
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 23,
-              "end": 49
-            }
+            "range": [
+              23,
+              49
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -97,42 +97,42 @@ Output:
               "name": "b",
               "typeAnnotation": null,
               "loc": null,
-              "range": {
-                "start": 59,
-                "end": 60
-              }
+              "range": [
+                59,
+                60
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 52,
-              "end": 61
-            }
+            "range": [
+              52,
+              61
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 19,
-          "end": 63
-        }
+        "range": [
+          19,
+          63
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 63
-      },
+      "range": [
+        0,
+        63
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 63
-      }
+      "range": [
+        0,
+        63
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 63
-  }
+  "range": [
+    0,
+    63
+  ]
 }

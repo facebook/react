@@ -21,10 +21,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -32,10 +32,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 19,
-            "end": 24
-          }
+          "range": [
+            19,
+            24
+          ]
         }
       ],
       "body": {
@@ -52,10 +52,10 @@ Output:
                   "name": "user",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 36,
-                    "end": 40
-                  }
+                  "range": [
+                    36,
+                    40
+                  ]
                 },
                 "init": {
                   "type": "CallExpression",
@@ -64,10 +64,10 @@ Output:
                     "name": "useFragment",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 43,
-                      "end": 54
-                    }
+                    "range": [
+                      43,
+                      54
+                    ]
                   },
                   "arguments": [
                     {
@@ -77,10 +77,10 @@ Output:
                         "name": "graphql",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 55,
-                          "end": 62
-                        }
+                        "range": [
+                          55,
+                          62
+                        ]
                       },
                       "quasi": {
                         "type": "TemplateLiteral",
@@ -93,24 +93,24 @@ Output:
                               "raw": "fragment on User { name }"
                             },
                             "loc": null,
-                            "range": {
-                              "start": 62,
-                              "end": 89
-                            }
+                            "range": [
+                              62,
+                              89
+                            ]
                           }
                         ],
                         "expressions": [],
                         "loc": null,
-                        "range": {
-                          "start": 62,
-                          "end": 89
-                        }
+                        "range": [
+                          62,
+                          89
+                        ]
                       },
                       "loc": null,
-                      "range": {
-                        "start": 55,
-                        "end": 89
-                      }
+                      "range": [
+                        55,
+                        89
+                      ]
                     },
                     {
                       "type": "MemberExpression",
@@ -119,47 +119,47 @@ Output:
                         "name": "props",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 91,
-                          "end": 96
-                        }
+                        "range": [
+                          91,
+                          96
+                        ]
                       },
                       "property": {
                         "type": "Identifier",
                         "name": "user",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 97,
-                          "end": 101
-                        }
+                        "range": [
+                          97,
+                          101
+                        ]
                       },
                       "computed": false,
                       "loc": null,
-                      "range": {
-                        "start": 91,
-                        "end": 101
-                      }
+                      "range": [
+                        91,
+                        101
+                      ]
                     }
                   ],
                   "loc": null,
-                  "range": {
-                    "start": 43,
-                    "end": 102
-                  }
+                  "range": [
+                    43,
+                    102
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 36,
-                  "end": 102
-                }
+                "range": [
+                  36,
+                  102
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 30,
-              "end": 103
-            }
+            "range": [
+              30,
+              103
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -170,59 +170,59 @@ Output:
                 "name": "user",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 113,
-                  "end": 117
-                }
+                "range": [
+                  113,
+                  117
+                ]
               },
               "property": {
                 "type": "Identifier",
                 "name": "name",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 118,
-                  "end": 122
-                }
+                "range": [
+                  118,
+                  122
+                ]
               },
               "computed": false,
               "loc": null,
-              "range": {
-                "start": 113,
-                "end": 122
-              }
+              "range": [
+                113,
+                122
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 106,
-              "end": 123
-            }
+            "range": [
+              106,
+              123
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 26,
-          "end": 125
-        }
+        "range": [
+          26,
+          125
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 125
-      },
+      "range": [
+        0,
+        125
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 125
-      }
+      "range": [
+        0,
+        125
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 125
-  }
+  "range": [
+    0,
+    125
+  ]
 }

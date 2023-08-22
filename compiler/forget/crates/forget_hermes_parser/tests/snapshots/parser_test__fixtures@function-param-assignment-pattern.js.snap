@@ -20,10 +20,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -33,25 +33,25 @@ Output:
             "name": "x",
             "typeAnnotation": null,
             "loc": null,
-            "range": {
-              "start": 19,
-              "end": 20
-            }
+            "range": [
+              19,
+              20
+            ]
           },
           "right": {
             "type": "StringLiteral",
             "value": "default",
             "loc": null,
-            "range": {
-              "start": 23,
-              "end": 32
-            }
+            "range": [
+              23,
+              32
+            ]
           },
           "loc": null,
-          "range": {
-            "start": 19,
-            "end": 32
-          }
+          "range": [
+            19,
+            32
+          ]
         },
         {
           "type": "AssignmentPattern",
@@ -60,10 +60,10 @@ Output:
             "name": "y",
             "typeAnnotation": null,
             "loc": null,
-            "range": {
-              "start": 34,
-              "end": 35
-            }
+            "range": [
+              34,
+              35
+            ]
           },
           "right": {
             "type": "ArrayExpression",
@@ -72,23 +72,23 @@ Output:
                 "type": "ObjectExpression",
                 "properties": [],
                 "loc": null,
-                "range": {
-                  "start": 39,
-                  "end": 41
-                }
+                "range": [
+                  39,
+                  41
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 38,
-              "end": 42
-            }
+            "range": [
+              38,
+              42
+            ]
           },
           "loc": null,
-          "range": {
-            "start": 34,
-            "end": 42
-          }
+          "range": [
+            34,
+            42
+          ]
         }
       ],
       "body": {
@@ -104,59 +104,59 @@ Output:
                   "name": "x",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 56,
-                    "end": 57
-                  }
+                  "range": [
+                    56,
+                    57
+                  ]
                 },
                 {
                   "type": "Identifier",
                   "name": "y",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 59,
-                    "end": 60
-                  }
+                  "range": [
+                    59,
+                    60
+                  ]
                 }
               ],
               "loc": null,
-              "range": {
-                "start": 55,
-                "end": 61
-              }
+              "range": [
+                55,
+                61
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 48,
-              "end": 62
-            }
+            "range": [
+              48,
+              62
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 44,
-          "end": 64
-        }
+        "range": [
+          44,
+          64
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 64
-      },
+      "range": [
+        0,
+        64
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 64
-      }
+      "range": [
+        0,
+        64
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 64
-  }
+  "range": [
+    0,
+    64
+  ]
 }

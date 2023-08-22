@@ -20,10 +20,10 @@ Output:
         "name": "foo",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 12
-        }
+        "range": [
+          9,
+          12
+        ]
       },
       "params": [
         {
@@ -31,10 +31,10 @@ Output:
           "name": "x",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 13,
-            "end": 14
-          }
+          "range": [
+            13,
+            14
+          ]
         }
       ],
       "body": {
@@ -47,42 +47,42 @@ Output:
               "name": "x",
               "typeAnnotation": null,
               "loc": null,
-              "range": {
-                "start": 27,
-                "end": 28
-              }
+              "range": [
+                27,
+                28
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 20,
-              "end": 29
-            }
+            "range": [
+              20,
+              29
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 16,
-          "end": 31
-        }
+        "range": [
+          16,
+          31
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 31
-      },
+      "range": [
+        0,
+        31
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 31
-      }
+      "range": [
+        0,
+        31
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 31
-  }
+  "range": [
+    0,
+    31
+  ]
 }

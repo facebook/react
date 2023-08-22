@@ -32,10 +32,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -43,10 +43,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 19,
-            "end": 24
-          }
+          "range": [
+            19,
+            24
+          ]
         }
       ],
       "body": {
@@ -63,10 +63,10 @@ Output:
                   "name": "maybeMutable",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 36,
-                    "end": 48
-                  }
+                  "range": [
+                    36,
+                    48
+                  ]
                 },
                 "init": {
                   "type": "NewExpression",
@@ -75,30 +75,30 @@ Output:
                     "name": "MaybeMutable",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 55,
-                      "end": 67
-                    }
+                    "range": [
+                      55,
+                      67
+                    ]
                   },
                   "arguments": [],
                   "loc": null,
-                  "range": {
-                    "start": 51,
-                    "end": 69
-                  }
+                  "range": [
+                    51,
+                    69
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 36,
-                  "end": 69
-                }
+                "range": [
+                  36,
+                  69
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 30,
-              "end": 70
-            }
+            "range": [
+              30,
+              70
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -110,18 +110,18 @@ Output:
                   "type": "JSXIdentifier",
                   "name": "View",
                   "loc": null,
-                  "range": {
-                    "start": 722,
-                    "end": 726
-                  }
+                  "range": [
+                    722,
+                    726
+                  ]
                 },
                 "attributes": [],
                 "selfClosing": false,
                 "loc": null,
-                "range": {
-                  "start": 721,
-                  "end": 727
-                }
+                "range": [
+                  721,
+                  727
+                ]
               },
               "children": [
                 {
@@ -133,10 +133,10 @@ Output:
                       "name": "maybeMutate",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 728,
-                        "end": 739
-                      }
+                      "range": [
+                        728,
+                        739
+                      ]
                     },
                     "arguments": [
                       {
@@ -144,23 +144,23 @@ Output:
                         "name": "maybeMutable",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 740,
-                          "end": 752
-                        }
+                        "range": [
+                          740,
+                          752
+                        ]
                       }
                     ],
                     "loc": null,
-                    "range": {
-                      "start": 728,
-                      "end": 753
-                    }
+                    "range": [
+                      728,
+                      753
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 727,
-                    "end": 754
-                  }
+                  "range": [
+                    727,
+                    754
+                  ]
                 }
               ],
               "closingElement": {
@@ -169,54 +169,54 @@ Output:
                   "type": "JSXIdentifier",
                   "name": "View",
                   "loc": null,
-                  "range": {
-                    "start": 756,
-                    "end": 760
-                  }
+                  "range": [
+                    756,
+                    760
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 754,
-                  "end": 761
-                }
+                "range": [
+                  754,
+                  761
+                ]
               },
               "loc": null,
-              "range": {
-                "start": 721,
-                "end": 761
-              }
+              "range": [
+                721,
+                761
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 714,
-              "end": 762
-            }
+            "range": [
+              714,
+              762
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 26,
-          "end": 764
-        }
+        "range": [
+          26,
+          764
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 764
-      },
+      "range": [
+        0,
+        764
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 764
-      }
+      "range": [
+        0,
+        764
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 764
-  }
+  "range": [
+    0,
+    764
+  ]
 }

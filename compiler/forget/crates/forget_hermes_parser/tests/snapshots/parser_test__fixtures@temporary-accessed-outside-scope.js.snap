@@ -22,10 +22,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -33,10 +33,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 19,
-            "end": 24
-          }
+          "range": [
+            19,
+            24
+          ]
         }
       ],
       "body": {
@@ -53,10 +53,10 @@ Output:
                   "name": "maybeMutable",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 36,
-                    "end": 48
-                  }
+                  "range": [
+                    36,
+                    48
+                  ]
                 },
                 "init": {
                   "type": "NewExpression",
@@ -65,30 +65,30 @@ Output:
                     "name": "MaybeMutable",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 55,
-                      "end": 67
-                    }
+                    "range": [
+                      55,
+                      67
+                    ]
                   },
                   "arguments": [],
                   "loc": null,
-                  "range": {
-                    "start": 51,
-                    "end": 69
-                  }
+                  "range": [
+                    51,
+                    69
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 36,
-                  "end": 69
-                }
+                "range": [
+                  36,
+                  69
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 30,
-              "end": 70
-            }
+            "range": [
+              30,
+              70
+            ]
           },
           {
             "type": "VariableDeclaration",
@@ -101,33 +101,33 @@ Output:
                   "name": "x",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 77,
-                    "end": 78
-                  }
+                  "range": [
+                    77,
+                    78
+                  ]
                 },
                 "init": {
                   "type": "Identifier",
                   "name": "props",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 81,
-                    "end": 86
-                  }
+                  "range": [
+                    81,
+                    86
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 77,
-                  "end": 86
-                }
+                "range": [
+                  77,
+                  86
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 73,
-              "end": 87
-            }
+            "range": [
+              73,
+              87
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -139,10 +139,10 @@ Output:
                   "name": "x",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 98,
-                    "end": 99
-                  }
+                  "range": [
+                    98,
+                    99
+                  ]
                 },
                 {
                   "type": "CallExpression",
@@ -151,10 +151,10 @@ Output:
                     "name": "maybeMutate",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 101,
-                      "end": 112
-                    }
+                    "range": [
+                      101,
+                      112
+                    ]
                   },
                   "arguments": [
                     {
@@ -162,56 +162,56 @@ Output:
                       "name": "maybeMutable",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 113,
-                        "end": 125
-                      }
+                      "range": [
+                        113,
+                        125
+                      ]
                     }
                   ],
                   "loc": null,
-                  "range": {
-                    "start": 101,
-                    "end": 126
-                  }
+                  "range": [
+                    101,
+                    126
+                  ]
                 }
               ],
               "loc": null,
-              "range": {
-                "start": 97,
-                "end": 127
-              }
+              "range": [
+                97,
+                127
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 90,
-              "end": 128
-            }
+            "range": [
+              90,
+              128
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 26,
-          "end": 130
-        }
+        "range": [
+          26,
+          130
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 130
-      },
+      "range": [
+        0,
+        130
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 130
-      }
+      "range": [
+        0,
+        130
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 130
-  }
+  "range": [
+    0,
+    130
+  ]
 }

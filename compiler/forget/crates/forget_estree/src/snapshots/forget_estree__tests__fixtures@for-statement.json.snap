@@ -554,10 +554,10 @@ Output:
             "column": 18
           }
         },
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -575,10 +575,10 @@ Output:
               "column": 24
             }
           },
-          "range": {
-            "start": 19,
-            "end": 24
-          }
+          "range": [
+            19,
+            24
+          ]
         }
       ],
       "body": {
@@ -605,10 +605,10 @@ Output:
                       "column": 7
                     }
                   },
-                  "range": {
-                    "start": 34,
-                    "end": 35
-                  }
+                  "range": [
+                    34,
+                    35
+                  ]
                 },
                 "init": {
                   "type": "Literal",
@@ -627,10 +627,10 @@ Output:
                       "column": 11
                     }
                   },
-                  "range": {
-                    "start": 38,
-                    "end": 39
-                  }
+                  "range": [
+                    38,
+                    39
+                  ]
                 },
                 "loc": {
                   "source": null,
@@ -643,10 +643,10 @@ Output:
                     "column": 11
                   }
                 },
-                "range": {
-                  "start": 34,
-                  "end": 39
-                }
+                "range": [
+                  34,
+                  39
+                ]
               }
             ],
             "loc": {
@@ -660,10 +660,10 @@ Output:
                 "column": 12
               }
             },
-            "range": {
-              "start": 30,
-              "end": 40
-            }
+            "range": [
+              30,
+              40
+            ]
           },
           {
             "type": "ForStatement",
@@ -688,10 +688,10 @@ Output:
                         "column": 12
                       }
                     },
-                    "range": {
-                      "start": 52,
-                      "end": 53
-                    }
+                    "range": [
+                      52,
+                      53
+                    ]
                   },
                   "init": {
                     "type": "Literal",
@@ -710,10 +710,10 @@ Output:
                         "column": 16
                       }
                     },
-                    "range": {
-                      "start": 56,
-                      "end": 57
-                    }
+                    "range": [
+                      56,
+                      57
+                    ]
                   },
                   "loc": {
                     "source": null,
@@ -726,10 +726,10 @@ Output:
                       "column": 16
                     }
                   },
-                  "range": {
-                    "start": 52,
-                    "end": 57
-                  }
+                  "range": [
+                    52,
+                    57
+                  ]
                 }
               ],
               "loc": {
@@ -743,10 +743,10 @@ Output:
                   "column": 16
                 }
               },
-              "range": {
-                "start": 48,
-                "end": 57
-              }
+              "range": [
+                48,
+                57
+              ]
             },
             "test": {
               "type": "BinaryExpression",
@@ -765,10 +765,10 @@ Output:
                     "column": 19
                   }
                 },
-                "range": {
-                  "start": 59,
-                  "end": 60
-                }
+                "range": [
+                  59,
+                  60
+                ]
               },
               "operator": "<",
               "right": {
@@ -788,10 +788,10 @@ Output:
                     "column": 24
                   }
                 },
-                "range": {
-                  "start": 63,
-                  "end": 65
-                }
+                "range": [
+                  63,
+                  65
+                ]
               },
               "loc": {
                 "source": null,
@@ -804,10 +804,10 @@ Output:
                   "column": 24
                 }
               },
-              "range": {
-                "start": 59,
-                "end": 65
-              }
+              "range": [
+                59,
+                65
+              ]
             },
             "update": {
               "type": "UpdateExpression",
@@ -827,10 +827,10 @@ Output:
                     "column": 27
                   }
                 },
-                "range": {
-                  "start": 67,
-                  "end": 68
-                }
+                "range": [
+                  67,
+                  68
+                ]
               },
               "prefix": false,
               "loc": {
@@ -844,10 +844,10 @@ Output:
                   "column": 29
                 }
               },
-              "range": {
-                "start": 67,
-                "end": 70
-              }
+              "range": [
+                67,
+                70
+              ]
             },
             "body": {
               "type": "BlockStatement",
@@ -872,10 +872,10 @@ Output:
                           "column": 5
                         }
                       },
-                      "range": {
-                        "start": 78,
-                        "end": 79
-                      }
+                      "range": [
+                        78,
+                        79
+                      ]
                     },
                     "right": {
                       "type": "Identifier",
@@ -892,10 +892,10 @@ Output:
                           "column": 10
                         }
                       },
-                      "range": {
-                        "start": 83,
-                        "end": 84
-                      }
+                      "range": [
+                        83,
+                        84
+                      ]
                     },
                     "loc": {
                       "source": null,
@@ -908,10 +908,10 @@ Output:
                         "column": 10
                       }
                     },
-                    "range": {
-                      "start": 78,
-                      "end": 84
-                    }
+                    "range": [
+                      78,
+                      84
+                    ]
                   },
                   "directive": null,
                   "loc": {
@@ -925,10 +925,10 @@ Output:
                       "column": 11
                     }
                   },
-                  "range": {
-                    "start": 78,
-                    "end": 85
-                  }
+                  "range": [
+                    78,
+                    85
+                  ]
                 }
               ],
               "loc": {
@@ -942,10 +942,10 @@ Output:
                   "column": 3
                 }
               },
-              "range": {
-                "start": 72,
-                "end": 89
-              }
+              "range": [
+                72,
+                89
+              ]
             },
             "loc": {
               "source": null,
@@ -958,10 +958,10 @@ Output:
                 "column": 3
               }
             },
-            "range": {
-              "start": 43,
-              "end": 89
-            }
+            "range": [
+              43,
+              89
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -980,10 +980,10 @@ Output:
                   "column": 10
                 }
               },
-              "range": {
-                "start": 99,
-                "end": 100
-              }
+              "range": [
+                99,
+                100
+              ]
             },
             "loc": {
               "source": null,
@@ -996,10 +996,10 @@ Output:
                 "column": 11
               }
             },
-            "range": {
-              "start": 92,
-              "end": 101
-            }
+            "range": [
+              92,
+              101
+            ]
           }
         ],
         "loc": {
@@ -1013,10 +1013,10 @@ Output:
             "column": 1
           }
         },
-        "range": {
-          "start": 26,
-          "end": 103
-        }
+        "range": [
+          26,
+          103
+        ]
       },
       "generator": false,
       "async": false,
@@ -1033,10 +1033,10 @@ Output:
           "column": 1
         }
       },
-      "range": {
-        "start": 0,
-        "end": 103
-      }
+      "range": [
+        0,
+        103
+      ]
     }
   ],
   "sourceType": "script",
@@ -1051,8 +1051,8 @@ Output:
       "column": 1
     }
   },
-  "range": {
-    "start": 0,
-    "end": 103
-  }
+  "range": [
+    0,
+    103
+  ]
 }

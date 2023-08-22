@@ -27,32 +27,32 @@ Output:
             "name": "makeReadOnly",
             "typeAnnotation": null,
             "loc": null,
-            "range": {
-              "start": 44,
-              "end": 56
-            }
+            "range": [
+              44,
+              56
+            ]
           },
           "init": {
             "type": "StringLiteral",
             "value": "conflicting identifier",
             "loc": null,
-            "range": {
-              "start": 59,
-              "end": 83
-            }
+            "range": [
+              59,
+              83
+            ]
           },
           "loc": null,
-          "range": {
-            "start": 44,
-            "end": 83
-          }
+          "range": [
+            44,
+            83
+          ]
         }
       ],
       "loc": null,
-      "range": {
-        "start": 40,
-        "end": 84
-      }
+      "range": [
+        40,
+        84
+      ]
     },
     {
       "type": "FunctionDeclaration",
@@ -61,10 +61,10 @@ Output:
         "name": "useFoo",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 94,
-          "end": 100
-        }
+        "range": [
+          94,
+          100
+        ]
       },
       "params": [
         {
@@ -72,10 +72,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 101,
-            "end": 106
-          }
+          "range": [
+            101,
+            106
+          ]
         }
       ],
       "body": {
@@ -90,10 +90,10 @@ Output:
                 "name": "foo",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 119,
-                  "end": 122
-                }
+                "range": [
+                  119,
+                  122
+                ]
               },
               "arguments": [
                 {
@@ -103,66 +103,66 @@ Output:
                     "name": "props",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 123,
-                      "end": 128
-                    }
+                    "range": [
+                      123,
+                      128
+                    ]
                   },
                   "property": {
                     "type": "Identifier",
                     "name": "x",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 129,
-                      "end": 130
-                    }
+                    "range": [
+                      129,
+                      130
+                    ]
                   },
                   "computed": false,
                   "loc": null,
-                  "range": {
-                    "start": 123,
-                    "end": 130
-                  }
+                  "range": [
+                    123,
+                    130
+                  ]
                 }
               ],
               "loc": null,
-              "range": {
-                "start": 119,
-                "end": 131
-              }
+              "range": [
+                119,
+                131
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 112,
-              "end": 132
-            }
+            "range": [
+              112,
+              132
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 108,
-          "end": 134
-        }
+        "range": [
+          108,
+          134
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 85,
-        "end": 134
-      },
+      "range": [
+        85,
+        134
+      ],
       "loc": null,
-      "range": {
-        "start": 85,
-        "end": 134
-      }
+      "range": [
+        85,
+        134
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 40,
-    "end": 134
-  }
+  "range": [
+    40,
+    134
+  ]
 }

@@ -20,10 +20,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -36,10 +36,10 @@ Output:
                 "name": "a",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 21,
-                  "end": 22
-                }
+                "range": [
+                  21,
+                  22
+                ]
               },
               "value": {
                 "type": "AssignmentPattern",
@@ -48,42 +48,42 @@ Output:
                   "name": "a",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 21,
-                    "end": 22
-                  }
+                  "range": [
+                    21,
+                    22
+                  ]
                 },
                 "right": {
                   "type": "NumericLiteral",
                   "value": 2.0,
                   "loc": null,
-                  "range": {
-                    "start": 25,
-                    "end": 26
-                  }
+                  "range": [
+                    25,
+                    26
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 21,
-                  "end": 26
-                }
+                "range": [
+                  21,
+                  26
+                ]
               },
               "kind": "init",
               "computed": false,
               "shorthand": true,
               "method": false,
               "loc": null,
-              "range": {
-                "start": 21,
-                "end": 26
-              }
+              "range": [
+                21,
+                26
+              ]
             }
           ],
           "loc": null,
-          "range": {
-            "start": 19,
-            "end": 28
-          }
+          "range": [
+            19,
+            28
+          ]
         }
       ],
       "body": {
@@ -96,42 +96,42 @@ Output:
               "name": "a",
               "typeAnnotation": null,
               "loc": null,
-              "range": {
-                "start": 41,
-                "end": 42
-              }
+              "range": [
+                41,
+                42
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 34,
-              "end": 43
-            }
+            "range": [
+              34,
+              43
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 30,
-          "end": 45
-        }
+        "range": [
+          30,
+          45
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 45
-      },
+      "range": [
+        0,
+        45
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 45
-      }
+      "range": [
+        0,
+        45
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 45
-  }
+  "range": [
+    0,
+    45
+  ]
 }

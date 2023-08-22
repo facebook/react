@@ -133,10 +133,10 @@ Output:
                 "column": 12
               }
             },
-            "range": {
-              "start": 7,
-              "end": 12
-            }
+            "range": [
+              7,
+              12
+            ]
           },
           "loc": {
             "source": null,
@@ -149,10 +149,10 @@ Output:
               "column": 12
             }
           },
-          "range": {
-            "start": 7,
-            "end": 12
-          }
+          "range": [
+            7,
+            12
+          ]
         }
       ],
       "source": {
@@ -172,10 +172,10 @@ Output:
             "column": 25
           }
         },
-        "range": {
-          "start": 18,
-          "end": 25
-        }
+        "range": [
+          18,
+          25
+        ]
       },
       "loc": {
         "source": null,
@@ -188,10 +188,10 @@ Output:
           "column": 26
         }
       },
-      "range": {
-        "start": 0,
-        "end": 26
-      }
+      "range": [
+        0,
+        26
+      ]
     }
   ],
   "sourceType": "module",
@@ -206,8 +206,8 @@ Output:
       "column": 26
     }
   },
-  "range": {
-    "start": 0,
-    "end": 26
-  }
+  "range": [
+    0,
+    26
+  ]
 }

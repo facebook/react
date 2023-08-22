@@ -29,32 +29,32 @@ Output:
             "name": "fbt",
             "typeAnnotation": null,
             "loc": null,
-            "range": {
-              "start": 7,
-              "end": 10
-            }
+            "range": [
+              7,
+              10
+            ]
           },
           "loc": null,
-          "range": {
-            "start": 7,
-            "end": 10
-          }
+          "range": [
+            7,
+            10
+          ]
         }
       ],
       "source": {
         "type": "StringLiteral",
         "value": "fbt",
         "loc": null,
-        "range": {
-          "start": 16,
-          "end": 21
-        }
+        "range": [
+          16,
+          21
+        ]
       },
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 22
-      }
+      "range": [
+        0,
+        22
+      ]
     },
     {
       "type": "FunctionDeclaration",
@@ -63,10 +63,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 33,
-          "end": 42
-        }
+        "range": [
+          33,
+          42
+        ]
       },
       "params": [
         {
@@ -74,10 +74,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 43,
-            "end": 48
-          }
+          "range": [
+            43,
+            48
+          ]
         }
       ],
       "body": {
@@ -93,10 +93,10 @@ Output:
                   "type": "JSXIdentifier",
                   "name": "fbt",
                   "loc": null,
-                  "range": {
-                    "start": 68,
-                    "end": 71
-                  }
+                  "range": [
+                    68,
+                    71
+                  ]
                 },
                 "attributes": [
                   {
@@ -105,10 +105,10 @@ Output:
                       "type": "JSXIdentifier",
                       "name": "desc",
                       "loc": null,
-                      "range": {
-                        "start": 72,
-                        "end": 76
-                      }
+                      "range": [
+                        72,
+                        76
+                      ]
                     },
                     "value": {
                       "type": "JSXExpressionContainer",
@@ -116,30 +116,30 @@ Output:
                         "type": "StringLiteral",
                         "value": "Dialog to show to user",
                         "loc": null,
-                        "range": {
-                          "start": 78,
-                          "end": 102
-                        }
+                        "range": [
+                          78,
+                          102
+                        ]
                       },
                       "loc": null,
-                      "range": {
-                        "start": 77,
-                        "end": 103
-                      }
+                      "range": [
+                        77,
+                        103
+                      ]
                     },
                     "loc": null,
-                    "range": {
-                      "start": 72,
-                      "end": 103
-                    }
+                    "range": [
+                      72,
+                      103
+                    ]
                   }
                 ],
                 "selfClosing": false,
                 "loc": null,
-                "range": {
-                  "start": 67,
-                  "end": 104
-                }
+                "range": [
+                  67,
+                  104
+                ]
               },
               "children": [
                 {
@@ -147,10 +147,10 @@ Output:
                   "value": "\n      Hello ",
                   "raw": "\n      Hello ",
                   "loc": null,
-                  "range": {
-                    "start": 104,
-                    "end": 117
-                  }
+                  "range": [
+                    104,
+                    117
+                  ]
                 },
                 {
                   "type": "JSXElement",
@@ -162,25 +162,25 @@ Output:
                         "type": "JSXIdentifier",
                         "name": "fbt",
                         "loc": null,
-                        "range": {
-                          "start": 118,
-                          "end": 121
-                        }
+                        "range": [
+                          118,
+                          121
+                        ]
                       },
                       "name": {
                         "type": "JSXIdentifier",
                         "name": "param",
                         "loc": null,
-                        "range": {
-                          "start": 122,
-                          "end": 127
-                        }
+                        "range": [
+                          122,
+                          127
+                        ]
                       },
                       "loc": null,
-                      "range": {
-                        "start": 118,
-                        "end": 127
-                      }
+                      "range": [
+                        118,
+                        127
+                      ]
                     },
                     "attributes": [
                       {
@@ -189,34 +189,34 @@ Output:
                           "type": "JSXIdentifier",
                           "name": "name",
                           "loc": null,
-                          "range": {
-                            "start": 128,
-                            "end": 132
-                          }
+                          "range": [
+                            128,
+                            132
+                          ]
                         },
                         "value": {
                           "type": "JSXStringLiteral",
                           "value": "user name",
                           "raw": "\"user name\"",
                           "loc": null,
-                          "range": {
-                            "start": 133,
-                            "end": 144
-                          }
+                          "range": [
+                            133,
+                            144
+                          ]
                         },
                         "loc": null,
-                        "range": {
-                          "start": 128,
-                          "end": 144
-                        }
+                        "range": [
+                          128,
+                          144
+                        ]
                       }
                     ],
                     "selfClosing": false,
                     "loc": null,
-                    "range": {
-                      "start": 117,
-                      "end": 145
-                    }
+                    "range": [
+                      117,
+                      145
+                    ]
                   },
                   "children": [
                     {
@@ -228,10 +228,10 @@ Output:
                           "name": "capitalize",
                           "typeAnnotation": null,
                           "loc": null,
-                          "range": {
-                            "start": 146,
-                            "end": 156
-                          }
+                          "range": [
+                            146,
+                            156
+                          ]
                         },
                         "arguments": [
                           {
@@ -241,40 +241,40 @@ Output:
                               "name": "props",
                               "typeAnnotation": null,
                               "loc": null,
-                              "range": {
-                                "start": 157,
-                                "end": 162
-                              }
+                              "range": [
+                                157,
+                                162
+                              ]
                             },
                             "property": {
                               "type": "Identifier",
                               "name": "name",
                               "typeAnnotation": null,
                               "loc": null,
-                              "range": {
-                                "start": 163,
-                                "end": 167
-                              }
+                              "range": [
+                                163,
+                                167
+                              ]
                             },
                             "computed": false,
                             "loc": null,
-                            "range": {
-                              "start": 157,
-                              "end": 167
-                            }
+                            "range": [
+                              157,
+                              167
+                            ]
                           }
                         ],
                         "loc": null,
-                        "range": {
-                          "start": 146,
-                          "end": 168
-                        }
+                        "range": [
+                          146,
+                          168
+                        ]
                       },
                       "loc": null,
-                      "range": {
-                        "start": 145,
-                        "end": 169
-                      }
+                      "range": [
+                        145,
+                        169
+                      ]
                     }
                   ],
                   "closingElement": {
@@ -285,47 +285,47 @@ Output:
                         "type": "JSXIdentifier",
                         "name": "fbt",
                         "loc": null,
-                        "range": {
-                          "start": 171,
-                          "end": 174
-                        }
+                        "range": [
+                          171,
+                          174
+                        ]
                       },
                       "name": {
                         "type": "JSXIdentifier",
                         "name": "param",
                         "loc": null,
-                        "range": {
-                          "start": 175,
-                          "end": 180
-                        }
+                        "range": [
+                          175,
+                          180
+                        ]
                       },
                       "loc": null,
-                      "range": {
-                        "start": 171,
-                        "end": 180
-                      }
+                      "range": [
+                        171,
+                        180
+                      ]
                     },
                     "loc": null,
-                    "range": {
-                      "start": 169,
-                      "end": 181
-                    }
+                    "range": [
+                      169,
+                      181
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 117,
-                    "end": 181
-                  }
+                  "range": [
+                    117,
+                    181
+                  ]
                 },
                 {
                   "type": "JSXText",
                   "value": "\n    ",
                   "raw": "\n    ",
                   "loc": null,
-                  "range": {
-                    "start": 181,
-                    "end": 186
-                  }
+                  "range": [
+                    181,
+                    186
+                  ]
                 }
               ],
               "closingElement": {
@@ -334,54 +334,54 @@ Output:
                   "type": "JSXIdentifier",
                   "name": "fbt",
                   "loc": null,
-                  "range": {
-                    "start": 188,
-                    "end": 191
-                  }
+                  "range": [
+                    188,
+                    191
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 186,
-                  "end": 192
-                }
+                "range": [
+                  186,
+                  192
+                ]
               },
               "loc": null,
-              "range": {
-                "start": 67,
-                "end": 192
-              }
+              "range": [
+                67,
+                192
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 54,
-              "end": 197
-            }
+            "range": [
+              54,
+              197
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 50,
-          "end": 199
-        }
+        "range": [
+          50,
+          199
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 24,
-        "end": 199
-      },
+      "range": [
+        24,
+        199
+      ],
       "loc": null,
-      "range": {
-        "start": 24,
-        "end": 199
-      }
+      "range": [
+        24,
+        199
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 199
-  }
+  "range": [
+    0,
+    199
+  ]
 }

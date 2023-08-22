@@ -28,10 +28,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -39,10 +39,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 19,
-            "end": 24
-          }
+          "range": [
+            19,
+            24
+          ]
         }
       ],
       "body": {
@@ -51,10 +51,10 @@ Output:
           {
             "type": "DebuggerStatement",
             "loc": null,
-            "range": {
-              "start": 30,
-              "end": 39
-            }
+            "range": [
+              30,
+              39
+            ]
           },
           {
             "type": "IfStatement",
@@ -65,27 +65,27 @@ Output:
                 "name": "props",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 46,
-                  "end": 51
-                }
+                "range": [
+                  46,
+                  51
+                ]
               },
               "property": {
                 "type": "Identifier",
                 "name": "cond",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 52,
-                  "end": 56
-                }
+                "range": [
+                  52,
+                  56
+                ]
               },
               "computed": false,
               "loc": null,
-              "range": {
-                "start": 46,
-                "end": 56
-              }
+              "range": [
+                46,
+                56
+              ]
             },
             "consequent": {
               "type": "BlockStatement",
@@ -93,17 +93,17 @@ Output:
                 {
                   "type": "DebuggerStatement",
                   "loc": null,
-                  "range": {
-                    "start": 64,
-                    "end": 73
-                  }
+                  "range": [
+                    64,
+                    73
+                  ]
                 }
               ],
               "loc": null,
-              "range": {
-                "start": 58,
-                "end": 77
-              }
+              "range": [
+                58,
+                77
+              ]
             },
             "alternate": {
               "type": "BlockStatement",
@@ -117,27 +117,27 @@ Output:
                       "name": "props",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 96,
-                        "end": 101
-                      }
+                      "range": [
+                        96,
+                        101
+                      ]
                     },
                     "property": {
                       "type": "Identifier",
                       "name": "cond",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 102,
-                        "end": 106
-                      }
+                      "range": [
+                        102,
+                        106
+                      ]
                     },
                     "computed": false,
                     "loc": null,
-                    "range": {
-                      "start": 96,
-                      "end": 106
-                    }
+                    "range": [
+                      96,
+                      106
+                    ]
                   },
                   "body": {
                     "type": "BlockStatement",
@@ -145,70 +145,70 @@ Output:
                       {
                         "type": "DebuggerStatement",
                         "loc": null,
-                        "range": {
-                          "start": 116,
-                          "end": 125
-                        }
+                        "range": [
+                          116,
+                          125
+                        ]
                       }
                     ],
                     "loc": null,
-                    "range": {
-                      "start": 108,
-                      "end": 131
-                    }
+                    "range": [
+                      108,
+                      131
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 89,
-                    "end": 131
-                  }
+                  "range": [
+                    89,
+                    131
+                  ]
                 }
               ],
               "loc": null,
-              "range": {
-                "start": 83,
-                "end": 135
-              }
+              "range": [
+                83,
+                135
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 42,
-              "end": 135
-            }
+            "range": [
+              42,
+              135
+            ]
           },
           {
             "type": "DebuggerStatement",
             "loc": null,
-            "range": {
-              "start": 138,
-              "end": 147
-            }
+            "range": [
+              138,
+              147
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 26,
-          "end": 149
-        }
+        "range": [
+          26,
+          149
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 149
-      },
+      "range": [
+        0,
+        149
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 149
-      }
+      "range": [
+        0,
+        149
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 149
-  }
+  "range": [
+    0,
+    149
+  ]
 }

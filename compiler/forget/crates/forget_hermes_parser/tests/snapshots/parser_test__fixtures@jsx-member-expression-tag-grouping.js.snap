@@ -21,10 +21,10 @@ Output:
         "name": "Component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -32,10 +32,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 19,
-            "end": 24
-          }
+          "range": [
+            19,
+            24
+          ]
         }
       ],
       "body": {
@@ -52,10 +52,10 @@ Output:
                   "name": "maybeMutable",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 36,
-                    "end": 48
-                  }
+                  "range": [
+                    36,
+                    48
+                  ]
                 },
                 "init": {
                   "type": "NewExpression",
@@ -64,30 +64,30 @@ Output:
                     "name": "MaybeMutable",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 55,
-                      "end": 67
-                    }
+                    "range": [
+                      55,
+                      67
+                    ]
                   },
                   "arguments": [],
                   "loc": null,
-                  "range": {
-                    "start": 51,
-                    "end": 69
-                  }
+                  "range": [
+                    51,
+                    69
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 36,
-                  "end": 69
-                }
+                "range": [
+                  36,
+                  69
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 30,
-              "end": 70
-            }
+            "range": [
+              30,
+              70
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -101,33 +101,33 @@ Output:
                     "type": "JSXIdentifier",
                     "name": "Foo",
                     "loc": null,
-                    "range": {
-                      "start": 81,
-                      "end": 84
-                    }
+                    "range": [
+                      81,
+                      84
+                    ]
                   },
                   "property": {
                     "type": "JSXIdentifier",
                     "name": "Bar",
                     "loc": null,
-                    "range": {
-                      "start": 85,
-                      "end": 88
-                    }
+                    "range": [
+                      85,
+                      88
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 81,
-                    "end": 88
-                  }
+                  "range": [
+                    81,
+                    88
+                  ]
                 },
                 "attributes": [],
                 "selfClosing": false,
                 "loc": null,
-                "range": {
-                  "start": 80,
-                  "end": 89
-                }
+                "range": [
+                  80,
+                  89
+                ]
               },
               "children": [
                 {
@@ -139,10 +139,10 @@ Output:
                       "name": "maybeMutate",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 90,
-                        "end": 101
-                      }
+                      "range": [
+                        90,
+                        101
+                      ]
                     },
                     "arguments": [
                       {
@@ -150,23 +150,23 @@ Output:
                         "name": "maybeMutable",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 102,
-                          "end": 114
-                        }
+                        "range": [
+                          102,
+                          114
+                        ]
                       }
                     ],
                     "loc": null,
-                    "range": {
-                      "start": 90,
-                      "end": 115
-                    }
+                    "range": [
+                      90,
+                      115
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 89,
-                    "end": 116
-                  }
+                  "range": [
+                    89,
+                    116
+                  ]
                 }
               ],
               "closingElement": {
@@ -177,69 +177,69 @@ Output:
                     "type": "JSXIdentifier",
                     "name": "Foo",
                     "loc": null,
-                    "range": {
-                      "start": 118,
-                      "end": 121
-                    }
+                    "range": [
+                      118,
+                      121
+                    ]
                   },
                   "property": {
                     "type": "JSXIdentifier",
                     "name": "Bar",
                     "loc": null,
-                    "range": {
-                      "start": 122,
-                      "end": 125
-                    }
+                    "range": [
+                      122,
+                      125
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 118,
-                    "end": 125
-                  }
+                  "range": [
+                    118,
+                    125
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 116,
-                  "end": 126
-                }
+                "range": [
+                  116,
+                  126
+                ]
               },
               "loc": null,
-              "range": {
-                "start": 80,
-                "end": 126
-              }
+              "range": [
+                80,
+                126
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 73,
-              "end": 127
-            }
+            "range": [
+              73,
+              127
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 26,
-          "end": 129
-        }
+        "range": [
+          26,
+          129
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 129
-      },
+      "range": [
+        0,
+        129
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 129
-      }
+      "range": [
+        0,
+        129
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 129
-  }
+  "range": [
+    0,
+    129
+  ]
 }

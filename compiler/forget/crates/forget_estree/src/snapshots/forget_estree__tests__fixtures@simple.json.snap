@@ -215,10 +215,10 @@ Output:
             "column": 18
           }
         },
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -236,10 +236,10 @@ Output:
               "column": 24
             }
           },
-          "range": {
-            "start": 19,
-            "end": 24
-          }
+          "range": [
+            19,
+            24
+          ]
         }
       ],
       "body": {
@@ -264,10 +264,10 @@ Output:
                     "column": 14
                   }
                 },
-                "range": {
-                  "start": 37,
-                  "end": 42
-                }
+                "range": [
+                  37,
+                  42
+                ]
               },
               "property": {
                 "type": "Identifier",
@@ -284,10 +284,10 @@ Output:
                     "column": 20
                   }
                 },
-                "range": {
-                  "start": 43,
-                  "end": 48
-                }
+                "range": [
+                  43,
+                  48
+                ]
               },
               "computed": false,
               "loc": {
@@ -301,10 +301,10 @@ Output:
                   "column": 20
                 }
               },
-              "range": {
-                "start": 37,
-                "end": 48
-              }
+              "range": [
+                37,
+                48
+              ]
             },
             "loc": {
               "source": null,
@@ -317,10 +317,10 @@ Output:
                 "column": 21
               }
             },
-            "range": {
-              "start": 30,
-              "end": 49
-            }
+            "range": [
+              30,
+              49
+            ]
           }
         ],
         "loc": {
@@ -334,10 +334,10 @@ Output:
             "column": 1
           }
         },
-        "range": {
-          "start": 26,
-          "end": 51
-        }
+        "range": [
+          26,
+          51
+        ]
       },
       "generator": false,
       "async": false,
@@ -354,10 +354,10 @@ Output:
           "column": 1
         }
       },
-      "range": {
-        "start": 0,
-        "end": 51
-      }
+      "range": [
+        0,
+        51
+      ]
     }
   ],
   "sourceType": "module",
@@ -372,8 +372,8 @@ Output:
       "column": 1
     }
   },
-  "range": {
-    "start": 0,
-    "end": 51
-  }
+  "range": [
+    0,
+    51
+  ]
 }

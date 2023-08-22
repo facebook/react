@@ -24,10 +24,10 @@ Output:
         "name": "lowercasecomponent",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 57,
-          "end": 75
-        }
+        "range": [
+          57,
+          75
+        ]
       },
       "params": [],
       "body": {
@@ -39,17 +39,17 @@ Output:
               "type": "StringLiteral",
               "value": "use forget",
               "loc": null,
-              "range": {
-                "start": 82,
-                "end": 94
-              }
+              "range": [
+                82,
+                94
+              ]
             },
             "directive": null,
             "loc": null,
-            "range": {
-              "start": 82,
-              "end": 95
-            }
+            "range": [
+              82,
+              95
+            ]
           },
           {
             "type": "VariableDeclaration",
@@ -62,32 +62,32 @@ Output:
                   "name": "x",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 104,
-                    "end": 105
-                  }
+                  "range": [
+                    104,
+                    105
+                  ]
                 },
                 "init": {
                   "type": "ArrayExpression",
                   "elements": [],
                   "loc": null,
-                  "range": {
-                    "start": 108,
-                    "end": 110
-                  }
+                  "range": [
+                    108,
+                    110
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 104,
-                  "end": 110
-                }
+                "range": [
+                  104,
+                  110
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 98,
-              "end": 111
-            }
+            "range": [
+              98,
+              111
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -99,18 +99,18 @@ Output:
                   "type": "JSXIdentifier",
                   "name": "div",
                   "loc": null,
-                  "range": {
-                    "start": 122,
-                    "end": 125
-                  }
+                  "range": [
+                    122,
+                    125
+                  ]
                 },
                 "attributes": [],
                 "selfClosing": false,
                 "loc": null,
-                "range": {
-                  "start": 121,
-                  "end": 126
-                }
+                "range": [
+                  121,
+                  126
+                ]
               },
               "children": [
                 {
@@ -120,16 +120,16 @@ Output:
                     "name": "x",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 127,
-                      "end": 128
-                    }
+                    "range": [
+                      127,
+                      128
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 126,
-                    "end": 129
-                  }
+                  "range": [
+                    126,
+                    129
+                  ]
                 }
               ],
               "closingElement": {
@@ -138,54 +138,54 @@ Output:
                   "type": "JSXIdentifier",
                   "name": "div",
                   "loc": null,
-                  "range": {
-                    "start": 131,
-                    "end": 134
-                  }
+                  "range": [
+                    131,
+                    134
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 129,
-                  "end": 135
-                }
+                "range": [
+                  129,
+                  135
+                ]
               },
               "loc": null,
-              "range": {
-                "start": 121,
-                "end": 135
-              }
+              "range": [
+                121,
+                135
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 114,
-              "end": 136
-            }
+            "range": [
+              114,
+              136
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 78,
-          "end": 138
-        }
+        "range": [
+          78,
+          138
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 48,
-        "end": 138
-      },
+      "range": [
+        48,
+        138
+      ],
       "loc": null,
-      "range": {
-        "start": 48,
-        "end": 138
-      }
+      "range": [
+        48,
+        138
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 48,
-    "end": 138
-  }
+  "range": [
+    48,
+    138
+  ]
 }

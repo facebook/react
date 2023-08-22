@@ -27,10 +27,10 @@ Output:
         "name": "Foo",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 12
-        }
+        "range": [
+          9,
+          12
+        ]
       },
       "params": [
         {
@@ -38,10 +38,10 @@ Output:
           "name": "props",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 13,
-            "end": 18
-          }
+          "range": [
+            13,
+            18
+          ]
         }
       ],
       "body": {
@@ -54,10 +54,10 @@ Output:
               "openingFragment": {
                 "type": "JSXOpeningFragment",
                 "loc": null,
-                "range": {
-                  "start": 37,
-                  "end": 39
-                }
+                "range": [
+                  37,
+                  39
+                ]
               },
               "children": [
                 {
@@ -65,10 +65,10 @@ Output:
                   "value": "\n      Hello ",
                   "raw": "\n      Hello ",
                   "loc": null,
-                  "range": {
-                    "start": 39,
-                    "end": 52
-                  }
+                  "range": [
+                    39,
+                    52
+                  ]
                 },
                 {
                   "type": "JSXExpressionContainer",
@@ -79,33 +79,33 @@ Output:
                       "name": "props",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 53,
-                        "end": 58
-                      }
+                      "range": [
+                        53,
+                        58
+                      ]
                     },
                     "property": {
                       "type": "Identifier",
                       "name": "greeting",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 59,
-                        "end": 67
-                      }
+                      "range": [
+                        59,
+                        67
+                      ]
                     },
                     "computed": false,
                     "loc": null,
-                    "range": {
-                      "start": 53,
-                      "end": 67
-                    }
+                    "range": [
+                      53,
+                      67
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 52,
-                    "end": 68
-                  }
+                  "range": [
+                    52,
+                    68
+                  ]
                 },
                 {
                   "type": "JSXExpressionContainer",
@@ -113,26 +113,26 @@ Output:
                     "type": "StringLiteral",
                     "value": " ",
                     "loc": null,
-                    "range": {
-                      "start": 69,
-                      "end": 72
-                    }
+                    "range": [
+                      69,
+                      72
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 68,
-                    "end": 73
-                  }
+                  "range": [
+                    68,
+                    73
+                  ]
                 },
                 {
                   "type": "JSXText",
                   "value": "\n      ",
                   "raw": "\n      ",
                   "loc": null,
-                  "range": {
-                    "start": 73,
-                    "end": 80
-                  }
+                  "range": [
+                    73,
+                    80
+                  ]
                 },
                 {
                   "type": "JSXElement",
@@ -142,18 +142,18 @@ Output:
                       "type": "JSXIdentifier",
                       "name": "div",
                       "loc": null,
-                      "range": {
-                        "start": 81,
-                        "end": 84
-                      }
+                      "range": [
+                        81,
+                        84
+                      ]
                     },
                     "attributes": [],
                     "selfClosing": false,
                     "loc": null,
-                    "range": {
-                      "start": 80,
-                      "end": 85
-                    }
+                    "range": [
+                      80,
+                      85
+                    ]
                   },
                   "children": [
                     {
@@ -161,20 +161,20 @@ Output:
                       "value": "\n        ",
                       "raw": "\n        ",
                       "loc": null,
-                      "range": {
-                        "start": 85,
-                        "end": 94
-                      }
+                      "range": [
+                        85,
+                        94
+                      ]
                     },
                     {
                       "type": "JSXFragment",
                       "openingFragment": {
                         "type": "JSXOpeningFragment",
                         "loc": null,
-                        "range": {
-                          "start": 94,
-                          "end": 96
-                        }
+                        "range": [
+                          94,
+                          96
+                        ]
                       },
                       "children": [
                         {
@@ -182,35 +182,35 @@ Output:
                           "value": "Text",
                           "raw": "Text",
                           "loc": null,
-                          "range": {
-                            "start": 96,
-                            "end": 100
-                          }
+                          "range": [
+                            96,
+                            100
+                          ]
                         }
                       ],
                       "closingFragment": {
                         "type": "JSXClosingFragment",
                         "loc": null,
-                        "range": {
-                          "start": 100,
-                          "end": 103
-                        }
+                        "range": [
+                          100,
+                          103
+                        ]
                       },
                       "loc": null,
-                      "range": {
-                        "start": 94,
-                        "end": 103
-                      }
+                      "range": [
+                        94,
+                        103
+                      ]
                     },
                     {
                       "type": "JSXText",
                       "value": "\n      ",
                       "raw": "\n      ",
                       "loc": null,
-                      "range": {
-                        "start": 103,
-                        "end": 110
-                      }
+                      "range": [
+                        103,
+                        110
+                      ]
                     }
                   ],
                   "closingElement": {
@@ -219,79 +219,79 @@ Output:
                       "type": "JSXIdentifier",
                       "name": "div",
                       "loc": null,
-                      "range": {
-                        "start": 112,
-                        "end": 115
-                      }
+                      "range": [
+                        112,
+                        115
+                      ]
                     },
                     "loc": null,
-                    "range": {
-                      "start": 110,
-                      "end": 116
-                    }
+                    "range": [
+                      110,
+                      116
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 80,
-                    "end": 116
-                  }
+                  "range": [
+                    80,
+                    116
+                  ]
                 },
                 {
                   "type": "JSXText",
                   "value": "\n    ",
                   "raw": "\n    ",
                   "loc": null,
-                  "range": {
-                    "start": 116,
-                    "end": 121
-                  }
+                  "range": [
+                    116,
+                    121
+                  ]
                 }
               ],
               "closingFragment": {
                 "type": "JSXClosingFragment",
                 "loc": null,
-                "range": {
-                  "start": 121,
-                  "end": 124
-                }
+                "range": [
+                  121,
+                  124
+                ]
               },
               "loc": null,
-              "range": {
-                "start": 37,
-                "end": 124
-              }
+              "range": [
+                37,
+                124
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 24,
-              "end": 129
-            }
+            "range": [
+              24,
+              129
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 20,
-          "end": 131
-        }
+        "range": [
+          20,
+          131
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 131
-      },
+      "range": [
+        0,
+        131
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 131
-      }
+      "range": [
+        0,
+        131
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 131
-  }
+  "range": [
+    0,
+    131
+  ]
 }

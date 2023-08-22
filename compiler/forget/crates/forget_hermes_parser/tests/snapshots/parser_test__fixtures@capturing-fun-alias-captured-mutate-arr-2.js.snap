@@ -28,10 +28,10 @@ Output:
         "name": "component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [
         {
@@ -39,20 +39,20 @@ Output:
           "name": "foo",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 19,
-            "end": 22
-          }
+          "range": [
+            19,
+            22
+          ]
         },
         {
           "type": "Identifier",
           "name": "bar",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 24,
-            "end": 27
-          }
+          "range": [
+            24,
+            27
+          ]
         }
       ],
       "body": {
@@ -69,10 +69,10 @@ Output:
                   "name": "x",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 37,
-                    "end": 38
-                  }
+                  "range": [
+                    37,
+                    38
+                  ]
                 },
                 "init": {
                   "type": "ObjectExpression",
@@ -84,50 +84,50 @@ Output:
                         "name": "foo",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 43,
-                          "end": 46
-                        }
+                        "range": [
+                          43,
+                          46
+                        ]
                       },
                       "value": {
                         "type": "Identifier",
                         "name": "foo",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 43,
-                          "end": 46
-                        }
+                        "range": [
+                          43,
+                          46
+                        ]
                       },
                       "kind": "init",
                       "method": false,
                       "shorthand": true,
                       "computed": false,
                       "loc": null,
-                      "range": {
-                        "start": 43,
-                        "end": 46
-                      }
+                      "range": [
+                        43,
+                        46
+                      ]
                     }
                   ],
                   "loc": null,
-                  "range": {
-                    "start": 41,
-                    "end": 48
-                  }
+                  "range": [
+                    41,
+                    48
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 37,
-                  "end": 48
-                }
+                "range": [
+                  37,
+                  48
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 33,
-              "end": 49
-            }
+            "range": [
+              33,
+              49
+            ]
           },
           {
             "type": "VariableDeclaration",
@@ -140,10 +140,10 @@ Output:
                   "name": "y",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 56,
-                    "end": 57
-                  }
+                  "range": [
+                    56,
+                    57
+                  ]
                 },
                 "init": {
                   "type": "ObjectExpression",
@@ -155,50 +155,50 @@ Output:
                         "name": "bar",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 62,
-                          "end": 65
-                        }
+                        "range": [
+                          62,
+                          65
+                        ]
                       },
                       "value": {
                         "type": "Identifier",
                         "name": "bar",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 62,
-                          "end": 65
-                        }
+                        "range": [
+                          62,
+                          65
+                        ]
                       },
                       "kind": "init",
                       "method": false,
                       "shorthand": true,
                       "computed": false,
                       "loc": null,
-                      "range": {
-                        "start": 62,
-                        "end": 65
-                      }
+                      "range": [
+                        62,
+                        65
+                      ]
                     }
                   ],
                   "loc": null,
-                  "range": {
-                    "start": 60,
-                    "end": 67
-                  }
+                  "range": [
+                    60,
+                    67
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 56,
-                  "end": 67
-                }
+                "range": [
+                  56,
+                  67
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 52,
-              "end": 68
-            }
+            "range": [
+              52,
+              68
+            ]
           },
           {
             "type": "ExpressionStatement",
@@ -222,10 +222,10 @@ Output:
                             "name": "a",
                             "typeAnnotation": null,
                             "loc": null,
-                            "range": {
-                              "start": 94,
-                              "end": 95
-                            }
+                            "range": [
+                              94,
+                              95
+                            ]
                           },
                           "init": {
                             "type": "ArrayExpression",
@@ -235,30 +235,30 @@ Output:
                                 "name": "y",
                                 "typeAnnotation": null,
                                 "loc": null,
-                                "range": {
-                                  "start": 99,
-                                  "end": 100
-                                }
+                                "range": [
+                                  99,
+                                  100
+                                ]
                               }
                             ],
                             "loc": null,
-                            "range": {
-                              "start": 98,
-                              "end": 101
-                            }
+                            "range": [
+                              98,
+                              101
+                            ]
                           },
                           "loc": null,
-                          "range": {
-                            "start": 94,
-                            "end": 101
-                          }
+                          "range": [
+                            94,
+                            101
+                          ]
                         }
                       ],
                       "loc": null,
-                      "range": {
-                        "start": 90,
-                        "end": 102
-                      }
+                      "range": [
+                        90,
+                        102
+                      ]
                     },
                     {
                       "type": "VariableDeclaration",
@@ -271,33 +271,33 @@ Output:
                             "name": "b",
                             "typeAnnotation": null,
                             "loc": null,
-                            "range": {
-                              "start": 111,
-                              "end": 112
-                            }
+                            "range": [
+                              111,
+                              112
+                            ]
                           },
                           "init": {
                             "type": "Identifier",
                             "name": "x",
                             "typeAnnotation": null,
                             "loc": null,
-                            "range": {
-                              "start": 115,
-                              "end": 116
-                            }
+                            "range": [
+                              115,
+                              116
+                            ]
                           },
                           "loc": null,
-                          "range": {
-                            "start": 111,
-                            "end": 116
-                          }
+                          "range": [
+                            111,
+                            116
+                          ]
                         }
                       ],
                       "loc": null,
-                      "range": {
-                        "start": 107,
-                        "end": 117
-                      }
+                      "range": [
+                        107,
+                        117
+                      ]
                     },
                     {
                       "type": "ExpressionStatement",
@@ -311,84 +311,84 @@ Output:
                             "name": "a",
                             "typeAnnotation": null,
                             "loc": null,
-                            "range": {
-                              "start": 122,
-                              "end": 123
-                            }
+                            "range": [
+                              122,
+                              123
+                            ]
                           },
                           "property": {
                             "type": "Identifier",
                             "name": "x",
                             "typeAnnotation": null,
                             "loc": null,
-                            "range": {
-                              "start": 124,
-                              "end": 125
-                            }
+                            "range": [
+                              124,
+                              125
+                            ]
                           },
                           "computed": false,
                           "loc": null,
-                          "range": {
-                            "start": 122,
-                            "end": 125
-                          }
+                          "range": [
+                            122,
+                            125
+                          ]
                         },
                         "right": {
                           "type": "Identifier",
                           "name": "b",
                           "typeAnnotation": null,
                           "loc": null,
-                          "range": {
-                            "start": 128,
-                            "end": 129
-                          }
+                          "range": [
+                            128,
+                            129
+                          ]
                         },
                         "loc": null,
-                        "range": {
-                          "start": 122,
-                          "end": 129
-                        }
+                        "range": [
+                          122,
+                          129
+                        ]
                       },
                       "directive": null,
                       "loc": null,
-                      "range": {
-                        "start": 122,
-                        "end": 130
-                      }
+                      "range": [
+                        122,
+                        130
+                      ]
                     }
                   ],
                   "loc": null,
-                  "range": {
-                    "start": 84,
-                    "end": 134
-                  }
+                  "range": [
+                    84,
+                    134
+                  ]
                 },
                 "generator": false,
                 "async": false,
                 "loc": null,
-                "range": {
-                  "start": 72,
-                  "end": 134
-                },
+                "range": [
+                  72,
+                  134
+                ],
                 "loc": null,
-                "range": {
-                  "start": 72,
-                  "end": 134
-                }
+                "range": [
+                  72,
+                  134
+                ]
               },
               "arguments": [],
               "loc": null,
-              "range": {
-                "start": 71,
-                "end": 137
-              }
+              "range": [
+                71,
+                137
+              ]
             },
             "directive": null,
             "loc": null,
-            "range": {
-              "start": 71,
-              "end": 138
-            }
+            "range": [
+              71,
+              138
+            ]
           },
           {
             "type": "ExpressionStatement",
@@ -399,10 +399,10 @@ Output:
                 "name": "mutate",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 141,
-                  "end": 147
-                }
+                "range": [
+                  141,
+                  147
+                ]
               },
               "arguments": [
                 {
@@ -410,24 +410,24 @@ Output:
                   "name": "y",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 148,
-                    "end": 149
-                  }
+                  "range": [
+                    148,
+                    149
+                  ]
                 }
               ],
               "loc": null,
-              "range": {
-                "start": 141,
-                "end": 150
-              }
+              "range": [
+                141,
+                150
+              ]
             },
             "directive": null,
             "loc": null,
-            "range": {
-              "start": 141,
-              "end": 151
-            }
+            "range": [
+              141,
+              151
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -436,42 +436,42 @@ Output:
               "name": "x",
               "typeAnnotation": null,
               "loc": null,
-              "range": {
-                "start": 161,
-                "end": 162
-              }
+              "range": [
+                161,
+                162
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 154,
-              "end": 163
-            }
+            "range": [
+              154,
+              163
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 29,
-          "end": 165
-        }
+        "range": [
+          29,
+          165
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 165
-      },
+      "range": [
+        0,
+        165
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 165
-      }
+      "range": [
+        0,
+        165
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 165
-  }
+  "range": [
+    0,
+    165
+  ]
 }

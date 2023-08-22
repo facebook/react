@@ -25,10 +25,10 @@ Output:
             "name": "ErrorView",
             "typeAnnotation": null,
             "loc": null,
-            "range": {
-              "start": 17,
-              "end": 26
-            }
+            "range": [
+              17,
+              26
+            ]
           },
           "init": {
             "type": "ArrowFunctionExpression",
@@ -39,20 +39,20 @@ Output:
                 "name": "error",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 30,
-                  "end": 35
-                }
+                "range": [
+                  30,
+                  35
+                ]
               },
               {
                 "type": "Identifier",
                 "name": "_retry",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 37,
-                  "end": 43
-                }
+                "range": [
+                  37,
+                  43
+                ]
               }
             ],
             "body": {
@@ -63,10 +63,10 @@ Output:
                   "type": "JSXIdentifier",
                   "name": "MessageBox",
                   "loc": null,
-                  "range": {
-                    "start": 49,
-                    "end": 59
-                  }
+                  "range": [
+                    49,
+                    59
+                  ]
                 },
                 "attributes": [
                   {
@@ -75,10 +75,10 @@ Output:
                       "type": "JSXIdentifier",
                       "name": "error",
                       "loc": null,
-                      "range": {
-                        "start": 60,
-                        "end": 65
-                      }
+                      "range": [
+                        60,
+                        65
+                      ]
                     },
                     "value": {
                       "type": "JSXExpressionContainer",
@@ -87,30 +87,30 @@ Output:
                         "name": "error",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 67,
-                          "end": 72
-                        }
+                        "range": [
+                          67,
+                          72
+                        ]
                       },
                       "loc": null,
-                      "range": {
-                        "start": 66,
-                        "end": 73
-                      }
+                      "range": [
+                        66,
+                        73
+                      ]
                     },
                     "loc": null,
-                    "range": {
-                      "start": 60,
-                      "end": 73
-                    }
+                    "range": [
+                      60,
+                      73
+                    ]
                   }
                 ],
                 "selfClosing": false,
                 "loc": null,
-                "range": {
-                  "start": 48,
-                  "end": 74
-                }
+                "range": [
+                  48,
+                  74
+                ]
               },
               "children": [],
               "closingElement": {
@@ -119,49 +119,49 @@ Output:
                   "type": "JSXIdentifier",
                   "name": "MessageBox",
                   "loc": null,
-                  "range": {
-                    "start": 76,
-                    "end": 86
-                  }
+                  "range": [
+                    76,
+                    86
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 74,
-                  "end": 87
-                }
+                "range": [
+                  74,
+                  87
+                ]
               },
               "loc": null,
-              "range": {
-                "start": 48,
-                "end": 87
-              }
+              "range": [
+                48,
+                87
+              ]
             },
             "generator": true,
             "async": false,
             "loc": null,
-            "range": {
-              "start": 29,
-              "end": 87
-            },
+            "range": [
+              29,
+              87
+            ],
             "expression": true,
             "loc": null,
-            "range": {
-              "start": 29,
-              "end": 87
-            }
+            "range": [
+              29,
+              87
+            ]
           },
           "loc": null,
-          "range": {
-            "start": 17,
-            "end": 87
-          }
+          "range": [
+            17,
+            87
+          ]
         }
       ],
       "loc": null,
-      "range": {
-        "start": 11,
-        "end": 88
-      }
+      "range": [
+        11,
+        88
+      ]
     },
     {
       "type": "ExportDefaultDeclaration",
@@ -170,22 +170,22 @@ Output:
         "name": "ErrorView",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 105,
-          "end": 114
-        }
+        "range": [
+          105,
+          114
+        ]
       },
       "loc": null,
-      "range": {
-        "start": 90,
-        "end": 115
-      }
+      "range": [
+        90,
+        115
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 11,
-    "end": 115
-  }
+  "range": [
+    11,
+    115
+  ]
 }

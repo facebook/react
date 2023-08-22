@@ -27,32 +27,32 @@ Output:
             "name": "renderCount",
             "typeAnnotation": null,
             "loc": null,
-            "range": {
-              "start": 4,
-              "end": 15
-            }
+            "range": [
+              4,
+              15
+            ]
           },
           "init": {
             "type": "NumericLiteral",
             "value": 0.0,
             "loc": null,
-            "range": {
-              "start": 18,
-              "end": 19
-            }
+            "range": [
+              18,
+              19
+            ]
           },
           "loc": null,
-          "range": {
-            "start": 4,
-            "end": 19
-          }
+          "range": [
+            4,
+            19
+          ]
         }
       ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 20
-      }
+      "range": [
+        0,
+        20
+      ]
     },
     {
       "type": "FunctionDeclaration",
@@ -61,10 +61,10 @@ Output:
         "name": "NoHooks",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 31,
-          "end": 38
-        }
+        "range": [
+          31,
+          38
+        ]
       },
       "params": [],
       "body": {
@@ -80,24 +80,24 @@ Output:
                 "name": "renderCount",
                 "typeAnnotation": null,
                 "loc": null,
-                "range": {
-                  "start": 45,
-                  "end": 56
-                }
+                "range": [
+                  45,
+                  56
+                ]
               },
               "prefix": false,
               "loc": null,
-              "range": {
-                "start": 45,
-                "end": 58
-              }
+              "range": [
+                45,
+                58
+              ]
             },
             "directive": null,
             "loc": null,
-            "range": {
-              "start": 45,
-              "end": 59
-            }
+            "range": [
+              45,
+              59
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -109,58 +109,58 @@ Output:
                   "type": "JSXIdentifier",
                   "name": "div",
                   "loc": null,
-                  "range": {
-                    "start": 70,
-                    "end": 73
-                  }
+                  "range": [
+                    70,
+                    73
+                  ]
                 },
                 "attributes": [],
                 "selfClosing": true,
                 "loc": null,
-                "range": {
-                  "start": 69,
-                  "end": 76
-                }
+                "range": [
+                  69,
+                  76
+                ]
               },
               "children": [],
               "closingElement": null,
               "loc": null,
-              "range": {
-                "start": 69,
-                "end": 76
-              }
+              "range": [
+                69,
+                76
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 62,
-              "end": 77
-            }
+            "range": [
+              62,
+              77
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 41,
-          "end": 79
-        }
+        "range": [
+          41,
+          79
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 22,
-        "end": 79
-      },
+      "range": [
+        22,
+        79
+      ],
       "loc": null,
-      "range": {
-        "start": 22,
-        "end": 79
-      }
+      "range": [
+        22,
+        79
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 79
-  }
+  "range": [
+    0,
+    79
+  ]
 }

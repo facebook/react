@@ -21,10 +21,10 @@ Output:
         "name": "StoreLandingUnseenGiftModalContainer",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 45
-        }
+        "range": [
+          9,
+          45
+        ]
       },
       "params": [
         {
@@ -32,10 +32,10 @@ Output:
           "name": "a",
           "typeAnnotation": null,
           "loc": null,
-          "range": {
-            "start": 46,
-            "end": 47
-          }
+          "range": [
+            46,
+            47
+          ]
         }
       ],
       "body": {
@@ -52,10 +52,10 @@ Output:
                   "name": "giftsSeen",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 59,
-                    "end": 68
-                  }
+                  "range": [
+                    59,
+                    68
+                  ]
                 },
                 "init": {
                   "type": "ObjectExpression",
@@ -67,50 +67,50 @@ Output:
                         "name": "a",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 73,
-                          "end": 74
-                        }
+                        "range": [
+                          73,
+                          74
+                        ]
                       },
                       "value": {
                         "type": "Identifier",
                         "name": "a",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 73,
-                          "end": 74
-                        }
+                        "range": [
+                          73,
+                          74
+                        ]
                       },
                       "kind": "init",
                       "method": false,
                       "shorthand": true,
                       "computed": false,
                       "loc": null,
-                      "range": {
-                        "start": 73,
-                        "end": 74
-                      }
+                      "range": [
+                        73,
+                        74
+                      ]
                     }
                   ],
                   "loc": null,
-                  "range": {
-                    "start": 71,
-                    "end": 76
-                  }
+                  "range": [
+                    71,
+                    76
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 59,
-                  "end": 76
-                }
+                "range": [
+                  59,
+                  76
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 53,
-              "end": 77
-            }
+            "range": [
+              53,
+              77
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -125,10 +125,10 @@ Output:
                     "name": "gift",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 89,
-                      "end": 93
-                    }
+                    "range": [
+                      89,
+                      93
+                    ]
                   }
                 ],
                 "body": {
@@ -140,36 +140,36 @@ Output:
                       "name": "gift",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 99,
-                        "end": 103
-                      }
+                      "range": [
+                        99,
+                        103
+                      ]
                     },
                     "property": {
                       "type": "Identifier",
                       "name": "id",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 104,
-                        "end": 106
-                      }
+                      "range": [
+                        104,
+                        106
+                      ]
                     },
                     "computed": false,
                     "loc": null,
-                    "range": {
-                      "start": 99,
-                      "end": 106
-                    }
+                    "range": [
+                      99,
+                      106
+                    ]
                   },
                   "alternate": {
                     "type": "BooleanLiteral",
                     "value": false,
                     "loc": null,
-                    "range": {
-                      "start": 130,
-                      "end": 135
-                    }
+                    "range": [
+                      130,
+                      135
+                    ]
                   },
                   "consequent": {
                     "type": "MemberExpression",
@@ -178,10 +178,10 @@ Output:
                       "name": "giftsSeen",
                       "typeAnnotation": null,
                       "loc": null,
-                      "range": {
-                        "start": 109,
-                        "end": 118
-                      }
+                      "range": [
+                        109,
+                        118
+                      ]
                     },
                     "property": {
                       "type": "MemberExpression",
@@ -190,93 +190,93 @@ Output:
                         "name": "gift",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 119,
-                          "end": 123
-                        }
+                        "range": [
+                          119,
+                          123
+                        ]
                       },
                       "property": {
                         "type": "Identifier",
                         "name": "id",
                         "typeAnnotation": null,
                         "loc": null,
-                        "range": {
-                          "start": 124,
-                          "end": 126
-                        }
+                        "range": [
+                          124,
+                          126
+                        ]
                       },
                       "computed": false,
                       "loc": null,
-                      "range": {
-                        "start": 119,
-                        "end": 126
-                      }
+                      "range": [
+                        119,
+                        126
+                      ]
                     },
                     "computed": true,
                     "loc": null,
-                    "range": {
-                      "start": 109,
-                      "end": 127
-                    }
+                    "range": [
+                      109,
+                      127
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 99,
-                    "end": 135
-                  }
+                  "range": [
+                    99,
+                    135
+                  ]
                 },
                 "generator": true,
                 "async": false,
                 "loc": null,
-                "range": {
-                  "start": 88,
-                  "end": 136
-                },
+                "range": [
+                  88,
+                  136
+                ],
                 "expression": true,
                 "loc": null,
-                "range": {
-                  "start": 88,
-                  "end": 136
-                }
+                "range": [
+                  88,
+                  136
+                ]
               },
               "arguments": [],
               "loc": null,
-              "range": {
-                "start": 87,
-                "end": 139
-              }
+              "range": [
+                87,
+                139
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 80,
-              "end": 140
-            }
+            "range": [
+              80,
+              140
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 49,
-          "end": 142
-        }
+        "range": [
+          49,
+          142
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 142
-      },
+      "range": [
+        0,
+        142
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 142
-      }
+      "range": [
+        0,
+        142
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 142
-  }
+  "range": [
+    0,
+    142
+  ]
 }

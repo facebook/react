@@ -33,10 +33,10 @@ Output:
         "name": "component",
         "typeAnnotation": null,
         "loc": null,
-        "range": {
-          "start": 9,
-          "end": 18
-        }
+        "range": [
+          9,
+          18
+        ]
       },
       "params": [],
       "body": {
@@ -53,10 +53,10 @@ Output:
                   "name": "t",
                   "typeAnnotation": null,
                   "loc": null,
-                  "range": {
-                    "start": 29,
-                    "end": 30
-                  }
+                  "range": [
+                    29,
+                    30
+                  ]
                 },
                 "init": {
                   "type": "TaggedTemplateExpression",
@@ -65,10 +65,10 @@ Output:
                     "name": "graphql",
                     "typeAnnotation": null,
                     "loc": null,
-                    "range": {
-                      "start": 33,
-                      "end": 40
-                    }
+                    "range": [
+                      33,
+                      40
+                    ]
                   },
                   "quasi": {
                     "type": "TemplateLiteral",
@@ -81,37 +81,37 @@ Output:
                           "raw": "\n    fragment List_viewer on Viewer\n    @argumentDefinitions(\n      count: {\n        type: \"Int\"\n        defaultValue: 10\n        directives: [\"@int_max_value(logged_in: 10)\"]\n      }\n      cursor: { type: \"ID\" }\n    )\n\n  "
                         },
                         "loc": null,
-                        "range": {
-                          "start": 40,
-                          "end": 264
-                        }
+                        "range": [
+                          40,
+                          264
+                        ]
                       }
                     ],
                     "expressions": [],
                     "loc": null,
-                    "range": {
-                      "start": 40,
-                      "end": 264
-                    }
+                    "range": [
+                      40,
+                      264
+                    ]
                   },
                   "loc": null,
-                  "range": {
-                    "start": 33,
-                    "end": 264
-                  }
+                  "range": [
+                    33,
+                    264
+                  ]
                 },
                 "loc": null,
-                "range": {
-                  "start": 29,
-                  "end": 264
-                }
+                "range": [
+                  29,
+                  264
+                ]
               }
             ],
             "loc": null,
-            "range": {
-              "start": 25,
-              "end": 265
-            }
+            "range": [
+              25,
+              265
+            ]
           },
           {
             "type": "ReturnStatement",
@@ -120,42 +120,42 @@ Output:
               "name": "t",
               "typeAnnotation": null,
               "loc": null,
-              "range": {
-                "start": 276,
-                "end": 277
-              }
+              "range": [
+                276,
+                277
+              ]
             },
             "loc": null,
-            "range": {
-              "start": 269,
-              "end": 278
-            }
+            "range": [
+              269,
+              278
+            ]
           }
         ],
         "loc": null,
-        "range": {
-          "start": 21,
-          "end": 280
-        }
+        "range": [
+          21,
+          280
+        ]
       },
       "generator": false,
       "async": false,
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 280
-      },
+      "range": [
+        0,
+        280
+      ],
       "loc": null,
-      "range": {
-        "start": 0,
-        "end": 280
-      }
+      "range": [
+        0,
+        280
+      ]
     }
   ],
   "sourceType": "script",
   "loc": null,
-  "range": {
-    "start": 0,
-    "end": 280
-  }
+  "range": [
+    0,
+    280
+  ]
 }

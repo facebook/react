@@ -377,10 +377,10 @@ Output:
             "column": 12
           }
         },
-        "range": {
-          "start": 10,
-          "end": 13
-        }
+        "range": [
+          10,
+          13
+        ]
       },
       "params": [],
       "body": {
@@ -408,10 +408,10 @@ Output:
                         "column": 13
                       }
                     },
-                    "range": {
-                      "start": 28,
-                      "end": 31
-                    }
+                    "range": [
+                      28,
+                      31
+                    ]
                   },
                   "property": {
                     "type": "JSXIdentifier",
@@ -427,10 +427,10 @@ Output:
                         "column": 17
                       }
                     },
-                    "range": {
-                      "start": 32,
-                      "end": 35
-                    }
+                    "range": [
+                      32,
+                      35
+                    ]
                   },
                   "loc": {
                     "source": null,
@@ -443,10 +443,10 @@ Output:
                       "column": 17
                     }
                   },
-                  "range": {
-                    "start": 28,
-                    "end": 35
-                  }
+                  "range": [
+                    28,
+                    35
+                  ]
                 },
                 "attributes": [
                   {
@@ -465,10 +465,10 @@ Output:
                           "column": 19
                         }
                       },
-                      "range": {
-                        "start": 36,
-                        "end": 37
-                      }
+                      "range": [
+                        36,
+                        37
+                      ]
                     },
                     "value": {
                       "type": "JSXExpressionContainer",
@@ -489,10 +489,10 @@ Output:
                             "column": 23
                           }
                         },
-                        "range": {
-                          "start": 39,
-                          "end": 41
-                        }
+                        "range": [
+                          39,
+                          41
+                        ]
                       },
                       "loc": {
                         "source": null,
@@ -505,10 +505,10 @@ Output:
                           "column": 24
                         }
                       },
-                      "range": {
-                        "start": 38,
-                        "end": 42
-                      }
+                      "range": [
+                        38,
+                        42
+                      ]
                     },
                     "loc": {
                       "source": null,
@@ -521,10 +521,10 @@ Output:
                         "column": 24
                       }
                     },
-                    "range": {
-                      "start": 36,
-                      "end": 42
-                    }
+                    "range": [
+                      36,
+                      42
+                    ]
                   }
                 ],
                 "selfClosing": false,
@@ -539,10 +539,10 @@ Output:
                     "column": 26
                   }
                 },
-                "range": {
-                  "start": 27,
-                  "end": 44
-                }
+                "range": [
+                  27,
+                  44
+                ]
               },
               "children": [],
               "closingElement": {
@@ -563,10 +563,10 @@ Output:
                         "column": 31
                       }
                     },
-                    "range": {
-                      "start": 46,
-                      "end": 49
-                    }
+                    "range": [
+                      46,
+                      49
+                    ]
                   },
                   "property": {
                     "type": "JSXIdentifier",
@@ -582,10 +582,10 @@ Output:
                         "column": 35
                       }
                     },
-                    "range": {
-                      "start": 50,
-                      "end": 53
-                    }
+                    "range": [
+                      50,
+                      53
+                    ]
                   },
                   "loc": {
                     "source": null,
@@ -598,10 +598,10 @@ Output:
                       "column": 35
                     }
                   },
-                  "range": {
-                    "start": 46,
-                    "end": 53
-                  }
+                  "range": [
+                    46,
+                    53
+                  ]
                 },
                 "loc": {
                   "source": null,
@@ -614,10 +614,10 @@ Output:
                     "column": 36
                   }
                 },
-                "range": {
-                  "start": 44,
-                  "end": 54
-                }
+                "range": [
+                  44,
+                  54
+                ]
               },
               "loc": {
                 "source": null,
@@ -630,10 +630,10 @@ Output:
                   "column": 36
                 }
               },
-              "range": {
-                "start": 27,
-                "end": 54
-              }
+              "range": [
+                27,
+                54
+              ]
             },
             "loc": {
               "source": null,
@@ -646,10 +646,10 @@ Output:
                 "column": 36
               }
             },
-            "range": {
-              "start": 20,
-              "end": 54
-            }
+            "range": [
+              20,
+              54
+            ]
           }
         ],
         "loc": {
@@ -663,10 +663,10 @@ Output:
             "column": 1
           }
         },
-        "range": {
-          "start": 16,
-          "end": 56
-        }
+        "range": [
+          16,
+          56
+        ]
       },
       "generator": false,
       "async": false,
@@ -683,10 +683,10 @@ Output:
           "column": 1
         }
       },
-      "range": {
-        "start": 1,
-        "end": 56
-      }
+      "range": [
+        1,
+        56
+      ]
     }
   ],
   "sourceType": "script",
@@ -701,8 +701,8 @@ Output:
       "column": 1
     }
   },
-  "range": {
-    "start": 1,
-    "end": 56
-  }
+  "range": [
+    1,
+    56
+  ]
 }
