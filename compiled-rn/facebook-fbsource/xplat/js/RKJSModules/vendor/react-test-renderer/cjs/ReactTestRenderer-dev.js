@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a90e685585292cdb00d4e8ba1b363382>>
+ * @generated SignedSource<<f4e294d7d90195ed2bc85d15207c702c>>
  */
 
 'use strict';
@@ -4071,7 +4071,14 @@ var SuspenseyCommitException = new Error(
 // for now this will do.
 
 var noopSuspenseyCommitThenable = {
-  then: function () {}
+  then: function () {
+    {
+      error(
+        "Internal React error: A listener was unexpectedly attached to a " +
+          '"noop" thenable. This is a bug in React. Please file an issue.'
+      );
+    }
+  }
 };
 function createThenableState() {
   // The ThenableState is created the first time a component suspends. If it
@@ -11072,10 +11079,16 @@ function throwException(
                 suspenseBoundary.updateQueue = new Set([wakeable]);
               } else {
                 retryQueue.add(wakeable);
+              } // We only attach ping listeners in concurrent mode. Legacy
+              // Suspense always commits fallbacks synchronously, so there are
+              // no pings.
+
+              if (suspenseBoundary.mode & ConcurrentMode) {
+                attachPingListener(root, wakeable, rootRenderLanes);
               }
             }
 
-            break;
+            return;
           }
 
           case OffscreenComponent: {
@@ -11106,28 +11119,21 @@ function throwException(
                     _retryQueue.add(wakeable);
                   }
                 }
+
+                attachPingListener(root, wakeable, rootRenderLanes);
               }
 
-              break;
-            } // Fall through
+              return;
+            }
           }
-
-          default: {
-            throw new Error(
-              "Unexpected Suspense handler tag (" +
-                suspenseBoundary.tag +
-                "). This " +
-                "is a bug in React."
-            );
-          }
-        } // We only attach ping listeners in concurrent mode. Legacy Suspense always
-        // commits fallbacks synchronously, so there are no pings.
-
-        if (suspenseBoundary.mode & ConcurrentMode) {
-          attachPingListener(root, wakeable, rootRenderLanes);
         }
 
-        return;
+        throw new Error(
+          "Unexpected Suspense handler tag (" +
+            suspenseBoundary.tag +
+            "). This " +
+            "is a bug in React."
+        );
       } else {
         // No boundary was found. Unless this is a sync update, this is OK.
         // We can suspend and wait for more data to arrive.
@@ -20983,9 +20989,19 @@ function shouldRemainOnPreviousScreen() {
   // on the previous screen, versus showing a fallback as soon as possible. It
   // takes into account both the priority of render and also whether showing a
   // fallback would produce a desirable user experience.
-  // TODO: Once `use` has fully replaced the `throw promise` pattern, we should
+  var handler = getSuspenseHandler();
+
+  if (handler === null) {
+    // There's no Suspense boundary that can provide a fallback. We have no
+    // choice but to remain on the previous screen.
+    // NOTE: We do this even for sync updates, for lack of any better option. In
+    // the future, we may change how we handle this, like by putting the whole
+    // root into a "detached" mode.
+    return true;
+  } // TODO: Once `use` has fully replaced the `throw promise` pattern, we should
   // be able to remove the equivalent check in finishConcurrentRender, and rely
   // just on this one.
+
   if (includesOnlyTransitions(workInProgressRootRenderLanes)) {
     if (getShellBoundary() === null) {
       // We're rendering inside the "shell" of the app. Activating the nearest
@@ -21001,26 +21017,21 @@ function shouldRemainOnPreviousScreen() {
     }
   }
 
-  var handler = getSuspenseHandler();
-
-  if (handler === null);
-  else {
-    if (
-      includesOnlyRetries(workInProgressRootRenderLanes) || // In this context, an OffscreenLane counts as a Retry
-      // TODO: It's become increasingly clear that Retries and Offscreen are
-      // deeply connected. They probably can be unified further.
-      includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
-    ) {
-      // During a retry, we can suspend rendering if the nearest Suspense boundary
-      // is the boundary of the "shell", because we're guaranteed not to block
-      // any new content from appearing.
-      //
-      // The reason we must check if this is a retry is because it guarantees
-      // that suspending the work loop won't block an actual update, because
-      // retries don't "update" anything; they fill in fallbacks that were left
-      // behind by a previous transition.
-      return handler === getShellBoundary();
-    }
+  if (
+    includesOnlyRetries(workInProgressRootRenderLanes) || // In this context, an OffscreenLane counts as a Retry
+    // TODO: It's become increasingly clear that Retries and Offscreen are
+    // deeply connected. They probably can be unified further.
+    includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
+  ) {
+    // During a retry, we can suspend rendering if the nearest Suspense boundary
+    // is the boundary of the "shell", because we're guaranteed not to block
+    // any new content from appearing.
+    //
+    // The reason we must check if this is a retry is because it guarantees
+    // that suspending the work loop won't block an actual update, because
+    // retries don't "update" anything; they fill in fallbacks that were left
+    // behind by a previous transition.
+    return handler === getShellBoundary();
   } // For all other Lanes besides Transitions and Retries, we should not wait
   // for the data to load.
 
@@ -23966,7 +23977,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-e76a5aca7-20230822";
+var ReactVersion = "18.3.0-canary-dd480ef92-20230822";
 
 // Might add PROFILE later.
 

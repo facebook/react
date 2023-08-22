@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<db5216c118a6ffba38296edfa8b84596>>
+ * @generated SignedSource<<652f44316e146b8f03b47dda41701ba7>>
  */
 
 
@@ -8512,23 +8512,20 @@ function handleThrow(root, thrownValue) {
   ReactCurrentOwner.current = null;
   thrownValue === SuspenseException
     ? ((thrownValue = getSuspendedThenable()),
-      (workInProgressRootRenderLanes & 8388480) ===
-      workInProgressRootRenderLanes
-        ? (root = null === shellBoundary ? !0 : !1)
-        : ((root = suspenseHandlerStackCursor.current),
-          (root =
-            null === root ||
-            ((workInProgressRootRenderLanes & 125829120) !==
-              workInProgressRootRenderLanes &&
-              0 === (workInProgressRootRenderLanes & 1073741824))
-              ? !1
-              : root === shellBoundary)),
+      (root = suspenseHandlerStackCursor.current),
       (workInProgressSuspendedReason =
-        root &&
-        0 === (workInProgressRootSkippedLanes & 268435455) &&
-        0 === (workInProgressRootInterleavedUpdatedLanes & 268435455)
-          ? 2
-          : 3))
+        (null !== root &&
+          ((workInProgressRootRenderLanes & 8388480) ===
+          workInProgressRootRenderLanes
+            ? null !== shellBoundary
+            : ((workInProgressRootRenderLanes & 125829120) !==
+                workInProgressRootRenderLanes &&
+                0 === (workInProgressRootRenderLanes & 1073741824)) ||
+              root !== shellBoundary)) ||
+        0 !== (workInProgressRootSkippedLanes & 268435455) ||
+        0 !== (workInProgressRootInterleavedUpdatedLanes & 268435455)
+          ? 3
+          : 2))
     : thrownValue === SuspenseyCommitException
     ? ((thrownValue = getSuspendedThenable()),
       (workInProgressSuspendedReason = 4))
@@ -8913,8 +8910,10 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
                   null === retryQueue
                     ? (suspenseBoundary.updateQueue = new Set([wakeable]))
                     : retryQueue.add(wakeable);
+                  suspenseBoundary.mode & 1 &&
+                    attachPingListener(root, wakeable, thrownValue);
                 }
-                break;
+                break a;
               case 22:
                 if (suspenseBoundary.mode & 1) {
                   suspenseBoundary.flags |= 65536;
@@ -8935,20 +8934,18 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
                         ? (offscreenQueue.retryQueue = new Set([wakeable]))
                         : retryQueue$37.add(wakeable);
                     }
+                    attachPingListener(root, wakeable, thrownValue);
                   }
-                  break;
+                  break a;
                 }
-              default:
-                throw Error(
-                  "Unexpected Suspense handler tag (" +
-                    suspenseBoundary.tag +
-                    "). This is a bug in React."
-                );
             }
-            suspenseBoundary.mode & 1 &&
-              attachPingListener(root, wakeable, thrownValue);
-            break a;
-          } else if (1 === root.tag) {
+            throw Error(
+              "Unexpected Suspense handler tag (" +
+                suspenseBoundary.tag +
+                "). This is a bug in React."
+            );
+          }
+          if (1 === root.tag) {
             attachPingListener(root, wakeable, thrownValue);
             renderDidSuspendDelayIfPossible();
             break a;
@@ -10385,7 +10382,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1173 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-1af01c24",
+    version: "18.3.0-canary-c231d0c6",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10441,7 +10438,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-1af01c24"
+  reconcilerVersion: "18.3.0-canary-c231d0c6"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

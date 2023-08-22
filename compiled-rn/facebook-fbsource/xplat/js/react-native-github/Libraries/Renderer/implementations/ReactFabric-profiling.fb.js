@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c1ea48b0dca5ef0a4eef09df56e52033>>
+ * @generated SignedSource<<d24f6fd9c468c7ff219382320fbd627a>>
  */
 
 
@@ -8263,23 +8263,20 @@ function handleThrow(root, thrownValue) {
   ReactCurrentOwner.current = null;
   thrownValue === SuspenseException
     ? ((thrownValue = getSuspendedThenable()),
-      (workInProgressRootRenderLanes & 8388480) ===
-      workInProgressRootRenderLanes
-        ? (root = null === shellBoundary ? !0 : !1)
-        : ((root = suspenseHandlerStackCursor.current),
-          (root =
-            null === root ||
-            ((workInProgressRootRenderLanes & 125829120) !==
-              workInProgressRootRenderLanes &&
-              0 === (workInProgressRootRenderLanes & 1073741824))
-              ? !1
-              : root === shellBoundary)),
+      (root = suspenseHandlerStackCursor.current),
       (workInProgressSuspendedReason =
-        root &&
-        0 === (workInProgressRootSkippedLanes & 268435455) &&
-        0 === (workInProgressRootInterleavedUpdatedLanes & 268435455)
-          ? 2
-          : 3))
+        (null !== root &&
+          ((workInProgressRootRenderLanes & 8388480) ===
+          workInProgressRootRenderLanes
+            ? null !== shellBoundary
+            : ((workInProgressRootRenderLanes & 125829120) !==
+                workInProgressRootRenderLanes &&
+                0 === (workInProgressRootRenderLanes & 1073741824)) ||
+              root !== shellBoundary)) ||
+        0 !== (workInProgressRootSkippedLanes & 268435455) ||
+        0 !== (workInProgressRootInterleavedUpdatedLanes & 268435455)
+          ? 3
+          : 2))
     : thrownValue === SuspenseyCommitException
     ? ((thrownValue = getSuspendedThenable()),
       (workInProgressSuspendedReason = 4))
@@ -8664,8 +8661,10 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
                   null === retryQueue
                     ? (suspenseBoundary.updateQueue = new Set([wakeable]))
                     : retryQueue.add(wakeable);
+                  suspenseBoundary.mode & 1 &&
+                    attachPingListener(root, wakeable, thrownValue);
                 }
-                break;
+                break a;
               case 22:
                 if (suspenseBoundary.mode & 1) {
                   suspenseBoundary.flags |= 65536;
@@ -8686,20 +8685,18 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
                         ? (offscreenQueue.retryQueue = new Set([wakeable]))
                         : retryQueue$35.add(wakeable);
                     }
+                    attachPingListener(root, wakeable, thrownValue);
                   }
-                  break;
+                  break a;
                 }
-              default:
-                throw Error(
-                  "Unexpected Suspense handler tag (" +
-                    suspenseBoundary.tag +
-                    "). This is a bug in React."
-                );
             }
-            suspenseBoundary.mode & 1 &&
-              attachPingListener(root, wakeable, thrownValue);
-            break a;
-          } else if (1 === root.tag) {
+            throw Error(
+              "Unexpected Suspense handler tag (" +
+                suspenseBoundary.tag +
+                "). This is a bug in React."
+            );
+          }
+          if (1 === root.tag) {
             attachPingListener(root, wakeable, thrownValue);
             renderDidSuspendDelayIfPossible();
             break a;
@@ -10129,7 +10126,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1118 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-d46b694e",
+    version: "18.3.0-canary-67d29d89",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10185,7 +10182,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-d46b694e"
+  reconcilerVersion: "18.3.0-canary-67d29d89"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
