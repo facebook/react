@@ -67,14 +67,17 @@ export function getFixtures(
   filter: TestFilter | null
 ): Map<string, TestFixture> {
   // search for fixtures within nested directories
-  const files = glob.sync(`**/*.{js,md}`, {
+  const files = glob.sync(`**/*.{js,ts,tsx,md}`, {
     cwd: FIXTURES_PATH,
   });
   const fixtures: Map<string, TestFixture> = new Map();
 
   for (const filePath of files) {
     const basename = path.basename(
-      path.basename(filePath, ".js"),
+      path.basename(
+        path.basename(path.basename(filePath, ".js"), ".ts"),
+        ".tsx"
+      ),
       ".expect.md"
     );
     // "partial" paths do not include suffixes
@@ -110,7 +113,13 @@ export function getFixtures(
       fixtures.set(partialRelativePath, fixtureInfo);
     }
 
-    if (filePath.endsWith(".js")) {
+    if (
+      filePath.endsWith(".js") ||
+      filePath.endsWith(".ts") ||
+      filePath.endsWith(".tsx")
+    ) {
+      // inputPath may have a different file extension than the .js default
+      fixtureInfo.inputPath = path.join(FIXTURES_PATH, filePath);
       fixtureInfo.inputExists = true;
     } else {
       fixtureInfo.outputExists = true;

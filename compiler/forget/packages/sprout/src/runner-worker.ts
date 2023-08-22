@@ -17,6 +17,7 @@ import fs from "fs/promises";
 import * as parser from "@babel/parser";
 import * as t from "@babel/types";
 import { doEval, EvaluatorResult } from "./runner-evaluator";
+import path from "path";
 
 const { runReactForgetBabelPlugin } = require(COMPILER_PATH) as {
   runReactForgetBabelPlugin: typeof RunReactForgetBabelPlugin;
@@ -105,16 +106,17 @@ function transformAST(
   }
   return code;
 }
+
 function transformFixtureForget(
   input: string,
-  basename: string
+  filename: string
 ): TransformResult {
   try {
     const language = parseLanguage(input.split("\n", 1)[0]);
 
     const forgetResult = transformFixtureInput(
       input,
-      basename,
+      filename,
       runReactForgetBabelPlugin,
       true
     );
@@ -129,7 +131,7 @@ function transformFixtureForget(
     const code = transformAST(
       forgetResult.ast,
       forgetResult.code,
-      basename,
+      filename,
       language,
       false
     );
@@ -147,17 +149,17 @@ function transformFixtureForget(
 
 function transformFixtureNoForget(
   input: string,
-  basename: string
+  filename: string
 ): TransformResult {
   try {
     const language = parseLanguage(input.split("\n", 1)[0]);
     const ast = parser.parse(input, {
-      sourceFilename: basename,
+      sourceFilename: filename,
       plugins: ["jsx", language],
       sourceType: "module",
     });
 
-    const code = transformAST(ast, input, basename, language, true);
+    const code = transformAST(ast, input, filename, language, true);
     return {
       type: "Ok",
       value: code,
@@ -175,8 +177,7 @@ export async function run(fixture: TestFixture): Promise<TestResult> {
   console.error = (...messages: Array<string>) => {
     seenConsoleErrors.push(...messages);
   };
-  const { inputPath, inputExists, basename } = fixture;
-
+  const { inputPath, inputExists } = fixture;
   if (!inputExists) {
     return {
       nonForgetResult: null,
@@ -185,8 +186,11 @@ export async function run(fixture: TestFixture): Promise<TestResult> {
     };
   }
   const inputRaw = await fs.readFile(inputPath, "utf8");
-  const forgetCode = transformFixtureForget(inputRaw, basename);
-  const noForgetCode = transformFixtureNoForget(inputRaw, basename);
+  // We need to include the file extension as it determines typescript
+  // babel plugin's mode (e.g. stripping types, parsing rules for brackets)
+  const filename = path.basename(inputPath);
+  const forgetCode = transformFixtureForget(inputRaw, filename);
+  const noForgetCode = transformFixtureNoForget(inputRaw, filename);
   if (forgetCode.type === "UnexpectedError") {
     return {
       nonForgetResult: null,

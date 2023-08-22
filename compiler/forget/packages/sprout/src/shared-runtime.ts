@@ -66,15 +66,18 @@ export function sum(...args: Array<number>): number {
 /**
  * React Components
  */
-export function Text(props: { value: string; children: any }) {
+export function Text(props: {
+  value: string;
+  children?: Array<React.ReactNode>;
+}) {
   return React.createElement("div", null, props.value, props.children);
 }
 
-export function StaticText1(props: { children: any }) {
+export function StaticText1(props: { children?: Array<React.ReactNode> }) {
   return React.createElement("div", null, "StaticText1", props.children);
 }
 
-export function StaticText2(props: { children: any }) {
+export function StaticText2(props: { children?: Array<React.ReactNode> }) {
   return React.createElement("div", null, "StaticText2", props.children);
 }
 

@@ -1,4 +1,4 @@
-function foo(props) {
+function foo(props: { x: number }) {
   let x = props.x;
   let y = x++;
   let z = x--;

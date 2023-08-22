@@ -11,10 +11,15 @@
     "useUnknownInCatchVariables": false,
     "noUnusedLocals": false,
     "baseUrl": ".",
+    "jsx": "preserve",
     "paths": {
       // Editor integration for sprout shared runtime files
       "shared-runtime": ["../../../../sprout/src/shared-runtime.ts"]
     }
   },
-  "include": ["./compiler/**/*.js"]
+  "include": [
+    "./compiler/**/*.js",
+    "./compiler/**/*.ts",
+    "./compiler/**/*.tsx"
+  ]
 }

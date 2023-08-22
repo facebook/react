@@ -4,7 +4,7 @@
 ```javascript
 import { StaticText1, StaticText2 } from "shared-runtime";
 
-function Component(props) {
+function Component(props: { value: string }) {
   let Tag = StaticText1;
 
   // Currently, Forget preserves jsx whitespace in the source text.
