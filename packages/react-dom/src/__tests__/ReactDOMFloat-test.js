@@ -3385,7 +3385,6 @@ body {
     );
   });
 
-  // @gate FIXME
   it('loading a stylesheet as part of an error boundary UI, during initial render', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
