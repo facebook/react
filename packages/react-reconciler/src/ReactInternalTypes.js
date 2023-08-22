@@ -53,7 +53,8 @@ export type HookType =
   | 'useSyncExternalStore'
   | 'useId'
   | 'useCacheRefresh'
-  | 'useOptimistic';
+  | 'useOptimistic'
+  | 'useFormState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -413,6 +414,11 @@ export type Dispatcher = {
     passthrough: S,
     reducer: ?(S, A) => S,
   ) => [S, (A) => void],
+  useFormState?: <S, P>(
+    action: (S, P) => S,
+    initialState: S,
+    url?: string,
+  ) => [S, (P) => void],
 };
 
 export type CacheDispatcher = {
