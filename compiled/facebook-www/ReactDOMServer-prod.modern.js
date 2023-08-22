@@ -1396,7 +1396,7 @@ function pushStartInstance(
         0 === formatContext.insertionMode &&
         null === responseState.htmlChunks
       ) {
-        responseState.htmlChunks = ["<!DOCTYPE html>"];
+        responseState.htmlChunks = [""];
         var JSCompiler_inline_result$jscomp$6 = pushStartGenericElement(
           responseState.htmlChunks,
           props,
@@ -4147,7 +4147,7 @@ function renderToStringImpl(
       options ? options.identifierPrefix : void 0,
       unstable_externalRuntimeSrc
     ),
-    { insertionMode: 2, selectedValue: null, noscriptTagInScope: !1 },
+    createFormatContext(0, null, !1),
     Infinity,
     onError,
     void 0,
@@ -4198,4 +4198,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-bd3b7799";
+exports.version = "18.3.0-www-modern-a4787be6";

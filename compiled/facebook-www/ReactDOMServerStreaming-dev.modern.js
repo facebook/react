@@ -4262,7 +4262,7 @@ function pushStartHtml(target, props, responseState, insertionMode) {
   {
     if (insertionMode === ROOT_HTML_MODE && responseState.htmlChunks === null) {
       // This <html> is the Document.documentElement and should be part of the preamble
-      responseState.htmlChunks = [DOCTYPE];
+      responseState.htmlChunks = [doctypeChunk];
       return pushStartGenericElement(responseState.htmlChunks, props, "html");
     } else {
       // This <html> is deep and is likely just an error. we emit it inline though.
@@ -4622,7 +4622,7 @@ function startChunkForTag(tag) {
   return tagStartChunk;
 }
 
-var DOCTYPE = stringToPrecomputedChunk("<!DOCTYPE html>");
+var doctypeChunk = stringToPrecomputedChunk("<!DOCTYPE html>");
 function pushStartInstance(
   target,
   type,

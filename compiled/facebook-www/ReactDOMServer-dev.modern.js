@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-0fdce021";
+var ReactVersion = "18.3.0-www-modern-283d577d";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2129,6 +2129,16 @@ function createFormatContext(insertionMode, selectedValue, noscriptTagInScope) {
     selectedValue: selectedValue,
     noscriptTagInScope: noscriptTagInScope
   };
+}
+
+function createRootFormatContext(namespaceURI) {
+  var insertionMode =
+    namespaceURI === "http://www.w3.org/2000/svg"
+      ? SVG_MODE
+      : namespaceURI === "http://www.w3.org/1998/Math/MathML"
+      ? MATHML_MODE
+      : ROOT_HTML_MODE;
+  return createFormatContext(insertionMode, null, false);
 }
 function getChildFormatContext(parentContext, type, props) {
   switch (type) {
@@ -4255,7 +4265,7 @@ function pushStartHtml(target, props, responseState, insertionMode) {
   {
     if (insertionMode === ROOT_HTML_MODE && responseState.htmlChunks === null) {
       // This <html> is the Document.documentElement and should be part of the preamble
-      responseState.htmlChunks = [DOCTYPE];
+      responseState.htmlChunks = [doctypeChunk];
       return pushStartGenericElement(responseState.htmlChunks, props, "html");
     } else {
       // This <html> is deep and is likely just an error. we emit it inline though.
@@ -4614,8 +4624,6 @@ function startChunkForTag(tag) {
 
   return tagStartChunk;
 }
-
-var DOCTYPE = stringToPrecomputedChunk("<!DOCTYPE html>");
 function pushStartInstance(
   target,
   type,
@@ -7093,14 +7101,8 @@ function createResponseState(
     generateStaticMarkup: generateStaticMarkup
   };
 }
-function createRootFormatContext() {
-  return {
-    insertionMode: HTML_MODE,
-    // We skip the root mode because we don't want to emit the DOCTYPE in legacy mode.
-    selectedValue: null,
-    noscriptTagInScope: false
-  };
-}
+
+var doctypeChunk = stringToPrecomputedChunk("");
 function pushTextInstance(target, text, responseState, textEmbedded) {
   if (responseState.generateStaticMarkup) {
     target.push(stringToChunk(escapeTextForBrowser(text)));
