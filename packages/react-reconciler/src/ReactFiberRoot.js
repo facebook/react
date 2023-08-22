@@ -52,6 +52,7 @@ function FiberRootNode(
   hydrate: any,
   identifierPrefix: any,
   onRecoverableError: any,
+  context?: any,
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -61,7 +62,7 @@ function FiberRootNode(
   this.finishedWork = null;
   this.timeoutHandle = noTimeout;
   this.cancelPendingCommit = null;
-  this.context = null;
+  this.context = context ?? null;
   this.pendingContext = null;
   this.next = null;
   this.callbackNode = null;
@@ -142,6 +143,7 @@ export function createFiberRoot(
   identifierPrefix: string,
   onRecoverableError: null | ((error: mixed) => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
+  context: ?Object,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   const root: FiberRoot = (new FiberRootNode(
@@ -150,6 +152,7 @@ export function createFiberRoot(
     hydrate,
     identifierPrefix,
     onRecoverableError,
+    context,
   ): any);
   if (enableSuspenseCallback) {
     root.hydrationCallbacks = hydrationCallbacks;

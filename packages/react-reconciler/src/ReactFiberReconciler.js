@@ -282,6 +282,9 @@ export function createHydrationContainer(
   transitionCallbacks: null | TransitionTracingCallbacks,
 ): OpaqueRoot {
   const hydrate = true;
+
+  const context = getContextForSubtree(null);
+
   const root = createFiberRoot(
     containerInfo,
     tag,
@@ -293,13 +296,11 @@ export function createHydrationContainer(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    context,
   );
 
-  // TODO: Move this to FiberRoot constructor
-  root.context = getContextForSubtree(null);
-
   // Schedule the initial render. In a hydration root, this is different from
-  // a regular update because the initial render must match was was rendered
+  // a regular update because the initial render must match was rendered
   // on the server.
   // NOTE: This update intentionally doesn't have a payload. We're only using
   // the update to schedule work on the root fiber (and, for legacy roots, to
@@ -429,8 +430,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      const retryLane = SyncLane;
-      markRetryLaneIfNotHydrated(fiber, retryLane);
+      markRetryLaneIfNotHydrated(fiber, SyncLane);
       break;
     }
   }
