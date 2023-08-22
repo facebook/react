@@ -16,7 +16,7 @@ import type {
   Usable,
 } from 'shared/ReactTypes';
 
-import type {ResponseState} from './ReactFizzConfig';
+import type {ResumableState} from './ReactFizzConfig';
 import type {Task} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
 import type {TransitionStatus} from './ReactFizzConfig';
@@ -554,15 +554,15 @@ function useId(): string {
   const task: Task = (currentlyRenderingTask: any);
   const treeId = getTreeId(task.treeContext);
 
-  const responseState = currentResponseState;
-  if (responseState === null) {
+  const resumableState = currentResumableState;
+  if (resumableState === null) {
     throw new Error(
       'Invalid hook call. Hooks can only be called inside of the body of a function component.',
     );
   }
 
   const localId = localIdCounter++;
-  return makeId(responseState, treeId, localId);
+  return makeId(resumableState, treeId, localId);
 }
 
 function use<T>(usable: Usable<T>): T {
@@ -652,9 +652,9 @@ if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
 }
 
-export let currentResponseState: null | ResponseState = (null: any);
-export function setCurrentResponseState(
-  responseState: null | ResponseState,
+export let currentResumableState: null | ResumableState = (null: any);
+export function setCurrentResumableState(
+  resumableState: null | ResumableState,
 ): void {
-  currentResponseState = responseState;
+  currentResumableState = resumableState;
 }
