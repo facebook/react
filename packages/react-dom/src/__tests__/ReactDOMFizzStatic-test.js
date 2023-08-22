@@ -218,11 +218,13 @@ describe('ReactDOMFizzStatic', () => {
       );
     }
 
-    const promise = ReactDOMFizzStatic.prerenderToNodeStreams(<App />);
+    const promise = ReactDOMFizzStatic.prerenderToNodeStream(<App />);
 
     resolveText('Hello');
 
     const result = await promise;
+
+    expect(result.postponed).toBe(null);
 
     await act(async () => {
       result.prelude.pipe(writable);

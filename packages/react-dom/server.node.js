@@ -37,7 +37,14 @@ export function renderToStaticNodeStream() {
 }
 
 export function renderToPipeableStream() {
-  return require('./src/server/ReactDOMFizzServerNode').renderToPipeableStream.apply(
+  return require('./src/server/react-dom-server.node').renderToPipeableStream.apply(
+    this,
+    arguments,
+  );
+}
+
+export function resume() {
+  return require('./src/server/react-dom-server.node').resume.apply(
     this,
     arguments,
   );

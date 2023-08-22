@@ -50,7 +50,7 @@ import {
 } from 'react-server/src/ReactServerStreamConfig';
 import {
   resolveRequest,
-  getResources,
+  getResumableState,
   flushResources,
 } from 'react-server/src/ReactFizzServer';
 
@@ -117,33 +117,33 @@ const SentClientRenderFunction /*         */ = 0b00100;
 const SentStyleInsertionFunction /*       */ = 0b01000;
 const SentFormReplayingRuntime /*         */ = 0b10000;
 
-// Per response, global state that is not contextual to the rendering subtree.
-export type ResponseState = {
-  bootstrapChunks: Array<Chunk | PrecomputedChunk>,
+// Per request, global state that is not contextual to the rendering subtree.
+// This cannot be resumed and therefore should only contain things that are
+// temporary working state or are never used in the prerender pass.
+export type RenderState = {
+  // These can be recreated from resumable state.
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
-  idPrefix: string,
-  nextSuspenseID: number,
-  streamingFormat: StreamingFormat,
 
-  // state for script streaming format, unused if using external runtime / data
+  // inline script streaming format, unused if using external runtime / data
   startInlineScript: PrecomputedChunk,
-  instructions: InstructionState,
 
-  // state for data streaming format
-  externalRuntimeScript: null | ExternalRuntimeScript,
+  // the preamble must always flush before resuming, so all these chunks must
+  // be null or empty when resuming.
 
-  // preamble and postamble chunks and state
+  // preamble chunks
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
-  hasBody: boolean,
 
   // Hoistable chunks
   charsetChunks: Array<Chunk | PrecomputedChunk>,
   preconnectChunks: Array<Chunk | PrecomputedChunk>,
   preloadChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
+
+  // Module-global-like reference for current boundary resources
+  boundaryResources: ?BoundaryResources,
 
   // Module-global-like reference for flushing/hoisting state of style resources
   // We need to track whether the current request has flushed any style resources
@@ -153,6 +153,43 @@ export type ResponseState = {
   // We allow the legacy renderer to extend this object.
 
   ...
+};
+
+// Per response, global state that is not contextual to the rendering subtree.
+// This is resumable and therefore should be serializable.
+export type ResumableState = {
+  // external runtime script chunks
+  externalRuntimeScript: null | ExternalRuntimeScript, // TODO: Move to a serializable format
+  bootstrapChunks: Array<Chunk | PrecomputedChunk>, // TODO: Move to a serializable format.
+  idPrefix: string,
+  nextSuspenseID: number,
+  streamingFormat: StreamingFormat,
+
+  // state for script streaming format, unused if using external runtime / data
+  instructions: InstructionState,
+
+  // postamble state
+  hasBody: boolean,
+  hasHtml: boolean,
+
+  // Resources
+
+  // Request local cache
+  preloadsMap: Map<string, PreloadResource>,
+  preconnectsMap: Map<string, PreconnectResource>,
+  stylesMap: Map<string, StyleResource>,
+  scriptsMap: Map<string, ScriptResource>,
+
+  // Flushing queues for Resource dependencies
+  preconnects: Set<PreconnectResource>,
+  fontPreloads: Set<PreloadResource>,
+  highImagePreloads: Set<PreloadResource>,
+  // usedImagePreloads: Set<PreloadResource>,
+  precedences: Map<string, Set<StyleResource>>,
+  stylePrecedences: Map<string, StyleTagResource>,
+  bootstrapScripts: Set<PreloadResource>,
+  scripts: Set<ScriptResource>,
+  bulkPreloads: Set<PreloadResource>,
 };
 
 const dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
@@ -203,26 +240,54 @@ export type ExternalRuntimeScript = {
 // Allows us to keep track of what we've already written so we can refer back to it.
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
 // is set, the server will send instructions via data attributes (instead of inline scripts)
-export function createResponseState(
-  resources: Resources,
-  identifierPrefix: string | void,
+export function createRenderState(
+  resumableState: ResumableState,
   nonce: string | void,
-  bootstrapScriptContent: string | void,
-  bootstrapScripts: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
-  bootstrapModules: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
-  externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
-): ResponseState {
-  const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
+): RenderState {
   const inlineScriptWithNonce =
     nonce === undefined
       ? startInlineScript
       : stringToPrecomputedChunk(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">',
         );
+  const idPrefix = resumableState.idPrefix;
+  return {
+    placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
+    segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
+    boundaryPrefix: idPrefix + 'B:',
+    startInlineScript: inlineScriptWithNonce,
+    htmlChunks: null,
+    headChunks: null,
+    charsetChunks: [],
+    preconnectChunks: [],
+    preloadChunks: [],
+    hoistableChunks: [],
+    nonce,
+    // like a module global for currently rendering boundary
+    boundaryResources: null,
+    stylesToHoist: false,
+  };
+}
+
+export function createResumableState(
+  identifierPrefix: string | void,
+  nonce: string | void,
+  bootstrapScriptContent: string | void,
+  bootstrapScripts: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
+  bootstrapModules: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
+  externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
+): ResumableState {
+  const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
   const bootstrapChunks: Array<Chunk | PrecomputedChunk> = [];
-  let externalRuntimeScript: null | ExternalRuntimeScript = null;
   let streamingFormat = ScriptStreamingFormat;
+  let externalRuntimeScript: null | ExternalRuntimeScript = null;
   if (bootstrapScriptContent !== undefined) {
+    const inlineScriptWithNonce =
+      nonce === undefined
+        ? startInlineScript
+        : stringToPrecomputedChunk(
+            '<script nonce="' + escapeTextForBrowser(nonce) + '">',
+          );
     bootstrapChunks.push(
       inlineScriptWithNonce,
       stringToChunk(escapeBootstrapScriptContent(bootstrapScriptContent)),
@@ -262,6 +327,37 @@ export function createResponseState(
       }
     }
   }
+
+  const resumableState: ResumableState = {
+    externalRuntimeScript: externalRuntimeScript,
+    bootstrapChunks: bootstrapChunks,
+    idPrefix: idPrefix,
+    nextSuspenseID: 0,
+    streamingFormat,
+    instructions: NothingSent,
+    hasBody: false,
+    hasHtml: false,
+
+    // @TODO add bootstrap script to implicit preloads
+
+    // persistent
+    preloadsMap: new Map(),
+    preconnectsMap: new Map(),
+    stylesMap: new Map(),
+    scriptsMap: new Map(),
+
+    // cleared on flush
+    preconnects: new Set(),
+    fontPreloads: new Set(),
+    highImagePreloads: new Set(),
+    // usedImagePreloads: new Set(),
+    precedences: new Map(),
+    stylePrecedences: new Map(),
+    bootstrapScripts: new Set(),
+    scripts: new Set(),
+    bulkPreloads: new Set(),
+  };
+
   if (bootstrapScripts !== undefined) {
     for (let i = 0; i < bootstrapScripts.length; i++) {
       const scriptConfig = bootstrapScripts[i];
@@ -276,7 +372,13 @@ export function createResponseState(
           ? 'use-credentials'
           : '';
 
-      preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin);
+      preloadBootstrapScript(
+        resumableState,
+        src,
+        nonce,
+        integrity,
+        crossOrigin,
+      );
 
       bootstrapChunks.push(
         startScriptSrc,
@@ -317,7 +419,13 @@ export function createResponseState(
           ? 'use-credentials'
           : '';
 
-      preloadBootstrapModule(resources, src, nonce, integrity, crossOrigin);
+      preloadBootstrapModule(
+        resumableState,
+        src,
+        nonce,
+        integrity,
+        crossOrigin,
+      );
 
       bootstrapChunks.push(
         startModuleSrc,
@@ -345,27 +453,8 @@ export function createResponseState(
       bootstrapChunks.push(endAsyncScript);
     }
   }
-  return {
-    bootstrapChunks: bootstrapChunks,
-    placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
-    segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
-    boundaryPrefix: idPrefix + 'B:',
-    idPrefix: idPrefix,
-    nextSuspenseID: 0,
-    streamingFormat,
-    startInlineScript: inlineScriptWithNonce,
-    instructions: NothingSent,
-    externalRuntimeScript,
-    htmlChunks: null,
-    headChunks: null,
-    hasBody: false,
-    charsetChunks: [],
-    preconnectChunks: [],
-    preloadChunks: [],
-    hoistableChunks: [],
-    stylesToHoist: false,
-    nonce,
-  };
+
+  return resumableState;
 }
 
 // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
@@ -506,20 +595,21 @@ export type SuspenseBoundaryID = null | PrecomputedChunk;
 export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID: SuspenseBoundaryID = null;
 
 export function assignSuspenseBoundaryID(
-  responseState: ResponseState,
+  renderState: RenderState,
+  resumableState: ResumableState,
 ): SuspenseBoundaryID {
-  const generatedID = responseState.nextSuspenseID++;
+  const generatedID = resumableState.nextSuspenseID++;
   return stringToPrecomputedChunk(
-    responseState.boundaryPrefix + generatedID.toString(16),
+    renderState.boundaryPrefix + generatedID.toString(16),
   );
 }
 
 export function makeId(
-  responseState: ResponseState,
+  resumableState: ResumableState,
   treeId: string,
   localId: number,
 ): string {
-  const idPrefix = responseState.idPrefix;
+  const idPrefix = resumableState.idPrefix;
 
   let id = ':' + idPrefix + 'R' + treeId;
 
@@ -542,7 +632,7 @@ const textSeparator = stringToPrecomputedChunk('<!-- -->');
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
-  responseState: ResponseState,
+  renderState: RenderState,
   textEmbedded: boolean,
 ): boolean {
   if (text === '') {
@@ -560,7 +650,7 @@ export function pushTextInstance(
 // emit a text separator when we don't know for sure it is safe to omit
 export function pushSegmentFinale(
   target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
+  renderState: RenderState,
   lastPushedText: boolean,
   textEmbedded: boolean,
 ): void {
@@ -700,11 +790,11 @@ function pushStringAttribute(
   }
 }
 
-function makeFormFieldPrefix(responseState: ResponseState): string {
+function makeFormFieldPrefix(resumableState: ResumableState): string {
   // I'm just reusing this counter. It's not really the same namespace as "name".
   // It could just be its own counter.
-  const id = responseState.nextSuspenseID++;
-  return responseState.idPrefix + id;
+  const id = resumableState.nextSuspenseID++;
+  return resumableState.idPrefix + id;
 }
 
 // Since this will likely be repeated a lot in the HTML, we use a more concise message
@@ -748,7 +838,8 @@ function pushAdditionalFormFields(
 
 function pushFormActionAttribute(
   target: Array<Chunk | PrecomputedChunk>,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
   formAction: any,
   formEncType: any,
   formMethod: any,
@@ -788,7 +879,7 @@ function pushFormActionAttribute(
     if (typeof customAction === 'function') {
       // This action has a custom progressive enhancement form that can submit the form
       // back to the server if it's invoked before hydration. Such as a Server Action.
-      const prefix = makeFormFieldPrefix(responseState);
+      const prefix = makeFormFieldPrefix(resumableState);
       const customFields = formAction.$$FORM_ACTION(prefix);
       name = customFields.name;
       formAction = customFields.action || '';
@@ -814,7 +905,7 @@ function pushFormActionAttribute(
       formEncType = null;
       formMethod = null;
       formTarget = null;
-      injectFormReplayingRuntime(responseState);
+      injectFormReplayingRuntime(resumableState, renderState);
     }
   }
   if (name != null) {
@@ -1163,7 +1254,7 @@ function pushInnerHTML(
   }
 }
 
-// TODO: Move these to ResponseState so that we warn for every request.
+// TODO: Move these to RenderState so that we warn for every request.
 // It would help debugging in stateful servers (e.g. service worker).
 let didWarnDefaultInputValue = false;
 let didWarnDefaultChecked = false;
@@ -1391,17 +1482,20 @@ function pushStartOption(
 const formReplayingRuntimeScript =
   stringToPrecomputedChunk(formReplayingRuntime);
 
-function injectFormReplayingRuntime(responseState: ResponseState): void {
+function injectFormReplayingRuntime(
+  resumableState: ResumableState,
+  renderState: RenderState,
+): void {
   // If we haven't sent it yet, inject the runtime that tracks submitted JS actions
   // for later replaying by Fiber. If we use an external runtime, we don't need
   // to emit anything. It's always used.
   if (
-    (responseState.instructions & SentFormReplayingRuntime) === NothingSent &&
-    (!enableFizzExternalRuntime || !responseState.externalRuntimeScript)
+    (resumableState.instructions & SentFormReplayingRuntime) === NothingSent &&
+    (!enableFizzExternalRuntime || !resumableState.externalRuntimeScript)
   ) {
-    responseState.instructions |= SentFormReplayingRuntime;
-    responseState.bootstrapChunks.unshift(
-      responseState.startInlineScript,
+    resumableState.instructions |= SentFormReplayingRuntime;
+    resumableState.bootstrapChunks.unshift(
+      renderState.startInlineScript,
       formReplayingRuntimeScript,
       endInlineScript,
     );
@@ -1411,7 +1505,8 @@ function injectFormReplayingRuntime(responseState: ResponseState): void {
 function pushStartForm(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
 ): ReactNodeList {
   target.push(startChunkForTag('form'));
 
@@ -1482,7 +1577,7 @@ function pushStartForm(
     if (typeof customAction === 'function') {
       // This action has a custom progressive enhancement form that can submit the form
       // back to the server if it's invoked before hydration. Such as a Server Action.
-      const prefix = makeFormFieldPrefix(responseState);
+      const prefix = makeFormFieldPrefix(resumableState);
       const customFields = formAction.$$FORM_ACTION(prefix);
       formAction = customFields.action || '';
       formEncType = customFields.encType;
@@ -1507,7 +1602,7 @@ function pushStartForm(
       formEncType = null;
       formMethod = null;
       formTarget = null;
-      injectFormReplayingRuntime(responseState);
+      injectFormReplayingRuntime(resumableState, renderState);
     }
   }
   if (formAction != null) {
@@ -1545,7 +1640,8 @@ function pushStartForm(
 function pushInput(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
 ): ReactNodeList {
   if (__DEV__) {
     checkControlledValueProps('input', props);
@@ -1626,7 +1722,8 @@ function pushInput(
 
   const formData = pushFormActionAttribute(
     target,
-    responseState,
+    resumableState,
+    renderState,
     formAction,
     formEncType,
     formMethod,
@@ -1685,7 +1782,8 @@ function pushInput(
 function pushStartButton(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
 ): ReactNodeList {
   target.push(startChunkForTag('button'));
 
@@ -1748,7 +1846,8 @@ function pushStartButton(
 
   const formData = pushFormActionAttribute(
     target,
-    responseState,
+    resumableState,
+    renderState,
     formAction,
     formEncType,
     formMethod,
@@ -1894,7 +1993,7 @@ function pushStartTextArea(
 function pushMeta(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
+  renderState: RenderState,
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
@@ -1914,12 +2013,12 @@ function pushMeta(
       }
 
       if (typeof props.charSet === 'string') {
-        return pushSelfClosing(responseState.charsetChunks, props, 'meta');
+        return pushSelfClosing(renderState.charsetChunks, props, 'meta');
       } else if (props.name === 'viewport') {
         // "viewport" isn't related to preconnect but it has the right priority
-        return pushSelfClosing(responseState.preconnectChunks, props, 'meta');
+        return pushSelfClosing(renderState.preconnectChunks, props, 'meta');
       } else {
-        return pushSelfClosing(responseState.hoistableChunks, props, 'meta');
+        return pushSelfClosing(renderState.hoistableChunks, props, 'meta');
       }
     }
   } else {
@@ -1930,8 +2029,8 @@ function pushMeta(
 function pushLink(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
-  resources: Resources,
+  resumableState: ResumableState,
+  renderState: RenderState,
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
@@ -1998,10 +2097,10 @@ function pushLink(
         return pushLinkImpl(target, props);
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
-        let resource = resources.stylesMap.get(key);
+        let resource = resumableState.stylesMap.get(key);
         if (!resource) {
           const resourceProps = stylesheetPropsFromRawProps(props);
-          const preloadResource = resources.preloadsMap.get(key);
+          const preloadResource = resumableState.preloadsMap.get(key);
           let state = NoState;
           if (preloadResource) {
             // If we already had a preload we don't want that resource to flush directly.
@@ -2021,11 +2120,11 @@ function pushLink(
             state,
             props: resourceProps,
           };
-          resources.stylesMap.set(key, resource);
-          let precedenceSet = resources.precedences.get(precedence);
+          resumableState.stylesMap.set(key, resource);
+          let precedenceSet = resumableState.precedences.get(precedence);
           if (!precedenceSet) {
             precedenceSet = new Set();
-            resources.precedences.set(precedence, precedenceSet);
+            resumableState.precedences.set(precedence, precedenceSet);
             const emptyStyleResource = {
               type: 'style',
               chunks: ([]: Array<Chunk | PrecomputedChunk>),
@@ -2037,19 +2136,19 @@ function pushLink(
             };
             precedenceSet.add(emptyStyleResource);
             if (__DEV__) {
-              if (resources.stylePrecedences.has(precedence)) {
+              if (resumableState.stylePrecedences.has(precedence)) {
                 console.error(
                   'React constructed an empty style resource when a style resource already exists for this precedence: "%s". This is a bug in React.',
                   precedence,
                 );
               }
             }
-            resources.stylePrecedences.set(precedence, emptyStyleResource);
+            resumableState.stylePrecedences.set(precedence, emptyStyleResource);
           }
           precedenceSet.add(resource);
         }
-        if (resources.boundaryResources) {
-          resources.boundaryResources.add(resource);
+        if (renderState.boundaryResources) {
+          renderState.boundaryResources.add(resource);
         }
         if (textEmbedded) {
           // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -2074,11 +2173,11 @@ function pushLink(
       switch (props.rel) {
         case 'preconnect':
         case 'dns-prefetch':
-          return pushLinkImpl(responseState.preconnectChunks, props);
+          return pushLinkImpl(renderState.preconnectChunks, props);
         case 'preload':
-          return pushLinkImpl(responseState.preloadChunks, props);
+          return pushLinkImpl(renderState.preloadChunks, props);
         default:
-          return pushLinkImpl(responseState.hoistableChunks, props);
+          return pushLinkImpl(renderState.hoistableChunks, props);
       }
     }
   } else {
@@ -2119,7 +2218,8 @@ function pushLinkImpl(
 function pushStyle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  resources: Resources,
+  resumableState: ResumableState,
+  renderState: RenderState,
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
@@ -2179,9 +2279,9 @@ function pushStyle(
     }
 
     const key = getResourceKey('style', href);
-    let resource = resources.stylesMap.get(key);
+    let resource = resumableState.stylesMap.get(key);
     if (!resource) {
-      resource = resources.stylePrecedences.get(precedence);
+      resource = resumableState.stylePrecedences.get(precedence);
       if (!resource) {
         resource = {
           type: 'style',
@@ -2192,24 +2292,24 @@ function pushStyle(
             hrefs: [href],
           },
         };
-        resources.stylePrecedences.set(precedence, resource);
+        resumableState.stylePrecedences.set(precedence, resource);
         const precedenceSet: Set<StyleResource> = new Set();
         precedenceSet.add(resource);
         if (__DEV__) {
-          if (resources.precedences.has(precedence)) {
+          if (resumableState.precedences.has(precedence)) {
             console.error(
               'React constructed a new style precedence set when one already exists for this precedence: "%s". This is a bug in React.',
               precedence,
             );
           }
         }
-        resources.precedences.set(precedence, precedenceSet);
+        resumableState.precedences.set(precedence, precedenceSet);
       } else {
         resource.props.hrefs.push(href);
       }
-      resources.stylesMap.set(key, resource);
-      if (resources.boundaryResources) {
-        resources.boundaryResources.add(resource);
+      resumableState.stylesMap.set(key, resource);
+      if (renderState.boundaryResources) {
+        renderState.boundaryResources.add(resource);
       }
       pushStyleContents(resource.chunks, props);
     }
@@ -2333,7 +2433,7 @@ function getImagePreloadKey(
 function pushImg(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  resources: Resources,
+  resumableState: ResumableState,
 ): null {
   const {src, srcSet} = props;
   if (
@@ -2359,10 +2459,10 @@ function pushImg(
     )
   ) {
     // We have a suspensey image and ought to preload it to optimize the loading of display blocking
-    // resources.
+    // resumableState.
     const {sizes} = props;
     const key = getImagePreloadKey(src, srcSet, sizes);
-    let resource = resources.preloadsMap.get(key);
+    let resource = resumableState.preloadsMap.get(key);
     if (!resource) {
       resource = {
         type: 'preload',
@@ -2385,16 +2485,16 @@ function pushImg(
           referrerPolicy: props.referrerPolicy,
         },
       };
-      resources.preloadsMap.set(key, resource);
+      resumableState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
     }
     if (
       props.fetchPriority === 'high' ||
-      resources.highImagePreloads.size < 10
+      resumableState.highImagePreloads.size < 10
     ) {
-      resources.highImagePreloads.add(resource);
+      resumableState.highImagePreloads.add(resource);
     } else {
-      resources.bulkPreloads.add(resource);
+      resumableState.bulkPreloads.add(resource);
     }
   }
   return pushSelfClosing(target, props, 'img');
@@ -2463,7 +2563,7 @@ function pushStartMenuItem(
 function pushTitle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
+  renderState: RenderState,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
@@ -2521,7 +2621,7 @@ function pushTitle(
       !noscriptTagInScope &&
       props.itemProp == null
     ) {
-      pushTitleImpl(responseState.hoistableChunks, props);
+      pushTitleImpl(renderState.hoistableChunks, props);
       return null;
     } else {
       return pushTitleImpl(target, props);
@@ -2653,14 +2753,14 @@ function pushStartTitle(
 function pushStartHead(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
+  renderState: RenderState,
   insertionMode: InsertionMode,
 ): ReactNodeList {
   if (enableFloat) {
-    if (insertionMode < HTML_MODE && responseState.headChunks === null) {
+    if (insertionMode < HTML_MODE && renderState.headChunks === null) {
       // This <head> is the Document.head and should be part of the preamble
-      responseState.headChunks = [];
-      return pushStartGenericElement(responseState.headChunks, props, 'head');
+      renderState.headChunks = [];
+      return pushStartGenericElement(renderState.headChunks, props, 'head');
     } else {
       // This <head> is deep and is likely just an error. we emit it inline though.
       // Validation should warn that this tag is the the wrong spot.
@@ -2674,14 +2774,14 @@ function pushStartHead(
 function pushStartHtml(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  responseState: ResponseState,
+  renderState: RenderState,
   insertionMode: InsertionMode,
 ): ReactNodeList {
   if (enableFloat) {
-    if (insertionMode === ROOT_HTML_MODE && responseState.htmlChunks === null) {
+    if (insertionMode === ROOT_HTML_MODE && renderState.htmlChunks === null) {
       // This <html> is the Document.documentElement and should be part of the preamble
-      responseState.htmlChunks = [DOCTYPE];
-      return pushStartGenericElement(responseState.htmlChunks, props, 'html');
+      renderState.htmlChunks = [DOCTYPE];
+      return pushStartGenericElement(renderState.htmlChunks, props, 'html');
     } else {
       // This <html> is deep and is likely just an error. we emit it inline though.
       // Validation should warn that this tag is the the wrong spot.
@@ -2701,7 +2801,7 @@ function pushStartHtml(
 function pushScript(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  resources: Resources,
+  resumableState: ResumableState,
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
@@ -2729,7 +2829,7 @@ function pushScript(
     const src = props.src;
     const key = getResourceKey('script', src);
     // We can make this <script> into a ScriptResource
-    let resource = resources.scriptsMap.get(key);
+    let resource = resumableState.scriptsMap.get(key);
     if (!resource) {
       resource = {
         type: 'script',
@@ -2737,12 +2837,12 @@ function pushScript(
         state: NoState,
         props: null,
       };
-      resources.scriptsMap.set(key, resource);
+      resumableState.scriptsMap.set(key, resource);
       // Add to the script flushing queue
-      resources.scripts.add(resource);
+      resumableState.scripts.add(resource);
 
       let scriptProps = props;
-      const preloadResource = resources.preloadsMap.get(key);
+      const preloadResource = resumableState.preloadsMap.get(key);
       if (preloadResource) {
         // If we already had a preload we don't want that resource to flush directly.
         // We let the newly created resource govern flushing.
@@ -3036,8 +3136,8 @@ export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
-  resources: Resources,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
   formatContext: FormatContext,
   textEmbedded: boolean,
 ): ReactNodeList {
@@ -3093,11 +3193,11 @@ export function pushStartInstance(
     case 'textarea':
       return pushStartTextArea(target, props);
     case 'input':
-      return pushInput(target, props, responseState);
+      return pushInput(target, props, resumableState, renderState);
     case 'button':
-      return pushStartButton(target, props, responseState);
+      return pushStartButton(target, props, resumableState, renderState);
     case 'form':
-      return pushStartForm(target, props, responseState);
+      return pushStartForm(target, props, resumableState, renderState);
     case 'menuitem':
       return pushStartMenuItem(target, props);
     case 'title':
@@ -3105,7 +3205,7 @@ export function pushStartInstance(
         ? pushTitle(
             target,
             props,
-            responseState,
+            renderState,
             formatContext.insertionMode,
             formatContext.noscriptTagInScope,
           )
@@ -3114,8 +3214,8 @@ export function pushStartInstance(
       return pushLink(
         target,
         props,
-        responseState,
-        resources,
+        resumableState,
+        renderState,
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope,
@@ -3125,7 +3225,7 @@ export function pushStartInstance(
         ? pushScript(
             target,
             props,
-            resources,
+            resumableState,
             textEmbedded,
             formatContext.insertionMode,
             formatContext.noscriptTagInScope,
@@ -3135,7 +3235,8 @@ export function pushStartInstance(
       return pushStyle(
         target,
         props,
-        resources,
+        resumableState,
+        renderState,
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope,
@@ -3144,7 +3245,7 @@ export function pushStartInstance(
       return pushMeta(
         target,
         props,
-        responseState,
+        renderState,
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope,
@@ -3156,7 +3257,7 @@ export function pushStartInstance(
     }
     case 'img': {
       return enableFloat
-        ? pushImg(target, props, resources)
+        ? pushImg(target, props, resumableState)
         : pushSelfClosing(target, props, type);
     }
     // Omitted close tags
@@ -3190,14 +3291,14 @@ export function pushStartInstance(
       return pushStartHead(
         target,
         props,
-        responseState,
+        renderState,
         formatContext.insertionMode,
       );
     case 'html': {
       return pushStartHtml(
         target,
         props,
-        responseState,
+        renderState,
         formatContext.insertionMode,
       );
     }
@@ -3219,7 +3320,7 @@ export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
-  responseState: ResponseState,
+  resumableState: ResumableState,
   formatContext: FormatContext,
 ): void {
   switch (type) {
@@ -3263,13 +3364,14 @@ export function pushEndInstance(
     // we won't emit any more tags
     case 'body': {
       if (enableFloat && formatContext.insertionMode <= HTML_HTML_MODE) {
-        responseState.hasBody = true;
+        resumableState.hasBody = true;
         return;
       }
       break;
     }
     case 'html':
       if (enableFloat && formatContext.insertionMode === ROOT_HTML_MODE) {
+        resumableState.hasHtml = true;
         return;
       }
       break;
@@ -3279,9 +3381,9 @@ export function pushEndInstance(
 
 function writeBootstrap(
   destination: Destination,
-  responseState: ResponseState,
+  resumableState: ResumableState,
 ): boolean {
-  const bootstrapChunks = responseState.bootstrapChunks;
+  const bootstrapChunks = resumableState.bootstrapChunks;
   let i = 0;
   for (; i < bootstrapChunks.length - 1; i++) {
     writeChunk(destination, bootstrapChunks[i]);
@@ -3296,9 +3398,9 @@ function writeBootstrap(
 
 export function writeCompletedRoot(
   destination: Destination,
-  responseState: ResponseState,
+  resumableState: ResumableState,
 ): boolean {
-  return writeBootstrap(destination, responseState);
+  return writeBootstrap(destination, resumableState);
 }
 
 // Structural Nodes
@@ -3310,11 +3412,11 @@ const placeholder1 = stringToPrecomputedChunk('<template id="');
 const placeholder2 = stringToPrecomputedChunk('"></template>');
 export function writePlaceholder(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
   id: number,
 ): boolean {
   writeChunk(destination, placeholder1);
-  writeChunk(destination, responseState.placeholderPrefix);
+  writeChunk(destination, renderState.placeholderPrefix);
   const formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
   return writeChunkAndReturn(destination, placeholder2);
@@ -3357,13 +3459,13 @@ export function pushEndCompletedSuspenseBoundary(
 
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
 ): boolean {
   return writeChunkAndReturn(destination, startCompletedSuspenseBoundary);
 }
 export function writeStartPendingSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
   id: SuspenseBoundaryID,
 ): boolean {
   writeChunk(destination, startPendingSuspenseBoundary1);
@@ -3379,7 +3481,7 @@ export function writeStartPendingSuspenseBoundary(
 }
 export function writeStartClientRenderedSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
   errorDigest: ?string,
   errorMesssage: ?string,
   errorComponentStack: ?string,
@@ -3430,19 +3532,19 @@ export function writeStartClientRenderedSuspenseBoundary(
 }
 export function writeEndCompletedSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
 ): boolean {
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 export function writeEndPendingSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
 ): boolean {
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 export function writeEndClientRenderedSuspenseBoundary(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
 ): boolean {
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
@@ -3485,7 +3587,7 @@ const endSegmentColGroup = stringToPrecomputedChunk('</colgroup></table>');
 
 export function writeStartSegment(
   destination: Destination,
-  responseState: ResponseState,
+  renderState: RenderState,
   formatContext: FormatContext,
   id: number,
 ): boolean {
@@ -3494,25 +3596,25 @@ export function writeStartSegment(
     case HTML_HTML_MODE:
     case HTML_MODE: {
       writeChunk(destination, startSegmentHTML);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentHTML2);
     }
     case SVG_MODE: {
       writeChunk(destination, startSegmentSVG);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentSVG2);
     }
     case MATHML_MODE: {
       writeChunk(destination, startSegmentMathML);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentMathML2);
     }
     case HTML_TABLE_MODE: {
       writeChunk(destination, startSegmentTable);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentTable2);
     }
@@ -3522,19 +3624,19 @@ export function writeStartSegment(
     // and it's kind of an edge case to suspend in a table. Totally supported though.
     case HTML_TABLE_BODY_MODE: {
       writeChunk(destination, startSegmentTableBody);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentTableBody2);
     }
     case HTML_TABLE_ROW_MODE: {
       writeChunk(destination, startSegmentTableRow);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentTableRow2);
     }
     case HTML_COLGROUP_MODE: {
       writeChunk(destination, startSegmentColGroup);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentColGroup2);
     }
@@ -3592,20 +3694,21 @@ const completeSegmentDataEnd = dataElementQuotedEnd;
 
 export function writeCompletedSegmentInstruction(
   destination: Destination,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
   contentSegmentID: number,
 ): boolean {
   const scriptFormat =
     !enableFizzExternalRuntime ||
-    responseState.streamingFormat === ScriptStreamingFormat;
+    resumableState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
+    writeChunk(destination, renderState.startInlineScript);
     if (
-      (responseState.instructions & SentCompleteSegmentFunction) ===
+      (resumableState.instructions & SentCompleteSegmentFunction) ===
       NothingSent
     ) {
       // The first time we write this, we'll need to include the full implementation.
-      responseState.instructions |= SentCompleteSegmentFunction;
+      resumableState.instructions |= SentCompleteSegmentFunction;
       writeChunk(destination, completeSegmentScript1Full);
     } else {
       // Future calls can just reuse the same function.
@@ -3616,7 +3719,7 @@ export function writeCompletedSegmentInstruction(
   }
 
   // Write function arguments, which are string literals
-  writeChunk(destination, responseState.segmentPrefix);
+  writeChunk(destination, renderState.segmentPrefix);
   const formattedID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, formattedID);
   if (scriptFormat) {
@@ -3624,7 +3727,7 @@ export function writeCompletedSegmentInstruction(
   } else {
     writeChunk(destination, completeSegmentData2);
   }
-  writeChunk(destination, responseState.placeholderPrefix);
+  writeChunk(destination, renderState.placeholderPrefix);
   writeChunk(destination, formattedID);
 
   if (scriptFormat) {
@@ -3665,51 +3768,52 @@ const completeBoundaryDataEnd = dataElementQuotedEnd;
 
 export function writeCompletedBoundaryInstruction(
   destination: Destination,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
   boundaryID: SuspenseBoundaryID,
   contentSegmentID: number,
   boundaryResources: BoundaryResources,
 ): boolean {
   let requiresStyleInsertion;
   if (enableFloat) {
-    requiresStyleInsertion = responseState.stylesToHoist;
+    requiresStyleInsertion = renderState.stylesToHoist;
     // If necessary stylesheets will be flushed with this instruction.
     // Any style tags not yet hoisted in the Document will also be hoisted.
     // We reset this state since after this instruction executes all styles
     // up to this point will have been hoisted
-    responseState.stylesToHoist = false;
+    renderState.stylesToHoist = false;
   }
   const scriptFormat =
     !enableFizzExternalRuntime ||
-    responseState.streamingFormat === ScriptStreamingFormat;
+    resumableState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
+    writeChunk(destination, renderState.startInlineScript);
     if (enableFloat && requiresStyleInsertion) {
       if (
-        (responseState.instructions & SentCompleteBoundaryFunction) ===
+        (resumableState.instructions & SentCompleteBoundaryFunction) ===
         NothingSent
       ) {
-        responseState.instructions |=
+        resumableState.instructions |=
           SentStyleInsertionFunction | SentCompleteBoundaryFunction;
         writeChunk(
           destination,
           clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth),
         );
       } else if (
-        (responseState.instructions & SentStyleInsertionFunction) ===
+        (resumableState.instructions & SentStyleInsertionFunction) ===
         NothingSent
       ) {
-        responseState.instructions |= SentStyleInsertionFunction;
+        resumableState.instructions |= SentStyleInsertionFunction;
         writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
       } else {
         writeChunk(destination, completeBoundaryWithStylesScript1Partial);
       }
     } else {
       if (
-        (responseState.instructions & SentCompleteBoundaryFunction) ===
+        (resumableState.instructions & SentCompleteBoundaryFunction) ===
         NothingSent
       ) {
-        responseState.instructions |= SentCompleteBoundaryFunction;
+        resumableState.instructions |= SentCompleteBoundaryFunction;
         writeChunk(destination, completeBoundaryScript1Full);
       } else {
         writeChunk(destination, completeBoundaryScript1Partial);
@@ -3737,7 +3841,7 @@ export function writeCompletedBoundaryInstruction(
   } else {
     writeChunk(destination, completeBoundaryData2);
   }
-  writeChunk(destination, responseState.segmentPrefix);
+  writeChunk(destination, renderState.segmentPrefix);
   writeChunk(destination, formattedContentID);
   if (enableFloat && requiresStyleInsertion) {
     // Script and data writers must format this differently:
@@ -3764,7 +3868,7 @@ export function writeCompletedBoundaryInstruction(
   } else {
     writeMore = writeChunkAndReturn(destination, completeBoundaryDataEnd);
   }
-  return writeBootstrap(destination, responseState) && writeMore;
+  return writeBootstrap(destination, resumableState) && writeMore;
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
@@ -3785,7 +3889,8 @@ const clientRenderDataEnd = dataElementQuotedEnd;
 
 export function writeClientRenderBoundaryInstruction(
   destination: Destination,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
   boundaryID: SuspenseBoundaryID,
   errorDigest: ?string,
   errorMessage?: string,
@@ -3793,15 +3898,15 @@ export function writeClientRenderBoundaryInstruction(
 ): boolean {
   const scriptFormat =
     !enableFizzExternalRuntime ||
-    responseState.streamingFormat === ScriptStreamingFormat;
+    resumableState.streamingFormat === ScriptStreamingFormat;
   if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
+    writeChunk(destination, renderState.startInlineScript);
     if (
-      (responseState.instructions & SentClientRenderFunction) ===
+      (resumableState.instructions & SentClientRenderFunction) ===
       NothingSent
     ) {
       // The first time we write this, we'll need to include the full implementation.
-      responseState.instructions |= SentClientRenderFunction;
+      resumableState.instructions |= SentClientRenderFunction;
       writeChunk(destination, clientRenderScript1Full);
     } else {
       // Future calls can just reuse the same function.
@@ -4002,7 +4107,7 @@ function flushStyleTagsLateForBoundary(
 export function writeResourcesForBoundary(
   destination: Destination,
   boundaryResources: BoundaryResources,
-  responseState: ResponseState,
+  renderState: RenderState,
 ): boolean {
   // Reset these on each invocation, they are only safe to read in this function
   currentlyRenderingBoundaryHasStylesToHoist = false;
@@ -4011,7 +4116,7 @@ export function writeResourcesForBoundary(
   // Flush each Boundary resource
   boundaryResources.forEach(flushStyleTagsLateForBoundary, destination);
   if (currentlyRenderingBoundaryHasStylesToHoist) {
-    responseState.stylesToHoist = true;
+    renderState.stylesToHoist = true;
   }
   return destinationHasCapacity;
 }
@@ -4162,27 +4267,27 @@ function preloadLateStyles(
 // of the flushing code in Fizz.
 export function writePreamble(
   destination: Destination,
-  resources: Resources,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
   willFlushAllSegments: boolean,
 ): void {
   // This function must be called exactly once on every request
   if (
     enableFizzExternalRuntime &&
     !willFlushAllSegments &&
-    responseState.externalRuntimeScript
+    resumableState.externalRuntimeScript
   ) {
     // If the root segment is incomplete due to suspended tasks
     // (e.g. willFlushAllSegments = false) and we are using data
     // streaming format, ensure the external runtime is sent.
     // (User code could choose to send this even earlier by calling
     //  preinit(...), if they know they will suspend).
-    const {src, chunks} = responseState.externalRuntimeScript;
-    internalPreinitScript(resources, src, chunks);
+    const {src, chunks} = resumableState.externalRuntimeScript;
+    internalPreinitScript(resumableState, src, chunks);
   }
 
-  const htmlChunks = responseState.htmlChunks;
-  const headChunks = responseState.headChunks;
+  const htmlChunks = renderState.htmlChunks;
+  const headChunks = renderState.headChunks;
 
   let i = 0;
 
@@ -4209,48 +4314,51 @@ export function writePreamble(
   }
 
   // Emit high priority Hoistables
-  const charsetChunks = responseState.charsetChunks;
+  const charsetChunks = renderState.charsetChunks;
   for (i = 0; i < charsetChunks.length; i++) {
     writeChunk(destination, charsetChunks[i]);
   }
   charsetChunks.length = 0;
 
   // emit preconnect resources
-  resources.preconnects.forEach(flushResourceInPreamble, destination);
-  resources.preconnects.clear();
+  resumableState.preconnects.forEach(flushResourceInPreamble, destination);
+  resumableState.preconnects.clear();
 
-  const preconnectChunks = responseState.preconnectChunks;
+  const preconnectChunks = renderState.preconnectChunks;
   for (i = 0; i < preconnectChunks.length; i++) {
     writeChunk(destination, preconnectChunks[i]);
   }
   preconnectChunks.length = 0;
 
-  resources.fontPreloads.forEach(flushResourceInPreamble, destination);
-  resources.fontPreloads.clear();
+  resumableState.fontPreloads.forEach(flushResourceInPreamble, destination);
+  resumableState.fontPreloads.clear();
 
-  resources.highImagePreloads.forEach(flushResourceInPreamble, destination);
-  resources.highImagePreloads.clear();
+  resumableState.highImagePreloads.forEach(
+    flushResourceInPreamble,
+    destination,
+  );
+  resumableState.highImagePreloads.clear();
 
   // Flush unblocked stylesheets by precedence
-  resources.precedences.forEach(flushAllStylesInPreamble, destination);
+  resumableState.precedences.forEach(flushAllStylesInPreamble, destination);
 
-  resources.bootstrapScripts.forEach(flushResourceInPreamble, destination);
+  resumableState.bootstrapScripts.forEach(flushResourceInPreamble, destination);
 
-  resources.scripts.forEach(flushResourceInPreamble, destination);
-  resources.scripts.clear();
+  resumableState.scripts.forEach(flushResourceInPreamble, destination);
+  resumableState.scripts.clear();
 
-  resources.bulkPreloads.forEach(flushResourceInPreamble, destination);
-  resources.bulkPreloads.clear();
+  resumableState.bulkPreloads.forEach(flushResourceInPreamble, destination);
+  resumableState.bulkPreloads.clear();
 
   // Write embedding preloadChunks
-  const preloadChunks = responseState.preloadChunks;
+  const preloadChunks = renderState.preloadChunks;
   for (i = 0; i < preloadChunks.length; i++) {
     writeChunk(destination, preloadChunks[i]);
   }
   preloadChunks.length = 0;
 
   // Write embedding hoistableChunks
-  const hoistableChunks = responseState.hoistableChunks;
+  const hoistableChunks = renderState.hoistableChunks;
   for (i = 0; i < hoistableChunks.length; i++) {
     writeChunk(destination, hoistableChunks[i]);
   }
@@ -4275,8 +4383,8 @@ export function writePreamble(
 // of the flushing code in Fizz.
 export function writeHoistables(
   destination: Destination,
-  resources: Resources,
-  responseState: ResponseState,
+  resumableState: ResumableState,
+  renderState: RenderState,
 ): void {
   let i = 0;
 
@@ -4285,43 +4393,46 @@ export function writeHoistables(
   // We omit charsetChunks because we have already sent the shell and if it wasn't
   // already sent it is too late now.
 
-  resources.preconnects.forEach(flushResourceLate, destination);
-  resources.preconnects.clear();
+  resumableState.preconnects.forEach(flushResourceLate, destination);
+  resumableState.preconnects.clear();
 
-  const preconnectChunks = responseState.preconnectChunks;
+  const preconnectChunks = renderState.preconnectChunks;
   for (i = 0; i < preconnectChunks.length; i++) {
     writeChunk(destination, preconnectChunks[i]);
   }
   preconnectChunks.length = 0;
 
-  resources.fontPreloads.forEach(flushResourceLate, destination);
-  resources.fontPreloads.clear();
+  resumableState.fontPreloads.forEach(flushResourceLate, destination);
+  resumableState.fontPreloads.clear();
 
-  resources.highImagePreloads.forEach(flushResourceInPreamble, destination);
-  resources.highImagePreloads.clear();
+  resumableState.highImagePreloads.forEach(
+    flushResourceInPreamble,
+    destination,
+  );
+  resumableState.highImagePreloads.clear();
 
   // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
-  resources.precedences.forEach(preloadLateStyles, destination);
+  resumableState.precedences.forEach(preloadLateStyles, destination);
 
   // bootstrap scripts should flush above script priority but these can only flush in the preamble
   // so we elide the code here for performance
 
-  resources.scripts.forEach(flushResourceLate, destination);
-  resources.scripts.clear();
+  resumableState.scripts.forEach(flushResourceLate, destination);
+  resumableState.scripts.clear();
 
-  resources.bulkPreloads.forEach(flushResourceLate, destination);
-  resources.bulkPreloads.clear();
+  resumableState.bulkPreloads.forEach(flushResourceLate, destination);
+  resumableState.bulkPreloads.clear();
 
   // Write embedding preloadChunks
-  const preloadChunks = responseState.preloadChunks;
+  const preloadChunks = renderState.preloadChunks;
   for (i = 0; i < preloadChunks.length; i++) {
     writeChunk(destination, preloadChunks[i]);
   }
   preloadChunks.length = 0;
 
   // Write embedding hoistableChunks
-  const hoistableChunks = responseState.hoistableChunks;
+  const hoistableChunks = renderState.hoistableChunks;
   for (i = 0; i < hoistableChunks.length; i++) {
     writeChunk(destination, hoistableChunks[i]);
   }
@@ -4330,14 +4441,14 @@ export function writeHoistables(
 
 export function writePostamble(
   destination: Destination,
-  responseState: ResponseState,
+  resumableState: ResumableState,
 ): void {
-  if (responseState.hasBody) {
+  if (resumableState.hasBody) {
     writeChunk(destination, endTag1);
     writeChunk(destination, stringToChunk('body'));
     writeChunk(destination, endTag2);
   }
-  if (responseState.htmlChunks) {
+  if (resumableState.hasHtml) {
     writeChunk(destination, endTag1);
     writeChunk(destination, stringToChunk('html'));
     writeChunk(destination, endTag2);
@@ -4823,54 +4934,6 @@ type Resource =
   | PreloadResource
   | PreconnectResource;
 
-export type Resources = {
-  // Request local cache
-  preloadsMap: Map<string, PreloadResource>,
-  preconnectsMap: Map<string, PreconnectResource>,
-  stylesMap: Map<string, StyleResource>,
-  scriptsMap: Map<string, ScriptResource>,
-
-  // Flushing queues for Resource dependencies
-  preconnects: Set<PreconnectResource>,
-  fontPreloads: Set<PreloadResource>,
-  highImagePreloads: Set<PreloadResource>,
-  // usedImagePreloads: Set<PreloadResource>,
-  precedences: Map<string, Set<StyleResource>>,
-  stylePrecedences: Map<string, StyleTagResource>,
-  bootstrapScripts: Set<PreloadResource>,
-  scripts: Set<ScriptResource>,
-  bulkPreloads: Set<PreloadResource>,
-
-  // Module-global-like reference for current boundary resources
-  boundaryResources: ?BoundaryResources,
-  ...
-};
-
-// @TODO add bootstrap script to implicit preloads
-export function createResources(): Resources {
-  return {
-    // persistent
-    preloadsMap: new Map(),
-    preconnectsMap: new Map(),
-    stylesMap: new Map(),
-    scriptsMap: new Map(),
-
-    // cleared on flush
-    preconnects: new Set(),
-    fontPreloads: new Set(),
-    highImagePreloads: new Set(),
-    // usedImagePreloads: new Set(),
-    precedences: new Map(),
-    stylePrecedences: new Map(),
-    bootstrapScripts: new Set(),
-    scripts: new Set(),
-    bulkPreloads: new Set(),
-
-    // like a module global for currently rendering boundary
-    boundaryResources: null,
-  };
-}
-
 export type BoundaryResources = Set<StyleResource>;
 
 export function createBoundaryResources(): BoundaryResources {
@@ -4878,10 +4941,10 @@ export function createBoundaryResources(): BoundaryResources {
 }
 
 export function setCurrentlyRenderingBoundaryResourcesTarget(
-  resources: Resources,
+  renderState: RenderState,
   boundaryResources: null | BoundaryResources,
 ) {
-  resources.boundaryResources = boundaryResources;
+  renderState.boundaryResources = boundaryResources;
 }
 
 function getResourceKey(as: string, href: string): string {
@@ -4901,7 +4964,7 @@ function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
     // fetching) and we don't want to warn in those cases.
     return;
   }
-  const resources = getResources(request);
+  const resumableState = getResumableState(request);
   if (__DEV__) {
     if (typeof href !== 'string' || !href) {
       console.error(
@@ -4928,7 +4991,7 @@ function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
 
   if (typeof href === 'string' && href) {
     const key = getResourceKey('prefetchDNS', href);
-    let resource = resources.preconnectsMap.get(key);
+    let resource = resumableState.preconnectsMap.get(key);
     if (!resource) {
       resource = {
         type: 'preconnect',
@@ -4936,13 +4999,13 @@ function prefetchDNS(href: string, options?: ?PrefetchDNSOptions) {
         state: NoState,
         props: null,
       };
-      resources.preconnectsMap.set(key, resource);
+      resumableState.preconnectsMap.set(key, resource);
       pushLinkImpl(
         resource.chunks,
         ({href, rel: 'dns-prefetch'}: PreconnectProps),
       );
     }
-    resources.preconnects.add(resource);
+    resumableState.preconnects.add(resource);
     flushResources(request);
   }
 }
@@ -4960,7 +5023,7 @@ function preconnect(href: string, options?: ?PreconnectOptions) {
     // fetching) and we don't want to warn in those cases.
     return;
   }
-  const resources = getResources(request);
+  const resumableState = getResumableState(request);
   if (__DEV__) {
     if (typeof href !== 'string' || !href) {
       console.error(
@@ -4991,7 +5054,7 @@ function preconnect(href: string, options?: ?PreconnectOptions) {
     const key = `[preconnect][${
       crossOrigin === null ? 'null' : crossOrigin
     }]${href}`;
-    let resource = resources.preconnectsMap.get(key);
+    let resource = resumableState.preconnectsMap.get(key);
     if (!resource) {
       resource = {
         type: 'preconnect',
@@ -4999,13 +5062,13 @@ function preconnect(href: string, options?: ?PreconnectOptions) {
         state: NoState,
         props: null,
       };
-      resources.preconnectsMap.set(key, resource);
+      resumableState.preconnectsMap.set(key, resource);
       pushLinkImpl(
         resource.chunks,
         ({rel: 'preconnect', href, crossOrigin}: PreconnectProps),
       );
     }
-    resources.preconnects.add(resource);
+    resumableState.preconnects.add(resource);
     flushResources(request);
   }
 }
@@ -5023,7 +5086,7 @@ function preload(href: string, options: PreloadOptions) {
     // fetching) and we don't want to warn in those cases.
     return;
   }
-  const resources = getResources(request);
+  const resumableState = getResumableState(request);
   if (__DEV__) {
     let encountered = '';
     if (typeof href !== 'string' || !href) {
@@ -5066,7 +5129,7 @@ function preload(href: string, options: PreloadOptions) {
     } else {
       key = getResourceKey(as, href);
     }
-    let resource = resources.preloadsMap.get(key);
+    let resource = resumableState.preloadsMap.get(key);
     if (!resource) {
       resource = {
         type: 'preload',
@@ -5074,15 +5137,15 @@ function preload(href: string, options: PreloadOptions) {
         state: NoState,
         props: preloadPropsFromPreloadOptions(href, as, options),
       };
-      resources.preloadsMap.set(key, resource);
+      resumableState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
     }
     if (as === 'font') {
-      resources.fontPreloads.add(resource);
+      resumableState.fontPreloads.add(resource);
     } else if (as === 'image' && options.fetchPriority === 'high') {
-      resources.highImagePreloads.add(resource);
+      resumableState.highImagePreloads.add(resource);
     } else {
-      resources.bulkPreloads.add(resource);
+      resumableState.bulkPreloads.add(resource);
     }
     flushResources(request);
   }
@@ -5101,7 +5164,7 @@ function preloadModule(href: string, options?: ?PreloadModuleOptions): void {
     // fetching) and we don't want to warn in those cases.
     return;
   }
-  const resources = getResources(request);
+  const resumableState = getResumableState(request);
   if (__DEV__) {
     let encountered = '';
     if (typeof href !== 'string' || !href) {
@@ -5129,7 +5192,7 @@ function preloadModule(href: string, options?: ?PreloadModuleOptions): void {
     const as =
       options && typeof options.as === 'string' ? options.as : 'script';
     const key = getResourceKey(as, href);
-    let resource = resources.preloadsMap.get(key);
+    let resource = resumableState.preloadsMap.get(key);
     if (!resource) {
       resource = {
         type: 'preload',
@@ -5137,10 +5200,10 @@ function preloadModule(href: string, options?: ?PreloadModuleOptions): void {
         state: NoState,
         props: preloadModulePropsFromPreloadModuleOptions(href, as, options),
       };
-      resources.preloadsMap.set(key, resource);
+      resumableState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
     }
-    resources.bulkPreloads.add(resource);
+    resumableState.bulkPreloads.add(resource);
     flushResources(request);
   }
 }
@@ -5158,7 +5221,7 @@ function preinit(href: string, options: PreinitOptions): void {
     // fetching) and we don't want to warn in those cases.
     return;
   }
-  const resources = getResources(request);
+  const resumableState = getResumableState(request);
   if (__DEV__) {
     if (typeof href !== 'string' || !href) {
       console.error(
@@ -5187,11 +5250,11 @@ function preinit(href: string, options: PreinitOptions): void {
     switch (as) {
       case 'style': {
         const key = getResourceKey(as, href);
-        let resource = resources.stylesMap.get(key);
+        let resource = resumableState.stylesMap.get(key);
         const precedence = options.precedence || 'default';
         if (!resource) {
           let state = NoState;
-          const preloadResource = resources.preloadsMap.get(key);
+          const preloadResource = resumableState.preloadsMap.get(key);
           if (preloadResource && preloadResource.state & Flushed) {
             state = PreloadFlushed;
           }
@@ -5201,11 +5264,11 @@ function preinit(href: string, options: PreinitOptions): void {
             state,
             props: stylesheetPropsFromPreinitOptions(href, precedence, options),
           };
-          resources.stylesMap.set(key, resource);
-          let precedenceSet = resources.precedences.get(precedence);
+          resumableState.stylesMap.set(key, resource);
+          let precedenceSet = resumableState.precedences.get(precedence);
           if (!precedenceSet) {
             precedenceSet = new Set();
-            resources.precedences.set(precedence, precedenceSet);
+            resumableState.precedences.set(precedence, precedenceSet);
             const emptyStyleResource = {
               type: 'style',
               chunks: ([]: Array<Chunk | PrecomputedChunk>),
@@ -5217,14 +5280,14 @@ function preinit(href: string, options: PreinitOptions): void {
             };
             precedenceSet.add(emptyStyleResource);
             if (__DEV__) {
-              if (resources.stylePrecedences.has(precedence)) {
+              if (resumableState.stylePrecedences.has(precedence)) {
                 console.error(
                   'React constructed an empty style resource when a style resource already exists for this precedence: "%s". This is a bug in React.',
                   precedence,
                 );
               }
             }
-            resources.stylePrecedences.set(precedence, emptyStyleResource);
+            resumableState.stylePrecedences.set(precedence, emptyStyleResource);
           }
           precedenceSet.add(resource);
           flushResources(request);
@@ -5234,7 +5297,7 @@ function preinit(href: string, options: PreinitOptions): void {
       case 'script': {
         const src = href;
         const key = getResourceKey(as, src);
-        let resource = resources.scriptsMap.get(key);
+        let resource = resumableState.scriptsMap.get(key);
         if (!resource) {
           resource = {
             type: 'script',
@@ -5242,9 +5305,9 @@ function preinit(href: string, options: PreinitOptions): void {
             state: NoState,
             props: null,
           };
-          resources.scriptsMap.set(key, resource);
+          resumableState.scriptsMap.set(key, resource);
           const resourceProps = scriptPropsFromPreinitOptions(src, options);
-          resources.scripts.add(resource);
+          resumableState.scripts.add(resource);
           pushScriptImpl(resource.chunks, resourceProps);
           flushResources(request);
         }
@@ -5267,7 +5330,7 @@ function preinitModule(href: string, options?: ?PreinitModuleOptions): void {
     // fetching) and we don't want to warn in those cases.
     return;
   }
-  const resources = getResources(request);
+  const resumableState = getResumableState(request);
   if (__DEV__) {
     let encountered = '';
     if (typeof href !== 'string' || !href) {
@@ -5319,7 +5382,7 @@ function preinitModule(href: string, options?: ?PreinitModuleOptions): void {
       case 'script': {
         const src = href;
         const key = getResourceKey(as, src);
-        let resource = resources.scriptsMap.get(key);
+        let resource = resumableState.scriptsMap.get(key);
         if (!resource) {
           resource = {
             type: 'script',
@@ -5327,12 +5390,12 @@ function preinitModule(href: string, options?: ?PreinitModuleOptions): void {
             state: NoState,
             props: null,
           };
-          resources.scriptsMap.set(key, resource);
+          resumableState.scriptsMap.set(key, resource);
           const resourceProps = modulePropsFromPreinitModuleOptions(
             src,
             options,
           );
-          resources.scripts.add(resource);
+          resumableState.scripts.add(resource);
           pushScriptImpl(resource.chunks, resourceProps);
           flushResources(request);
         }
@@ -5347,7 +5410,7 @@ function preinitModule(href: string, options?: ?PreinitModuleOptions): void {
 // scripts at any other point in time we will need to check whether the preload
 // already exists and not assume it
 function preloadBootstrapScript(
-  resources: Resources,
+  resumableState: ResumableState,
   src: string,
   nonce: ?string,
   integrity: ?string,
@@ -5355,7 +5418,7 @@ function preloadBootstrapScript(
 ): void {
   const key = getResourceKey('script', src);
   if (__DEV__) {
-    if (resources.preloadsMap.has(key)) {
+    if (resumableState.preloadsMap.has(key)) {
       // This is coded as a React error because it should be impossible for a userspace preload to preempt this call
       // If a userspace preload can preempt it then this assumption is broken and we need to reconsider this strategy
       // rather than instruct the user to not preload their bootstrap scripts themselves
@@ -5380,8 +5443,8 @@ function preloadBootstrapScript(
     state: NoState,
     props,
   };
-  resources.preloadsMap.set(key, resource);
-  resources.bootstrapScripts.add(resource);
+  resumableState.preloadsMap.set(key, resource);
+  resumableState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
 }
 
@@ -5390,7 +5453,7 @@ function preloadBootstrapScript(
 // scripts at any other point in time we will need to check whether the preload
 // already exists and not assume it
 function preloadBootstrapModule(
-  resources: Resources,
+  resumableState: ResumableState,
   src: string,
   nonce: ?string,
   integrity: ?string,
@@ -5398,7 +5461,7 @@ function preloadBootstrapModule(
 ): void {
   const key = getResourceKey('script', src);
   if (__DEV__) {
-    if (resources.preloadsMap.has(key)) {
+    if (resumableState.preloadsMap.has(key)) {
       // This is coded as a React error because it should be impossible for a userspace preload to preempt this call
       // If a userspace preload can preempt it then this assumption is broken and we need to reconsider this strategy
       // rather than instruct the user to not preload their bootstrap scripts themselves
@@ -5422,19 +5485,19 @@ function preloadBootstrapModule(
     state: NoState,
     props,
   };
-  resources.preloadsMap.set(key, resource);
-  resources.bootstrapScripts.add(resource);
+  resumableState.preloadsMap.set(key, resource);
+  resumableState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
   return;
 }
 
 function internalPreinitScript(
-  resources: Resources,
+  resumableState: ResumableState,
   src: string,
   chunks: Array<Chunk | PrecomputedChunk>,
 ): void {
   const key = getResourceKey('script', src);
-  let resource = resources.scriptsMap.get(key);
+  let resource = resumableState.scriptsMap.get(key);
   if (!resource) {
     resource = {
       type: 'script',
@@ -5442,8 +5505,8 @@ function internalPreinitScript(
       state: NoState,
       props: null,
     };
-    resources.scriptsMap.set(key, resource);
-    resources.scripts.add(resource);
+    resumableState.scriptsMap.set(key, resource);
+    resumableState.scripts.add(resource);
   }
   return;
 }
@@ -5575,10 +5638,10 @@ function hoistStyleResource(this: BoundaryResources, resource: StyleResource) {
 }
 
 export function hoistResources(
-  resources: Resources,
+  renderState: RenderState,
   source: BoundaryResources,
 ): void {
-  const currentBoundaryResources = resources.boundaryResources;
+  const currentBoundaryResources = renderState.boundaryResources;
   if (currentBoundaryResources) {
     source.forEach(hoistStyleResource, currentBoundaryResources);
   }

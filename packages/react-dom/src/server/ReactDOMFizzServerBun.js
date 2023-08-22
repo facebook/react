@@ -20,8 +20,8 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
-  createResources,
-  createResponseState,
+  createResumableState,
+  createRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -82,19 +82,18 @@ function renderToReadableStream(
       allReady.catch(() => {});
       reject(error);
     }
-    const resources = createResources();
+    const resumableState = createResumableState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.nonce : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+    );
     const request = createRequest(
       children,
-      resources,
-      createResponseState(
-        resources,
-        options ? options.identifierPrefix : undefined,
-        options ? options.nonce : undefined,
-        options ? options.bootstrapScriptContent : undefined,
-        options ? options.bootstrapScripts : undefined,
-        options ? options.bootstrapModules : undefined,
-        options ? options.unstable_externalRuntimeSrc : undefined,
-      ),
+      resumableState,
+      createRenderState(resumableState, options ? options.nonce : undefined),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
