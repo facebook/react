@@ -1,4 +1,4 @@
-[submodule "forget/test262"]
-	path = forget/test262
+[submodule "test262"]
+	path = test262
 	url = git@github.com:tc39/test262.git
 	shallow = true

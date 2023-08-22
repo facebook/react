@@ -15,15 +15,12 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-          cache-dependency-path: forget/yarn.lock
+          cache-dependency-path: yarn.lock
       - run: yarn install --frozen-lockfile
-        working-directory: forget
       - run: yarn workspace babel-plugin-react-forget run build
-        working-directory: forget
       - id: test262
         name: Run test262
         run: echo results=$(yarn --silent workspace babel-plugin-react-forget run --silent test262:ci) >> $GITHUB_OUTPUT
-        working-directory: forget
       - id: format_test262_results
         name: Format test262 results
         uses: actions/github-script@v6

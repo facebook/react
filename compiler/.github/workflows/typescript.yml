@@ -14,7 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - id: set-matrix
-        run: echo "matrix=$(find forget/packages -mindepth 1 -maxdepth 1 -type d | sed 's!forget/packages/!!g' | tr '\n' ',' | sed s/.$// | jq -Rsc '. / "," - [""]')" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(find packages -mindepth 1 -maxdepth 1 -type d | sed 's!packages/!!g' | tr '\n' ',' | sed s/.$// | jq -Rsc '. / "," - [""]')" >> $GITHUB_OUTPUT
 
   # Hardcoded to improve parallelism for babel-plugin-react-forget
   lint:
@@ -26,18 +26,15 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-          cache-dependency-path: forget/yarn.lock
+          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v3
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
-        working-directory: forget
       - run: yarn workspace babel-plugin-react-forget prettier:ci
-        working-directory: forget
       - run: yarn workspace babel-plugin-react-forget lint
-        working-directory: forget
 
   # Hardcoded to improve parallelism for babel-plugin-react-forget
   jest:
@@ -49,7 +46,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-          cache-dependency-path: forget/yarn.lock
+          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v3
         id: node_modules
@@ -57,9 +54,7 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
-        working-directory: forget
       - run: yarn workspace babel-plugin-react-forget jest
-        working-directory: forget
 
   test:
     name: Test ${{ matrix.workspace_name }}
@@ -75,7 +70,7 @@ jobs:
         with:
           node-version: 18.x
           cache: "yarn"
-          cache-dependency-path: forget/yarn.lock
+          cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
         uses: actions/cache@v3
         id: node_modules
@@ -83,6 +78,4 @@ jobs:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
       - run: yarn install --frozen-lockfile
-        working-directory: forget
       - run: yarn workspace ${{ matrix.workspace_name }} test
-        working-directory: forget

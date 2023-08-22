@@ -11,3 +11,12 @@ target/
 
 # MSVC Windows builds of rustc generate these, which store debugging information
 *.pdb
+
+node_modules
+.watchmanconfig
+dist
+package-lock.json
+.vscode
+!packages/playground/.vscode
+.spr.yml
+testfilter.txt

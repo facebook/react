@@ -39,7 +39,7 @@ Reference
 ## First-Time Setup
 
 1. Install Rust using `rustup`. See the guide at https://www.rust-lang.org/tools/install.
-2. Install Visual Studio Code from https://code.visualstudio.com/. 
+2. Install Visual Studio Code from https://code.visualstudio.com/.
    Note to Meta employees: install the stock version from that website, not the pre-installed version.
 3. Install the Rust Analyzer VSCode extension through the VSCode marketplace. See instructions at https://rust-analyzer.github.io/manual.html#vs-code.
 4. Install `cargo edit` which extends cargo with commands to manage dependencies. See https://github.com/killercup/cargo-edit#installation
@@ -47,12 +47,12 @@ Reference
 
 ## Workspace Hygiene
 
-### Adding Dependencies 
+### Adding Dependencies
 
 To add a dependency, add it to the top-level `Cargo.toml`
 
 ```
-// forget/Cargo.toml
+// Cargo.toml
 [workspace.dependencies]
 ...
 new_dep = { version = "x.y.z" }
@@ -62,7 +62,7 @@ new_dep = { version = "x.y.z" }
 Then reference it from your crate as follows:
 
 ```
-// forget/crates/forget_foo/Cargo.toml
+// crates/forget_foo/Cargo.toml
 [dependencies]
 ...
 new_dep = { workspace = true }
@@ -76,7 +76,7 @@ have more but smaller crates. Where possible it helps to structure crates to min
 passes depend on each other in the sense that they often must run in a certain order. However, they often don't need to call each other,
 so they can generally be split into crates of similar types of passes, so that those crates can compile in parallel.
 
-As a rule of thumb, add crates at roughly the granularity of our existing top-level folds. If you have some one-off utility code that 
+As a rule of thumb, add crates at roughly the granularity of our existing top-level folds. If you have some one-off utility code that
 doesn't fit neatly in a crate, add it to `forget_utils` rather than add a one-off crate for it.
 
 ## Running Tests
@@ -92,7 +92,7 @@ tests. To run just these tests use:
 
 ```
 # quiet version
-cargo test -p forget_fixtures 
+cargo test -p forget_fixtures
 
 # without suppressing stdout/stderr output
 cargo test -p forget_fixtures -- --nocapture

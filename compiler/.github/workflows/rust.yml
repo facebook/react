@@ -5,15 +5,15 @@ on:
     branches: ["main"]
     paths:
       - .github/workflows/**
-      - forget/crates/**
-      - forget/Cargo.*
-      - forget/*.toml
+      - crates/**
+      - Cargo.*
+      - ./*.toml
   pull_request:
     paths:
       - .github/workflows/**
-      - forget/crates/**
-      - forget/Cargo.*
-      - forget/*.toml
+      - crates/**
+      - Cargo.*
+      - ./*.toml
 
 env:
   CARGO_TERM_COLOR: always
@@ -36,7 +36,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: cargo test
-        working-directory: forget
         run: cargo test --manifest-path=Cargo.toml --locked ${{ matrix.target.features && '--features' }} ${{ matrix.target.features }}
 
   lint:
@@ -53,9 +52,7 @@ jobs:
           components: rustfmt, clippy
       - name: rustfmt
         run: grep -r --include "*.rs" --files-without-match "@generated" crates | xargs rustup run nightly-2023-08-01 rustfmt --check --config="skip_children=true"
-        working-directory: ./forget/
       # - name: cargo clippy
-      #   working-directory: forget
       #   run: rustup run nightly-2023-08-01 cargo clippy -- -Dclippy::correctness
 
   build:
@@ -65,5 +62,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: cargo build
-        working-directory: forget
         run: cargo build --release

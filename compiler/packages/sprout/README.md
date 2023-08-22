@@ -7,7 +7,7 @@ We hope to add fuzzing capabilities to Sprout, synthesizing sets of program inpu
 Sprout is now enabled for all fixtures! If Sprout cannot execute your fixture due to some technical limitations, add your fixture to [`SproutTodoFilter.ts`](./src/SproutTodoFilter.ts) with a comment explaining why.
 
 ### Sprout CLI
-Sprout can be run from `forget/packages/babel-plugin-react-forget`. When adding new fixtures to Sprout, please check that fixture outputs look reasonable with `yarn sprout --filter --verbose`.
+Sprout can be run from `packages/babel-plugin-react-forget`. When adding new fixtures to Sprout, please check that fixture outputs look reasonable with `yarn sprout --filter --verbose`.
 
 ```sh
 # rebuild when sprout or babel-plugin-react-forget changes
