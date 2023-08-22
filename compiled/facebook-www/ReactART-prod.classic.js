@@ -8369,23 +8369,20 @@ function handleThrow(root, thrownValue) {
   ReactCurrentOwner.current = null;
   thrownValue === SuspenseException
     ? ((thrownValue = getSuspendedThenable()),
-      (workInProgressRootRenderLanes & 8388480) ===
-      workInProgressRootRenderLanes
-        ? (root = null === shellBoundary ? !0 : !1)
-        : ((root = suspenseHandlerStackCursor.current),
-          (root =
-            null === root ||
-            ((workInProgressRootRenderLanes & 125829120) !==
-              workInProgressRootRenderLanes &&
-              0 === (workInProgressRootRenderLanes & 1073741824))
-              ? !1
-              : root === shellBoundary)),
+      (root = suspenseHandlerStackCursor.current),
       (workInProgressSuspendedReason =
-        root &&
-        0 === (workInProgressRootSkippedLanes & 268435455) &&
-        0 === (workInProgressRootInterleavedUpdatedLanes & 268435455)
-          ? 2
-          : 3))
+        (null !== root &&
+          ((workInProgressRootRenderLanes & 8388480) ===
+          workInProgressRootRenderLanes
+            ? null !== shellBoundary
+            : ((workInProgressRootRenderLanes & 125829120) !==
+                workInProgressRootRenderLanes &&
+                0 === (workInProgressRootRenderLanes & 1073741824)) ||
+              root !== shellBoundary)) ||
+        0 !== (workInProgressRootSkippedLanes & 268435455) ||
+        0 !== (workInProgressRootInterleavedUpdatedLanes & 268435455)
+          ? 3
+          : 2))
     : thrownValue === SuspenseyCommitException
     ? ((thrownValue = getSuspendedThenable()),
       (workInProgressSuspendedReason = 4))
@@ -8720,8 +8717,10 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
                   null === retryQueue
                     ? (suspenseBoundary.updateQueue = new Set([wakeable]))
                     : retryQueue.add(wakeable);
+                  suspenseBoundary.mode & 1 &&
+                    attachPingListener(root, wakeable, thrownValue);
                 }
-                break;
+                break a;
               case 22:
                 if (suspenseBoundary.mode & 1) {
                   suspenseBoundary.flags |= 65536;
@@ -8742,16 +8741,14 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
                         ? (offscreenQueue.retryQueue = new Set([wakeable]))
                         : retryQueue$36.add(wakeable);
                     }
+                    attachPingListener(root, wakeable, thrownValue);
                   }
-                  break;
+                  break a;
                 }
-              default:
-                throw Error(formatProdErrorMessage(435, suspenseBoundary.tag));
             }
-            suspenseBoundary.mode & 1 &&
-              attachPingListener(root, wakeable, thrownValue);
-            break a;
-          } else if (1 === root.tag) {
+            throw Error(formatProdErrorMessage(435, suspenseBoundary.tag));
+          }
+          if (1 === root.tag) {
             attachPingListener(root, wakeable, thrownValue);
             renderDidSuspendDelayIfPossible();
             break a;
@@ -10094,7 +10091,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-5c10ec1e",
+    version: "18.3.0-www-classic-66a3bd33",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1303 = {
@@ -10125,7 +10122,7 @@ var internals$jscomp$inline_1303 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-5c10ec1e"
+  reconcilerVersion: "18.3.0-www-classic-66a3bd33"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1304 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

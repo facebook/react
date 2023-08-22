@@ -168,6 +168,7 @@
 "Hooks are not supported inside an async component. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server."
 "Internal React Error: React expected bootstrap module with src \"%s\" to not have been preloaded already. please file an issue"
 "Internal React Error: React expected bootstrap script with src \"%s\" to not have been preloaded already. please file an issue"
+"Internal React error: A listener was unexpectedly attached to a \"noop\" thenable. This is a bug in React. Please file an issue."
 "Internal React error: Attempted to capture a commit phase error inside a detached tree. This indicates a bug in React. Potential causes include deleting the same fiber more than once, committing an already-finished tree, or an inconsistent return pointer.\n\nError message:\n\n%s"
 "Internal React error: Expected static flag was missing. Please notify the React team."
 "Internal React error: Expected this fiber to be complete, but it isn't. It should have been unwound. This is a bug in React."

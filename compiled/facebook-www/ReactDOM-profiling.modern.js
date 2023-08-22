@@ -4754,6 +4754,160 @@ function markSuspenseBoundaryShouldCapture(
   suspenseBoundary.lanes = rootRenderLanes;
   return suspenseBoundary;
 }
+function throwException(
+  root,
+  returnFiber,
+  sourceFiber,
+  value,
+  rootRenderLanes
+) {
+  sourceFiber.flags |= 32768;
+  isDevToolsPresent && restorePendingUpdaters(root, rootRenderLanes);
+  if (
+    null !== value &&
+    "object" === typeof value &&
+    "function" === typeof value.then
+  ) {
+    if (enableLazyContextPropagation) {
+      var currentSourceFiber = sourceFiber.alternate;
+      null !== currentSourceFiber &&
+        propagateParentContextChanges(
+          currentSourceFiber,
+          sourceFiber,
+          rootRenderLanes,
+          !0
+        );
+    }
+    currentSourceFiber = sourceFiber.tag;
+    0 !== (sourceFiber.mode & 1) ||
+      (0 !== currentSourceFiber &&
+        11 !== currentSourceFiber &&
+        15 !== currentSourceFiber) ||
+      ((currentSourceFiber = sourceFiber.alternate)
+        ? ((sourceFiber.updateQueue = currentSourceFiber.updateQueue),
+          (sourceFiber.memoizedState = currentSourceFiber.memoizedState),
+          (sourceFiber.lanes = currentSourceFiber.lanes))
+        : ((sourceFiber.updateQueue = null),
+          (sourceFiber.memoizedState = null)));
+    currentSourceFiber = suspenseHandlerStackCursor.current;
+    if (null !== currentSourceFiber) {
+      switch (currentSourceFiber.tag) {
+        case 13:
+          sourceFiber.mode & 1 &&
+            (null === shellBoundary
+              ? renderDidSuspendDelayIfPossible()
+              : null === currentSourceFiber.alternate &&
+                0 === workInProgressRootExitStatus &&
+                (workInProgressRootExitStatus = 3));
+          currentSourceFiber.flags &= -257;
+          markSuspenseBoundaryShouldCapture(
+            currentSourceFiber,
+            returnFiber,
+            sourceFiber,
+            root,
+            rootRenderLanes
+          );
+          value === noopSuspenseyCommitThenable
+            ? (currentSourceFiber.flags |= 16384)
+            : ((returnFiber = currentSourceFiber.updateQueue),
+              null === returnFiber
+                ? (currentSourceFiber.updateQueue = new Set([value]))
+                : returnFiber.add(value),
+              currentSourceFiber.mode & 1 &&
+                attachPingListener(root, value, rootRenderLanes));
+          return;
+        case 22:
+          if (currentSourceFiber.mode & 1) {
+            currentSourceFiber.flags |= 65536;
+            value === noopSuspenseyCommitThenable
+              ? (currentSourceFiber.flags |= 16384)
+              : ((returnFiber = currentSourceFiber.updateQueue),
+                null === returnFiber
+                  ? ((returnFiber = {
+                      transitions: null,
+                      markerInstances: null,
+                      retryQueue: new Set([value])
+                    }),
+                    (currentSourceFiber.updateQueue = returnFiber))
+                  : ((sourceFiber = returnFiber.retryQueue),
+                    null === sourceFiber
+                      ? (returnFiber.retryQueue = new Set([value]))
+                      : sourceFiber.add(value)),
+                attachPingListener(root, value, rootRenderLanes));
+            return;
+          }
+      }
+      throw Error(formatProdErrorMessage(435, currentSourceFiber.tag));
+    }
+    if (1 === root.tag) {
+      attachPingListener(root, value, rootRenderLanes);
+      renderDidSuspendDelayIfPossible();
+      return;
+    }
+    value = Error(formatProdErrorMessage(426));
+  }
+  if (
+    isHydrating &&
+    sourceFiber.mode & 1 &&
+    ((currentSourceFiber = suspenseHandlerStackCursor.current),
+    null !== currentSourceFiber)
+  ) {
+    0 === (currentSourceFiber.flags & 65536) &&
+      (currentSourceFiber.flags |= 256);
+    markSuspenseBoundaryShouldCapture(
+      currentSourceFiber,
+      returnFiber,
+      sourceFiber,
+      root,
+      rootRenderLanes
+    );
+    queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
+    return;
+  }
+  root = value = createCapturedValueAtFiber(value, sourceFiber);
+  4 !== workInProgressRootExitStatus && (workInProgressRootExitStatus = 2);
+  null === workInProgressRootConcurrentErrors
+    ? (workInProgressRootConcurrentErrors = [root])
+    : workInProgressRootConcurrentErrors.push(root);
+  root = returnFiber;
+  do {
+    switch (root.tag) {
+      case 3:
+        root.flags |= 65536;
+        rootRenderLanes &= -rootRenderLanes;
+        root.lanes |= rootRenderLanes;
+        rootRenderLanes = createRootErrorUpdate(root, value, rootRenderLanes);
+        enqueueCapturedUpdate(root, rootRenderLanes);
+        return;
+      case 1:
+        if (
+          ((returnFiber = value),
+          (sourceFiber = root.type),
+          (currentSourceFiber = root.stateNode),
+          0 === (root.flags & 128) &&
+            ("function" === typeof sourceFiber.getDerivedStateFromError ||
+              (null !== currentSourceFiber &&
+                "function" === typeof currentSourceFiber.componentDidCatch &&
+                (null === legacyErrorBoundariesThatAlreadyFailed ||
+                  !legacyErrorBoundariesThatAlreadyFailed.has(
+                    currentSourceFiber
+                  )))))
+        ) {
+          root.flags |= 65536;
+          rootRenderLanes &= -rootRenderLanes;
+          root.lanes |= rootRenderLanes;
+          rootRenderLanes = createClassErrorUpdate(
+            root,
+            returnFiber,
+            rootRenderLanes
+          );
+          enqueueCapturedUpdate(root, rootRenderLanes);
+          return;
+        }
+    }
+    root = root.return;
+  } while (null !== root);
+}
 function processTransitionCallbacks(pendingTransitions, endTime, callbacks) {
   if (enableTransitionTracing && null !== pendingTransitions) {
     var transitionStart = pendingTransitions.transitionStart,
@@ -10642,18 +10796,19 @@ function handleThrow(root, thrownValue) {
     }
 }
 function shouldRemainOnPreviousScreen() {
-  if (
-    (workInProgressRootRenderLanes & 8388480) ===
-    workInProgressRootRenderLanes
-  )
-    return null === shellBoundary ? !0 : !1;
   var handler = suspenseHandlerStackCursor.current;
-  return null === handler ||
-    ((workInProgressRootRenderLanes & 125829120) !==
-      workInProgressRootRenderLanes &&
-      0 === (workInProgressRootRenderLanes & 1073741824))
-    ? !1
-    : handler === shellBoundary;
+  return null === handler
+    ? !0
+    : (workInProgressRootRenderLanes & 8388480) ===
+      workInProgressRootRenderLanes
+    ? null === shellBoundary
+      ? !0
+      : !1
+    : (workInProgressRootRenderLanes & 125829120) ===
+        workInProgressRootRenderLanes ||
+      0 !== (workInProgressRootRenderLanes & 1073741824)
+    ? handler === shellBoundary
+    : !1;
 }
 function pushDispatcher() {
   var prevDispatcher = ReactCurrentDispatcher.current;
@@ -10937,181 +11092,32 @@ function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
       (workInProgress = null);
   else {
     try {
-      a: {
-        var root = workInProgressRoot,
-          value = thrownValue;
-        thrownValue = workInProgressRootRenderLanes;
-        unitOfWork.flags |= 32768;
-        isDevToolsPresent && restorePendingUpdaters(root, thrownValue);
-        if (
-          null !== value &&
-          "object" === typeof value &&
-          "function" === typeof value.then
-        ) {
-          var wakeable = value;
-          if (enableLazyContextPropagation) {
-            var currentSourceFiber = unitOfWork.alternate;
-            null !== currentSourceFiber &&
-              propagateParentContextChanges(
-                currentSourceFiber,
-                unitOfWork,
-                thrownValue,
-                !0
-              );
-          }
-          var tag = unitOfWork.tag;
-          if (
-            0 === (unitOfWork.mode & 1) &&
-            (0 === tag || 11 === tag || 15 === tag)
-          ) {
-            var currentSource = unitOfWork.alternate;
-            currentSource
-              ? ((unitOfWork.updateQueue = currentSource.updateQueue),
-                (unitOfWork.memoizedState = currentSource.memoizedState),
-                (unitOfWork.lanes = currentSource.lanes))
-              : ((unitOfWork.updateQueue = null),
-                (unitOfWork.memoizedState = null));
-          }
-          var suspenseBoundary = suspenseHandlerStackCursor.current;
-          if (null !== suspenseBoundary) {
-            switch (suspenseBoundary.tag) {
-              case 13:
-                unitOfWork.mode & 1 &&
-                  (null === shellBoundary
-                    ? renderDidSuspendDelayIfPossible()
-                    : null === suspenseBoundary.alternate &&
-                      0 === workInProgressRootExitStatus &&
-                      (workInProgressRootExitStatus = 3));
-                suspenseBoundary.flags &= -257;
-                markSuspenseBoundaryShouldCapture(
-                  suspenseBoundary,
-                  returnFiber,
-                  unitOfWork,
-                  root,
-                  thrownValue
-                );
-                if (wakeable === noopSuspenseyCommitThenable)
-                  suspenseBoundary.flags |= 16384;
-                else {
-                  var retryQueue = suspenseBoundary.updateQueue;
-                  null === retryQueue
-                    ? (suspenseBoundary.updateQueue = new Set([wakeable]))
-                    : retryQueue.add(wakeable);
-                }
-                break;
-              case 22:
-                if (suspenseBoundary.mode & 1) {
-                  suspenseBoundary.flags |= 65536;
-                  if (wakeable === noopSuspenseyCommitThenable)
-                    suspenseBoundary.flags |= 16384;
-                  else {
-                    var offscreenQueue = suspenseBoundary.updateQueue;
-                    if (null === offscreenQueue) {
-                      var newOffscreenQueue = {
-                        transitions: null,
-                        markerInstances: null,
-                        retryQueue: new Set([wakeable])
-                      };
-                      suspenseBoundary.updateQueue = newOffscreenQueue;
-                    } else {
-                      var retryQueue$65 = offscreenQueue.retryQueue;
-                      null === retryQueue$65
-                        ? (offscreenQueue.retryQueue = new Set([wakeable]))
-                        : retryQueue$65.add(wakeable);
-                    }
-                  }
-                  break;
-                }
-              default:
-                throw Error(formatProdErrorMessage(435, suspenseBoundary.tag));
-            }
-            suspenseBoundary.mode & 1 &&
-              attachPingListener(root, wakeable, thrownValue);
-            break a;
-          } else if (1 === root.tag) {
-            attachPingListener(root, wakeable, thrownValue);
-            renderDidSuspendDelayIfPossible();
-            break a;
-          } else value = Error(formatProdErrorMessage(426));
-        }
-        if (isHydrating && unitOfWork.mode & 1) {
-          var suspenseBoundary$66 = suspenseHandlerStackCursor.current;
-          if (null !== suspenseBoundary$66) {
-            0 === (suspenseBoundary$66.flags & 65536) &&
-              (suspenseBoundary$66.flags |= 256);
-            markSuspenseBoundaryShouldCapture(
-              suspenseBoundary$66,
-              returnFiber,
-              unitOfWork,
-              root,
-              thrownValue
-            );
-            queueHydrationError(createCapturedValueAtFiber(value, unitOfWork));
-            break a;
-          }
-        }
-        root = value = createCapturedValueAtFiber(value, unitOfWork);
-        4 !== workInProgressRootExitStatus &&
-          (workInProgressRootExitStatus = 2);
-        null === workInProgressRootConcurrentErrors
-          ? (workInProgressRootConcurrentErrors = [root])
-          : workInProgressRootConcurrentErrors.push(root);
-        root = returnFiber;
-        do {
-          switch (root.tag) {
-            case 3:
-              var errorInfo = value;
-              root.flags |= 65536;
-              thrownValue &= -thrownValue;
-              root.lanes |= thrownValue;
-              var update = createRootErrorUpdate(root, errorInfo, thrownValue);
-              enqueueCapturedUpdate(root, update);
-              break a;
-            case 1:
-              currentSourceFiber = value;
-              var ctor = root.type,
-                instance = root.stateNode;
-              if (
-                0 === (root.flags & 128) &&
-                ("function" === typeof ctor.getDerivedStateFromError ||
-                  (null !== instance &&
-                    "function" === typeof instance.componentDidCatch &&
-                    (null === legacyErrorBoundariesThatAlreadyFailed ||
-                      !legacyErrorBoundariesThatAlreadyFailed.has(instance))))
-              ) {
-                root.flags |= 65536;
-                update = thrownValue & -thrownValue;
-                root.lanes |= update;
-                errorInfo = createClassErrorUpdate(
-                  root,
-                  currentSourceFiber,
-                  update
-                );
-                enqueueCapturedUpdate(root, errorInfo);
-                break a;
-              }
-          }
-          root = root.return;
-        } while (null !== root);
-      }
+      throwException(
+        workInProgressRoot,
+        returnFiber,
+        unitOfWork,
+        thrownValue,
+        workInProgressRootRenderLanes
+      );
     } catch (error) {
       throw ((workInProgress = returnFiber), error);
     }
     if (unitOfWork.flags & 32768)
       a: {
         do {
-          returnFiber = unwindWork(unitOfWork.alternate, unitOfWork);
-          if (null !== returnFiber) {
-            returnFiber.flags &= 32767;
-            workInProgress = returnFiber;
+          thrownValue = unwindWork(unitOfWork.alternate, unitOfWork);
+          if (null !== thrownValue) {
+            thrownValue.flags &= 32767;
+            workInProgress = thrownValue;
             break a;
           }
           if (0 !== (unitOfWork.mode & 2)) {
             stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !1);
-            returnFiber = unitOfWork.actualDuration;
-            for (update = unitOfWork.child; null !== update; )
-              (returnFiber += update.actualDuration), (update = update.sibling);
-            unitOfWork.actualDuration = returnFiber;
+            thrownValue = unitOfWork.actualDuration;
+            for (returnFiber = unitOfWork.child; null !== returnFiber; )
+              (thrownValue += returnFiber.actualDuration),
+                (returnFiber = returnFiber.sibling);
+            unitOfWork.actualDuration = thrownValue;
           }
           unitOfWork = unitOfWork.return;
           null !== unitOfWork &&
@@ -13649,14 +13655,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$387;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1636 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1636) {
-      var element$jscomp$inline_1637 = document.createElement("div");
-      element$jscomp$inline_1637.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1636 =
-        "function" === typeof element$jscomp$inline_1637.oninput;
+    var isSupported$jscomp$inline_1619 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1619) {
+      var element$jscomp$inline_1620 = document.createElement("div");
+      element$jscomp$inline_1620.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1619 =
+        "function" === typeof element$jscomp$inline_1620.oninput;
     }
-    JSCompiler_inline_result$jscomp$387 = isSupported$jscomp$inline_1636;
+    JSCompiler_inline_result$jscomp$387 = isSupported$jscomp$inline_1619;
   } else JSCompiler_inline_result$jscomp$387 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$387 &&
@@ -13968,20 +13974,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1677 = 0;
-  i$jscomp$inline_1677 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1677++
+  var i$jscomp$inline_1660 = 0;
+  i$jscomp$inline_1660 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1660++
 ) {
-  var eventName$jscomp$inline_1678 =
-      simpleEventPluginEvents[i$jscomp$inline_1677],
-    domEventName$jscomp$inline_1679 =
-      eventName$jscomp$inline_1678.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1680 =
-      eventName$jscomp$inline_1678[0].toUpperCase() +
-      eventName$jscomp$inline_1678.slice(1);
+  var eventName$jscomp$inline_1661 =
+      simpleEventPluginEvents[i$jscomp$inline_1660],
+    domEventName$jscomp$inline_1662 =
+      eventName$jscomp$inline_1661.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1663 =
+      eventName$jscomp$inline_1661[0].toUpperCase() +
+      eventName$jscomp$inline_1661.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1679,
-    "on" + capitalizedEvent$jscomp$inline_1680
+    domEventName$jscomp$inline_1662,
+    "on" + capitalizedEvent$jscomp$inline_1663
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16961,10 +16967,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1844 = {
+var devToolsConfig$jscomp$inline_1827 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-84557740",
+  version: "18.3.0-www-modern-4c5a5509",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16982,10 +16988,10 @@ var devToolsConfig$jscomp$inline_1844 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1844.bundleType,
-  version: devToolsConfig$jscomp$inline_1844.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1844.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1844.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1827.bundleType,
+  version: devToolsConfig$jscomp$inline_1827.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1827.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1827.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17002,14 +17008,14 @@ var devToolsConfig$jscomp$inline_1844 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1844.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1827.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-84557740"
+  reconcilerVersion: "18.3.0-www-modern-4c5a5509"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17160,7 +17166,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-84557740";
+exports.version = "18.3.0-www-modern-4c5a5509";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
