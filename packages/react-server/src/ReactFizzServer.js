@@ -281,7 +281,7 @@ function defaultErrorHandler(error: mixed) {
 
 function noop(): void {}
 
-function createRequestImpl(
+export function createRequest(
   children: ReactNodeList,
   resumableState: ResumableState,
   renderState: RenderState,
@@ -350,86 +350,6 @@ function createRequestImpl(
   );
   pingedTasks.push(rootTask);
   return request;
-}
-
-export function createRequest(
-  children: ReactNodeList,
-  resumableState: ResumableState,
-  renderState: RenderState,
-  rootFormatContext: FormatContext,
-  progressiveChunkSize: void | number,
-  onError: void | ((error: mixed) => ?string),
-  onAllReady: void | (() => void),
-  onShellReady: void | (() => void),
-  onShellError: void | ((error: mixed) => void),
-  onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string) => void),
-): Request {
-  return createRequestImpl(
-    children,
-    resumableState,
-    renderState,
-    rootFormatContext,
-    progressiveChunkSize,
-    onError,
-    onAllReady,
-    onShellReady,
-    onShellError,
-    onFatalError,
-    onPostpone,
-  );
-}
-
-export function createPrerenderRequest(
-  children: ReactNodeList,
-  resumableState: ResumableState,
-  renderState: RenderState,
-  rootFormatContext: FormatContext,
-  progressiveChunkSize: void | number,
-  onError: void | ((error: mixed) => ?string),
-  onAllReady: void | (() => void),
-  onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string) => void),
-): Request {
-  return createRequestImpl(
-    children,
-    resumableState,
-    renderState,
-    rootFormatContext,
-    progressiveChunkSize,
-    onError,
-    onAllReady,
-    undefined,
-    undefined,
-    onFatalError,
-    onPostpone,
-  );
-}
-
-export function resumeRequest(
-  children: ReactNodeList,
-  postponedState: PostponedState,
-  renderState: RenderState,
-  onError: void | ((error: mixed) => ?string),
-  onAllReady: void | (() => void),
-  onShellReady: void | (() => void),
-  onShellError: void | ((error: mixed) => void),
-  onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string) => void),
-): Request {
-  return createRequestImpl(
-    children,
-    postponedState.resumableState,
-    renderState,
-    postponedState.rootFormatContext,
-    postponedState.progressiveChunkSize,
-    onError,
-    onAllReady,
-    onShellReady,
-    onShellError,
-    onFatalError,
-    onPostpone,
-  );
 }
 
 let currentRequest: null | Request = null;

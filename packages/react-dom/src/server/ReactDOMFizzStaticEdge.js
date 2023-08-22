@@ -14,7 +14,7 @@ import type {PostponedState} from 'react-server/src/ReactFizzServer';
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createPrerenderRequest,
+  createRequest,
   startWork,
   startFlowing,
   abort,
@@ -78,7 +78,7 @@ function prerender(
       options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     );
-    const request = createPrerenderRequest(
+    const request = createRequest(
       children,
       resources,
       createRenderState(resources, undefined),
@@ -86,6 +86,8 @@ function prerender(
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
       onAllReady,
+      undefined,
+      undefined,
       onFatalError,
       options ? options.onPostpone : undefined,
     );

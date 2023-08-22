@@ -15,7 +15,6 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
-  resumeRequest,
   startWork,
   startFlowing,
   abort,
@@ -166,13 +165,15 @@ function resume(
       allReady.catch(() => {});
       reject(error);
     }
-    const request = resumeRequest(
+    const request = createRequest(
       children,
-      postponedState,
+      postponedState.resumableState,
       createRenderState(
         postponedState.resumableState,
         options ? options.nonce : undefined,
       ),
+      postponedState.rootFormatContext,
+      postponedState.progressiveChunkSize,
       options ? options.onError : undefined,
       onAllReady,
       onShellReady,
