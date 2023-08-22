@@ -1687,6 +1687,16 @@ export function shouldRemainOnPreviousScreen(): boolean {
   // takes into account both the priority of render and also whether showing a
   // fallback would produce a desirable user experience.
 
+  const handler = getSuspenseHandler();
+  if (handler === null) {
+    // There's no Suspense boundary that can provide a fallback. We have no
+    // choice but to remain on the previous screen.
+    // NOTE: We do this even for sync updates, for lack of any better option. In
+    // the future, we may change how we handle this, like by putting the whole
+    // root into a "detached" mode.
+    return true;
+  }
+
   // TODO: Once `use` has fully replaced the `throw promise` pattern, we should
   // be able to remove the equivalent check in finishConcurrentRender, and rely
   // just on this one.
@@ -1705,29 +1715,22 @@ export function shouldRemainOnPreviousScreen(): boolean {
     }
   }
 
-  const handler = getSuspenseHandler();
-  if (handler === null) {
-    // TODO: We should support suspending in the case where there's no
-    // parent Suspense boundary, even outside a transition. Somehow. Otherwise,
-    // an uncached promise can fall into an infinite loop.
-  } else {
-    if (
-      includesOnlyRetries(workInProgressRootRenderLanes) ||
-      // In this context, an OffscreenLane counts as a Retry
-      // TODO: It's become increasingly clear that Retries and Offscreen are
-      // deeply connected. They probably can be unified further.
-      includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
-    ) {
-      // During a retry, we can suspend rendering if the nearest Suspense boundary
-      // is the boundary of the "shell", because we're guaranteed not to block
-      // any new content from appearing.
-      //
-      // The reason we must check if this is a retry is because it guarantees
-      // that suspending the work loop won't block an actual update, because
-      // retries don't "update" anything; they fill in fallbacks that were left
-      // behind by a previous transition.
-      return handler === getShellBoundary();
-    }
+  if (
+    includesOnlyRetries(workInProgressRootRenderLanes) ||
+    // In this context, an OffscreenLane counts as a Retry
+    // TODO: It's become increasingly clear that Retries and Offscreen are
+    // deeply connected. They probably can be unified further.
+    includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)
+  ) {
+    // During a retry, we can suspend rendering if the nearest Suspense boundary
+    // is the boundary of the "shell", because we're guaranteed not to block
+    // any new content from appearing.
+    //
+    // The reason we must check if this is a retry is because it guarantees
+    // that suspending the work loop won't block an actual update, because
+    // retries don't "update" anything; they fill in fallbacks that were left
+    // behind by a previous transition.
+    return handler === getShellBoundary();
   }
 
   // For all other Lanes besides Transitions and Retries, we should not wait
