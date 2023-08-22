@@ -188,4 +188,8 @@ function resumeToPipeableStream(
   };
 }
 
-export {renderToPipeableStream, ReactVersion as version};
+export {
+  renderToPipeableStream,
+  resumeToPipeableStream,
+  ReactVersion as version,
+};

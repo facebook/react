@@ -12,7 +12,7 @@ module.exports = [
     entryPoints: [
       'react-dom',
       'react-dom/unstable_testing',
-      'react-dom/src/server/ReactDOMFizzServerNode.js',
+      'react-dom/src/server/react-dom-server.node.js',
       'react-dom/static.node',
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
@@ -27,6 +27,7 @@ module.exports = [
       'react-dom/server.node',
       'react-dom/static',
       'react-dom/static.node',
+      'react-dom/src/server/react-dom-server.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-webpack',
@@ -46,10 +47,11 @@ module.exports = [
   },
   {
     shortName: 'dom-bun',
-    entryPoints: ['react-dom', 'react-dom/src/server/ReactDOMFizzServerBun.js'],
+    entryPoints: ['react-dom', 'react-dom/src/server/react-dom-server.bun.js'],
     paths: [
       'react-dom',
       'react-dom/server.bun',
+      'react-dom/src/server/react-dom-server.bun',
       'react-dom/src/server/ReactDOMFizzServerBun.js',
       'react-dom-bindings',
       'shared/ReactDOMSharedInternals',
@@ -62,7 +64,7 @@ module.exports = [
     entryPoints: [
       'react-dom',
       'react-dom/unstable_testing',
-      'react-dom/src/server/ReactDOMFizzServerBrowser.js',
+      'react-dom/src/server/react-dom-server.browser.js',
       'react-dom/static.browser',
       'react-dom/server-rendering-stub',
       'react-dom/unstable_server-external-runtime',
@@ -76,6 +78,7 @@ module.exports = [
       'react-dom/server.browser',
       'react-dom/static.browser',
       'react-dom/unstable_testing',
+      'react-dom/src/server/react-dom-server.browser',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/server.browser
       'react-dom/src/server/ReactDOMFizzStaticBrowser.js',
       'react-server-dom-webpack',
@@ -118,7 +121,7 @@ module.exports = [
   {
     shortName: 'dom-edge-webpack',
     entryPoints: [
-      'react-dom/src/server/ReactDOMFizzServerEdge.js',
+      'react-dom/src/server/react-dom-server.edge.js',
       'react-dom/static.edge',
       'react-server-dom-webpack/server.edge',
       'react-server-dom-webpack/client.edge',
@@ -130,6 +133,7 @@ module.exports = [
       'react-dom/server.edge',
       'react-dom/static.edge',
       'react-dom/unstable_testing',
+      'react-dom/src/server/react-dom-server.edge',
       'react-dom/src/server/ReactDOMFizzServerEdge.js', // react-dom/server.edge
       'react-dom/src/server/ReactDOMFizzStaticEdge.js',
       'react-server-dom-webpack',
@@ -160,6 +164,7 @@ module.exports = [
       'react-dom/server.node',
       'react-dom/static',
       'react-dom/static.node',
+      'react-dom/src/server/react-dom-server.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-webpack',
@@ -193,6 +198,7 @@ module.exports = [
       'react-dom/server.node',
       'react-dom/static',
       'react-dom/static.node',
+      'react-dom/src/server/react-dom-server.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
       'react-dom/src/server/ReactDOMFizzStaticNode.js',
       'react-server-dom-esm',

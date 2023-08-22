@@ -196,4 +196,4 @@ function resume(
   });
 }
 
-export {renderToReadableStream, ReactVersion as version};
+export {renderToReadableStream, resume, ReactVersion as version};
