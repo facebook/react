@@ -3385,6 +3385,93 @@ body {
     );
   });
 
+  // @gate FIXME
+  it('loading a stylesheet as part of an error boundary UI, during initial render', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        const error = this.state.error;
+        if (error !== null) {
+          return (
+            <>
+              <link rel="stylesheet" href="A" precedence="default" />
+              {error.message}
+            </>
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    function Throws() {
+      throw new Error('Oops!');
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <ErrorBoundary>
+              <Suspense fallback="Loading...">
+                <Throws />
+              </Suspense>
+            </ErrorBoundary>
+          </body>
+        </html>
+      );
+    }
+
+    // Initial server render. Because something threw, a Suspense fallback
+    // is shown.
+    await act(() => {
+      renderToPipeableStream(<App />, {
+        onError(x) {
+          Scheduler.log('Caught server error: ' + x.message);
+        },
+      }).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>Loading...</body>
+      </html>,
+    );
+    assertLog(['Caught server error: Oops!']);
+
+    // Hydrate the tree. The error boundary will capture the error and attempt
+    // to show an error screen. However, the error screen includes a stylesheet,
+    // so the commit should suspend until the stylesheet loads.
+    ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+
+    // A preload for the stylesheet is inserted, but we still haven't committed
+    // the error screen.
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link as="style" href="A" rel="preload" />
+        </head>
+        <body>Loading...</body>
+      </html>,
+    );
+
+    // Finish loading the stylesheets. The commit should be unblocked, and the
+    // error screen should appear.
+    await clientAct(() => loadStylesheets());
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link data-precedence="default" href="A" rel="stylesheet" />
+          <link as="style" href="A" rel="preload" />
+        </head>
+        <body>Oops!</body>
+      </html>,
+    );
+  });
+
   it('will not flush a preload for a new rendered Stylesheet Resource if one was already flushed', async () => {
     function Component() {
       ReactDOM.preload('foo', {as: 'style'});
