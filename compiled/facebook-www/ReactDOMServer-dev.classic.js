@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-2d41a773";
+var ReactVersion = "18.3.0-www-classic-dcbc1f0e";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -1895,6 +1895,10 @@ var SentClientRenderFunction =
 var SentStyleInsertionFunction =
   /*       */
   8;
+// This cannot be resumed and therefore should only contain things that are
+// temporary working state or are never used in the prerender pass.
+// Per response, global state that is not contextual to the rendering subtree.
+// This is resumable and therefore should be serializable.
 
 var dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
 var startInlineScript = stringToPrecomputedChunk("<script>");
@@ -1932,8 +1936,32 @@ var scriptReplacer = function (match, prefix, s, suffix) {
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
 // is set, the server will send instructions via data attributes (instead of inline scripts)
 
-function createResponseState$1(
-  resources,
+function createRenderState$1(resumableState, nonce) {
+  var inlineScriptWithNonce =
+    nonce === undefined
+      ? startInlineScript
+      : stringToPrecomputedChunk(
+          '<script nonce="' + escapeTextForBrowser(nonce) + '">'
+        );
+  var idPrefix = resumableState.idPrefix;
+  return {
+    placeholderPrefix: stringToPrecomputedChunk(idPrefix + "P:"),
+    segmentPrefix: stringToPrecomputedChunk(idPrefix + "S:"),
+    boundaryPrefix: idPrefix + "B:",
+    startInlineScript: inlineScriptWithNonce,
+    htmlChunks: null,
+    headChunks: null,
+    charsetChunks: [],
+    preconnectChunks: [],
+    preloadChunks: [],
+    hoistableChunks: [],
+    nonce: nonce,
+    // like a module global for currently rendering boundary
+    boundaryResources: null,
+    stylesToHoist: false
+  };
+}
+function createResumableState(
   identifierPrefix,
   nonce,
   bootstrapScriptContent,
@@ -1942,17 +1970,17 @@ function createResponseState$1(
   externalRuntimeConfig
 ) {
   var idPrefix = identifierPrefix === undefined ? "" : identifierPrefix;
-  var inlineScriptWithNonce =
-    nonce === undefined
-      ? startInlineScript
-      : stringToPrecomputedChunk(
-          '<script nonce="' + escapeTextForBrowser(nonce) + '">'
-        );
   var bootstrapChunks = [];
-  var externalRuntimeScript = null;
   var streamingFormat = ScriptStreamingFormat;
+  var externalRuntimeScript = null;
 
   if (bootstrapScriptContent !== undefined) {
+    var inlineScriptWithNonce =
+      nonce === undefined
+        ? startInlineScript
+        : stringToPrecomputedChunk(
+            '<script nonce="' + escapeTextForBrowser(nonce) + '">'
+          );
     bootstrapChunks.push(
       inlineScriptWithNonce,
       stringToChunk(escapeBootstrapScriptContent(bootstrapScriptContent)),
@@ -1990,6 +2018,33 @@ function createResponseState$1(
     }
   }
 
+  var resumableState = {
+    externalRuntimeScript: externalRuntimeScript,
+    bootstrapChunks: bootstrapChunks,
+    idPrefix: idPrefix,
+    nextSuspenseID: 0,
+    streamingFormat: streamingFormat,
+    instructions: NothingSent,
+    hasBody: false,
+    hasHtml: false,
+    // @TODO add bootstrap script to implicit preloads
+    // persistent
+    preloadsMap: new Map(),
+    preconnectsMap: new Map(),
+    stylesMap: new Map(),
+    scriptsMap: new Map(),
+    // cleared on flush
+    preconnects: new Set(),
+    fontPreloads: new Set(),
+    highImagePreloads: new Set(),
+    // usedImagePreloads: new Set(),
+    precedences: new Map(),
+    stylePrecedences: new Map(),
+    bootstrapScripts: new Set(),
+    scripts: new Set(),
+    bulkPreloads: new Set()
+  };
+
   if (bootstrapScripts !== undefined) {
     for (var i = 0; i < bootstrapScripts.length; i++) {
       var scriptConfig = bootstrapScripts[i];
@@ -2003,7 +2058,13 @@ function createResponseState$1(
           : scriptConfig.crossOrigin === "use-credentials"
           ? "use-credentials"
           : "";
-      preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin);
+      preloadBootstrapScript(
+        resumableState,
+        src,
+        nonce,
+        integrity,
+        crossOrigin
+      );
       bootstrapChunks.push(
         startScriptSrc,
         stringToChunk(escapeTextForBrowser(src))
@@ -2051,7 +2112,13 @@ function createResponseState$1(
           ? "use-credentials"
           : "";
 
-      preloadBootstrapModule(resources, _src, nonce, _integrity, _crossOrigin);
+      preloadBootstrapModule(
+        resumableState,
+        _src,
+        nonce,
+        _integrity,
+        _crossOrigin
+      );
       bootstrapChunks.push(
         startModuleSrc,
         stringToChunk(escapeTextForBrowser(_src))
@@ -2082,27 +2149,7 @@ function createResponseState$1(
     }
   }
 
-  return {
-    bootstrapChunks: bootstrapChunks,
-    placeholderPrefix: stringToPrecomputedChunk(idPrefix + "P:"),
-    segmentPrefix: stringToPrecomputedChunk(idPrefix + "S:"),
-    boundaryPrefix: idPrefix + "B:",
-    idPrefix: idPrefix,
-    nextSuspenseID: 0,
-    streamingFormat: streamingFormat,
-    startInlineScript: inlineScriptWithNonce,
-    instructions: NothingSent,
-    externalRuntimeScript: externalRuntimeScript,
-    htmlChunks: null,
-    headChunks: null,
-    hasBody: false,
-    charsetChunks: [],
-    preconnectChunks: [],
-    preloadChunks: [],
-    hoistableChunks: [],
-    stylesToHoist: false,
-    nonce: nonce
-  };
+  return resumableState;
 } // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
@@ -2232,14 +2279,14 @@ function getChildFormatContext(parentContext, type, props) {
   return parentContext;
 }
 var UNINITIALIZED_SUSPENSE_BOUNDARY_ID = null;
-function assignSuspenseBoundaryID(responseState) {
-  var generatedID = responseState.nextSuspenseID++;
+function assignSuspenseBoundaryID(renderState, resumableState) {
+  var generatedID = resumableState.nextSuspenseID++;
   return stringToPrecomputedChunk(
-    responseState.boundaryPrefix + generatedID.toString(16)
+    renderState.boundaryPrefix + generatedID.toString(16)
   );
 }
-function makeId(responseState, treeId, localId) {
-  var idPrefix = responseState.idPrefix;
+function makeId(resumableState, treeId, localId) {
+  var idPrefix = resumableState.idPrefix;
   var id = ":" + idPrefix + "R" + treeId; // Unless this is the first id at this level, append a number at the end
   // that represents the position of this useId hook among all the useId
   // hooks for this fiber.
@@ -2256,7 +2303,7 @@ function encodeHTMLTextNode(text) {
 }
 
 var textSeparator = stringToPrecomputedChunk("<!-- -->");
-function pushTextInstance$1(target, text, responseState, textEmbedded) {
+function pushTextInstance$1(target, text, renderState, textEmbedded) {
   if (text === "") {
     // Empty text doesn't have a DOM node representation and the hydration is aware of this.
     return textEmbedded;
@@ -2273,7 +2320,7 @@ function pushTextInstance$1(target, text, responseState, textEmbedded) {
 
 function pushSegmentFinale$1(
   target,
-  responseState,
+  renderState,
   lastPushedText,
   textEmbedded
 ) {
@@ -2449,7 +2496,8 @@ function pushAdditionalFormFields(target, formData) {
 
 function pushFormActionAttribute(
   target,
-  responseState,
+  resumableState,
+  renderState,
   formAction,
   formEncType,
   formMethod,
@@ -2842,7 +2890,7 @@ function pushInnerHTML(target, innerHTML, children) {
       target.push(stringToChunk("" + html));
     }
   }
-} // TODO: Move these to ResponseState so that we warn for every request.
+} // TODO: Move these to RenderState so that we warn for every request.
 // It would help debugging in stateful servers (e.g. service worker).
 
 var didWarnDefaultInputValue = false;
@@ -3084,7 +3132,7 @@ function pushStartOption(target, props, formatContext) {
   return children;
 }
 
-function pushStartForm(target, props, responseState) {
+function pushStartForm(target, props, resumableState, renderState) {
   target.push(startChunkForTag("form"));
   var children = null;
   var innerHTML = null;
@@ -3163,7 +3211,7 @@ function pushStartForm(target, props, responseState) {
   return children;
 }
 
-function pushInput(target, props, responseState) {
+function pushInput(target, props, resumableState, renderState) {
   {
     checkControlledValueProps("input", props);
   }
@@ -3256,7 +3304,8 @@ function pushInput(target, props, responseState) {
 
   var formData = pushFormActionAttribute(
     target,
-    responseState,
+    resumableState,
+    renderState,
     formAction,
     formEncType,
     formMethod,
@@ -3314,7 +3363,7 @@ function pushInput(target, props, responseState) {
   return null;
 }
 
-function pushStartButton(target, props, responseState) {
+function pushStartButton(target, props, resumableState, renderState) {
   target.push(startChunkForTag("button"));
   var children = null;
   var innerHTML = null;
@@ -3385,7 +3434,8 @@ function pushStartButton(target, props, responseState) {
 
   var formData = pushFormActionAttribute(
     target,
-    responseState,
+    resumableState,
+    renderState,
     formAction,
     formEncType,
     formMethod,
@@ -3536,7 +3586,7 @@ function pushStartTextArea(target, props) {
 function pushMeta(
   target,
   props,
-  responseState,
+  renderState,
   textEmbedded,
   insertionMode,
   noscriptTagInScope
@@ -3556,12 +3606,12 @@ function pushMeta(
       }
 
       if (typeof props.charSet === "string") {
-        return pushSelfClosing(responseState.charsetChunks, props, "meta");
+        return pushSelfClosing(renderState.charsetChunks, props, "meta");
       } else if (props.name === "viewport") {
         // "viewport" isn't related to preconnect but it has the right priority
-        return pushSelfClosing(responseState.preconnectChunks, props, "meta");
+        return pushSelfClosing(renderState.preconnectChunks, props, "meta");
       } else {
-        return pushSelfClosing(responseState.hoistableChunks, props, "meta");
+        return pushSelfClosing(renderState.hoistableChunks, props, "meta");
       }
     }
   }
@@ -3570,8 +3620,8 @@ function pushMeta(
 function pushLink(
   target,
   props,
-  responseState,
-  resources,
+  resumableState,
+  renderState,
   textEmbedded,
   insertionMode,
   noscriptTagInScope
@@ -3643,11 +3693,11 @@ function pushLink(
         return pushLinkImpl(target, props);
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
-        var resource = resources.stylesMap.get(key);
+        var resource = resumableState.stylesMap.get(key);
 
         if (!resource) {
           var resourceProps = stylesheetPropsFromRawProps(props);
-          var preloadResource = resources.preloadsMap.get(key);
+          var preloadResource = resumableState.preloadsMap.get(key);
           var state = NoState;
 
           if (preloadResource) {
@@ -3670,12 +3720,12 @@ function pushLink(
             state: state,
             props: resourceProps
           };
-          resources.stylesMap.set(key, resource);
-          var precedenceSet = resources.precedences.get(precedence);
+          resumableState.stylesMap.set(key, resource);
+          var precedenceSet = resumableState.precedences.get(precedence);
 
           if (!precedenceSet) {
             precedenceSet = new Set();
-            resources.precedences.set(precedence, precedenceSet);
+            resumableState.precedences.set(precedence, precedenceSet);
             var emptyStyleResource = {
               type: "style",
               chunks: [],
@@ -3688,7 +3738,7 @@ function pushLink(
             precedenceSet.add(emptyStyleResource);
 
             {
-              if (resources.stylePrecedences.has(precedence)) {
+              if (resumableState.stylePrecedences.has(precedence)) {
                 error(
                   'React constructed an empty style resource when a style resource already exists for this precedence: "%s". This is a bug in React.',
                   precedence
@@ -3696,14 +3746,14 @@ function pushLink(
               }
             }
 
-            resources.stylePrecedences.set(precedence, emptyStyleResource);
+            resumableState.stylePrecedences.set(precedence, emptyStyleResource);
           }
 
           precedenceSet.add(resource);
         }
 
-        if (resources.boundaryResources) {
-          resources.boundaryResources.add(resource);
+        if (renderState.boundaryResources) {
+          renderState.boundaryResources.add(resource);
         }
 
         if (textEmbedded) {
@@ -3730,13 +3780,13 @@ function pushLink(
       switch (props.rel) {
         case "preconnect":
         case "dns-prefetch":
-          return pushLinkImpl(responseState.preconnectChunks, props);
+          return pushLinkImpl(renderState.preconnectChunks, props);
 
         case "preload":
-          return pushLinkImpl(responseState.preloadChunks, props);
+          return pushLinkImpl(renderState.preloadChunks, props);
 
         default:
-          return pushLinkImpl(responseState.hoistableChunks, props);
+          return pushLinkImpl(renderState.hoistableChunks, props);
       }
     }
   }
@@ -3776,7 +3826,8 @@ function pushLinkImpl(target, props) {
 function pushStyle(
   target,
   props,
-  resources,
+  resumableState,
+  renderState,
   textEmbedded,
   insertionMode,
   noscriptTagInScope
@@ -3837,10 +3888,10 @@ function pushStyle(
     }
 
     var key = getResourceKey("style", href);
-    var resource = resources.stylesMap.get(key);
+    var resource = resumableState.stylesMap.get(key);
 
     if (!resource) {
-      resource = resources.stylePrecedences.get(precedence);
+      resource = resumableState.stylePrecedences.get(precedence);
 
       if (!resource) {
         resource = {
@@ -3852,12 +3903,12 @@ function pushStyle(
             hrefs: [href]
           }
         };
-        resources.stylePrecedences.set(precedence, resource);
+        resumableState.stylePrecedences.set(precedence, resource);
         var precedenceSet = new Set();
         precedenceSet.add(resource);
 
         {
-          if (resources.precedences.has(precedence)) {
+          if (resumableState.precedences.has(precedence)) {
             error(
               'React constructed a new style precedence set when one already exists for this precedence: "%s". This is a bug in React.',
               precedence
@@ -3865,15 +3916,15 @@ function pushStyle(
           }
         }
 
-        resources.precedences.set(precedence, precedenceSet);
+        resumableState.precedences.set(precedence, precedenceSet);
       } else {
         resource.props.hrefs.push(href);
       }
 
-      resources.stylesMap.set(key, resource);
+      resumableState.stylesMap.set(key, resource);
 
-      if (resources.boundaryResources) {
-        resources.boundaryResources.add(resource);
+      if (renderState.boundaryResources) {
+        renderState.boundaryResources.add(resource);
       }
 
       pushStyleContents(resource.chunks, props);
@@ -3998,7 +4049,7 @@ function getImagePreloadKey(href, imageSrcSet, imageSizes) {
   return getResourceKey("image", uniquePart);
 }
 
-function pushImg(target, props, resources) {
+function pushImg(target, props, resumableState) {
   var src = props.src,
     srcSet = props.srcSet;
 
@@ -4024,10 +4075,10 @@ function pushImg(target, props, resources) {
     )
   ) {
     // We have a suspensey image and ought to preload it to optimize the loading of display blocking
-    // resources.
+    // resumableState.
     var sizes = props.sizes;
     var key = getImagePreloadKey(src, srcSet, sizes);
-    var resource = resources.preloadsMap.get(key);
+    var resource = resumableState.preloadsMap.get(key);
 
     if (!resource) {
       resource = {
@@ -4051,17 +4102,17 @@ function pushImg(target, props, resources) {
           referrerPolicy: props.referrerPolicy
         }
       };
-      resources.preloadsMap.set(key, resource);
+      resumableState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
     }
 
     if (
       props.fetchPriority === "high" ||
-      resources.highImagePreloads.size < 10
+      resumableState.highImagePreloads.size < 10
     ) {
-      resources.highImagePreloads.add(resource);
+      resumableState.highImagePreloads.add(resource);
     } else {
-      resources.bulkPreloads.add(resource);
+      resumableState.bulkPreloads.add(resource);
     }
   }
 
@@ -4131,7 +4182,7 @@ function pushStartMenuItem(target, props) {
 function pushTitle(
   target,
   props,
-  responseState,
+  renderState,
   insertionMode,
   noscriptTagInScope
 ) {
@@ -4188,7 +4239,7 @@ function pushTitle(
       !noscriptTagInScope &&
       props.itemProp == null
     ) {
-      pushTitleImpl(responseState.hoistableChunks, props);
+      pushTitleImpl(renderState.hoistableChunks, props);
       return null;
     } else {
       return pushTitleImpl(target, props);
@@ -4247,12 +4298,12 @@ function pushTitleImpl(target, props) {
   return null;
 }
 
-function pushStartHead(target, props, responseState, insertionMode) {
+function pushStartHead(target, props, renderState, insertionMode) {
   {
-    if (insertionMode < HTML_MODE && responseState.headChunks === null) {
+    if (insertionMode < HTML_MODE && renderState.headChunks === null) {
       // This <head> is the Document.head and should be part of the preamble
-      responseState.headChunks = [];
-      return pushStartGenericElement(responseState.headChunks, props, "head");
+      renderState.headChunks = [];
+      return pushStartGenericElement(renderState.headChunks, props, "head");
     } else {
       // This <head> is deep and is likely just an error. we emit it inline though.
       // Validation should warn that this tag is the the wrong spot.
@@ -4261,12 +4312,12 @@ function pushStartHead(target, props, responseState, insertionMode) {
   }
 }
 
-function pushStartHtml(target, props, responseState, insertionMode) {
+function pushStartHtml(target, props, renderState, insertionMode) {
   {
-    if (insertionMode === ROOT_HTML_MODE && responseState.htmlChunks === null) {
+    if (insertionMode === ROOT_HTML_MODE && renderState.htmlChunks === null) {
       // This <html> is the Document.documentElement and should be part of the preamble
-      responseState.htmlChunks = [doctypeChunk];
-      return pushStartGenericElement(responseState.htmlChunks, props, "html");
+      renderState.htmlChunks = [doctypeChunk];
+      return pushStartGenericElement(renderState.htmlChunks, props, "html");
     } else {
       // This <html> is deep and is likely just an error. we emit it inline though.
       // Validation should warn that this tag is the the wrong spot.
@@ -4278,7 +4329,7 @@ function pushStartHtml(target, props, responseState, insertionMode) {
 function pushScript(
   target,
   props,
-  resources,
+  resumableState,
   textEmbedded,
   insertionMode,
   noscriptTagInScope
@@ -4307,7 +4358,7 @@ function pushScript(
     var src = props.src;
     var key = getResourceKey("script", src); // We can make this <script> into a ScriptResource
 
-    var resource = resources.scriptsMap.get(key);
+    var resource = resumableState.scriptsMap.get(key);
 
     if (!resource) {
       resource = {
@@ -4316,11 +4367,11 @@ function pushScript(
         state: NoState,
         props: null
       };
-      resources.scriptsMap.set(key, resource); // Add to the script flushing queue
+      resumableState.scriptsMap.set(key, resource); // Add to the script flushing queue
 
-      resources.scripts.add(resource);
+      resumableState.scripts.add(resource);
       var scriptProps = props;
-      var preloadResource = resources.preloadsMap.get(key);
+      var preloadResource = resumableState.preloadsMap.get(key);
 
       if (preloadResource) {
         // If we already had a preload we don't want that resource to flush directly.
@@ -4628,8 +4679,8 @@ function pushStartInstance(
   target,
   type,
   props,
-  resources,
-  responseState,
+  resumableState,
+  renderState,
   formatContext,
   textEmbedded
 ) {
@@ -4689,10 +4740,10 @@ function pushStartInstance(
       return pushStartTextArea(target, props);
 
     case "input":
-      return pushInput(target, props, responseState);
+      return pushInput(target, props, resumableState, renderState);
 
     case "button":
-      return pushStartButton(target, props, responseState);
+      return pushStartButton(target, props, resumableState, renderState);
 
     case "form":
       return pushStartForm(target, props);
@@ -4704,7 +4755,7 @@ function pushStartInstance(
       return pushTitle(
         target,
         props,
-        responseState,
+        renderState,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope
       );
@@ -4713,8 +4764,8 @@ function pushStartInstance(
       return pushLink(
         target,
         props,
-        responseState,
-        resources,
+        resumableState,
+        renderState,
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope
@@ -4724,7 +4775,7 @@ function pushStartInstance(
       return pushScript(
         target,
         props,
-        resources,
+        resumableState,
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope
@@ -4734,7 +4785,8 @@ function pushStartInstance(
       return pushStyle(
         target,
         props,
-        resources,
+        resumableState,
+        renderState,
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope
@@ -4744,7 +4796,7 @@ function pushStartInstance(
       return pushMeta(
         target,
         props,
-        responseState,
+        renderState,
         textEmbedded,
         formatContext.insertionMode,
         formatContext.noscriptTagInScope
@@ -4757,7 +4809,7 @@ function pushStartInstance(
     }
 
     case "img": {
-      return pushImg(target, props, resources);
+      return pushImg(target, props, resumableState);
     }
     // Omitted close tags
 
@@ -4793,7 +4845,7 @@ function pushStartInstance(
       return pushStartHead(
         target,
         props,
-        responseState,
+        renderState,
         formatContext.insertionMode
       );
 
@@ -4801,7 +4853,7 @@ function pushStartInstance(
       return pushStartHtml(
         target,
         props,
-        responseState,
+        renderState,
         formatContext.insertionMode
       );
     }
@@ -4818,7 +4870,7 @@ function pushStartInstance(
 }
 var endTag1 = stringToPrecomputedChunk("</");
 var endTag2 = stringToPrecomputedChunk(">");
-function pushEndInstance(target, type, props, responseState, formatContext) {
+function pushEndInstance(target, type, props, resumableState, formatContext) {
   switch (type) {
     // When float is on we expect title and script tags to always be pushed in
     // a unit and never return children. when we end up pushing the end tag we
@@ -4856,7 +4908,7 @@ function pushEndInstance(target, type, props, responseState, formatContext) {
 
     case "body": {
       if (formatContext.insertionMode <= HTML_HTML_MODE) {
-        responseState.hasBody = true;
+        resumableState.hasBody = true;
         return;
       }
 
@@ -4865,6 +4917,7 @@ function pushEndInstance(target, type, props, responseState, formatContext) {
 
     case "html":
       if (formatContext.insertionMode === ROOT_HTML_MODE) {
+        resumableState.hasHtml = true;
         return;
       }
 
@@ -4874,8 +4927,8 @@ function pushEndInstance(target, type, props, responseState, formatContext) {
   target.push(endTag1, stringToChunk(type), endTag2);
 }
 
-function writeBootstrap(destination, responseState) {
-  var bootstrapChunks = responseState.bootstrapChunks;
+function writeBootstrap(destination, resumableState) {
+  var bootstrapChunks = resumableState.bootstrapChunks;
   var i = 0;
 
   for (; i < bootstrapChunks.length - 1; i++) {
@@ -4891,8 +4944,8 @@ function writeBootstrap(destination, responseState) {
   return true;
 }
 
-function writeCompletedRoot(destination, responseState) {
-  return writeBootstrap(destination, responseState);
+function writeCompletedRoot(destination, resumableState) {
+  return writeBootstrap(destination, resumableState);
 } // Structural Nodes
 // A placeholder is a node inside a hidden partial tree that can be filled in later, but before
 // display. It's never visible to users. We use the template tag because it can be used in every
@@ -4900,9 +4953,9 @@ function writeCompletedRoot(destination, responseState) {
 
 var placeholder1 = stringToPrecomputedChunk('<template id="');
 var placeholder2 = stringToPrecomputedChunk('"></template>');
-function writePlaceholder(destination, responseState, id) {
+function writePlaceholder(destination, renderState, id) {
   writeChunk(destination, placeholder1);
-  writeChunk(destination, responseState.placeholderPrefix);
+  writeChunk(destination, renderState.placeholderPrefix);
   var formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
   return writeChunkAndReturn(destination, placeholder2);
@@ -4927,10 +4980,10 @@ var clientRenderedSuspenseBoundaryError1C =
   stringToPrecomputedChunk(' data-stck="');
 var clientRenderedSuspenseBoundaryError2 =
   stringToPrecomputedChunk("></template>");
-function writeStartCompletedSuspenseBoundary$1(destination, responseState) {
+function writeStartCompletedSuspenseBoundary$1(destination, renderState) {
   return writeChunkAndReturn(destination, startCompletedSuspenseBoundary);
 }
-function writeStartPendingSuspenseBoundary(destination, responseState, id) {
+function writeStartPendingSuspenseBoundary(destination, renderState, id) {
   writeChunk(destination, startPendingSuspenseBoundary1);
 
   if (id === null) {
@@ -4944,7 +4997,7 @@ function writeStartPendingSuspenseBoundary(destination, responseState, id) {
 }
 function writeStartClientRenderedSuspenseBoundary$1(
   destination,
-  responseState,
+  renderState,
   errorDigest,
   errorMesssage,
   errorComponentStack
@@ -4997,13 +5050,13 @@ function writeStartClientRenderedSuspenseBoundary$1(
   );
   return result;
 }
-function writeEndCompletedSuspenseBoundary$1(destination, responseState) {
+function writeEndCompletedSuspenseBoundary$1(destination, renderState) {
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
-function writeEndPendingSuspenseBoundary(destination, responseState) {
+function writeEndPendingSuspenseBoundary(destination, renderState) {
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
-function writeEndClientRenderedSuspenseBoundary$1(destination, responseState) {
+function writeEndClientRenderedSuspenseBoundary$1(destination, renderState) {
   return writeChunkAndReturn(destination, endSuspenseBoundary);
 }
 var startSegmentHTML = stringToPrecomputedChunk('<div hidden id="');
@@ -5035,34 +5088,34 @@ var startSegmentColGroup = stringToPrecomputedChunk(
 );
 var startSegmentColGroup2 = stringToPrecomputedChunk('">');
 var endSegmentColGroup = stringToPrecomputedChunk("</colgroup></table>");
-function writeStartSegment(destination, responseState, formatContext, id) {
+function writeStartSegment(destination, renderState, formatContext, id) {
   switch (formatContext.insertionMode) {
     case ROOT_HTML_MODE:
     case HTML_HTML_MODE:
     case HTML_MODE: {
       writeChunk(destination, startSegmentHTML);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentHTML2);
     }
 
     case SVG_MODE: {
       writeChunk(destination, startSegmentSVG);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentSVG2);
     }
 
     case MATHML_MODE: {
       writeChunk(destination, startSegmentMathML);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentMathML2);
     }
 
     case HTML_TABLE_MODE: {
       writeChunk(destination, startSegmentTable);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentTable2);
     }
@@ -5073,21 +5126,21 @@ function writeStartSegment(destination, responseState, formatContext, id) {
 
     case HTML_TABLE_BODY_MODE: {
       writeChunk(destination, startSegmentTableBody);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentTableBody2);
     }
 
     case HTML_TABLE_ROW_MODE: {
       writeChunk(destination, startSegmentTableRow);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentTableRow2);
     }
 
     case HTML_COLGROUP_MODE: {
       writeChunk(destination, startSegmentColGroup);
-      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, renderState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
       return writeChunkAndReturn(destination, startSegmentColGroup2);
     }
@@ -5147,20 +5200,21 @@ var completeSegmentData2 = stringToPrecomputedChunk('" data-pid="');
 var completeSegmentDataEnd = dataElementQuotedEnd;
 function writeCompletedSegmentInstruction(
   destination,
-  responseState,
+  resumableState,
+  renderState,
   contentSegmentID
 ) {
-  var scriptFormat = responseState.streamingFormat === ScriptStreamingFormat;
+  var scriptFormat = resumableState.streamingFormat === ScriptStreamingFormat;
 
   if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
+    writeChunk(destination, renderState.startInlineScript);
 
     if (
-      (responseState.instructions & SentCompleteSegmentFunction) ===
+      (resumableState.instructions & SentCompleteSegmentFunction) ===
       NothingSent
     ) {
       // The first time we write this, we'll need to include the full implementation.
-      responseState.instructions |= SentCompleteSegmentFunction;
+      resumableState.instructions |= SentCompleteSegmentFunction;
       writeChunk(destination, completeSegmentScript1Full);
     } else {
       // Future calls can just reuse the same function.
@@ -5170,7 +5224,7 @@ function writeCompletedSegmentInstruction(
     writeChunk(destination, completeSegmentData1);
   } // Write function arguments, which are string literals
 
-  writeChunk(destination, responseState.segmentPrefix);
+  writeChunk(destination, renderState.segmentPrefix);
   var formattedID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, formattedID);
 
@@ -5180,7 +5234,7 @@ function writeCompletedSegmentInstruction(
     writeChunk(destination, completeSegmentData2);
   }
 
-  writeChunk(destination, responseState.placeholderPrefix);
+  writeChunk(destination, renderState.placeholderPrefix);
   writeChunk(destination, formattedID);
 
   if (scriptFormat) {
@@ -5216,7 +5270,8 @@ var completeBoundaryData3a = stringToPrecomputedChunk('" data-sty="');
 var completeBoundaryDataEnd = dataElementQuotedEnd;
 function writeCompletedBoundaryInstruction(
   destination,
-  responseState,
+  resumableState,
+  renderState,
   boundaryID,
   contentSegmentID,
   boundaryResources
@@ -5224,45 +5279,45 @@ function writeCompletedBoundaryInstruction(
   var requiresStyleInsertion;
 
   {
-    requiresStyleInsertion = responseState.stylesToHoist; // If necessary stylesheets will be flushed with this instruction.
+    requiresStyleInsertion = renderState.stylesToHoist; // If necessary stylesheets will be flushed with this instruction.
     // Any style tags not yet hoisted in the Document will also be hoisted.
     // We reset this state since after this instruction executes all styles
     // up to this point will have been hoisted
 
-    responseState.stylesToHoist = false;
+    renderState.stylesToHoist = false;
   }
 
-  var scriptFormat = responseState.streamingFormat === ScriptStreamingFormat;
+  var scriptFormat = resumableState.streamingFormat === ScriptStreamingFormat;
 
   if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
+    writeChunk(destination, renderState.startInlineScript);
 
     if (requiresStyleInsertion) {
       if (
-        (responseState.instructions & SentCompleteBoundaryFunction) ===
+        (resumableState.instructions & SentCompleteBoundaryFunction) ===
         NothingSent
       ) {
-        responseState.instructions |=
+        resumableState.instructions |=
           SentStyleInsertionFunction | SentCompleteBoundaryFunction;
         writeChunk(
           destination,
           clonePrecomputedChunk(completeBoundaryWithStylesScript1FullBoth)
         );
       } else if (
-        (responseState.instructions & SentStyleInsertionFunction) ===
+        (resumableState.instructions & SentStyleInsertionFunction) ===
         NothingSent
       ) {
-        responseState.instructions |= SentStyleInsertionFunction;
+        resumableState.instructions |= SentStyleInsertionFunction;
         writeChunk(destination, completeBoundaryWithStylesScript1FullPartial);
       } else {
         writeChunk(destination, completeBoundaryWithStylesScript1Partial);
       }
     } else {
       if (
-        (responseState.instructions & SentCompleteBoundaryFunction) ===
+        (resumableState.instructions & SentCompleteBoundaryFunction) ===
         NothingSent
       ) {
-        responseState.instructions |= SentCompleteBoundaryFunction;
+        resumableState.instructions |= SentCompleteBoundaryFunction;
         writeChunk(destination, completeBoundaryScript1Full);
       } else {
         writeChunk(destination, completeBoundaryScript1Partial);
@@ -5291,7 +5346,7 @@ function writeCompletedBoundaryInstruction(
     writeChunk(destination, completeBoundaryData2);
   }
 
-  writeChunk(destination, responseState.segmentPrefix);
+  writeChunk(destination, renderState.segmentPrefix);
   writeChunk(destination, formattedContentID);
 
   if (requiresStyleInsertion) {
@@ -5322,7 +5377,7 @@ function writeCompletedBoundaryInstruction(
     writeMore = writeChunkAndReturn(destination, completeBoundaryDataEnd);
   }
 
-  return writeBootstrap(destination, responseState) && writeMore;
+  return writeBootstrap(destination, resumableState) && writeMore;
 }
 var clientRenderScript1Full = stringToPrecomputedChunk(
   clientRenderBoundary + ';$RX("'
@@ -5340,23 +5395,24 @@ var clientRenderData4 = stringToPrecomputedChunk('" data-stck="');
 var clientRenderDataEnd = dataElementQuotedEnd;
 function writeClientRenderBoundaryInstruction(
   destination,
-  responseState,
+  resumableState,
+  renderState,
   boundaryID,
   errorDigest,
   errorMessage,
   errorComponentStack
 ) {
-  var scriptFormat = responseState.streamingFormat === ScriptStreamingFormat;
+  var scriptFormat = resumableState.streamingFormat === ScriptStreamingFormat;
 
   if (scriptFormat) {
-    writeChunk(destination, responseState.startInlineScript);
+    writeChunk(destination, renderState.startInlineScript);
 
     if (
-      (responseState.instructions & SentClientRenderFunction) ===
+      (resumableState.instructions & SentClientRenderFunction) ===
       NothingSent
     ) {
       // The first time we write this, we'll need to include the full implementation.
-      responseState.instructions |= SentClientRenderFunction;
+      resumableState.instructions |= SentClientRenderFunction;
       writeChunk(destination, clientRenderScript1Full);
     } else {
       // Future calls can just reuse the same function.
@@ -5570,7 +5626,7 @@ function flushStyleTagsLateForBoundary(resource) {
 function writeResourcesForBoundary(
   destination,
   boundaryResources,
-  responseState
+  renderState
 ) {
   // Reset these on each invocation, they are only safe to read in this function
   currentlyRenderingBoundaryHasStylesToHoist = false;
@@ -5579,7 +5635,7 @@ function writeResourcesForBoundary(
   boundaryResources.forEach(flushStyleTagsLateForBoundary, destination);
 
   if (currentlyRenderingBoundaryHasStylesToHoist) {
-    responseState.stylesToHoist = true;
+    renderState.stylesToHoist = true;
   }
 
   return destinationHasCapacity;
@@ -5727,25 +5783,25 @@ function preloadLateStyles(set, precedence) {
 
 function writePreamble(
   destination,
-  resources,
-  responseState,
+  resumableState,
+  renderState,
   willFlushAllSegments
 ) {
   // This function must be called exactly once on every request
-  if (!willFlushAllSegments && responseState.externalRuntimeScript) {
+  if (!willFlushAllSegments && resumableState.externalRuntimeScript) {
     // If the root segment is incomplete due to suspended tasks
     // (e.g. willFlushAllSegments = false) and we are using data
     // streaming format, ensure the external runtime is sent.
     // (User code could choose to send this even earlier by calling
     //  preinit(...), if they know they will suspend).
-    var _responseState$extern = responseState.externalRuntimeScript,
-      src = _responseState$extern.src,
-      chunks = _responseState$extern.chunks;
-    internalPreinitScript(resources, src, chunks);
+    var _resumableState$exter = resumableState.externalRuntimeScript,
+      src = _resumableState$exter.src,
+      chunks = _resumableState$exter.chunks;
+    internalPreinitScript(resumableState, src, chunks);
   }
 
-  var htmlChunks = responseState.htmlChunks;
-  var headChunks = responseState.headChunks;
+  var htmlChunks = renderState.htmlChunks;
+  var headChunks = renderState.headChunks;
   var i = 0; // Emit open tags before Hoistables and Resources
 
   if (htmlChunks) {
@@ -5770,7 +5826,7 @@ function writePreamble(
     }
   } // Emit high priority Hoistables
 
-  var charsetChunks = responseState.charsetChunks;
+  var charsetChunks = renderState.charsetChunks;
 
   for (i = 0; i < charsetChunks.length; i++) {
     writeChunk(destination, charsetChunks[i]);
@@ -5778,28 +5834,31 @@ function writePreamble(
 
   charsetChunks.length = 0; // emit preconnect resources
 
-  resources.preconnects.forEach(flushResourceInPreamble, destination);
-  resources.preconnects.clear();
-  var preconnectChunks = responseState.preconnectChunks;
+  resumableState.preconnects.forEach(flushResourceInPreamble, destination);
+  resumableState.preconnects.clear();
+  var preconnectChunks = renderState.preconnectChunks;
 
   for (i = 0; i < preconnectChunks.length; i++) {
     writeChunk(destination, preconnectChunks[i]);
   }
 
   preconnectChunks.length = 0;
-  resources.fontPreloads.forEach(flushResourceInPreamble, destination);
-  resources.fontPreloads.clear();
-  resources.highImagePreloads.forEach(flushResourceInPreamble, destination);
-  resources.highImagePreloads.clear(); // Flush unblocked stylesheets by precedence
+  resumableState.fontPreloads.forEach(flushResourceInPreamble, destination);
+  resumableState.fontPreloads.clear();
+  resumableState.highImagePreloads.forEach(
+    flushResourceInPreamble,
+    destination
+  );
+  resumableState.highImagePreloads.clear(); // Flush unblocked stylesheets by precedence
 
-  resources.precedences.forEach(flushAllStylesInPreamble, destination);
-  resources.bootstrapScripts.forEach(flushResourceInPreamble, destination);
-  resources.scripts.forEach(flushResourceInPreamble, destination);
-  resources.scripts.clear();
-  resources.bulkPreloads.forEach(flushResourceInPreamble, destination);
-  resources.bulkPreloads.clear(); // Write embedding preloadChunks
+  resumableState.precedences.forEach(flushAllStylesInPreamble, destination);
+  resumableState.bootstrapScripts.forEach(flushResourceInPreamble, destination);
+  resumableState.scripts.forEach(flushResourceInPreamble, destination);
+  resumableState.scripts.clear();
+  resumableState.bulkPreloads.forEach(flushResourceInPreamble, destination);
+  resumableState.bulkPreloads.clear(); // Write embedding preloadChunks
 
-  var preloadChunks = responseState.preloadChunks;
+  var preloadChunks = renderState.preloadChunks;
 
   for (i = 0; i < preloadChunks.length; i++) {
     writeChunk(destination, preloadChunks[i]);
@@ -5807,7 +5866,7 @@ function writePreamble(
 
   preloadChunks.length = 0; // Write embedding hoistableChunks
 
-  var hoistableChunks = responseState.hoistableChunks;
+  var hoistableChunks = renderState.hoistableChunks;
 
   for (i = 0; i < hoistableChunks.length; i++) {
     writeChunk(destination, hoistableChunks[i]);
@@ -5830,35 +5889,38 @@ function writePreamble(
 // in the future to be backpressure sensitive but that requires a larger refactor
 // of the flushing code in Fizz.
 
-function writeHoistables(destination, resources, responseState) {
+function writeHoistables(destination, resumableState, renderState) {
   var i = 0; // Emit high priority Hoistables
   // We omit charsetChunks because we have already sent the shell and if it wasn't
   // already sent it is too late now.
 
-  resources.preconnects.forEach(flushResourceLate, destination);
-  resources.preconnects.clear();
-  var preconnectChunks = responseState.preconnectChunks;
+  resumableState.preconnects.forEach(flushResourceLate, destination);
+  resumableState.preconnects.clear();
+  var preconnectChunks = renderState.preconnectChunks;
 
   for (i = 0; i < preconnectChunks.length; i++) {
     writeChunk(destination, preconnectChunks[i]);
   }
 
   preconnectChunks.length = 0;
-  resources.fontPreloads.forEach(flushResourceLate, destination);
-  resources.fontPreloads.clear();
-  resources.highImagePreloads.forEach(flushResourceInPreamble, destination);
-  resources.highImagePreloads.clear(); // Preload any stylesheets. these will emit in a render instruction that follows this
+  resumableState.fontPreloads.forEach(flushResourceLate, destination);
+  resumableState.fontPreloads.clear();
+  resumableState.highImagePreloads.forEach(
+    flushResourceInPreamble,
+    destination
+  );
+  resumableState.highImagePreloads.clear(); // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
 
-  resources.precedences.forEach(preloadLateStyles, destination); // bootstrap scripts should flush above script priority but these can only flush in the preamble
+  resumableState.precedences.forEach(preloadLateStyles, destination); // bootstrap scripts should flush above script priority but these can only flush in the preamble
   // so we elide the code here for performance
 
-  resources.scripts.forEach(flushResourceLate, destination);
-  resources.scripts.clear();
-  resources.bulkPreloads.forEach(flushResourceLate, destination);
-  resources.bulkPreloads.clear(); // Write embedding preloadChunks
+  resumableState.scripts.forEach(flushResourceLate, destination);
+  resumableState.scripts.clear();
+  resumableState.bulkPreloads.forEach(flushResourceLate, destination);
+  resumableState.bulkPreloads.clear(); // Write embedding preloadChunks
 
-  var preloadChunks = responseState.preloadChunks;
+  var preloadChunks = renderState.preloadChunks;
 
   for (i = 0; i < preloadChunks.length; i++) {
     writeChunk(destination, preloadChunks[i]);
@@ -5866,7 +5928,7 @@ function writeHoistables(destination, resources, responseState) {
 
   preloadChunks.length = 0; // Write embedding hoistableChunks
 
-  var hoistableChunks = responseState.hoistableChunks;
+  var hoistableChunks = renderState.hoistableChunks;
 
   for (i = 0; i < hoistableChunks.length; i++) {
     writeChunk(destination, hoistableChunks[i]);
@@ -5874,14 +5936,14 @@ function writeHoistables(destination, resources, responseState) {
 
   hoistableChunks.length = 0;
 }
-function writePostamble(destination, responseState) {
-  if (responseState.hasBody) {
+function writePostamble(destination, resumableState) {
+  if (resumableState.hasBody) {
     writeChunk(destination, endTag1);
     writeChunk(destination, stringToChunk("body"));
     writeChunk(destination, endTag2);
   }
 
-  if (responseState.htmlChunks) {
+  if (resumableState.hasHtml) {
     writeChunk(destination, endTag1);
     writeChunk(destination, stringToChunk("html"));
     writeChunk(destination, endTag2);
@@ -6318,37 +6380,15 @@ var Blocked =
 
 var PreloadFlushed =
   /*     */
-  8; // @TODO add bootstrap script to implicit preloads
-
-function createResources() {
-  return {
-    // persistent
-    preloadsMap: new Map(),
-    preconnectsMap: new Map(),
-    stylesMap: new Map(),
-    scriptsMap: new Map(),
-    // cleared on flush
-    preconnects: new Set(),
-    fontPreloads: new Set(),
-    highImagePreloads: new Set(),
-    // usedImagePreloads: new Set(),
-    precedences: new Map(),
-    stylePrecedences: new Map(),
-    bootstrapScripts: new Set(),
-    scripts: new Set(),
-    bulkPreloads: new Set(),
-    // like a module global for currently rendering boundary
-    boundaryResources: null
-  };
-}
+  8;
 function createBoundaryResources() {
   return new Set();
 }
 function setCurrentlyRenderingBoundaryResourcesTarget(
-  resources,
+  renderState,
   boundaryResources
 ) {
-  resources.boundaryResources = boundaryResources;
+  renderState.boundaryResources = boundaryResources;
 }
 
 function getResourceKey(as, href) {
@@ -6367,7 +6407,7 @@ function prefetchDNS(href, options) {
     return;
   }
 
-  var resources = getResources(request);
+  var resumableState = getResumableState(request);
 
   {
     if (typeof href !== "string" || !href) {
@@ -6395,7 +6435,7 @@ function prefetchDNS(href, options) {
 
   if (typeof href === "string" && href) {
     var key = getResourceKey("prefetchDNS", href);
-    var resource = resources.preconnectsMap.get(key);
+    var resource = resumableState.preconnectsMap.get(key);
 
     if (!resource) {
       resource = {
@@ -6404,14 +6444,14 @@ function prefetchDNS(href, options) {
         state: NoState,
         props: null
       };
-      resources.preconnectsMap.set(key, resource);
+      resumableState.preconnectsMap.set(key, resource);
       pushLinkImpl(resource.chunks, {
         href: href,
         rel: "dns-prefetch"
       });
     }
 
-    resources.preconnects.add(resource);
+    resumableState.preconnects.add(resource);
     flushResources(request);
   }
 }
@@ -6428,7 +6468,7 @@ function preconnect(href, options) {
     return;
   }
 
-  var resources = getResources(request);
+  var resumableState = getResumableState(request);
 
   {
     if (typeof href !== "string" || !href) {
@@ -6461,7 +6501,7 @@ function preconnect(href, options) {
       (crossOrigin === null ? "null" : crossOrigin) +
       "]" +
       href;
-    var resource = resources.preconnectsMap.get(key);
+    var resource = resumableState.preconnectsMap.get(key);
 
     if (!resource) {
       resource = {
@@ -6470,7 +6510,7 @@ function preconnect(href, options) {
         state: NoState,
         props: null
       };
-      resources.preconnectsMap.set(key, resource);
+      resumableState.preconnectsMap.set(key, resource);
       pushLinkImpl(resource.chunks, {
         rel: "preconnect",
         href: href,
@@ -6478,7 +6518,7 @@ function preconnect(href, options) {
       });
     }
 
-    resources.preconnects.add(resource);
+    resumableState.preconnects.add(resource);
     flushResources(request);
   }
 }
@@ -6495,7 +6535,7 @@ function preload(href, options) {
     return;
   }
 
-  var resources = getResources(request);
+  var resumableState = getResumableState(request);
 
   {
     var encountered = "";
@@ -6549,7 +6589,7 @@ function preload(href, options) {
       key = getResourceKey(as, href);
     }
 
-    var resource = resources.preloadsMap.get(key);
+    var resource = resumableState.preloadsMap.get(key);
 
     if (!resource) {
       resource = {
@@ -6558,16 +6598,16 @@ function preload(href, options) {
         state: NoState,
         props: preloadPropsFromPreloadOptions(href, as, options)
       };
-      resources.preloadsMap.set(key, resource);
+      resumableState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
     }
 
     if (as === "font") {
-      resources.fontPreloads.add(resource);
+      resumableState.fontPreloads.add(resource);
     } else if (as === "image" && options.fetchPriority === "high") {
-      resources.highImagePreloads.add(resource);
+      resumableState.highImagePreloads.add(resource);
     } else {
-      resources.bulkPreloads.add(resource);
+      resumableState.bulkPreloads.add(resource);
     }
 
     flushResources(request);
@@ -6586,7 +6626,7 @@ function preloadModule(href, options) {
     return;
   }
 
-  var resources = getResources(request);
+  var resumableState = getResumableState(request);
 
   {
     var encountered = "";
@@ -6621,7 +6661,7 @@ function preloadModule(href, options) {
   if (typeof href === "string" && href) {
     var as = options && typeof options.as === "string" ? options.as : "script";
     var key = getResourceKey(as, href);
-    var resource = resources.preloadsMap.get(key);
+    var resource = resumableState.preloadsMap.get(key);
 
     if (!resource) {
       resource = {
@@ -6630,11 +6670,11 @@ function preloadModule(href, options) {
         state: NoState,
         props: preloadModulePropsFromPreloadModuleOptions(href, as, options)
       };
-      resources.preloadsMap.set(key, resource);
+      resumableState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
     }
 
-    resources.bulkPreloads.add(resource);
+    resumableState.bulkPreloads.add(resource);
     flushResources(request);
   }
 }
@@ -6651,7 +6691,7 @@ function preinit(href, options) {
     return;
   }
 
-  var resources = getResources(request);
+  var resumableState = getResumableState(request);
 
   {
     if (typeof href !== "string" || !href) {
@@ -6683,12 +6723,12 @@ function preinit(href, options) {
     switch (as) {
       case "style": {
         var key = getResourceKey(as, href);
-        var resource = resources.stylesMap.get(key);
+        var resource = resumableState.stylesMap.get(key);
         var precedence = options.precedence || "default";
 
         if (!resource) {
           var state = NoState;
-          var preloadResource = resources.preloadsMap.get(key);
+          var preloadResource = resumableState.preloadsMap.get(key);
 
           if (preloadResource && preloadResource.state & Flushed) {
             state = PreloadFlushed;
@@ -6700,12 +6740,12 @@ function preinit(href, options) {
             state: state,
             props: stylesheetPropsFromPreinitOptions(href, precedence, options)
           };
-          resources.stylesMap.set(key, resource);
-          var precedenceSet = resources.precedences.get(precedence);
+          resumableState.stylesMap.set(key, resource);
+          var precedenceSet = resumableState.precedences.get(precedence);
 
           if (!precedenceSet) {
             precedenceSet = new Set();
-            resources.precedences.set(precedence, precedenceSet);
+            resumableState.precedences.set(precedence, precedenceSet);
             var emptyStyleResource = {
               type: "style",
               chunks: [],
@@ -6718,7 +6758,7 @@ function preinit(href, options) {
             precedenceSet.add(emptyStyleResource);
 
             {
-              if (resources.stylePrecedences.has(precedence)) {
+              if (resumableState.stylePrecedences.has(precedence)) {
                 error(
                   'React constructed an empty style resource when a style resource already exists for this precedence: "%s". This is a bug in React.',
                   precedence
@@ -6726,7 +6766,7 @@ function preinit(href, options) {
               }
             }
 
-            resources.stylePrecedences.set(precedence, emptyStyleResource);
+            resumableState.stylePrecedences.set(precedence, emptyStyleResource);
           }
 
           precedenceSet.add(resource);
@@ -6741,7 +6781,7 @@ function preinit(href, options) {
 
         var _key = getResourceKey(as, src);
 
-        var _resource = resources.scriptsMap.get(_key);
+        var _resource = resumableState.scriptsMap.get(_key);
 
         if (!_resource) {
           _resource = {
@@ -6750,9 +6790,9 @@ function preinit(href, options) {
             state: NoState,
             props: null
           };
-          resources.scriptsMap.set(_key, _resource);
+          resumableState.scriptsMap.set(_key, _resource);
           var resourceProps = scriptPropsFromPreinitOptions(src, options);
-          resources.scripts.add(_resource);
+          resumableState.scripts.add(_resource);
           pushScriptImpl(_resource.chunks, resourceProps);
           flushResources(request);
         }
@@ -6775,7 +6815,7 @@ function preinitModule(href, options) {
     return;
   }
 
-  var resources = getResources(request);
+  var resumableState = getResumableState(request);
 
   {
     var encountered = "";
@@ -6837,7 +6877,7 @@ function preinitModule(href, options) {
       case "script": {
         var src = href;
         var key = getResourceKey(_as, src);
-        var resource = resources.scriptsMap.get(key);
+        var resource = resumableState.scriptsMap.get(key);
 
         if (!resource) {
           resource = {
@@ -6846,9 +6886,9 @@ function preinitModule(href, options) {
             state: NoState,
             props: null
           };
-          resources.scriptsMap.set(key, resource);
+          resumableState.scriptsMap.set(key, resource);
           var resourceProps = modulePropsFromPreinitModuleOptions(src, options);
-          resources.scripts.add(resource);
+          resumableState.scripts.add(resource);
           pushScriptImpl(resource.chunks, resourceProps);
           flushResources(request);
         }
@@ -6862,11 +6902,17 @@ function preinitModule(href, options) {
 // scripts at any other point in time we will need to check whether the preload
 // already exists and not assume it
 
-function preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin) {
+function preloadBootstrapScript(
+  resumableState,
+  src,
+  nonce,
+  integrity,
+  crossOrigin
+) {
   var key = getResourceKey("script", src);
 
   {
-    if (resources.preloadsMap.has(key)) {
+    if (resumableState.preloadsMap.has(key)) {
       // This is coded as a React error because it should be impossible for a userspace preload to preempt this call
       // If a userspace preload can preempt it then this assumption is broken and we need to reconsider this strategy
       // rather than instruct the user to not preload their bootstrap scripts themselves
@@ -6892,19 +6938,25 @@ function preloadBootstrapScript(resources, src, nonce, integrity, crossOrigin) {
     state: NoState,
     props: props
   };
-  resources.preloadsMap.set(key, resource);
-  resources.bootstrapScripts.add(resource);
+  resumableState.preloadsMap.set(key, resource);
+  resumableState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
 } // This function is only safe to call at Request start time since it assumes
 // that each module has not already been preloaded. If we find a need to preload
 // scripts at any other point in time we will need to check whether the preload
 // already exists and not assume it
 
-function preloadBootstrapModule(resources, src, nonce, integrity, crossOrigin) {
+function preloadBootstrapModule(
+  resumableState,
+  src,
+  nonce,
+  integrity,
+  crossOrigin
+) {
   var key = getResourceKey("script", src);
 
   {
-    if (resources.preloadsMap.has(key)) {
+    if (resumableState.preloadsMap.has(key)) {
       // This is coded as a React error because it should be impossible for a userspace preload to preempt this call
       // If a userspace preload can preempt it then this assumption is broken and we need to reconsider this strategy
       // rather than instruct the user to not preload their bootstrap scripts themselves
@@ -6929,15 +6981,15 @@ function preloadBootstrapModule(resources, src, nonce, integrity, crossOrigin) {
     state: NoState,
     props: props
   };
-  resources.preloadsMap.set(key, resource);
-  resources.bootstrapScripts.add(resource);
+  resumableState.preloadsMap.set(key, resource);
+  resumableState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
   return;
 }
 
-function internalPreinitScript(resources, src, chunks) {
+function internalPreinitScript(resumableState, src, chunks) {
   var key = getResourceKey("script", src);
-  var resource = resources.scriptsMap.get(key);
+  var resource = resumableState.scriptsMap.get(key);
 
   if (!resource) {
     resource = {
@@ -6946,8 +6998,8 @@ function internalPreinitScript(resources, src, chunks) {
       state: NoState,
       props: null
     };
-    resources.scriptsMap.set(key, resource);
-    resources.scripts.add(resource);
+    resumableState.scriptsMap.set(key, resource);
+    resumableState.scripts.add(resource);
   }
 
   return;
@@ -7054,82 +7106,58 @@ function hoistStyleResource(resource) {
   this.add(resource);
 }
 
-function hoistResources(resources, source) {
-  var currentBoundaryResources = resources.boundaryResources;
+function hoistResources(renderState, source) {
+  var currentBoundaryResources = renderState.boundaryResources;
 
   if (currentBoundaryResources) {
     source.forEach(hoistStyleResource, currentBoundaryResources);
   }
 }
 
-function createResponseState(
-  resources,
-  generateStaticMarkup,
-  identifierPrefix,
-  externalRuntimeConfig
-) {
-  var responseState = createResponseState$1(
-    resources,
-    identifierPrefix,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    externalRuntimeConfig
-  );
+function createRenderState(resumableState, nonce, generateStaticMarkup) {
+  var renderState = createRenderState$1(resumableState, nonce);
   return {
     // Keep this in sync with ReactFizzConfigDOM
-    bootstrapChunks: responseState.bootstrapChunks,
-    placeholderPrefix: responseState.placeholderPrefix,
-    segmentPrefix: responseState.segmentPrefix,
-    boundaryPrefix: responseState.boundaryPrefix,
-    idPrefix: responseState.idPrefix,
-    nextSuspenseID: responseState.nextSuspenseID,
-    streamingFormat: responseState.streamingFormat,
-    startInlineScript: responseState.startInlineScript,
-    instructions: responseState.instructions,
-    externalRuntimeScript: responseState.externalRuntimeScript,
-    htmlChunks: responseState.htmlChunks,
-    headChunks: responseState.headChunks,
-    hasBody: responseState.hasBody,
-    charsetChunks: responseState.charsetChunks,
-    preconnectChunks: responseState.preconnectChunks,
-    preloadChunks: responseState.preloadChunks,
-    hoistableChunks: responseState.hoistableChunks,
-    stylesToHoist: responseState.stylesToHoist,
+    placeholderPrefix: renderState.placeholderPrefix,
+    segmentPrefix: renderState.segmentPrefix,
+    boundaryPrefix: renderState.boundaryPrefix,
+    startInlineScript: renderState.startInlineScript,
+    htmlChunks: renderState.htmlChunks,
+    headChunks: renderState.headChunks,
+    charsetChunks: renderState.charsetChunks,
+    preconnectChunks: renderState.preconnectChunks,
+    preloadChunks: renderState.preloadChunks,
+    hoistableChunks: renderState.hoistableChunks,
+    boundaryResources: renderState.boundaryResources,
+    stylesToHoist: renderState.stylesToHoist,
     // This is an extra field for the legacy renderer
     generateStaticMarkup: generateStaticMarkup
   };
 }
 
 var doctypeChunk = stringToPrecomputedChunk("");
-function pushTextInstance(target, text, responseState, textEmbedded) {
-  if (responseState.generateStaticMarkup) {
+function pushTextInstance(target, text, renderState, textEmbedded) {
+  if (renderState.generateStaticMarkup) {
     target.push(stringToChunk(escapeTextForBrowser(text)));
     return false;
   } else {
-    return pushTextInstance$1(target, text, responseState, textEmbedded);
+    return pushTextInstance$1(target, text, renderState, textEmbedded);
   }
 }
-function pushSegmentFinale(
-  target,
-  responseState,
-  lastPushedText,
-  textEmbedded
-) {
-  if (responseState.generateStaticMarkup) {
+function pushSegmentFinale(target, renderState, lastPushedText, textEmbedded) {
+  if (renderState.generateStaticMarkup) {
     return;
   } else {
     return pushSegmentFinale$1(
       target,
-      responseState,
+      renderState,
       lastPushedText,
       textEmbedded
     );
   }
 }
-function writeStartCompletedSuspenseBoundary(destination, responseState) {
-  if (responseState.generateStaticMarkup) {
+function writeStartCompletedSuspenseBoundary(destination, renderState) {
+  if (renderState.generateStaticMarkup) {
     // A completed boundary is done and doesn't need a representation in the HTML
     // if we're not going to be hydrating it.
     return true;
@@ -7139,12 +7167,12 @@ function writeStartCompletedSuspenseBoundary(destination, responseState) {
 }
 function writeStartClientRenderedSuspenseBoundary(
   destination,
-  responseState, // flushing these error arguments are not currently supported in this legacy streaming format.
+  renderState, // flushing these error arguments are not currently supported in this legacy streaming format.
   errorDigest,
   errorMessage,
   errorComponentStack
 ) {
-  if (responseState.generateStaticMarkup) {
+  if (renderState.generateStaticMarkup) {
     // A client rendered boundary is done and doesn't need a representation in the HTML
     // since we'll never hydrate it. This is arguably an error in static generation.
     return true;
@@ -7152,21 +7180,21 @@ function writeStartClientRenderedSuspenseBoundary(
 
   return writeStartClientRenderedSuspenseBoundary$1(
     destination,
-    responseState,
+    renderState,
     errorDigest,
     errorMessage,
     errorComponentStack
   );
 }
-function writeEndCompletedSuspenseBoundary(destination, responseState) {
-  if (responseState.generateStaticMarkup) {
+function writeEndCompletedSuspenseBoundary(destination, renderState) {
+  if (renderState.generateStaticMarkup) {
     return true;
   }
 
   return writeEndCompletedSuspenseBoundary$1(destination);
 }
-function writeEndClientRenderedSuspenseBoundary(destination, responseState) {
-  if (responseState.generateStaticMarkup) {
+function writeEndClientRenderedSuspenseBoundary(destination, renderState) {
+  if (renderState.generateStaticMarkup) {
     return true;
   }
 
@@ -9543,16 +9571,16 @@ function useOptimistic(passthrough, reducer) {
 function useId() {
   var task = currentlyRenderingTask;
   var treeId = getTreeId(task.treeContext);
-  var responseState = currentResponseState;
+  var resumableState = currentResumableState;
 
-  if (responseState === null) {
+  if (resumableState === null) {
     throw new Error(
       "Invalid hook call. Hooks can only be called inside of the body of a function component."
     );
   }
 
   var localId = localIdCounter++;
-  return makeId(responseState, treeId, localId);
+  return makeId(resumableState, treeId, localId);
 }
 
 function use(usable) {
@@ -9645,9 +9673,9 @@ if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
 }
 
-var currentResponseState = null;
-function setCurrentResponseState(responseState) {
-  currentResponseState = responseState;
+var currentResumableState = null;
+function setCurrentResumableState(resumableState) {
+  currentResumableState = resumableState;
 }
 
 function getCacheSignal() {
@@ -9733,8 +9761,8 @@ function noop() {}
 
 function createRequest(
   children,
-  resources,
-  responseState,
+  resumableState,
+  renderState,
   rootFormatContext,
   progressiveChunkSize,
   onError,
@@ -9750,7 +9778,8 @@ function createRequest(
   var request = {
     destination: null,
     flushScheduled: false,
-    responseState: responseState,
+    resumableState: resumableState,
+    renderState: renderState,
     progressiveChunkSize:
       progressiveChunkSize === undefined
         ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
@@ -9760,7 +9789,6 @@ function createRequest(
     nextSegmentId: 0,
     allPendingTasks: 0,
     pendingRootTasks: 0,
-    resources: resources,
     completedRootSegment: null,
     abortableTasks: abortSet,
     pingedTasks: pingedTasks,
@@ -10061,7 +10089,7 @@ function renderSuspenseBoundary(request, task, props) {
 
   {
     setCurrentlyRenderingBoundaryResourcesTarget(
-      request.resources,
+      request.renderState,
       newBoundary.resources
     );
   }
@@ -10071,7 +10099,7 @@ function renderSuspenseBoundary(request, task, props) {
     renderNode(request, task, content, 0);
     pushSegmentFinale(
       contentRootSegment.chunks,
-      request.responseState,
+      request.renderState,
       contentRootSegment.lastPushedText,
       contentRootSegment.textEmbedded
     );
@@ -10104,7 +10132,7 @@ function renderSuspenseBoundary(request, task, props) {
   } finally {
     {
       setCurrentlyRenderingBoundaryResourcesTarget(
-        request.resources,
+        request.renderState,
         parentBoundary ? parentBoundary.resources : null
       );
     }
@@ -10143,8 +10171,8 @@ function renderHostElement(request, task, type, props) {
     segment.chunks,
     type,
     props,
-    request.resources,
-    request.responseState,
+    request.resumableState,
+    request.renderState,
     segment.formatContext,
     segment.lastPushedText
   );
@@ -10161,7 +10189,7 @@ function renderHostElement(request, task, type, props) {
     segment.chunks,
     type,
     props,
-    request.responseState,
+    request.resumableState,
     prevContext
   );
   segment.lastPushedText = false;
@@ -10913,7 +10941,7 @@ function renderNodeDestructiveImpl(
     segment.lastPushedText = pushTextInstance(
       task.blockedSegment.chunks,
       node,
-      request.responseState,
+      request.renderState,
       segment.lastPushedText
     );
     return;
@@ -10924,7 +10952,7 @@ function renderNodeDestructiveImpl(
     _segment.lastPushedText = pushTextInstance(
       task.blockedSegment.chunks,
       "" + node,
-      request.responseState,
+      request.renderState,
       _segment.lastPushedText
     );
     return;
@@ -11295,7 +11323,7 @@ function retryTask(request, task) {
   {
     var blockedBoundary = task.blockedBoundary;
     setCurrentlyRenderingBoundaryResourcesTarget(
-      request.resources,
+      request.renderState,
       blockedBoundary ? blockedBoundary.resources : null
     );
   }
@@ -11331,7 +11359,7 @@ function retryTask(request, task) {
     renderNodeDestructive(request, task, prevThenableState, task.node, 0);
     pushSegmentFinale(
       segment.chunks,
-      request.responseState,
+      request.renderState,
       segment.lastPushedText,
       segment.textEmbedded
     );
@@ -11364,7 +11392,7 @@ function retryTask(request, task) {
     }
   } finally {
     {
-      setCurrentlyRenderingBoundaryResourcesTarget(request.resources, null);
+      setCurrentlyRenderingBoundaryResourcesTarget(request.renderState, null);
     }
 
     {
@@ -11397,8 +11425,8 @@ function performWork(request) {
     ReactDebugCurrentFrame.getCurrentStack = getCurrentStackInDEV;
   }
 
-  var prevResponseState = currentResponseState;
-  setCurrentResponseState(request.responseState);
+  var prevResumableState = currentResumableState;
+  setCurrentResumableState(request.resumableState);
 
   try {
     var pingedTasks = request.pingedTasks;
@@ -11418,7 +11446,7 @@ function performWork(request) {
     logRecoverableError(request, error);
     fatalError(request, error);
   } finally {
-    setCurrentResponseState(prevResponseState);
+    setCurrentResumableState(prevResumableState);
     ReactCurrentDispatcher.current = prevDispatcher;
 
     {
@@ -11455,7 +11483,7 @@ function flushSubtree(request, destination, segment) {
 
       segment.lastPushedText = false;
       segment.textEmbedded = false;
-      return writePlaceholder(destination, request.responseState, segmentID);
+      return writePlaceholder(destination, request.renderState, segmentID);
     }
 
     case COMPLETED: {
@@ -11510,7 +11538,7 @@ function flushSegment(request, destination, segment) {
     // We never queue the inner boundary so we'll never emit its content or partial segments.
     writeStartClientRenderedSuspenseBoundary(
       destination,
-      request.responseState,
+      request.renderState,
       boundary.errorDigest,
       boundary.errorMessage,
       boundary.errorComponentStack
@@ -11519,7 +11547,7 @@ function flushSegment(request, destination, segment) {
     flushSubtree(request, destination, segment);
     return writeEndClientRenderedSuspenseBoundary(
       destination,
-      request.responseState
+      request.renderState
     );
   } else if (boundary.pendingTasks > 0) {
     // This boundary is still loading. Emit a pending suspense boundary wrapper.
@@ -11531,8 +11559,11 @@ function flushSegment(request, destination, segment) {
       request.partialBoundaries.push(boundary);
     } /// This is the first time we should have referenced this ID.
 
-    var id = (boundary.id = assignSuspenseBoundaryID(request.responseState));
-    writeStartPendingSuspenseBoundary(destination, request.responseState, id); // Flush the fallback.
+    var id = (boundary.id = assignSuspenseBoundaryID(
+      request.renderState,
+      request.resumableState
+    ));
+    writeStartPendingSuspenseBoundary(destination, request.renderState, id); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
     return writeEndPendingSuspenseBoundary(destination);
@@ -11548,7 +11579,7 @@ function flushSegment(request, destination, segment) {
 
     writeStartPendingSuspenseBoundary(
       destination,
-      request.responseState,
+      request.renderState,
       boundary.id
     ); // Flush the fallback.
 
@@ -11556,10 +11587,10 @@ function flushSegment(request, destination, segment) {
     return writeEndPendingSuspenseBoundary(destination);
   } else {
     {
-      hoistResources(request.resources, boundary.resources);
+      hoistResources(request.renderState, boundary.resources);
     } // We can inline this boundary's content as a complete boundary.
 
-    writeStartCompletedSuspenseBoundary(destination, request.responseState);
+    writeStartCompletedSuspenseBoundary(destination, request.renderState);
     var completedSegments = boundary.completedSegments;
 
     if (completedSegments.length !== 1) {
@@ -11570,17 +11601,15 @@ function flushSegment(request, destination, segment) {
 
     var contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment);
-    return writeEndCompletedSuspenseBoundary(
-      destination,
-      request.responseState
-    );
+    return writeEndCompletedSuspenseBoundary(destination, request.renderState);
   }
 }
 
 function flushClientRenderedBoundary(request, destination, boundary) {
   return writeClientRenderBoundaryInstruction(
     destination,
-    request.responseState,
+    request.resumableState,
+    request.renderState,
     boundary.id,
     boundary.errorDigest,
     boundary.errorMessage,
@@ -11591,7 +11620,7 @@ function flushClientRenderedBoundary(request, destination, boundary) {
 function flushSegmentContainer(request, destination, segment) {
   writeStartSegment(
     destination,
-    request.responseState,
+    request.renderState,
     segment.formatContext,
     segment.id
   );
@@ -11602,7 +11631,7 @@ function flushSegmentContainer(request, destination, segment) {
 function flushCompletedBoundary(request, destination, boundary) {
   {
     setCurrentlyRenderingBoundaryResourcesTarget(
-      request.resources,
+      request.renderState,
       boundary.resources
     );
   }
@@ -11621,13 +11650,14 @@ function flushCompletedBoundary(request, destination, boundary) {
     writeResourcesForBoundary(
       destination,
       boundary.resources,
-      request.responseState
+      request.renderState
     );
   }
 
   return writeCompletedBoundaryInstruction(
     destination,
-    request.responseState,
+    request.resumableState,
+    request.renderState,
     boundary.id,
     boundary.rootSegmentID,
     boundary.resources
@@ -11637,7 +11667,7 @@ function flushCompletedBoundary(request, destination, boundary) {
 function flushPartialBoundary(request, destination, boundary) {
   {
     setCurrentlyRenderingBoundaryResourcesTarget(
-      request.resources,
+      request.renderState,
       boundary.resources
     );
   }
@@ -11669,7 +11699,7 @@ function flushPartialBoundary(request, destination, boundary) {
     return writeResourcesForBoundary(
       destination,
       boundary.resources,
-      request.responseState
+      request.renderState
     );
   }
 }
@@ -11703,7 +11733,8 @@ function flushPartiallyCompletedSegment(
     flushSegmentContainer(request, destination, segment);
     return writeCompletedSegmentInstruction(
       destination,
-      request.responseState,
+      request.resumableState,
+      request.renderState,
       segmentID
     );
   }
@@ -11723,15 +11754,15 @@ function flushCompletedQueues(request, destination) {
         if (enableFloat) {
           writePreamble(
             destination,
-            request.resources,
-            request.responseState,
+            request.resumableState,
+            request.renderState,
             request.allPendingTasks === 0
           );
         }
 
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
-        writeCompletedRoot(destination, request.responseState);
+        writeCompletedRoot(destination, request.resumableState);
       } else {
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
@@ -11742,7 +11773,7 @@ function flushCompletedQueues(request, destination) {
     }
 
     if (enableFloat) {
-      writeHoistables(destination, request.resources, request.responseState);
+      writeHoistables(destination, request.resumableState, request.renderState);
     } // We emit client rendering instructions for already emitted boundaries first.
     // This is so that we can signal to the client to start client rendering them as
     // soon as possible.
@@ -11827,7 +11858,7 @@ function flushCompletedQueues(request, destination) {
       request.flushScheduled = false;
 
       {
-        writePostamble(destination, request.responseState);
+        writePostamble(destination, request.resumableState);
       }
 
       {
@@ -11920,9 +11951,9 @@ function abort(request, reason) {
 function flushResources(request) {
   enqueueFlush(request);
 }
-function getResources(request) {
-  return request.resources;
-}
+function getResumableState(request) {
+  return request.resumableState;
+} // Returns the state of a postponed request or null if nothing was postponed.
 
 function onError() {
   // Non-fatal errors are ignored.
@@ -11932,8 +11963,7 @@ function renderToStringImpl(
   children,
   options,
   generateStaticMarkup,
-  abortReason,
-  unstable_externalRuntimeSrc
+  abortReason
 ) {
   var didFatal = false;
   var fatalError = null;
@@ -11959,16 +11989,18 @@ function renderToStringImpl(
     readyToStream = true;
   }
 
-  var resources = createResources();
+  var resumableState = createResumableState(
+    options ? options.identifierPrefix : undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined
+  );
   var request = createRequest(
     children,
-    resources,
-    createResponseState(
-      resources,
-      generateStaticMarkup,
-      options ? options.identifierPrefix : undefined,
-      unstable_externalRuntimeSrc
-    ),
+    resumableState,
+    createRenderState(resumableState, undefined, generateStaticMarkup),
     createRootFormatContext(),
     Infinity,
     onError,
