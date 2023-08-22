@@ -438,8 +438,15 @@ function throwException(
               } else {
                 retryQueue.add(wakeable);
               }
+
+              // We only attach ping listeners in concurrent mode. Legacy
+              // Suspense always commits fallbacks synchronously, so there are
+              // no pings.
+              if (suspenseBoundary.mode & ConcurrentMode) {
+                attachPingListener(root, wakeable, rootRenderLanes);
+              }
             }
-            break;
+            return;
           }
           case OffscreenComponent: {
             if (suspenseBoundary.mode & ConcurrentMode) {
@@ -466,24 +473,17 @@ function throwException(
                     retryQueue.add(wakeable);
                   }
                 }
+
+                attachPingListener(root, wakeable, rootRenderLanes);
               }
-              break;
+              return;
             }
-            // Fall through
-          }
-          default: {
-            throw new Error(
-              `Unexpected Suspense handler tag (${suspenseBoundary.tag}). This ` +
-                'is a bug in React.',
-            );
           }
         }
-        // We only attach ping listeners in concurrent mode. Legacy Suspense always
-        // commits fallbacks synchronously, so there are no pings.
-        if (suspenseBoundary.mode & ConcurrentMode) {
-          attachPingListener(root, wakeable, rootRenderLanes);
-        }
-        return;
+        throw new Error(
+          `Unexpected Suspense handler tag (${suspenseBoundary.tag}). This ` +
+            'is a bug in React.',
+        );
       } else {
         // No boundary was found. Unless this is a sync update, this is OK.
         // We can suspend and wait for more data to arrive.
