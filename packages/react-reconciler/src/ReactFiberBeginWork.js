@@ -532,6 +532,7 @@ function updateMemoComponent(
       null,
       nextProps,
       workInProgress,
+      null,
       workInProgress.mode,
       renderLanes,
     );
@@ -4006,6 +4007,7 @@ function beginWork(
           workInProgress.key,
           workInProgress.pendingProps,
           workInProgress._debugOwner || null,
+          workInProgress._debugSource || null,
           workInProgress.mode,
           workInProgress.lanes,
         ),

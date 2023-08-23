@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactElement} from 'shared/ReactElementType';
+import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
@@ -491,6 +491,7 @@ export function createFiberFromTypeAndProps(
   key: null | string,
   pendingProps: any,
   owner: null | Fiber,
+  source: null | Source,
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
@@ -644,6 +645,7 @@ export function createFiberFromTypeAndProps(
 
   if (__DEV__) {
     fiber._debugOwner = owner;
+    fiber._debugSource = source;
   }
 
   return fiber;
@@ -655,8 +657,10 @@ export function createFiberFromElement(
   lanes: Lanes,
 ): Fiber {
   let owner = null;
+  let source = null;
   if (__DEV__) {
     owner = element._owner;
+    source = element._source;
   }
   const type = element.type;
   const key = element.key;
@@ -666,6 +670,7 @@ export function createFiberFromElement(
     key,
     pendingProps,
     owner,
+    source,
     mode,
     lanes,
   );
