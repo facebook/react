@@ -2,10 +2,12 @@
 ## Input
 
 ```javascript
+import { makeObject_Primitives, mutate } from "shared-runtime";
+
 function Component() {
   // a's mutable range should be the same as x's mutable range,
   // since a is captured into x (which gets mutated later)
-  let a = someObj();
+  let a = makeObject_Primitives();
 
   let x = [];
   x.push(a);
@@ -14,18 +16,26 @@ function Component() {
   return [x, a];
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+  isComponent: false,
+};
+
 ```
 
 ## Code
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { makeObject_Primitives, mutate } from "shared-runtime";
+
 function Component() {
   const $ = useMemoCache(3);
   let x;
   let a;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a = someObj();
+    a = makeObject_Primitives();
 
     x = [];
     x.push(a);
@@ -46,6 +56,12 @@ function Component() {
   }
   return t0;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [],
+  isComponent: false,
+};
 
 ```
       

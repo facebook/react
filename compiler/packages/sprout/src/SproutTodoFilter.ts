@@ -181,7 +181,6 @@ const skipFilter = new Set([
    * Category C:
    * Tests with at 0 params and at least one ref to external values
    */
-  "alias-capture-in-method-receiver-and-mutate",
   "alias-capture-in-method-receiver",
   "alias-nested-member-path-mutate",
   "chained-assignment-context-variable",
