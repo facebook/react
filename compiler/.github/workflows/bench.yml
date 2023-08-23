@@ -1,0 +1,54 @@
+# Runs the parser benchmark on every push to main, and compares it with the previous run
+name: Parser Benchmark (Rust)
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - .github/workflows/**
+      - crates/**
+      - Cargo.*
+      - ./*.toml
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: -Dwarnings
+
+jobs:
+  bench:
+    name: Parser Benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
+      - run: yarn install --frozen-lockfile
+        working-directory: crates/forget_napi
+      - run: mkdir dist -p
+        working-directory: crates/forget_napi
+      - run: yarn build
+        working-directory: crates/forget_napi
+      - run: yarn install --frozen-lockfile
+        working-directory: bench/parser-benchmark
+      - name: Run benchmark
+        run: yarn bench --ci --sampleSize=3 | tee results.json
+        working-directory: bench/parser-benchmark
+        # Download previous benchmark result from cache (if exists)
+      - name: Download previous benchmark data
+        uses: actions/cache@v3
+        with:
+          path: ./cache
+          key: ${{ runner.os }}-benchmark
+      - name: Store benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: "${{ runner.os }} Benchmark"
+          tool: customBiggerIsBetter
+          output-file-path: bench/parser-benchmark/results.json
+          # Where the previous data file is stored
+          external-data-json-path: ./cache/parser-benchmark-results.json
+          # Workflow will fail when an alert happens
+          fail-on-alert: true
+          # Enable Job Summary for PRs
+          summary-always: true
+          # GitHub API token to make a commit comment
+          github-token: ${{ secrets.GITHUB_TOKEN }}
