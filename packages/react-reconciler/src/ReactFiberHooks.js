@@ -1859,7 +1859,7 @@ function TODO_formStateDispatch() {
 }
 
 function mountFormState<S, P>(
-  action: (S, P) => S,
+  action: (S, P) => Promise<S>,
   initialState: S,
   url?: string,
 ): [S, (P) => void] {
@@ -1868,7 +1868,7 @@ function mountFormState<S, P>(
 }
 
 function updateFormState<S, P>(
-  action: (S, P) => S,
+  action: (S, P) => Promise<S>,
   initialState: S,
   url?: string,
 ): [S, (P) => void] {
@@ -1877,7 +1877,7 @@ function updateFormState<S, P>(
 }
 
 function rerenderFormState<S, P>(
-  action: (S, P) => S,
+  action: (S, P) => Promise<S>,
   initialState: S,
   url?: string,
 ): [S, (P) => void] {
@@ -3332,7 +3332,7 @@ if (__DEV__) {
       useHostTransitionStatus;
     (HooksDispatcherOnMountInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => S,
+        action: (S, P) => Promise<S>,
         initialState: S,
         url?: string,
       ): [S, (P) => void] {
@@ -3502,7 +3502,7 @@ if (__DEV__) {
       useHostTransitionStatus;
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => S,
+        action: (S, P) => Promise<S>,
         initialState: S,
         url?: string,
       ): [S, (P) => void] {
@@ -3674,7 +3674,7 @@ if (__DEV__) {
       useHostTransitionStatus;
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => S,
+        action: (S, P) => Promise<S>,
         initialState: S,
         url?: string,
       ): [S, (P) => void] {
@@ -3846,7 +3846,7 @@ if (__DEV__) {
       useHostTransitionStatus;
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => S,
+        action: (S, P) => Promise<S>,
         initialState: S,
         url?: string,
       ): [S, (P) => void] {
@@ -4039,7 +4039,7 @@ if (__DEV__) {
       useHostTransitionStatus;
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => S,
+        action: (S, P) => Promise<S>,
         initialState: S,
         url?: string,
       ): [S, (P) => void] {
@@ -4237,7 +4237,7 @@ if (__DEV__) {
       useHostTransitionStatus;
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => S,
+        action: (S, P) => Promise<S>,
         initialState: S,
         url?: string,
       ): [S, (P) => void] {
@@ -4435,7 +4435,7 @@ if (__DEV__) {
       useHostTransitionStatus;
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => S,
+        action: (S, P) => Promise<S>,
         initialState: S,
         url?: string,
       ): [S, (P) => void] {

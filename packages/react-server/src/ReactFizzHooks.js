@@ -555,7 +555,7 @@ function useOptimistic<S, A>(
 }
 
 function useFormState<S, P>(
-  action: (S, P) => S,
+  action: (S, P) => Promise<S>,
   initialState: S,
   url?: string,
 ): [S, (P) => void] {
