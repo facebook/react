@@ -35,6 +35,7 @@ jobs:
     runs-on: ${{ matrix.target.os }}
     steps:
       - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
       - name: cargo test
         run: cargo test --manifest-path=Cargo.toml --locked ${{ matrix.target.features && '--features' }} ${{ matrix.target.features }}
 
@@ -50,6 +51,7 @@ jobs:
           toolchain: nightly-2023-08-01
           override: true
           components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
       - name: rustfmt
         run: grep -r --include "*.rs" --files-without-match "@generated" crates | xargs rustup run nightly-2023-08-01 rustfmt --check --config="skip_children=true"
       # - name: cargo clippy
@@ -61,6 +63,7 @@ jobs:
     # TODO: build on more platforms, deploy, etc
     steps:
       - uses: actions/checkout@v3
+      - uses: Swatinem/rust-cache@v2
       - name: cargo build
         run: cargo build --release
 
