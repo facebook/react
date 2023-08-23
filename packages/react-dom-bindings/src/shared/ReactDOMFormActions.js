@@ -74,3 +74,17 @@ export function useFormStatus(): FormStatus {
     return dispatcher.useHostTransitionStatus();
   }
 }
+
+export function useFormState<S, P>(
+  action: (S, P) => S,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  if (!(enableFormActions && enableAsyncActions)) {
+    throw new Error('Not implemented.');
+  } else {
+    const dispatcher = resolveDispatcher();
+    // $FlowFixMe[not-a-function] This is unstable, thus optional
+    return dispatcher.useFormState(action, initialState, url);
+  }
+}

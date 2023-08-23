@@ -40,6 +40,7 @@ describe('ReactDOMForm', () => {
   let startTransition;
   let textCache;
   let useFormStatus;
+  let useFormState;
 
   beforeEach(() => {
     jest.resetModules();
@@ -53,6 +54,7 @@ describe('ReactDOMForm', () => {
     Suspense = React.Suspense;
     startTransition = React.startTransition;
     useFormStatus = ReactDOM.experimental_useFormStatus;
+    useFormState = ReactDOM.experimental_useFormState;
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -968,5 +970,25 @@ describe('ReactDOMForm', () => {
     expect(error.message).toContain(
       'A React form was unexpectedly submitted. If you called form.submit()',
     );
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  test('useFormState exists', async () => {
+    // TODO: Not yet implemented. This just tests that the API is wired up.
+
+    async function action(state) {
+      return state;
+    }
+
+    function App() {
+      const [state] = useFormState(action, 0);
+      return <Text text={state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog([0]);
+    expect(container.textContent).toBe('0');
   });
 });
