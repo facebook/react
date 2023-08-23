@@ -2621,9 +2621,16 @@ function unsupportedStartTransition() {
 function unsupportedSetOptimisticState() {
   throw Error("Cannot update optimistic state while rendering.");
 }
+function unsupportedDispatchFormState() {
+  throw Error("Cannot update form state while rendering.");
+}
 function useOptimistic(passthrough) {
   resolveCurrentlyRenderingComponent();
   return [passthrough, unsupportedSetOptimisticState];
+}
+function useFormState(action, initialState) {
+  resolveCurrentlyRenderingComponent();
+  return [initialState, unsupportedDispatchFormState];
 }
 function unwrapThenable(thenable) {
   var index = thenableIndexCounter;
@@ -2725,7 +2732,9 @@ var HooksDispatcher = {
     return data;
   }
 };
-enableAsyncActions && (HooksDispatcher.useOptimistic = useOptimistic);
+enableAsyncActions &&
+  ((HooksDispatcher.useOptimistic = useOptimistic),
+  (HooksDispatcher.useFormState = useFormState));
 var currentResumableState = null,
   DefaultCacheDispatcher = {
     getCacheSignal: function () {

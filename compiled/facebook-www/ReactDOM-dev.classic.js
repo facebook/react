@@ -983,6 +983,11 @@ function useFormStatus() {
     throw new Error("Not implemented.");
   }
 }
+function useFormState(action, initialState, url) {
+  {
+    throw new Error("Not implemented.");
+  }
+}
 
 var valueStack = [];
 var fiberStack;
@@ -33955,7 +33960,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-ca6e9201";
+var ReactVersion = "18.3.0-www-classic-763d3541";
 
 function createPortal$1(
   children,
@@ -47051,6 +47056,7 @@ assign(Internals, {
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = createPortal;
 exports.createRoot = createRoot;
+exports.experimental_useFormState = useFormState;
 exports.experimental_useFormStatus = useFormStatus;
 exports.findDOMNode = findDOMNode;
 exports.flushSync = flushSync;

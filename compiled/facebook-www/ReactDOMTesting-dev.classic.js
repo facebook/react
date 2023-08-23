@@ -972,6 +972,11 @@ function useFormStatus() {
     throw new Error("Not implemented.");
   }
 }
+function useFormState(action, initialState, url) {
+  {
+    throw new Error("Not implemented.");
+  }
+}
 
 var valueStack = [];
 var fiberStack;
@@ -34572,7 +34577,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-df81fbf5";
+var ReactVersion = "18.3.0-www-classic-a74a7d20";
 
 function createPortal$1(
   children,
@@ -47807,6 +47812,7 @@ exports.createRoleSelector = createRoleSelector;
 exports.createRoot = createRoot;
 exports.createTestNameSelector = createTestNameSelector;
 exports.createTextSelector = createTextSelector;
+exports.experimental_useFormState = useFormState;
 exports.experimental_useFormStatus = useFormStatus;
 exports.findAllNodes = findAllNodes;
 exports.findBoundingRects = findBoundingRects;
