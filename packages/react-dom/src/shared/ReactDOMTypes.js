@@ -47,3 +47,14 @@ export type HostDispatcher = {
   preinit: (href: string, options: PreinitOptions) => void,
   preinitModule: (href: string, options?: ?PreinitModuleOptions) => void,
 };
+
+export type ImportMap = {
+  imports?: {
+    [specifier: string]: string,
+  },
+  scopes?: {
+    [scope: string]: {
+      [specifier: string]: string,
+    },
+  },
+};

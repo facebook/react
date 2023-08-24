@@ -3623,6 +3623,33 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
+  it('takes an importMap option which emits an "importmap" script in the head', async () => {
+    const importMap = {
+      foo: './path/to/foo.js',
+    };
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <head>
+            <script async={true} src="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+        {
+          importMap,
+        },
+      ).pipe(writable);
+    });
+
+    expect(document.head.innerHTML).toBe(
+      '<script type="importmap">' +
+        JSON.stringify(importMap) +
+        '</script><script async="" src="foo"></script>',
+    );
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};
@@ -3949,7 +3976,7 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  describe('bootstrapScriptContent escaping', () => {
+  describe('bootstrapScriptContent and importMap escaping', () => {
     it('the "S" in "</?[Ss]cript" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters', async () => {
       window.__test_outlet = '';
       const stringWithScriptsInIt =
@@ -4004,6 +4031,24 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
       expect(window.__test_outlet).toBe(1);
+    });
+
+    it('escapes </[sS]cirpt> in importMaps', async () => {
+      window.__test_outlet_key = '';
+      window.__test_outlet_value = '';
+      const jsonWithScriptsInIt = {
+        "keypos</script><script>window.__test_outlet_key = 'pwned'</script><script>":
+          'value',
+        key: "valuepos</script><script>window.__test_outlet_value = 'pwned'</script><script>",
+      };
+      await act(() => {
+        const {pipe} = renderToPipeableStream(<div />, {
+          importMap: jsonWithScriptsInIt,
+        });
+        pipe(writable);
+      });
+      expect(window.__test_outlet_key).toBe('');
+      expect(window.__test_outlet_value).toBe('');
     });
   });
 

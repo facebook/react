@@ -84,6 +84,10 @@ describe('ReactDOMFizzStatic', () => {
       if (node.nodeName === 'SCRIPT') {
         const script = document.createElement('script');
         script.textContent = node.textContent;
+        for (let i = 0; i < node.attributes.length; i++) {
+          const attribute = node.attributes[i];
+          script.setAttribute(attribute.name, attribute.value);
+        }
         fakeBody.removeChild(node);
         container.appendChild(script);
       } else {
@@ -98,7 +102,7 @@ describe('ReactDOMFizzStatic', () => {
     while (node) {
       if (node.nodeType === 1) {
         if (
-          node.tagName !== 'SCRIPT' &&
+          (node.tagName !== 'SCRIPT' || node.hasAttribute('type')) &&
           node.tagName !== 'TEMPLATE' &&
           node.tagName !== 'template' &&
           !node.hasAttribute('hidden') &&
@@ -236,5 +240,26 @@ describe('ReactDOMFizzStatic', () => {
     });
 
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
+
+  // @gate experimental
+  it('should support importMap option', async () => {
+    const importMap = {
+      foo: 'path/to/foo.js',
+    };
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
+      <html>
+        <body>hello world</body>
+      </html>,
+      {importMap},
+    );
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual([
+      <script type="importmap">{JSON.stringify(importMap)}</script>,
+      'hello world',
+    ]);
   });
 });
