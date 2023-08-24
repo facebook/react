@@ -3739,6 +3739,14 @@ function flushCompletedQueues(request, destination) {
           flushAllStylesInPreamble,
           destination
         );
+        var importMapChunks = renderState.importMapChunks;
+        for (
+          _resumableState$exter = 0;
+          _resumableState$exter < importMapChunks.length;
+          _resumableState$exter++
+        )
+          writeChunk(destination, importMapChunks[_resumableState$exter]);
+        importMapChunks.length = 0;
         resumableState.bootstrapScripts.forEach(
           flushResourceInPreamble,
           destination
@@ -4309,6 +4317,7 @@ exports.renderToStream = function (children, options) {
     headChunks: null,
     charsetChunks: [],
     preconnectChunks: [],
+    importMapChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
     nonce: void 0,

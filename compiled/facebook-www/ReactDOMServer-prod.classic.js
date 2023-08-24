@@ -2357,6 +2357,7 @@ function createRenderState(resumableState, nonce, generateStaticMarkup) {
     headChunks: null,
     charsetChunks: [],
     preconnectChunks: [],
+    importMapChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
     boundaryResources: null,
@@ -4054,6 +4055,14 @@ function flushCompletedQueues(request, destination) {
           flushAllStylesInPreamble,
           destination
         );
+        var importMapChunks = renderState.importMapChunks;
+        for (
+          _resumableState$exter = 0;
+          _resumableState$exter < importMapChunks.length;
+          _resumableState$exter++
+        )
+          destination.push(importMapChunks[_resumableState$exter]);
+        importMapChunks.length = 0;
         resumableState.bootstrapScripts.forEach(
           flushResourceInPreamble,
           destination
@@ -4399,4 +4408,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-4f299cee";
+exports.version = "18.3.0-www-classic-7f028090";
