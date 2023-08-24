@@ -97,6 +97,7 @@ const forcePrettyOutput = argv.pretty;
 const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
+const buildEntry = argv.entry;
 
 // Non-ES2015 stuff applied before closure compiler.
 const babelPlugins = [
@@ -782,6 +783,9 @@ async function buildEverything() {
   let bundles = [];
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops
   for (const bundle of Bundles.bundles) {
+    if (buildEntry && bundle.entry !== buildEntry) {
+      continue;
+    }
     bundles.push(
       [bundle, NODE_ES2015],
       [bundle, ESM_DEV],
