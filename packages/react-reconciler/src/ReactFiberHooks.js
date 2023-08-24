@@ -1835,6 +1835,37 @@ function rerenderOptimistic<S, A>(
   return [passthrough, dispatch];
 }
 
+function TODO_formStateDispatch() {
+  throw new Error('Not implemented.');
+}
+
+function mountFormState<S, P>(
+  action: (S, P) => S,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  // TODO: Not yet implemented
+  return [initialState, TODO_formStateDispatch];
+}
+
+function updateFormState<S, P>(
+  action: (S, P) => S,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  // TODO: Not yet implemented
+  return [initialState, TODO_formStateDispatch];
+}
+
+function rerenderFormState<S, P>(
+  action: (S, P) => S,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  // TODO: Not yet implemented
+  return [initialState, TODO_formStateDispatch];
+}
+
 function pushEffect(
   tag: HookFlags,
   create: () => (() => void) | void,
@@ -2981,6 +3012,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useFormState = throwInvalidHookError;
 }
 if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
@@ -3018,6 +3050,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnMount: Dispatcher).useFormState = mountFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
@@ -3055,6 +3088,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnUpdate: Dispatcher).useFormState = updateFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
@@ -3092,6 +3126,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnRerender: Dispatcher).useFormState = rerenderFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useOptimistic = rerenderOptimistic;
@@ -3276,6 +3311,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnMountInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => S,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        mountHookTypesDev();
+        return mountFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
@@ -3436,6 +3481,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => S,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return mountFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useOptimistic =
@@ -3598,6 +3653,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => S,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return updateFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -3760,6 +3825,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => S,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
@@ -3943,6 +4018,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => S,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
@@ -4130,6 +4216,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => S,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -4317,6 +4414,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => S,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =

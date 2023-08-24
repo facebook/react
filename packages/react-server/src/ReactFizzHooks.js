@@ -542,12 +542,25 @@ function unsupportedSetOptimisticState() {
   throw new Error('Cannot update optimistic state while rendering.');
 }
 
+function unsupportedDispatchFormState() {
+  throw new Error('Cannot update form state while rendering.');
+}
+
 function useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   resolveCurrentlyRenderingComponent();
   return [passthrough, unsupportedSetOptimisticState];
+}
+
+function useFormState<S, P>(
+  action: (S, P) => S,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  resolveCurrentlyRenderingComponent();
+  return [initialState, unsupportedDispatchFormState];
 }
 
 function useId(): string {
@@ -650,6 +663,7 @@ if (enableFormActions && enableAsyncActions) {
 }
 if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
+  HooksDispatcher.useFormState = useFormState;
 }
 
 export let currentResumableState: null | ResumableState = (null: any);
