@@ -30,7 +30,7 @@ jobs:
       - run: yarn install --frozen-lockfile
         working-directory: bench/parser-benchmark
       - name: Run benchmark
-        run: yarn bench --ci --sampleSize=3 | tee results.json
+        run: node index.js --ci --sampleSize=3 | tee results.json
         working-directory: bench/parser-benchmark
         # Download previous benchmark result from cache (if exists)
       - name: Download previous benchmark data
