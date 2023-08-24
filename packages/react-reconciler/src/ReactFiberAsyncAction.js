@@ -35,19 +35,22 @@ let currentEntangledLane: Lane = NoLane;
 
 export function requestAsyncActionContext<S>(
   actionReturnValue: mixed,
-  finishedState: S,
+  // If this is provided, this resulting thenable resolves to this value instead
+  // of the return value of the action. This is a perf trick to avoid composing
+  // an extra async function.
+  overrideReturnValue: S | null,
 ): Thenable<S> | S {
   if (
     actionReturnValue !== null &&
     typeof actionReturnValue === 'object' &&
-    typeof actionReturnValue.then === 'function'
+    typeof (actionReturnValue: any).then === 'function'
   ) {
     // This is an async action.
     //
     // Return a thenable that resolves once the action scope (i.e. the async
     // function passed to startTransition) has finished running.
 
-    const thenable: Thenable<mixed> = (actionReturnValue: any);
+    const thenable: Thenable<S> = (actionReturnValue: any);
     let entangledListeners;
     if (currentEntangledListeners === null) {
       // There's no outer async action scope. Create a new one.
@@ -59,19 +62,6 @@ export function requestAsyncActionContext<S>(
     }
 
     currentEntangledPendingCount++;
-    let resultStatus = 'pending';
-    let rejectedReason;
-    thenable.then(
-      () => {
-        resultStatus = 'fulfilled';
-        pingEngtangledActionScope();
-      },
-      error => {
-        resultStatus = 'rejected';
-        rejectedReason = error;
-        pingEngtangledActionScope();
-      },
-    );
 
     // Create a thenable that represents the result of this action, but doesn't
     // resolve until the entire entangled scope has finished.
@@ -81,13 +71,30 @@ export function requestAsyncActionContext<S>(
     //   return thisResult;
     const resultThenable = createResultThenable<S>(entangledListeners);
 
+    let resultStatus = 'pending';
+    let resultValue;
+    let rejectedReason;
+    thenable.then(
+      (value: S) => {
+        resultStatus = 'fulfilled';
+        resultValue =
+          overrideReturnValue !== null ? overrideReturnValue : value;
+        pingEngtangledActionScope();
+      },
+      error => {
+        resultStatus = 'rejected';
+        rejectedReason = error;
+        pingEngtangledActionScope();
+      },
+    );
+
     // Attach a listener to fill in the result.
     entangledListeners.push(() => {
       switch (resultStatus) {
         case 'fulfilled': {
           const fulfilledThenable: FulfilledThenable<S> = (resultThenable: any);
           fulfilledThenable.status = 'fulfilled';
-          fulfilledThenable.value = finishedState;
+          fulfilledThenable.value = resultValue;
           break;
         }
         case 'rejected': {
@@ -110,9 +117,13 @@ export function requestAsyncActionContext<S>(
 
     return resultThenable;
   } else {
+    const resultValue: S =
+      overrideReturnValue !== null
+        ? overrideReturnValue
+        : (actionReturnValue: any);
     // This is not an async action, but it may be part of an outer async action.
     if (currentEntangledListeners === null) {
-      return finishedState;
+      return resultValue;
     } else {
       // Return a thenable that does not resolve until the entangled actions
       // have finished.
@@ -121,7 +132,7 @@ export function requestAsyncActionContext<S>(
       entangledListeners.push(() => {
         const fulfilledThenable: FulfilledThenable<S> = (resultThenable: any);
         fulfilledThenable.status = 'fulfilled';
-        fulfilledThenable.value = finishedState;
+        fulfilledThenable.value = resultValue;
       });
       return resultThenable;
     }
