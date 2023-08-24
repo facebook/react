@@ -265,6 +265,7 @@ export function createContainer(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    null
   );
 }
 

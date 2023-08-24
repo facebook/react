@@ -52,7 +52,7 @@ function FiberRootNode(
   hydrate: any,
   identifierPrefix: any,
   onRecoverableError: any,
-  context: ?Object,
+  context: any,
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -143,7 +143,7 @@ export function createFiberRoot(
   identifierPrefix: string,
   onRecoverableError: null | ((error: mixed) => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
-  context: ?Object,
+  context: null | Object,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   const root: FiberRoot = (new FiberRootNode(
