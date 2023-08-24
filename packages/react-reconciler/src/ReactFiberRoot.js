@@ -52,7 +52,7 @@ function FiberRootNode(
   hydrate: any,
   identifierPrefix: any,
   onRecoverableError: any,
-  context?: any,
+  context: ?Object,
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
