@@ -137,7 +137,10 @@ import {
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
-import {requestAsyncActionContext} from './ReactFiberAsyncAction';
+import {
+  requestAsyncActionContext,
+  requestSyncActionContext,
+} from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 
@@ -2459,15 +2462,37 @@ function startTransition<S>(
     if (enableAsyncActions) {
       const returnValue = callback();
 
+      // Check if we're inside an async action scope. If so, we'll entangle
+      // this new action with the existing scope.
+      //
+      // If we're not already inside an async action scope, and this action is
+      // async, then we'll create a new async scope.
+      //
+      // In the async case, the resulting render will suspend until the async
+      // action scope has finished.
+      if (
+        returnValue !== null &&
+        typeof returnValue === 'object' &&
+        typeof returnValue.then === 'function'
+      ) {
+        const thenable = ((returnValue: any): Thenable<mixed>);
+        // This is a thenable that resolves to `finishedState` once the async
+        // action scope has finished.
+        const entangledResult = requestAsyncActionContext(
+          thenable,
+          finishedState,
+        );
+        dispatchSetState(fiber, queue, entangledResult);
+      } else {
       // This is either `finishedState` or a thenable that resolves to
-      // `finishedState`, depending on whether the action scope is an async
-      // function. In the async case, the resulting render will suspend until
-      // the async action scope has finished.
-      const maybeThenable = requestAsyncActionContext(
+        // `finishedState`, depending on whether we're inside an async
+        // action scope.
+        const entangledResult = requestSyncActionContext(
         returnValue,
         finishedState,
       );
-      dispatchSetState(fiber, queue, maybeThenable);
+        dispatchSetState(fiber, queue, entangledResult);
+      }
     } else {
       // Async actions are not enabled.
       dispatchSetState(fiber, queue, finishedState);
