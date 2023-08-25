@@ -6,8 +6,8 @@
  */
 
 import { JSDOM } from "jsdom";
-import { toJSON } from "./shared-runtime";
 import util from "util";
+import { toJSON } from "./shared-runtime";
 const React = require("react");
 const render = require("@testing-library/react").render;
 
@@ -37,6 +37,24 @@ const PLACEHOLDER_VALUE = Symbol();
 
   return toJSON(result);
 };
+
+function validateEntrypoint(entrypoint: object) {
+  if (!("params" in entrypoint)) {
+    return "missing `params` property";
+  } else if (!Array.isArray(entrypoint.params)) {
+    return "unexpected type for `params` property";
+  } else if (!(`isComponent` in entrypoint)) {
+    return "missing `isComponent` property";
+  } else if (typeof entrypoint.isComponent !== "boolean") {
+    return "unexpected type for `isComponent` property";
+  } else if (!(`fn` in entrypoint)) {
+    return "missing `fn` property";
+  } else if (!entrypoint.isComponent && typeof entrypoint.fn !== "function") {
+    return "expected `fn` property to be a function";
+  } else {
+    return null;
+  }
+}
 
 export function doEval(source: string): EvaluatorResult {
   "use strict";
@@ -69,7 +87,8 @@ export function doEval(source: string): EvaluatorResult {
       };
       let reachedInvoke = false;
       try {
-        ${source}
+        // run in an iife to avoid naming collisions
+        (() => {${source}})();
         reachedInvoke = true;
         if (exports.FIXTURE_ENTRYPOINT == null ||
           exports.FIXTURE_ENTRYPOINT.fn === globalThis.placeholderFn
@@ -78,16 +97,16 @@ export function doEval(source: string): EvaluatorResult {
             kind: "UnexpectedError",
             value: 'FIXTURE_ENTRYPOINT not exported!',
           };
-        } else if (
-          typeof exports.FIXTURE_ENTRYPOINT.fn !== "function" ||
-          !Array.isArray(exports.FIXTURE_ENTRYPOINT.params) ||
-          typeof exports.FIXTURE_ENTRYPOINT.isComponent !== "boolean"
-        ) {
+        }
+        const validationError = validateEntrypoint(exports.FIXTURE_ENTRYPOINT);
+        if (validationError) {
           return {
             kind: "UnexpectedError",
-            value: 'Bad shape for FIXTURE_ENTRYPOINT.',
+            value: 'Bad shape for FIXTURE_ENTRYPOINT (' + validationError + ').',
           };
-        } else if (exports.FIXTURE_ENTRYPOINT.isComponent) {
+        }
+
+        if (exports.FIXTURE_ENTRYPOINT.isComponent) {
           // try to run fixture as a react component
           const result = render(
             React.createElement(
