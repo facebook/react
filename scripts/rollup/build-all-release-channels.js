@@ -8,6 +8,7 @@ const fse = require('fs-extra');
 const {spawnSync} = require('child_process');
 const path = require('path');
 const tmp = require('tmp');
+const argv = require('minimist')(process.argv.slice(2));
 
 const {
   ReactVersion,
@@ -69,6 +70,30 @@ if (process.env.CIRCLE_NODE_TOTAL) {
     processExperimental('./build');
   }
 } else {
+  const priorDir = tmp.dirSync().name;
+
+  if (argv.inc === true || argv.incremental === true) {
+    // stash existing build so we can recover prior build packages
+    // since this is an incremental rebuild
+    crossDeviceRenameSync('./build', priorDir);
+    let channels = fs.readdirSync(priorDir);
+    for (const channel of channels) {
+      const stat = fs.statSync(path.join(priorDir, channel));
+      if (stat.isDirectory()) {
+        const packages = fs.readdirSync(path.join(priorDir, channel));
+        for (const pkg of packages) {
+          try {
+            fs.statSync(path.join(priorDir, channel, pkg, 'package.json'));
+          } catch (error) {
+            spawnSync('rm', ['-rm', path.join(priorDir, channel, pkg)]);
+          }
+        }
+      } else {
+        spawnSync('rm', ['-rm', path.join(priorDir, channel)]);
+      }
+    }
+  }
+
   // Running locally, no concurrency. Move each channel's build artifacts into
   // a temporary directory so that they don't conflict.
   buildForChannel('stable', '', '');
@@ -86,8 +111,16 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   // In CI, merging is handled automatically by CircleCI's workspace feature.
   mergeDirsSync(experimentalDir + '/', stableDir + '/');
 
-  // Now restore the combined directory back to its original name
-  crossDeviceRenameSync(stableDir, './build');
+  if (argv.inc === true || argv.incremental === true) {
+    mergeDirsSync(stableDir + '/', priorDir + '/');
+    // Now restore the combined directory back to its original name
+    // This will wipe out any previously built packages
+    crossDeviceRenameSync(priorDir, './build');
+  } else {
+    // Now restore the combined directory back to its original name
+    // This will wipe out any previously built packages
+    crossDeviceRenameSync(stableDir, './build');
+  }
 }
 
 function buildForChannel(channel, nodeTotal, nodeIndex) {
