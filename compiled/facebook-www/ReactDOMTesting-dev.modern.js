@@ -20575,7 +20575,11 @@ function updateDehydratedSuspenseComponent(
       // a pass where we hydrate this subtree in place using the previous Context and then
       // reapply the update afterwards.
 
-      renderDidSuspendDelayIfPossible();
+      if (isSuspenseInstancePending(suspenseInstance));
+      else {
+        renderDidSuspendDelayIfPossible();
+      }
+
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -34422,7 +34426,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-49db1079";
+var ReactVersion = "18.3.0-www-modern-abbbb170";
 
 function createPortal$1(
   children,

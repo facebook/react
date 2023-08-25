@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-3c71bf82";
+var ReactVersion = "18.3.0-www-modern-a127d0ff";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -15414,7 +15414,11 @@ function updateDehydratedSuspenseComponent(
       // a pass where we hydrate this subtree in place using the previous Context and then
       // reapply the update afterwards.
 
-      renderDidSuspendDelayIfPossible();
+      if (isSuspenseInstancePending());
+      else {
+        renderDidSuspendDelayIfPossible();
+      }
+
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,

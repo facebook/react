@@ -5884,14 +5884,14 @@ function updateDehydratedSuspenseComponent(
       return (
         pushPrimaryTreeSuspenseHandler(workInProgress),
         (workInProgress.flags &= -257),
-        (suspenseState = createCapturedValue(
+        (suspenseInstance = createCapturedValue(
           Error(formatProdErrorMessage(422))
         )),
         retrySuspenseComponentWithoutHydrating(
           current,
           workInProgress,
           renderLanes,
-          suspenseState
+          suspenseInstance
         )
       );
     if (null !== workInProgress.memoizedState)
@@ -5902,31 +5902,31 @@ function updateDehydratedSuspenseComponent(
         null
       );
     reuseSuspenseHandlerOnStack(workInProgress);
-    suspenseState = nextProps.fallback;
-    suspenseInstance = workInProgress.mode;
+    suspenseInstance = nextProps.fallback;
+    suspenseState = workInProgress.mode;
     nextProps = createFiberFromOffscreen(
       { mode: "visible", children: nextProps.children },
-      suspenseInstance,
+      suspenseState,
       0,
       null
     );
-    suspenseState = createFiberFromFragment(
-      suspenseState,
+    suspenseInstance = createFiberFromFragment(
       suspenseInstance,
+      suspenseState,
       renderLanes,
       null
     );
-    suspenseState.flags |= 2;
+    suspenseInstance.flags |= 2;
     nextProps.return = workInProgress;
-    suspenseState.return = workInProgress;
-    nextProps.sibling = suspenseState;
+    suspenseInstance.return = workInProgress;
+    nextProps.sibling = suspenseInstance;
     workInProgress.child = nextProps;
     0 !== (workInProgress.mode & 1) &&
       reconcileChildFibers(workInProgress, current.child, null, renderLanes);
     workInProgress.child.memoizedState =
       mountSuspenseOffscreenState(renderLanes);
     workInProgress.memoizedState = SUSPENDED_MARKER;
-    return suspenseState;
+    return suspenseInstance;
   }
   pushPrimaryTreeSuspenseHandler(workInProgress);
   if (0 === (workInProgress.mode & 1))
@@ -5937,18 +5937,22 @@ function updateDehydratedSuspenseComponent(
       null
     );
   if ("$!" === suspenseInstance.data) {
-    suspenseState =
+    suspenseInstance =
       suspenseInstance.nextSibling && suspenseInstance.nextSibling.dataset;
-    if (suspenseState) var digest = suspenseState.dgst;
-    suspenseState = digest;
-    nextProps = Error(formatProdErrorMessage(419));
-    nextProps.digest = suspenseState;
-    suspenseState = createCapturedValue(nextProps, suspenseState, void 0);
+    if (suspenseInstance) var digest = suspenseInstance.dgst;
+    suspenseInstance = digest;
+    suspenseState = Error(formatProdErrorMessage(419));
+    suspenseState.digest = suspenseInstance;
+    suspenseInstance = createCapturedValue(
+      suspenseState,
+      suspenseInstance,
+      void 0
+    );
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
       renderLanes,
-      suspenseState
+      suspenseInstance
     );
   }
   enableLazyContextPropagation &&
@@ -5958,19 +5962,18 @@ function updateDehydratedSuspenseComponent(
   if (didReceiveUpdate || digest) {
     nextProps = workInProgressRoot;
     if (null !== nextProps) {
-      suspenseInstance = renderLanes & -renderLanes;
-      if (enableUnifiedSyncLane && 0 !== (suspenseInstance & 42))
-        suspenseInstance = 1;
+      digest = renderLanes & -renderLanes;
+      if (enableUnifiedSyncLane && 0 !== (digest & 42)) digest = 1;
       else
-        switch (suspenseInstance) {
+        switch (digest) {
           case 2:
-            suspenseInstance = 1;
+            digest = 1;
             break;
           case 8:
-            suspenseInstance = 4;
+            digest = 4;
             break;
           case 32:
-            suspenseInstance = 16;
+            digest = 16;
             break;
           case 128:
           case 256:
@@ -5992,30 +5995,25 @@ function updateDehydratedSuspenseComponent(
           case 16777216:
           case 33554432:
           case 67108864:
-            suspenseInstance = 64;
+            digest = 64;
             break;
           case 536870912:
-            suspenseInstance = 268435456;
+            digest = 268435456;
             break;
           default:
-            suspenseInstance = 0;
+            digest = 0;
         }
-      suspenseInstance =
-        0 !== (suspenseInstance & (nextProps.suspendedLanes | renderLanes))
-          ? 0
-          : suspenseInstance;
-      if (
-        0 !== suspenseInstance &&
-        suspenseInstance !== suspenseState.retryLane
-      )
+      digest =
+        0 !== (digest & (nextProps.suspendedLanes | renderLanes)) ? 0 : digest;
+      if (0 !== digest && digest !== suspenseState.retryLane)
         throw (
-          ((suspenseState.retryLane = suspenseInstance),
-          enqueueConcurrentRenderForLane(current, suspenseInstance),
-          scheduleUpdateOnFiber(nextProps, current, suspenseInstance),
+          ((suspenseState.retryLane = digest),
+          enqueueConcurrentRenderForLane(current, digest),
+          scheduleUpdateOnFiber(nextProps, current, digest),
           SelectiveHydrationException)
         );
     }
-    renderDidSuspendDelayIfPossible();
+    "$?" !== suspenseInstance.data && renderDidSuspendDelayIfPossible();
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
@@ -17000,7 +16998,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1812 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-6a0bb38f",
+  version: "18.3.0-www-classic-7c114fcb",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2174 = {
@@ -17030,7 +17028,7 @@ var internals$jscomp$inline_2174 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-6a0bb38f"
+  reconcilerVersion: "18.3.0-www-classic-7c114fcb"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2175 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17420,4 +17418,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-6a0bb38f";
+exports.version = "18.3.0-www-classic-7c114fcb";

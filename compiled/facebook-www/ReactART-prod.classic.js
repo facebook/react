@@ -4840,7 +4840,7 @@ function updateDehydratedSuspenseComponent(
           SelectiveHydrationException)
         );
     }
-    renderDidSuspendDelayIfPossible();
+    shim$2() || renderDidSuspendDelayIfPossible();
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
@@ -10091,7 +10091,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-66a3bd33",
+    version: "18.3.0-www-classic-b5d591d4",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1303 = {
@@ -10122,7 +10122,7 @@ var internals$jscomp$inline_1303 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-66a3bd33"
+  reconcilerVersion: "18.3.0-www-classic-b5d591d4"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1304 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
