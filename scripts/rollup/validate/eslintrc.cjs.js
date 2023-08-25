@@ -56,6 +56,10 @@ module.exports = {
     __webpack_chunk_load__: 'readonly',
     __webpack_require__: 'readonly',
 
+    // Flight Turbopack
+    __turbopack_load__: 'readonly',
+    __turbopack_require__: 'readonly',
+
     // jest
     expect: 'readonly',
     jest: 'readonly',
