@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d24f6fd9c468c7ff219382320fbd627a>>
+ * @generated SignedSource<<dca223953e9d6eb5745857546761d038>>
  */
 
 
@@ -5663,7 +5663,7 @@ function updateDehydratedSuspenseComponent(
           SelectiveHydrationException)
         );
     }
-    renderDidSuspendDelayIfPossible();
+    shim$1() || renderDidSuspendDelayIfPossible();
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
@@ -10126,7 +10126,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1118 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-67d29d89",
+    version: "18.3.0-canary-6d6bb26c",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10182,7 +10182,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-67d29d89"
+  reconcilerVersion: "18.3.0-canary-6d6bb26c"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

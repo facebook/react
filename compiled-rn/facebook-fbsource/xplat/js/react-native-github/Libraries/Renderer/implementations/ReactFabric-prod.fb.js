@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a07e5e05f488236a06128ef01e09c2f5>>
+ * @generated SignedSource<<57b11b8687e4491a79b88fae7c8140e2>>
  */
 
 "use strict";
@@ -5441,7 +5441,7 @@ function updateDehydratedSuspenseComponent(
           SelectiveHydrationException)
         );
     }
-    renderDidSuspendDelayIfPossible();
+    shim$1() || renderDidSuspendDelayIfPossible();
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
@@ -9418,7 +9418,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1040 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-9812ca1f",
+    version: "18.3.0-canary-f78875b3",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9461,7 +9461,7 @@ var internals$jscomp$inline_1282 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-9812ca1f"
+  reconcilerVersion: "18.3.0-canary-f78875b3"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1283 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<433e051293b336d0e7452d6c87975a14>>
+ * @generated SignedSource<<9f65b8806fa6ba712eb14d0474695200>>
  */
 
 "use strict";
@@ -4043,7 +4043,7 @@ function updateDehydratedSuspenseComponent(
           SelectiveHydrationException)
         );
     }
-    renderDidSuspendDelayIfPossible();
+    shim$1() || renderDidSuspendDelayIfPossible();
     return retrySuspenseComponentWithoutHydrating(
       current,
       workInProgress,
@@ -8612,7 +8612,7 @@ var devToolsConfig$jscomp$inline_1029 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-9d4582dff-20230824",
+  version: "18.3.0-canary-ab31a9ed2-20230824",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1228 = {
@@ -8643,7 +8643,7 @@ var internals$jscomp$inline_1228 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-9d4582dff-20230824"
+  reconcilerVersion: "18.3.0-canary-ab31a9ed2-20230824"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1229 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c5864c0cab35ace8ea22b15a3fd75fde>>
+ * @generated SignedSource<<7dde82ff69547d91479b5d4c0c3b700e>>
  */
 
 'use strict';
@@ -17392,7 +17392,11 @@ function updateDehydratedSuspenseComponent(
       // a pass where we hydrate this subtree in place using the previous Context and then
       // reapply the update afterwards.
 
-      renderDidSuspendDelayIfPossible();
+      if (isSuspenseInstancePending());
+      else {
+        renderDidSuspendDelayIfPossible();
+      }
+
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -27530,7 +27534,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-2a0c5fa6";
+var ReactVersion = "18.3.0-canary-ec1c61b8";
 
 function createPortal$1(
   children,
