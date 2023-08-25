@@ -6176,4 +6176,55 @@ describe('ReactDOMFizzServer', () => {
     // However, it does error the shell.
     expect(fatalErrors).toEqual(['testing postpone']);
   });
+
+  it(
+    'a transition that flows into a dehydrated boundary should not suspend ' +
+      'if the boundary is showing a fallback',
+    async () => {
+      let setSearch;
+      function App() {
+        const [search, _setSearch] = React.useState('initial query');
+        setSearch = _setSearch;
+        return (
+          <div>
+            <div>{search}</div>
+            <div>
+              <Suspense fallback="Loading...">
+                <AsyncText text="Async" />
+              </Suspense>
+            </div>
+          </div>
+        );
+      }
+
+      // Render the initial HTML, which is showing a fallback.
+      await act(() => {
+        const {pipe} = renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      // Start hydrating.
+      await clientAct(() => {
+        ReactDOMClient.hydrateRoot(container, <App />);
+      });
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <div>initial query</div>
+          <div>Loading...</div>
+        </div>,
+      );
+
+      // Before the HTML has streamed in, update the query. The part outside
+      // the fallback should be allowed to finish.
+      await clientAct(() => {
+        React.startTransition(() => setSearch('updated query'));
+      });
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <div>updated query</div>
+          <div>Loading...</div>
+        </div>,
+      );
+    },
+  );
 });
