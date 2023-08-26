@@ -1,0 +1,36 @@
+
+## Input
+
+```javascript
+function Foo() {
+  return {
+    "a.b": 1,
+    "a\b": 2,
+    "a/b": 3,
+    "a+b": 4,
+    "a b": 5,
+  };
+}
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Foo,
+  params: [],
+  isComponent: false,
+};
+
+```
+
+
+## Error
+
+```
+Unexpected token, expected "," (2:13)
+  1 | import { unstable_useMemoCache as useMemoCache } from "react";function Foo() {const $ = useMemoCache(1);let t0;if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+> 2 |     t0 = { a.b: 1, a: 2, a/b: 3, a+b: 4, a b: 5 };$[0] = t0;} else {t0 = $[0];}return t0;}
+    |             ^
+  3 |
+  4 |
+  5 |
+```
+          
+      

@@ -88,6 +88,7 @@ export async function compile(
       runReactForgetBabelPlugin
     ).code;
   } catch (e) {
+    e.message = e.message.replace(/\u001b[^m]*m/g, '');
     error = e;
   }
 
