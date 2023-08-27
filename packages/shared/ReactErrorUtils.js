@@ -116,9 +116,9 @@ export function clearCaughtError(): mixed {
     hasError = false;
     caughtError = null;
     return error;
-  } 
+  }
   throw new Error(
     'clearCaughtError was called but no error was captured. This error is ' +
-    'likely caused by a bug in React. Please file an issue.',
+      'likely caused by a bug in React. Please file an issue.',
   );
 }
