@@ -36,7 +36,9 @@ jobs:
       security-events: write
 
     strategy:
-      fail-fast: false
+    on:
+  workflow_dispatch:
+      fail-fast: 
       matrix:
         language: [ 'cpp', 'javascript', 'python' ]
         # CodeQL supports [ 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby', 'swift' ]
