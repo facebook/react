@@ -22,7 +22,9 @@ global.TextDecoder = require('util').TextDecoder;
 global.setTimeout = cb => cb();
 
 let container;
+let clientExports;
 let serverExports;
+let webpackMap;
 let webpackServerMap;
 let React;
 let ReactDOMServer;
@@ -37,7 +39,9 @@ describe('ReactFlightDOMForm', () => {
       require('react-server-dom-webpack/server.edge'),
     );
     const WebpackMock = require('./utils/WebpackMock');
+    clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;
+    webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
     React = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
@@ -235,5 +239,73 @@ describe('ReactFlightDOMForm', () => {
 
     expect(result).toBe('helloc');
     expect(foo).toBe('barc');
+  });
+
+  // @gate enableFormActions
+  it('can bind an imported server action on the client without hydrating it', async () => {
+    let foo = null;
+
+    const ServerModule = serverExports(function action(bound, formData) {
+      foo = formData.get('foo') + bound.complex;
+      return 'hello';
+    });
+    const serverAction = ReactServerDOMClient.createServerReference(
+      ServerModule.$$id,
+    );
+    function Client() {
+      return (
+        <form action={serverAction.bind(null, {complex: 'object'})}>
+          <input type="text" name="foo" defaultValue="bar" />
+        </form>
+      );
+    }
+
+    const ssrStream = await ReactDOMServer.renderToReadableStream(<Client />);
+    await readIntoContainer(ssrStream);
+
+    const form = container.firstChild;
+
+    expect(foo).toBe(null);
+
+    const result = await submit(form);
+
+    expect(result).toBe('hello');
+    expect(foo).toBe('barobject');
+  });
+
+  // @gate enableFormActions
+  it('can bind a server action on the client without hydrating it', async () => {
+    let foo = null;
+
+    const serverAction = serverExports(function action(bound, formData) {
+      foo = formData.get('foo') + bound.complex;
+      return 'hello';
+    });
+
+    function Client({action}) {
+      return (
+        <form action={action.bind(null, {complex: 'object'})}>
+          <input type="text" name="foo" defaultValue="bar" />
+        </form>
+      );
+    }
+    const ClientRef = await clientExports(Client);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form = container.firstChild;
+
+    expect(foo).toBe(null);
+
+    const result = await submit(form);
+
+    expect(result).toBe('hello');
+    expect(foo).toBe('barobject');
   });
 });
