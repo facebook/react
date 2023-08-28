@@ -178,18 +178,20 @@ function transformServerModule(
         continue;
     }
   }
-
+  if (localNames.size === 0) {
+    return source;
+  }
   let newSrc = source + '\n\n;';
+  newSrc +=
+    'import {registerServerReference} from "react-server-dom-esm/server";\n';
   localNames.forEach(function (exported, local) {
     if (localTypes.get(local) !== 'function') {
       // We first check if the export is a function and if so annotate it.
       newSrc += 'if (typeof ' + local + ' === "function") ';
     }
-    newSrc += 'Object.defineProperties(' + local + ',{';
-    newSrc += '$$typeof: {value: Symbol.for("react.server.reference")},';
-    newSrc += '$$id: {value: ' + JSON.stringify(url + '#' + exported) + '},';
-    newSrc += '$$bound: { value: null }';
-    newSrc += '});\n';
+    newSrc += 'registerServerReference(' + local + ',';
+    newSrc += JSON.stringify(url) + ',';
+    newSrc += JSON.stringify(exported) + ');\n';
   });
   return newSrc;
 }
@@ -313,13 +315,17 @@ async function transformClientModule(
 
   await parseExportNamesInto(body, names, url, loader);
 
+  if (names.length === 0) {
+    return '';
+  }
+
   let newSrc =
-    "const CLIENT_REFERENCE = Symbol.for('react.client.reference');\n";
+    'import {registerClientReference} from "react-server-dom-esm/server";\n';
   for (let i = 0; i < names.length; i++) {
     const name = names[i];
     if (name === 'default') {
       newSrc += 'export default ';
-      newSrc += 'Object.defineProperties(function() {';
+      newSrc += 'registerClientReference(function() {';
       newSrc +=
         'throw new Error(' +
         JSON.stringify(
@@ -331,7 +337,7 @@ async function transformClientModule(
         ');';
     } else {
       newSrc += 'export const ' + name + ' = ';
-      newSrc += 'Object.defineProperties(function() {';
+      newSrc += 'registerClientReference(function() {';
       newSrc +=
         'throw new Error(' +
         JSON.stringify(
@@ -341,10 +347,9 @@ async function transformClientModule(
         ) +
         ');';
     }
-    newSrc += '},{';
-    newSrc += '$$typeof: {value: CLIENT_REFERENCE},';
-    newSrc += '$$id: {value: ' + JSON.stringify(url + '#' + name) + '}';
-    newSrc += '});\n';
+    newSrc += '},';
+    newSrc += JSON.stringify(url) + ',';
+    newSrc += JSON.stringify(name) + ');\n';
   }
   return newSrc;
 }

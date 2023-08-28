@@ -4,6 +4,25 @@
 
 ---
 
+### 4.28.0
+July 4, 2023
+
+#### Features
+* feat[devtools]: support x_google_ignoreList source maps extension ([hoxyq](https://github.com/hoxyq) in [#26951](https://github.com/facebook/react/pull/26951))
+
+#### Bugfixes
+* fix: check if fiber is unmounted before trying to highlight ([hoxyq](https://github.com/hoxyq) in [#26983](https://github.com/facebook/react/pull/26983))
+* fix: display NaN as string in values ([hoxyq](https://github.com/hoxyq) in [#26947](https://github.com/facebook/react/pull/26947))
+* fix: devtools cannot be closed correctly ([Jack-Works](https://github.com/Jack-Works) in [#25510](https://github.com/facebook/react/pull/25510))
+* fix: supported inspect mode on Shadow dom ([Biki-das](https://github.com/Biki-das) in [#26888](https://github.com/facebook/react/pull/26888))
+* fix: updated strict mode badge URL ([ibrahemid](https://github.com/ibrahemid) in [#26825](https://github.com/facebook/react/pull/26825))
+
+#### Other
+* chore: upgrade to webpack v5 ([hoxyq](https://github.com/hoxyq) in [#26887](https://github.com/facebook/react/pull/26887))
+* chore: removed unused CSS ([Biki-das](https://github.com/Biki-das) in [#27032](https://github.com/facebook/react/pull/27032))
+
+---
+
 ### 4.27.8
 May 17, 2023
 

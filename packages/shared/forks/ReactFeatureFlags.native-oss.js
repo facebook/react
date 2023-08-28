@@ -24,6 +24,8 @@ export const enableLegacyCache = false;
 export const enableCacheElement = false;
 export const enableFetchInstrumentation = false;
 export const enableFormActions = true; // Doesn't affect Native
+export const enableBinaryFlight = true;
+export const enablePostpone = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
@@ -60,7 +62,6 @@ export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableServerContext = true;
-export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;
 
@@ -68,6 +69,7 @@ export const enableFloat = true;
 export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 

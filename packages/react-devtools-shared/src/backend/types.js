@@ -379,6 +379,7 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   handlePostCommitFiberRoot: (fiber: Object) => void,
+  hasFiberWithId: (id: number) => boolean,
   inspectElement: (
     requestID: number,
     id: number,

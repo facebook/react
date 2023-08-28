@@ -16,6 +16,7 @@ export type Destination = {
 
 export opaque type PrecomputedChunk = string;
 export opaque type Chunk = string;
+export opaque type BinaryChunk = string;
 
 export function scheduleWork(callback: () => void) {
   // We don't schedule work in this model, and instead expect performWork to always be called repeatedly.
@@ -30,14 +31,14 @@ export function beginWriting(destination: Destination) {}
 
 export function writeChunk(
   destination: Destination,
-  chunk: Chunk | PrecomputedChunk,
+  chunk: Chunk | PrecomputedChunk | BinaryChunk,
 ): void {
   destination.buffer += chunk;
 }
 
 export function writeChunkAndReturn(
   destination: Destination,
-  chunk: Chunk | PrecomputedChunk,
+  chunk: Chunk | PrecomputedChunk | BinaryChunk,
 ): boolean {
   destination.buffer += chunk;
   return true;
@@ -57,6 +58,12 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   return content;
 }
 
+export function typedArrayToBinaryChunk(
+  content: $ArrayBufferView,
+): BinaryChunk {
+  throw new Error('Not implemented.');
+}
+
 export function clonePrecomputedChunk(
   chunk: PrecomputedChunk,
 ): PrecomputedChunk {
@@ -64,6 +71,10 @@ export function clonePrecomputedChunk(
 }
 
 export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
+  throw new Error('Not implemented.');
+}
+
+export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
   throw new Error('Not implemented.');
 }
 

@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
+export {renderToReadableStream, version} from './ReactDOMFizzServerEdge.js';

@@ -1042,6 +1042,22 @@ const tests = {
       `,
       errors: [classError('useState')],
     },
+    {
+      code: normalizeIndent`
+        async function AsyncComponent() {
+          useState();
+        }
+      `,
+      errors: [asyncComponentHookError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        async function useAsyncHook() {
+          useState();
+        }
+      `,
+      errors: [asyncComponentHookError('useState')],
+    },
   ],
 };
 
@@ -1300,6 +1316,14 @@ if (__EXPERIMENTAL__) {
       `,
       errors: [classError('use')],
     },
+    {
+      code: normalizeIndent`
+        async function AsyncComponent() {
+          use();
+        }
+      `,
+      errors: [asyncComponentHookError('use')],
+    },
   ];
 }
 
@@ -1365,6 +1389,12 @@ function useEffectEventError(fn) {
     message:
       `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
       'the same component. They cannot be assigned to variables or passed down.',
+  };
+}
+
+function asyncComponentHookError(fn) {
+  return {
+    message: `React Hook "${fn}" cannot be called in an async function.`,
   };
 }
 

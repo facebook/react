@@ -81,7 +81,7 @@ describe('ReactDOMFizzServer', () => {
     Suspense = React.Suspense;
     use = React.use;
     if (gate(flags => flags.enableSuspenseList)) {
-      SuspenseList = React.SuspenseList;
+      SuspenseList = React.unstable_SuspenseList;
     }
 
     PropTypes = require('prop-types');
@@ -610,17 +610,30 @@ describe('ReactDOMFizzServer', () => {
       });
 
       expect(getVisibleChildren(container)).toEqual([
-        <link rel="preload" href="init.js" as="script" nonce={CSPnonce} />,
         <link
           rel="preload"
+          fetchpriority="low"
+          href="init.js"
+          as="script"
+          nonce={CSPnonce}
+        />,
+        <link
+          rel="preload"
+          fetchpriority="low"
           href="init2.js"
           as="script"
           nonce={CSPnonce}
           integrity="init2hash"
         />,
-        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
         <link
           rel="modulepreload"
+          fetchpriority="low"
+          href="init.mjs"
+          nonce={CSPnonce}
+        />,
+        <link
+          rel="modulepreload"
+          fetchpriority="low"
           href="init2.mjs"
           nonce={CSPnonce}
           integrity="init2hash"
@@ -640,17 +653,30 @@ describe('ReactDOMFizzServer', () => {
         resolve({default: Text});
       });
       expect(getVisibleChildren(container)).toEqual([
-        <link rel="preload" href="init.js" as="script" nonce={CSPnonce} />,
         <link
           rel="preload"
+          fetchpriority="low"
+          href="init.js"
+          as="script"
+          nonce={CSPnonce}
+        />,
+        <link
+          rel="preload"
+          fetchpriority="low"
           href="init2.js"
           as="script"
           nonce={CSPnonce}
           integrity="init2hash"
         />,
-        <link rel="modulepreload" href="init.mjs" nonce={CSPnonce} />,
         <link
           rel="modulepreload"
+          fetchpriority="low"
+          href="init.mjs"
+          nonce={CSPnonce}
+        />,
+        <link
+          rel="modulepreload"
+          fetchpriority="low"
           href="init2.mjs"
           nonce={CSPnonce}
           integrity="init2hash"
@@ -3597,6 +3623,33 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
   });
 
+  it('takes an importMap option which emits an "importmap" script in the head', async () => {
+    const importMap = {
+      foo: './path/to/foo.js',
+    };
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <head>
+            <script async={true} src="foo" />
+          </head>
+          <body>
+            <div>hello world</div>
+          </body>
+        </html>,
+        {
+          importMap,
+        },
+      ).pipe(writable);
+    });
+
+    expect(document.head.innerHTML).toBe(
+      '<script type="importmap">' +
+        JSON.stringify(importMap) +
+        '</script><script async="" src="foo"></script>',
+    );
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};
@@ -3797,12 +3850,23 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="script" />
-          <link rel="preload" href="bar" as="script" />
-          <link rel="preload" href="baz" as="script" integrity="qux" />
-          <link rel="modulepreload" href="quux" />
-          <link rel="modulepreload" href="corge" />
-          <link rel="modulepreload" href="grault" integrity="garply" />
+          <link rel="preload" fetchpriority="low" href="foo" as="script" />
+          <link rel="preload" fetchpriority="low" href="bar" as="script" />
+          <link
+            rel="preload"
+            fetchpriority="low"
+            href="baz"
+            as="script"
+            integrity="qux"
+          />
+          <link rel="modulepreload" fetchpriority="low" href="quux" />
+          <link rel="modulepreload" fetchpriority="low" href="corge" />
+          <link
+            rel="modulepreload"
+            fetchpriority="low"
+            href="grault"
+            integrity="garply"
+          />
         </head>
         <body>
           <div>hello world</div>
@@ -3866,14 +3930,27 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(document)).toEqual(
       <html>
         <head>
-          <link rel="preload" href="foo" as="script" />
-          <link rel="preload" href="bar" as="script" />
-          <link rel="preload" href="baz" as="script" crossorigin="" />
-          <link rel="preload" href="qux" as="script" crossorigin="" />
-          <link rel="modulepreload" href="quux" />
-          <link rel="modulepreload" href="corge" />
+          <link rel="preload" fetchpriority="low" href="foo" as="script" />
+          <link rel="preload" fetchpriority="low" href="bar" as="script" />
+          <link
+            rel="preload"
+            fetchpriority="low"
+            href="baz"
+            as="script"
+            crossorigin=""
+          />
+          <link
+            rel="preload"
+            fetchpriority="low"
+            href="qux"
+            as="script"
+            crossorigin=""
+          />
+          <link rel="modulepreload" fetchpriority="low" href="quux" />
+          <link rel="modulepreload" fetchpriority="low" href="corge" />
           <link
             rel="modulepreload"
+            fetchpriority="low"
             href="grault"
             crossorigin="use-credentials"
           />
@@ -3899,7 +3976,7 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  describe('bootstrapScriptContent escaping', () => {
+  describe('bootstrapScriptContent and importMap escaping', () => {
     it('the "S" in "</?[Ss]cript" strings are replaced with unicode escaped lowercase s or S depending on case, preserving case sensitivity of nearby characters', async () => {
       window.__test_outlet = '';
       const stringWithScriptsInIt =
@@ -3954,6 +4031,24 @@ describe('ReactDOMFizzServer', () => {
         pipe(writable);
       });
       expect(window.__test_outlet).toBe(1);
+    });
+
+    it('escapes </[sS]cirpt> in importMaps', async () => {
+      window.__test_outlet_key = '';
+      window.__test_outlet_value = '';
+      const jsonWithScriptsInIt = {
+        "keypos</script><script>window.__test_outlet_key = 'pwned'</script><script>":
+          'value',
+        key: "valuepos</script><script>window.__test_outlet_value = 'pwned'</script><script>",
+      };
+      await act(() => {
+        const {pipe} = renderToPipeableStream(<div />, {
+          importMap: jsonWithScriptsInIt,
+        });
+        pipe(writable);
+      });
+      expect(window.__test_outlet_key).toBe('');
+      expect(window.__test_outlet_value).toBe('');
     });
   });
 
@@ -5990,4 +6085,146 @@ describe('ReactDOMFizzServer', () => {
       console.error = originalConsoleError;
     }
   });
+
+  // @gate enablePostpone
+  it('client renders postponed boundaries without erroring', async () => {
+    function Postponed({isClient}) {
+      if (!isClient) {
+        React.unstable_postpone('testing postpone');
+      }
+      return 'client only';
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <Suspense fallback={'loading...'}>
+            <Postponed isClient={isClient} />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App isClient={false} />, {
+        onError(error) {
+          errors.push(error.message);
+        },
+      });
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>loading...</div>);
+
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        errors.push(error.message);
+      },
+    });
+    await waitForAll([]);
+    // Postponing should not be logged as a recoverable error since it's intentional.
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(<div>client only</div>);
+  });
+
+  // @gate enablePostpone
+  it('errors if trying to postpone outside a Suspense boundary', async () => {
+    function Postponed() {
+      React.unstable_postpone('testing postpone');
+      return 'client only';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Postponed />
+        </div>
+      );
+    }
+
+    const errors = [];
+    const fatalErrors = [];
+    const postponed = [];
+    let written = false;
+
+    const testWritable = new Stream.Writable();
+    testWritable._write = (chunk, encoding, next) => {
+      written = true;
+    };
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />, {
+        onPostpone(reason) {
+          postponed.push(reason);
+        },
+        onError(error) {
+          errors.push(error.message);
+        },
+        onShellError(error) {
+          fatalErrors.push(error.message);
+        },
+      });
+      pipe(testWritable);
+    });
+
+    expect(written).toBe(false);
+    // Postponing is not logged as an error but as a postponed reason.
+    expect(errors).toEqual([]);
+    expect(postponed).toEqual(['testing postpone']);
+    // However, it does error the shell.
+    expect(fatalErrors).toEqual(['testing postpone']);
+  });
+
+  it(
+    'a transition that flows into a dehydrated boundary should not suspend ' +
+      'if the boundary is showing a fallback',
+    async () => {
+      let setSearch;
+      function App() {
+        const [search, _setSearch] = React.useState('initial query');
+        setSearch = _setSearch;
+        return (
+          <div>
+            <div>{search}</div>
+            <div>
+              <Suspense fallback="Loading...">
+                <AsyncText text="Async" />
+              </Suspense>
+            </div>
+          </div>
+        );
+      }
+
+      // Render the initial HTML, which is showing a fallback.
+      await act(() => {
+        const {pipe} = renderToPipeableStream(<App />);
+        pipe(writable);
+      });
+
+      // Start hydrating.
+      await clientAct(() => {
+        ReactDOMClient.hydrateRoot(container, <App />);
+      });
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <div>initial query</div>
+          <div>Loading...</div>
+        </div>,
+      );
+
+      // Before the HTML has streamed in, update the query. The part outside
+      // the fallback should be allowed to finish.
+      await clientAct(() => {
+        React.startTransition(() => setSearch('updated query'));
+      });
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <div>updated query</div>
+          <div>Loading...</div>
+        </div>,
+      );
+    },
+  );
 });

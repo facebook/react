@@ -14,7 +14,16 @@ export type PreloadOptions = {
   crossOrigin?: string,
   integrity?: string,
   type?: string,
+  nonce?: string,
   fetchPriority?: 'high' | 'low' | 'auto',
+  imageSrcSet?: string,
+  imageSizes?: string,
+  referrerPolicy?: string,
+};
+export type PreloadModuleOptions = {
+  as?: string,
+  crossOrigin?: string,
+  integrity?: string,
 };
 export type PreinitOptions = {
   as: string,
@@ -24,10 +33,28 @@ export type PreinitOptions = {
   nonce?: string,
   fetchPriority?: 'high' | 'low' | 'auto',
 };
+export type PreinitModuleOptions = {
+  as?: string,
+  crossOrigin?: string,
+  integrity?: string,
+};
 
 export type HostDispatcher = {
   prefetchDNS: (href: string, options?: ?PrefetchDNSOptions) => void,
-  preconnect: (href: string, options: ?PreconnectOptions) => void,
+  preconnect: (href: string, options?: ?PreconnectOptions) => void,
   preload: (href: string, options: PreloadOptions) => void,
+  preloadModule: (href: string, options?: ?PreloadModuleOptions) => void,
   preinit: (href: string, options: PreinitOptions) => void,
+  preinitModule: (href: string, options?: ?PreinitModuleOptions) => void,
+};
+
+export type ImportMap = {
+  imports?: {
+    [specifier: string]: string,
+  },
+  scopes?: {
+    [scope: string]: {
+      [specifier: string]: string,
+    },
+  },
 };

@@ -40,6 +40,7 @@ describe('ReactDOMForm', () => {
   let startTransition;
   let textCache;
   let useFormStatus;
+  let useFormState;
 
   beforeEach(() => {
     jest.resetModules();
@@ -53,6 +54,7 @@ describe('ReactDOMForm', () => {
     Suspense = React.Suspense;
     startTransition = React.startTransition;
     useFormStatus = ReactDOM.experimental_useFormStatus;
+    useFormState = ReactDOM.experimental_useFormState;
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -921,5 +923,72 @@ describe('ReactDOMForm', () => {
 
     await act(() => resolveText('Wait'));
     assertLog(['Async action finished', 'No pending action']);
+  });
+
+  // @gate enableFormActions
+  it('should error if submitting a form manually', async () => {
+    const ref = React.createRef();
+
+    let error = null;
+    let result = null;
+
+    function emulateForceSubmit(submitter) {
+      const form = submitter.form || submitter;
+      const action =
+        (submitter && submitter.getAttribute('formaction')) || form.action;
+      try {
+        if (!/\s*javascript:/i.test(action)) {
+          throw new Error('Navigate to: ' + action);
+        } else {
+          // eslint-disable-next-line no-new-func
+          result = Function(action.slice(11))();
+        }
+      } catch (x) {
+        error = x;
+      }
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <form
+          action={() => {}}
+          ref={ref}
+          onSubmit={e => {
+            e.preventDefault();
+            emulateForceSubmit(e.target);
+          }}>
+          <input type="text" name="foo" defaultValue="bar" />
+        </form>,
+      );
+    });
+
+    // This submits the form, which gets blocked and then resubmitted. It's a somewhat
+    // common idiom but we don't support this pattern unless it uses requestSubmit().
+    await submit(ref.current);
+    expect(result).toBe(null);
+    expect(error.message).toContain(
+      'A React form was unexpectedly submitted. If you called form.submit()',
+    );
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  test('useFormState exists', async () => {
+    // TODO: Not yet implemented. This just tests that the API is wired up.
+
+    async function action(state) {
+      return state;
+    }
+
+    function App() {
+      const [state] = useFormState(action, 0);
+      return <Text text={state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog([0]);
+    expect(container.textContent).toBe('0');
   });
 });

@@ -10,16 +10,13 @@
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 
 import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
   Thenable,
   Usable,
 } from 'shared/ReactTypes';
 
-import type {ResponseState} from './ReactFizzConfig';
+import type {ResumableState} from './ReactFizzConfig';
 import type {Task} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
 import type {TransitionStatus} from './ReactFizzConfig';
@@ -505,18 +502,6 @@ export function useEffectEvent<Args, Return, F: (...Array<Args>) => Return>(
   return throwOnUseEffectEventCall;
 }
 
-// TODO Decide on how to implement this hook for server rendering.
-// If a mutation occurs during render, consider triggering a Suspense boundary
-// and falling back to client rendering.
-function useMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  resolveCurrentlyRenderingComponent();
-  return getSnapshot(source._source);
-}
-
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
@@ -557,6 +542,10 @@ function unsupportedSetOptimisticState() {
   throw new Error('Cannot update optimistic state while rendering.');
 }
 
+function unsupportedDispatchFormState() {
+  throw new Error('Cannot update form state while rendering.');
+}
+
 function useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
@@ -565,19 +554,28 @@ function useOptimistic<S, A>(
   return [passthrough, unsupportedSetOptimisticState];
 }
 
+function useFormState<S, P>(
+  action: (S, P) => S,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  resolveCurrentlyRenderingComponent();
+  return [initialState, unsupportedDispatchFormState];
+}
+
 function useId(): string {
   const task: Task = (currentlyRenderingTask: any);
   const treeId = getTreeId(task.treeContext);
 
-  const responseState = currentResponseState;
-  if (responseState === null) {
+  const resumableState = currentResumableState;
+  if (resumableState === null) {
     throw new Error(
       'Invalid hook call. Hooks can only be called inside of the body of a function component.',
     );
   }
 
   const localId = localIdCounter++;
-  return makeId(responseState, treeId, localId);
+  return makeId(resumableState, treeId, localId);
 }
 
 function use<T>(usable: Usable<T>): T {
@@ -648,7 +646,6 @@ export const HooksDispatcher: Dispatcher = {
   useTransition,
   useId,
   // Subscriptions are not setup in a server environment.
-  useMutableSource,
   useSyncExternalStore,
 };
 
@@ -666,11 +663,12 @@ if (enableFormActions && enableAsyncActions) {
 }
 if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
+  HooksDispatcher.useFormState = useFormState;
 }
 
-export let currentResponseState: null | ResponseState = (null: any);
-export function setCurrentResponseState(
-  responseState: null | ResponseState,
+export let currentResumableState: null | ResumableState = (null: any);
+export function setCurrentResumableState(
+  resumableState: null | ResumableState,
 ): void {
-  currentResponseState = responseState;
+  currentResumableState = resumableState;
 }

@@ -32,6 +32,12 @@ let use;
 describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    // Simulate the condition resolution
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.browser'),
+    );
+
     act = require('internal-test-utils').act;
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
@@ -1101,7 +1107,7 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<App />);
     });
     expect(document.head.innerHTML).toBe(
-      '<link href="before" rel="preload" as="style">',
+      '<link rel="preload" as="style" href="before">',
     );
     expect(container.innerHTML).toBe('<p>hello world</p>');
   });
@@ -1171,5 +1177,49 @@ describe('ReactFlightDOMBrowser', () => {
       '<!DOCTYPE html><html><head>' +
         '</head><body><p>hello world</p></body></html>',
     );
+  });
+
+  // @gate enablePostpone
+  it('supports postpone in Server Components', async () => {
+    function Server() {
+      React.unstable_postpone('testing postpone');
+      return 'Not shown';
+    }
+
+    let postponed = null;
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Suspense fallback="Loading...">
+        <Server />
+      </Suspense>,
+      null,
+      {
+        onPostpone(reason) {
+          postponed = reason;
+        },
+      },
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+
+    function Client() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <div>
+          Shell: <Client />
+        </div>,
+      );
+    });
+    // We should have reserved the shell already. Which means that the Server
+    // Component should've been a lazy component.
+    expect(container.innerHTML).toContain('Shell:');
+    expect(container.innerHTML).toContain('Loading...');
+    expect(container.innerHTML).not.toContain('Not shown');
+
+    expect(postponed).toBe('testing postpone');
   });
 });

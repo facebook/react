@@ -27,12 +27,14 @@ export opaque type ClientReferenceMetadata = {
   id: string,
   chunks: Array<string>,
   name: string,
+  async?: boolean,
 };
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {
   specifier: string,
   name: string,
+  async?: boolean,
 };
 
 export function resolveClientReference<T>(
@@ -61,6 +63,7 @@ export function resolveClientReference<T>(
   return {
     specifier: resolvedModuleData.specifier,
     name: name,
+    async: metadata.async,
   };
 }
 
@@ -87,7 +90,16 @@ export function preloadModule<T>(
     return existingPromise;
   } else {
     // $FlowFixMe[unsupported-syntax]
-    const modulePromise: Thenable<T> = import(metadata.specifier);
+    let modulePromise: Promise<T> = import(metadata.specifier);
+    if (metadata.async) {
+      // If the module is async, it must have been a CJS module.
+      // CJS modules are accessed through the default export in
+      // Node.js so we have to get the default export to get the
+      // full module exports.
+      modulePromise = modulePromise.then(function (value) {
+        return (value: any).default;
+      });
+    }
     modulePromise.then(
       value => {
         const fulfilledThenable: FulfilledThenable<mixed> =
