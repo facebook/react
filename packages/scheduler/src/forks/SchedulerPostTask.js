@@ -10,7 +10,7 @@
 import type {PriorityLevel} from '../SchedulerPriorities';
 
 declare class TaskController {
-  constructor(priority?: string): TaskController;
+  constructor(options?: {priority?: string}): TaskController;
   signal: mixed;
   abort(): void;
 }
@@ -95,9 +95,8 @@ export function unstable_scheduleCallback<T>(
       break;
   }
 
-  const controller = new TaskController();
+  const controller = new TaskController({priority: postTaskPriority});
   const postTaskOptions = {
-    priority: postTaskPriority,
     delay: typeof options === 'object' && options !== null ? options.delay : 0,
     signal: controller.signal,
   };
@@ -130,9 +129,10 @@ function runTask<T>(
     if (typeof result === 'function') {
       // Assume this is a continuation
       const continuation: SchedulerCallback<T> = (result: any);
-      const continuationController = new TaskController();
-      const continuationOptions = {
+      const continuationController = new TaskController({
         priority: postTaskPriority,
+      });
+      const continuationOptions = {
         signal: continuationController.signal,
       };
       // Update the original callback node's controller, since even though we're
