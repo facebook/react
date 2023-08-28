@@ -280,6 +280,7 @@
 "The `%s` prop supplied to <select> must be an array if `multiple` is true.%s"
 "The `aria` attribute is reserved for future use in React. Pass individual `aria-` attributes instead."
 "The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?"
+"The action passed to useFormState must be an async function."
 "The current testing environment is not configured to support act(...)"
 "The final argument passed to %s changed size between renders. The order and size of this array must remain constant.\n\nPrevious: %s\nIncoming: %s"
 "The installed version of React DevTools is too old and will not work with the current version of React. Please update React DevTools. https://reactjs.org/link/react-devtools"

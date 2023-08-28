@@ -6685,97 +6685,102 @@ var currentEntangledListeners = null; // The number of pending async actions in 
 var currentEntangledPendingCount = 0; // The transition lane shared by all updates in the entangled scope.
 
 var currentEntangledLane = NoLane;
-function requestAsyncActionContext(actionReturnValue, finishedState) {
-  if (
-    actionReturnValue !== null &&
-    typeof actionReturnValue === "object" &&
-    typeof actionReturnValue.then === "function"
-  ) {
-    // This is an async action.
-    //
-    // Return a thenable that resolves once the action scope (i.e. the async
-    // function passed to startTransition) has finished running.
-    var thenable = actionReturnValue;
-    var entangledListeners;
+function requestAsyncActionContext(
+  actionReturnValue, // If this is provided, this resulting thenable resolves to this value instead
+  // of the return value of the action. This is a perf trick to avoid composing
+  // an extra async function.
+  overrideReturnValue
+) {
+  // This is an async action.
+  //
+  // Return a thenable that resolves once the action scope (i.e. the async
+  // function passed to startTransition) has finished running.
+  var thenable = actionReturnValue;
+  var entangledListeners;
 
-    if (currentEntangledListeners === null) {
-      // There's no outer async action scope. Create a new one.
-      entangledListeners = currentEntangledListeners = [];
-      currentEntangledPendingCount = 0;
-      currentEntangledLane = requestTransitionLane();
-    } else {
-      entangledListeners = currentEntangledListeners;
+  if (currentEntangledListeners === null) {
+    // There's no outer async action scope. Create a new one.
+    entangledListeners = currentEntangledListeners = [];
+    currentEntangledPendingCount = 0;
+    currentEntangledLane = requestTransitionLane();
+  } else {
+    entangledListeners = currentEntangledListeners;
+  }
+
+  currentEntangledPendingCount++; // Create a thenable that represents the result of this action, but doesn't
+  // resolve until the entire entangled scope has finished.
+  //
+  // Expressed using promises:
+  //   const [thisResult] = await Promise.all([thisAction, entangledAction]);
+  //   return thisResult;
+
+  var resultThenable = createResultThenable(entangledListeners);
+  var resultStatus = "pending";
+  var resultValue;
+  var rejectedReason;
+  thenable.then(
+    function (value) {
+      resultStatus = "fulfilled";
+      resultValue = overrideReturnValue !== null ? overrideReturnValue : value;
+      pingEngtangledActionScope();
+    },
+    function (error) {
+      resultStatus = "rejected";
+      rejectedReason = error;
+      pingEngtangledActionScope();
     }
+  ); // Attach a listener to fill in the result.
 
-    currentEntangledPendingCount++;
-    var resultStatus = "pending";
-    var rejectedReason;
-    thenable.then(
-      function () {
-        resultStatus = "fulfilled";
-        pingEngtangledActionScope();
-      },
-      function (error) {
-        resultStatus = "rejected";
-        rejectedReason = error;
-        pingEngtangledActionScope();
+  entangledListeners.push(function () {
+    switch (resultStatus) {
+      case "fulfilled": {
+        var fulfilledThenable = resultThenable;
+        fulfilledThenable.status = "fulfilled";
+        fulfilledThenable.value = resultValue;
+        break;
       }
-    ); // Create a thenable that represents the result of this action, but doesn't
-    // resolve until the entire entangled scope has finished.
-    //
-    // Expressed using promises:
-    //   const [thisResult] = await Promise.all([thisAction, entangledAction]);
-    //   return thisResult;
 
-    var resultThenable = createResultThenable(entangledListeners); // Attach a listener to fill in the result.
+      case "rejected": {
+        var rejectedThenable = resultThenable;
+        rejectedThenable.status = "rejected";
+        rejectedThenable.reason = rejectedReason;
+        break;
+      }
 
+      case "pending":
+      default: {
+        // The listener above should have been called first, so `resultStatus`
+        // should already be set to the correct value.
+        throw new Error(
+          "Thenable should have already resolved. This " + "is a bug in React."
+        );
+      }
+    }
+  });
+  return resultThenable;
+}
+function requestSyncActionContext(
+  actionReturnValue, // If this is provided, this resulting thenable resolves to this value instead
+  // of the return value of the action. This is a perf trick to avoid composing
+  // an extra async function.
+  overrideReturnValue
+) {
+  var resultValue =
+    overrideReturnValue !== null ? overrideReturnValue : actionReturnValue; // This is not an async action, but it may be part of an outer async action.
+
+  if (currentEntangledListeners === null) {
+    return resultValue;
+  } else {
+    // Return a thenable that does not resolve until the entangled actions
+    // have finished.
+    var entangledListeners = currentEntangledListeners;
+    var resultThenable = createResultThenable(entangledListeners);
     entangledListeners.push(function () {
-      switch (resultStatus) {
-        case "fulfilled": {
-          var fulfilledThenable = resultThenable;
-          fulfilledThenable.status = "fulfilled";
-          fulfilledThenable.value = finishedState;
-          break;
-        }
-
-        case "rejected": {
-          var rejectedThenable = resultThenable;
-          rejectedThenable.status = "rejected";
-          rejectedThenable.reason = rejectedReason;
-          break;
-        }
-
-        case "pending":
-        default: {
-          // The listener above should have been called first, so `resultStatus`
-          // should already be set to the correct value.
-          throw new Error(
-            "Thenable should have already resolved. This " +
-              "is a bug in React."
-          );
-        }
-      }
+      var fulfilledThenable = resultThenable;
+      fulfilledThenable.status = "fulfilled";
+      fulfilledThenable.value = resultValue;
     });
     return resultThenable;
-  } else {
-    // This is not an async action, but it may be part of an outer async action.
-    if (currentEntangledListeners === null) {
-      return finishedState;
-    } else {
-      // Return a thenable that does not resolve until the entangled actions
-      // have finished.
-      var _entangledListeners = currentEntangledListeners;
-
-      var _resultThenable = createResultThenable(_entangledListeners);
-
-      _entangledListeners.push(function () {
-        var fulfilledThenable = _resultThenable;
-        fulfilledThenable.status = "fulfilled";
-        fulfilledThenable.value = finishedState;
-      });
-
-      return _resultThenable;
-    }
   }
 }
 
@@ -8436,7 +8441,7 @@ function startTransition(
   }
 
   try {
-    var returnValue, maybeThenable;
+    var returnValue, thenable, entangledResult, _entangledResult;
     if (enableAsyncActions);
     else {
       // Async actions are not enabled.
@@ -24343,7 +24348,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-a58fbf74";
+var ReactVersion = "18.3.0-www-classic-8bea6228";
 
 // Might add PROFILE later.
 
