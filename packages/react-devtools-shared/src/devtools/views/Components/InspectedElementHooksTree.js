@@ -22,7 +22,6 @@ import styles from './InspectedElementHooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
 import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache';
-import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import isArray from 'react-devtools-shared/src/isArray';
 
 import type {InspectedElement} from './types';
@@ -41,6 +40,11 @@ type HooksTreeViewProps = {
   store: Store,
   toggleParseHookNames: ToggleParseHookNames,
 };
+
+const hookNamesModuleLoader = () =>
+  import(
+    /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
+  );
 
 export function InspectedElementHooksTree({
   bridge,
@@ -61,8 +65,6 @@ export function InspectedElementHooksTree({
     setParseHookNamesOptimistic(!parseHookNames);
     toggleParseHookNames();
   };
-
-  const hookNamesModuleLoader = useContext(HookNamesModuleLoaderContext);
 
   const hookParsingFailed = parseHookNames && hookNames === null;
 

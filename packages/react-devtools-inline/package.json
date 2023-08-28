@@ -12,8 +12,7 @@
   "files": [
     "dist",
     "backend.js",
-    "frontend.js",
-    "hookNames.js"
+    "frontend.js"
   ],
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",

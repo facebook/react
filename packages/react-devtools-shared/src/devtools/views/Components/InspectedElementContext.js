@@ -34,7 +34,6 @@ import {
 } from 'react-devtools-shared/src/hookNamesCache';
 import {loadModule} from 'react-devtools-shared/src/dynamicImportCache';
 import FetchFileWithCachingContext from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
-import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 
 import type {HookNames} from 'react-devtools-shared/src/types';
@@ -56,6 +55,14 @@ type Context = {
   toggleParseHookNames: ToggleParseHookNames,
 };
 
+// parseHookNames has a lot of code.
+// Embedding it into a build makes the build large.
+// This function enables DevTools to make use of Suspense to lazily import() it only if the feature will be used.
+const hookNamesModuleLoader = () =>
+  import(
+    /* webpackChunkName: 'parseHookNames' */ 'react-devtools-shared/src/hooks/parseHookNames'
+  );
+
 export const InspectedElementContext: ReactContext<Context> =
   createContext<Context>(((null: any): Context));
 
@@ -73,12 +80,6 @@ export function InspectedElementContextController({
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
   const {parseHookNames: parseHookNamesByDefault} = useContext(SettingsContext);
-
-  // parseHookNames has a lot of code.
-  // Embedding it into a build makes the build large.
-  // This function enables DevTools to make use of Suspense to lazily import() it only if the feature will be used.
-  // TODO (Webpack 5) Hopefully we can remove this indirection once the Webpack 5 upgrade is completed.
-  const hookNamesModuleLoader = useContext(HookNamesModuleLoaderContext);
 
   const refresh = useCacheRefresh();
 

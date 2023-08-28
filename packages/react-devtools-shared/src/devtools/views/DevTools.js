@@ -29,7 +29,6 @@ import {TreeContextController} from './Components/TreeContext';
 import ViewElementSourceContext from './Components/ViewElementSourceContext';
 import ViewSourceContext from './Components/ViewSourceContext';
 import FetchFileWithCachingContext from './Components/FetchFileWithCachingContext';
-import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {ProfilerContextController} from './Profiler/ProfilerContext';
 import {TimelineContextController} from 'react-devtools-timeline/src/TimelineContext';
 import {ModalDialogContextController} from './ModalDialog';
@@ -48,7 +47,6 @@ import './root.css';
 
 import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
 import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContext';
-import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {BrowserTheme} from 'react-devtools-shared/src/types';
 
@@ -103,8 +101,6 @@ export type Props = {
   // and extracts hook "names" based on the variables the hook return values get assigned to.
   // Not every DevTools build can load source maps, so this property is optional.
   fetchFileWithCaching?: ?FetchFileWithCaching,
-  // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
-  hookNamesModuleLoaderFunction?: ?HookNamesModuleLoaderFunction,
 };
 
 const componentsTab = {
@@ -281,57 +277,52 @@ export default function DevTools({
                 profilerPortalContainer={profilerPortalContainer}>
                 <ViewElementSourceContext.Provider value={viewElementSource}>
                   <ViewSourceContext.Provider value={viewSource}>
-                    <HookNamesModuleLoaderContext.Provider
-                      value={hookNamesModuleLoaderFunction || null}>
-                      <FetchFileWithCachingContext.Provider
-                        value={fetchFileWithCaching || null}>
-                        <TreeContextController>
-                          <ProfilerContextController>
-                            <TimelineContextController>
-                              <ThemeProvider>
+                    <FetchFileWithCachingContext.Provider
+                      value={fetchFileWithCaching || null}>
+                      <TreeContextController>
+                        <ProfilerContextController>
+                          <TimelineContextController>
+                            <ThemeProvider>
+                              <div
+                                className={styles.DevTools}
+                                ref={devToolsRef}
+                                data-react-devtools-portal-root={true}>
+                                {showTabBar && (
+                                  <div className={styles.TabBar}>
+                                    <ReactLogo />
+                                    <span className={styles.DevToolsVersion}>
+                                      {process.env.DEVTOOLS_VERSION}
+                                    </span>
+                                    <div className={styles.Spacer} />
+                                    <TabBar
+                                      currentTab={tab}
+                                      id="DevTools"
+                                      selectTab={selectTab}
+                                      tabs={tabs}
+                                      type="navigation"
+                                    />
+                                  </div>
+                                )}
                                 <div
-                                  className={styles.DevTools}
-                                  ref={devToolsRef}
-                                  data-react-devtools-portal-root={true}>
-                                  {showTabBar && (
-                                    <div className={styles.TabBar}>
-                                      <ReactLogo />
-                                      <span className={styles.DevToolsVersion}>
-                                        {process.env.DEVTOOLS_VERSION}
-                                      </span>
-                                      <div className={styles.Spacer} />
-                                      <TabBar
-                                        currentTab={tab}
-                                        id="DevTools"
-                                        selectTab={selectTab}
-                                        tabs={tabs}
-                                        type="navigation"
-                                      />
-                                    </div>
-                                  )}
-                                  <div
-                                    className={styles.TabContent}
-                                    hidden={tab !== 'components'}>
-                                    <Components
-                                      portalContainer={
-                                        componentsPortalContainer
-                                      }
-                                    />
-                                  </div>
-                                  <div
-                                    className={styles.TabContent}
-                                    hidden={tab !== 'profiler'}>
-                                    <Profiler
-                                      portalContainer={profilerPortalContainer}
-                                    />
-                                  </div>
+                                  className={styles.TabContent}
+                                  hidden={tab !== 'components'}>
+                                  <Components
+                                    portalContainer={componentsPortalContainer}
+                                  />
                                 </div>
-                              </ThemeProvider>
-                            </TimelineContextController>
-                          </ProfilerContextController>
-                        </TreeContextController>
-                      </FetchFileWithCachingContext.Provider>
-                    </HookNamesModuleLoaderContext.Provider>
+                                <div
+                                  className={styles.TabContent}
+                                  hidden={tab !== 'profiler'}>
+                                  <Profiler
+                                    portalContainer={profilerPortalContainer}
+                                  />
+                                </div>
+                              </div>
+                            </ThemeProvider>
+                          </TimelineContextController>
+                        </ProfilerContextController>
+                      </TreeContextController>
+                    </FetchFileWithCachingContext.Provider>
                   </ViewSourceContext.Provider>
                 </ViewElementSourceContext.Provider>
               </SettingsContextController>

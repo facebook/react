@@ -9,11 +9,6 @@ import {
 import {initialize as initializeFrontend} from 'react-devtools-inline/frontend';
 import {initDevTools} from 'react-devtools-shared/src/devtools';
 
-// This is a pretty gross hack to make the runtime loaded named-hooks-code work.
-// TODO (Webpack 5) Hoepfully we can remove this once we upgrade to Webpack 5.
-// $FlowFixMe[cannot-resolve-name]
-__webpack_public_path__ = '/dist/'; // eslint-disable-line no-undef
-
 const iframe = ((document.getElementById('target'): any): HTMLIFrameElement);
 
 const {contentDocument, contentWindow} = iframe;
@@ -54,11 +49,6 @@ mountButton.addEventListener('click', function () {
   }
 });
 
-// TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
-function hookNamesModuleLoaderFunction() {
-  return import('react-devtools-inline/hookNames');
-}
-
 inject('dist/app-index.js', () => {
   initDevTools({
     connect(cb) {
@@ -67,7 +57,6 @@ inject('dist/app-index.js', () => {
         createElement(DevTools, {
           browserTheme: 'light',
           enabledInspectedElementContextMenu: true,
-          hookNamesModuleLoaderFunction,
           showTabBar: true,
           warnIfLegacyBackendDetected: true,
           warnIfUnsupportedVersionDetected: true,
