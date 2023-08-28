@@ -14,7 +14,7 @@ import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
 import {
   createRequest,
-  startWork,
+  startRender,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
@@ -70,7 +70,7 @@ function renderToReadableStream(
     {
       type: 'bytes',
       start: (controller): ?Promise<void> => {
-        startWork(request);
+        startRender(request);
       },
       pull: (controller): ?Promise<void> => {
         startFlowing(request, controller);

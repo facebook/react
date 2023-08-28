@@ -158,6 +158,12 @@ type KeyNode =
   | null
   | [KeyNode /* parent */, string | null /* name */, string | number /* key */];
 
+type PostponedBoundary = {
+  boundary: SuspenseBoundary,
+  segments: Map<KeyNode, Segment>,
+};
+type PostponedHoles = Map<KeyNode, PostponedBoundary>;
+
 type LegacyContext = {
   [key: string]: any,
 };
@@ -237,6 +243,7 @@ export opaque type Request = {
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
+  trackedPostpones: null | PostponedHoles, // Gets set to non-null while we want to track postponed holes. I.e. during a prerender.
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
   // Returning null/undefined will cause a defualt error message in production
@@ -317,6 +324,7 @@ export function createRequest(
     clientRenderedBoundaries: ([]: Array<SuspenseBoundary>),
     completedBoundaries: ([]: Array<SuspenseBoundary>),
     partialBoundaries: ([]: Array<SuspenseBoundary>),
+    trackedPostpones: null,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onPostpone: onPostpone === undefined ? noop : onPostpone,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
@@ -2522,7 +2530,15 @@ function flushCompletedQueues(
     ) {
       request.flushScheduled = false;
       if (enableFloat) {
-        writePostamble(destination, request.resumableState);
+        // We write the trailing tags but only if don't have any data to resume.
+        // If we need to resume we'll write the postamble in the resume instead.
+        if (
+          !enablePostpone ||
+          request.trackedPostpones === null ||
+          request.trackedPostpones.size === 0
+        ) {
+          writePostamble(destination, request.resumableState);
+        }
       }
       completeWriting(destination);
       flushBuffered(destination);
@@ -2542,13 +2558,19 @@ function flushCompletedQueues(
   }
 }
 
-export function startWork(request: Request): void {
+export function startRender(request: Request): void {
   request.flushScheduled = request.destination !== null;
   if (supportsRequestStorage) {
     scheduleWork(() => requestStorage.run(request, performWork, request));
   } else {
     scheduleWork(() => performWork(request));
   }
+}
+
+export function startPrerender(request: Request): void {
+  // Start tracking postponed holes during this render.
+  request.trackedPostpones = new Map();
+  startRender(request);
 }
 
 function enqueueFlush(request: Request): void {

@@ -1519,7 +1519,7 @@ function flushCompletedChunks(
   }
 }
 
-export function startWork(request: Request): void {
+export function startRender(request: Request): void {
   request.flushScheduled = request.destination !== null;
   if (supportsRequestStorage) {
     scheduleWork(() => requestStorage.run(request, performWork, request));
