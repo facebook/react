@@ -2008,7 +2008,7 @@ function formStateReducer<S>(oldState: S, newState: S): S {
 function mountFormState<S, P>(
   action: (S, P) => Promise<S>,
   initialState: S,
-  url?: string,
+  permalink?: string,
 ): [S, (P) => void] {
   // State hook. The state is stored in a thenable which is then unwrapped by
   // the `use` algorithm during render.
@@ -2063,7 +2063,7 @@ function mountFormState<S, P>(
 function updateFormState<S, P>(
   action: (S, P) => Promise<S>,
   initialState: S,
-  url?: string,
+  permalink?: string,
 ): [S, (P) => void] {
   const stateHook = updateWorkInProgressHook();
   const currentStateHook = ((currentHook: any): Hook);
@@ -2072,7 +2072,7 @@ function updateFormState<S, P>(
     currentStateHook,
     action,
     initialState,
-    url,
+    permalink,
   );
 }
 
@@ -2081,7 +2081,7 @@ function updateFormStateImpl<S, P>(
   currentStateHook: Hook,
   action: (S, P) => Promise<S>,
   initialState: S,
-  url?: string,
+  permalink?: string,
 ): [S, (P) => void] {
   const [thenable] = updateReducerImpl<Thenable<S>, Thenable<S>>(
     stateHook,
@@ -2121,7 +2121,7 @@ function formStateActionEffect<S, P>(
 function rerenderFormState<S, P>(
   action: (S, P) => Promise<S>,
   initialState: S,
-  url?: string,
+  permalink?: string,
 ): [S, (P) => void] {
   // Unlike useState, useFormState doesn't support render phase updates.
   // Also unlike useState, we need to replay all pending updates again in case
@@ -2140,7 +2140,7 @@ function rerenderFormState<S, P>(
       currentStateHook,
       action,
       initialState,
-      url,
+      permalink,
     );
   }
 
@@ -3628,11 +3628,11 @@ if (__DEV__) {
       function useFormState<S, P>(
         action: (S, P) => Promise<S>,
         initialState: S,
-        url?: string,
+        permalink?: string,
       ): [S, (P) => void] {
         currentHookNameInDev = 'useFormState';
         mountHookTypesDev();
-        return mountFormState(action, initialState, url);
+        return mountFormState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -3798,11 +3798,11 @@ if (__DEV__) {
       function useFormState<S, P>(
         action: (S, P) => Promise<S>,
         initialState: S,
-        url?: string,
+        permalink?: string,
       ): [S, (P) => void] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
-        return mountFormState(action, initialState, url);
+        return mountFormState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -3970,11 +3970,11 @@ if (__DEV__) {
       function useFormState<S, P>(
         action: (S, P) => Promise<S>,
         initialState: S,
-        url?: string,
+        permalink?: string,
       ): [S, (P) => void] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
-        return updateFormState(action, initialState, url);
+        return updateFormState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4142,11 +4142,11 @@ if (__DEV__) {
       function useFormState<S, P>(
         action: (S, P) => Promise<S>,
         initialState: S,
-        url?: string,
+        permalink?: string,
       ): [S, (P) => void] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
-        return rerenderFormState(action, initialState, url);
+        return rerenderFormState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4335,12 +4335,12 @@ if (__DEV__) {
       function useFormState<S, P>(
         action: (S, P) => Promise<S>,
         initialState: S,
-        url?: string,
+        permalink?: string,
       ): [S, (P) => void] {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         mountHookTypesDev();
-        return mountFormState(action, initialState, url);
+        return mountFormState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4533,12 +4533,12 @@ if (__DEV__) {
       function useFormState<S, P>(
         action: (S, P) => Promise<S>,
         initialState: S,
-        url?: string,
+        permalink?: string,
       ): [S, (P) => void] {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return updateFormState(action, initialState, url);
+        return updateFormState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {
@@ -4731,12 +4731,12 @@ if (__DEV__) {
       function useFormState<S, P>(
         action: (S, P) => Promise<S>,
         initialState: S,
-        url?: string,
+        permalink?: string,
       ): [S, (P) => void] {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         updateHookTypesDev();
-        return rerenderFormState(action, initialState, url);
+        return rerenderFormState(action, initialState, permalink);
       };
   }
   if (enableAsyncActions) {

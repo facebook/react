@@ -557,7 +557,7 @@ function useOptimistic<S, A>(
 function useFormState<S, P>(
   action: (S, P) => Promise<S>,
   initialState: S,
-  url?: string,
+  permalink?: string,
 ): [S, (P) => void] {
   resolveCurrentlyRenderingComponent();
   return [initialState, unsupportedDispatchFormState];
