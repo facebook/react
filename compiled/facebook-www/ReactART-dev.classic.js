@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-217d7ffa";
+var ReactVersion = "18.3.0-www-classic-a63d3ca6";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -9287,13 +9287,17 @@ function mountOptimistic(passthrough, reducer) {
 }
 
 function updateOptimistic(passthrough, reducer) {
-  var hook = updateWorkInProgressHook(); // Optimistic updates are always rebased on top of the latest value passed in
+  var hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+}
+
+function updateOptimisticImpl(hook, current, passthrough, reducer) {
+  // Optimistic updates are always rebased on top of the latest value passed in
   // as an argument. It's called a passthrough because if there are no pending
   // updates, it will be returned as-is.
   //
   // Reset the base state and memoized state to the passthrough. Future
   // updates will be applied on top of this.
-
   hook.baseState = hook.memoizedState = passthrough; // If a reducer is not provided, default to the same one used by useState.
 
   var resolvedReducer =
@@ -9309,12 +9313,13 @@ function rerenderOptimistic(passthrough, reducer) {
   // So instead of a forked re-render implementation that knows how to handle
   // render phase udpates, we can use the same implementation as during a
   // regular mount or update.
+  var hook = updateWorkInProgressHook();
+
   if (currentHook !== null) {
     // This is an update. Process the update queue.
-    return updateOptimistic(passthrough, reducer);
+    return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
   } // This is a mount. No updates to process.
-
-  var hook = updateWorkInProgressHook(); // Reset the base state and memoized state to the passthrough. Future
+  // Reset the base state and memoized state to the passthrough. Future
   // updates will be applied on top of this.
 
   hook.baseState = hook.memoizedState = passthrough;

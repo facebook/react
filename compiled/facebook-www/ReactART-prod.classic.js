@@ -2995,6 +2995,9 @@ function mountOptimistic(passthrough) {
 }
 function updateOptimistic(passthrough, reducer) {
   var hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+}
+function updateOptimisticImpl(hook, current, passthrough, reducer) {
   hook.baseState = hook.memoizedState = passthrough;
   return updateReducerImpl(
     hook,
@@ -3003,10 +3006,11 @@ function updateOptimistic(passthrough, reducer) {
   );
 }
 function rerenderOptimistic(passthrough, reducer) {
-  if (null !== currentHook) return updateOptimistic(passthrough, reducer);
-  reducer = updateWorkInProgressHook();
-  reducer.baseState = reducer.memoizedState = passthrough;
-  return [passthrough, reducer.queue.dispatch];
+  var hook = updateWorkInProgressHook();
+  if (null !== currentHook)
+    return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+  hook.baseState = hook.memoizedState = passthrough;
+  return [passthrough, hook.queue.dispatch];
 }
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
@@ -10091,7 +10095,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-b5d591d4",
+    version: "18.3.0-www-classic-5ee47d9f",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1303 = {
@@ -10122,7 +10126,7 @@ var internals$jscomp$inline_1303 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-b5d591d4"
+  reconcilerVersion: "18.3.0-www-classic-5ee47d9f"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1304 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

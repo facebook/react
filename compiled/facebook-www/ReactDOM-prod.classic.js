@@ -3808,6 +3808,9 @@ function mountOptimistic(passthrough) {
 }
 function updateOptimistic(passthrough, reducer) {
   var hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+}
+function updateOptimisticImpl(hook, current, passthrough, reducer) {
   hook.baseState = hook.memoizedState = passthrough;
   return updateReducerImpl(
     hook,
@@ -3816,10 +3819,11 @@ function updateOptimistic(passthrough, reducer) {
   );
 }
 function rerenderOptimistic(passthrough, reducer) {
-  if (null !== currentHook) return updateOptimistic(passthrough, reducer);
-  reducer = updateWorkInProgressHook();
-  reducer.baseState = reducer.memoizedState = passthrough;
-  return [passthrough, reducer.queue.dispatch];
+  var hook = updateWorkInProgressHook();
+  if (null !== currentHook)
+    return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+  hook.baseState = hook.memoizedState = passthrough;
+  return [passthrough, hook.queue.dispatch];
 }
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
@@ -16669,7 +16673,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1783 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-c01203f3",
+  version: "18.3.0-www-classic-d2e8c11b",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2140 = {
@@ -16699,7 +16703,7 @@ var internals$jscomp$inline_2140 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-c01203f3"
+  reconcilerVersion: "18.3.0-www-classic-d2e8c11b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2141 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16938,4 +16942,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-c01203f3";
+exports.version = "18.3.0-www-classic-d2e8c11b";

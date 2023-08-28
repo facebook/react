@@ -3701,6 +3701,9 @@ function mountOptimistic(passthrough) {
 }
 function updateOptimistic(passthrough, reducer) {
   var hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+}
+function updateOptimisticImpl(hook, current, passthrough, reducer) {
   hook.baseState = hook.memoizedState = passthrough;
   return updateReducerImpl(
     hook,
@@ -3709,10 +3712,11 @@ function updateOptimistic(passthrough, reducer) {
   );
 }
 function rerenderOptimistic(passthrough, reducer) {
-  if (null !== currentHook) return updateOptimistic(passthrough, reducer);
-  reducer = updateWorkInProgressHook();
-  reducer.baseState = reducer.memoizedState = passthrough;
-  return [passthrough, reducer.queue.dispatch];
+  var hook = updateWorkInProgressHook();
+  if (null !== currentHook)
+    return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+  hook.baseState = hook.memoizedState = passthrough;
+  return [passthrough, hook.queue.dispatch];
 }
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
@@ -16199,7 +16203,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1742 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-de287969",
+  version: "18.3.0-www-modern-91e39875",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2104 = {
@@ -16230,7 +16234,7 @@ var internals$jscomp$inline_2104 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-de287969"
+  reconcilerVersion: "18.3.0-www-modern-91e39875"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2105 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16397,4 +16401,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-de287969";
+exports.version = "18.3.0-www-modern-91e39875";

@@ -3847,6 +3847,9 @@ function mountOptimistic(passthrough) {
 }
 function updateOptimistic(passthrough, reducer) {
   var hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+}
+function updateOptimisticImpl(hook, current, passthrough, reducer) {
   hook.baseState = hook.memoizedState = passthrough;
   return updateReducerImpl(
     hook,
@@ -3855,10 +3858,11 @@ function updateOptimistic(passthrough, reducer) {
   );
 }
 function rerenderOptimistic(passthrough, reducer) {
-  if (null !== currentHook) return updateOptimistic(passthrough, reducer);
-  reducer = updateWorkInProgressHook();
-  reducer.baseState = reducer.memoizedState = passthrough;
-  return [passthrough, reducer.queue.dispatch];
+  var hook = updateWorkInProgressHook();
+  if (null !== currentHook)
+    return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+  hook.baseState = hook.memoizedState = passthrough;
+  return [passthrough, hook.queue.dispatch];
 }
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
@@ -16968,7 +16972,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1827 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-6f44ca66",
+  version: "18.3.0-www-modern-13e9d958",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17013,7 +17017,7 @@ var devToolsConfig$jscomp$inline_1827 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-6f44ca66"
+  reconcilerVersion: "18.3.0-www-modern-13e9d958"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17167,7 +17171,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-6f44ca66";
+exports.version = "18.3.0-www-modern-13e9d958";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
