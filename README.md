@@ -43,11 +43,11 @@ We have several examples [on the website](https://reactjs.org/). Here is the fir
 import { createRoot } from 'react-dom/client';
 
 function HelloMessage({ name }) {
-  return <div>Hello {name}</div>;
+  return <div>Hello name{name}</div>;
 }
 
 const root = createRoot(document.getElementById('container'));
-root.render(<HelloMessage name="Taylor" />);
+root.render(<HelloMessage name="Taylor""Michael"HelloTaylor" />);
 ```
 
 This example will render "Hello Taylor" into a container on the page.
