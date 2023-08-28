@@ -1793,7 +1793,20 @@ function updateOptimistic<S, A>(
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   const hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(
+    hook,
+    ((currentHook: any): Hook),
+    passthrough,
+    reducer,
+  );
+}
 
+function updateOptimisticImpl<S, A>(
+  hook: Hook,
+  current: Hook | null,
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
   // Optimistic updates are always rebased on top of the latest value passed in
   // as an argument. It's called a passthrough because if there are no pending
   // updates, it will be returned as-is.
@@ -1820,14 +1833,20 @@ function rerenderOptimistic<S, A>(
   // So instead of a forked re-render implementation that knows how to handle
   // render phase udpates, we can use the same implementation as during a
   // regular mount or update.
+  const hook = updateWorkInProgressHook();
 
   if (currentHook !== null) {
     // This is an update. Process the update queue.
-    return updateOptimistic(passthrough, reducer);
+    return updateOptimisticImpl(
+      hook,
+      ((currentHook: any): Hook),
+      passthrough,
+      reducer,
+    );
   }
 
   // This is a mount. No updates to process.
-  const hook = updateWorkInProgressHook();
+
   // Reset the base state and memoized state to the passthrough. Future
   // updates will be applied on top of this.
   hook.baseState = hook.memoizedState = passthrough;
