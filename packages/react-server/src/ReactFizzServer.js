@@ -230,6 +230,7 @@ export opaque type Request = {
   flushScheduled: boolean,
   +resumableState: ResumableState,
   +renderState: RenderState,
+  +rootFormatContext: FormatContext,
   +progressiveChunkSize: number,
   status: 0 | 1 | 2,
   fatalError: mixed,
@@ -309,6 +310,7 @@ export function createRequest(
     flushScheduled: false,
     resumableState,
     renderState,
+    rootFormatContext,
     progressiveChunkSize:
       progressiveChunkSize === undefined
         ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
@@ -2648,5 +2650,16 @@ export type PostponedState = {
 
 // Returns the state of a postponed request or null if nothing was postponed.
 export function getPostponedState(request: Request): null | PostponedState {
-  return null;
+  if (
+    request.trackedPostpones === null ||
+    request.trackedPostpones.size === 0
+  ) {
+    return null;
+  }
+  return {
+    nextSegmentId: request.nextSegmentId,
+    rootFormatContext: request.rootFormatContext,
+    progressiveChunkSize: request.progressiveChunkSize,
+    resumableState: request.resumableState,
+  };
 }
