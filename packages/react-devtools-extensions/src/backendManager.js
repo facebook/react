@@ -152,6 +152,32 @@ function activateBackend(version: string, hook: DevToolsHook) {
     );
   }
 
+  let inspectModeEnabled = false;
+
+  window.addEventListener('message', event => {
+    const {data} = event;
+    const {source, payload} = data || {};
+
+    if (
+      source !== 'react-devtools-content-script' ||
+      !payload ||
+      payload.type !== 'command' ||
+      !payload.command
+    ) {
+      return;
+    }
+
+    if (payload.command === 'inspect_node') {
+      inspectModeEnabled = !inspectModeEnabled;
+
+      if (inspectModeEnabled) {
+        agent.startInspectingNative();
+      } else {
+        agent.stopInspectingNative(true);
+      }
+    }
+  });
+
   // Let the frontend know that the backend has attached listeners and is ready for messages.
   // This covers the case of syncing saved values after reloading/navigating while DevTools remain open.
   bridge.send('extensionBackendInitialized');

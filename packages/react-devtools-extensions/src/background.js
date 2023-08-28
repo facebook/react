@@ -243,3 +243,16 @@ chrome.runtime.onMessage.addListener((request, sender) => {
     }
   }
 });
+
+chrome.commands.onCommand.addListener(command => {
+  switch (command) {
+    case 'inspect_node': {
+      chrome.tabs.query({active: true, currentWindow: true}, tabs => {
+        chrome.tabs.sendMessage(tabs[0].id, {command: 'inspect_node'});
+      });
+      return;
+    }
+    default:
+      return;
+  }
+});
