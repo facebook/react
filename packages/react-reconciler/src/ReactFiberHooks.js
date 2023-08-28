@@ -137,7 +137,10 @@ import {
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
-import {requestAsyncActionContext} from './ReactFiberAsyncAction';
+import {
+  requestAsyncActionContext,
+  requestSyncActionContext,
+} from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 
@@ -1793,7 +1796,20 @@ function updateOptimistic<S, A>(
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   const hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(
+    hook,
+    ((currentHook: any): Hook),
+    passthrough,
+    reducer,
+  );
+}
 
+function updateOptimisticImpl<S, A>(
+  hook: Hook,
+  current: Hook | null,
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
   // Optimistic updates are always rebased on top of the latest value passed in
   // as an argument. It's called a passthrough because if there are no pending
   // updates, it will be returned as-is.
@@ -1820,19 +1836,325 @@ function rerenderOptimistic<S, A>(
   // So instead of a forked re-render implementation that knows how to handle
   // render phase udpates, we can use the same implementation as during a
   // regular mount or update.
+  const hook = updateWorkInProgressHook();
 
   if (currentHook !== null) {
     // This is an update. Process the update queue.
-    return updateOptimistic(passthrough, reducer);
+    return updateOptimisticImpl(
+      hook,
+      ((currentHook: any): Hook),
+      passthrough,
+      reducer,
+    );
   }
 
   // This is a mount. No updates to process.
-  const hook = updateWorkInProgressHook();
+
   // Reset the base state and memoized state to the passthrough. Future
   // updates will be applied on top of this.
   hook.baseState = hook.memoizedState = passthrough;
   const dispatch = hook.queue.dispatch;
   return [passthrough, dispatch];
+}
+
+// useFormState actions run sequentially, because each action receives the
+// previous state as an argument. We store pending actions on a queue.
+type FormStateActionQueue<S, P> = {
+  // This is the most recent state returned from an action. It's updated as
+  // soon as the action finishes running.
+  state: S,
+  // A stable dispatch method, passed to the user.
+  dispatch: Dispatch<P>,
+  // This is the most recent action function that was rendered. It's updated
+  // during the commit phase.
+  action: (S, P) => Promise<S>,
+  // This is a circular linked list of pending action payloads. It incudes the
+  // action that is currently running.
+  pending: FormStateActionQueueNode<P> | null,
+};
+
+type FormStateActionQueueNode<P> = {
+  payload: P,
+  // This is never null because it's part of a circular linked list.
+  next: FormStateActionQueueNode<P>,
+};
+
+function dispatchFormState<S, P>(
+  fiber: Fiber,
+  actionQueue: FormStateActionQueue<S, P>,
+  setState: Dispatch<Thenable<S>>,
+  payload: P,
+): void {
+  if (isRenderPhaseUpdate(fiber)) {
+    throw new Error('Cannot update form state while rendering.');
+  }
+  const last = actionQueue.pending;
+  if (last === null) {
+    // There are no pending actions; this is the first one. We can run
+    // it immediately.
+    const newLast: FormStateActionQueueNode<P> = {
+      payload,
+      next: (null: any), // circular
+    };
+    newLast.next = actionQueue.pending = newLast;
+
+    runFormStateAction(actionQueue, setState, payload);
+  } else {
+    // There's already an action running. Add to the queue.
+    const first = last.next;
+    const newLast: FormStateActionQueueNode<P> = {
+      payload,
+      next: first,
+    };
+    last.next = newLast;
+  }
+}
+
+function runFormStateAction<S, P>(
+  actionQueue: FormStateActionQueue<S, P>,
+  setState: Dispatch<Thenable<S>>,
+  payload: P,
+) {
+  const action = actionQueue.action;
+  const prevState = actionQueue.state;
+
+  // This is a fork of startTransition
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
+  const currentTransition = ReactCurrentBatchConfig.transition;
+  if (__DEV__) {
+    ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+  }
+  try {
+    const promise = action(prevState, payload);
+
+    if (__DEV__) {
+      if (
+        promise === null ||
+        typeof promise !== 'object' ||
+        typeof (promise: any).then !== 'function'
+      ) {
+        console.error(
+          'The action passed to useFormState must be an async function.',
+        );
+      }
+    }
+
+    // Attach a listener to read the return state of the action. As soon as this
+    // resolves, we can run the next action in the sequence.
+    promise.then(
+      (nextState: S) => {
+        actionQueue.state = nextState;
+        finishRunningFormStateAction(actionQueue, setState);
+      },
+      () => finishRunningFormStateAction(actionQueue, setState),
+    );
+
+    // Create a thenable that resolves once the current async action scope has
+    // finished. Then stash that thenable in state. We'll unwrap it with the
+    // `use` algorithm during render. This is the same logic used
+    // by startTransition.
+    const entangledThenable: Thenable<S> = requestAsyncActionContext(
+      promise,
+      null,
+    );
+    setState(entangledThenable);
+  } finally {
+    ReactCurrentBatchConfig.transition = prevTransition;
+
+    if (__DEV__) {
+      if (prevTransition === null && currentTransition._updatedFibers) {
+        const updatedFibersCount = currentTransition._updatedFibers.size;
+        currentTransition._updatedFibers.clear();
+        if (updatedFibersCount > 10) {
+          console.warn(
+            'Detected a large number of updates inside startTransition. ' +
+              'If this is due to a subscription please re-write it to use React provided hooks. ' +
+              'Otherwise concurrent mode guarantees are off the table.',
+          );
+        }
+      }
+    }
+  }
+}
+
+function finishRunningFormStateAction<S, P>(
+  actionQueue: FormStateActionQueue<S, P>,
+  setState: Dispatch<Thenable<S>>,
+) {
+  // The action finished running. Pop it from the queue and run the next pending
+  // action, if there are any.
+  const last = actionQueue.pending;
+  if (last !== null) {
+    const first = last.next;
+    if (first === last) {
+      // This was the last action in the queue.
+      actionQueue.pending = null;
+    } else {
+      // Remove the first node from the circular queue.
+      const next = first.next;
+      last.next = next;
+
+      // Run the next action.
+      runFormStateAction(actionQueue, setState, next.payload);
+    }
+  }
+}
+
+function formStateReducer<S>(oldState: S, newState: S): S {
+  return newState;
+}
+
+function mountFormState<S, P>(
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  // State hook. The state is stored in a thenable which is then unwrapped by
+  // the `use` algorithm during render.
+  const stateHook = mountWorkInProgressHook();
+  stateHook.memoizedState = stateHook.baseState = {
+    status: 'fulfilled',
+    value: initialState,
+  };
+  const stateQueue: UpdateQueue<Thenable<S>, Thenable<S>> = {
+    pending: null,
+    lanes: NoLanes,
+    dispatch: null,
+    lastRenderedReducer: formStateReducer,
+    lastRenderedState: (initialState: any),
+  };
+  stateHook.queue = stateQueue;
+  const setState: Dispatch<Thenable<S>> = (dispatchSetState.bind(
+    null,
+    currentlyRenderingFiber,
+    stateQueue,
+  ): any);
+  stateQueue.dispatch = setState;
+
+  // Action queue hook. This is used to queue pending actions. The queue is
+  // shared between all instances of the hook. Similar to a regular state queue,
+  // but different because the actions are run sequentially, and they run in
+  // an event instead of during render.
+  const actionQueueHook = mountWorkInProgressHook();
+  const actionQueue: FormStateActionQueue<S, P> = {
+    state: initialState,
+    dispatch: (null: any), // circular
+    action,
+    pending: null,
+  };
+  actionQueueHook.queue = actionQueue;
+  const dispatch = dispatchFormState.bind(
+    null,
+    currentlyRenderingFiber,
+    actionQueue,
+    setState,
+  );
+  actionQueue.dispatch = dispatch;
+
+  // Stash the action function on the memoized state of the hook. We'll use this
+  // to detect when the action function changes so we can update it in
+  // an effect.
+  actionQueueHook.memoizedState = action;
+
+  return [initialState, dispatch];
+}
+
+function updateFormState<S, P>(
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  const stateHook = updateWorkInProgressHook();
+  const currentStateHook = ((currentHook: any): Hook);
+  return updateFormStateImpl(
+    stateHook,
+    currentStateHook,
+    action,
+    initialState,
+    url,
+  );
+}
+
+function updateFormStateImpl<S, P>(
+  stateHook: Hook,
+  currentStateHook: Hook,
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  const [thenable] = updateReducerImpl<Thenable<S>, Thenable<S>>(
+    stateHook,
+    currentStateHook,
+    formStateReducer,
+  );
+
+  // This will suspend until the action finishes.
+  const state = useThenable(thenable);
+
+  const actionQueueHook = updateWorkInProgressHook();
+  const actionQueue = actionQueueHook.queue;
+  const dispatch = actionQueue.dispatch;
+
+  // Check if a new action was passed. If so, update it in an effect.
+  const prevAction = actionQueueHook.memoizedState;
+  if (action !== prevAction) {
+    currentlyRenderingFiber.flags |= PassiveEffect;
+    pushEffect(
+      HookHasEffect | HookPassive,
+      formStateActionEffect.bind(null, actionQueue, action),
+      createEffectInstance(),
+      null,
+    );
+  }
+
+  return [state, dispatch];
+}
+
+function formStateActionEffect<S, P>(
+  actionQueue: FormStateActionQueue<S, P>,
+  action: (S, P) => Promise<S>,
+): void {
+  actionQueue.action = action;
+}
+
+function rerenderFormState<S, P>(
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  url?: string,
+): [S, (P) => void] {
+  // Unlike useState, useFormState doesn't support render phase updates.
+  // Also unlike useState, we need to replay all pending updates again in case
+  // the passthrough value changed.
+  //
+  // So instead of a forked re-render implementation that knows how to handle
+  // render phase udpates, we can use the same implementation as during a
+  // regular mount or update.
+  const stateHook = updateWorkInProgressHook();
+  const currentStateHook = currentHook;
+
+  if (currentStateHook !== null) {
+    // This is an update. Process the update queue.
+    return updateFormStateImpl(
+      stateHook,
+      currentStateHook,
+      action,
+      initialState,
+      url,
+    );
+  }
+
+  // This is a mount. No updates to process.
+  const state = stateHook.memoizedState;
+
+  const actionQueueHook = updateWorkInProgressHook();
+  const actionQueue = actionQueueHook.queue;
+  const dispatch = actionQueue.dispatch;
+
+  // This may have changed during the rerender.
+  actionQueueHook.memoizedState = action;
+
+  return [state, dispatch];
 }
 
 function pushEffect(
@@ -2409,15 +2731,37 @@ function startTransition<S>(
     if (enableAsyncActions) {
       const returnValue = callback();
 
-      // This is either `finishedState` or a thenable that resolves to
-      // `finishedState`, depending on whether the action scope is an async
-      // function. In the async case, the resulting render will suspend until
-      // the async action scope has finished.
-      const maybeThenable = requestAsyncActionContext(
-        returnValue,
-        finishedState,
-      );
-      dispatchSetState(fiber, queue, maybeThenable);
+      // Check if we're inside an async action scope. If so, we'll entangle
+      // this new action with the existing scope.
+      //
+      // If we're not already inside an async action scope, and this action is
+      // async, then we'll create a new async scope.
+      //
+      // In the async case, the resulting render will suspend until the async
+      // action scope has finished.
+      if (
+        returnValue !== null &&
+        typeof returnValue === 'object' &&
+        typeof returnValue.then === 'function'
+      ) {
+        const thenable = ((returnValue: any): Thenable<mixed>);
+        // This is a thenable that resolves to `finishedState` once the async
+        // action scope has finished.
+        const entangledResult = requestAsyncActionContext(
+          thenable,
+          finishedState,
+        );
+        dispatchSetState(fiber, queue, entangledResult);
+      } else {
+        // This is either `finishedState` or a thenable that resolves to
+        // `finishedState`, depending on whether we're inside an async
+        // action scope.
+        const entangledResult = requestSyncActionContext(
+          returnValue,
+          finishedState,
+        );
+        dispatchSetState(fiber, queue, entangledResult);
+      }
     } else {
       // Async actions are not enabled.
       dispatchSetState(fiber, queue, finishedState);
@@ -2981,6 +3325,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useFormState = throwInvalidHookError;
 }
 if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
@@ -3018,6 +3363,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnMount: Dispatcher).useFormState = mountFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
@@ -3055,6 +3401,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnUpdate: Dispatcher).useFormState = updateFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
@@ -3092,6 +3439,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnRerender: Dispatcher).useFormState = rerenderFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useOptimistic = rerenderOptimistic;
@@ -3276,6 +3624,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnMountInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        mountHookTypesDev();
+        return mountFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
@@ -3436,6 +3794,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return mountFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useOptimistic =
@@ -3598,6 +3966,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return updateFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -3760,6 +4138,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
@@ -3943,6 +4331,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
@@ -4130,6 +4529,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -4317,6 +4727,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        url?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, url);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =

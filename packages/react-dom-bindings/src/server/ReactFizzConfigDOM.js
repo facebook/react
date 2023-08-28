@@ -15,6 +15,7 @@ import type {
   PreloadModuleOptions,
   PreinitOptions,
   PreinitModuleOptions,
+  ImportMap,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
 import {
@@ -139,6 +140,7 @@ export type RenderState = {
   // Hoistable chunks
   charsetChunks: Array<Chunk | PrecomputedChunk>,
   preconnectChunks: Array<Chunk | PrecomputedChunk>,
+  importMapChunks: Array<Chunk | PrecomputedChunk>,
   preloadChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
 
@@ -205,7 +207,7 @@ const scriptCrossOrigin = stringToPrecomputedChunk('" crossorigin="');
 const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
 
 /**
- * This escaping function is designed to work with bootstrapScriptContent only.
+ * This escaping function is designed to work with bootstrapScriptContent and importMap only.
  * because we know we are escaping the entire script. We can avoid for instance
  * escaping html comment string sequences that are valid javascript as well because
  * if there are no sebsequent <script sequences the html parser will never enter
@@ -214,7 +216,7 @@ const endAsyncScript = stringToPrecomputedChunk('" async=""></script>');
  * While untrusted script content should be made safe before using this api it will
  * ensure that the script cannot be early terminated or never terminated state
  */
-function escapeBootstrapScriptContent(scriptText: string) {
+function escapeBootstrapAndImportMapScriptContent(scriptText: string) {
   if (__DEV__) {
     checkHtmlStringCoercion(scriptText);
   }
@@ -237,12 +239,19 @@ export type ExternalRuntimeScript = {
   src: string,
   chunks: Array<Chunk | PrecomputedChunk>,
 };
+
+const importMapScriptStart = stringToPrecomputedChunk(
+  '<script type="importmap">',
+);
+const importMapScriptEnd = stringToPrecomputedChunk('</script>');
+
 // Allows us to keep track of what we've already written so we can refer back to it.
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
 // is set, the server will send instructions via data attributes (instead of inline scripts)
 export function createRenderState(
   resumableState: ResumableState,
   nonce: string | void,
+  importMap: ImportMap | void,
 ): RenderState {
   const inlineScriptWithNonce =
     nonce === undefined
@@ -251,6 +260,17 @@ export function createRenderState(
           '<script nonce="' + escapeTextForBrowser(nonce) + '">',
         );
   const idPrefix = resumableState.idPrefix;
+  const importMapChunks: Array<Chunk | PrecomputedChunk> = [];
+  if (importMap !== undefined) {
+    const map = importMap;
+    importMapChunks.push(importMapScriptStart);
+    importMapChunks.push(
+      stringToChunk(
+        escapeBootstrapAndImportMapScriptContent(JSON.stringify(map)),
+      ),
+    );
+    importMapChunks.push(importMapScriptEnd);
+  }
   return {
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
@@ -260,6 +280,7 @@ export function createRenderState(
     headChunks: null,
     charsetChunks: [],
     preconnectChunks: [],
+    importMapChunks,
     preloadChunks: [],
     hoistableChunks: [],
     nonce,
@@ -290,7 +311,9 @@ export function createResumableState(
           );
     bootstrapChunks.push(
       inlineScriptWithNonce,
-      stringToChunk(escapeBootstrapScriptContent(bootstrapScriptContent)),
+      stringToChunk(
+        escapeBootstrapAndImportMapScriptContent(bootstrapScriptContent),
+      ),
       endInlineScript,
     );
   }
@@ -4342,6 +4365,12 @@ export function writePreamble(
   // Flush unblocked stylesheets by precedence
   resumableState.precedences.forEach(flushAllStylesInPreamble, destination);
 
+  const importMapChunks = renderState.importMapChunks;
+  for (i = 0; i < importMapChunks.length; i++) {
+    writeChunk(destination, importMapChunks[i]);
+  }
+  importMapChunks.length = 0;
+
   resumableState.bootstrapScripts.forEach(flushResourceInPreamble, destination);
 
   resumableState.scripts.forEach(flushResourceInPreamble, destination);
@@ -4414,6 +4443,11 @@ export function writeHoistables(
   // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
   resumableState.precedences.forEach(preloadLateStyles, destination);
+
+  // We only hoist importmaps that are configured through createResponse and that will
+  // always flush in the preamble. Generally we don't expect people to render them as
+  // tags when using React but if you do they are going to be treated like regular inline
+  // scripts and flush after other hoistables which is problematic
 
   // bootstrap scripts should flush above script priority but these can only flush in the preamble
   // so we elide the code here for performance

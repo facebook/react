@@ -33,13 +33,9 @@ import {
   readPartialStringChunk,
   readFinalStringChunk,
   createStringDecoder,
-  usedWithSSR,
 } from './ReactFlightClientConfig';
 
-import {
-  encodeFormAction,
-  knownServerReferences,
-} from './ReactFlightReplyClient';
+import {registerServerReference} from './ReactFlightReplyClient';
 
 import {
   REACT_LAZY_TYPE,
@@ -545,12 +541,7 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
       return callServer(metaData.id, bound.concat(args));
     });
   };
-  // Expose encoder for use by SSR.
-  if (usedWithSSR) {
-    // Only expose this in builds that would actually use it. Not needed on the client.
-    (proxy: any).$$FORM_ACTION = encodeFormAction;
-  }
-  knownServerReferences.set(proxy, metaData);
+  registerServerReference(proxy, metaData);
   return proxy;
 }
 
