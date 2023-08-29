@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b5389456a6700c5ba7ac64783de69922>>
+ * @generated SignedSource<<fc10d7aa86eca62a04f26382a5f9893e>>
  */
 
 "use strict";
@@ -2668,6 +2668,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       element.key,
       element.props,
       null,
+      null,
       returnFiber.mode,
       lanes
     );
@@ -2729,6 +2730,7 @@ function createChildReconciler(shouldTrackSideEffects) {
               newChild.type,
               newChild.key,
               newChild.props,
+              null,
               null,
               returnFiber.mode,
               lanes
@@ -3134,6 +3136,7 @@ function createChildReconciler(shouldTrackSideEffects) {
                   newChild.type,
                   newChild.key,
                   newChild.props,
+                  null,
                   null,
                   returnFiber.mode,
                   lanes
@@ -4686,6 +4689,7 @@ function updateMemoComponent(
       Component.type,
       null,
       nextProps,
+      null,
       workInProgress,
       workInProgress.mode,
       renderLanes
@@ -9022,20 +9026,21 @@ function createFiberFromTypeAndProps(
   type,
   key,
   pendingProps,
+  source,
   owner,
   mode,
   lanes
 ) {
-  var fiberTag = 2;
-  owner = type;
-  if ("function" === typeof type) shouldConstruct(type) && (fiberTag = 1);
-  else if ("string" === typeof type) fiberTag = 5;
+  owner = 2;
+  source = type;
+  if ("function" === typeof type) shouldConstruct(type) && (owner = 1);
+  else if ("string" === typeof type) owner = 5;
   else
     a: switch (type) {
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
-        fiberTag = 8;
+        owner = 8;
         mode |= 8;
         0 !== (mode & 1) && (mode |= 16);
         break;
@@ -9068,20 +9073,20 @@ function createFiberFromTypeAndProps(
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              fiberTag = 10;
+              owner = 10;
               break a;
             case REACT_CONTEXT_TYPE:
-              fiberTag = 9;
+              owner = 9;
               break a;
             case REACT_FORWARD_REF_TYPE:
-              fiberTag = 11;
+              owner = 11;
               break a;
             case REACT_MEMO_TYPE:
-              fiberTag = 14;
+              owner = 14;
               break a;
             case REACT_LAZY_TYPE:
-              fiberTag = 16;
-              owner = null;
+              owner = 16;
+              source = null;
               break a;
           }
         throw Error(
@@ -9089,9 +9094,9 @@ function createFiberFromTypeAndProps(
             ((null == type ? type : typeof type) + ".")
         );
     }
-  key = createFiber(fiberTag, pendingProps, key, mode);
+  key = createFiber(owner, pendingProps, key, mode);
   key.elementType = type;
-  key.type = owner;
+  key.type = source;
   key.lanes = lanes;
   return key;
 }
@@ -9418,7 +9423,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1038 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-516f11d4",
+    version: "18.3.0-canary-f14942e6",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9461,7 +9466,7 @@ var internals$jscomp$inline_1280 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-516f11d4"
+  reconcilerVersion: "18.3.0-canary-f14942e6"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1281 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

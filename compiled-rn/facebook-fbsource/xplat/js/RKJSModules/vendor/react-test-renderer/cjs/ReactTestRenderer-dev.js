@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3545510f0ae198cd36a14af654d7cf69>>
+ * @generated SignedSource<<cd445f3b30b95bc14ba23cb28c191840>>
  */
 
 'use strict';
@@ -11440,6 +11440,7 @@ function updateMemoComponent(
       Component.type,
       null,
       nextProps,
+      null,
       workInProgress,
       workInProgress.mode,
       renderLanes
@@ -14216,6 +14217,7 @@ function beginWork$1(current, workInProgress, renderLanes) {
           workInProgress.type,
           workInProgress.key,
           workInProgress.pendingProps,
+          workInProgress._debugSource || null,
           workInProgress._debugOwner || null,
           workInProgress.mode,
           workInProgress.lanes
@@ -17600,6 +17602,7 @@ function detachFiberAfterEffects(fiber) {
   fiber.stateNode = null;
 
   {
+    fiber._debugSource = null;
     fiber._debugOwner = null;
   } // Theoretically, nothing in here should be necessary, because we already
   // disconnected the fiber from the tree. So even if something leaks this
@@ -23609,6 +23612,7 @@ function createFiberFromTypeAndProps(
   type, // React$ElementType
   key,
   pendingProps,
+  source,
   owner,
   mode,
   lanes
@@ -23752,15 +23756,18 @@ function createFiberFromTypeAndProps(
   fiber.lanes = lanes;
 
   {
+    fiber._debugSource = source;
     fiber._debugOwner = owner;
   }
 
   return fiber;
 }
 function createFiberFromElement(element, mode, lanes) {
+  var source = null;
   var owner = null;
 
   {
+    source = element._source;
     owner = element._owner;
   }
 
@@ -23771,6 +23778,7 @@ function createFiberFromElement(element, mode, lanes) {
     type,
     key,
     pendingProps,
+    source,
     owner,
     mode,
     lanes
@@ -23986,7 +23994,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-4129ea8c9-20230829";
+var ReactVersion = "18.3.0-canary-eaa696876-20230829";
 
 // Might add PROFILE later.
 
