@@ -94,6 +94,12 @@ export type PluginOptions = {
    *
    */
   enableOnlyOnReactScript: boolean;
+
+  /**
+   * Enable to make Forget infer which components to compile, based on the same rules
+   * that React's ESLint rules use to detect components.
+   */
+  enableInferReactFunctions: boolean;
 };
 
 export type Logger = {
@@ -103,6 +109,7 @@ export type Logger = {
 export const defaultOptions: PluginOptions = {
   enableOnlyOnReactScript: false,
   enableOnlyOnUseForgetDirective: false,
+  enableInferReactFunctions: false,
   panicOnBailout: true,
   environment: null,
   logger: null,

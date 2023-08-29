@@ -33,6 +33,7 @@ export function transformFixtureInput(
   let validateNoSetStateInRender = true;
   let enableEmitFreeze = null;
   let enableOnlyOnReactScript = false;
+  let enableInferReactFunctions = false;
 
   if (firstLine.indexOf("@forgetDirective") !== -1) {
     enableOnlyOnUseForgetDirective = true;
@@ -80,6 +81,20 @@ export function transformFixtureInput(
     enableOnlyOnReactScript = true;
     language = "flow";
   }
+  if (firstLine.indexOf("@enableInferReactFunctions") !== -1) {
+    enableInferReactFunctions = true;
+  }
+  if (
+    [
+      enableInferReactFunctions,
+      enableOnlyOnReactScript,
+      enableOnlyOnUseForgetDirective,
+    ].filter((x) => x === true).length > 1
+  ) {
+    throw new Error(
+      "Cannot enable more than one of @enableInferReactFunctions, @enableOnlyOnReactScript, and @enableOnlyOnUseForgetDirective at once"
+    );
+  }
 
   return pluginFn(
     input,
@@ -111,6 +126,7 @@ export function transformFixtureInput(
       },
       enableOnlyOnUseForgetDirective,
       enableOnlyOnReactScript,
+      enableInferReactFunctions,
       logger: null,
       gating,
       instrumentForget,

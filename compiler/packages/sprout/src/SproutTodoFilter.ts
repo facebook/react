@@ -438,6 +438,13 @@ const skipFilter = new Set([
   "rules-of-hooks/rules-of-hooks-e66a744cffbe",
   "rules-of-hooks/rules-of-hooks-eacfcaa6ef89",
   "rules-of-hooks/rules-of-hooks-fe6042f7628b",
+  "infer-functions-component-with-jsx",
+  "infer-function-forwardRef",
+  "infer-function-React-memo",
+  "infer-functions-component-with-hook-call",
+  "infer-functions-component-with-jsx",
+  "infer-functions-hook-with-hook-call",
+  "infer-functions-hook-with-jsx",
 ]);
 
 export default skipFilter;

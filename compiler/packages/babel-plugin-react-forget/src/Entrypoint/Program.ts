@@ -332,6 +332,11 @@ function shouldVisitNode(
     }
   }
 
+  if (pass.opts.enableInferReactFunctions) {
+    const isReactLike = isReactFunctionLike(fn);
+    return isReactLike;
+  }
+
   return fn.scope.getProgramParent() === fn.scope.parent;
 }
 
@@ -418,4 +423,172 @@ function buildBlockStatement(
   });
 
   return body.node;
+}
+
+function isHookName(s: string): boolean {
+  return /^use[A-Z0-9]/.test(s);
+}
+
+/**
+ * We consider hooks to be a hook name identifier or a member expression
+ * containing a hook name.
+ */
+
+function isHook(path: NodePath<t.Expression | t.PrivateName>): boolean {
+  if (path.isIdentifier()) {
+    return isHookName(path.node.name);
+  } else if (
+    path.isMemberExpression() &&
+    !path.node.computed &&
+    isHook(path.get("property"))
+  ) {
+    const obj = path.get("object").node;
+    const isPascalCaseNameSpace = /^[A-Z].*/;
+    return obj.type === "Identifier" && isPascalCaseNameSpace.test(obj.name);
+  } else {
+    return false;
+  }
+}
+
+/**
+ * Checks if the node is a React component name. React component names must
+ * always start with an uppercase letter.
+ */
+
+function isComponentName(path: NodePath<t.Expression>): boolean {
+  return path.isIdentifier() && /^[A-Z]/.test(path.node.name);
+}
+
+function isReactFunction(
+  path: NodePath<t.Expression | t.PrivateName | t.V8IntrinsicIdentifier>,
+  functionName: string
+): boolean {
+  const node = path.node;
+  return (
+    (node.type === "Identifier" && node.name === functionName) ||
+    (node.type === "MemberExpression" &&
+      node.object.type === "Identifier" &&
+      node.object.name === "React" &&
+      node.property.type === "Identifier" &&
+      node.property.name === functionName)
+  );
+}
+
+/**
+ * Checks if the node is a callback argument of forwardRef. This render function
+ * should follow the rules of hooks.
+ */
+
+function isForwardRefCallback(path: NodePath<t.Expression>): boolean {
+  return !!(
+    path.parentPath.isCallExpression() &&
+    path.parentPath.get("callee").isExpression() &&
+    isReactFunction(path.parentPath.get("callee"), "forwardRef")
+  );
+}
+
+/**
+ * Checks if the node is a callback argument of React.memo. This anonymous
+ * functional component should follow the rules of hooks.
+ */
+
+function isMemoCallback(path: NodePath<t.Expression>): boolean {
+  return !!(
+    path.parentPath.isCallExpression() &&
+    path.parentPath.get("callee").isExpression() &&
+    isReactFunction(path.parentPath.get("callee"), "memo")
+  );
+}
+
+function isReactFunctionLike(
+  node: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>
+): boolean {
+  const functionName = getFunctionName(node);
+  if (functionName !== null) {
+    if (!isComponentName(functionName) && !isHook(functionName)) {
+      return false;
+    }
+  } else if (
+    node.isExpression() &&
+    !isForwardRefCallback(node) &&
+    !isMemoCallback(node)
+  ) {
+    return false;
+  } else {
+    return false;
+  }
+
+  let invokesHooks = false;
+  let createsJsx = false;
+  node.traverse({
+    JSX() {
+      createsJsx = true;
+    },
+    CallExpression(call) {
+      const callee = call.get("callee");
+      if (callee.isExpression() && isHook(callee)) {
+        invokesHooks = true;
+      }
+    },
+  });
+
+  return invokesHooks || createsJsx;
+}
+
+/**
+ * Gets the static name of a function AST node. For function declarations it is
+ * easy. For anonymous function expressions it is much harder. If you search for
+ * `IsAnonymousFunctionDefinition()` in the ECMAScript spec you'll find places
+ * where JS gives anonymous function expressions names. We roughly detect the
+ * same AST nodes with some exceptions to better fit our use case.
+ */
+
+function getFunctionName(
+  path: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>
+): NodePath<t.Expression> | null {
+  if (path.isFunctionDeclaration()) {
+    const id = path.get("id");
+    if (id.isIdentifier()) {
+      return id;
+    }
+    return null;
+  }
+  let id: NodePath<t.LVal | t.Expression | t.PrivateName> | null = null;
+  const parent = path.parentPath;
+  if (parent.isVariableDeclarator() && parent.get("init").node === path.node) {
+    // const useHook = () => {};
+    id = parent.get("id");
+  } else if (
+    parent.isAssignmentExpression() &&
+    parent.get("right").node === path.node &&
+    parent.get("operator") === "="
+  ) {
+    // useHook = () => {};
+    id = parent.get("left");
+  } else if (
+    parent.isProperty() &&
+    parent.get("value").node === path.node &&
+    !parent.get("computed") &&
+    parent.get("key").isLVal()
+  ) {
+    // {useHook: () => {}}
+    // {useHook() {}}
+    id = parent.get("key");
+  } else if (
+    parent.isAssignmentPattern() &&
+    parent.get("right").node === path.node &&
+    !parent.get("computed")
+  ) {
+    // const {useHook = () => {}} = {};
+    // ({useHook = () => {}} = {});
+    //
+    // Kinda clowny, but we'd said we'd follow spec convention for
+    // `IsAnonymousFunctionDefinition()` usage.
+    id = parent.get("left");
+  }
+  if (id !== null && (id.isIdentifier() || id.isMemberExpression())) {
+    return id;
+  } else {
+    return null;
+  }
 }
