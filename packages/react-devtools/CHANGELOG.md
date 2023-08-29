@@ -4,6 +4,24 @@
 
 ---
 
+### 4.28.1
+August 29, 2023
+
+#### Features
+* feat: added open in editor to appear by default ([Biki-das](https://github.com/Biki-das) in [#26949](https://github.com/facebook/react/pull/26949))
+
+#### Bugfixes
+* refactor: refactored devtools browser extension scripts to improve port management and service worker lifetime ([hoxyq](https://github.com/hoxyq) in [#27215](https://github.com/facebook/react/pull/27215))
+* fix[devtools]: allow element updates polling only if bridge is alive ([hoxyq](https://github.com/hoxyq) in [#27067](https://github.com/facebook/react/pull/27067))
+* refactor: resolve browser via env variables based on build rather than user agent ([hoxyq](https://github.com/hoxyq) in [#27179](https://github.com/facebook/react/pull/27179))
+* fix[devtools/updateFiberRecursively]: mount suspense fallback set in timed out case ([hoxyq](https://github.com/hoxyq) in [#27147](https://github.com/facebook/react/pull/27147))
+* fix[devtools/inspect]: null check memoized props before trying to call hasOwnProperty ([hoxyq](https://github.com/hoxyq) in [#27057](https://github.com/facebook/react/pull/27057))
+
+#### Other
+* refactor[devtools/extension]: minify production builds to strip comments ([hoxyq](https://github.com/hoxyq) in [#27304](https://github.com/facebook/react/pull/27304))
+
+---
+
 ### 4.28.0
 July 4, 2023
 
