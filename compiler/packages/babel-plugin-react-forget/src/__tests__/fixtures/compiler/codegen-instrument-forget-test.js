@@ -1,4 +1,4 @@
-// @instrumentForget @forgetDirective
+// @instrumentForget @compilationMode(annotation)
 
 function Bar(props) {
   "use forget";

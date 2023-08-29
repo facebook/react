@@ -1,4 +1,4 @@
-// @gating @forgetDirective
+// @gating @compilationMode(annotation)
 function Bar(props) {
   "use forget";
   return <div>{props.bar}</div>;

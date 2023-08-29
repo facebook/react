@@ -411,7 +411,7 @@ const skipFilter = new Set([
   "fbt-call",
   "fbt-call-complex-param-value",
   "fbt-template-string-same-scope",
-  "reactscript-basic.flow",
+  "component-declaration-basic.flow",
 
   // TODO: we probably want to always skip these
   "rules-of-hooks/rules-of-hooks-0592bd574811",

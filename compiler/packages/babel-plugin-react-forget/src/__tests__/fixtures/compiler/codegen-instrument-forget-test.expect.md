@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @instrumentForget @forgetDirective
+// @instrumentForget @compilationMode(annotation)
 
 function Bar(props) {
   "use forget";
@@ -24,7 +24,7 @@ function Foo(props) {
 
 ```javascript
 import { useRenderCounter } from "react-forget-runtime";
-import { unstable_useMemoCache as useMemoCache } from "react"; // @instrumentForget @forgetDirective
+import { unstable_useMemoCache as useMemoCache } from "react"; // @instrumentForget @compilationMode(annotation)
 
 function Bar(props) {
   if (__DEV__) useRenderCounter("Bar");

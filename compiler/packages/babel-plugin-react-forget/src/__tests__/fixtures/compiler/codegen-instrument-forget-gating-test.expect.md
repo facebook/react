@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @instrumentForget @forgetDirective @gating
+// @instrumentForget @compilationMode(annotation) @gating
 
 function Bar(props) {
   "use forget";
@@ -25,7 +25,7 @@ function Foo(props) {
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { useRenderCounter } from "react-forget-runtime";
-import { unstable_useMemoCache as useMemoCache } from "react"; // @instrumentForget @forgetDirective @gating
+import { unstable_useMemoCache as useMemoCache } from "react"; // @instrumentForget @compilationMode(annotation) @gating
 
 function Bar_uncompiled(props) {
   "use forget";

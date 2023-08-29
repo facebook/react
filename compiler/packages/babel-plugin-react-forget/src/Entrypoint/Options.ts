@@ -24,11 +24,6 @@ export type InstrumentForgetOptions = {
 };
 
 export type PluginOptions = {
-  /**
-   * Enable to make Forget only compile functions containing the 'use forget' directive.
-   */
-  enableOnlyOnUseForgetDirective: boolean;
-
   environment: EnvironmentConfig | null;
 
   logger: Logger | null;
@@ -89,27 +84,41 @@ export type PluginOptions = {
   noEmit: boolean;
 
   /**
-   * Enable to make Forget only compile components written in ReactScript syntax
-   * and parsed by hermes-parser.
+   * Determines the strategy for determining which functions to compile. Note that regardless of
+   * which mode is enabled, a component can be opted out by adding the string literal
+   * `"use no forget"` at the top of the function body, eg.:
    *
+   * ```
+   * function ComponentYouWantToSkipCompilation(props) {
+   *   "use no forget";
+   *   ...
+   * }
+   * ```
    */
-  enableOnlyOnReactScript: boolean;
-
-  /**
-   * Enable to make Forget infer which components to compile, based on the same rules
-   * that React's ESLint rules use to detect components.
-   */
-  enableInferReactFunctions: boolean;
+  compilationMode: CompilationMode;
 };
+
+export type CompilationMode =
+  // Compiles functions annotated with "use forget" or component/hook-like functions.
+  // This latter includes:
+  // * Components declared with component syntax.
+  // * Functions which can be inferred to be a component or hook:
+  //   - Be named like a hook or component. This logic matches the ESLint rule.
+  //   - *and* create JSX and/or call a hook. This is an additional check to help prevent
+  //     false positives, since compilation has a greater impact than linting.
+  // This is the default mode
+  | "infer"
+  // Compile only functions which are explicitly annotated with "use forget"
+  | "annotation"
+  // Compile all top-level functions
+  | "all";
 
 export type Logger = {
   logEvent(name: string, data: any): void;
 };
 
 export const defaultOptions: PluginOptions = {
-  enableOnlyOnReactScript: false,
-  enableOnlyOnUseForgetDirective: false,
-  enableInferReactFunctions: false,
+  compilationMode: "infer",
   panicOnBailout: true,
   environment: null,
   logger: null,

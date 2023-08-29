@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableInferReactFunctions
+// @compilationMode(infer)
 React.memo((props) => {
   return <div />;
 });
@@ -12,7 +12,7 @@ React.memo((props) => {
 ## Code
 
 ```javascript
-// @enableInferReactFunctions
+// @compilationMode(infer)
 React.memo((props) => {
   return <div />;
 });

@@ -55,7 +55,7 @@ function isReportableDiagnostic(
 
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
-  enableOnlyOnUseForgetDirective: true,
+  compilationMode: "annotation",
   panicOnBailout: false,
   environment: {
     validateHooksUsage: true,

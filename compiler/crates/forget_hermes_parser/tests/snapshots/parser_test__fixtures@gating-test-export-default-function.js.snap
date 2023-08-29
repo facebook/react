@@ -4,7 +4,7 @@ expression: "format!(\"Input:\\n{input}\\n\\nOutput:\\n{output}\")"
 input_file: crates/forget_hermes_parser/tests/fixtures/gating-test-export-default-function.js
 ---
 Input:
-// @gating @forgetDirective
+// @gating @compilationMode(annotation)
 export default function Bar(props) {
   "use forget";
   return <div>{props.bar}</div>;
@@ -34,8 +34,8 @@ Output:
           "typeAnnotation": null,
           "loc": null,
           "range": [
-            52,
-            55
+            64,
+            67
           ]
         },
         "params": [
@@ -45,8 +45,8 @@ Output:
             "typeAnnotation": null,
             "loc": null,
             "range": [
-              56,
-              61
+              68,
+              73
             ]
           }
         ],
@@ -60,15 +60,15 @@ Output:
                 "value": "use forget",
                 "loc": null,
                 "range": [
-                  67,
-                  79
+                  79,
+                  91
                 ]
               },
               "directive": null,
               "loc": null,
               "range": [
-                67,
-                80
+                79,
+                92
               ]
             },
             {
@@ -82,16 +82,16 @@ Output:
                     "name": "div",
                     "loc": null,
                     "range": [
-                      91,
-                      94
+                      103,
+                      106
                     ]
                   },
                   "attributes": [],
                   "selfClosing": false,
                   "loc": null,
                   "range": [
-                    90,
-                    95
+                    102,
+                    107
                   ]
                 },
                 "children": [
@@ -105,8 +105,8 @@ Output:
                         "typeAnnotation": null,
                         "loc": null,
                         "range": [
-                          96,
-                          101
+                          108,
+                          113
                         ]
                       },
                       "property": {
@@ -115,21 +115,21 @@ Output:
                         "typeAnnotation": null,
                         "loc": null,
                         "range": [
-                          102,
-                          105
+                          114,
+                          117
                         ]
                       },
                       "computed": false,
                       "loc": null,
                       "range": [
-                        96,
-                        105
+                        108,
+                        117
                       ]
                     },
                     "loc": null,
                     "range": [
-                      95,
-                      106
+                      107,
+                      118
                     ]
                   }
                 ],
@@ -140,52 +140,52 @@ Output:
                     "name": "div",
                     "loc": null,
                     "range": [
-                      108,
-                      111
+                      120,
+                      123
                     ]
                   },
                   "loc": null,
                   "range": [
-                    106,
-                    112
+                    118,
+                    124
                   ]
                 },
                 "loc": null,
                 "range": [
-                  90,
-                  112
+                  102,
+                  124
                 ]
               },
               "loc": null,
               "range": [
-                83,
-                113
+                95,
+                125
               ]
             }
           ],
           "loc": null,
           "range": [
-            63,
-            115
+            75,
+            127
           ]
         },
         "generator": false,
         "async": false,
         "loc": null,
         "range": [
-          43,
-          115
+          55,
+          127
         ],
         "loc": null,
         "range": [
-          43,
-          115
+          55,
+          127
         ]
       },
       "loc": null,
       "range": [
-        28,
-        115
+        40,
+        127
       ]
     },
     {
@@ -196,8 +196,8 @@ Output:
         "typeAnnotation": null,
         "loc": null,
         "range": [
-          126,
-          134
+          138,
+          146
         ]
       },
       "params": [
@@ -207,8 +207,8 @@ Output:
           "typeAnnotation": null,
           "loc": null,
           "range": [
-            135,
-            140
+            147,
+            152
           ]
         }
       ],
@@ -226,16 +226,16 @@ Output:
                   "name": "Bar",
                   "loc": null,
                   "range": [
-                    154,
-                    157
+                    166,
+                    169
                   ]
                 },
                 "attributes": [],
                 "selfClosing": false,
                 "loc": null,
                 "range": [
-                  153,
-                  158
+                  165,
+                  170
                 ]
               },
               "children": [
@@ -249,8 +249,8 @@ Output:
                       "typeAnnotation": null,
                       "loc": null,
                       "range": [
-                        159,
-                        164
+                        171,
+                        176
                       ]
                     },
                     "property": {
@@ -259,21 +259,21 @@ Output:
                       "typeAnnotation": null,
                       "loc": null,
                       "range": [
-                        165,
-                        173
+                        177,
+                        185
                       ]
                     },
                     "computed": false,
                     "loc": null,
                     "range": [
-                      159,
-                      173
+                      171,
+                      185
                     ]
                   },
                   "loc": null,
                   "range": [
-                    158,
-                    174
+                    170,
+                    186
                   ]
                 }
               ],
@@ -284,46 +284,46 @@ Output:
                   "name": "Bar",
                   "loc": null,
                   "range": [
-                    176,
-                    179
+                    188,
+                    191
                   ]
                 },
                 "loc": null,
                 "range": [
-                  174,
-                  180
+                  186,
+                  192
                 ]
               },
               "loc": null,
               "range": [
-                153,
-                180
+                165,
+                192
               ]
             },
             "loc": null,
             "range": [
-              146,
-              181
+              158,
+              193
             ]
           }
         ],
         "loc": null,
         "range": [
-          142,
-          183
+          154,
+          195
         ]
       },
       "generator": false,
       "async": false,
       "loc": null,
       "range": [
-        117,
-        183
+        129,
+        195
       ],
       "loc": null,
       "range": [
-        117,
-        183
+        129,
+        195
       ]
     },
     {
@@ -334,8 +334,8 @@ Output:
         "typeAnnotation": null,
         "loc": null,
         "range": [
-          194,
-          197
+          206,
+          209
         ]
       },
       "params": [
@@ -345,8 +345,8 @@ Output:
           "typeAnnotation": null,
           "loc": null,
           "range": [
-            198,
-            203
+            210,
+            215
           ]
         }
       ],
@@ -360,15 +360,15 @@ Output:
               "value": "use forget",
               "loc": null,
               "range": [
-                209,
-                221
+                221,
+                233
               ]
             },
             "directive": null,
             "loc": null,
             "range": [
-              209,
-              222
+              221,
+              234
             ]
           },
           {
@@ -382,16 +382,16 @@ Output:
                   "name": "Foo",
                   "loc": null,
                   "range": [
-                    233,
-                    236
+                    245,
+                    248
                   ]
                 },
                 "attributes": [],
                 "selfClosing": false,
                 "loc": null,
                 "range": [
-                  232,
-                  237
+                  244,
+                  249
                 ]
               },
               "children": [
@@ -405,8 +405,8 @@ Output:
                       "typeAnnotation": null,
                       "loc": null,
                       "range": [
-                        238,
-                        243
+                        250,
+                        255
                       ]
                     },
                     "property": {
@@ -415,21 +415,21 @@ Output:
                       "typeAnnotation": null,
                       "loc": null,
                       "range": [
-                        244,
-                        247
+                        256,
+                        259
                       ]
                     },
                     "computed": false,
                     "loc": null,
                     "range": [
-                      238,
-                      247
+                      250,
+                      259
                     ]
                   },
                   "loc": null,
                   "range": [
-                    237,
-                    248
+                    249,
+                    260
                   ]
                 }
               ],
@@ -440,53 +440,53 @@ Output:
                   "name": "Foo",
                   "loc": null,
                   "range": [
-                    250,
-                    253
+                    262,
+                    265
                   ]
                 },
                 "loc": null,
                 "range": [
-                  248,
-                  254
+                  260,
+                  266
                 ]
               },
               "loc": null,
               "range": [
-                232,
-                254
+                244,
+                266
               ]
             },
             "loc": null,
             "range": [
-              225,
-              255
+              237,
+              267
             ]
           }
         ],
         "loc": null,
         "range": [
-          205,
-          257
+          217,
+          269
         ]
       },
       "generator": false,
       "async": false,
       "loc": null,
       "range": [
-        185,
-        257
+        197,
+        269
       ],
       "loc": null,
       "range": [
-        185,
-        257
+        197,
+        269
       ]
     }
   ],
   "sourceType": "script",
   "loc": null,
   "range": [
-    28,
-    257
+    40,
+    269
   ]
 }

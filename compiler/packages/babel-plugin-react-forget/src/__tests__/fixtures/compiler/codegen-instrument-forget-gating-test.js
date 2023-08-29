@@ -1,4 +1,4 @@
-// @instrumentForget @forgetDirective @gating
+// @instrumentForget @compilationMode(annotation) @gating
 
 function Bar(props) {
   "use forget";

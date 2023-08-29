@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @gating @forgetDirective
+// @gating @compilationMode(annotation)
 function Bar(props) {
   "use forget";
   return <div>{props.bar}</div>;
@@ -23,7 +23,7 @@ function Foo(props) {
 
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
-import { unstable_useMemoCache as useMemoCache } from "react"; // @gating @forgetDirective
+import { unstable_useMemoCache as useMemoCache } from "react"; // @gating @compilationMode(annotation)
 function Bar_uncompiled(props) {
   "use forget";
   return <div>{props.bar}</div>;

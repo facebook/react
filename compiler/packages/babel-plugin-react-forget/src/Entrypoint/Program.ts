@@ -15,6 +15,7 @@ import {
 } from "../CompilerError";
 import { GeneratedSource } from "../HIR";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
+import { assertExhaustive } from "../Utils/utils";
 import { insertGatedFunctionDeclaration } from "./Gating";
 import {
   addImportsToProgram,
@@ -315,29 +316,38 @@ function shouldVisitNode(
   pass: CompilerPass
 ): boolean {
   if (fn.node.body.type === "BlockStatement") {
-    const shouldSkip = hasAnyUseNoForgetDirectives(fn.node.body.directives);
-    if (shouldSkip) {
+    // Opt-outs disable compilation regardless of mode
+    if (hasAnyUseNoForgetDirectives(fn.node.body.directives)) {
       return false;
     }
-  }
-
-  if (pass.opts.enableOnlyOnReactScript && fn.isFunctionDeclaration()) {
-    return isComponentDeclaration(fn.node);
-  }
-
-  if (pass.opts.enableOnlyOnUseForgetDirective) {
-    const body = fn.get("body");
-    if (body.isBlockStatement()) {
-      return hasAnyUseForgetDirectives(body.node.directives);
+    // Otherwise opt-ins enable compilation regardless of mode
+    if (hasAnyUseForgetDirectives(fn.node.body.directives)) {
+      return true;
     }
   }
-
-  if (pass.opts.enableInferReactFunctions) {
-    const isReactLike = isReactFunctionLike(fn);
-    return isReactLike;
+  switch (pass.opts.compilationMode) {
+    case "annotation": {
+      // opt-ins are checked above
+      return false;
+    }
+    case "infer": {
+      return (
+        // Component declarations are known components
+        (fn.isFunctionDeclaration() && isComponentDeclaration(fn.node)) ||
+        // Otherwise check if this is a component or hook-like function
+        isReactFunctionLike(fn)
+      );
+    }
+    case "all": {
+      return fn.scope.getProgramParent() === fn.scope.parent;
+    }
+    default: {
+      assertExhaustive(
+        pass.opts.compilationMode,
+        `Unexpected compilationMode '${pass.opts.compilationMode}'`
+      );
+    }
   }
-
-  return fn.scope.getProgramParent() === fn.scope.parent;
 }
 
 function log(error: CompilerError, filename: string | null): void {

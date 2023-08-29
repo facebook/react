@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableInferReactFunctions
+// @compilationMode(infer)
 React.forwardRef((props) => {
   return <div />;
 });
@@ -12,7 +12,7 @@ React.forwardRef((props) => {
 ## Code
 
 ```javascript
-// @enableInferReactFunctions
+// @compilationMode(infer)
 React.forwardRef((props) => {
   return <div />;
 });

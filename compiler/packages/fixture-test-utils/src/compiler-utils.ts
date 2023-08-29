@@ -1,14 +1,10 @@
+import assert from "assert";
 import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from "babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin";
+import { CompilationMode } from "babel-plugin-react-forget/src/Entrypoint";
 import type { Effect, ValueKind } from "babel-plugin-react-forget/src/HIR";
 
-const FlowPragmas = [/\/\/\s@flow$/gm, /\*\s@flow$/gm];
-
 export function parseLanguage(source: string): "flow" | "typescript" {
-  let useFlow = false;
-  for (const flowPragma of FlowPragmas) {
-    useFlow ||= !!source.match(flowPragma);
-  }
-  return useFlow ? "flow" : "typescript";
+  return source.indexOf("@flow") !== -1 ? "flow" : "typescript";
 }
 
 export function transformFixtureInput(
@@ -21,7 +17,6 @@ export function transformFixtureInput(
   const firstLine = input.substring(0, input.indexOf("\n"));
 
   let language = parseLanguage(firstLine);
-  let enableOnlyOnUseForgetDirective = false;
   let gating = null;
   let instrumentForget = null;
   let panicOnBailout = true;
@@ -32,12 +27,23 @@ export function transformFixtureInput(
   let validateRefAccessDuringRender = true;
   let validateNoSetStateInRender = true;
   let enableEmitFreeze = null;
-  let enableOnlyOnReactScript = false;
-  let enableInferReactFunctions = false;
+  let compilationMode: CompilationMode = "all";
 
-  if (firstLine.indexOf("@forgetDirective") !== -1) {
-    enableOnlyOnUseForgetDirective = true;
+  if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
+    assert(
+      compilationMode === "all",
+      "Cannot set @compilationMode(..) more than once"
+    );
+    compilationMode = "annotation";
   }
+  if (firstLine.indexOf("@compilationMode(infer)") !== -1) {
+    assert(
+      compilationMode === "all",
+      "Cannot set @compilationMode(..) more than once"
+    );
+    compilationMode = "infer";
+  }
+
   if (firstLine.includes("@gating")) {
     gating = {
       source: "ReactForgetFeatureFlag",
@@ -77,24 +83,6 @@ export function transformFixtureInput(
       importSpecifierName: "makeReadOnly",
     };
   }
-  if (firstLine.indexOf("@reactScriptDirective") !== -1) {
-    enableOnlyOnReactScript = true;
-    language = "flow";
-  }
-  if (firstLine.indexOf("@enableInferReactFunctions") !== -1) {
-    enableInferReactFunctions = true;
-  }
-  if (
-    [
-      enableInferReactFunctions,
-      enableOnlyOnReactScript,
-      enableOnlyOnUseForgetDirective,
-    ].filter((x) => x === true).length > 1
-  ) {
-    throw new Error(
-      "Cannot enable more than one of @enableInferReactFunctions, @enableOnlyOnReactScript, and @enableOnlyOnUseForgetDirective at once"
-    );
-  }
 
   return pluginFn(
     input,
@@ -124,9 +112,7 @@ export function transformFixtureInput(
         enableEmitFreeze,
         assertValidMutableRanges: true,
       },
-      enableOnlyOnUseForgetDirective,
-      enableOnlyOnReactScript,
-      enableInferReactFunctions,
+      compilationMode,
       logger: null,
       gating,
       instrumentForget,

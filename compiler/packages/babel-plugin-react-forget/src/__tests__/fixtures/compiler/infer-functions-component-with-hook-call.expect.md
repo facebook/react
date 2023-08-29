@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableInferReactFunctions
+// @compilationMode(infer)
 function Component(props) {
   const [state, _] = useState(null);
   return [state];
@@ -13,7 +13,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableInferReactFunctions
+import { unstable_useMemoCache as useMemoCache } from "react"; // @compilationMode(infer)
 function Component(props) {
   const $ = useMemoCache(2);
   const [state] = useState(null);
