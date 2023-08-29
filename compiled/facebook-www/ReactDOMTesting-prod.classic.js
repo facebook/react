@@ -2458,6 +2458,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       element.key,
       element.props,
       null,
+      null,
       returnFiber.mode,
       lanes
     );
@@ -2519,6 +2520,7 @@ function createChildReconciler(shouldTrackSideEffects) {
               newChild.type,
               newChild.key,
               newChild.props,
+              null,
               null,
               returnFiber.mode,
               lanes
@@ -2931,6 +2933,7 @@ function createChildReconciler(shouldTrackSideEffects) {
                   newChild.type,
                   newChild.key,
                   newChild.props,
+                  null,
                   null,
                   returnFiber.mode,
                   lanes
@@ -5127,6 +5130,7 @@ function updateMemoComponent(
       Component.type,
       null,
       nextProps,
+      null,
       workInProgress,
       workInProgress.mode,
       renderLanes
@@ -11960,15 +11964,16 @@ function createFiberFromTypeAndProps(
   type,
   key,
   pendingProps,
+  source,
   owner,
   mode,
   lanes
 ) {
-  var fiberTag = 2;
-  owner = type;
-  if ("function" === typeof type) shouldConstruct(type) && (fiberTag = 1);
+  owner = 2;
+  source = type;
+  if ("function" === typeof type) shouldConstruct(type) && (owner = 1);
   else if ("string" === typeof type)
-    fiberTag = isHostHoistableType(
+    owner = isHostHoistableType(
       type,
       pendingProps,
       contextStackCursor$1.current
@@ -11982,7 +11987,7 @@ function createFiberFromTypeAndProps(
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
-        fiberTag = 8;
+        owner = 8;
         mode |= 8;
         0 !== (mode & 1) &&
           ((mode |= 16),
@@ -12047,7 +12052,7 @@ function createFiberFromTypeAndProps(
           );
       case REACT_DEBUG_TRACING_MODE_TYPE:
         if (enableDebugTracing) {
-          fiberTag = 8;
+          owner = 8;
           mode |= 4;
           break;
         }
@@ -12055,29 +12060,29 @@ function createFiberFromTypeAndProps(
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              fiberTag = 10;
+              owner = 10;
               break a;
             case REACT_CONTEXT_TYPE:
-              fiberTag = 9;
+              owner = 9;
               break a;
             case REACT_FORWARD_REF_TYPE:
-              fiberTag = 11;
+              owner = 11;
               break a;
             case REACT_MEMO_TYPE:
-              fiberTag = 14;
+              owner = 14;
               break a;
             case REACT_LAZY_TYPE:
-              fiberTag = 16;
-              owner = null;
+              owner = 16;
+              source = null;
               break a;
           }
         throw Error(
           formatProdErrorMessage(130, null == type ? type : typeof type, "")
         );
     }
-  pendingProps = createFiber(fiberTag, pendingProps, key, mode);
+  pendingProps = createFiber(owner, pendingProps, key, mode);
   pendingProps.elementType = type;
-  pendingProps.type = owner;
+  pendingProps.type = source;
   pendingProps.lanes = lanes;
   return pendingProps;
 }
@@ -17017,7 +17022,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1811 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-567708ca",
+  version: "18.3.0-www-classic-dfb43f64",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2173 = {
@@ -17047,7 +17052,7 @@ var internals$jscomp$inline_2173 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-567708ca"
+  reconcilerVersion: "18.3.0-www-classic-dfb43f64"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2174 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17437,4 +17442,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-567708ca";
+exports.version = "18.3.0-www-classic-dfb43f64";
