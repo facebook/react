@@ -55,9 +55,9 @@ module.exports = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: __DEV__ ? 'cheap-module-source-map' : false,
   entry: {
-    background: './src/background.js',
-    backendManager: './src/backendManager.js',
-    main: './src/main.js',
+    background: './src/background/index.js',
+    backendManager: './src/contentScripts/backendManager.js',
+    main: './src/main/index.js',
     panel: './src/panel.js',
     proxy: './src/contentScripts/proxy.js',
     prepareInjection: './src/contentScripts/prepareInjection.js',

@@ -5,7 +5,7 @@ import {SESSION_STORAGE_RELOAD_AND_PROFILE_KEY} from 'react-devtools-shared/src/
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {IS_FIREFOX, EXTENSION_CONTAINED_VERSIONS} from '../utils';
 
-// We run scripts on the page via the service worker (backgroud.js) for
+// We run scripts on the page via the service worker (background/index.js) for
 // Manifest V3 extensions (Chrome & Edge).
 // We need to inject this code for Firefox only because it does not support ExecutionWorld.MAIN
 // https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/scripting/ExecutionWorld

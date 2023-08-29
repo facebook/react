@@ -6,7 +6,7 @@
   "applications": {
     "gecko": {
       "id": "@react-devtools",
-      "strict_min_version": "55.0"
+      "strict_min_version": "102.0"
     }
   },
   "icons": {
@@ -41,7 +41,9 @@
     "file:///*",
     "http://*/*",
     "https://*/*",
-    "clipboardWrite"
+    "clipboardWrite",
+    "scripting",
+    "devtools"
   ],
   "content_scripts": [
     {

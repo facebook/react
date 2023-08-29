@@ -68,4 +68,7 @@ export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
 export const LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE =
   'React::DevTools::hideConsoleLogsInStrictMode';
 
+export const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
+  'React::DevTools::supportsProfiling';
+
 export const PROFILER_EXPORT_VERSION = 5;
