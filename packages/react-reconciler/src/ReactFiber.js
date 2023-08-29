@@ -490,8 +490,8 @@ export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
   pendingProps: any,
-  owner: null | Fiber,
   source: null | Source,
+  owner: null | Fiber,
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
@@ -644,8 +644,8 @@ export function createFiberFromTypeAndProps(
   fiber.lanes = lanes;
 
   if (__DEV__) {
-    fiber._debugOwner = owner;
     fiber._debugSource = source;
+    fiber._debugOwner = owner;
   }
 
   return fiber;
@@ -659,8 +659,8 @@ export function createFiberFromElement(
   let owner = null;
   let source = null;
   if (__DEV__) {
-    owner = element._owner;
     source = element._source;
+    owner = element._owner;
   }
   const type = element.type;
   const key = element.key;
@@ -669,8 +669,8 @@ export function createFiberFromElement(
     type,
     key,
     pendingProps,
-    owner,
     source,
+    owner,
     mode,
     lanes,
   );

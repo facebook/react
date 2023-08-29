@@ -1697,6 +1697,7 @@ function detachFiberAfterEffects(fiber: Fiber) {
   fiber.stateNode = null;
 
   if (__DEV__) {
+    fiber._debugSource = null;
     fiber._debugOwner = null;
   }
 
