@@ -30,6 +30,7 @@ let SuspenseList;
 let useSyncExternalStore;
 let useSyncExternalStoreWithSelector;
 let use;
+let useFormState;
 let PropTypes;
 let textCache;
 let writable;
@@ -88,6 +89,7 @@ describe('ReactDOMFizzServer', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.unstable_SuspenseList;
     }
+    useFormState = ReactDOM.experimental_useFormState;
 
     PropTypes = require('prop-types');
 
@@ -5874,6 +5876,123 @@ describe('ReactDOMFizzServer', () => {
     });
 
     expect(getVisibleChildren(container)).toEqual('Hi');
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('useFormState hydrates without a mismatch', async () => {
+    // This is testing an implementation detail: useFormState emits comment
+    // nodes into the SSR stream, so this checks that they are handled correctly
+    // during hydration.
+
+    async function action(state) {
+      return state;
+    }
+
+    const childRef = React.createRef(null);
+    function Form() {
+      const [state] = useFormState(action, 0);
+      const text = `Child: ${state}`;
+      return (
+        <div id="child" ref={childRef}>
+          {text}
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <div>
+            <Form />
+          </div>
+          <span>Sibling</span>
+        </div>
+      );
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>
+          <div id="child">Child: 0</div>
+        </div>
+        <span>Sibling</span>
+      </div>,
+    );
+    const child = document.getElementById('child');
+
+    // Confirm that it hydrates correctly
+    await clientAct(() => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    expect(childRef.current).toBe(child);
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it("useFormState hydrates without a mismatch if there's a render phase update", async () => {
+    async function action(state) {
+      return state;
+    }
+
+    const childRef = React.createRef(null);
+    function Form() {
+      const [localState, setLocalState] = React.useState(0);
+      if (localState < 3) {
+        setLocalState(localState + 1);
+      }
+
+      // Because of the render phase update above, this component is evaluated
+      // multiple times (even during SSR), but it should only emit a single
+      // marker per useFormState instance.
+      const [formState] = useFormState(action, 0);
+      const text = `${readText('Child')}:${formState}:${localState}`;
+      return (
+        <div id="child" ref={childRef}>
+          {text}
+        </div>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Form />
+          </Suspense>
+          <span>Sibling</span>
+        </div>
+      );
+    }
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App />);
+      pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Loading...<span>Sibling</span>
+      </div>,
+    );
+
+    await act(() => resolveText('Child'));
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div id="child">Child:0:3</div>
+        <span>Sibling</span>
+      </div>,
+    );
+    const child = document.getElementById('child');
+
+    // Confirm that it hydrates correctly
+    await clientAct(() => {
+      ReactDOMClient.hydrateRoot(container, <App />);
+    });
+    expect(childRef.current).toBe(child);
   });
 
   describe('useEffectEvent', () => {

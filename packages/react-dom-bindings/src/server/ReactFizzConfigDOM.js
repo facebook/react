@@ -1519,6 +1519,21 @@ function injectFormReplayingRuntime(
   }
 }
 
+const formStateMarkerIsMatching = stringToPrecomputedChunk('<!--F!-->');
+const formStateMarkerIsNotMatching = stringToPrecomputedChunk('<!--F-->');
+
+export function pushFormStateMarkerIsMatching(
+  target: Array<Chunk | PrecomputedChunk>,
+) {
+  target.push(formStateMarkerIsMatching);
+}
+
+export function pushFormStateMarkerIsNotMatching(
+  target: Array<Chunk | PrecomputedChunk>,
+) {
+  target.push(formStateMarkerIsNotMatching);
+}
+
 function pushStartForm(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,

@@ -76,6 +76,8 @@ import {
   prepareHostDispatcher,
   supportsRequestStorage,
   requestStorage,
+  pushFormStateMarkerIsMatching,
+  pushFormStateMarkerIsNotMatching,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -104,6 +106,8 @@ import {
   setCurrentResumableState,
   getThenableStateAfterSuspending,
   unwrapThenable,
+  getFormStateCount,
+  getFormStateMatchingIndex,
 } from './ReactFizzHooks';
 import {DefaultCacheDispatcher} from './ReactFizzCache';
 import {getStackByComponentStackNode} from './ReactFizzComponentStack';
@@ -1044,6 +1048,8 @@ function renderIndeterminateComponent(
     legacyContext,
   );
   const hasId = checkDidRenderIdHook();
+  const formStateCount = getFormStateCount();
+  const formStateMatchingIndex = getFormStateMatchingIndex();
 
   if (__DEV__) {
     // Support for module components is deprecated and is removed behind a flag.
@@ -1113,26 +1119,72 @@ function renderIndeterminateComponent(
     if (__DEV__) {
       validateFunctionComponentInDev(Component);
     }
-    // We're now successfully past this task, and we don't have to pop back to
-    // the previous task every again, so we can use the destructive recursive form.
-    if (hasId) {
-      // This component materialized an id. We treat this as its own level, with
-      // a single "child" slot.
-      const prevTreeContext = task.treeContext;
-      const totalChildren = 1;
-      const index = 0;
-      // Modify the id context. Because we'll need to reset this if something
-      // suspends or errors, we'll use the non-destructive render path.
-      task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
-      renderNode(request, task, value, 0);
-      // Like the other contexts, this does not need to be in a finally block
-      // because renderNode takes care of unwinding the stack.
-      task.treeContext = prevTreeContext;
-    } else {
-      renderNodeDestructive(request, task, null, value, 0);
-    }
+    finishFunctionComponent(
+      request,
+      task,
+      value,
+      hasId,
+      formStateCount,
+      formStateMatchingIndex,
+    );
   }
   popComponentStackInDEV(task);
+}
+
+function finishFunctionComponent(
+  request: Request,
+  task: Task,
+  children: ReactNodeList,
+  hasId: boolean,
+  formStateCount: number,
+  formStateMatchingIndex: number,
+) {
+  let didEmitFormStateMarkers = false;
+  if (formStateCount !== 0) {
+    // For each useFormState hook, emit a marker that indicates whether we
+    // rendered using the form state passed at the root.
+    // TODO: As an optimization, Fizz should only emit these markers if form
+    // state is passed at the root.
+    const segment = task.blockedSegment;
+    if (segment === null) {
+      // Implies we're in reumable mode.
+    } else {
+      didEmitFormStateMarkers = true;
+      const target = segment.chunks;
+      for (let i = 0; i < formStateCount; i++) {
+        if (i === formStateMatchingIndex) {
+          pushFormStateMarkerIsMatching(target);
+        } else {
+          pushFormStateMarkerIsNotMatching(target);
+        }
+      }
+    }
+  }
+
+  if (hasId) {
+    // This component materialized an id. We treat this as its own level, with
+    // a single "child" slot.
+    const prevTreeContext = task.treeContext;
+    const totalChildren = 1;
+    const index = 0;
+    // Modify the id context. Because we'll need to reset this if something
+    // suspends or errors, we'll use the non-destructive render path.
+    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
+    renderNode(request, task, children, 0);
+    // Like the other contexts, this does not need to be in a finally block
+    // because renderNode takes care of unwinding the stack.
+    task.treeContext = prevTreeContext;
+  } else if (didEmitFormStateMarkers) {
+    // If there were formState hooks, we must use the non-destructive path
+    // because this component is not a pure indirection; we emitted markers
+    // to the stream.
+    renderNode(request, task, children, 0);
+  } else {
+    // We're now successfully past this task, and we haven't modified the
+    // context stack. We don't have to pop back to the previous task every
+    // again, so we can use the destructive recursive form.
+    renderNodeDestructive(request, task, null, children, 0);
+  }
 }
 
 function validateFunctionComponentInDev(Component: any): void {
@@ -1221,21 +1273,16 @@ function renderForwardRef(
     ref,
   );
   const hasId = checkDidRenderIdHook();
-  if (hasId) {
-    // This component materialized an id. We treat this as its own level, with
-    // a single "child" slot.
-    const prevTreeContext = task.treeContext;
-    const totalChildren = 1;
-    const index = 0;
-    // Modify the id context. Because we'll need to reset this if something
-    // suspends or errors, we'll use the non-destructive render path.
-    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
-    renderNode(request, task, children, 0);
-    // Like the other contexts, this does not need to be in a finally block
-    // because renderNode takes care of unwinding the stack.
-  } else {
-    renderNodeDestructive(request, task, null, children, 0);
-  }
+  const formStateCount = getFormStateCount();
+  const formStateMatchingIndex = getFormStateMatchingIndex();
+  finishFunctionComponent(
+    request,
+    task,
+    children,
+    hasId,
+    formStateCount,
+    formStateMatchingIndex,
+  );
   popComponentStackInDEV(task);
 }
 

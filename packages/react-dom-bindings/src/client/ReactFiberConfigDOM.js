@@ -98,6 +98,7 @@ import {
   enableTrustedTypesIntegration,
   diffInCommitPhase,
   enableFormActions,
+  enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
@@ -160,7 +161,12 @@ export type TextInstance = Text;
 export interface SuspenseInstance extends Comment {
   _reactRetry?: () => void;
 }
-export type HydratableInstance = Instance | TextInstance | SuspenseInstance;
+type FormStateMarkerInstance = Comment;
+export type HydratableInstance =
+  | Instance
+  | TextInstance
+  | SuspenseInstance
+  | FormStateMarkerInstance;
 export type PublicInstance = Element | Text;
 export type HostContextDev = {
   context: HostContextProd,
@@ -187,6 +193,8 @@ const SUSPENSE_START_DATA = '$';
 const SUSPENSE_END_DATA = '/$';
 const SUSPENSE_PENDING_START_DATA = '$?';
 const SUSPENSE_FALLBACK_START_DATA = '$!';
+const FORM_STATE_IS_MATCHING = 'F!';
+const FORM_STATE_IS_NOT_MATCHING = 'F';
 
 const STYLE = 'style';
 
@@ -1283,6 +1291,37 @@ export function registerSuspenseInstanceRetry(
   instance._reactRetry = callback;
 }
 
+export function canHydrateFormStateMarker(
+  instance: HydratableInstance,
+  inRootOrSingleton: boolean,
+): null | FormStateMarkerInstance {
+  while (instance.nodeType !== COMMENT_NODE) {
+    if (!inRootOrSingleton || !enableHostSingletons) {
+      return null;
+    }
+    const nextInstance = getNextHydratableSibling(instance);
+    if (nextInstance === null) {
+      return null;
+    }
+    instance = nextInstance;
+  }
+  const nodeData = (instance: any).data;
+  if (
+    nodeData === FORM_STATE_IS_MATCHING ||
+    nodeData === FORM_STATE_IS_NOT_MATCHING
+  ) {
+    const markerInstance: FormStateMarkerInstance = (instance: any);
+    return markerInstance;
+  }
+  return null;
+}
+
+export function isFormStateMarkerMatching(
+  markerInstance: FormStateMarkerInstance,
+): boolean {
+  return markerInstance.data === FORM_STATE_IS_MATCHING;
+}
+
 function getNextHydratable(node: ?Node) {
   // Skip non-hydratable nodes.
   for (; node != null; node = ((node: any): Node).nextSibling) {
@@ -1295,7 +1334,11 @@ function getNextHydratable(node: ?Node) {
       if (
         nodeData === SUSPENSE_START_DATA ||
         nodeData === SUSPENSE_FALLBACK_START_DATA ||
-        nodeData === SUSPENSE_PENDING_START_DATA
+        nodeData === SUSPENSE_PENDING_START_DATA ||
+        (enableFormActions &&
+          enableAsyncActions &&
+          (nodeData === FORM_STATE_IS_MATCHING ||
+            nodeData === FORM_STATE_IS_NOT_MATCHING))
       ) {
         break;
       }

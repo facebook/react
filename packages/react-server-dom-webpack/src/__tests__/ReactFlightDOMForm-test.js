@@ -344,7 +344,7 @@ describe('ReactFlightDOMForm', () => {
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
-    const form = container.firstChild;
+    const form = container.getElementsByTagName('form')[0];
     const span = container.getElementsByTagName('span')[0];
     expect(span.textContent).toBe('Count: 1');
 
@@ -382,7 +382,7 @@ describe('ReactFlightDOMForm', () => {
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
-    const form = container.firstChild;
+    const form = container.getElementsByTagName('form')[0];
     const span = container.getElementsByTagName('span')[0];
     expect(span.textContent).toBe('Count: 1');
 
@@ -423,7 +423,7 @@ describe('ReactFlightDOMForm', () => {
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
-    const form = container.firstChild;
+    const form = container.getElementsByTagName('form')[0];
     const span = container.getElementsByTagName('span')[0];
     expect(span.textContent).toBe('Count: 1');
 
