@@ -181,6 +181,7 @@ type SuspenseBoundary = {
   byteSize: number, // used to determine whether to inline children boundaries.
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
   resources: BoundaryResources,
+  keyPath: KeyNode,
 };
 
 export type Task = {
@@ -385,6 +386,7 @@ function pingTask(request: Request, task: Task): void {
 function createSuspenseBoundary(
   request: Request,
   fallbackAbortableTasks: Set<Task>,
+  keyPath: KeyNode,
 ): SuspenseBoundary {
   return {
     id: UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
@@ -397,6 +399,7 @@ function createSuspenseBoundary(
     fallbackAbortableTasks,
     errorDigest: null,
     resources: createBoundaryResources(),
+    keyPath,
   };
 }
 
@@ -590,7 +593,7 @@ function renderSuspenseBoundary(
   const content: ReactNodeList = props.children;
 
   const fallbackAbortSet: Set<Task> = new Set();
-  const newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
+  const newBoundary = createSuspenseBoundary(request, fallbackAbortSet, task.keyPath);
   const insertionIndex = parentSegment.chunks.length;
   // The children of the boundary segment is actually the fallback.
   const boundarySegment = createPendingSegment(
