@@ -15,6 +15,6 @@ exports.renderToStaticMarkup = l.renderToStaticMarkup;
 exports.renderToNodeStream = l.renderToNodeStream;
 exports.renderToStaticNodeStream = l.renderToStaticNodeStream;
 exports.renderToPipeableStream = s.renderToPipeableStream;
-if (s.resume) {
-  exports.resume = s.resume;
+if (s.resumeToPipeableStream) {
+  exports.resumeToPipeableStream = s.resumeToPipeableStream;
 }
