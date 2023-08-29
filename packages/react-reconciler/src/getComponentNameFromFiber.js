@@ -40,7 +40,7 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
   TracingMarkerComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {REACT_STRICT_MODE_TYPE} from 'shared/ReactSymbols';
 

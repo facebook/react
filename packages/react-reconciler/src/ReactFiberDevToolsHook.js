@@ -17,7 +17,7 @@ import type {EventPriority} from './ReactEventPriorities';
 // React which this hook might be in.
 type DevToolsProfilingHooks = any;
 
-import {getLabelForLane, TotalLanes} from 'react-reconciler/src/ReactFiberLane';
+import {getLabelForLane, TotalLanes} from './ReactFiberLane';
 import {DidCapture} from './ReactFiberFlags';
 import {
   consoleManagedByDevToolsDuringStrictMode,

@@ -13,7 +13,7 @@ import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import {StrictLegacyMode} from './ReactTypeOfMode';
 
 type FiberArray = Array<Fiber>;

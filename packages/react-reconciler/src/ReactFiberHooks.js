@@ -104,7 +104,7 @@ import {
   isInvalidExecutionContextForEventFunction,
 } from './ReactFiberWorkLoop';
 
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import is from 'shared/objectIs';
 import isArray from 'shared/isArray';
 import {

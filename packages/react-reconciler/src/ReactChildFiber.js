@@ -13,7 +13,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {ThenableState} from './ReactFiberThenable';
 
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import {
   Placement,
   ChildDeletion,

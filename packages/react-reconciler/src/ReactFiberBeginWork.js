@@ -113,7 +113,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';

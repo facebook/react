@@ -99,7 +99,7 @@ import {
   ShouldSuspendCommit,
   MaySuspendCommit,
 } from './ReactFiberFlags';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
