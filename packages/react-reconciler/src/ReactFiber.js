@@ -656,8 +656,8 @@ export function createFiberFromElement(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let owner = null;
   let source = null;
+  let owner = null;
   if (__DEV__) {
     source = element._source;
     owner = element._owner;
