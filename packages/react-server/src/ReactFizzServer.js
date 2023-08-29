@@ -158,23 +158,26 @@ type KeyNode =
   | null
   | [KeyNode /* parent */, string | null /* name */, string | number /* key */];
 
-type PostponedBoundary = {
-  boundary: SuspenseBoundary,
-  segments: Map<KeyNode, Segment>,
+type PostponedSegment = {
+  keyPath: KeyNode,
+  segment: Segment,
 };
-type PostponedHoles = Map<KeyNode, PostponedBoundary>;
+
+type PostponedHoles = Map<Root | SuspenseBoundary, Array<PostponedSegment>>;
 
 type LegacyContext = {
   [key: string]: any,
 };
 
+const CLIENT_RENDERED = 4; // if it errors or infinitely suspends
+
 type SuspenseBoundary = {
+  status: 0 | 1 | 4 | 5,
   id: SuspenseBoundaryID,
   rootSegmentID: number,
   errorDigest: ?string, // the error hash if it errors
   errorMessage?: string, // the error string if it errors
   errorComponentStack?: string, // the error component stack if it errors
-  forceClientRender: boolean, // if it errors or infinitely suspends
   parentFlushed: boolean,
   pendingTasks: number, // when it reaches zero we can show this boundary's content
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
@@ -203,11 +206,12 @@ const COMPLETED = 1;
 const FLUSHED = 2;
 const ABORTED = 3;
 const ERRORED = 4;
+const POSTPONED = 5;
 
 type Root = null;
 
 type Segment = {
-  status: 0 | 1 | 2 | 3 | 4,
+  status: 0 | 1 | 2 | 3 | 4 | 5,
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
   id: number, // starts as 0 and is lazily assigned if the parent flushes early
   +index: number, // the index within the parent's chunks or 0 at the root
@@ -389,11 +393,11 @@ function createSuspenseBoundary(
   keyPath: KeyNode,
 ): SuspenseBoundary {
   return {
+    status: PENDING,
     id: UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
-    forceClientRender: false,
     completedSegments: [],
     byteSize: 0,
     fallbackAbortableTasks,
@@ -593,7 +597,11 @@ function renderSuspenseBoundary(
   const content: ReactNodeList = props.children;
 
   const fallbackAbortSet: Set<Task> = new Set();
-  const newBoundary = createSuspenseBoundary(request, fallbackAbortSet, task.keyPath);
+  const newBoundary = createSuspenseBoundary(
+    request,
+    fallbackAbortSet,
+    task.keyPath,
+  );
   const insertionIndex = parentSegment.chunks.length;
   // The children of the boundary segment is actually the fallback.
   const boundarySegment = createPendingSegment(
@@ -650,7 +658,8 @@ function renderSuspenseBoundary(
     );
     contentRootSegment.status = COMPLETED;
     queueCompletedSegment(newBoundary, contentRootSegment);
-    if (newBoundary.pendingTasks === 0) {
+    if (newBoundary.pendingTasks === 0 && newBoundary.status === PENDING) {
+      newBoundary.status = COMPLETED;
       // This must have been the last segment we were waiting on. This boundary is now complete.
       // Therefore we won't need the fallback. We early return so that we don't have to create
       // the fallback.
@@ -659,7 +668,7 @@ function renderSuspenseBoundary(
     }
   } catch (error) {
     contentRootSegment.status = ERRORED;
-    newBoundary.forceClientRender = true;
+    newBoundary.status = CLIENT_RENDERED;
     let errorDigest;
     if (
       enablePostpone &&
@@ -1637,6 +1646,53 @@ function renderChildrenArray(
   }
 }
 
+function trackPostpone(
+  trackedPostpones: PostponedHoles,
+  task: Task,
+  segment: Segment,
+): void {
+  const boundary = task.blockedBoundary;
+  if (boundary !== null && boundary.status === PENDING) {
+    boundary.status = POSTPONED;
+  }
+  let postponedSegments = trackedPostpones.get(task.blockedBoundary);
+  if (postponedSegments === undefined) {
+    // This is the first time we've postponed this boundary.
+    postponedSegments = [];
+    trackedPostpones.set(task.blockedBoundary, postponedSegments);
+  }
+  postponedSegments.push({
+    keyPath: task.keyPath,
+    segment,
+  });
+}
+
+function injectPostponedHole(
+  request: Request,
+  task: Task,
+  reason: string,
+): Segment {
+  logPostpone(request, reason);
+  // Something suspended, we'll need to create a new segment and resolve it later.
+  const segment = task.blockedSegment;
+  const insertionIndex = segment.chunks.length;
+  const newSegment = createPendingSegment(
+    request,
+    insertionIndex,
+    null,
+    segment.formatContext,
+    // Adopt the parent segment's leading text embed
+    segment.lastPushedText,
+    // Assume we are text embedded at the trailing edge
+    true,
+  );
+  newSegment.status = POSTPONED;
+  segment.children.push(newSegment);
+  // Reset lastPushedText for current Segment since the new Segment "consumed" it
+  segment.lastPushedText = false;
+  return segment;
+}
+
 function spawnNewSuspendedTask(
   request: Request,
   task: Task,
@@ -1726,40 +1782,73 @@ function renderNode(
           getSuspendedThenable()
         : thrownValue;
 
-    // $FlowFixMe[method-unbinding]
-    if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-      const wakeable: Wakeable = (x: any);
-      const thenableState = getThenableStateAfterSuspending();
-      spawnNewSuspendedTask(request, task, thenableState, wakeable);
+    if (typeof x === 'object' && x !== null) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof x.then === 'function') {
+        const wakeable: Wakeable = (x: any);
+        const thenableState = getThenableStateAfterSuspending();
+        spawnNewSuspendedTask(request, task, thenableState, wakeable);
 
-      // Restore the context. We assume that this will be restored by the inner
-      // functions in case nothing throws so we don't use "finally" here.
-      task.blockedSegment.formatContext = previousFormatContext;
-      task.legacyContext = previousLegacyContext;
-      task.context = previousContext;
-      task.keyPath = previousKeyPath;
-      // Restore all active ReactContexts to what they were before.
-      switchContext(previousContext);
-      if (__DEV__) {
-        task.componentStack = previousComponentStack;
+        // Restore the context. We assume that this will be restored by the inner
+        // functions in case nothing throws so we don't use "finally" here.
+        task.blockedSegment.formatContext = previousFormatContext;
+        task.legacyContext = previousLegacyContext;
+        task.context = previousContext;
+        task.keyPath = previousKeyPath;
+        // Restore all active ReactContexts to what they were before.
+        switchContext(previousContext);
+        if (__DEV__) {
+          task.componentStack = previousComponentStack;
+        }
+        return;
       }
-      return;
-    } else {
-      // Restore the context. We assume that this will be restored by the inner
-      // functions in case nothing throws so we don't use "finally" here.
-      task.blockedSegment.formatContext = previousFormatContext;
-      task.legacyContext = previousLegacyContext;
-      task.context = previousContext;
-      task.keyPath = previousKeyPath;
-      // Restore all active ReactContexts to what they were before.
-      switchContext(previousContext);
-      if (__DEV__) {
-        task.componentStack = previousComponentStack;
+      if (
+        enablePostpone &&
+        request.trackedPostpones !== null &&
+        x.$$typeof === REACT_POSTPONE_TYPE &&
+        task.blockedBoundary !== null // TODO: Support holes in the shell
+      ) {
+        // If we're tracking postpones, we inject a hole here and continue rendering
+        // sibling. Similar to suspending. If we're not tracking, we treat it more like
+        // an error. Notably this doesn't spawn a new task since nothing will fill it
+        // in during this prerender.
+        const postponeInstance: Postpone = (x: any);
+        const trackedPostpones = request.trackedPostpones;
+        const postponedSegment = injectPostponedHole(
+          request,
+          task,
+          postponeInstance.message,
+        );
+        trackPostpone(trackedPostpones, task, postponedSegment);
+
+        // Restore the context. We assume that this will be restored by the inner
+        // functions in case nothing throws so we don't use "finally" here.
+        task.blockedSegment.formatContext = previousFormatContext;
+        task.legacyContext = previousLegacyContext;
+        task.context = previousContext;
+        task.keyPath = previousKeyPath;
+        // Restore all active ReactContexts to what they were before.
+        switchContext(previousContext);
+        if (__DEV__) {
+          task.componentStack = previousComponentStack;
+        }
+        return;
       }
-      // We assume that we don't need the correct context.
-      // Let's terminate the rest of the tree and don't render any siblings.
-      throw x;
     }
+    // Restore the context. We assume that this will be restored by the inner
+    // functions in case nothing throws so we don't use "finally" here.
+    task.blockedSegment.formatContext = previousFormatContext;
+    task.legacyContext = previousLegacyContext;
+    task.context = previousContext;
+    task.keyPath = previousKeyPath;
+    // Restore all active ReactContexts to what they were before.
+    switchContext(previousContext);
+    if (__DEV__) {
+      task.componentStack = previousComponentStack;
+    }
+    // We assume that we don't need the correct context.
+    // Let's terminate the rest of the tree and don't render any siblings.
+    throw x;
   }
 }
 
@@ -1788,8 +1877,8 @@ function erroredTask(
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
-    if (!boundary.forceClientRender) {
-      boundary.forceClientRender = true;
+    if (boundary.status !== CLIENT_RENDERED) {
+      boundary.status = CLIENT_RENDERED;
       boundary.errorDigest = errorDigest;
       if (__DEV__) {
         captureBoundaryErrorDetailsDev(boundary, error);
@@ -1842,9 +1931,8 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     }
   } else {
     boundary.pendingTasks--;
-
-    if (!boundary.forceClientRender) {
-      boundary.forceClientRender = true;
+    if (boundary.status !== CLIENT_RENDERED) {
+      boundary.status = CLIENT_RENDERED;
       boundary.errorDigest = request.onError(error);
       if (__DEV__) {
         const errorPrefix =
@@ -1931,9 +2019,12 @@ function finishedTask(
     }
   } else {
     boundary.pendingTasks--;
-    if (boundary.forceClientRender) {
+    if (boundary.status === CLIENT_RENDERED) {
       // This already errored.
     } else if (boundary.pendingTasks === 0) {
+      if (boundary.status === PENDING) {
+        boundary.status = COMPLETED;
+      }
       // This must have been the last segment we were waiting on. This boundary is now complete.
       if (segment.parentFlushed) {
         // Our parent segment already flushed, so we need to schedule this segment to be emitted.
@@ -2047,17 +2138,36 @@ function retryTask(request: Request, task: Task): void {
           getSuspendedThenable()
         : thrownValue;
 
-    // $FlowFixMe[method-unbinding]
-    if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-      // Something suspended again, let's pick it back up later.
-      const ping = task.ping;
-      x.then(ping, ping);
-      task.thenableState = getThenableStateAfterSuspending();
-    } else {
-      task.abortSet.delete(task);
-      segment.status = ERRORED;
-      erroredTask(request, task.blockedBoundary, segment, x);
+    if (typeof x === 'object' && x !== null) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof x.then === 'function') {
+        // Something suspended again, let's pick it back up later.
+        const ping = task.ping;
+        x.then(ping, ping);
+        task.thenableState = getThenableStateAfterSuspending();
+        return;
+      } else if (
+        enablePostpone &&
+        request.trackedPostpones !== null &&
+        x.$$typeof === REACT_POSTPONE_TYPE &&
+        task.blockedBoundary !== null // TODO: Support holes in the shell
+      ) {
+        // If we're tracking postpones, we mark this segment as postponed and finish
+        // the task without filling it in. If we're not tracking, we treat it more like
+        // an error.
+        const trackedPostpones = request.trackedPostpones;
+        task.abortSet.delete(task);
+        segment.status = POSTPONED;
+        const postponeInstance: Postpone = (x: any);
+        logPostpone(request, postponeInstance.message);
+        trackPostpone(trackedPostpones, task, segment);
+        finishedTask(request, task.blockedBoundary, segment);
+      }
     }
+    task.abortSet.delete(task);
+    segment.status = ERRORED;
+    erroredTask(request, task.blockedBoundary, segment, x);
+    return;
   } finally {
     if (enableFloat) {
       setCurrentlyRenderingBoundaryResourcesTarget(request.renderState, null);
@@ -2136,7 +2246,8 @@ function flushSubtree(
 ): boolean {
   segment.parentFlushed = true;
   switch (segment.status) {
-    case PENDING: {
+    case PENDING:
+    case POSTPONED: {
       // We're emitting a placeholder for this segment to be filled in later.
       // Therefore we'll need to assign it an ID - to refer to it by.
       const segmentID = (segment.id = request.nextSegmentId++);
@@ -2187,10 +2298,11 @@ function flushSegment(
     // Not a suspense boundary.
     return flushSubtree(request, destination, segment);
   }
+
   boundary.parentFlushed = true;
   // This segment is a Suspense boundary. We need to decide whether to
   // emit the content or the fallback now.
-  if (boundary.forceClientRender) {
+  if (boundary.status === CLIENT_RENDERED) {
     // Emit a client rendered suspense boundary wrapper.
     // We never queue the inner boundary so we'll never emit its content or partial segments.
 
@@ -2208,7 +2320,7 @@ function flushSegment(
       destination,
       request.renderState,
     );
-  } else if (boundary.pendingTasks > 0) {
+  } else if (boundary.status !== COMPLETED) {
     // This boundary is still loading. Emit a pending suspense boundary wrapper.
 
     // Assign an ID to refer to the future content by.
