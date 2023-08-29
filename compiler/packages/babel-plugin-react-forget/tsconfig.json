@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/node16-strictest/tsconfig.json",
+  "extends": "@tsconfig/node18-strictest/tsconfig.json",
   "compilerOptions": {
     "declaration": true,
     "rootDir": "src",
@@ -7,7 +7,6 @@
     // https://github.com/microsoft/TypeScript/issues/30925
     "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo",
     "jsx": "react-jsxdev",
-
     // weaken strictness from preset
     "importsNotUsedAsValues": "remove",
     "noUncheckedIndexedAccess": false,
@@ -19,6 +18,11 @@
     "sourceMap": true,
     "composite": true
   },
-  "exclude": ["node_modules", "src/__tests__/fixtures"],
-  "include": ["src/**/*.ts"]
+  "exclude": [
+    "node_modules",
+    "src/__tests__/fixtures"
+  ],
+  "include": [
+    "src/**/*.ts"
+  ]
 }
