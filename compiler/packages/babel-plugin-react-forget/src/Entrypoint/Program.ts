@@ -455,33 +455,43 @@ function isForwardRefCallback(path: NodePath<t.Expression>): boolean {
  */
 
 function isMemoCallback(path: NodePath<t.Expression>): boolean {
-  return !!(
+  return (
     path.parentPath.isCallExpression() &&
     path.parentPath.get("callee").isExpression() &&
     isReactFunction(path.parentPath.get("callee"), "memo")
   );
 }
 
+// Adapted from the ESLint rule at
+// https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#L90-L103
 function isReactFunctionLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >
 ): boolean {
   const functionName = getFunctionName(node);
-  if (functionName !== null) {
-    if (!isComponentName(functionName) && !isHook(functionName)) {
+  // Check if the name is component or hook like:
+  if (
+    functionName !== null &&
+    (isComponentName(functionName) || isHook(functionName))
+  ) {
+    // As an added check we also look for hook invocations or JSX
+    return callsHooksOrCreatesJsx(node);
+  }
+  // Otherwise for function or arrow function expressions, check if they
+  // appear as the argument to React.forwardRef() or React.memo():
+  if (node.isFunctionExpression() || node.isArrowFunctionExpression()) {
+    if (isForwardRefCallback(node) || isMemoCallback(node)) {
+      // As an added check we also look for hook invocations or JSX
+      return callsHooksOrCreatesJsx(node);
+    } else {
       return false;
     }
-  } else if (
-    node.isExpression() &&
-    !isForwardRefCallback(node) &&
-    !isMemoCallback(node)
-  ) {
-    return false;
-  } else {
-    return false;
   }
+  return false;
+}
 
+function callsHooksOrCreatesJsx(node: NodePath<t.Node>): boolean {
   let invokesHooks = false;
   let createsJsx = false;
   node.traverse({

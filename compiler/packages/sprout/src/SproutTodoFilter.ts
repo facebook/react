@@ -448,6 +448,8 @@ const skipFilter = new Set([
   "infer-functions-hook-with-hook-call",
   "infer-functions-hook-with-jsx",
   "infer-function-expression-component",
+  "infer-function-expression-React-memo-gating",
+  "infer-skip-components-without-hooks-or-jsx",
 ]);
 
 export default skipFilter;
