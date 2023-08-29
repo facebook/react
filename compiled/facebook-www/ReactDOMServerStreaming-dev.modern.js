@@ -9261,18 +9261,41 @@ function unsupportedSetOptimisticState() {
   throw new Error("Cannot update optimistic state while rendering.");
 }
 
-function unsupportedDispatchFormState() {
-  throw new Error("Cannot update form state while rendering.");
-}
-
 function useOptimistic(passthrough, reducer) {
   resolveCurrentlyRenderingComponent();
   return [passthrough, unsupportedSetOptimisticState];
 }
 
-function useFormState(action, initialState, url) {
-  resolveCurrentlyRenderingComponent();
-  return [initialState, unsupportedDispatchFormState];
+function useFormState(action, initialState, permalink) {
+  resolveCurrentlyRenderingComponent(); // Bind the initial state to the first argument of the action.
+  // TODO: Use the keypath (or permalink) to check if there's matching state
+  // from the previous page.
+
+  var boundAction = action.bind(null, initialState); // Wrap the action so the return value is void.
+
+  var dispatch = function (payload) {
+    boundAction(payload);
+  }; // $FlowIgnore[prop-missing]
+
+  if (typeof boundAction.$$FORM_ACTION === "function") {
+    // $FlowIgnore[prop-missing]
+    dispatch.$$FORM_ACTION = function (prefix) {
+      // $FlowIgnore[prop-missing]
+      var metadata = boundAction.$$FORM_ACTION(prefix); // Override the target URL
+
+      if (permalink !== undefined) {
+        {
+          checkAttributeStringCoercion(permalink, "target");
+        }
+
+        metadata.target = permalink + "";
+      }
+
+      return metadata;
+    };
+  }
+
+  return [initialState, dispatch];
 }
 
 function useId() {

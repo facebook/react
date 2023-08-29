@@ -2621,16 +2621,23 @@ function unsupportedStartTransition() {
 function unsupportedSetOptimisticState() {
   throw Error("Cannot update optimistic state while rendering.");
 }
-function unsupportedDispatchFormState() {
-  throw Error("Cannot update form state while rendering.");
-}
 function useOptimistic(passthrough) {
   resolveCurrentlyRenderingComponent();
   return [passthrough, unsupportedSetOptimisticState];
 }
-function useFormState(action, initialState) {
+function useFormState(action, initialState, permalink) {
+  function dispatch(payload) {
+    boundAction(payload);
+  }
   resolveCurrentlyRenderingComponent();
-  return [initialState, unsupportedDispatchFormState];
+  var boundAction = action.bind(null, initialState);
+  "function" === typeof boundAction.$$FORM_ACTION &&
+    (dispatch.$$FORM_ACTION = function (prefix) {
+      prefix = boundAction.$$FORM_ACTION(prefix);
+      void 0 !== permalink && (prefix.target = permalink + "");
+      return prefix;
+    });
+  return [initialState, dispatch];
 }
 function unwrapThenable(thenable) {
   var index = thenableIndexCounter;
