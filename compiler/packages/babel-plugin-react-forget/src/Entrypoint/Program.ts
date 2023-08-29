@@ -265,6 +265,19 @@ export function compileProgram(
         }
       },
 
+      FunctionExpression(
+        fn: NodePath<t.FunctionExpression>,
+        pass: CompilerPass
+      ): void {
+        if (!shouldVisitNode(fn, pass)) {
+          return;
+        }
+
+        if (compileAndInsertNewFunctionDeclaration(fn, pass) === true) {
+          hasForgetMutatedOriginalSource = true;
+        }
+      },
+
       ArrowFunctionExpression(
         fn: NodePath<t.ArrowFunctionExpression>,
         pass: CompilerPass

@@ -83,6 +83,8 @@ export function lower(
   let id: string | null = null;
   if (func.isFunctionDeclaration() && func.get("id").node != null) {
     id = (func.get("id") as NodePath<t.Identifier>).node.name;
+  } else if (func.isFunctionExpression() && func.get("id").node != null) {
+    id = (func.get("id") as NodePath<t.Identifier>).node.name;
   }
   const params: Array<Place> = [];
   func.get("params").forEach((param) => {
