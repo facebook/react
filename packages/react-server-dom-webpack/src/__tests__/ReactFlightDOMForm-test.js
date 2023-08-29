@@ -388,4 +388,45 @@ describe('ReactFlightDOMForm', () => {
 
     expect(form.target).toBe('/permalink');
   });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('useFormState `permalink` is coerced to string', async () => {
+    const serverAction = serverExports(function action(prevState) {
+      return {state: prevState.count + 1};
+    });
+
+    class Permalink {
+      toString() {
+        return '/permalink';
+      }
+    }
+
+    const permalink = new Permalink();
+
+    const initialState = {count: 1};
+    function Client({action}) {
+      const [state, dispatch] = useFormState(action, initialState, permalink);
+      return (
+        <form action={dispatch}>
+          <span>Count: {state.count}</span>
+        </form>
+      );
+    }
+    const ClientRef = await clientExports(Client);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form = container.firstChild;
+    const span = container.getElementsByTagName('span')[0];
+    expect(span.textContent).toBe('Count: 1');
+
+    expect(form.target).toBe('/permalink');
+  });
 });

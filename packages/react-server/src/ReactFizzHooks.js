@@ -41,6 +41,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -575,8 +576,11 @@ function useFormState<S, P>(
       // $FlowIgnore[prop-missing]
       const metadata: ReactCustomFormAction = boundAction.$$FORM_ACTION(prefix);
       // Override the target URL
-      if (typeof permalink === 'string') {
-        metadata.target = permalink;
+      if (permalink !== undefined) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(permalink, 'target');
+        }
+        metadata.target = permalink + '';
       }
       return metadata;
     };
