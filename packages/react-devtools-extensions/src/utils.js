@@ -2,26 +2,9 @@
 
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
 
-export const IS_EDGE = navigator.userAgent.indexOf('Edg') >= 0;
-export const IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
-export const IS_CHROME = IS_EDGE === false && IS_FIREFOX === false;
-
-export type BrowserName = 'Chrome' | 'Firefox' | 'Edge';
-
-export function getBrowserName(): BrowserName {
-  if (IS_EDGE) {
-    return 'Edge';
-  }
-  if (IS_FIREFOX) {
-    return 'Firefox';
-  }
-  if (IS_CHROME) {
-    return 'Chrome';
-  }
-  throw new Error(
-    'Expected browser name to be one of Chrome, Edge or Firefox.',
-  );
-}
+export const IS_EDGE: boolean = process.env.IS_EDGE;
+export const IS_FIREFOX: boolean = process.env.IS_FIREFOX;
+export const IS_CHROME: boolean = process.env.IS_CHROME;
 
 export function getBrowserTheme(): BrowserTheme {
   if (IS_CHROME) {
