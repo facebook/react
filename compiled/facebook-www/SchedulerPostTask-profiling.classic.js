@@ -23,11 +23,10 @@ function runTask(priorityLevel, postTaskPriority, node, callback) {
     currentPriorityLevel_DEPRECATED = priorityLevel;
     var result = callback(!1);
     if ("function" === typeof result) {
-      var continuationController = new TaskController(),
-        continuationOptions = {
-          priority: postTaskPriority,
-          signal: continuationController.signal
-        };
+      var continuationController = new TaskController({
+          priority: postTaskPriority
+        }),
+        continuationOptions = { signal: continuationController.signal };
       node._controller = continuationController;
       var nextTask = runTask.bind(
         null,
@@ -121,9 +120,8 @@ exports.unstable_scheduleCallback = function (
     default:
       postTaskPriority = "user-visible";
   }
-  var controller = new TaskController();
+  var controller = new TaskController({ priority: postTaskPriority });
   options = {
-    priority: postTaskPriority,
     delay: "object" === typeof options && null !== options ? options.delay : 0,
     signal: controller.signal
   };

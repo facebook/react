@@ -67,9 +67,10 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
       break;
   }
 
-  var controller = new TaskController();
+  var controller = new TaskController({
+    priority: postTaskPriority
+  });
   var postTaskOptions = {
-    priority: postTaskPriority,
     delay: typeof options === "object" && options !== null ? options.delay : 0,
     signal: controller.signal
   };
@@ -96,9 +97,10 @@ function runTask(priorityLevel, postTaskPriority, node, callback) {
     if (typeof result === "function") {
       // Assume this is a continuation
       var continuation = result;
-      var continuationController = new TaskController();
+      var continuationController = new TaskController({
+        priority: postTaskPriority
+      });
       var continuationOptions = {
-        priority: postTaskPriority,
         signal: continuationController.signal
       }; // Update the original callback node's controller, since even though we're
       // posting a new task, conceptually it's the same one.
