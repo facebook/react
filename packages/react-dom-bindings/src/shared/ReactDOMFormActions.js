@@ -78,13 +78,13 @@ export function useFormStatus(): FormStatus {
 export function useFormState<S, P>(
   action: (S, P) => Promise<S>,
   initialState: S,
-  url?: string,
+  permalink?: string,
 ): [S, (P) => void] {
   if (!(enableFormActions && enableAsyncActions)) {
     throw new Error('Not implemented.');
   } else {
     const dispatcher = resolveDispatcher();
     // $FlowFixMe[not-a-function] This is unstable, thus optional
-    return dispatcher.useFormState(action, initialState, url);
+    return dispatcher.useFormState(action, initialState, permalink);
   }
 }

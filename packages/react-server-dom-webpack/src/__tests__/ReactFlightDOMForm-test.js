@@ -30,6 +30,7 @@ let React;
 let ReactDOMServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
+let useFormState;
 
 describe('ReactFlightDOMForm', () => {
   beforeEach(() => {
@@ -47,6 +48,7 @@ describe('ReactFlightDOMForm', () => {
     ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
     ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
     ReactDOMServer = require('react-dom/server.edge');
+    useFormState = require('react-dom').experimental_useFormState;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -307,5 +309,124 @@ describe('ReactFlightDOMForm', () => {
 
     expect(result).toBe('hello');
     expect(foo).toBe('barobject');
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it("useFormState's dispatch binds the initial state to the provided action", async () => {
+    let serverActionResult = null;
+
+    const serverAction = serverExports(function action(prevState, formData) {
+      const newState = {
+        count: prevState.count + parseInt(formData.get('incrementAmount'), 10),
+      };
+      serverActionResult = newState;
+      return newState;
+    });
+
+    const initialState = {count: 1};
+    function Client({action}) {
+      const [state, dispatch] = useFormState(action, initialState);
+      return (
+        <form action={dispatch}>
+          <span>Count: {state.count}</span>
+          <input type="text" name="incrementAmount" defaultValue="5" />
+        </form>
+      );
+    }
+    const ClientRef = await clientExports(Client);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form = container.firstChild;
+    const span = container.getElementsByTagName('span')[0];
+    expect(span.textContent).toBe('Count: 1');
+
+    await submit(form);
+    expect(serverActionResult.count).toBe(6);
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it("useFormState can change the action's target with the `permalink` argument", async () => {
+    const serverAction = serverExports(function action(prevState) {
+      return {state: prevState.count + 1};
+    });
+
+    const initialState = {count: 1};
+    function Client({action}) {
+      const [state, dispatch] = useFormState(
+        action,
+        initialState,
+        '/permalink',
+      );
+      return (
+        <form action={dispatch}>
+          <span>Count: {state.count}</span>
+        </form>
+      );
+    }
+    const ClientRef = await clientExports(Client);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form = container.firstChild;
+    const span = container.getElementsByTagName('span')[0];
+    expect(span.textContent).toBe('Count: 1');
+
+    expect(form.target).toBe('/permalink');
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('useFormState `permalink` is coerced to string', async () => {
+    const serverAction = serverExports(function action(prevState) {
+      return {state: prevState.count + 1};
+    });
+
+    class Permalink {
+      toString() {
+        return '/permalink';
+      }
+    }
+
+    const permalink = new Permalink();
+
+    const initialState = {count: 1};
+    function Client({action}) {
+      const [state, dispatch] = useFormState(action, initialState, permalink);
+      return (
+        <form action={dispatch}>
+          <span>Count: {state.count}</span>
+        </form>
+      );
+    }
+    const ClientRef = await clientExports(Client);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    const form = container.firstChild;
+    const span = container.getElementsByTagName('span')[0];
+    expect(span.textContent).toBe('Count: 1');
+
+    expect(form.target).toBe('/permalink');
   });
 });

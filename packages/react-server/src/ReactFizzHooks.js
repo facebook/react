@@ -14,6 +14,7 @@ import type {
   StartTransitionOptions,
   Thenable,
   Usable,
+  ReactCustomFormAction,
 } from 'shared/ReactTypes';
 
 import type {ResumableState} from './ReactFizzConfig';
@@ -40,6 +41,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -542,10 +544,6 @@ function unsupportedSetOptimisticState() {
   throw new Error('Cannot update optimistic state while rendering.');
 }
 
-function unsupportedDispatchFormState() {
-  throw new Error('Cannot update form state while rendering.');
-}
-
 function useOptimistic<S, A>(
   passthrough: S,
   reducer: ?(S, A) => S,
@@ -557,10 +555,41 @@ function useOptimistic<S, A>(
 function useFormState<S, P>(
   action: (S, P) => Promise<S>,
   initialState: S,
-  url?: string,
+  permalink?: string,
 ): [S, (P) => void] {
   resolveCurrentlyRenderingComponent();
-  return [initialState, unsupportedDispatchFormState];
+
+  // Bind the initial state to the first argument of the action.
+  // TODO: Use the keypath (or permalink) to check if there's matching state
+  // from the previous page.
+  const boundAction = action.bind(null, initialState);
+
+  // Wrap the action so the return value is void.
+  const dispatch = (payload: P): void => {
+    boundAction(payload);
+  };
+
+  // $FlowIgnore[prop-missing]
+  if (typeof boundAction.$$FORM_ACTION === 'function') {
+    // $FlowIgnore[prop-missing]
+    dispatch.$$FORM_ACTION = (prefix: string) => {
+      // $FlowIgnore[prop-missing]
+      const metadata: ReactCustomFormAction = boundAction.$$FORM_ACTION(prefix);
+      // Override the target URL
+      if (permalink !== undefined) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(permalink, 'target');
+        }
+        metadata.target = permalink + '';
+      }
+      return metadata;
+    };
+  } else {
+    // This is not a server action, so the permalink argument has
+    // no effect. The form will have to be hydrated before it's submitted.
+  }
+
+  return [initialState, dispatch];
 }
 
 function useId(): string {
