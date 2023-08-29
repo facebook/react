@@ -180,32 +180,35 @@ export function checkForUpdate({
 }): void {
   const {id} = element;
   const rendererID = store.getRendererIDForElement(id);
-  if (rendererID != null) {
-    inspectElementMutableSource({
-      bridge,
-      element,
-      path: null,
-      rendererID: ((rendererID: any): number),
-    }).then(
-      ([inspectedElement, responseType]: [
-        InspectedElementFrontend,
-        InspectedElementResponseType,
-      ]) => {
-        if (responseType === 'full-data') {
-          startTransition(() => {
-            const [key, value] = createCacheSeed(element, inspectedElement);
-            refresh(key, value);
-          });
-        }
-      },
 
-      // There isn't much to do about errors in this case,
-      // but we should at least log them so they aren't silent.
-      error => {
-        console.error(error);
-      },
-    );
+  if (rendererID == null) {
+    return;
   }
+
+  inspectElementMutableSource({
+    bridge,
+    element,
+    path: null,
+    rendererID,
+  }).then(
+    ([inspectedElement, responseType]: [
+      InspectedElementFrontend,
+      InspectedElementResponseType,
+    ]) => {
+      if (responseType === 'full-data') {
+        startTransition(() => {
+          const [key, value] = createCacheSeed(element, inspectedElement);
+          refresh(key, value);
+        });
+      }
+    },
+
+    // There isn't much to do about errors in this case,
+    // but we should at least log them so they aren't silent.
+    error => {
+      console.error(error);
+    },
+  );
 }
 
 export function clearCacheBecauseOfError(refresh: RefreshFunction): void {
