@@ -2,6 +2,7 @@
 
 const {resolve} = require('path');
 const Webpack = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -84,7 +85,21 @@ module.exports = {
     },
   },
   optimization: {
-    minimize: false,
+    minimize: !__DEV__,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: false,
+          mangle: {
+            keep_fnames: true,
+          },
+          format: {
+            comments: false,
+          },
+        },
+        extractComments: false,
+      }),
+    ],
   },
   plugins: [
     new Webpack.ProvidePlugin({
