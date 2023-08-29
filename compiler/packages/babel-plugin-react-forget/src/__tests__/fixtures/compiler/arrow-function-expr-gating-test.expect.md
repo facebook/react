@@ -14,25 +14,21 @@ export default ErrorView;
 ```javascript
 import { isForgetEnabled_Fixtures } from "ReactForgetFeatureFlag";
 import { unstable_useMemoCache as useMemoCache } from "react"; // @gating
-function ErrorView_uncompiled(error, _retry) {
-  return <MessageBox error={error}></MessageBox>;
-}
-function ErrorView_forget(error, _retry) {
-  const $ = useMemoCache(2);
-  const c_0 = $[0] !== error;
-  let t0;
-  if (c_0) {
-    t0 = <MessageBox error={error} />;
-    $[0] = error;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  return t0;
-}
 const ErrorView = isForgetEnabled_Fixtures()
-  ? ErrorView_forget
-  : ErrorView_uncompiled;
+  ? (error, _retry) => {
+      const $ = useMemoCache(2);
+      const c_0 = $[0] !== error;
+      let t0;
+      if (c_0) {
+        t0 = <MessageBox error={error} />;
+        $[0] = error;
+        $[1] = t0;
+      } else {
+        t0 = $[1];
+      }
+      return t0;
+    }
+  : (error, _retry) => <MessageBox error={error}></MessageBox>;
 
 export default ErrorView;
 

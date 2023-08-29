@@ -200,7 +200,14 @@ function compile(source: string): CompilerOutput {
               kind: "ast",
               fnName,
               name: result.name,
-              value: result.value,
+              value: {
+                type: "FunctionDeclaration",
+                id: result.value.id,
+                async: result.value.async,
+                generator: result.value.generator,
+                body: result.value.body,
+                params: result.value.params,
+              },
             });
             break;
           }

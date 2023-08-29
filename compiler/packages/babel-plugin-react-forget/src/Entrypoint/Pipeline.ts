@@ -27,6 +27,7 @@ import {
 } from "../Inference";
 import { constantPropagation, deadCodeElimination } from "../Optimization";
 import {
+  CodegenFunction,
   alignReactiveScopesToBlockScopes,
   buildReactiveBlocks,
   buildReactiveFunction,
@@ -60,15 +61,17 @@ import {
 } from "../Validation";
 
 export type CompilerPipelineValue =
-  | { kind: "ast"; name: string; value: t.FunctionDeclaration }
+  | { kind: "ast"; name: string; value: CodegenFunction }
   | { kind: "hir"; name: string; value: HIRFunction }
   | { kind: "reactive"; name: string; value: ReactiveFunction }
   | { kind: "debug"; name: string; value: string };
 
 export function* run(
-  func: NodePath<t.FunctionDeclaration>,
+  func: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
   config?: EnvironmentConfig | null
-): Generator<CompilerPipelineValue, t.FunctionDeclaration> {
+): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(config ?? null, contextIdentifiers);
   const hir = lower(func, env).unwrap();
@@ -282,9 +285,11 @@ export function* run(
 }
 
 export function compileFn(
-  func: NodePath<t.FunctionDeclaration>,
+  func: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
   options?: Partial<EnvironmentConfig> | null
-): t.FunctionDeclaration {
+): CodegenFunction {
   let generator = run(func, options);
   while (true) {
     const next = generator.next();

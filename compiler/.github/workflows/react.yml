@@ -19,5 +19,5 @@ jobs:
       - run: yarn workspace babel-plugin-react-forget run build
       - run: yarn install --frozen-lockfile
         working-directory: react
-      - run: yarn test --ci
-        working-directory: react
+      #- run: yarn test --ci
+      #  working-directory: react

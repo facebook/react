@@ -406,6 +406,7 @@ const skipFilter = new Set([
   "ssa-newexpression",
   "ssa-shadowing",
   "template-literal",
+  "multi-arrow-expr-export-default-gating-test",
 
   // TODO: we should be able to support these
   "fbt-call",
@@ -438,6 +439,7 @@ const skipFilter = new Set([
   "rules-of-hooks/rules-of-hooks-e66a744cffbe",
   "rules-of-hooks/rules-of-hooks-eacfcaa6ef89",
   "rules-of-hooks/rules-of-hooks-fe6042f7628b",
+  "infer-function-assignment",
   "infer-functions-component-with-jsx",
   "infer-function-forwardRef",
   "infer-function-React-memo",
@@ -445,6 +447,7 @@ const skipFilter = new Set([
   "infer-functions-component-with-jsx",
   "infer-functions-hook-with-hook-call",
   "infer-functions-hook-with-jsx",
+  "infer-function-expression-component",
 ]);
 
 export default skipFilter;

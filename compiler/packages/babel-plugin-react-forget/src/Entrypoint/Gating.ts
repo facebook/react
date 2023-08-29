@@ -1,85 +1,63 @@
 import { NodePath } from "@babel/core";
 import * as t from "@babel/types";
-import { CompilerError } from "../CompilerError";
-import { GeneratedSource } from "../HIR";
-import { ExternalFunction, PluginOptions } from "./Options";
-
-type GatingTestOptions = {
-  originalFnDecl: NodePath<t.FunctionDeclaration>;
-  compiledIdent: t.Identifier;
-  originalIdent: t.Identifier;
-  gating: ExternalFunction;
-};
-function buildGatingTest({
-  originalFnDecl,
-  compiledIdent,
-  originalIdent,
-  gating,
-}: GatingTestOptions): t.Node | t.Node[] {
-  const testVarDecl = t.variableDeclaration("const", [
-    t.variableDeclarator(
-      originalIdent,
-      t.conditionalExpression(
-        t.callExpression(t.identifier(gating.importSpecifierName), []),
-        compiledIdent,
-        originalFnDecl.node.id!
-      )
-    ),
-  ]);
-
-  // Re-export new declaration
-  const parent = originalFnDecl.parentPath;
-  if (t.isExportDefaultDeclaration(parent)) {
-    // Re-add uncompiled function
-    parent.replaceWith(originalFnDecl)[0].skip();
-
-    // Add test and synthesize new export
-    return [testVarDecl, t.exportDefaultDeclaration(originalIdent)];
-  } else if (t.isExportNamedDeclaration(parent)) {
-    // Re-add uncompiled function
-    parent.replaceWith(originalFnDecl)[0].skip();
-
-    // Add and export test
-    return t.exportNamedDeclaration(testVarDecl);
-  }
-
-  // Just add the test, no need for re-export
-  return testVarDecl;
-}
-
-function addSuffix(id: t.Identifier, suffix: string): t.Identifier {
-  return t.identifier(`${id.name}${suffix}`);
-}
+import { PluginOptions } from "./Options";
 
 export function insertGatedFunctionDeclaration(
-  fnPath: NodePath<t.FunctionDeclaration>,
-  compiled: t.FunctionDeclaration,
-  originalIdent: t.Identifier,
+  fnPath: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
+  compiled:
+    | t.FunctionDeclaration
+    | t.ArrowFunctionExpression
+    | t.FunctionExpression,
   gating: NonNullable<PluginOptions["gating"]>
-): NodePath<t.FunctionDeclaration> {
-  // Rename existing function
-  fnPath.node.id = addSuffix(originalIdent, "_uncompiled");
-
-  // Rename and append compiled function
-  CompilerError.invariant(compiled.id != null, {
-    reason: "FunctionDeclaration must produce a name",
-    description: null,
-    loc: fnPath.node.loc ?? GeneratedSource,
-    suggestions: null,
-  });
-  compiled.id = addSuffix(compiled.id, "_forget");
-  const compiledFn = fnPath.insertAfter(compiled)[0];
-  compiledFn.skip();
-
-  // Build and append gating test
-  compiledFn.insertAfter(
-    buildGatingTest({
-      originalFnDecl: fnPath,
-      compiledIdent: compiled.id,
-      originalIdent,
-      gating,
-    })
+): NodePath<t.ConditionalExpression | t.VariableDeclaration> {
+  const gatingExpression = t.conditionalExpression(
+    t.callExpression(t.identifier(gating.importSpecifierName), []),
+    buildFunctionExpression(compiled),
+    buildFunctionExpression(fnPath.node)
   );
 
+  let compiledFn;
+  // Convert function declarations to named variables *unless* this is an
+  // `export default function ...` since `export default const ...` is
+  // not supported. For that case we fall through to replacing w the raw
+  // conditional expression
+  if (
+    fnPath.parentPath.node.type !== "ExportDefaultDeclaration" &&
+    fnPath.node.type === "FunctionDeclaration" &&
+    fnPath.node.id != null
+  ) {
+    compiledFn = fnPath.replaceWith(
+      t.variableDeclaration("const", [
+        t.variableDeclarator(fnPath.node.id, gatingExpression),
+      ])
+    )[0];
+  } else {
+    compiledFn = fnPath.replaceWith(gatingExpression)[0];
+  }
+
   return compiledFn;
+}
+
+function buildFunctionExpression(
+  node: t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+): t.ArrowFunctionExpression | t.FunctionExpression {
+  if (
+    node.type === "ArrowFunctionExpression" ||
+    node.type === "FunctionExpression"
+  ) {
+    return node;
+  } else {
+    const fn: t.FunctionExpression = {
+      type: "FunctionExpression",
+      async: node.async,
+      generator: node.generator,
+      loc: node.loc ?? null,
+      id: node.id ?? null,
+      params: node.params,
+      body: node.body,
+    };
+    return fn;
+  }
 }

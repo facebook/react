@@ -34,9 +34,19 @@ import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
 
+export type CodegenFunction = {
+  type: "CodegenFunction";
+  id: t.Identifier | null;
+  params: t.FunctionDeclaration["params"];
+  body: t.BlockStatement;
+  generator: boolean;
+  async: boolean;
+  loc: SourceLocation;
+};
+
 export function codegenReactiveFunction(
   fn: ReactiveFunction
-): Result<t.FunctionDeclaration, CompilerError> {
+): Result<CodegenFunction, CompilerError> {
   const cx = new Context(fn.env, fn.id ?? "[[ anonymous ]]");
   for (const param of fn.params) {
     cx.temp.set(param.identifier.id, null);
@@ -70,16 +80,15 @@ export function codegenReactiveFunction(
     return Err(cx.errors);
   }
 
-  return Ok(
-    createFunctionDeclaration(
-      fn.loc,
-      fn.id !== null ? t.identifier(fn.id) : null,
-      params,
-      body,
-      fn.generator,
-      fn.async
-    )
-  );
+  return Ok({
+    type: "CodegenFunction",
+    loc: fn.loc,
+    id: fn.id !== null ? t.identifier(fn.id) : null,
+    params,
+    body,
+    generator: fn.generator,
+    async: fn.async,
+  });
 }
 
 class Context {
@@ -649,7 +658,6 @@ function withLoc<T extends (...args: any[]) => t.Node>(
 const createBinaryExpression = withLoc(t.binaryExpression);
 const createCallExpression = withLoc(t.callExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
-const createFunctionDeclaration = withLoc(t.functionDeclaration);
 const _createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
 const _createWhileStatement = withLoc(t.whileStatement);

@@ -5,7 +5,7 @@
 // @gating
 const ErrorView = (error, _retry) => <MessageBox error={error}></MessageBox>;
 
-export const Renderer = (props) => (
+export default Renderer = (props) => (
   <Foo>
     <Bar></Bar>
     <ErrorView></ErrorView>
@@ -35,7 +35,7 @@ const ErrorView = isForgetEnabled_Fixtures()
     }
   : (error, _retry) => <MessageBox error={error}></MessageBox>;
 
-export const Renderer = isForgetEnabled_Fixtures()
+export default Renderer = isForgetEnabled_Fixtures()
   ? (props) => {
       const $ = useMemoCache(3);
       let t0;

@@ -8,7 +8,10 @@
 export { alignReactiveScopesToBlockScopes } from "./AlignReactiveScopesToBlockScopes";
 export { buildReactiveBlocks } from "./BuildReactiveBlocks";
 export { buildReactiveFunction } from "./BuildReactiveFunction";
-export { codegenReactiveFunction } from "./CodegenReactiveFunction";
+export {
+  codegenReactiveFunction,
+  type CodegenFunction,
+} from "./CodegenReactiveFunction";
 export { extractScopeDeclarationsFromDestructuring } from "./ExtractScopeDeclarationsFromDestructuring";
 export { flattenReactiveLoops } from "./FlattenReactiveLoops";
 export { flattenScopesWithHooks } from "./FlattenScopesWithHooks";

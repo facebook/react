@@ -10,10 +10,11 @@ import babelJest from "babel-jest";
 import { compile } from "babel-plugin-react-forget";
 import { execSync } from "child_process";
 
-import type { NodePath } from "@babel/traverse";
+import type { NodePath, Visitor } from "@babel/traverse";
 import type { CallExpression, FunctionDeclaration } from "@babel/types";
+import * as t from "@babel/types";
 import type { PluginOptions } from "babel-plugin-react-forget";
-import path from "path";
+import { basename } from "path";
 
 /**
  * -- IMPORTANT --
@@ -55,10 +56,10 @@ module.exports = (useForget: boolean) => {
         {
           plugins: [
             [
-              function BabelPluginRewriteRequirePath() {
+              function BabelPluginRewriteRequirePath(): { visitor: Visitor } {
                 return {
                   visitor: {
-                    CallExpression(path: NodePath<CallExpression>) {
+                    CallExpression(path: NodePath<CallExpression>): void {
                       const { callee } = path.node;
                       if (
                         callee.type === "Identifier" &&
@@ -96,7 +97,7 @@ module.exports = (useForget: boolean) => {
 };
 
 // Mostly copied from react/scripts/babel/transform-forget.js
-function isReactComponentLike(fn: NodePath<FunctionDeclaration>) {
+function isReactComponentLike(fn: NodePath<FunctionDeclaration>): boolean {
   let isReactComponent = false;
   let hasNoUseForgetDirective = false;
 
@@ -145,7 +146,7 @@ function isReactComponentLike(fn: NodePath<FunctionDeclaration>) {
 function ReactForgetFunctionTransform() {
   const compiledFns = new Set();
   const visitor = {
-    FunctionDeclaration(fn: NodePath<FunctionDeclaration>, state: any) {
+    FunctionDeclaration(fn: NodePath<FunctionDeclaration>, state: any): void {
       if (compiledFns.has(fn.node)) {
         return;
       }
@@ -154,7 +155,7 @@ function ReactForgetFunctionTransform() {
         return;
       }
       if (debugMode) {
-        const filename = path.basename(state.file.opts.filename);
+        const filename = basename(state.file.opts.filename);
         if (fn.node.loc && fn.node.id) {
           console.log(
             ` Compiling ${filename}:${fn.node.loc.start.line}:${fn.node.loc.start.column}  ${fn.node.id.name}`
@@ -166,7 +167,16 @@ function ReactForgetFunctionTransform() {
 
       const compiled = compile(fn, forgetOptions);
       compiledFns.add(compiled);
-      fn.replaceWith(compiled);
+
+      const fun = t.functionDeclaration(
+        compiled.id,
+        compiled.params,
+        compiled.body,
+        compiled.generator,
+        compiled.async
+      );
+      fn.replaceWith(fun);
+      fn.skip();
     },
   };
   return {

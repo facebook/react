@@ -13,7 +13,7 @@ import {
   CompilerSuggestionOperation,
   ErrorSeverity,
 } from "../CompilerError";
-import { GeneratedSource } from "../HIR";
+import { CodegenFunction } from "../ReactiveScopes";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
 import { assertExhaustive } from "../Utils/utils";
 import { insertGatedFunctionDeclaration } from "./Gating";
@@ -60,10 +60,12 @@ function hasAnyUseNoForgetDirectives(directives: t.Directive[]): boolean {
  * Returns a boolean denoting if the AST was mutated or not.
  */
 function compileAndInsertNewFunctionDeclaration(
-  fnPath: NodePath<t.FunctionDeclaration>,
+  fnPath: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
   pass: CompilerPass
 ): boolean {
-  let compiledFn: t.FunctionDeclaration | null = null;
+  let compiledFn: CodegenFunction | null = null;
   let hasForgetMutatedOriginalSource = false;
   try {
     compiledFn = compileFn(fnPath, pass.opts.environment);
@@ -98,15 +100,50 @@ function compileAndInsertNewFunctionDeclaration(
     // traversal will loop infinitely.
     fnPath.skip();
 
-    CompilerError.invariant(fnPath.node.id != null, {
-      reason: "FunctionDeclaration must have a name",
-      description: null,
-      loc: fnPath.node.loc ?? GeneratedSource,
-      suggestions: null,
-    });
-    const originalIdent = fnPath.node.id;
+    let transformedFunction;
+    switch (fnPath.node.type) {
+      case "FunctionDeclaration": {
+        const fn: t.FunctionDeclaration = {
+          type: "FunctionDeclaration",
+          id: compiledFn.id,
+          loc: fnPath.node.loc ?? null,
+          async: compiledFn.async,
+          generator: compiledFn.generator,
+          params: compiledFn.params,
+          body: compiledFn.body,
+        };
+        transformedFunction = fn;
+        break;
+      }
+      case "ArrowFunctionExpression": {
+        const fn: t.ArrowFunctionExpression = {
+          type: "ArrowFunctionExpression",
+          loc: fnPath.node.loc ?? null,
+          async: compiledFn.async,
+          generator: compiledFn.generator,
+          params: compiledFn.params,
+          expression: fnPath.node.expression,
+          body: compiledFn.body,
+        };
+        transformedFunction = fn;
+        break;
+      }
+      case "FunctionExpression": {
+        const fn: t.FunctionExpression = {
+          type: "FunctionExpression",
+          id: compiledFn.id,
+          loc: fnPath.node.loc ?? null,
+          async: compiledFn.async,
+          generator: compiledFn.generator,
+          params: compiledFn.params,
+          body: compiledFn.body,
+        };
+        transformedFunction = fn;
+        break;
+      }
+    }
 
-    insertNewFunctionDeclaration(fnPath, originalIdent, compiledFn, pass);
+    insertNewFunctionDeclaration(fnPath, transformedFunction, pass);
     hasForgetMutatedOriginalSource = true;
   }
 
@@ -114,36 +151,29 @@ function compileAndInsertNewFunctionDeclaration(
 }
 
 function insertNewFunctionDeclaration(
-  fnPath: NodePath<t.FunctionDeclaration>,
-  originalIdent: t.Identifier,
-  compiledFn: t.FunctionDeclaration,
+  fnPath: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
+  compiledFn:
+    | t.FunctionDeclaration
+    | t.ArrowFunctionExpression
+    | t.FunctionExpression,
   pass: CompilerPass
 ): void {
-  let gatedFn = null;
-  if (pass.opts.gating != null) {
-    gatedFn = insertGatedFunctionDeclaration(
-      fnPath,
-      compiledFn,
-      originalIdent,
-      pass.opts.gating
-    );
-  } else {
-    fnPath.replaceWith(compiledFn);
-  }
-
   if (pass.opts.instrumentForget != null) {
     const instrumentFnName = pass.opts.instrumentForget.importSpecifierName;
-    addInstrumentForget(fnPath, originalIdent.name, instrumentFnName);
-    if (pass.opts.gating != null) {
-      CompilerError.invariant(gatedFn != null, {
-        reason: "Should have inserted a gated function declaration",
-        description: null,
-        loc: null,
-        suggestions: null,
-      });
-      addInstrumentForget(gatedFn, originalIdent.name, instrumentFnName);
-    }
+    addInstrumentForget(compiledFn, instrumentFnName);
   }
+  if (pass.opts)
+    if (pass.opts.gating != null) {
+      if (pass.opts.instrumentForget != null) {
+        const instrumentFnName = pass.opts.instrumentForget.importSpecifierName;
+        addInstrumentForget(fnPath.node, instrumentFnName);
+      }
+      insertGatedFunctionDeclaration(fnPath, compiledFn, pass.opts.gating);
+    } else {
+      fnPath.replaceWith(compiledFn);
+    }
 }
 
 export function compileProgram(
@@ -243,27 +273,7 @@ export function compileProgram(
           return;
         }
 
-        const loweredFn = buildFunctionDeclaration(fn);
-        if (loweredFn instanceof CompilerErrorDetail) {
-          const error = new CompilerError();
-          error.pushErrorDetail(loweredFn);
-
-          const options = parsePluginOptions(pass.opts);
-          if (options.logger != null) {
-            options.logger.logEvent("err", error);
-          }
-
-          if (options.panicOnBailout || error.isCritical()) {
-            throw error;
-          } else {
-            if (pass.opts.isDev) {
-              log(error, pass.filename);
-            }
-          }
-          return;
-        }
-
-        if (compileAndInsertNewFunctionDeclaration(loweredFn, pass) === true) {
+        if (compileAndInsertNewFunctionDeclaration(fn, pass) === true) {
           hasForgetMutatedOriginalSource = true;
         }
       },
@@ -312,7 +322,9 @@ export function compileProgram(
 }
 
 function shouldVisitNode(
-  fn: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>,
+  fn: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
   pass: CompilerPass
 ): boolean {
   if (fn.node.body.type === "BlockStatement") {
@@ -360,79 +372,6 @@ function log(error: CompilerError, filename: string | null): void {
       )
       .join("\n")
   );
-}
-
-function buildFunctionDeclaration(
-  fn: NodePath<t.ArrowFunctionExpression>
-): NodePath<t.FunctionDeclaration> | CompilerErrorDetail {
-  if (!fn.parentPath.isVariableDeclarator()) {
-    return new CompilerErrorDetail({
-      reason:
-        "ArrowFunctionExpression was not declared in a variable declaration",
-      severity: ErrorSeverity.Todo,
-      description: `Handle ${fn.parentPath.type}`,
-      loc: fn.node.loc ?? null,
-      suggestions: null,
-    });
-  }
-  const variableDeclarator = fn.parentPath;
-
-  if (!variableDeclarator.parentPath.isVariableDeclaration()) {
-    return new CompilerErrorDetail({
-      reason: "ArrowFunctionExpression was not a single declaration",
-      severity: ErrorSeverity.Todo,
-      description: `Handle ${variableDeclarator.parentPath.type}`,
-      loc: fn.node.loc ?? null,
-      suggestions: null,
-    });
-  }
-  const variableDeclaration = variableDeclarator.parentPath;
-
-  const id = variableDeclarator.get("id");
-  if (!id.isIdentifier()) {
-    return new CompilerErrorDetail({
-      reason: "ArrowFunctionExpression was not an identifier",
-      severity: ErrorSeverity.Todo,
-      description: `Handle ${id.type}`,
-      loc: fn.node.loc ?? null,
-      suggestions: null,
-    });
-  }
-
-  const rewrittenFn = variableDeclaration.replaceWith(
-    t.functionDeclaration(
-      id.node,
-      fn.node.params,
-      buildBlockStatement(fn),
-      fn.node.generator,
-      fn.node.async
-    )
-  )[0];
-  fn.skip();
-  return rewrittenFn;
-}
-
-function buildBlockStatement(
-  fn: NodePath<t.ArrowFunctionExpression>
-): t.BlockStatement {
-  const body = fn.get("body");
-  if (body.isExpression()) {
-    const wrappedBody = body.replaceWith(
-      t.blockStatement([t.returnStatement(body.node)])
-    )[0];
-    body.skip();
-
-    return wrappedBody.node;
-  }
-
-  CompilerError.invariant(body.isBlockStatement(), {
-    reason: "Body must be a BlockStatement",
-    description: null,
-    loc: body.node.loc ?? GeneratedSource,
-    suggestions: null,
-  });
-
-  return body.node;
 }
 
 function isHookName(s: string): boolean {
@@ -511,7 +450,9 @@ function isMemoCallback(path: NodePath<t.Expression>): boolean {
 }
 
 function isReactFunctionLike(
-  node: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>
+  node: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >
 ): boolean {
   const functionName = getFunctionName(node);
   if (functionName !== null) {
@@ -554,7 +495,9 @@ function isReactFunctionLike(
  */
 
 function getFunctionName(
-  path: NodePath<t.FunctionDeclaration | t.ArrowFunctionExpression>
+  path: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >
 ): NodePath<t.Expression> | null {
   if (path.isFunctionDeclaration()) {
     const id = path.get("id");
