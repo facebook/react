@@ -36,6 +36,8 @@ import {clearErrorsAndWarnings as clearErrorsAndWarningsAPI} from 'react-devtool
 import styles from './Tree.css';
 import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
+import ComponentSummary from './ComponentSummary';
+import TabBar from '../TabBar';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
 // Never indent more than this number of pixels (even if we have the room).
@@ -50,6 +52,19 @@ export type ItemData = {
 };
 
 type Props = {};
+
+const tabs = [
+  {
+    id: 'tree',
+    label: 'Tree',
+    title: 'Component tree',
+  },
+  {
+    id: 'summary',
+    label: 'Summary',
+    title: 'Component summary',
+  },
+];
 
 export default function Tree(props: Props): React.Node {
   const dispatch = useContext(TreeDispatcherContext);
@@ -66,6 +81,7 @@ export default function Tree(props: Props): React.Node {
   const {hideSettings} = useContext(OptionsContext);
   const [isNavigatingWithKeyboard, setIsNavigatingWithKeyboard] =
     useState(false);
+  const [selectedTabID, setSelectedTabID] = useState('tree');
   const {highlightNativeElement, clearHighlightNativeElement} =
     useHighlightNativeElement();
   const treeRef = useRef<HTMLDivElement | null>(null);
@@ -341,6 +357,39 @@ export default function Tree(props: Props): React.Node {
     clearErrorsAndWarningsAPI({bridge, store});
   };
 
+  const content =
+    selectedTabID === 'summary' ? (
+      <ComponentSummary />
+    ) : (
+      <div
+        className={styles.AutoSizerWrapper}
+        onBlur={handleBlur}
+        onFocus={handleFocus}
+        onKeyPress={handleKeyPress}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        ref={focusTargetRef}
+        tabIndex={0}>
+        <AutoSizer>
+          {({height, width}) => (
+            // $FlowFixMe https://github.com/facebook/flow/issues/7341
+            <FixedSizeList
+              className={styles.List}
+              height={height}
+              innerElementType={InnerElementType}
+              itemCount={numElements}
+              itemData={itemData}
+              itemKey={itemKey}
+              itemSize={lineHeight}
+              ref={listCallbackRef}
+              width={width}>
+              {Element}
+            </FixedSizeList>
+          )}
+        </AutoSizer>
+      </div>
+    );
+
   const zeroElementsNotice = (
     <div className={styles.ZeroElementsNotice}>
       <p>Loading React Element Tree...</p>
@@ -404,6 +453,13 @@ export default function Tree(props: Props): React.Node {
                 </Button>
               </React.Fragment>
             )}
+          <TabBar
+            currentTab={selectedTabID}
+            id="Components"
+            selectTab={setSelectedTabID}
+            tabs={tabs}
+            type="components"
+          />
           {!hideSettings && (
             <Fragment>
               <div className={styles.VRule} />
@@ -411,36 +467,7 @@ export default function Tree(props: Props): React.Node {
             </Fragment>
           )}
         </div>
-        {numElements === 0 ? (
-          zeroElementsNotice
-        ) : (
-          <div
-            className={styles.AutoSizerWrapper}
-            onBlur={handleBlur}
-            onFocus={handleFocus}
-            onKeyPress={handleKeyPress}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-            ref={focusTargetRef}
-            tabIndex={0}>
-            <AutoSizer>
-              {({height, width}) => (
-                <FixedSizeList
-                  className={styles.List}
-                  height={height}
-                  innerElementType={InnerElementType}
-                  itemCount={numElements}
-                  itemData={itemData}
-                  itemKey={itemKey}
-                  itemSize={lineHeight}
-                  ref={listCallbackRef}
-                  width={width}>
-                  {Element}
-                </FixedSizeList>
-              )}
-            </AutoSizer>
-          </div>
-        )}
+        {content}
       </div>
     </TreeFocusedContext.Provider>
   );

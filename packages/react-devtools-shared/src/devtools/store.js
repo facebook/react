@@ -1444,6 +1444,12 @@ export default class Store extends EventEmitter<{
     copy(text);
   };
 
+  getAllElements = (): Array<{|id: number, displayName: null | string|}> => {
+    return Array.from(this._idToElement, ([, value]) => ({
+      id: value.id,
+      displayName: value.displayName,
+    })).filter(value => !!value.displayName);
+  };
   // The Store should never throw an Error without also emitting an event.
   // Otherwise Store errors will be invisible to users,
   // but the downstream errors they cause will be reported as bugs.
