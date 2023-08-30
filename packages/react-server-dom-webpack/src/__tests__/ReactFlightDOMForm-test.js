@@ -354,7 +354,7 @@ describe('ReactFlightDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it("useFormState can change the action's target with the `permalink` argument", async () => {
+  it('useFormState can change the action URL with the `permalink` argument', async () => {
     const serverAction = serverExports(function action(prevState) {
       return {state: prevState.count + 1};
     });
@@ -386,7 +386,7 @@ describe('ReactFlightDOMForm', () => {
     const span = container.getElementsByTagName('span')[0];
     expect(span.textContent).toBe('Count: 1');
 
-    expect(form.target).toBe('/permalink');
+    expect(form.action).toBe('http://localhost/permalink');
   });
 
   // @gate enableFormActions
@@ -427,6 +427,6 @@ describe('ReactFlightDOMForm', () => {
     const span = container.getElementsByTagName('span')[0];
     expect(span.textContent).toBe('Count: 1');
 
-    expect(form.target).toBe('/permalink');
+    expect(form.action).toBe('http://localhost/permalink');
   });
 });

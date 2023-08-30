@@ -575,12 +575,12 @@ function useFormState<S, P>(
     dispatch.$$FORM_ACTION = (prefix: string) => {
       // $FlowIgnore[prop-missing]
       const metadata: ReactCustomFormAction = boundAction.$$FORM_ACTION(prefix);
-      // Override the target URL
+      // Override the action URL
       if (permalink !== undefined) {
         if (__DEV__) {
           checkAttributeStringCoercion(permalink, 'target');
         }
-        metadata.target = permalink + '';
+        metadata.action = permalink + '';
       }
       return metadata;
     };
