@@ -65,6 +65,10 @@ function compileAndInsertNewFunctionDeclaration(
   >,
   pass: CompilerPass
 ): boolean {
+  if (ALREADY_COMPILED.has(fnPath.node)) {
+    return false;
+  }
+
   let compiledFn: CodegenFunction | null = null;
   let hasForgetMutatedOriginalSource = false;
   try {
@@ -100,7 +104,10 @@ function compileAndInsertNewFunctionDeclaration(
     // traversal will loop infinitely.
     fnPath.skip();
 
-    let transformedFunction;
+    let transformedFunction:
+      | t.FunctionDeclaration
+      | t.ArrowFunctionExpression
+      | t.FunctionExpression;
     switch (fnPath.node.type) {
       case "FunctionDeclaration": {
         const fn: t.FunctionDeclaration = {
@@ -143,6 +150,12 @@ function compileAndInsertNewFunctionDeclaration(
       }
     }
 
+    // Ensure we avoid visiting the original function again (since we move it
+    // within the AST in gating mode)
+    ALREADY_COMPILED.add(fnPath);
+    // And avoid visiting the new version as well
+    ALREADY_COMPILED.add(transformedFunction);
+
     insertNewFunctionDeclaration(fnPath, transformedFunction, pass);
     hasForgetMutatedOriginalSource = true;
   }
@@ -175,6 +188,11 @@ function insertNewFunctionDeclaration(
       fnPath.replaceWith(compiledFn);
     }
 }
+
+// This is a hack to work around what seems to be a Babel bug. Babel doesn't
+// consistently respect the `skip()` function to avoid revisiting a node within
+// a pass, so we use this set to track nodes that we have compiled.
+const ALREADY_COMPILED: WeakSet<object> | Set<object> = new (WeakSet ?? Set)();
 
 export function compileProgram(
   program: NodePath<t.Program>,
