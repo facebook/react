@@ -95,7 +95,7 @@ function isNumeric(str: string): boolean {
   return +str + '' === str;
 }
 
-chrome.runtime.onConnect.addListener(async port => {
+chrome.runtime.onConnect.addListener(port => {
   if (port.name === 'proxy') {
     // Proxy content script is executed in tab, so it should have it specified.
     const tabId = port.sender.tab.id;
@@ -115,11 +115,28 @@ chrome.runtime.onConnect.addListener(async port => {
   if (isNumeric(port.name)) {
     // Extension port doesn't have tab id specified, because its sender is the extension.
     const tabId = +port.name;
+    const extensionPortAlreadyConnected = ports[tabId]?.extension != null;
+
+    // Handle the case when extension port was disconnected and we were not notified
+    if (extensionPortAlreadyConnected) {
+      ports[tabId].disconnectPipe?.();
+    }
 
     registerTab(tabId);
     registerExtensionPort(port, tabId);
 
-    injectProxy(tabId);
+    if (extensionPortAlreadyConnected) {
+      const proxyPort = ports[tabId].proxy;
+
+      // Avoid re-injecting the content script, we might end up in a situation
+      // where we would have multiple proxy ports opened and trying to reconnect
+      if (proxyPort) {
+        clearReconnectionTimeout(proxyPort);
+        reconnectProxyPort(proxyPort, tabId);
+      }
+    } else {
+      injectProxy(tabId);
+    }
 
     return;
   }

@@ -323,8 +323,6 @@ function createBridgeAndStore() {
       }),
     );
   };
-
-  render();
 }
 
 const viewUrlSourceFunction = (url, line, col) => {
@@ -364,14 +362,14 @@ function createComponentsPanel() {
         }
       });
 
-      // TODO: we should listen to extension.onHidden to unmount some listeners
+      // TODO: we should listen to createdPanel.onHidden to unmount some listeners
       // and potentially stop highlighting
     },
   );
 }
 
 function createProfilerPanel() {
-  if (componentsPortalContainer) {
+  if (profilerPortalContainer) {
     render('profiler');
 
     return;
@@ -398,6 +396,9 @@ function createProfilerPanel() {
 }
 
 function performInTabNavigationCleanup() {
+  // Potentially, if react hasn't loaded yet and user performs in-tab navigation
+  clearReactPollingInterval();
+
   if (store !== null) {
     // Store profiling data, so it can be used later
     profilingData = store.profilerStore.profilingData;
@@ -435,6 +436,9 @@ function performInTabNavigationCleanup() {
 }
 
 function performFullCleanup() {
+  // Potentially, if react hasn't loaded yet and user closed the browser DevTools
+  clearReactPollingInterval();
+
   if ((componentsPortalContainer || profilerPortalContainer) && root) {
     // This should also emit bridge.shutdown, but only if this root was mounted
     flushSync(() => root.unmount());
@@ -455,13 +459,23 @@ function performFullCleanup() {
   port = null;
 }
 
-function mountReactDevTools() {
-  registerEventsLogger();
-
+function connectExtensionPort() {
   const tabId = chrome.devtools.inspectedWindow.tabId;
   port = chrome.runtime.connect({
     name: String(tabId),
   });
+
+  // This port may be disconnected by Chrome at some point, this callback
+  // will be executed only if this port was disconnected from the other end
+  // so, when we call `port.disconnect()` from this script,
+  // this should not trigger this callback and port reconnection
+  port.onDisconnect.addListener(connectExtensionPort);
+}
+
+function mountReactDevTools() {
+  registerEventsLogger();
+
+  connectExtensionPort();
 
   createBridgeAndStore();
 
@@ -477,17 +491,19 @@ function mountReactDevToolsWhenReactHasLoaded() {
   const checkIfReactHasLoaded = () => executeIfReactHasLoaded(onReactReady);
 
   // Check to see if React has loaded in case React is added after page load
-  const reactPollingIntervalId = setInterval(() => {
+  reactPollingIntervalId = setInterval(() => {
     checkIfReactHasLoaded();
   }, 500);
 
   function onReactReady() {
-    clearInterval(reactPollingIntervalId);
+    clearReactPollingInterval();
     mountReactDevTools();
   }
 
   checkIfReactHasLoaded();
 }
+
+let reactPollingIntervalId = null;
 
 let bridge = null;
 let store = null;
@@ -509,6 +525,8 @@ chrome.devtools.network.onNavigated.addListener(syncSavedPreferences);
 
 // Cleanup previous page state and remount everything
 chrome.devtools.network.onNavigated.addListener(() => {
+  clearReactPollingInterval();
+
   performInTabNavigationCleanup();
   mountReactDevToolsWhenReactHasLoaded();
 });
@@ -519,6 +537,11 @@ if (IS_FIREFOX) {
   window.addEventListener('unload', performFullCleanup);
 } else {
   window.addEventListener('beforeunload', performFullCleanup);
+}
+
+function clearReactPollingInterval() {
+  clearInterval(reactPollingIntervalId);
+  reactPollingIntervalId = null;
 }
 
 syncSavedPreferences();
