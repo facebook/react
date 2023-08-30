@@ -187,12 +187,10 @@ type ResumableNode =
       number /* segment id */,
     ];
 
-type PostponedSegment = {
-  keyPath: KeyNode,
-  segment: Segment,
+type PostponedHoles = {
+  workingMap: Map<KeyNode, ResumableParentNode>,
+  root: Array<ResumableNode>,
 };
-
-type PostponedHoles = Map<Root | SuspenseBoundary, Array<PostponedSegment>>;
 
 type LegacyContext = {
   [key: string]: any,
@@ -1681,6 +1679,10 @@ function trackPostpone(
   task: Task,
   segment: Segment,
 ): void {
+  segment.status = POSTPONED;
+  // We know that this will leave a hole so we might as well assign an ID now.
+  segment.id = request.nextSegmentId++;
+
   const boundary = task.blockedBoundary;
   if (boundary !== null && boundary.status === PENDING) {
     boundary.status = POSTPONED;
@@ -1690,22 +1692,39 @@ function trackPostpone(
       request.renderState,
       request.resumableState,
     );
+
+    const boundaryKeyPath = boundary.keyPath;
+    if (boundaryKeyPath === null) {
+      throw new Error(
+        'It should not be possible to postpone at the root. This is a bug in React.',
+      );
+    }
+    const children: Array<ResumableNode> = [];
+    const boundaryNode: ResumableParentNode = [
+      REPLAY_SUSPENSE_BOUNDARY,
+      boundaryKeyPath[1],
+      boundaryKeyPath[2],
+      children,
+      boundary.id,
+    ];
+    trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
+    addToResumableParent(boundaryNode, boundaryKeyPath, trackedPostpones);
   }
-  let postponedSegments = trackedPostpones.get(task.blockedBoundary);
-  if (postponedSegments === undefined) {
-    // This is the first time we've postponed this boundary.
-    postponedSegments = [];
-    trackedPostpones.set(task.blockedBoundary, postponedSegments);
-  }
-  if (task.keyPath === null) {
+
+  const keyPath = task.keyPath;
+  if (keyPath === null) {
     throw new Error(
       'It should not be possible to postpone at the root. This is a bug in React.',
     );
   }
-  postponedSegments.push({
-    keyPath: task.keyPath,
-    segment,
-  });
+
+  const segmentNode: ResumableNode = [
+    RESUME_SEGMENT,
+    keyPath[1],
+    keyPath[2],
+    segment.id,
+  ];
+  addToResumableParent(segmentNode, keyPath, trackedPostpones);
 }
 
 function injectPostponedHole(
@@ -1727,9 +1746,6 @@ function injectPostponedHole(
     // Assume we are text embedded at the trailing edge
     true,
   );
-  newSegment.status = POSTPONED;
-  // We know that this will leave a hole so we might as well assign an ID now.
-  segment.id = request.nextSegmentId++;
   segment.children.push(newSegment);
   // Reset lastPushedText for current Segment since the new Segment "consumed" it
   segment.lastPushedText = false;
@@ -2200,9 +2216,6 @@ function retryTask(request: Request, task: Task): void {
         // an error.
         const trackedPostpones = request.trackedPostpones;
         task.abortSet.delete(task);
-        segment.status = POSTPONED;
-        // We know that this will leave a hole so we might as well assign an ID now.
-        segment.id = request.nextSegmentId++;
         const postponeInstance: Postpone = (x: any);
         logPostpone(request, postponeInstance.message);
         trackPostpone(request, trackedPostpones, task, segment);
@@ -2703,7 +2716,7 @@ function flushCompletedQueues(
         if (
           !enablePostpone ||
           request.trackedPostpones === null ||
-          request.trackedPostpones.size === 0
+          request.trackedPostpones.root.length === 0
         ) {
           writePostamble(destination, request.resumableState);
         }
@@ -2737,7 +2750,7 @@ export function startRender(request: Request): void {
 
 export function startPrerender(request: Request): void {
   // Start tracking postponed holes during this render.
-  request.trackedPostpones = new Map();
+  request.trackedPostpones = {workingMap: new Map(), root: []};
   startRender(request);
 }
 
@@ -2810,13 +2823,13 @@ export function getResumableState(request: Request): ResumableState {
 function addToResumableParent(
   node: ResumableNode,
   keyPath: KeyNode,
-  root: Array<ResumableNode>,
-  workingMap: Map<KeyNode, ResumableParentNode>,
+  trackedPostpones: PostponedHoles,
 ): void {
   const parentKeyPath = keyPath[0];
   if (parentKeyPath === null) {
-    root.push(node);
+    trackedPostpones.root.push(node);
   } else {
+    const workingMap = trackedPostpones.workingMap;
     let parentNode = workingMap.get(parentKeyPath);
     if (parentNode === undefined) {
       parentNode = ([
@@ -2826,7 +2839,7 @@ function addToResumableParent(
         ([]: Array<ResumableNode>),
       ]: ResumableParentNode);
       workingMap.set(parentKeyPath, parentNode);
-      addToResumableParent(parentNode, parentKeyPath, root, workingMap);
+      addToResumableParent(parentNode, parentKeyPath, trackedPostpones);
     }
     parentNode[3].push(node);
   }
@@ -2843,50 +2856,14 @@ export type PostponedState = {
 // Returns the state of a postponed request or null if nothing was postponed.
 export function getPostponedState(request: Request): null | PostponedState {
   const trackedPostpones = request.trackedPostpones;
-  if (trackedPostpones === null || trackedPostpones.size === 0) {
+  if (trackedPostpones === null || trackedPostpones.root.length === 0) {
     return null;
   }
-
-  // Next we build up a traversal tree of the resumable key paths and their
-  // paths through suspense boundaries.
-  const workingMap: Map<KeyNode, ResumableParentNode> = new Map();
-  const root: Array<ResumableNode> = [];
-
-  trackedPostpones.forEach(function (
-    segments: Array<PostponedSegment>,
-    boundary: Root | SuspenseBoundary,
-  ) {
-    if (boundary !== null && boundary.keyPath !== null) {
-      const keyPath = boundary.keyPath;
-      const children: Array<ResumableNode> = [];
-      const boundaryNode: ResumableParentNode = [
-        REPLAY_SUSPENSE_BOUNDARY,
-        keyPath[1],
-        keyPath[2],
-        children,
-        boundary.id,
-      ];
-      workingMap.set(boundary.keyPath, boundaryNode);
-      addToResumableParent(boundaryNode, keyPath, root, workingMap);
-    }
-    for (let i = 0; i < segments.length; i++) {
-      const postponedSegment = segments[i];
-      const keyPath = postponedSegment.keyPath;
-      const segmentNode: ResumableNode = [
-        RESUME_SEGMENT,
-        keyPath[1],
-        keyPath[2],
-        postponedSegment.segment.id,
-      ];
-      addToResumableParent(segmentNode, keyPath, root, workingMap);
-    }
-  });
-
   return {
     nextSegmentId: request.nextSegmentId,
     rootFormatContext: request.rootFormatContext,
     progressiveChunkSize: request.progressiveChunkSize,
     resumableState: request.resumableState,
-    resumablePath: root,
+    resumablePath: trackedPostpones.root,
   };
 }
