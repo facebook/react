@@ -52,10 +52,6 @@ type FixtureEntrypoint<T> = {
   // (if `fn` is a react component, this should be an array
   // with exactly one element -- props)
   params: Array<T>,
-  // True if fn returns jsx.
-  // False if fn returns non-jsx values that can be serialized.
-  //  (e.g. regular objects, sets, maps)
-  isComponent: boolean,
 }
 ```
 
@@ -68,7 +64,6 @@ function MyComponent(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: MyComponent,
   params: [{a: "hello ", b: "world"}],
-  isComponent: true,
 };
 ```
 

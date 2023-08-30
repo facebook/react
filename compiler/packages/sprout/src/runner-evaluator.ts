@@ -34,8 +34,14 @@ const PLACEHOLDER_VALUE = Symbol();
   params: Array<any>;
 }) {
   const result = props.fn(...props.params);
-
-  return toJSON(result);
+  // Hacky solution to determine whether the fixture returned jsx (which
+  // needs to passed through to React's runtime as-is) or a non-jsx value
+  // (which should be converted to a string).
+  if (typeof result === "object" && result != null && "$$typeof" in result) {
+    return result;
+  } else {
+    return toJSON(result);
+  }
 };
 
 function validateEntrypoint(entrypoint: object) {
@@ -43,14 +49,13 @@ function validateEntrypoint(entrypoint: object) {
     return "missing `params` property";
   } else if (!Array.isArray(entrypoint.params)) {
     return "unexpected type for `params` property";
-  } else if (!(`isComponent` in entrypoint)) {
-    return "missing `isComponent` property";
-  } else if (typeof entrypoint.isComponent !== "boolean") {
-    return "unexpected type for `isComponent` property";
-  } else if (!(`fn` in entrypoint)) {
+  } else if (!(`fn` in entrypoint) || entrypoint == null) {
     return "missing `fn` property";
-  } else if (!entrypoint.isComponent && typeof entrypoint.fn !== "function") {
-    return "expected `fn` property to be a function";
+  } else if (
+    typeof entrypoint.fn !== "function" &&
+    typeof entrypoint.fn !== "object"
+  ) {
+    return "expected `fn` property to be a function or React object";
   } else {
     return null;
   }
@@ -82,7 +87,6 @@ export function doEval(source: string): EvaluatorResult {
         FIXTURE_ENTRYPOINT: {
           fn: globalThis.placeholderFn,
           params: [],
-          isComponent: false,
         },
       };
       let reachedInvoke = false;
@@ -106,7 +110,7 @@ export function doEval(source: string): EvaluatorResult {
           };
         }
 
-        if (exports.FIXTURE_ENTRYPOINT.isComponent) {
+        if (typeof exports.FIXTURE_ENTRYPOINT.fn === 'object') {
           // try to run fixture as a react component
           const result = render(
             React.createElement(
