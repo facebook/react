@@ -4,6 +4,14 @@
 
 ---
 
+### 4.28.2
+August 30, 2023
+
+#### Bugfixes
+* fix[devtools/extension]: handle tab navigation events before react is loaded ([hoxyq](https://github.com/hoxyq) in [#27316](https://github.com/facebook/react/pull/27316))
+
+---
+
 ### 4.28.1
 August 29, 2023
 
