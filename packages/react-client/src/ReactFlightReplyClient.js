@@ -7,7 +7,12 @@
  * @flow
  */
 
-import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  FulfilledThenable,
+  RejectedThenable,
+  ReactCustomFormAction,
+} from 'shared/ReactTypes';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -23,10 +28,6 @@ import {
 } from 'shared/ReactSerializationErrors';
 
 import isArray from 'shared/isArray';
-import type {
-  FulfilledThenable,
-  RejectedThenable,
-} from '../../shared/ReactTypes';
 
 import {usedWithSSR} from './ReactFlightClientConfig';
 

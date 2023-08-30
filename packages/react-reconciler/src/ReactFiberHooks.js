@@ -2010,28 +2010,36 @@ function formStateReducer<S>(oldState: S, newState: S): S {
 
 function mountFormState<S, P>(
   action: (S, P) => Promise<S>,
-  initialState: S,
+  initialStateProp: S,
   permalink?: string,
 ): [S, (P) => void] {
+  let initialState = initialStateProp;
   if (getIsHydrating()) {
-    // TODO: If this function returns true, it means we should use the form
-    // state passed to hydrateRoot instead of initialState.
-    tryToClaimNextHydratableFormMarkerInstance(currentlyRenderingFiber);
+    const isMatching = tryToClaimNextHydratableFormMarkerInstance(
+      currentlyRenderingFiber,
+    );
+    const root: FiberRoot = (getWorkInProgressRoot(): any);
+    const ssrFormState = root.formState;
+    if (ssrFormState !== null && isMatching) {
+      initialState = ssrFormState[0];
+    }
   }
+  const initialStateThenable: Thenable<S> = {
+    status: 'fulfilled',
+    value: initialState,
+    then() {},
+  };
 
   // State hook. The state is stored in a thenable which is then unwrapped by
   // the `use` algorithm during render.
   const stateHook = mountWorkInProgressHook();
-  stateHook.memoizedState = stateHook.baseState = {
-    status: 'fulfilled',
-    value: initialState,
-  };
+  stateHook.memoizedState = stateHook.baseState = initialStateThenable;
   const stateQueue: UpdateQueue<Thenable<S>, Thenable<S>> = {
     pending: null,
     lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: formStateReducer,
-    lastRenderedState: (initialState: any),
+    lastRenderedState: initialStateThenable,
   };
   stateHook.queue = stateQueue;
   const setState: Dispatch<Thenable<S>> = (dispatchSetState.bind(

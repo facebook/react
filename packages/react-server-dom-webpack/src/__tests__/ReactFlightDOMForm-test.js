@@ -30,7 +30,9 @@ let React;
 let ReactDOMServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
+let ReactDOMClient;
 let useFormState;
+let act;
 
 describe('ReactFlightDOMForm', () => {
   beforeEach(() => {
@@ -48,6 +50,8 @@ describe('ReactFlightDOMForm', () => {
     ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
     ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
     ReactDOMServer = require('react-dom/server.edge');
+    ReactDOMClient = require('react-dom/client');
+    act = require('react-dom/test-utils').act;
     useFormState = require('react-dom').experimental_useFormState;
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -62,7 +66,13 @@ describe('ReactFlightDOMForm', () => {
       formData,
       webpackServerMap,
     );
-    return boundAction();
+    const returnValue = boundAction();
+    const formState = ReactServerDOMServer.decodeFormState(
+      await returnValue,
+      formData,
+      webpackServerMap,
+    );
+    return {returnValue, formState};
   }
 
   function submit(submitter) {
@@ -138,9 +148,9 @@ describe('ReactFlightDOMForm', () => {
 
     expect(foo).toBe(null);
 
-    const result = await submit(form);
+    const {returnValue} = await submit(form);
 
-    expect(result).toBe('hello');
+    expect(returnValue).toBe('hello');
     expect(foo).toBe('bar');
   });
 
@@ -170,9 +180,9 @@ describe('ReactFlightDOMForm', () => {
 
     expect(foo).toBe(null);
 
-    const result = await submit(form);
+    const {returnValue} = await submit(form);
 
-    expect(result).toBe('hi');
+    expect(returnValue).toBe('hi');
 
     expect(foo).toBe('bar');
   });
@@ -201,9 +211,9 @@ describe('ReactFlightDOMForm', () => {
 
     expect(foo).toBe(null);
 
-    const result = await submit(form);
+    const {returnValue} = await submit(form);
 
-    expect(result).toBe('hello');
+    expect(returnValue).toBe('hello');
     expect(foo).toBe('barobject');
   });
 
@@ -237,9 +247,9 @@ describe('ReactFlightDOMForm', () => {
 
     expect(foo).toBe(null);
 
-    const result = await submit(form.getElementsByTagName('button')[1]);
+    const {returnValue} = await submit(form.getElementsByTagName('button')[1]);
 
-    expect(result).toBe('helloc');
+    expect(returnValue).toBe('helloc');
     expect(foo).toBe('barc');
   });
 
@@ -269,9 +279,9 @@ describe('ReactFlightDOMForm', () => {
 
     expect(foo).toBe(null);
 
-    const result = await submit(form);
+    const {returnValue} = await submit(form);
 
-    expect(result).toBe('hello');
+    expect(returnValue).toBe('hello');
     expect(foo).toBe('barobject');
   });
 
@@ -305,23 +315,22 @@ describe('ReactFlightDOMForm', () => {
 
     expect(foo).toBe(null);
 
-    const result = await submit(form);
+    const {returnValue} = await submit(form);
 
-    expect(result).toBe('hello');
+    expect(returnValue).toBe('hello');
     expect(foo).toBe('barobject');
   });
 
   // @gate enableFormActions
   // @gate enableAsyncActions
   it("useFormState's dispatch binds the initial state to the provided action", async () => {
-    let serverActionResult = null;
-
-    const serverAction = serverExports(function action(prevState, formData) {
-      const newState = {
+    const serverAction = serverExports(async function action(
+      prevState,
+      formData,
+    ) {
+      return {
         count: prevState.count + parseInt(formData.get('incrementAmount'), 10),
       };
-      serverActionResult = newState;
-      return newState;
     });
 
     const initialState = {count: 1};
@@ -348,8 +357,82 @@ describe('ReactFlightDOMForm', () => {
     const span = container.getElementsByTagName('span')[0];
     expect(span.textContent).toBe('Count: 1');
 
-    await submit(form);
-    expect(serverActionResult.count).toBe(6);
+    const {returnValue} = await submit(form);
+    expect(await returnValue).toEqual({count: 6});
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('useFormState can reuse state during MPA form submission', async () => {
+    const serverAction = serverExports(async function action(
+      prevState,
+      formData,
+    ) {
+      return prevState + 1;
+    });
+
+    function Form({action}) {
+      const [count, dispatch] = useFormState(action, 1);
+      return <form action={dispatch}>{count}</form>;
+    }
+
+    function Client({action}) {
+      return (
+        <div>
+          <Form action={action} />
+          <Form action={action} />
+          <Form action={action} />
+        </div>
+      );
+    }
+
+    const ClientRef = await clientExports(Client);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={serverAction} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    expect(container.textContent).toBe('111');
+
+    // There are three identical forms. We're going to submit the second one.
+    const form = container.getElementsByTagName('form')[1];
+    const {formState} = await submit(form);
+
+    // Simulate an MPA form submission by resetting the container and
+    // rendering again.
+    container.innerHTML = '';
+
+    const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={serverAction} />,
+      webpackMap,
+    );
+    const postbackResponse =
+      ReactServerDOMClient.createFromReadableStream(postbackRscStream);
+    const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
+      postbackResponse,
+      {experimental_formState: formState},
+    );
+    await readIntoContainer(postbackSsrStream);
+
+    // Only the second form's state should have been updated.
+    expect(container.textContent).toBe('121');
+
+    // Test that it hydrates correctly
+    if (__DEV__) {
+      // TODO: Can't use our internal act() util that works in production
+      // because it works by overriding the timer APIs, which this test module
+      // also does. Remove dev condition once FlightServer.act() is available.
+      await act(() => {
+        ReactDOMClient.hydrateRoot(container, postbackResponse, {
+          experimental_formState: formState,
+        });
+      });
+      expect(container.textContent).toBe('121');
+    }
   });
 
   // @gate enableFormActions

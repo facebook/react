@@ -18,7 +18,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import type {ResumableState} from './ReactFizzConfig';
-import type {Task} from './ReactFizzServer';
+import type {Request, Task, KeyNode} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
 import type {TransitionStatus} from './ReactFizzConfig';
 
@@ -42,6 +42,7 @@ import {
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {getFormState} from './ReactFizzServer';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -64,6 +65,8 @@ type Hook = {
 
 let currentlyRenderingComponent: Object | null = null;
 let currentlyRenderingTask: Task | null = null;
+let currentlyRenderingRequest: Request | null = null;
+let currentlyRenderingKeyPath: KeyNode | null = null;
 let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
 // Whether the work-in-progress hook is a re-rendered hook
@@ -197,12 +200,16 @@ function createWorkInProgressHook(): Hook {
 }
 
 export function prepareToUseHooks(
+  request: Request,
   task: Task,
+  keyPath: KeyNode | null,
   componentIdentity: Object,
   prevThenableState: ThenableState | null,
 ): void {
   currentlyRenderingComponent = componentIdentity;
   currentlyRenderingTask = task;
+  currentlyRenderingRequest = request;
+  currentlyRenderingKeyPath = keyPath;
   if (__DEV__) {
     isInHookUserCodeInDev = false;
   }
@@ -287,6 +294,8 @@ export function resetHooksState(): void {
 
   currentlyRenderingComponent = null;
   currentlyRenderingTask = null;
+  currentlyRenderingRequest = null;
+  currentlyRenderingKeyPath = null;
   didScheduleRenderPhaseUpdate = false;
   firstWorkInProgressHook = null;
   numberOfReRenders = 0;
@@ -584,15 +593,43 @@ function useFormState<S, P>(
 ): [S, (P) => void] {
   resolveCurrentlyRenderingComponent();
 
-  // Count the number of useFormState hooks per component.
-  // TODO: We should also track which hook matches the form state passed at
-  // the root, if any. Matching is not yet implemented.
-  formStateCounter++;
+  // Count the number of useFormState hooks per component. We also use this to
+  // track the position of this useFormState hook relative to the other ones in
+  // this component, so we can generate a unique key for each one.
+  const formStateHookIndex = formStateCounter++;
+  const request: Request = (currentlyRenderingRequest: any);
 
-  // Bind the initial state to the first argument of the action.
-  // TODO: Use the keypath (or permalink) to check if there's matching state
-  // from the previous page.
-  const boundAction = action.bind(null, initialState);
+  // Append a node to the key path that represents the form state hook.
+  const componentKey: KeyNode | null = (currentlyRenderingKeyPath: any);
+  const key: KeyNode = [componentKey, null, formStateHookIndex];
+  const keyJSON = JSON.stringify(key);
+
+  // Get the form state. If we received form state from a previous page, then
+  // we should reuse that, if the action identity matches. Otherwise we'll use
+  // the initial state argument. We emit a comment marker into the stream
+  // that indicates whether the state was reused.
+  let state;
+  const postbackFormState = getFormState(request);
+  if (postbackFormState !== null) {
+    const postbackKey = postbackFormState[1];
+    // TODO: Compare the action identity, too
+    // TODO: If a permalink is used, disregard the key and compare that instead.
+    if (keyJSON === postbackKey) {
+      // This was a match.
+      formStateMatchingIndex = formStateHookIndex;
+      // Reuse the state that was submitted by the form.
+      state = postbackFormState[0];
+    } else {
+      state = initialState;
+    }
+  } else {
+    // TODO: As an optimization, Fizz should only emit these markers if form
+    // state is passed at the root.
+    state = initialState;
+  }
+
+  // Bind the state to the first argument of the action.
+  const boundAction = action.bind(null, state);
 
   // Wrap the action so the return value is void.
   const dispatch = (payload: P): void => {
@@ -605,6 +642,12 @@ function useFormState<S, P>(
     dispatch.$$FORM_ACTION = (prefix: string) => {
       // $FlowIgnore[prop-missing]
       const metadata: ReactCustomFormAction = boundAction.$$FORM_ACTION(prefix);
+
+      const formData = metadata.data;
+      if (formData) {
+        formData.append('$ACTION_KEY', keyJSON);
+      }
+
       // Override the action URL
       if (permalink !== undefined) {
         if (__DEV__) {
@@ -619,7 +662,7 @@ function useFormState<S, P>(
     // no effect. The form will have to be hydrated before it's submitted.
   }
 
-  return [initialState, dispatch];
+  return [state, dispatch];
 }
 
 function useId(): string {

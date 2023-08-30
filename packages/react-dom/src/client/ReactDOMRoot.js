@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {
   FiberRoot,
   TransitionTracingCallbacks,
@@ -21,6 +21,8 @@ import {
   enableHostSingletons,
   allowConcurrentByDefault,
   disableCommentsAsDOMContainers,
+  enableAsyncActions,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 
 import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
@@ -55,6 +57,7 @@ export type HydrateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
+  experimental_formState?: ReactFormState<any> | null,
   ...
 };
 
@@ -302,6 +305,7 @@ export function hydrateRoot(
   let identifierPrefix = '';
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
+  let formState = null;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -321,6 +325,11 @@ export function hydrateRoot(
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
+    if (enableAsyncActions && enableFormActions) {
+      if (options.experimental_formState !== undefined) {
+        formState = options.experimental_formState;
+      }
+    }
   }
 
   const root = createHydrationContainer(
@@ -334,6 +343,7 @@ export function hydrateRoot(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    formState,
   );
   markContainerAsRoot(root.current, container);
   Dispatcher.current = ReactDOMClientDispatcher;

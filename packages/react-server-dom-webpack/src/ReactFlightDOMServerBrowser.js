@@ -25,7 +25,10 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
-import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+import {
+  decodeAction,
+  decodeFormState,
+} from 'react-server/src/ReactFlightActionServer';
 
 export {
   registerServerReference,
@@ -97,4 +100,4 @@ function decodeReply<T>(
   return getRoot(response);
 }
 
-export {renderToReadableStream, decodeReply, decodeAction};
+export {renderToReadableStream, decodeReply, decodeAction, decodeFormState};
