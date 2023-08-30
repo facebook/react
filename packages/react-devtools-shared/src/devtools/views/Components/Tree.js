@@ -357,9 +357,27 @@ export default function Tree(props: Props): React.Node {
     clearErrorsAndWarningsAPI({bridge, store});
   };
 
+  const zeroElementsNotice = (
+    <div className={styles.ZeroElementsNotice}>
+      <p>Loading React Element Tree...</p>
+      <p>
+        If this seems stuck, please follow the{' '}
+        <a
+          className={styles.Link}
+          href="https://github.com/facebook/react/blob/main/packages/react-devtools/README.md#the-react-tab-shows-no-components"
+          target="_blank">
+          troubleshooting instructions
+        </a>
+        .
+      </p>
+    </div>
+  );
+
   const content =
     selectedTabID === 'summary' ? (
       <ComponentSummary />
+    ) : numElements === 0 ? (
+      zeroElementsNotice
     ) : (
       <div
         className={styles.AutoSizerWrapper}
@@ -372,7 +390,6 @@ export default function Tree(props: Props): React.Node {
         tabIndex={0}>
         <AutoSizer>
           {({height, width}) => (
-            // $FlowFixMe https://github.com/facebook/flow/issues/7341
             <FixedSizeList
               className={styles.List}
               height={height}
@@ -389,22 +406,6 @@ export default function Tree(props: Props): React.Node {
         </AutoSizer>
       </div>
     );
-
-  const zeroElementsNotice = (
-    <div className={styles.ZeroElementsNotice}>
-      <p>Loading React Element Tree...</p>
-      <p>
-        If this seems stuck, please follow the{' '}
-        <a
-          className={styles.Link}
-          href="https://github.com/facebook/react/blob/main/packages/react-devtools/README.md#the-react-tab-shows-no-components"
-          target="_blank">
-          troubleshooting instructions
-        </a>
-        .
-      </p>
-    </div>
-  );
 
   return (
     <TreeFocusedContext.Provider value={treeFocused}>

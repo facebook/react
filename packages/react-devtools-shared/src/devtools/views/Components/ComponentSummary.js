@@ -13,6 +13,8 @@ type ListItem = {|
   instanceCount: number,
 |};
 
+type Props = {};
+
 export default function ComponentSummary(props: Props) {
   const store = useContext(StoreContext);
 
