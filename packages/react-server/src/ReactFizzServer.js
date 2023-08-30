@@ -1676,6 +1676,7 @@ function renderChildrenArray(
 }
 
 function trackPostpone(
+  request: Request,
   trackedPostpones: PostponedHoles,
   task: Task,
   segment: Segment,
@@ -1683,6 +1684,12 @@ function trackPostpone(
   const boundary = task.blockedBoundary;
   if (boundary !== null && boundary.status === PENDING) {
     boundary.status = POSTPONED;
+    // We need to eagerly assign it an ID because we'll need to refer to
+    // it before flushing and we know that we can't inline it.
+    boundary.id = assignSuspenseBoundaryID(
+      request.renderState,
+      request.resumableState,
+    );
   }
   let postponedSegments = trackedPostpones.get(task.blockedBoundary);
   if (postponedSegments === undefined) {
@@ -1721,6 +1728,8 @@ function injectPostponedHole(
     true,
   );
   newSegment.status = POSTPONED;
+  // We know that this will leave a hole so we might as well assign an ID now.
+  segment.id = request.nextSegmentId++;
   segment.children.push(newSegment);
   // Reset lastPushedText for current Segment since the new Segment "consumed" it
   segment.lastPushedText = false;
@@ -1853,7 +1862,7 @@ function renderNode(
           task,
           postponeInstance.message,
         );
-        trackPostpone(trackedPostpones, task, postponedSegment);
+        trackPostpone(request, trackedPostpones, task, postponedSegment);
 
         // Restore the context. We assume that this will be restored by the inner
         // functions in case nothing throws so we don't use "finally" here.
@@ -2192,9 +2201,11 @@ function retryTask(request: Request, task: Task): void {
         const trackedPostpones = request.trackedPostpones;
         task.abortSet.delete(task);
         segment.status = POSTPONED;
+        // We know that this will leave a hole so we might as well assign an ID now.
+        segment.id = request.nextSegmentId++;
         const postponeInstance: Postpone = (x: any);
         logPostpone(request, postponeInstance.message);
-        trackPostpone(trackedPostpones, task, segment);
+        trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, task.blockedBoundary, segment);
       }
     }
@@ -2280,11 +2291,14 @@ function flushSubtree(
 ): boolean {
   segment.parentFlushed = true;
   switch (segment.status) {
-    case PENDING:
-    case POSTPONED: {
+    case PENDING: {
       // We're emitting a placeholder for this segment to be filled in later.
       // Therefore we'll need to assign it an ID - to refer to it by.
-      const segmentID = (segment.id = request.nextSegmentId++);
+      segment.id = request.nextSegmentId++;
+      // Fallthrough
+    }
+    case POSTPONED: {
+      const segmentID = segment.id;
       // When this segment finally completes it won't be embedded in text since it will flush separately
       segment.lastPushedText = false;
       segment.textEmbedded = false;
@@ -2355,6 +2369,12 @@ function flushSegment(
       request.renderState,
     );
   } else if (boundary.status !== COMPLETED) {
+    if (boundary.status === PENDING) {
+      boundary.id = assignSuspenseBoundaryID(
+        request.renderState,
+        request.resumableState,
+      );
+    }
     // This boundary is still loading. Emit a pending suspense boundary wrapper.
 
     // Assign an ID to refer to the future content by.
@@ -2365,10 +2385,7 @@ function flushSegment(
     }
 
     /// This is the first time we should have referenced this ID.
-    const id = (boundary.id = assignSuspenseBoundaryID(
-      request.renderState,
-      request.resumableState,
-    ));
+    const id = boundary.id;
 
     writeStartPendingSuspenseBoundary(destination, request.renderState, id);
 
@@ -2831,9 +2848,7 @@ export function getPostponedState(request: Request): null | PostponedState {
   }
 
   // Next we build up a traversal tree of the resumable key paths and their
-  // paths through suspense boundaries. We do this after the fact as a second
-  // pass because the IDs aren't assigned until things are flushed so we don't
-  // have them at the time they're added to the map.
+  // paths through suspense boundaries.
   const workingMap: Map<KeyNode, ResumableParentNode> = new Map();
   const root: Array<ResumableNode> = [];
 
