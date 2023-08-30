@@ -1444,7 +1444,7 @@ export default class Store extends EventEmitter<{
     copy(text);
   };
 
-  getAllElements = (): Array<{|id: number, displayName: null | string|}> => {
+  getAllElements = (): Array<{id: number, displayName: string | null}> => {
     return Array.from(this._idToElement, ([, value]) => ({
       id: value.id,
       displayName: value.displayName,
