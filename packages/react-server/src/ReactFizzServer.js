@@ -154,9 +154,38 @@ const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 // Linked list representing the identity of a component given the component/tag name and key.
 // The name might be minified but we assume that it's going to be the same generated name. Typically
 // because it's just the same compiled output in practice.
-type KeyNode =
-  | null
-  | [KeyNode /* parent */, string | null /* name */, string | number /* key */];
+type KeyNode = [
+  Root | KeyNode /* parent */,
+  string | null /* name */,
+  string | number /* key */,
+];
+
+const REPLAY_NODE = 0;
+const REPLAY_SUSPENSE_BOUNDARY = 1;
+const RESUME_SEGMENT = 2;
+
+type ResumableParentNode =
+  | [
+      0, // REPLAY_NODE
+      string | null /* name */,
+      string | number /* key */,
+      Array<ResumableNode> /* children */,
+    ]
+  | [
+      1, // REPLAY_SUSPENSE_BOUNDARY
+      string | null /* name */,
+      string | number /* key */,
+      Array<ResumableNode> /* children */,
+      SuspenseBoundaryID,
+    ];
+type ResumableNode =
+  | ResumableParentNode
+  | [
+      2, // RESUME_SEGMENT
+      string | null /* name */,
+      string | number /* key */,
+      number /* segment id */,
+    ];
 
 type PostponedSegment = {
   keyPath: KeyNode,
@@ -184,7 +213,7 @@ type SuspenseBoundary = {
   byteSize: number, // used to determine whether to inline children boundaries.
   fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
   resources: BoundaryResources,
-  keyPath: KeyNode,
+  keyPath: Root | KeyNode,
 };
 
 export type Task = {
@@ -193,7 +222,7 @@ export type Task = {
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<Task>, // the abortable set that this task belongs to
-  keyPath: KeyNode, // the path of all parent keys currently rendering
+  keyPath: Root | KeyNode, // the path of all parent keys currently rendering
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
@@ -390,7 +419,7 @@ function pingTask(request: Request, task: Task): void {
 function createSuspenseBoundary(
   request: Request,
   fallbackAbortableTasks: Set<Task>,
-  keyPath: KeyNode,
+  keyPath: Root | KeyNode,
 ): SuspenseBoundary {
   return {
     status: PENDING,
@@ -414,7 +443,7 @@ function createTask(
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
   abortSet: Set<Task>,
-  keyPath: KeyNode,
+  keyPath: Root | KeyNode,
   legacyContext: LegacyContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
@@ -1661,6 +1690,11 @@ function trackPostpone(
     postponedSegments = [];
     trackedPostpones.set(task.blockedBoundary, postponedSegments);
   }
+  if (task.keyPath === null) {
+    throw new Error(
+      'It should not be possible to postpone at the root. This is a bug in React.',
+    );
+  }
   postponedSegments.push({
     keyPath: task.keyPath,
     segment,
@@ -2756,25 +2790,88 @@ export function getResumableState(request: Request): ResumableState {
   return request.resumableState;
 }
 
+function addToResumableParent(
+  node: ResumableNode,
+  keyPath: KeyNode,
+  root: Array<ResumableNode>,
+  workingMap: Map<KeyNode, ResumableParentNode>,
+): void {
+  const parentKeyPath = keyPath[0];
+  if (parentKeyPath === null) {
+    root.push(node);
+  } else {
+    let parentNode = workingMap.get(parentKeyPath);
+    if (parentNode === undefined) {
+      parentNode = ([
+        REPLAY_NODE,
+        parentKeyPath[1],
+        parentKeyPath[2],
+        ([]: Array<ResumableNode>),
+      ]: ResumableParentNode);
+      workingMap.set(parentKeyPath, parentNode);
+      addToResumableParent(parentNode, parentKeyPath, root, workingMap);
+    }
+    parentNode[3].push(node);
+  }
+}
+
 export type PostponedState = {
   nextSegmentId: number,
   rootFormatContext: FormatContext,
   progressiveChunkSize: number,
   resumableState: ResumableState,
+  resumablePath: Array<ResumableNode>,
 };
 
 // Returns the state of a postponed request or null if nothing was postponed.
 export function getPostponedState(request: Request): null | PostponedState {
-  if (
-    request.trackedPostpones === null ||
-    request.trackedPostpones.size === 0
-  ) {
+  const trackedPostpones = request.trackedPostpones;
+  if (trackedPostpones === null || trackedPostpones.size === 0) {
     return null;
   }
+
+  // Next we build up a traversal tree of the resumable key paths and their
+  // paths through suspense boundaries. We do this after the fact as a second
+  // pass because the IDs aren't assigned until things are flushed so we don't
+  // have them at the time they're added to the map.
+  const workingMap: Map<KeyNode, ResumableParentNode> = new Map();
+  const root: Array<ResumableNode> = [];
+
+  trackedPostpones.forEach(function (
+    segments: Array<PostponedSegment>,
+    boundary: Root | SuspenseBoundary,
+  ) {
+    if (boundary !== null && boundary.keyPath !== null) {
+      const keyPath = boundary.keyPath;
+      const children: Array<ResumableNode> = [];
+      const boundaryNode: ResumableParentNode = [
+        REPLAY_SUSPENSE_BOUNDARY,
+        keyPath[1],
+        keyPath[2],
+        children,
+        boundary.id,
+      ];
+      workingMap.set(boundary.keyPath, boundaryNode);
+      addToResumableParent(boundaryNode, keyPath, root, workingMap);
+    }
+    for (let i = 0; i < segments.length; i++) {
+      const postponedSegment = segments[i];
+      const keyPath = postponedSegment.keyPath;
+      const segmentNode: ResumableNode = [
+        RESUME_SEGMENT,
+        keyPath[1],
+        keyPath[2],
+        postponedSegment.segment.id,
+      ];
+      addToResumableParent(segmentNode, keyPath, root, workingMap);
+    }
+  });
+
   return {
     nextSegmentId: request.nextSegmentId,
     rootFormatContext: request.rootFormatContext,
     progressiveChunkSize: request.progressiveChunkSize,
     resumableState: request.resumableState,
+    resumablePath: root,
   };
 }
