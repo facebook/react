@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-528c5df7";
+var ReactVersion = "18.3.0-www-modern-a9c5f511";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -9375,14 +9375,14 @@ function useFormState(action, initialState, permalink) {
     // $FlowIgnore[prop-missing]
     dispatch.$$FORM_ACTION = function (prefix) {
       // $FlowIgnore[prop-missing]
-      var metadata = boundAction.$$FORM_ACTION(prefix); // Override the target URL
+      var metadata = boundAction.$$FORM_ACTION(prefix); // Override the action URL
 
       if (permalink !== undefined) {
         {
           checkAttributeStringCoercion(permalink, "target");
         }
 
-        metadata.target = permalink + "";
+        metadata.action = permalink + "";
       }
 
       return metadata;

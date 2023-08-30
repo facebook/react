@@ -2786,7 +2786,7 @@ function useFormState(action, initialState, permalink) {
   "function" === typeof boundAction.$$FORM_ACTION &&
     (dispatch.$$FORM_ACTION = function (prefix) {
       prefix = boundAction.$$FORM_ACTION(prefix);
-      void 0 !== permalink && (prefix.target = permalink + "");
+      void 0 !== permalink && (prefix.action = permalink + "");
       return prefix;
     });
   return [initialState, dispatch];
@@ -4415,4 +4415,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-31e5c37c";
+exports.version = "18.3.0-www-classic-d7739767";

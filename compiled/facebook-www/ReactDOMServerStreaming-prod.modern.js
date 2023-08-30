@@ -2634,7 +2634,7 @@ function useFormState(action, initialState, permalink) {
   "function" === typeof boundAction.$$FORM_ACTION &&
     (dispatch.$$FORM_ACTION = function (prefix) {
       prefix = boundAction.$$FORM_ACTION(prefix);
-      void 0 !== permalink && (prefix.target = permalink + "");
+      void 0 !== permalink && (prefix.action = permalink + "");
       return prefix;
     });
   return [initialState, dispatch];

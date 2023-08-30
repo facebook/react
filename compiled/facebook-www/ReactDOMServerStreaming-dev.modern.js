@@ -9281,14 +9281,14 @@ function useFormState(action, initialState, permalink) {
     // $FlowIgnore[prop-missing]
     dispatch.$$FORM_ACTION = function (prefix) {
       // $FlowIgnore[prop-missing]
-      var metadata = boundAction.$$FORM_ACTION(prefix); // Override the target URL
+      var metadata = boundAction.$$FORM_ACTION(prefix); // Override the action URL
 
       if (permalink !== undefined) {
         {
           checkAttributeStringCoercion(permalink, "target");
         }
 
-        metadata.target = permalink + "";
+        metadata.action = permalink + "";
       }
 
       return metadata;
