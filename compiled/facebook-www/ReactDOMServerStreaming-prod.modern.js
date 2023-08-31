@@ -3048,17 +3048,19 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           ref = props.fallback;
           props = props.children;
           contextType = new Set();
+          partial = task.keyPath;
           partial = {
+            status: 0,
             id: null,
             rootSegmentID: -1,
             parentFlushed: !1,
             pendingTasks: 0,
-            forceClientRender: !1,
             completedSegments: [],
             byteSize: 0,
             fallbackAbortableTasks: contextType,
             errorDigest: null,
-            resources: new Set()
+            resources: new Set(),
+            keyPath: partial
           };
           var boundarySegment = createPendingSegment(
             request,
@@ -3090,12 +3092,14 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
                 contentRootSegment.chunks.push("\x3c!-- --\x3e"),
               (contentRootSegment.status = 1),
               queueCompletedSegment(partial, contentRootSegment),
-              0 === partial.pendingTasks)
-            )
+              0 === partial.pendingTasks && 0 === partial.status)
+            ) {
+              partial.status = 1;
               break a;
+            }
           } catch (error) {
             (contentRootSegment.status = 4),
-              (partial.forceClientRender = !0),
+              (partial.status = 4),
               (JSCompiler_inline_result = logRecoverableError(request, error)),
               (partial.errorDigest = JSCompiler_inline_result);
           } finally {
@@ -3387,8 +3391,8 @@ function abortTask(task, request, error) {
         2 !== request.status &&
         (logRecoverableError(request, error), fatalError(request, error)))
     : (boundary.pendingTasks--,
-      boundary.forceClientRender ||
-        ((boundary.forceClientRender = !0),
+      4 !== boundary.status &&
+        ((boundary.status = 4),
         (boundary.errorDigest = request.onError(error)),
         boundary.parentFlushed &&
           request.clientRenderedBoundaries.push(boundary)),
@@ -3427,9 +3431,10 @@ function finishedTask(request, boundary, segment) {
       boundary());
   } else
     boundary.pendingTasks--,
-      boundary.forceClientRender ||
+      4 !== boundary.status &&
         (0 === boundary.pendingTasks
-          ? (segment.parentFlushed &&
+          ? (0 === boundary.status && (boundary.status = 1),
+            segment.parentFlushed &&
               1 === segment.status &&
               queueCompletedSegment(boundary, segment),
             boundary.parentFlushed &&
@@ -3449,7 +3454,9 @@ function flushSubtree(request, destination, segment) {
   segment.parentFlushed = !0;
   switch (segment.status) {
     case 0:
-      var segmentID = (segment.id = request.nextSegmentId++);
+      segment.id = request.nextSegmentId++;
+    case 5:
+      var segmentID = segment.id;
       segment.lastPushedText = !1;
       segment.textEmbedded = !1;
       request = request.renderState;
@@ -3484,7 +3491,7 @@ function flushSegment(request, destination, segment) {
   var boundary = segment.boundary;
   if (null === boundary) return flushSubtree(request, destination, segment);
   boundary.parentFlushed = !0;
-  if (boundary.forceClientRender)
+  if (4 === boundary.status)
     (boundary = boundary.errorDigest),
       writeChunkAndReturn(destination, "\x3c!--$!--\x3e"),
       writeChunk(destination, "<template"),
@@ -3494,19 +3501,21 @@ function flushSegment(request, destination, segment) {
         writeChunk(destination, '"')),
       writeChunkAndReturn(destination, "></template>"),
       flushSubtree(request, destination, segment);
-  else if (0 < boundary.pendingTasks) {
+  else if (1 !== boundary.status) {
+    if (0 === boundary.status) {
+      var JSCompiler_inline_result = request.renderState;
+      var generatedID = request.resumableState.nextSuspenseID++;
+      JSCompiler_inline_result =
+        JSCompiler_inline_result.boundaryPrefix + generatedID.toString(16);
+      boundary.id = JSCompiler_inline_result;
+    }
     boundary.rootSegmentID = request.nextSegmentId++;
     0 < boundary.completedSegments.length &&
       request.partialBoundaries.push(boundary);
-    var JSCompiler_inline_result = request.renderState;
-    var generatedID = request.resumableState.nextSuspenseID++;
-    JSCompiler_inline_result =
-      JSCompiler_inline_result.boundaryPrefix + generatedID.toString(16);
-    boundary = boundary.id = JSCompiler_inline_result;
     writeStartPendingSuspenseBoundary(
       destination,
       request.renderState,
-      boundary
+      boundary.id
     );
     flushSubtree(request, destination, segment);
   } else if (boundary.byteSize > request.progressiveChunkSize)
@@ -4100,8 +4109,8 @@ exports.renderNextChunk = function (stream) {
               null === boundary
                 ? fatalError(request, error$jscomp$0)
                 : (boundary.pendingTasks--,
-                  boundary.forceClientRender ||
-                    ((boundary.forceClientRender = !0),
+                  4 !== boundary.status &&
+                    ((boundary.status = 4),
                     (boundary.errorDigest = errorDigest),
                     boundary.parentFlushed &&
                       request.clientRenderedBoundaries.push(boundary)));
@@ -4342,6 +4351,7 @@ exports.renderToStream = function (children, options) {
     flushScheduled: !1,
     resumableState: bootstrapScriptContent,
     renderState: bootstrapScripts,
+    rootFormatContext: bootstrapModules,
     progressiveChunkSize:
       void 0 === externalRuntimeConfig ? 12800 : externalRuntimeConfig,
     status: 0,
@@ -4355,6 +4365,7 @@ exports.renderToStream = function (children, options) {
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    trackedPostpones: null,
     onError: void 0 === idPrefix ? defaultErrorHandler : idPrefix,
     onPostpone: noop,
     onAllReady: noop,

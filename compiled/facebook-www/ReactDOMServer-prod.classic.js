@@ -2925,6 +2925,7 @@ function createRequest(
     flushScheduled: !1,
     resumableState: resumableState,
     renderState: renderState,
+    rootFormatContext: rootFormatContext,
     progressiveChunkSize:
       void 0 === progressiveChunkSize ? 12800 : progressiveChunkSize,
     status: 0,
@@ -2938,6 +2939,7 @@ function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    trackedPostpones: null,
     onError: void 0 === onError ? defaultErrorHandler : onError,
     onPostpone: void 0 === onPostpone ? noop : onPostpone,
     onAllReady: void 0 === onAllReady ? noop : onAllReady,
@@ -3271,17 +3273,19 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           prevThenableState = props.fallback;
           props = props.children;
           ref = new Set();
+          initialState = task.keyPath;
           initialState = {
+            status: 0,
             id: null,
             rootSegmentID: -1,
             parentFlushed: !1,
             pendingTasks: 0,
-            forceClientRender: !1,
             completedSegments: [],
             byteSize: 0,
             fallbackAbortableTasks: ref,
             errorDigest: null,
-            resources: new Set()
+            resources: new Set(),
+            keyPath: initialState
           };
           contextType = createPendingSegment(
             request,
@@ -3314,12 +3318,14 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
                   oldReplace.chunks.push("\x3c!-- --\x3e")),
               (oldReplace.status = 1),
               queueCompletedSegment(initialState, oldReplace),
-              0 === initialState.pendingTasks)
-            )
+              0 === initialState.pendingTasks && 0 === initialState.status)
+            ) {
+              initialState.status = 1;
               break a;
+            }
           } catch (error) {
             (oldReplace.status = 4),
-              (initialState.forceClientRender = !0),
+              (initialState.status = 4),
               (JSCompiler_inline_result = logRecoverableError(request, error)),
               (initialState.errorDigest = JSCompiler_inline_result);
           } finally {
@@ -3600,8 +3606,8 @@ function abortTask(task, request, error) {
         2 !== request.status &&
         (logRecoverableError(request, error), fatalError(request, error)))
     : (boundary.pendingTasks--,
-      boundary.forceClientRender ||
-        ((boundary.forceClientRender = !0),
+      4 !== boundary.status &&
+        ((boundary.status = 4),
         (boundary.errorDigest = request.onError(error)),
         boundary.parentFlushed &&
           request.clientRenderedBoundaries.push(boundary)),
@@ -3638,9 +3644,10 @@ function finishedTask(request, boundary, segment) {
       boundary());
   } else
     boundary.pendingTasks--,
-      boundary.forceClientRender ||
+      4 !== boundary.status &&
         (0 === boundary.pendingTasks
-          ? (segment.parentFlushed &&
+          ? (0 === boundary.status && (boundary.status = 1),
+            segment.parentFlushed &&
               1 === segment.status &&
               queueCompletedSegment(boundary, segment),
             boundary.parentFlushed &&
@@ -3729,8 +3736,8 @@ function performWork(request$jscomp$1) {
               null === boundary
                 ? fatalError(request$jscomp$0, error$jscomp$0)
                 : (boundary.pendingTasks--,
-                  boundary.forceClientRender ||
-                    ((boundary.forceClientRender = !0),
+                  4 !== boundary.status &&
+                    ((boundary.status = 4),
                     (boundary.errorDigest = errorDigest),
                     boundary.parentFlushed &&
                       request$jscomp$0.clientRenderedBoundaries.push(
@@ -3766,7 +3773,9 @@ function flushSubtree(request, destination, segment) {
   segment.parentFlushed = !0;
   switch (segment.status) {
     case 0:
-      var segmentID = (segment.id = request.nextSegmentId++);
+      segment.id = request.nextSegmentId++;
+    case 5:
+      var segmentID = segment.id;
       segment.lastPushedText = !1;
       segment.textEmbedded = !1;
       request = request.renderState;
@@ -3799,7 +3808,7 @@ function flushSegment(request, destination, segment) {
   var boundary = segment.boundary;
   if (null === boundary) return flushSubtree(request, destination, segment);
   boundary.parentFlushed = !0;
-  if (boundary.forceClientRender)
+  if (4 === boundary.status)
     return (
       request.renderState.generateStaticMarkup ||
         ((boundary = boundary.errorDigest),
@@ -3817,19 +3826,21 @@ function flushSegment(request, destination, segment) {
         : destination.push("\x3c!--/$--\x3e")),
       request
     );
-  if (0 < boundary.pendingTasks) {
+  if (1 !== boundary.status) {
+    if (0 === boundary.status) {
+      var JSCompiler_inline_result = request.renderState;
+      var generatedID = request.resumableState.nextSuspenseID++;
+      JSCompiler_inline_result =
+        JSCompiler_inline_result.boundaryPrefix + generatedID.toString(16);
+      boundary.id = JSCompiler_inline_result;
+    }
     boundary.rootSegmentID = request.nextSegmentId++;
     0 < boundary.completedSegments.length &&
       request.partialBoundaries.push(boundary);
-    var JSCompiler_inline_result = request.renderState;
-    var generatedID = request.resumableState.nextSuspenseID++;
-    JSCompiler_inline_result =
-      JSCompiler_inline_result.boundaryPrefix + generatedID.toString(16);
-    boundary = boundary.id = JSCompiler_inline_result;
     writeStartPendingSuspenseBoundary(
       destination,
       request.renderState,
-      boundary
+      boundary.id
     );
     flushSubtree(request, destination, segment);
     return destination.push("\x3c!--/$--\x3e");
@@ -4415,4 +4426,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-d7739767";
+exports.version = "18.3.0-www-classic-fde0e1c7";

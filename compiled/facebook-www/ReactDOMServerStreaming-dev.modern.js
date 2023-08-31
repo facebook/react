@@ -9454,14 +9454,14 @@ function getStackByComponentStackNode(componentStack) {
 var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 var ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
 var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame; // Linked list representing the identity of a component given the component/tag name and key.
-// The name might be minified but we assume that it's going to be the same generated name. Typically
-// because it's just the same compiled output in practice.
+var CLIENT_RENDERED = 4; // if it errors or infinitely suspends
 
 var PENDING = 0;
 var COMPLETED = 1;
 var FLUSHED = 2;
 var ABORTED = 3;
 var ERRORED = 4;
+var POSTPONED = 5;
 var OPEN = 0;
 var CLOSING = 1;
 var CLOSED = 2; // This is a default heuristic for how to split up the HTML content into progressive
@@ -9511,6 +9511,7 @@ function createRequest(
     flushScheduled: false,
     resumableState: resumableState,
     renderState: renderState,
+    rootFormatContext: rootFormatContext,
     progressiveChunkSize:
       progressiveChunkSize === undefined
         ? DEFAULT_PROGRESSIVE_CHUNK_SIZE
@@ -9526,6 +9527,7 @@ function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    trackedPostpones: null,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onPostpone: onPostpone === undefined ? noop : onPostpone,
     onAllReady: onAllReady === undefined ? noop : onAllReady,
@@ -9575,18 +9577,19 @@ function pingTask(request, task) {
   }
 }
 
-function createSuspenseBoundary(request, fallbackAbortableTasks) {
+function createSuspenseBoundary(request, fallbackAbortableTasks, keyPath) {
   return {
+    status: PENDING,
     id: UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
-    forceClientRender: false,
     completedSegments: [],
     byteSize: 0,
     fallbackAbortableTasks: fallbackAbortableTasks,
     errorDigest: null,
-    resources: createBoundaryResources()
+    resources: createBoundaryResources(),
+    keyPath: keyPath
   };
 }
 
@@ -9779,7 +9782,11 @@ function renderSuspenseBoundary(request, task, props) {
   var fallback = props.fallback;
   var content = props.children;
   var fallbackAbortSet = new Set();
-  var newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
+  var newBoundary = createSuspenseBoundary(
+    request,
+    fallbackAbortSet,
+    task.keyPath
+  );
   var insertionIndex = parentSegment.chunks.length; // The children of the boundary segment is actually the fallback.
 
   var boundarySegment = createPendingSegment(
@@ -9834,16 +9841,17 @@ function renderSuspenseBoundary(request, task, props) {
     contentRootSegment.status = COMPLETED;
     queueCompletedSegment(newBoundary, contentRootSegment);
 
-    if (newBoundary.pendingTasks === 0) {
-      // This must have been the last segment we were waiting on. This boundary is now complete.
+    if (newBoundary.pendingTasks === 0 && newBoundary.status === PENDING) {
+      newBoundary.status = COMPLETED; // This must have been the last segment we were waiting on. This boundary is now complete.
       // Therefore we won't need the fallback. We early return so that we don't have to create
       // the fallback.
+
       popComponentStackInDEV(task);
       return;
     }
   } catch (error) {
     contentRootSegment.status = ERRORED;
-    newBoundary.forceClientRender = true;
+    newBoundary.status = CLIENT_RENDERED;
     var errorDigest;
 
     {
@@ -10785,43 +10793,45 @@ function renderNode(request, task, node, childIndex) {
           // (unstable) API for suspending. This implementation detail can change
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
-        : thrownValue; // $FlowFixMe[method-unbinding]
+        : thrownValue;
 
-    if (typeof x === "object" && x !== null && typeof x.then === "function") {
-      var wakeable = x;
-      var thenableState = getThenableStateAfterSuspending();
-      spawnNewSuspendedTask(request, task, thenableState, wakeable); // Restore the context. We assume that this will be restored by the inner
-      // functions in case nothing throws so we don't use "finally" here.
+    if (typeof x === "object" && x !== null) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof x.then === "function") {
+        var wakeable = x;
+        var thenableState = getThenableStateAfterSuspending();
+        spawnNewSuspendedTask(request, task, thenableState, wakeable); // Restore the context. We assume that this will be restored by the inner
+        // functions in case nothing throws so we don't use "finally" here.
 
-      task.blockedSegment.formatContext = previousFormatContext;
-      task.legacyContext = previousLegacyContext;
-      task.context = previousContext;
-      task.keyPath = previousKeyPath; // Restore all active ReactContexts to what they were before.
+        task.blockedSegment.formatContext = previousFormatContext;
+        task.legacyContext = previousLegacyContext;
+        task.context = previousContext;
+        task.keyPath = previousKeyPath; // Restore all active ReactContexts to what they were before.
 
-      switchContext(previousContext);
+        switchContext(previousContext);
 
-      {
-        task.componentStack = previousComponentStack;
+        {
+          task.componentStack = previousComponentStack;
+        }
+
+        return;
       }
+    } // Restore the context. We assume that this will be restored by the inner
+    // functions in case nothing throws so we don't use "finally" here.
 
-      return;
-    } else {
-      // Restore the context. We assume that this will be restored by the inner
-      // functions in case nothing throws so we don't use "finally" here.
-      task.blockedSegment.formatContext = previousFormatContext;
-      task.legacyContext = previousLegacyContext;
-      task.context = previousContext;
-      task.keyPath = previousKeyPath; // Restore all active ReactContexts to what they were before.
+    task.blockedSegment.formatContext = previousFormatContext;
+    task.legacyContext = previousLegacyContext;
+    task.context = previousContext;
+    task.keyPath = previousKeyPath; // Restore all active ReactContexts to what they were before.
 
-      switchContext(previousContext);
+    switchContext(previousContext);
 
-      {
-        task.componentStack = previousComponentStack;
-      } // We assume that we don't need the correct context.
-      // Let's terminate the rest of the tree and don't render any siblings.
+    {
+      task.componentStack = previousComponentStack;
+    } // We assume that we don't need the correct context.
+    // Let's terminate the rest of the tree and don't render any siblings.
 
-      throw x;
-    }
+    throw x;
   }
 }
 
@@ -10838,8 +10848,8 @@ function erroredTask(request, boundary, segment, error) {
   } else {
     boundary.pendingTasks--;
 
-    if (!boundary.forceClientRender) {
-      boundary.forceClientRender = true;
+    if (boundary.status !== CLIENT_RENDERED) {
+      boundary.status = CLIENT_RENDERED;
       boundary.errorDigest = errorDigest;
 
       {
@@ -10894,8 +10904,8 @@ function abortTask(task, request, error) {
   } else {
     boundary.pendingTasks--;
 
-    if (!boundary.forceClientRender) {
-      boundary.forceClientRender = true;
+    if (boundary.status !== CLIENT_RENDERED) {
+      boundary.status = CLIENT_RENDERED;
       boundary.errorDigest = request.onError(error);
 
       {
@@ -10982,9 +10992,12 @@ function finishedTask(request, boundary, segment) {
   } else {
     boundary.pendingTasks--;
 
-    if (boundary.forceClientRender);
+    if (boundary.status === CLIENT_RENDERED);
     else if (boundary.pendingTasks === 0) {
-      // This must have been the last segment we were waiting on. This boundary is now complete.
+      if (boundary.status === PENDING) {
+        boundary.status = COMPLETED;
+      } // This must have been the last segment we were waiting on. This boundary is now complete.
+
       if (segment.parentFlushed) {
         // Our parent segment already flushed, so we need to schedule this segment to be emitted.
         // If it is a segment that was aborted, we'll write other content instead so we don't need
@@ -11095,18 +11108,23 @@ function retryTask(request, task) {
           // (unstable) API for suspending. This implementation detail can change
           // later, once we deprecate the old API in favor of `use`.
           getSuspendedThenable()
-        : thrownValue; // $FlowFixMe[method-unbinding]
+        : thrownValue;
 
-    if (typeof x === "object" && x !== null && typeof x.then === "function") {
-      // Something suspended again, let's pick it back up later.
-      var ping = task.ping;
-      x.then(ping, ping);
-      task.thenableState = getThenableStateAfterSuspending();
-    } else {
-      task.abortSet.delete(task);
-      segment.status = ERRORED;
-      erroredTask(request, task.blockedBoundary, segment, x);
+    if (typeof x === "object" && x !== null) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof x.then === "function") {
+        // Something suspended again, let's pick it back up later.
+        var ping = task.ping;
+        x.then(ping, ping);
+        task.thenableState = getThenableStateAfterSuspending();
+        return;
+      }
     }
+
+    task.abortSet.delete(task);
+    segment.status = ERRORED;
+    erroredTask(request, task.blockedBoundary, segment, x);
+    return;
   } finally {
     {
       setCurrentlyRenderingBoundaryResourcesTarget(request.renderState, null);
@@ -11196,7 +11214,11 @@ function flushSubtree(request, destination, segment) {
     case PENDING: {
       // We're emitting a placeholder for this segment to be filled in later.
       // Therefore we'll need to assign it an ID - to refer to it by.
-      var segmentID = (segment.id = request.nextSegmentId++); // When this segment finally completes it won't be embedded in text since it will flush separately
+      segment.id = request.nextSegmentId++; // Fallthrough
+    }
+
+    case POSTPONED: {
+      var segmentID = segment.id; // When this segment finally completes it won't be embedded in text since it will flush separately
 
       segment.lastPushedText = false;
       segment.textEmbedded = false;
@@ -11250,7 +11272,7 @@ function flushSegment(request, destination, segment) {
   boundary.parentFlushed = true; // This segment is a Suspense boundary. We need to decide whether to
   // emit the content or the fallback now.
 
-  if (boundary.forceClientRender) {
+  if (boundary.status === CLIENT_RENDERED) {
     // Emit a client rendered suspense boundary wrapper.
     // We never queue the inner boundary so we'll never emit its content or partial segments.
     writeStartClientRenderedSuspenseBoundary(
@@ -11263,9 +11285,15 @@ function flushSegment(request, destination, segment) {
 
     flushSubtree(request, destination, segment);
     return writeEndClientRenderedSuspenseBoundary(destination);
-  } else if (boundary.pendingTasks > 0) {
-    // This boundary is still loading. Emit a pending suspense boundary wrapper.
+  } else if (boundary.status !== COMPLETED) {
+    if (boundary.status === PENDING) {
+      boundary.id = assignSuspenseBoundaryID(
+        request.renderState,
+        request.resumableState
+      );
+    } // This boundary is still loading. Emit a pending suspense boundary wrapper.
     // Assign an ID to refer to the future content by.
+
     boundary.rootSegmentID = request.nextSegmentId++;
 
     if (boundary.completedSegments.length > 0) {
@@ -11273,10 +11301,7 @@ function flushSegment(request, destination, segment) {
       request.partialBoundaries.push(boundary);
     } /// This is the first time we should have referenced this ID.
 
-    var id = (boundary.id = assignSuspenseBoundaryID(
-      request.renderState,
-      request.resumableState
-    ));
+    var id = boundary.id;
     writeStartPendingSuspenseBoundary(destination, request.renderState, id); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
@@ -11572,7 +11597,11 @@ function flushCompletedQueues(request, destination) {
       request.flushScheduled = false;
 
       {
-        writePostamble(destination, request.resumableState);
+        // We write the trailing tags but only if don't have any data to resume.
+        // If we need to resume we'll write the postamble in the resume instead.
+        {
+          writePostamble(destination, request.resumableState);
+        }
       }
 
       {
@@ -11588,7 +11617,7 @@ function flushCompletedQueues(request, destination) {
   }
 }
 
-function startWork(request) {
+function startRender(request) {
   request.flushScheduled = request.destination !== null;
 }
 
@@ -11657,7 +11686,7 @@ function flushResources(request) {
 }
 function getResumableState(request) {
   return request.resumableState;
-} // Returns the state of a postponed request or null if nothing was postponed.
+}
 
 function renderToStream(children, options) {
   var destination = {
@@ -11684,7 +11713,7 @@ function renderToStream(children, options) {
     undefined,
     undefined
   );
-  startWork(request);
+  startRender(request);
 
   if (destination.fatal) {
     throw destination.error;
