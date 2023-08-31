@@ -340,8 +340,14 @@ function ensureInitialHTMLIsCleared(container) {
 
 function createComponentsPanel() {
   if (componentsPortalContainer) {
+    // Panel is created and user opened it at least once
     render('components');
 
+    return;
+  }
+
+  if (componentsPanel) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
     return;
   }
 
@@ -350,6 +356,8 @@ function createComponentsPanel() {
     IS_EDGE ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
+      componentsPanel = createdPanel;
+
       createdPanel.onShown.addListener(portal => {
         componentsPortalContainer = portal.container;
         if (componentsPortalContainer != null) {
@@ -370,8 +378,14 @@ function createComponentsPanel() {
 
 function createProfilerPanel() {
   if (profilerPortalContainer) {
+    // Panel is created and user opened it at least once
     render('profiler');
 
+    return;
+  }
+
+  if (profilerPanel) {
+    // Panel is created, but wasn't opened yet, so no document is present for it
     return;
   }
 
@@ -380,6 +394,8 @@ function createProfilerPanel() {
     IS_EDGE ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
+      profilerPanel = createdPanel;
+
       createdPanel.onShown.addListener(portal => {
         profilerPortalContainer = portal.container;
         if (profilerPortalContainer != null) {
@@ -510,6 +526,8 @@ let store = null;
 
 let profilingData = null;
 
+let componentsPanel = null;
+let profilerPanel = null;
 let componentsPortalContainer = null;
 let profilerPortalContainer = null;
 
