@@ -49,6 +49,7 @@ function createDrainHandler(destination: Destination, request: Request) {
 
 type Options = {
   onError?: (error: mixed) => void,
+  onPostpone?: (reason: string) => void,
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 };
@@ -69,6 +70,7 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);

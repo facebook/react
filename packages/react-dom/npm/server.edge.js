@@ -16,3 +16,6 @@ exports.renderToNodeStream = b.renderToNodeStream;
 exports.renderToStaticNodeStream = b.renderToStaticNodeStream;
 exports.renderToString = l.renderToString;
 exports.renderToStaticMarkup = l.renderToStaticMarkup;
+if (b.resume) {
+  exports.resume = b.resume;
+}

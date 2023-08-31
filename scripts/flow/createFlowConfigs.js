@@ -9,12 +9,47 @@
 
 const chalk = require('chalk');
 const fs = require('fs');
+const path = require('path');
 const mkdirp = require('mkdirp');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
   .toString();
+
+// stores all forks discovered during config generation
+const allForks = new Set();
+// maps forked file to the base path containing it and it's forks (it's parent)
+const forkedFiles = new Map();
+
+function findForks(file) {
+  const basePath = path.join(file, '..');
+  const forksPath = path.join(basePath, 'forks');
+  const forks = fs.readdirSync(path.join('packages', forksPath));
+  forks.forEach(f => allForks.add('forks/' + f));
+  forkedFiles.set(file, basePath);
+  return basePath;
+}
+
+function addFork(forks, renderer, file) {
+  let basePath = forkedFiles.get(file);
+  if (!basePath) {
+    basePath = findForks(file);
+  }
+
+  const baseFilename = file.slice(basePath.length + 1);
+
+  const parts = renderer.split('-');
+  while (parts.length) {
+    const candidate = `forks/${baseFilename}.${parts.join('-')}.js`;
+    if (allForks.has(candidate)) {
+      forks.set(candidate, `${baseFilename}$$`);
+      return;
+    }
+    parts.pop();
+  }
+  throw new Error(`Cannot find fork for ${file} for renderer ${renderer}`);
+}
 
 function writeConfig(
   renderer,
@@ -44,15 +79,30 @@ function writeConfig(
       }
       ignoredPaths.push(`.*/packages/${otherPath}`);
     });
+  });
 
-    if (
-      otherRenderer.shortName !== serverRenderer &&
-      otherRenderer.shortName !== flightRenderer
-    ) {
-      ignoredPaths.push(
-        `.*/packages/.*/forks/.*\\.${otherRenderer.shortName}.js`,
-      );
+  const forks = new Map();
+  addFork(forks, renderer, 'react-reconciler/src/ReactFiberConfig');
+  addFork(forks, serverRenderer, 'react-server/src/ReactServerStreamConfig');
+  addFork(forks, serverRenderer, 'react-server/src/ReactFizzConfig');
+  addFork(forks, flightRenderer, 'react-server/src/ReactFlightServerConfig');
+  addFork(forks, flightRenderer, 'react-client/src/ReactFlightClientConfig');
+  forks.set(
+    'react-devtools-shared/src/config/DevToolsFeatureFlags.default',
+    'react-devtools-feature-flags',
+  );
+
+  allForks.forEach(fork => {
+    if (!forks.has(fork)) {
+      ignoredPaths.push(`.*/packages/.*/${fork}`);
     }
+  });
+
+  let moduleMappings = '';
+  forks.forEach((source, target) => {
+    moduleMappings += `module.name_mapper='${source.slice(
+      source.lastIndexOf('/') + 1,
+    )}' -> '${target}'\n`;
   });
 
   const config = configTemplate
@@ -61,17 +111,7 @@ function writeConfig(
       // On CI, we seem to need to limit workers.
       process.env.CI ? 'server.max_workers=4\n' : '',
     )
-    .replace(
-      '%REACT_RENDERER_FLOW_OPTIONS%',
-      `
-module.name_mapper='ReactFiberConfig$$' -> 'forks/ReactFiberConfig.${renderer}'
-module.name_mapper='ReactServerStreamConfig$$' -> 'forks/ReactServerStreamConfig.${serverRenderer}'
-module.name_mapper='ReactFizzConfig$$' -> 'forks/ReactFizzConfig.${serverRenderer}'
-module.name_mapper='ReactFlightServerConfig$$' -> 'forks/ReactFlightServerConfig.${flightRenderer}'
-module.name_mapper='ReactFlightClientConfig$$' -> 'forks/ReactFlightClientConfig.${flightRenderer}'
-module.name_mapper='react-devtools-feature-flags' -> 'react-devtools-shared/src/config/DevToolsFeatureFlags.default'
-    `.trim(),
-    )
+    .replace('%REACT_RENDERER_FLOW_OPTIONS%', moduleMappings.trim())
     .replace('%REACT_RENDERER_FLOW_IGNORES%', ignoredPaths.join('\n'));
 
   const disclaimer = `

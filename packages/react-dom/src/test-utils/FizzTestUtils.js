@@ -104,9 +104,9 @@ async function executeScript(script: Element) {
     const newScript = ownerDocument.createElement('script');
     newScript.textContent = script.textContent;
     // make sure to add nonce back to script if it exists
-    const scriptNonce = script.getAttribute('nonce');
-    if (scriptNonce) {
-      newScript.setAttribute('nonce', scriptNonce);
+    for (let i = 0; i < script.attributes.length; i++) {
+      const attribute = script.attributes[i];
+      newScript.setAttribute(attribute.name, attribute.value);
     }
 
     parent.insertBefore(newScript, script);

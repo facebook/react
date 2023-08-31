@@ -107,6 +107,8 @@ export function InspectedElementContextController({
     parseHookNamesByDefault || alreadyLoadedHookNames,
   );
 
+  const [bridgeIsAlive, setBridgeIsAliveStatus] = useState<boolean>(true);
+
   const elementHasChanged = element !== null && element !== state.element;
 
   // Reset the cached inspected paths when a new element is selected.
@@ -213,14 +215,25 @@ export function InspectedElementContextController({
     }
   }, [state]);
 
+  useEffect(() => {
+    // Assuming that new bridge is always alive at this moment
+    setBridgeIsAliveStatus(true);
+
+    const listener = () => setBridgeIsAliveStatus(false);
+    bridge.addListener('shutdown', listener);
+
+    return () => bridge.removeListener('shutdown', listener);
+  }, [bridge]);
+
   // Periodically poll the selected element for updates.
   useEffect(() => {
-    if (element !== null) {
+    if (element !== null && bridgeIsAlive) {
       const checkForUpdateWrapper = () => {
         checkForUpdate({bridge, element, refresh, store});
         timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
       };
       let timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
+
       return () => {
         clearTimeout(timeoutID);
       };
@@ -232,6 +245,7 @@ export function InspectedElementContextController({
     // No sense to ping right away after e.g. inspecting/hydrating a path.
     inspectedElement,
     state,
+    bridgeIsAlive,
   ]);
 
   const value = useMemo<Context>(

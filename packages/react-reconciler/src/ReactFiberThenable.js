@@ -42,7 +42,16 @@ export const SuspenseyCommitException: mixed = new Error(
 // TODO: It would be better to refactor throwException into multiple functions
 // so we can trigger a fallback directly without having to check the type. But
 // for now this will do.
-export const noopSuspenseyCommitThenable = {then() {}};
+export const noopSuspenseyCommitThenable = {
+  then() {
+    if (__DEV__) {
+      console.error(
+        'Internal React error: A listener was unexpectedly attached to a ' +
+          '"noop" thenable. This is a bug in React. Please file an issue.',
+      );
+    }
+  },
+};
 
 export function createThenableState(): ThenableState {
   // The ThenableState is created the first time a component suspends. If it

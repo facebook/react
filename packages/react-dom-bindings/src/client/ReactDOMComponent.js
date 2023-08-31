@@ -501,7 +501,7 @@ function setProp(
             // eslint-disable-next-line no-script-url
             "javascript:throw new Error('" +
               'A React form was unexpectedly submitted. If you called form.submit() manually, ' +
-              "consider using form.requestSubmit() instead. If you're trying to use " +
+              "consider using form.requestSubmit() instead. If you\\'re trying to use " +
               'event.stopPropagation() in a submit event handler, consider also calling ' +
               'event.preventDefault().' +
               "')",

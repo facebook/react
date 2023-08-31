@@ -109,6 +109,7 @@ import {
   enableHostSingletons,
   enableFormActions,
   enableAsyncActions,
+  enablePostpone,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -530,6 +531,7 @@ function updateMemoComponent(
       Component.type,
       null,
       nextProps,
+      null,
       workInProgress,
       workInProgress.mode,
       renderLanes,
@@ -2859,7 +2861,8 @@ function updateDehydratedSuspenseComponent(
       // This boundary is in a permanent fallback state. In this case, we'll never
       // get an update and we'll never be able to hydrate the final content. Let's just try the
       // client side render instead.
-      let digest, message, stack;
+      let digest: ?string;
+      let message, stack;
       if (__DEV__) {
         ({digest, message, stack} =
           getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
@@ -2867,19 +2870,23 @@ function updateDehydratedSuspenseComponent(
         ({digest} = getSuspenseInstanceFallbackErrorDetails(suspenseInstance));
       }
 
-      let error;
-      if (message) {
-        // eslint-disable-next-line react-internal/prod-error-codes
-        error = new Error(message);
-      } else {
-        error = new Error(
-          'The server could not finish this Suspense boundary, likely ' +
-            'due to an error during server rendering. Switched to ' +
-            'client rendering.',
-        );
+      let capturedValue = null;
+      // TODO: Figure out a better signal than encoding a magic digest value.
+      if (!enablePostpone || digest !== 'POSTPONE') {
+        let error;
+        if (message) {
+          // eslint-disable-next-line react-internal/prod-error-codes
+          error = new Error(message);
+        } else {
+          error = new Error(
+            'The server could not finish this Suspense boundary, likely ' +
+              'due to an error during server rendering. Switched to ' +
+              'client rendering.',
+          );
+        }
+        (error: any).digest = digest;
+        capturedValue = createCapturedValue<mixed>(error, digest, stack);
       }
-      (error: any).digest = digest;
-      const capturedValue = createCapturedValue<mixed>(error, digest, stack);
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -2952,7 +2959,15 @@ function updateDehydratedSuspenseComponent(
       // TODO: We should ideally have a sync hydration lane that we can apply to do
       // a pass where we hydrate this subtree in place using the previous Context and then
       // reapply the update afterwards.
-      renderDidSuspendDelayIfPossible();
+      if (isSuspenseInstancePending(suspenseInstance)) {
+        // This is a dehydrated suspense instance. We don't need to suspend
+        // because we're already showing a fallback.
+        // TODO: The Fizz runtime might still stream in completed HTML, out-of-
+        // band. Should we fix this? There's a version of this bug that happens
+        // during client rendering, too. Needs more consideration.
+      } else {
+        renderDidSuspendDelayIfPossible();
+      }
       return retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
@@ -3999,6 +4014,7 @@ function beginWork(
           workInProgress.type,
           workInProgress.key,
           workInProgress.pendingProps,
+          workInProgress._debugSource || null,
           workInProgress._debugOwner || null,
           workInProgress.mode,
           workInProgress.lanes,

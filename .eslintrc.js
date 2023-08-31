@@ -456,6 +456,7 @@ module.exports = {
     $ReadOnlyArray: 'readonly',
     $ArrayBufferView: 'readonly',
     $Shape: 'readonly',
+    ReturnType: 'readonly',
     AnimationFrameID: 'readonly',
     // For Flow type annotation. Only `BigInt` is valid at runtime.
     bigint: 'readonly',
@@ -492,7 +493,6 @@ module.exports = {
     ReadableStreamController: 'readonly',
     RequestInfo: 'readonly',
     RequestOptions: 'readonly',
-    ResponseState: 'readonly',
     StoreAsGlobal: 'readonly',
     symbol: 'readonly',
     SyntheticEvent: 'readonly',
