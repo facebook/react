@@ -454,7 +454,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(errors).toEqual(['uh oh', 'uh oh']);
   });
 
-  // @gate experimental
+  // @gate enablePostpone
   it('supports postponing in prerender and resuming later', async () => {
     let prerendering = true;
     function Postpone() {
@@ -493,7 +493,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
-  // @gate experimental
+  // @gate enablePostpone
   it('only emits end tags once when resuming', async () => {
     let prerendering = true;
     function Postpone() {

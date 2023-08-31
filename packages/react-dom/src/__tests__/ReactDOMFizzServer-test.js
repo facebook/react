@@ -6193,7 +6193,7 @@ describe('ReactDOMFizzServer', () => {
     },
   );
 
-  // @gate experimental
+  // @gate enablePostpone
   it('supports postponing in prerender and resuming later', async () => {
     let prerendering = true;
     function Postpone() {
