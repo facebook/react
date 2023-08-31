@@ -270,6 +270,20 @@ export function compileProgram(
   // Main traversal to compile with Forget
   program.traverse(
     {
+      ClassDeclaration(node: NodePath<t.ClassDeclaration>) {
+        // Don't visit functions defined inside classes, because they
+        // can reference `this` which is unsafe for compilation
+        node.skip();
+        return;
+      },
+
+      ClassExpression(node: NodePath<t.ClassExpression>) {
+        // Don't visit functions defined inside classes, because they
+        // can reference `this` which is unsafe for compilation
+        node.skip();
+        return;
+      },
+
       FunctionDeclaration(
         fn: NodePath<t.FunctionDeclaration>,
         pass: CompilerPass
