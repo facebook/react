@@ -171,9 +171,52 @@ async function withLoadingReadyState<T>(
   return result;
 }
 
+function getVisibleChildren(element: Element): React$Node {
+  const children = [];
+  let node: any = element.firstChild;
+  while (node) {
+    if (node.nodeType === 1) {
+      if (
+        node.tagName !== 'SCRIPT' &&
+        node.tagName !== 'script' &&
+        node.tagName !== 'TEMPLATE' &&
+        node.tagName !== 'template' &&
+        !node.hasAttribute('hidden') &&
+        !node.hasAttribute('aria-hidden')
+      ) {
+        const props: any = {};
+        const attributes = node.attributes;
+        for (let i = 0; i < attributes.length; i++) {
+          if (
+            attributes[i].name === 'id' &&
+            attributes[i].value.includes(':')
+          ) {
+            // We assume this is a React added ID that's a non-visual implementation detail.
+            continue;
+          }
+          props[attributes[i].name] = attributes[i].value;
+        }
+        props.children = getVisibleChildren(node);
+        children.push(
+          require('react').createElement(node.tagName.toLowerCase(), props),
+        );
+      }
+    } else if (node.nodeType === 3) {
+      children.push(node.data);
+    }
+    node = node.nextSibling;
+  }
+  return children.length === 0
+    ? undefined
+    : children.length === 1
+    ? children[0]
+    : children;
+}
+
 export {
   insertNodesAndExecuteScripts,
   mergeOptions,
   stripExternalRuntimeInNodes,
   withLoadingReadyState,
+  getVisibleChildren,
 };

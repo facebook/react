@@ -14,6 +14,7 @@ import {
   mergeOptions,
   stripExternalRuntimeInNodes,
   withLoadingReadyState,
+  getVisibleChildren,
 } from '../test-utils/FizzTestUtils';
 
 let JSDOM;
@@ -23,6 +24,7 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzServer;
+let ReactDOMFizzStatic;
 let Suspense;
 let SuspenseList;
 let useSyncExternalStore;
@@ -77,6 +79,9 @@ describe('ReactDOMFizzServer', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMFizzServer = require('react-dom/server');
+    if (__EXPERIMENTAL__) {
+      ReactDOMFizzStatic = require('react-dom/static');
+    }
     Stream = require('stream');
     Suspense = React.Suspense;
     use = React.use;
@@ -287,46 +292,6 @@ describe('ReactDOMFizzServer', () => {
         await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
       }
     }, document);
-  }
-
-  function getVisibleChildren(element) {
-    const children = [];
-    let node = element.firstChild;
-    while (node) {
-      if (node.nodeType === 1) {
-        if (
-          node.tagName !== 'SCRIPT' &&
-          node.tagName !== 'script' &&
-          node.tagName !== 'TEMPLATE' &&
-          node.tagName !== 'template' &&
-          !node.hasAttribute('hidden') &&
-          !node.hasAttribute('aria-hidden')
-        ) {
-          const props = {};
-          const attributes = node.attributes;
-          for (let i = 0; i < attributes.length; i++) {
-            if (
-              attributes[i].name === 'id' &&
-              attributes[i].value.includes(':')
-            ) {
-              // We assume this is a React added ID that's a non-visual implementation detail.
-              continue;
-            }
-            props[attributes[i].name] = attributes[i].value;
-          }
-          props.children = getVisibleChildren(node);
-          children.push(React.createElement(node.tagName.toLowerCase(), props));
-        }
-      } else if (node.nodeType === 3) {
-        children.push(node.data);
-      }
-      node = node.nextSibling;
-    }
-    return children.length === 0
-      ? undefined
-      : children.length === 1
-      ? children[0]
-      : children;
   }
 
   function resolveText(text) {
@@ -6227,4 +6192,60 @@ describe('ReactDOMFizzServer', () => {
       );
     },
   );
+
+  // @gate enablePostpone
+  it('supports postponing in prerender and resuming later', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Postpone />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      prerendered.postponed,
+    );
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    const b = new Stream.PassThrough();
+    b.setEncoding('utf8');
+    b.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
 });

@@ -18,7 +18,7 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
-  startWork,
+  startPrerender,
   startFlowing,
   abort,
   getPostponedState,
@@ -123,7 +123,7 @@ function prerenderToNodeStream(
         signal.addEventListener('abort', listener);
       }
     }
-    startWork(request);
+    startPrerender(request);
   });
 }
 

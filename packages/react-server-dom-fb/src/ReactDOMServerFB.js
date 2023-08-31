@@ -16,7 +16,7 @@ import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/Reac
 
 import {
   createRequest,
-  startWork,
+  startRender,
   performWork,
   startFlowing,
   abort,
@@ -68,7 +68,7 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
     undefined,
     undefined,
   );
-  startWork(request);
+  startRender(request);
   if (destination.fatal) {
     throw destination.error;
   }
