@@ -50,6 +50,9 @@ export type Hook = {
 export type EnvironmentConfig = Partial<{
   customHooks: Map<string, Hook>;
 
+  // 🌲
+  enableForest: boolean;
+
   /**
    * Enable memoization of JSX elements in addition to other types of values. When disabled,
    * other types (objects, arrays, call expressions, etc) are memoized, but not known JSX

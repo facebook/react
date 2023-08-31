@@ -28,6 +28,7 @@ export function transformFixtureInput(
   let validateNoSetStateInRender = true;
   let enableEmitFreeze = null;
   let compilationMode: CompilationMode = "all";
+  let enableForest = false;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -83,6 +84,9 @@ export function transformFixtureInput(
       importSpecifierName: "makeReadOnly",
     };
   }
+  if (firstLine.includes("@enableForest true")) {
+    enableForest = true;
+  }
 
   return pluginFn(
     input,
@@ -111,6 +115,7 @@ export function transformFixtureInput(
         validateNoSetStateInRender,
         enableEmitFreeze,
         assertValidMutableRanges: true,
+        enableForest,
       },
       compilationMode,
       logger: null,
