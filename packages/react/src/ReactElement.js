@@ -250,6 +250,12 @@ export function jsx(type, config, maybeKey) {
     }
   }
 
+  // Remaining properties of Symbol
+  const symbols = Object.getOwnPropertySymbols(config);
+  for (propName of symbols) {
+    props[propName] = config[propName];
+  }
+
   // Resolve default props
   if (type && type.defaultProps) {
     const defaultProps = type.defaultProps;
