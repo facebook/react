@@ -29,7 +29,23 @@ import registerEventsLogger from './registerEventsLogger';
 import getProfilingFlags from './getProfilingFlags';
 import './requestAnimationFramePolyfill';
 
-function executeIfReactHasLoaded(callback) {
+// Try polling for at least 5 seconds, in case if it takes too long to load react
+const REACT_POLLING_TICK_COOLDOWN = 250;
+const REACT_POLLING_ATTEMPTS_THRESHOLD = 20;
+
+let reactPollingTimeoutId = null;
+function clearReactPollingTimeout() {
+  clearTimeout(reactPollingTimeoutId);
+  reactPollingTimeoutId = null;
+}
+
+function executeIfReactHasLoaded(callback, attempt = 1) {
+  reactPollingTimeoutId = null;
+
+  if (attempt > REACT_POLLING_ATTEMPTS_THRESHOLD) {
+    return;
+  }
+
   chrome.devtools.inspectedWindow.eval(
     'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
     (pageHasReact, exceptionInfo) => {
@@ -53,6 +69,13 @@ function executeIfReactHasLoaded(callback) {
 
       if (pageHasReact) {
         callback();
+      } else {
+        reactPollingTimeoutId = setTimeout(
+          executeIfReactHasLoaded,
+          REACT_POLLING_TICK_COOLDOWN,
+          callback,
+          attempt + 1,
+        );
       }
     },
   );
@@ -413,7 +436,7 @@ function createProfilerPanel() {
 
 function performInTabNavigationCleanup() {
   // Potentially, if react hasn't loaded yet and user performs in-tab navigation
-  clearReactPollingInterval();
+  clearReactPollingTimeout();
 
   if (store !== null) {
     // Store profiling data, so it can be used later
@@ -453,7 +476,7 @@ function performInTabNavigationCleanup() {
 
 function performFullCleanup() {
   // Potentially, if react hasn't loaded yet and user closed the browser DevTools
-  clearReactPollingInterval();
+  clearReactPollingTimeout();
 
   if ((componentsPortalContainer || profilerPortalContainer) && root) {
     // This should also emit bridge.shutdown, but only if this root was mounted
@@ -504,22 +527,13 @@ function mountReactDevTools() {
 // TODO: display some disclaimer if user performs in-tab navigation to non-react application
 // when React DevTools panels are already opened, currently we will display just blank white block
 function mountReactDevToolsWhenReactHasLoaded() {
-  const checkIfReactHasLoaded = () => executeIfReactHasLoaded(onReactReady);
-
-  // Check to see if React has loaded in case React is added after page load
-  reactPollingIntervalId = setInterval(() => {
-    checkIfReactHasLoaded();
-  }, 500);
-
   function onReactReady() {
-    clearReactPollingInterval();
+    clearReactPollingTimeout();
     mountReactDevTools();
   }
 
-  checkIfReactHasLoaded();
+  executeIfReactHasLoaded(onReactReady);
 }
-
-let reactPollingIntervalId = null;
 
 let bridge = null;
 let store = null;
@@ -543,8 +557,6 @@ chrome.devtools.network.onNavigated.addListener(syncSavedPreferences);
 
 // Cleanup previous page state and remount everything
 chrome.devtools.network.onNavigated.addListener(() => {
-  clearReactPollingInterval();
-
   performInTabNavigationCleanup();
   mountReactDevToolsWhenReactHasLoaded();
 });
@@ -555,11 +567,6 @@ if (IS_FIREFOX) {
   window.addEventListener('unload', performFullCleanup);
 } else {
   window.addEventListener('beforeunload', performFullCleanup);
-}
-
-function clearReactPollingInterval() {
-  clearInterval(reactPollingIntervalId);
-  reactPollingIntervalId = null;
 }
 
 syncSavedPreferences();
