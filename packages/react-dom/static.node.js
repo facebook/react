@@ -8,6 +8,6 @@
  */
 
 export {
-  prerenderToNodeStreams,
+  prerenderToNodeStream,
   version,
 } from './src/server/ReactDOMFizzStaticNode';

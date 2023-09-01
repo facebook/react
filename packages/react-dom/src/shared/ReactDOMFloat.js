@@ -9,7 +9,9 @@
 import type {
   PreconnectOptions,
   PreloadOptions,
+  PreloadModuleOptions,
   PreinitOptions,
+  PreinitModuleOptions,
 } from './ReactDOMTypes';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
@@ -63,10 +65,30 @@ export function preload(href: string, options: PreloadOptions) {
   // so we favor silent bailout over warning or erroring.
 }
 
+export function preloadModule(href: string, options?: ?PreloadModuleOptions) {
+  const dispatcher = Dispatcher.current;
+  if (dispatcher) {
+    dispatcher.preloadModule(href, options);
+  }
+  // We don't error because preload needs to be resilient to being called in a variety of scopes
+  // and the runtime may not be capable of responding. The function is optimistic and not critical
+  // so we favor silent bailout over warning or erroring.
+}
+
 export function preinit(href: string, options: PreinitOptions) {
   const dispatcher = Dispatcher.current;
   if (dispatcher) {
     dispatcher.preinit(href, options);
+  }
+  // We don't error because preinit needs to be resilient to being called in a variety of scopes
+  // and the runtime may not be capable of responding. The function is optimistic and not critical
+  // so we favor silent bailout over warning or erroring.
+}
+
+export function preinitModule(href: string, options?: ?PreinitModuleOptions) {
+  const dispatcher = Dispatcher.current;
+  if (dispatcher) {
+    dispatcher.preinitModule(href, options);
   }
   // We don't error because preinit needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical

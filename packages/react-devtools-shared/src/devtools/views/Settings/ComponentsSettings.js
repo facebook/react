@@ -16,7 +16,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import {
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+} from '../../../constants';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {StoreContext} from '../context';
 import Button from '../Button';
@@ -51,6 +54,8 @@ import type {
   RegExpComponentFilter,
 } from 'react-devtools-shared/src/types';
 
+const vscodeFilepath = 'vscode://file/{path}:{line}';
+
 export default function ComponentsSettings(_: {}): React.Node {
   const store = useContext(StoreContext);
   const {parseHookNames, setParseHookNames} = useContext(SettingsContext);
@@ -82,6 +87,10 @@ export default function ComponentsSettings(_: {}): React.Node {
     },
     [setParseHookNames],
   );
+
+  const [openInEditorURLPreset, setOpenInEditorURLPreset] = useLocalStorage<
+    'vscode' | 'custom',
+  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, 'custom');
 
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
@@ -280,15 +289,32 @@ export default function ComponentsSettings(_: {}): React.Node {
 
       <label className={styles.OpenInURLSetting}>
         Open in Editor URL:{' '}
-        <input
-          className={styles.Input}
-          type="text"
-          placeholder={process.env.EDITOR_URL ?? 'vscode://file/{path}:{line}'}
-          value={openInEditorURL}
-          onChange={event => {
-            setOpenInEditorURL(event.target.value);
-          }}
-        />
+        <select
+          className={styles.Select}
+          value={openInEditorURLPreset}
+          onChange={({currentTarget}) => {
+            const selectedValue = currentTarget.value;
+            setOpenInEditorURLPreset(selectedValue);
+            if (selectedValue === 'vscode') {
+              setOpenInEditorURL(vscodeFilepath);
+            } else if (selectedValue === 'custom') {
+              setOpenInEditorURL('');
+            }
+          }}>
+          <option value="vscode">VS Code</option>
+          <option value="custom">Custom</option>
+        </select>
+        {openInEditorURLPreset === 'custom' && (
+          <input
+            className={styles.Input}
+            type="text"
+            placeholder={process.env.EDITOR_URL ? process.env.EDITOR_URL : ''}
+            value={openInEditorURL}
+            onChange={event => {
+              setOpenInEditorURL(event.target.value);
+            }}
+          />
+        )}
       </label>
 
       <div className={styles.Header}>Hide components where...</div>

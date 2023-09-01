@@ -320,7 +320,7 @@ export function installHook(target: any): DevToolsHook | null {
 
   let uidCounter = 0;
 
-  function inject(renderer: ReactRenderer) {
+  function inject(renderer: ReactRenderer): number {
     const id = ++uidCounter;
     renderers.set(id, renderer);
 

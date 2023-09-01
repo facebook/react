@@ -12,6 +12,7 @@
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
 // Don't wait before processing work on the server.
@@ -32,10 +33,13 @@ let ReactServerDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
 let ErrorBoundary;
+let JSDOM;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    JSDOM = require('jsdom').JSDOM;
 
     // Simulate the condition resolution
     jest.mock('react-server-dom-webpack/server', () =>
@@ -97,6 +101,51 @@ describe('ReactFlightDOM', () => {
   const theInfinitePromise = new Promise(() => {});
   function InfiniteSuspend() {
     throw theInfinitePromise;
+  }
+
+  function getMeaningfulChildren(element) {
+    const children = [];
+    let node = element.firstChild;
+    while (node) {
+      if (node.nodeType === 1) {
+        if (
+          // some tags are ambiguous and might be hidden because they look like non-meaningful children
+          // so we have a global override where if this data attribute is included we also include the node
+          node.hasAttribute('data-meaningful') ||
+          (node.tagName === 'SCRIPT' &&
+            node.hasAttribute('src') &&
+            node.hasAttribute('async')) ||
+          (node.tagName !== 'SCRIPT' &&
+            node.tagName !== 'TEMPLATE' &&
+            node.tagName !== 'template' &&
+            !node.hasAttribute('hidden') &&
+            !node.hasAttribute('aria-hidden'))
+        ) {
+          const props = {};
+          const attributes = node.attributes;
+          for (let i = 0; i < attributes.length; i++) {
+            if (
+              attributes[i].name === 'id' &&
+              attributes[i].value.includes(':')
+            ) {
+              // We assume this is a React added ID that's a non-visual implementation detail.
+              continue;
+            }
+            props[attributes[i].name] = attributes[i].value;
+          }
+          props.children = getMeaningfulChildren(node);
+          children.push(React.createElement(node.tagName.toLowerCase(), props));
+        }
+      } else if (node.nodeType === 3) {
+        children.push(node.data);
+      }
+      node = node.nextSibling;
+    }
+    return children.length === 0
+      ? undefined
+      : children.length === 1
+      ? children[0]
+      : children;
   }
 
   it('should resolve HTML using Node streams', async () => {
@@ -1148,7 +1197,7 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  it('should support ReactDOM.preload when rendering in Fiber', async () => {
+  it('should support float methods when rendering in Fiber', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -1156,9 +1205,25 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent() {
-      ReactDOM.preload('before', {as: 'style'});
+      ReactDOM.prefetchDNS('d before');
+      ReactDOM.preconnect('c before');
+      ReactDOM.preconnect('c2 before', {crossOrigin: 'anonymous'});
+      ReactDOM.preload('l before', {as: 'style'});
+      ReactDOM.preloadModule('lm before');
+      ReactDOM.preloadModule('lm2 before', {crossOrigin: 'anonymous'});
+      ReactDOM.preinit('i before', {as: 'script'});
+      ReactDOM.preinitModule('m before');
+      ReactDOM.preinitModule('m2 before', {crossOrigin: 'anonymous'});
       await 1;
-      ReactDOM.preload('after', {as: 'style'});
+      ReactDOM.prefetchDNS('d after');
+      ReactDOM.preconnect('c after');
+      ReactDOM.preconnect('c2 after', {crossOrigin: 'anonymous'});
+      ReactDOM.preload('l after', {as: 'style'});
+      ReactDOM.preloadModule('lm after');
+      ReactDOM.preloadModule('lm2 after', {crossOrigin: 'anonymous'});
+      ReactDOM.preinit('i after', {as: 'script'});
+      ReactDOM.preinitModule('m after');
+      ReactDOM.preinitModule('m2 after', {crossOrigin: 'anonymous'});
       return <ClientComponent />;
     }
 
@@ -1196,14 +1261,46 @@ describe('ReactFlightDOM', () => {
     await act(() => {
       root.render(<App />);
     });
-    expect(document.head.innerHTML).toBe(
-      '<link rel="preload" as="style" href="before">' +
-        '<link rel="preload" as="style" href="after">',
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="dns-prefetch" href="d before" />
+          <link rel="preconnect" href="c before" />
+          <link rel="preconnect" href="c2 before" crossorigin="" />
+          <link rel="preload" as="style" href="l before" />
+          <link rel="modulepreload" href="lm before" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="anonymous" />
+          <script async="" src="i before" />
+          <script type="module" async="" src="m before" />
+          <script
+            type="module"
+            async=""
+            src="m2 before"
+            crossorigin="anonymous"
+          />
+          <link rel="dns-prefetch" href="d after" />
+          <link rel="preconnect" href="c after" />
+          <link rel="preconnect" href="c2 after" crossorigin="" />
+          <link rel="preload" as="style" href="l after" />
+          <link rel="modulepreload" href="lm after" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="anonymous" />
+          <script async="" src="i after" />
+          <script type="module" async="" src="m after" />
+          <script
+            type="module"
+            async=""
+            src="m2 after"
+            crossorigin="anonymous"
+          />
+        </head>
+        <body />
+      </html>,
     );
-    expect(container.innerHTML).toBe('<p>hello world</p>');
+    expect(getMeaningfulChildren(container)).toEqual(<p>hello world</p>);
   });
 
-  it('should support ReactDOM.preload when rendering in Fizz', async () => {
+  it('should support float methods when rendering in Fizz', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -1211,9 +1308,25 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent() {
-      ReactDOM.preload('before', {as: 'style'});
+      ReactDOM.prefetchDNS('d before');
+      ReactDOM.preconnect('c before');
+      ReactDOM.preconnect('c2 before', {crossOrigin: 'anonymous'});
+      ReactDOM.preload('l before', {as: 'style'});
+      ReactDOM.preloadModule('lm before');
+      ReactDOM.preloadModule('lm2 before', {crossOrigin: 'anonymous'});
+      ReactDOM.preinit('i before', {as: 'script'});
+      ReactDOM.preinitModule('m before');
+      ReactDOM.preinitModule('m2 before', {crossOrigin: 'anonymous'});
       await 1;
-      ReactDOM.preload('after', {as: 'style'});
+      ReactDOM.prefetchDNS('d after');
+      ReactDOM.preconnect('c after');
+      ReactDOM.preconnect('c2 after', {crossOrigin: 'anonymous'});
+      ReactDOM.preload('l after', {as: 'style'});
+      ReactDOM.preloadModule('lm after');
+      ReactDOM.preloadModule('lm2 after', {crossOrigin: 'anonymous'});
+      ReactDOM.preinit('i after', {as: 'script'});
+      ReactDOM.preinitModule('m after');
+      ReactDOM.preinitModule('m2 after', {crossOrigin: 'anonymous'});
       return <ClientComponent />;
     }
 
@@ -1265,9 +1378,43 @@ describe('ReactFlightDOM', () => {
       content += decoder.decode(value, {stream: true});
     }
 
-    expect(content).toEqual(
-      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before"/>' +
-        '<link rel="preload" as="style" href="after"/></head><body><p>hello world</p></body></html>',
+    const doc = new JSDOM(content).window.document;
+    expect(getMeaningfulChildren(doc)).toEqual(
+      <html>
+        <head>
+          <link rel="dns-prefetch" href="d before" />
+          <link rel="preconnect" href="c before" />
+          <link rel="preconnect" href="c2 before" crossorigin="" />
+          <link rel="dns-prefetch" href="d after" />
+          <link rel="preconnect" href="c after" />
+          <link rel="preconnect" href="c2 after" crossorigin="" />
+          <script async="" src="i before" />
+          <script type="module" async="" src="m before" />
+          <script
+            type="module"
+            async=""
+            src="m2 before"
+            crossorigin="anonymous"
+          />
+          <script async="" src="i after" />
+          <script type="module" async="" src="m after" />
+          <script
+            type="module"
+            async=""
+            src="m2 after"
+            crossorigin="anonymous"
+          />
+          <link rel="preload" as="style" href="l before" />
+          <link rel="modulepreload" href="lm before" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="anonymous" />
+          <link rel="preload" as="style" href="l after" />
+          <link rel="modulepreload" href="lm after" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="anonymous" />
+        </head>
+        <body>
+          <p>hello world</p>
+        </body>
+      </html>,
     );
   });
 

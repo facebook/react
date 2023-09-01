@@ -152,7 +152,7 @@ function handleTimeout(currentTime: number) {
   if (!isHostCallbackScheduled) {
     if (peek(taskQueue) !== null) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork);
+      requestHostCallback();
     } else {
       const firstTimer = peek(timerQueue);
       if (firstTimer !== null) {
@@ -419,7 +419,7 @@ function unstable_scheduleCallback(
     // wait until the next time we yield.
     if (!isHostCallbackScheduled && !isPerformingWork) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork);
+      requestHostCallback();
     }
   }
 
@@ -434,7 +434,7 @@ function unstable_continueExecution() {
   isSchedulerPaused = false;
   if (!isHostCallbackScheduled && !isPerformingWork) {
     isHostCallbackScheduled = true;
-    requestHostCallback(flushWork);
+    requestHostCallback();
   }
 }
 
@@ -616,7 +616,7 @@ if (typeof localSetImmediate === 'function') {
   };
 }
 
-function requestHostCallback(callback: (initialTime: number) => boolean) {
+function requestHostCallback() {
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
     schedulePerformWorkUntilDeadline();

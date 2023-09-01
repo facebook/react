@@ -12,7 +12,7 @@ import type {
   ReactRenderer,
 } from 'react-devtools-shared/src/backend/types';
 import {hasAssignedBackend} from 'react-devtools-shared/src/backend/utils';
-import {COMPACT_VERSION_NAME} from './utils';
+import {COMPACT_VERSION_NAME} from 'react-devtools-extensions/src/utils';
 
 let welcomeHasInitialized = false;
 

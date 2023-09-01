@@ -23,5 +23,6 @@ export {
   preload,
   preinit,
   experimental_useFormStatus,
+  experimental_useFormState,
   unstable_batchedUpdates,
 } from './src/server/ReactDOMServerRenderingStub';

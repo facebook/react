@@ -34,6 +34,10 @@ const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString(process.env.DEVTOOLS_VERSION);
 
+const IS_CHROME = process.env.IS_CHROME === 'true';
+const IS_FIREFOX = process.env.IS_FIREFOX === 'true';
+const IS_EDGE = process.env.IS_EDGE === 'true';
+
 const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 module.exports = {
@@ -79,6 +83,9 @@ module.exports = {
       'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
+      'process.env.IS_CHROME': IS_CHROME,
+      'process.env.IS_FIREFOX': IS_FIREFOX,
+      'process.env.IS_EDGE': IS_EDGE,
     }),
     new DevToolsIgnorePlugin({
       shouldIgnorePath: function (path) {

@@ -20,7 +20,7 @@ import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
 
 import {
   createRequest,
-  startWork,
+  startRender,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
@@ -49,6 +49,7 @@ function createDrainHandler(destination: Destination, request: Request) {
 
 type Options = {
   onError?: (error: mixed) => void,
+  onPostpone?: (reason: string) => void,
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 };
@@ -69,9 +70,10 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
   );
   let hasStartedFlowing = false;
-  startWork(request);
+  startRender(request);
   return {
     pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {

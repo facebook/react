@@ -233,7 +233,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/src/server/ReactDOMFizzServerBrowser.js',
+    entry: 'react-dom/src/server/react-dom-server.browser.js',
     name: 'react-dom-server.browser',
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: true,
@@ -243,7 +243,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/src/server/ReactDOMFizzServerNode.js',
+    entry: 'react-dom/src/server/react-dom-server.node.js',
     name: 'react-dom-server.node',
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
@@ -264,7 +264,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/src/server/ReactDOMFizzServerEdge.js',
+    entry: 'react-dom/src/server/react-dom-server.edge.js',
     name: 'react-dom-server.edge', // 'node_modules/react/*.js',
 
     global: 'ReactDOMServer',
@@ -277,7 +277,7 @@ const bundles = [
   {
     bundleTypes: [BUN_DEV, BUN_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/src/server/ReactDOMFizzServerBun.js',
+    entry: 'react-dom/src/server/react-dom-server.bun.js',
     name: 'react-dom-server.bun', // 'node_modules/react/*.js',
 
     global: 'ReactDOMServer',
