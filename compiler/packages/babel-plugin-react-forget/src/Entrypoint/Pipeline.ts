@@ -220,9 +220,11 @@ export function* run(
     value: reactiveFunction,
   });
 
-  pruneNonEscapingScopes(reactiveFunction, {
-    memoizeJsxElements: config?.memoizeJsxElements ?? true,
-  });
+  let memoizeJsxElements = config?.memoizeJsxElements ?? true;
+  if (config?.enableForest) {
+    memoizeJsxElements = false;
+  }
+  pruneNonEscapingScopes(reactiveFunction, { memoizeJsxElements });
   yield log({
     kind: "reactive",
     name: "PruneNonEscapingDependencies",
