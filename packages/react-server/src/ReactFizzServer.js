@@ -221,6 +221,7 @@ export type Task = {
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<Task>, // the abortable set that this task belongs to
   keyPath: Root | KeyNode, // the path of all parent keys currently rendering
+  formatContext: FormatContext, // the format's specific context (e.g. HTML/SVG/MathML)
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
@@ -245,7 +246,7 @@ type Segment = {
   +chunks: Array<Chunk | PrecomputedChunk>,
   +children: Array<Segment>,
   // The context that this segment was created in.
-  formatContext: FormatContext,
+  parentFormatContext: FormatContext,
   // If this segment represents a fallback, this is the content that will replace that fallback.
   +boundary: null | SuspenseBoundary,
   // used to discern when text separator boundaries are needed
@@ -386,6 +387,7 @@ export function createRequest(
     rootSegment,
     abortSet,
     null,
+    rootFormatContext,
     emptyContextObject,
     rootContextSnapshot,
     emptyTreeContext,
@@ -442,6 +444,7 @@ function createTask(
   blockedSegment: Segment,
   abortSet: Set<Task>,
   keyPath: Root | KeyNode,
+  formatContext: FormatContext,
   legacyContext: LegacyContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
@@ -459,6 +462,7 @@ function createTask(
     blockedSegment,
     abortSet,
     keyPath,
+    formatContext,
     legacyContext,
     context,
     treeContext,
@@ -475,7 +479,7 @@ function createPendingSegment(
   request: Request,
   index: number,
   boundary: null | SuspenseBoundary,
-  formatContext: FormatContext,
+  parentFormatContext: FormatContext,
   lastPushedText: boolean,
   textEmbedded: boolean,
 ): Segment {
@@ -486,7 +490,7 @@ function createPendingSegment(
     parentFlushed: false,
     chunks: [],
     children: [],
-    formatContext,
+    parentFormatContext,
     boundary,
     lastPushedText,
     textEmbedded,
@@ -635,7 +639,7 @@ function renderSuspenseBoundary(
     request,
     insertionIndex,
     newBoundary,
-    parentSegment.formatContext,
+    task.formatContext,
     // boundaries never require text embedding at their edges because comment nodes bound them
     false,
     false,
@@ -649,7 +653,7 @@ function renderSuspenseBoundary(
     request,
     0,
     null,
-    parentSegment.formatContext,
+    task.formatContext,
     // boundaries never require text embedding at their edges because comment nodes bound them
     false,
     false,
@@ -739,6 +743,7 @@ function renderSuspenseBoundary(
     boundarySegment,
     fallbackAbortSet,
     task.keyPath,
+    task.formatContext,
     task.legacyContext,
     task.context,
     task.treeContext,
@@ -785,12 +790,12 @@ function renderHostElement(
     props,
     request.resumableState,
     request.renderState,
-    segment.formatContext,
+    task.formatContext,
     segment.lastPushedText,
   );
   segment.lastPushedText = false;
-  const prevContext = segment.formatContext;
-  segment.formatContext = getChildFormatContext(prevContext, type, props);
+  const prevContext = task.formatContext;
+  task.formatContext = getChildFormatContext(prevContext, type, props);
 
   // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
@@ -798,7 +803,7 @@ function renderHostElement(
 
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
-  segment.formatContext = prevContext;
+  task.formatContext = prevContext;
   pushEndInstance(
     segment.chunks,
     type,
@@ -1740,7 +1745,7 @@ function injectPostponedHole(
     request,
     insertionIndex,
     null,
-    segment.formatContext,
+    task.formatContext,
     // Adopt the parent segment's leading text embed
     segment.lastPushedText,
     // Assume we are text embedded at the trailing edge
@@ -1765,7 +1770,7 @@ function spawnNewSuspendedTask(
     request,
     insertionIndex,
     null,
-    segment.formatContext,
+    task.formatContext,
     // Adopt the parent segment's leading text embed
     segment.lastPushedText,
     // Assume we are text embedded at the trailing edge
@@ -1782,6 +1787,7 @@ function spawnNewSuspendedTask(
     newSegment,
     task.abortSet,
     task.keyPath,
+    task.formatContext,
     task.legacyContext,
     task.context,
     task.treeContext,
@@ -1814,7 +1820,7 @@ function renderNode(
 
   // Snapshot the current context in case something throws to interrupt the
   // process.
-  const previousFormatContext = task.blockedSegment.formatContext;
+  const previousFormatContext = task.formatContext;
   const previousLegacyContext = task.legacyContext;
   const previousContext = task.context;
   const previousKeyPath = task.keyPath;
@@ -1850,7 +1856,7 @@ function renderNode(
 
         // Restore the context. We assume that this will be restored by the inner
         // functions in case nothing throws so we don't use "finally" here.
-        task.blockedSegment.formatContext = previousFormatContext;
+        task.formatContext = previousFormatContext;
         task.legacyContext = previousLegacyContext;
         task.context = previousContext;
         task.keyPath = previousKeyPath;
@@ -1882,7 +1888,7 @@ function renderNode(
 
         // Restore the context. We assume that this will be restored by the inner
         // functions in case nothing throws so we don't use "finally" here.
-        task.blockedSegment.formatContext = previousFormatContext;
+        task.formatContext = previousFormatContext;
         task.legacyContext = previousLegacyContext;
         task.context = previousContext;
         task.keyPath = previousKeyPath;
@@ -1896,7 +1902,7 @@ function renderNode(
     }
     // Restore the context. We assume that this will be restored by the inner
     // functions in case nothing throws so we don't use "finally" here.
-    task.blockedSegment.formatContext = previousFormatContext;
+    task.formatContext = previousFormatContext;
     task.legacyContext = previousLegacyContext;
     task.context = previousContext;
     task.keyPath = previousKeyPath;
@@ -2474,11 +2480,11 @@ function flushSegmentContainer(
   writeStartSegment(
     destination,
     request.renderState,
-    segment.formatContext,
+    segment.parentFormatContext,
     segment.id,
   );
   flushSegment(request, destination, segment);
-  return writeEndSegment(destination, segment.formatContext);
+  return writeEndSegment(destination, segment.parentFormatContext);
 }
 
 function flushCompletedBoundary(
