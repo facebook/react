@@ -414,6 +414,9 @@ const skipFilter = new Set([
   "fbt-template-string-same-scope",
   "component-declaration-basic.flow",
 
+  // TODO: 🌲
+  "forest-basic",
+
   // TODO: we probably want to always skip these
   "rules-of-hooks/rules-of-hooks-0592bd574811",
   "rules-of-hooks/rules-of-hooks-0e2214abc294",
