@@ -83,7 +83,8 @@ describe('SchedulerPostTask', () => {
     const scheduler = {};
     global.scheduler = scheduler;
 
-    scheduler.postTask = function (callback, {priority, signal}) {
+    scheduler.postTask = function (callback, {signal}) {
+      const {priority} = signal;
       const id = idCounter++;
       log(
         `Post Task ${id} [${priority === undefined ? '<default>' : priority}]`,
@@ -94,7 +95,8 @@ describe('SchedulerPostTask', () => {
       });
     };
 
-    scheduler.yield = function ({priority, signal}) {
+    scheduler.yield = function ({signal}) {
+      const {priority} = signal;
       const id = idCounter++;
       log(`Yield ${id} [${priority === undefined ? '<default>' : priority}]`);
       const controller = signal._controller;
@@ -111,8 +113,8 @@ describe('SchedulerPostTask', () => {
     };
 
     global.TaskController = class TaskController {
-      constructor() {
-        this.signal = {_controller: this};
+      constructor({priority}) {
+        this.signal = {_controller: this, priority};
       }
       abort() {
         const task = taskQueue.get(this);

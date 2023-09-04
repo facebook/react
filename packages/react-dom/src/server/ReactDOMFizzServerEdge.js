@@ -7,21 +7,23 @@
  * @flow
  */
 
+import type {PostponedState} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
-  startWork,
+  startRender,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
 
 import {
-  createResources,
-  createResponseState,
+  createResumableState,
+  createRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -35,6 +37,16 @@ type Options = {
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
+  onPostpone?: (reason: string) => void,
+  unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+  importMap?: ImportMap,
+};
+
+type ResumeOptions = {
+  nonce?: string,
+  signal?: AbortSignal,
+  onError?: (error: mixed) => ?string,
+  onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
 };
 
@@ -80,18 +92,21 @@ function renderToReadableStream(
       allReady.catch(() => {});
       reject(error);
     }
-    const resources = createResources();
+    const resumableState = createResumableState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.nonce : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+    );
     const request = createRequest(
       children,
-      resources,
-      createResponseState(
-        resources,
-        options ? options.identifierPrefix : undefined,
+      resumableState,
+      createRenderState(
+        resumableState,
         options ? options.nonce : undefined,
-        options ? options.bootstrapScriptContent : undefined,
-        options ? options.bootstrapScripts : undefined,
-        options ? options.bootstrapModules : undefined,
-        options ? options.unstable_externalRuntimeSrc : undefined,
+        options ? options.importMap : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -100,6 +115,7 @@ function renderToReadableStream(
       onShellReady,
       onShellError,
       onFatalError,
+      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -113,8 +129,79 @@ function renderToReadableStream(
         signal.addEventListener('abort', listener);
       }
     }
-    startWork(request);
+    startRender(request);
   });
 }
 
-export {renderToReadableStream, ReactVersion as version};
+function resume(
+  children: ReactNodeList,
+  postponedState: PostponedState,
+  options?: ResumeOptions,
+): Promise<ReactDOMServerReadableStream> {
+  return new Promise((resolve, reject) => {
+    let onFatalError;
+    let onAllReady;
+    const allReady = new Promise<void>((res, rej) => {
+      onAllReady = res;
+      onFatalError = rej;
+    });
+
+    function onShellReady() {
+      const stream: ReactDOMServerReadableStream = (new ReadableStream(
+        {
+          type: 'bytes',
+          pull: (controller): ?Promise<void> => {
+            startFlowing(request, controller);
+          },
+          cancel: (reason): ?Promise<void> => {
+            abort(request);
+          },
+        },
+        // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
+        {highWaterMark: 0},
+      ): any);
+      // TODO: Move to sub-classing ReadableStream.
+      stream.allReady = allReady;
+      resolve(stream);
+    }
+    function onShellError(error: mixed) {
+      // If the shell errors the caller of `renderToReadableStream` won't have access to `allReady`.
+      // However, `allReady` will be rejected by `onFatalError` as well.
+      // So we need to catch the duplicate, uncatchable fatal error in `allReady` to prevent a `UnhandledPromiseRejection`.
+      allReady.catch(() => {});
+      reject(error);
+    }
+    const request = createRequest(
+      children,
+      postponedState.resumableState,
+      createRenderState(
+        postponedState.resumableState,
+        options ? options.nonce : undefined,
+        undefined, // importMap
+      ),
+      postponedState.rootFormatContext,
+      postponedState.progressiveChunkSize,
+      options ? options.onError : undefined,
+      onAllReady,
+      onShellReady,
+      onShellError,
+      onFatalError,
+      options ? options.onPostpone : undefined,
+    );
+    if (options && options.signal) {
+      const signal = options.signal;
+      if (signal.aborted) {
+        abort(request, (signal: any).reason);
+      } else {
+        const listener = () => {
+          abort(request, (signal: any).reason);
+          signal.removeEventListener('abort', listener);
+        };
+        signal.addEventListener('abort', listener);
+      }
+    }
+    startRender(request);
+  });
+}
+
+export {renderToReadableStream, resume, ReactVersion as version};

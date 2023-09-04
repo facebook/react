@@ -269,6 +269,7 @@ export default function DevTools({
   useEffect(() => {
     logEvent({event_name: 'loaded-dev-tools'});
   }, []);
+
   return (
     <BridgeContext.Provider value={bridge}>
       <StoreContext.Provider value={store}>

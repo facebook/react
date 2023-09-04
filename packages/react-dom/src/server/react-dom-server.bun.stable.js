@@ -7,4 +7,9 @@
  * @flow
  */
 
-export * from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
+export {
+  renderToReadableStream,
+  renderToNodeStream,
+  renderToStaticNodeStream,
+  version,
+} from './ReactDOMFizzServerBun.js';
