@@ -1,8 +1,8 @@
 {
   "extends": "@tsconfig/node18-strictest/tsconfig.json",
   "compilerOptions": {
-    "declaration": true,
-    "outDir": "dist",
+    "rootDir": "../",
+    "noEmit": true,
     "jsx": "react-jsxdev",
 
     // weaken strictness from preset
@@ -13,7 +13,7 @@
     "target": "ES2015",
     // ideally turn off only during dev, or on a per-file basis
     "noUnusedLocals": false,
-    "sourceMap": true
+    "sourceMap": false
   },
   "exclude": ["node_modules"],
   "include": ["src/**/*.ts"]
