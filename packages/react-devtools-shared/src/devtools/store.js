@@ -1444,12 +1444,13 @@ export default class Store extends EventEmitter<{
     copy(text);
   };
 
-  getAllElements = () => Array<{id: number, displayName: string | null}> = () =>  {
-    return Array.from(this._idToElement, ([, value]) => ({
-      id: value.id,
-      displayName: value.displayName,
-    })).filter(value => !!value.displayName);
-  };
+  getAllElements: () => Array<{id: number, displayName: string | null}> =
+    () => {
+      return Array.from(this._idToElement, ([, value]) => ({
+        id: value.id,
+        displayName: value.displayName,
+      })).filter(value => !!value.displayName);
+    };
   // The Store should never throw an Error without also emitting an event.
   // Otherwise Store errors will be invisible to users,
   // but the downstream errors they cause will be reported as bugs.
@@ -1458,7 +1459,7 @@ export default class Store extends EventEmitter<{
   _throwAndEmitError(error: Error): empty {
     this.emit('error', error);
 
-    // Throwing is still valuable for local development
+    // Throwing is still valuuable for local development
     // and for unit testing the Store itself.
     throw error;
   }
