@@ -4,9 +4,7 @@ function Component(_props) {
   const collection = [makeObject_Primitives()];
   const results = [];
   for (const item of collection) {
-    results.push(
-      <div key={Stringify(item)}>{Stringify(mutate(item))}</div>
-    );
+    results.push(<div key={Stringify(item)}>{Stringify(mutate(item))}</div>);
   }
   return <div>{results}</div>;
 }
