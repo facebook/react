@@ -9554,6 +9554,7 @@ function createRequest(
     rootSegment,
     abortSet,
     null,
+    rootFormatContext,
     emptyContextObject,
     rootContextSnapshot,
     emptyTreeContext
@@ -9601,6 +9602,7 @@ function createTask(
   blockedSegment,
   abortSet,
   keyPath,
+  formatContext,
   legacyContext,
   context,
   treeContext
@@ -9622,6 +9624,7 @@ function createTask(
     blockedSegment: blockedSegment,
     abortSet: abortSet,
     keyPath: keyPath,
+    formatContext: formatContext,
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
@@ -9640,7 +9643,7 @@ function createPendingSegment(
   request,
   index,
   boundary,
-  formatContext,
+  parentFormatContext,
   lastPushedText,
   textEmbedded
 ) {
@@ -9652,7 +9655,7 @@ function createPendingSegment(
     parentFlushed: false,
     chunks: [],
     children: [],
-    formatContext: formatContext,
+    parentFormatContext: parentFormatContext,
     boundary: boundary,
     lastPushedText: lastPushedText,
     textEmbedded: textEmbedded
@@ -9793,7 +9796,7 @@ function renderSuspenseBoundary(request, task, props) {
     request,
     insertionIndex,
     newBoundary,
-    parentSegment.formatContext, // boundaries never require text embedding at their edges because comment nodes bound them
+    task.formatContext, // boundaries never require text embedding at their edges because comment nodes bound them
     false,
     false
   );
@@ -9805,7 +9808,7 @@ function renderSuspenseBoundary(request, task, props) {
     request,
     0,
     null,
-    parentSegment.formatContext, // boundaries never require text embedding at their edges because comment nodes bound them
+    task.formatContext, // boundaries never require text embedding at their edges because comment nodes bound them
     false,
     false
   ); // We mark the root segment as having its parent flushed. It's not really flushed but there is
@@ -9886,6 +9889,7 @@ function renderSuspenseBoundary(request, task, props) {
     boundarySegment,
     fallbackAbortSet,
     task.keyPath,
+    task.formatContext,
     task.legacyContext,
     task.context,
     task.treeContext
@@ -9909,18 +9913,18 @@ function renderHostElement(request, task, type, props) {
     props,
     request.resumableState,
     request.renderState,
-    segment.formatContext,
+    task.formatContext,
     segment.lastPushedText
   );
   segment.lastPushedText = false;
-  var prevContext = segment.formatContext;
-  segment.formatContext = getChildFormatContext(prevContext, type, props); // We use the non-destructive form because if something suspends, we still
+  var prevContext = task.formatContext;
+  task.formatContext = getChildFormatContext(prevContext, type, props); // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
 
   renderNode(request, task, children, 0); // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
 
-  segment.formatContext = prevContext;
+  task.formatContext = prevContext;
   pushEndInstance(
     segment.chunks,
     type,
@@ -10728,7 +10732,7 @@ function spawnNewSuspendedTask(request, task, thenableState, x) {
     request,
     insertionIndex,
     null,
-    segment.formatContext, // Adopt the parent segment's leading text embed
+    task.formatContext, // Adopt the parent segment's leading text embed
     segment.lastPushedText, // Assume we are text embedded at the trailing edge
     true
   );
@@ -10743,6 +10747,7 @@ function spawnNewSuspendedTask(request, task, thenableState, x) {
     newSegment,
     task.abortSet,
     task.keyPath,
+    task.formatContext,
     task.legacyContext,
     task.context,
     task.treeContext
@@ -10769,7 +10774,7 @@ function renderNode(request, task, node, childIndex) {
   var chunkLength = segment.chunks.length; // Snapshot the current context in case something throws to interrupt the
   // process.
 
-  var previousFormatContext = task.blockedSegment.formatContext;
+  var previousFormatContext = task.formatContext;
   var previousLegacyContext = task.legacyContext;
   var previousContext = task.context;
   var previousKeyPath = task.keyPath;
@@ -10803,7 +10808,7 @@ function renderNode(request, task, node, childIndex) {
         spawnNewSuspendedTask(request, task, thenableState, wakeable); // Restore the context. We assume that this will be restored by the inner
         // functions in case nothing throws so we don't use "finally" here.
 
-        task.blockedSegment.formatContext = previousFormatContext;
+        task.formatContext = previousFormatContext;
         task.legacyContext = previousLegacyContext;
         task.context = previousContext;
         task.keyPath = previousKeyPath; // Restore all active ReactContexts to what they were before.
@@ -10819,7 +10824,7 @@ function renderNode(request, task, node, childIndex) {
     } // Restore the context. We assume that this will be restored by the inner
     // functions in case nothing throws so we don't use "finally" here.
 
-    task.blockedSegment.formatContext = previousFormatContext;
+    task.formatContext = previousFormatContext;
     task.legacyContext = previousLegacyContext;
     task.context = previousContext;
     task.keyPath = previousKeyPath; // Restore all active ReactContexts to what they were before.
@@ -11360,11 +11365,11 @@ function flushSegmentContainer(request, destination, segment) {
   writeStartSegment(
     destination,
     request.renderState,
-    segment.formatContext,
+    segment.parentFormatContext,
     segment.id
   );
   flushSegment(request, destination, segment);
-  return writeEndSegment(destination, segment.formatContext);
+  return writeEndSegment(destination, segment.parentFormatContext);
 }
 
 function flushCompletedBoundary(request, destination, boundary) {

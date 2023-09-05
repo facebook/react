@@ -2767,6 +2767,7 @@ function createTask(
   blockedSegment,
   abortSet,
   keyPath,
+  formatContext,
   legacyContext,
   context,
   treeContext
@@ -2786,6 +2787,7 @@ function createTask(
     blockedSegment: blockedSegment,
     abortSet: abortSet,
     keyPath: keyPath,
+    formatContext: formatContext,
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
@@ -2798,7 +2800,7 @@ function createPendingSegment(
   request,
   index,
   boundary,
-  formatContext,
+  parentFormatContext,
   lastPushedText,
   textEmbedded
 ) {
@@ -2809,7 +2811,7 @@ function createPendingSegment(
     parentFlushed: !1,
     chunks: [],
     children: [],
-    formatContext: formatContext,
+    parentFormatContext: parentFormatContext,
     boundary: boundary,
     lastPushedText: lastPushedText,
     textEmbedded: textEmbedded
@@ -2972,18 +2974,14 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       props,
       request.resumableState,
       request.renderState,
-      JSCompiler_inline_result.formatContext,
+      task.formatContext,
       JSCompiler_inline_result.lastPushedText
     );
     JSCompiler_inline_result.lastPushedText = !1;
-    prevThenableState = JSCompiler_inline_result.formatContext;
-    JSCompiler_inline_result.formatContext = getChildFormatContext(
-      prevThenableState,
-      type,
-      props
-    );
+    prevThenableState = task.formatContext;
+    task.formatContext = getChildFormatContext(prevThenableState, type, props);
     renderNode(request, task, ref, 0);
-    JSCompiler_inline_result.formatContext = prevThenableState;
+    task.formatContext = prevThenableState;
     a: {
       task = JSCompiler_inline_result.chunks;
       request = request.resumableState;
@@ -3066,7 +3064,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             request,
             prevThenableState.chunks.length,
             partial,
-            prevThenableState.formatContext,
+            task.formatContext,
             !1,
             !1
           );
@@ -3076,7 +3074,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             request,
             0,
             null,
-            prevThenableState.formatContext,
+            task.formatContext,
             !1,
             !1
           );
@@ -3117,6 +3115,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             boundarySegment,
             contextType,
             task.keyPath,
+            task.formatContext,
             task.legacyContext,
             task.context,
             task.treeContext
@@ -3316,7 +3315,7 @@ function renderNode(request, task, node, childIndex) {
   var segment = task.blockedSegment,
     childrenLength = segment.children.length,
     chunkLength = segment.chunks.length,
-    previousFormatContext = task.blockedSegment.formatContext,
+    previousFormatContext = task.formatContext,
     previousLegacyContext = task.legacyContext,
     previousContext = task.context,
     previousKeyPath = task.keyPath;
@@ -3341,7 +3340,7 @@ function renderNode(request, task, node, childIndex) {
           request,
           segment.chunks.length,
           null,
-          segment.formatContext,
+          task.formatContext,
           segment.lastPushedText,
           !0
         )),
@@ -3355,19 +3354,20 @@ function renderNode(request, task, node, childIndex) {
           childrenLength,
           task.abortSet,
           task.keyPath,
+          task.formatContext,
           task.legacyContext,
           task.context,
           task.treeContext
         ).ping),
         node.then(request, request),
-        (task.blockedSegment.formatContext = previousFormatContext),
+        (task.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
         (task.keyPath = previousKeyPath),
         switchContext(previousContext);
     else
       throw (
-        ((task.blockedSegment.formatContext = previousFormatContext),
+        ((task.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
         (task.keyPath = previousKeyPath),
@@ -3544,11 +3544,11 @@ function flushSegmentContainer(request, destination, segment) {
   writeStartSegment(
     destination,
     request.renderState,
-    segment.formatContext,
+    segment.parentFormatContext,
     segment.id
   );
   flushSegment(request, destination, segment);
-  return writeEndSegment(destination, segment.formatContext);
+  return writeEndSegment(destination, segment.parentFormatContext);
 }
 function flushCompletedBoundary(request, destination, boundary) {
   request.renderState.boundaryResources = boundary.resources;
@@ -4373,7 +4373,7 @@ exports.renderToStream = function (children, options) {
     onShellError: noop,
     onFatalError: noop
   };
-  bootstrapModules = createPendingSegment(
+  bootstrapScripts = createPendingSegment(
     bootstrapScriptContent,
     0,
     null,
@@ -4381,15 +4381,16 @@ exports.renderToStream = function (children, options) {
     !1,
     !1
   );
-  bootstrapModules.parentFlushed = !0;
+  bootstrapScripts.parentFlushed = !0;
   children = createTask(
     bootstrapScriptContent,
     null,
     children,
     null,
-    bootstrapModules,
+    bootstrapScripts,
     identifierPrefix,
     null,
+    bootstrapModules,
     emptyContextObject,
     null,
     emptyTreeContext

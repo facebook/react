@@ -2939,7 +2939,7 @@ function createRequest(
     onShellError: void 0 === onShellError ? noop : onShellError,
     onFatalError: void 0 === onFatalError ? noop : onFatalError
   };
-  rootFormatContext = createPendingSegment(
+  renderState = createPendingSegment(
     resumableState,
     0,
     null,
@@ -2947,15 +2947,16 @@ function createRequest(
     !1,
     !1
   );
-  rootFormatContext.parentFlushed = !0;
+  renderState.parentFlushed = !0;
   children = createTask(
     resumableState,
     null,
     children,
     null,
-    rootFormatContext,
+    renderState,
     abortSet,
     null,
+    rootFormatContext,
     emptyContextObject,
     null,
     emptyTreeContext
@@ -2972,6 +2973,7 @@ function createTask(
   blockedSegment,
   abortSet,
   keyPath,
+  formatContext,
   legacyContext,
   context,
   treeContext
@@ -2992,6 +2994,7 @@ function createTask(
     blockedSegment: blockedSegment,
     abortSet: abortSet,
     keyPath: keyPath,
+    formatContext: formatContext,
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
@@ -3004,7 +3007,7 @@ function createPendingSegment(
   request,
   index,
   boundary,
-  formatContext,
+  parentFormatContext,
   lastPushedText,
   textEmbedded
 ) {
@@ -3015,7 +3018,7 @@ function createPendingSegment(
     parentFlushed: !1,
     chunks: [],
     children: [],
-    formatContext: formatContext,
+    parentFormatContext: parentFormatContext,
     boundary: boundary,
     lastPushedText: lastPushedText,
     textEmbedded: textEmbedded
@@ -3174,18 +3177,14 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       props,
       request.resumableState,
       request.renderState,
-      JSCompiler_inline_result.formatContext,
+      task.formatContext,
       JSCompiler_inline_result.lastPushedText
     );
     JSCompiler_inline_result.lastPushedText = !1;
-    prevThenableState = JSCompiler_inline_result.formatContext;
-    JSCompiler_inline_result.formatContext = getChildFormatContext(
-      prevThenableState,
-      type,
-      props
-    );
+    prevThenableState = task.formatContext;
+    task.formatContext = getChildFormatContext(prevThenableState, type, props);
     renderNode(request, task, ref, 0);
-    JSCompiler_inline_result.formatContext = prevThenableState;
+    task.formatContext = prevThenableState;
     a: {
       task = JSCompiler_inline_result.chunks;
       request = request.resumableState;
@@ -3268,7 +3267,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             request,
             prevThenableState.chunks.length,
             partial,
-            prevThenableState.formatContext,
+            task.formatContext,
             !1,
             !1
           );
@@ -3278,7 +3277,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             request,
             0,
             null,
-            prevThenableState.formatContext,
+            task.formatContext,
             !1,
             !1
           );
@@ -3320,6 +3319,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             boundarySegment,
             contextType,
             task.keyPath,
+            task.formatContext,
             task.legacyContext,
             task.context,
             task.treeContext
@@ -3514,7 +3514,7 @@ function renderNode(request, task, node, childIndex) {
   var segment = task.blockedSegment,
     childrenLength = segment.children.length,
     chunkLength = segment.chunks.length,
-    previousFormatContext = task.blockedSegment.formatContext,
+    previousFormatContext = task.formatContext,
     previousLegacyContext = task.legacyContext,
     previousContext = task.context,
     previousKeyPath = task.keyPath;
@@ -3539,7 +3539,7 @@ function renderNode(request, task, node, childIndex) {
           request,
           segment.chunks.length,
           null,
-          segment.formatContext,
+          task.formatContext,
           segment.lastPushedText,
           !0
         )),
@@ -3553,19 +3553,20 @@ function renderNode(request, task, node, childIndex) {
           childrenLength,
           task.abortSet,
           task.keyPath,
+          task.formatContext,
           task.legacyContext,
           task.context,
           task.treeContext
         ).ping),
         node.then(request, request),
-        (task.blockedSegment.formatContext = previousFormatContext),
+        (task.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
         (task.keyPath = previousKeyPath),
         switchContext(previousContext);
     else
       throw (
-        ((task.blockedSegment.formatContext = previousFormatContext),
+        ((task.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
         (task.keyPath = previousKeyPath),
@@ -3856,11 +3857,11 @@ function flushSegmentContainer(request, destination, segment) {
   writeStartSegment(
     destination,
     request.renderState,
-    segment.formatContext,
+    segment.parentFormatContext,
     segment.id
   );
   flushSegment(request, destination, segment);
-  return writeEndSegment(destination, segment.formatContext);
+  return writeEndSegment(destination, segment.parentFormatContext);
 }
 function flushCompletedBoundary(request, destination, boundary) {
   request.renderState.boundaryResources = boundary.resources;
@@ -4409,4 +4410,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-ec9c6ec0";
+exports.version = "18.3.0-www-modern-05ae0261";
