@@ -10,6 +10,10 @@ const Counter3 = await(AsyncModule);
 import ShowMore from './ShowMore.js';
 import Button from './Button.js';
 import Form from './Form.js';
+import {Dynamic} from './Dynamic.js';
+import {Client} from './Client.js';
+
+import {Note} from './cjs/Note.js';
 
 import {like, greet} from './actions.js';
 
@@ -43,6 +47,11 @@ export default async function App() {
           <div>
             <Button action={like}>Like</Button>
           </div>
+          <div>
+            loaded statically: <Dynamic />
+          </div>
+          <Client />
+          <Note />
         </Container>
       </body>
     </html>
