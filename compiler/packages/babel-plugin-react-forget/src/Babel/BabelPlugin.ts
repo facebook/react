@@ -8,7 +8,6 @@
 /// <reference path="./types.d.ts" />
 
 import type * as BabelCore from "@babel/core";
-import jsx from "@babel/plugin-syntax-jsx";
 import { compileProgram, parsePluginOptions } from "../Entrypoint";
 
 /**
@@ -21,7 +20,6 @@ export default function ReactForgetBabelPlugin(
 ): BabelCore.PluginObj {
   return {
     name: "react-forget",
-    inherits: jsx,
     visitor: {
       // Note: Babel does some "smart" merging of visitors across plugins, so even if A is inserted
       // prior to B, if A does not have a Program visitor and B does, B will run first. We always

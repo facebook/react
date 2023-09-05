@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@babel/generator": "7.2.0",
-    "@babel/plugin-syntax-jsx": "^7.18.6",
     "@babel/types": "^7.19.0",
     "chalk": "4",
     "invariant": "^2.2.4",
