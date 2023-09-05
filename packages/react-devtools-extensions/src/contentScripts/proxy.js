@@ -30,18 +30,6 @@ function sayHelloToBackendManager() {
 }
 
 function handleMessageFromDevtools(message) {
-  if (message.source === 'react-devtools-service-worker' && message.stop) {
-    window.removeEventListener('message', handleMessageFromPage);
-
-    // Calling disconnect here should not emit onDisconnect event inside this script
-    // This port will not attempt to reconnect again
-    // It will connect only once this content script will be injected again
-    port?.disconnect();
-    port = null;
-
-    return;
-  }
-
   window.postMessage(
     {
       source: 'react-devtools-content-script',
