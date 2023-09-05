@@ -4,6 +4,15 @@
 
 ---
 
+### 4.28.3
+September 5, 2023
+
+* refactor[devtools/extension]: handle ports disconnection, instead of frequent reconnection ([hoxyq](https://github.com/hoxyq) in [#27336](https://github.com/facebook/react/pull/27336))
+* refactor[devtools/extension]: migrate from using setInterval for polling if react is loaded ([hoxyq](https://github.com/hoxyq) in [#27323](https://github.com/facebook/react/pull/27323))
+* fix[devtools/extension]: fixed duplicating panels in firefox ([hoxyq](https://github.com/hoxyq) in [#27320](https://github.com/facebook/react/pull/27320))
+
+---
+
 ### 4.28.2
 August 30, 2023
 
