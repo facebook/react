@@ -7,7 +7,6 @@ import {IS_FIREFOX, EXTENSION_CONTAINED_VERSIONS} from '../utils';
 import './dynamicallyInjectContentScripts';
 import './tabsManager';
 import setExtensionIconAndPopup from './setExtensionIconAndPopup';
-import injectProxy from './injectProxy';
 
 /*
   {
@@ -39,18 +38,6 @@ function registerExtensionPort(port, tabId) {
     ports[tabId].disconnectPipe?.();
 
     delete ports[tabId].extension;
-
-    const proxyPort = ports[tabId].proxy;
-    if (proxyPort) {
-      // Do not disconnect proxy port, we will inject this content script again
-      // If extension port has disconnected, it probably means that user did in-tab navigation
-      clearReconnectionTimeout(proxyPort);
-
-      proxyPort.postMessage({
-        source: 'react-devtools-service-worker',
-        stop: true,
-      });
-    }
   });
 }
 
@@ -59,36 +46,12 @@ function registerProxyPort(port, tabId) {
 
   // In case proxy port was disconnected from the other end, from content script
   // This can happen if content script was detached, when user does in-tab navigation
-  // Or if when we notify proxy port to stop reconnecting, when extension port dies
-  // This listener should never be called when we call port.shutdown() from this (background/index.js) script
+  // This listener should never be called when we call port.disconnect() from this (background/index.js) script
   port.onDisconnect.addListener(() => {
     ports[tabId].disconnectPipe?.();
 
     delete ports[tabId].proxy;
   });
-
-  port._reconnectionTimeoutId = setTimeout(
-    reconnectProxyPort,
-    25_000,
-    port,
-    tabId,
-  );
-}
-
-function clearReconnectionTimeout(port) {
-  if (port._reconnectionTimeoutId) {
-    clearTimeout(port._reconnectionTimeoutId);
-    delete port._reconnectionTimeoutId;
-  }
-}
-
-function reconnectProxyPort(port, tabId) {
-  // IMPORTANT: port.onDisconnect will only be emitted if disconnect() was called from the other end
-  // We need to do it manually here if we disconnect proxy port from service worker
-  ports[tabId].disconnectPipe?.();
-
-  // It should be reconnected automatically by proxy content script, look at proxy.js
-  port.disconnect();
 }
 
 function isNumeric(str: string): boolean {
@@ -100,14 +63,21 @@ chrome.runtime.onConnect.addListener(port => {
     // Proxy content script is executed in tab, so it should have it specified.
     const tabId = port.sender.tab.id;
 
+    if (ports[tabId]?.proxy) {
+      port.disconnect();
+      return;
+    }
+
     registerTab(tabId);
     registerProxyPort(port, tabId);
 
-    connectExtensionAndProxyPorts(
-      ports[tabId].extension,
-      ports[tabId].proxy,
-      tabId,
-    );
+    if (ports[tabId].extension) {
+      connectExtensionAndProxyPorts(
+        ports[tabId].extension,
+        ports[tabId].proxy,
+        tabId,
+      );
+    }
 
     return;
   }
@@ -115,27 +85,16 @@ chrome.runtime.onConnect.addListener(port => {
   if (isNumeric(port.name)) {
     // Extension port doesn't have tab id specified, because its sender is the extension.
     const tabId = +port.name;
-    const extensionPortAlreadyConnected = ports[tabId]?.extension != null;
-
-    // Handle the case when extension port was disconnected and we were not notified
-    if (extensionPortAlreadyConnected) {
-      ports[tabId].disconnectPipe?.();
-    }
 
     registerTab(tabId);
     registerExtensionPort(port, tabId);
 
-    if (extensionPortAlreadyConnected) {
-      const proxyPort = ports[tabId].proxy;
-
-      // Avoid re-injecting the content script, we might end up in a situation
-      // where we would have multiple proxy ports opened and trying to reconnect
-      if (proxyPort) {
-        clearReconnectionTimeout(proxyPort);
-        reconnectProxyPort(proxyPort, tabId);
-      }
-    } else {
-      injectProxy(tabId);
+    if (ports[tabId].proxy) {
+      connectExtensionAndProxyPorts(
+        ports[tabId].extension,
+        ports[tabId].proxy,
+        tabId,
+      );
     }
 
     return;
