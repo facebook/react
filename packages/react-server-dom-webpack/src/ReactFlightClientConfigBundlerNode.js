@@ -13,7 +13,18 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-export type SSRManifest = {
+import type {ImportMetadata} from './shared/ReactFlightImportMetadata';
+import type {ModuleLoading} from 'react-client/src/ReactFlightClientConfig';
+
+import {
+  ID,
+  CHUNKS,
+  NAME,
+  isAsyncImport,
+} from './shared/ReactFlightImportMetadata';
+import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
+
+export type SSRModuleMap = {
   [clientId: string]: {
     [clientExportName: string]: ClientReference<any>,
   },
@@ -23,12 +34,7 @@ export type ServerManifest = void;
 
 export type ServerReferenceId = string;
 
-export opaque type ClientReferenceMetadata = {
-  id: string,
-  chunks: Array<string>,
-  name: string,
-  async?: boolean,
-};
+export opaque type ClientReferenceMetadata = ImportMetadata;
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {
@@ -37,12 +43,26 @@ export opaque type ClientReference<T> = {
   async?: boolean,
 };
 
+// The reason this function needs to defined here in this file instead of just
+// being exported directly from the WebpackDestination... file is because the
+// ClientReferenceMetadata is opaque and we can't unwrap it there.
+// This should get inlined and we could also just implement an unwrapping function
+// though that risks it getting used in places it shouldn't be. This is unfortunate
+// but currently it seems to be the best option we have.
+export function prepareDestinationForModule(
+  moduleLoading: ModuleLoading,
+  nonce: ?string,
+  metadata: ClientReferenceMetadata,
+) {
+  prepareDestinationWithChunks(moduleLoading, metadata[CHUNKS], nonce);
+}
+
 export function resolveClientReference<T>(
-  bundlerConfig: SSRManifest,
+  bundlerConfig: SSRModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  const moduleExports = bundlerConfig[metadata.id];
-  let resolvedModuleData = moduleExports[metadata.name];
+  const moduleExports = bundlerConfig[metadata[ID]];
+  let resolvedModuleData = moduleExports[metadata[NAME]];
   let name;
   if (resolvedModuleData) {
     // The potentially aliased name.
@@ -53,17 +73,17 @@ export function resolveClientReference<T>(
     if (!resolvedModuleData) {
       throw new Error(
         'Could not find the module "' +
-          metadata.id +
+          metadata[ID] +
           '" in the React SSR Manifest. ' +
           'This is probably a bug in the React Server Components bundler.',
       );
     }
-    name = metadata.name;
+    name = metadata[NAME];
   }
   return {
     specifier: resolvedModuleData.specifier,
     name: name,
-    async: metadata.async,
+    async: isAsyncImport(metadata),
   };
 }
 

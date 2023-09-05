@@ -22,6 +22,7 @@ global.setTimeout = cb => cb();
 let clientExports;
 let webpackMap;
 let webpackModules;
+let webpackModuleLoading;
 let React;
 let ReactDOMServer;
 let ReactServerDOMServer;
@@ -33,18 +34,28 @@ describe('ReactFlightDOMEdge', () => {
     jest.resetModules();
 
     // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.shared-subset'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.edge'),
     );
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
 
     const WebpackMock = require('./utils/WebpackMock');
+
     clientExports = WebpackMock.clientExports;
     webpackMap = WebpackMock.webpackMap;
     webpackModules = WebpackMock.webpackModules;
+    webpackModuleLoading = WebpackMock.moduleLoading;
+
+    jest.resetModules();
+    jest.unmock('react');
+    jest.unmock('react-server-dom-webpack/server');
+    jest.mock('react-server-dom-webpack/client', () =>
+      require('react-server-dom-webpack/client.edge'),
+    );
     React = require('react');
     ReactDOMServer = require('react-dom/server.edge');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
-    ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
+    ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.use;
   });
 
@@ -122,7 +133,10 @@ describe('ReactFlightDOMEdge', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
-      moduleMap: translationMap,
+      ssrManifest: {
+        moduleMap: translationMap,
+        moduleLoading: webpackModuleLoading,
+      },
     });
 
     function ClientRoot() {
@@ -154,7 +168,15 @@ describe('ReactFlightDOMEdge', () => {
     expect(serializedContent).not.toContain('\\"');
     expect(serializedContent).toContain('\t');
 
-    const result = await ReactServerDOMClient.createFromReadableStream(stream2);
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
     // Should still match the result when parsed
     expect(result.text).toBe(testString);
     expect(result.text2).toBe(testString2);
@@ -183,7 +205,12 @@ describe('ReactFlightDOMEdge', () => {
     const stream = passThrough(
       ReactServerDOMServer.renderToReadableStream(buffers),
     );
-    const result = await ReactServerDOMClient.createFromReadableStream(stream);
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     expect(result).toEqual(buffers);
   });
 });

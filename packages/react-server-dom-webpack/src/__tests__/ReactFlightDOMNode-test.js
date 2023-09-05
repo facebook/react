@@ -16,6 +16,7 @@ global.setImmediate = cb => cb();
 let clientExports;
 let webpackMap;
 let webpackModules;
+let webpackModuleLoading;
 let React;
 let ReactDOMServer;
 let ReactServerDOMServer;
@@ -28,18 +29,28 @@ describe('ReactFlightDOMNode', () => {
     jest.resetModules();
 
     // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.shared-subset'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node'),
     );
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
 
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     webpackMap = WebpackMock.webpackMap;
     webpackModules = WebpackMock.webpackModules;
+    webpackModuleLoading = WebpackMock.moduleLoading;
+
+    jest.resetModules();
+    jest.unmock('react');
+    jest.unmock('react-server-dom-webpack/server');
+    jest.mock('react-server-dom-webpack/client', () =>
+      require('react-server-dom-webpack/client.node'),
+    );
+
     React = require('react');
     ReactDOMServer = require('react-dom/server.node');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.node');
-    ReactServerDOMClient = require('react-server-dom-webpack/client.node');
+    ReactServerDOMClient = require('react-server-dom-webpack/client');
     Stream = require('stream');
     use = React.use;
   });
@@ -68,7 +79,11 @@ describe('ReactFlightDOMNode', () => {
     }
     // The Client build may not have the same IDs as the Server bundles for the same
     // component.
-    const ClientComponentOnTheClient = clientExports(ClientComponent);
+    const ClientComponentOnTheClient = clientExports(
+      ClientComponent,
+      123,
+      'path/to/chunk.js',
+    );
     const ClientComponentOnTheServer = clientExports(ClientComponent);
 
     // In the SSR bundle this module won't exist. We simulate this by deleting it.
@@ -83,6 +98,10 @@ describe('ReactFlightDOMNode', () => {
         '*': ssrMetadata,
       },
     };
+    const ssrManifest = {
+      moduleMap: translationMap,
+      moduleLoading: webpackModuleLoading,
+    };
 
     function App() {
       return <ClientComponentOnTheClient />;
@@ -93,14 +112,16 @@ describe('ReactFlightDOMNode', () => {
       webpackMap,
     );
     const readable = new Stream.PassThrough();
-    const response = ReactServerDOMClient.createFromNodeStream(
-      readable,
-      translationMap,
-    );
+    let response;
 
     stream.pipe(readable);
 
     function ClientRoot() {
+      if (response) return use(response);
+      response = ReactServerDOMClient.createFromNodeStream(
+        readable,
+        ssrManifest,
+      );
       return use(response);
     }
 
@@ -108,7 +129,9 @@ describe('ReactFlightDOMNode', () => {
       <ClientRoot />,
     );
     const result = await readResult(ssrStream);
-    expect(result).toEqual('<span>Client Component</span>');
+    expect(result).toEqual(
+      '<script src="/path/to/chunk.js" async=""></script><span>Client Component</span>',
+    );
   });
 
   it('should encode long string in a compact format', async () => {
@@ -121,7 +144,10 @@ describe('ReactFlightDOMNode', () => {
     const readable = new Stream.PassThrough();
 
     const stringResult = readResult(readable);
-    const parsedResult = ReactServerDOMClient.createFromNodeStream(readable);
+    const parsedResult = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: webpackModuleLoading,
+    });
 
     stream.pipe(readable);
 
@@ -160,9 +186,76 @@ describe('ReactFlightDOMNode', () => {
     ];
     const stream = ReactServerDOMServer.renderToPipeableStream(buffers);
     const readable = new Stream.PassThrough();
-    const promise = ReactServerDOMClient.createFromNodeStream(readable);
+    const promise = ReactServerDOMClient.createFromNodeStream(readable, {
+      moduleMap: {},
+      moduleLoading: webpackModuleLoading,
+    });
     stream.pipe(readable);
     const result = await promise;
     expect(result).toEqual(buffers);
+  });
+
+  it('should allow accept a nonce option for Flight preinitialized scripts', async () => {
+    function ClientComponent() {
+      return <span>Client Component</span>;
+    }
+    // The Client build may not have the same IDs as the Server bundles for the same
+    // component.
+    const ClientComponentOnTheClient = clientExports(
+      ClientComponent,
+      123,
+      'path/to/chunk.js',
+    );
+    const ClientComponentOnTheServer = clientExports(ClientComponent);
+
+    // In the SSR bundle this module won't exist. We simulate this by deleting it.
+    const clientId = webpackMap[ClientComponentOnTheClient.$$id].id;
+    delete webpackModules[clientId];
+
+    // Instead, we have to provide a translation from the client meta data to the SSR
+    // meta data.
+    const ssrMetadata = webpackMap[ClientComponentOnTheServer.$$id];
+    const translationMap = {
+      [clientId]: {
+        '*': ssrMetadata,
+      },
+    };
+    const ssrManifest = {
+      moduleMap: translationMap,
+      moduleLoading: webpackModuleLoading,
+    };
+
+    function App() {
+      return <ClientComponentOnTheClient />;
+    }
+
+    const stream = ReactServerDOMServer.renderToPipeableStream(
+      <App />,
+      webpackMap,
+    );
+    const readable = new Stream.PassThrough();
+    let response;
+
+    stream.pipe(readable);
+
+    function ClientRoot() {
+      if (response) return use(response);
+      response = ReactServerDOMClient.createFromNodeStream(
+        readable,
+        ssrManifest,
+        {
+          nonce: 'r4nd0m',
+        },
+      );
+      return use(response);
+    }
+
+    const ssrStream = await ReactDOMServer.renderToPipeableStream(
+      <ClientRoot />,
+    );
+    const result = await readResult(ssrStream);
+    expect(result).toEqual(
+      '<script src="/path/to/chunk.js" async="" nonce="r4nd0m"></script><span>Client Component</span>',
+    );
   });
 });

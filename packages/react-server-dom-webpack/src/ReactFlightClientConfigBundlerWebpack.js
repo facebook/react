@@ -13,35 +13,62 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 
-export type SSRManifest = null | {
+import type {
+  ImportMetadata,
+  ImportManifestEntry,
+} from './shared/ReactFlightImportMetadata';
+import type {ModuleLoading} from 'react-client/src/ReactFlightClientConfig';
+
+import {
+  ID,
+  CHUNKS,
+  NAME,
+  isAsyncImport,
+} from './shared/ReactFlightImportMetadata';
+
+import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
+
+import {loadChunk} from 'react-client/src/ReactFlightClientConfig';
+
+export type SSRModuleMap = null | {
   [clientId: string]: {
-    [clientExportName: string]: ClientReferenceMetadata,
+    [clientExportName: string]: ClientReferenceManifestEntry,
   },
 };
 
 export type ServerManifest = {
-  [id: string]: ClientReference<any>,
+  [id: string]: ImportManifestEntry,
 };
 
 export type ServerReferenceId = string;
 
-export opaque type ClientReferenceMetadata = {
-  id: string,
-  chunks: Array<string>,
-  name: string,
-  async: boolean,
-};
+export opaque type ClientReferenceManifestEntry = ImportManifestEntry;
+export opaque type ClientReferenceMetadata = ImportMetadata;
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = ClientReferenceMetadata;
 
+// The reason this function needs to defined here in this file instead of just
+// being exported directly from the WebpackDestination... file is because the
+// ClientReferenceMetadata is opaque and we can't unwrap it there.
+// This should get inlined and we could also just implement an unwrapping function
+// though that risks it getting used in places it shouldn't be. This is unfortunate
+// but currently it seems to be the best option we have.
+export function prepareDestinationForModule(
+  moduleLoading: ModuleLoading,
+  nonce: ?string,
+  metadata: ClientReferenceMetadata,
+) {
+  prepareDestinationWithChunks(moduleLoading, metadata[CHUNKS], nonce);
+}
+
 export function resolveClientReference<T>(
-  bundlerConfig: SSRManifest,
+  bundlerConfig: SSRModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
   if (bundlerConfig) {
-    const moduleExports = bundlerConfig[metadata.id];
-    let resolvedModuleData = moduleExports[metadata.name];
+    const moduleExports = bundlerConfig[metadata[ID]];
+    let resolvedModuleData = moduleExports[metadata[NAME]];
     let name;
     if (resolvedModuleData) {
       // The potentially aliased name.
@@ -52,19 +79,23 @@ export function resolveClientReference<T>(
       if (!resolvedModuleData) {
         throw new Error(
           'Could not find the module "' +
-            metadata.id +
+            metadata[ID] +
             '" in the React SSR Manifest. ' +
             'This is probably a bug in the React Server Components bundler.',
         );
       }
-      name = metadata.name;
+      name = metadata[NAME];
     }
-    return {
-      id: resolvedModuleData.id,
-      chunks: resolvedModuleData.chunks,
-      name: name,
-      async: !!metadata.async,
-    };
+    if (isAsyncImport(metadata)) {
+      return [
+        resolvedModuleData.id,
+        resolvedModuleData.chunks,
+        name,
+        1 /* async */,
+      ];
+    } else {
+      return [resolvedModuleData.id, resolvedModuleData.chunks, name];
+    }
   }
   return metadata;
 }
@@ -98,12 +129,7 @@ export function resolveServerReference<T>(
     }
   }
   // TODO: This needs to return async: true if it's an async module.
-  return {
-    id: resolvedModuleData.id,
-    chunks: resolvedModuleData.chunks,
-    name: name,
-    async: false,
-  };
+  return [resolvedModuleData.id, resolvedModuleData.chunks, name];
 }
 
 // The chunk cache contains all the chunks we've preloaded so far.
@@ -147,13 +173,15 @@ function ignoreReject() {
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
-  const chunks = metadata.chunks;
+  const chunks = metadata[CHUNKS];
   const promises = [];
-  for (let i = 0; i < chunks.length; i++) {
-    const chunkId = chunks[i];
+  let i = 0;
+  while (i < chunks.length) {
+    const chunkId = chunks[i++];
+    const chunkFilename = chunks[i++];
     const entry = chunkCache.get(chunkId);
     if (entry === undefined) {
-      const thenable = __webpack_chunk_load__(chunkId);
+      const thenable = loadChunk(chunkId, chunkFilename);
       promises.push(thenable);
       // $FlowFixMe[method-unbinding]
       const resolve = chunkCache.set.bind(chunkCache, chunkId, null);
@@ -163,12 +191,12 @@ export function preloadModule<T>(
       promises.push(entry);
     }
   }
-  if (metadata.async) {
+  if (isAsyncImport(metadata)) {
     if (promises.length === 0) {
-      return requireAsyncModule(metadata.id);
+      return requireAsyncModule(metadata[ID]);
     } else {
       return Promise.all(promises).then(() => {
-        return requireAsyncModule(metadata.id);
+        return requireAsyncModule(metadata[ID]);
       });
     }
   } else if (promises.length > 0) {
@@ -181,8 +209,8 @@ export function preloadModule<T>(
 // Actually require the module or suspend if it's not yet ready.
 // Increase priority if necessary.
 export function requireModule<T>(metadata: ClientReference<T>): T {
-  let moduleExports = __webpack_require__(metadata.id);
-  if (metadata.async) {
+  let moduleExports = __webpack_require__(metadata[ID]);
+  if (isAsyncImport(metadata)) {
     if (typeof moduleExports.then !== 'function') {
       // This wasn't a promise after all.
     } else if (moduleExports.status === 'fulfilled') {
@@ -192,15 +220,15 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
       throw moduleExports.reason;
     }
   }
-  if (metadata.name === '*') {
+  if (metadata[NAME] === '*') {
     // This is a placeholder value that represents that the caller imported this
     // as a CommonJS module as is.
     return moduleExports;
   }
-  if (metadata.name === '') {
+  if (metadata[NAME] === '') {
     // This is a placeholder value that represents that the caller accessed the
     // default property of this if it was an ESM interop module.
     return moduleExports.__esModule ? moduleExports.default : moduleExports;
   }
-  return moduleExports[metadata.name];
+  return moduleExports[metadata[NAME]];
 }

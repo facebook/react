@@ -46,9 +46,17 @@ describe('ReactFetch', () => {
     if (gate(flags => !flags.www)) {
       jest.mock('react', () => require('react/react.shared-subset'));
     }
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.browser'),
+    );
+    require('react-server-dom-webpack/src/__tests__/utils/WebpackMock');
 
     React = require('react');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
+
+    jest.resetModules();
+    jest.unmock('react');
+    jest.unmock('react-server-dom-webpack/server');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.use;
     cache = React.cache;
