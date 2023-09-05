@@ -266,7 +266,6 @@ const skipFilter = new Set([
   "do-while-conditional-break",
   "do-while-early-unconditional-break",
   "fbt-params-complex-param-value",
-  "for-of-mutate",
   "function-expression-captures-value-later-frozen-jsx",
   "function-expression-maybe-mutates-hook-return-value",
   "function-expression-with-store-to-parameter",

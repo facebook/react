@@ -21,6 +21,8 @@ import React from "react";
  * ```
  */
 
+export type StringKeyedObject = { [key: string]: unknown };
+
 export const CONST_STRING0 = "global string 0";
 export const CONST_STRING1 = "global string 1";
 export const CONST_STRING2 = "global string 2";
@@ -59,7 +61,7 @@ export function shallowCopy(obj: Object): object {
   return Object.assign({}, obj);
 }
 
-export function makeObject_Primitives(): object {
+export function makeObject_Primitives(): StringKeyedObject {
   return { a: 0, b: "value1", c: true };
 }
 
