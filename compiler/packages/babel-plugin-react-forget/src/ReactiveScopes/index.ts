@@ -28,3 +28,9 @@ export { pruneTemporaryLValues as pruneUnusedLValues } from "./PruneTemporaryLVa
 export { pruneUnusedLabels } from "./PruneUnusedLabels";
 export { pruneUnusedScopes } from "./PruneUnusedScopes";
 export { renameVariables } from "./RenameVariables";
+export {
+  ReactiveFunctionTransform,
+  Transformed,
+  eachReactiveValueOperand,
+  visitReactiveFunction,
+} from "./visitors";
