@@ -176,7 +176,7 @@ function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
   }
 }
 
-function codegenReactiveScope(
+function codegenMemoBlockForReactiveScope(
   cx: Context,
   statements: Array<t.Statement>,
   scope: ReactiveScope,
@@ -317,6 +317,54 @@ function codegenReactiveScope(
   computationBlock.body.push(...cacheStoreStatements);
   const memoBlock = t.blockStatement(cacheLoadStatements);
   statements.push(t.ifStatement(testCondition, computationBlock, memoBlock));
+}
+
+function codegenSignalBlockForReactiveScope(
+  cx: Context,
+  statements: Array<t.Statement>,
+  scope: ReactiveScope,
+  block: ReactiveBlock
+): void {
+  CompilerError.invariant(scope.reassignments.size === 0, {
+    reason: "Add support for reassignments in a derived computation block",
+    loc: null,
+    suggestions: null,
+  });
+  CompilerError.invariant(scope.declarations.size === 1, {
+    reason:
+      "Add support for multiple declarations in a derived computation block",
+    loc: null,
+    suggestions: null,
+  });
+  const [_, { identifier }] = [...scope.declarations][0];
+  const name = convertIdentifier(identifier);
+
+  const derivedBlock = codegenBlock(cx, block);
+  derivedBlock.body.push(t.returnStatement(name));
+
+  const derivedLambda = t.functionExpression(null, [], derivedBlock, false);
+  const derivedComputationCall = t.callExpression(t.identifier("derived"), [
+    derivedLambda,
+  ]);
+
+  statements.push(
+    t.variableDeclaration("const", [
+      t.variableDeclarator(name, derivedComputationCall),
+    ])
+  );
+}
+
+function codegenReactiveScope(
+  cx: Context,
+  statements: Array<t.Statement>,
+  scope: ReactiveScope,
+  block: ReactiveBlock
+): void {
+  if (cx.env.enableForest) {
+    codegenSignalBlockForReactiveScope(cx, statements, scope, block);
+  } else {
+    codegenMemoBlockForReactiveScope(cx, statements, scope, block);
+  }
 }
 
 function codegenTerminal(

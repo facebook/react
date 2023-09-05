@@ -185,6 +185,7 @@ export class Environment {
   disableAllMemoization: boolean;
   enableEmitFreeze: ExternalFunction | null;
   assertValidMutableRanges: boolean;
+  enableForest: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
 
@@ -233,6 +234,7 @@ export class Environment {
     this.assertValidMutableRanges = config?.assertValidMutableRanges ?? false;
     this.validateNoSetStateInRender =
       config?.validateNoSetStateInRender ?? false;
+    this.enableForest = config?.enableForest ?? false;
 
     this.#contextIdentifiers = contextIdentifiers;
   }
