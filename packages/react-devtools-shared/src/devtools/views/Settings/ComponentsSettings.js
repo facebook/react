@@ -443,7 +443,7 @@ export default function ComponentsSettings(_: {}): React.Node {
         Add filter
       </Button>
       {componentFilters.length > 0 && (
-        <Button onClick={removeAllFilter} title="Delete All filters">
+        <Button onClick={removeAllFilter} title="Delete all filters">
           <ButtonIcon className={styles.ButtonIcon} type="delete" />
           Delete all filters
         </Button>
