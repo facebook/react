@@ -3058,7 +3058,7 @@ function gatherCapturedDeps(
     }
   }
 
-  fn.get("body").traverse({
+  fn.traverse({
     Expression(path) {
       visit(path);
     },
