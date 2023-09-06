@@ -1021,12 +1021,13 @@ function renderIndeterminateComponent(
       const prevTreeContext = task.treeContext;
       const totalChildren = 1;
       const index = 0;
+      // Modify the id context. Because we'll need to reset this if something
+      // suspends or errors, we'll use the non-destructive render path.
       task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
-      try {
-        renderNodeDestructive(request, task, null, value, 0);
-      } finally {
-        task.treeContext = prevTreeContext;
-      }
+      renderNode(request, task, value, 0);
+      // Like the other contexts, this does not need to be in a finally block
+      // because renderNode takes care of unwinding the stack.
+      task.treeContext = prevTreeContext;
     } else {
       renderNodeDestructive(request, task, null, value, 0);
     }
@@ -1126,12 +1127,12 @@ function renderForwardRef(
     const prevTreeContext = task.treeContext;
     const totalChildren = 1;
     const index = 0;
+    // Modify the id context. Because we'll need to reset this if something
+    // suspends or errors, we'll use the non-destructive render path.
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
-    try {
-      renderNodeDestructive(request, task, null, children, 0);
-    } finally {
-      task.treeContext = prevTreeContext;
-    }
+    renderNode(request, task, children, 0);
+    // Like the other contexts, this does not need to be in a finally block
+    // because renderNode takes care of unwinding the stack.
   } else {
     renderNodeDestructive(request, task, null, children, 0);
   }
@@ -1656,26 +1657,27 @@ function renderChildrenArray(
   children: Array<any>,
   childIndex: number,
 ) {
-  const prevKeyPath = task.keyPath;
+  const prevTreeContext = task.treeContext;
   const totalChildren = children.length;
   for (let i = 0; i < totalChildren; i++) {
-    const prevTreeContext = task.treeContext;
+    const node = children[i];
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
-    try {
-      const node = children[i];
-      if (isArray(node) || getIteratorFn(node)) {
-        // Nested arrays behave like a "fragment node" which is keyed.
-        // Therefore we need to add the current index as a parent key.
-        task.keyPath = [task.keyPath, '', childIndex];
-      }
+    if (isArray(node) || getIteratorFn(node)) {
+      // Nested arrays behave like a "fragment node" which is keyed.
+      // Therefore we need to add the current index as a parent key.
+      const prevKeyPath = task.keyPath;
+      task.keyPath = [task.keyPath, '', childIndex];
+      renderNode(request, task, node, i);
+      task.keyPath = prevKeyPath;
+    } else {
       // We need to use the non-destructive form so that we can safely pop back
       // up and render the sibling if something suspends.
       renderNode(request, task, node, i);
-    } finally {
-      task.treeContext = prevTreeContext;
-      task.keyPath = prevKeyPath;
     }
   }
+  // Because this context is always set right before rendering every child, we
+  // only need to reset it to the previous value at the very end.
+  task.treeContext = prevTreeContext;
 }
 
 function trackPostpone(
@@ -1824,6 +1826,7 @@ function renderNode(
   const previousLegacyContext = task.legacyContext;
   const previousContext = task.context;
   const previousKeyPath = task.keyPath;
+  const previousTreeContext = task.treeContext;
   let previousComponentStack = null;
   if (__DEV__) {
     previousComponentStack = task.componentStack;
@@ -1860,6 +1863,7 @@ function renderNode(
         task.legacyContext = previousLegacyContext;
         task.context = previousContext;
         task.keyPath = previousKeyPath;
+        task.treeContext = previousTreeContext;
         // Restore all active ReactContexts to what they were before.
         switchContext(previousContext);
         if (__DEV__) {
@@ -1892,6 +1896,7 @@ function renderNode(
         task.legacyContext = previousLegacyContext;
         task.context = previousContext;
         task.keyPath = previousKeyPath;
+        task.treeContext = previousTreeContext;
         // Restore all active ReactContexts to what they were before.
         switchContext(previousContext);
         if (__DEV__) {
@@ -1906,6 +1911,7 @@ function renderNode(
     task.legacyContext = previousLegacyContext;
     task.context = previousContext;
     task.keyPath = previousKeyPath;
+    task.treeContext = previousTreeContext;
     // Restore all active ReactContexts to what they were before.
     switchContext(previousContext);
     if (__DEV__) {
