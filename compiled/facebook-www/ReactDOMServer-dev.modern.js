@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-b63e4245";
+var ReactVersion = "18.3.0-www-modern-7792b590";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -10182,14 +10182,14 @@ function renderIndeterminateComponent(
       // a single "child" slot.
       var prevTreeContext = task.treeContext;
       var totalChildren = 1;
-      var index = 0;
-      task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
+      var index = 0; // Modify the id context. Because we'll need to reset this if something
+      // suspends or errors, we'll use the non-destructive render path.
 
-      try {
-        renderNodeDestructive(request, task, null, value, 0);
-      } finally {
-        task.treeContext = prevTreeContext;
-      }
+      task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
+      renderNode(request, task, value, 0); // Like the other contexts, this does not need to be in a finally block
+      // because renderNode takes care of unwinding the stack.
+
+      task.treeContext = prevTreeContext;
     } else {
       renderNodeDestructive(request, task, null, value, 0);
     }
@@ -10289,14 +10289,12 @@ function renderForwardRef(request, task, prevThenableState, type, props, ref) {
     // a single "child" slot.
     var prevTreeContext = task.treeContext;
     var totalChildren = 1;
-    var index = 0;
-    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
+    var index = 0; // Modify the id context. Because we'll need to reset this if something
+    // suspends or errors, we'll use the non-destructive render path.
 
-    try {
-      renderNodeDestructive(request, task, null, children, 0);
-    } finally {
-      task.treeContext = prevTreeContext;
-    }
+    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
+    renderNode(request, task, children, 0); // Like the other contexts, this does not need to be in a finally block
+    // because renderNode takes care of unwinding the stack.
   } else {
     renderNodeDestructive(request, task, null, children, 0);
   }
@@ -10796,29 +10794,29 @@ function renderNodeDestructiveImpl(
 }
 
 function renderChildrenArray(request, task, children, childIndex) {
-  var prevKeyPath = task.keyPath;
+  var prevTreeContext = task.treeContext;
   var totalChildren = children.length;
 
   for (var i = 0; i < totalChildren; i++) {
-    var prevTreeContext = task.treeContext;
+    var node = children[i];
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
 
-    try {
-      var node = children[i];
-
-      if (isArray(node) || getIteratorFn(node)) {
-        // Nested arrays behave like a "fragment node" which is keyed.
-        // Therefore we need to add the current index as a parent key.
-        task.keyPath = [task.keyPath, "", childIndex];
-      } // We need to use the non-destructive form so that we can safely pop back
-      // up and render the sibling if something suspends.
-
+    if (isArray(node) || getIteratorFn(node)) {
+      // Nested arrays behave like a "fragment node" which is keyed.
+      // Therefore we need to add the current index as a parent key.
+      var prevKeyPath = task.keyPath;
+      task.keyPath = [task.keyPath, "", childIndex];
       renderNode(request, task, node, i);
-    } finally {
-      task.treeContext = prevTreeContext;
       task.keyPath = prevKeyPath;
+    } else {
+      // We need to use the non-destructive form so that we can safely pop back
+      // up and render the sibling if something suspends.
+      renderNode(request, task, node, i);
     }
-  }
+  } // Because this context is always set right before rendering every child, we
+  // only need to reset it to the previous value at the very end.
+
+  task.treeContext = prevTreeContext;
 }
 
 function spawnNewSuspendedTask(request, task, thenableState, x) {
@@ -10875,6 +10873,7 @@ function renderNode(request, task, node, childIndex) {
   var previousLegacyContext = task.legacyContext;
   var previousContext = task.context;
   var previousKeyPath = task.keyPath;
+  var previousTreeContext = task.treeContext;
   var previousComponentStack = null;
 
   {
@@ -10908,7 +10907,8 @@ function renderNode(request, task, node, childIndex) {
         task.formatContext = previousFormatContext;
         task.legacyContext = previousLegacyContext;
         task.context = previousContext;
-        task.keyPath = previousKeyPath; // Restore all active ReactContexts to what they were before.
+        task.keyPath = previousKeyPath;
+        task.treeContext = previousTreeContext; // Restore all active ReactContexts to what they were before.
 
         switchContext(previousContext);
 
@@ -10924,7 +10924,8 @@ function renderNode(request, task, node, childIndex) {
     task.formatContext = previousFormatContext;
     task.legacyContext = previousLegacyContext;
     task.context = previousContext;
-    task.keyPath = previousKeyPath; // Restore all active ReactContexts to what they were before.
+    task.keyPath = previousKeyPath;
+    task.treeContext = previousTreeContext; // Restore all active ReactContexts to what they were before.
 
     switchContext(previousContext);
 

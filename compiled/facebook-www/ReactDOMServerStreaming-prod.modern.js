@@ -2949,23 +2949,19 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
         else prevThenableState.queue = null;
       props = JSCompiler_inline_result.render();
       renderNodeDestructiveImpl(request, task, null, props, 0);
-    } else if (
-      ((currentlyRenderingComponent = {}),
-      (currentlyRenderingTask = task),
-      (thenableIndexCounter = localIdCounter = 0),
-      (thenableState = prevThenableState),
-      (JSCompiler_inline_result = type(props, void 0)),
-      (props = finishHooks(type, props, JSCompiler_inline_result, void 0)),
-      0 !== localIdCounter)
-    ) {
-      type = task.treeContext;
-      task.treeContext = pushTreeContext(type, 1, 0);
-      try {
-        renderNodeDestructiveImpl(request, task, null, props, 0);
-      } finally {
-        task.treeContext = type;
-      }
-    } else renderNodeDestructiveImpl(request, task, null, props, 0);
+    } else
+      (currentlyRenderingComponent = {}),
+        (currentlyRenderingTask = task),
+        (thenableIndexCounter = localIdCounter = 0),
+        (thenableState = prevThenableState),
+        (JSCompiler_inline_result = type(props, void 0)),
+        (props = finishHooks(type, props, JSCompiler_inline_result, void 0)),
+        0 !== localIdCounter
+          ? ((type = task.treeContext),
+            (task.treeContext = pushTreeContext(type, 1, 0)),
+            renderNode(request, task, props, 0),
+            (task.treeContext = type))
+          : renderNodeDestructiveImpl(request, task, null, props, 0);
   else if ("string" === typeof type) {
     JSCompiler_inline_result = task.blockedSegment;
     ref = pushStartInstance(
@@ -3134,15 +3130,10 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           thenableState = prevThenableState;
           JSCompiler_inline_result = type(props, ref);
           props = finishHooks(type, props, JSCompiler_inline_result, ref);
-          if (0 !== localIdCounter) {
-            type = task.treeContext;
-            task.treeContext = pushTreeContext(type, 1, 0);
-            try {
-              renderNodeDestructiveImpl(request, task, null, props, 0);
-            } finally {
-              task.treeContext = type;
-            }
-          } else renderNodeDestructiveImpl(request, task, null, props, 0);
+          0 !== localIdCounter
+            ? ((task.treeContext = pushTreeContext(task.treeContext, 1, 0)),
+              renderNode(request, task, props, 0))
+            : renderNodeDestructiveImpl(request, task, null, props, 0);
           return;
         case REACT_MEMO_TYPE:
           type = type.type;
@@ -3295,21 +3286,22 @@ function renderNodeDestructiveImpl(
 }
 function renderChildrenArray(request, task, children, childIndex) {
   for (
-    var prevKeyPath = task.keyPath, totalChildren = children.length, i = 0;
+    var prevTreeContext = task.treeContext,
+      totalChildren = children.length,
+      i = 0;
     i < totalChildren;
     i++
   ) {
-    var prevTreeContext = task.treeContext;
+    var node = children[i];
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
-    try {
-      var node = children[i];
-      if (isArrayImpl(node) || getIteratorFn(node))
-        task.keyPath = [task.keyPath, "", childIndex];
+    if (isArrayImpl(node) || getIteratorFn(node)) {
+      var prevKeyPath = task.keyPath;
+      task.keyPath = [task.keyPath, "", childIndex];
       renderNode(request, task, node, i);
-    } finally {
-      (task.treeContext = prevTreeContext), (task.keyPath = prevKeyPath);
-    }
+      task.keyPath = prevKeyPath;
+    } else renderNode(request, task, node, i);
   }
+  task.treeContext = prevTreeContext;
 }
 function renderNode(request, task, node, childIndex) {
   var segment = task.blockedSegment,
@@ -3318,7 +3310,8 @@ function renderNode(request, task, node, childIndex) {
     previousFormatContext = task.formatContext,
     previousLegacyContext = task.legacyContext,
     previousContext = task.context,
-    previousKeyPath = task.keyPath;
+    previousKeyPath = task.keyPath,
+    previousTreeContext = task.treeContext;
   try {
     return renderNodeDestructiveImpl(request, task, null, node, childIndex);
   } catch (thrownValue) {
@@ -3364,6 +3357,7 @@ function renderNode(request, task, node, childIndex) {
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
         (task.keyPath = previousKeyPath),
+        (task.treeContext = previousTreeContext),
         switchContext(previousContext);
     else
       throw (
@@ -3371,6 +3365,7 @@ function renderNode(request, task, node, childIndex) {
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
         (task.keyPath = previousKeyPath),
+        (task.treeContext = previousTreeContext),
         switchContext(previousContext),
         node)
       );

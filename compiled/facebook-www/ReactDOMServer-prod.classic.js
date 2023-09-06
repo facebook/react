@@ -3174,24 +3174,25 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
         renderNodeDestructiveImpl(request, task, null, props, 0);
         task.legacyContext = prevThenableState;
       } else renderNodeDestructiveImpl(request, task, null, props, 0);
-    } else if (
-      ((contextKey = getMaskedContext(type, task.legacyContext)),
-      (currentlyRenderingComponent = {}),
-      (currentlyRenderingTask = task),
-      (thenableIndexCounter = localIdCounter = 0),
-      (thenableState = prevThenableState),
-      (JSCompiler_inline_result = type(props, contextKey)),
-      (props = finishHooks(type, props, JSCompiler_inline_result, contextKey)),
-      0 !== localIdCounter)
-    ) {
-      type = task.treeContext;
-      task.treeContext = pushTreeContext(type, 1, 0);
-      try {
-        renderNodeDestructiveImpl(request, task, null, props, 0);
-      } finally {
-        task.treeContext = type;
-      }
-    } else renderNodeDestructiveImpl(request, task, null, props, 0);
+    } else
+      (contextKey = getMaskedContext(type, task.legacyContext)),
+        (currentlyRenderingComponent = {}),
+        (currentlyRenderingTask = task),
+        (thenableIndexCounter = localIdCounter = 0),
+        (thenableState = prevThenableState),
+        (JSCompiler_inline_result = type(props, contextKey)),
+        (props = finishHooks(
+          type,
+          props,
+          JSCompiler_inline_result,
+          contextKey
+        )),
+        0 !== localIdCounter
+          ? ((type = task.treeContext),
+            (task.treeContext = pushTreeContext(type, 1, 0)),
+            renderNode(request, task, props, 0),
+            (task.treeContext = type))
+          : renderNodeDestructiveImpl(request, task, null, props, 0);
   else if ("string" === typeof type) {
     contextKey = task.blockedSegment;
     prevThenableState = pushStartInstance(
@@ -3365,15 +3366,10 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           thenableState = prevThenableState;
           contextKey = type(props, ref);
           props = finishHooks(type, props, contextKey, ref);
-          if (0 !== localIdCounter) {
-            type = task.treeContext;
-            task.treeContext = pushTreeContext(type, 1, 0);
-            try {
-              renderNodeDestructiveImpl(request, task, null, props, 0);
-            } finally {
-              task.treeContext = type;
-            }
-          } else renderNodeDestructiveImpl(request, task, null, props, 0);
+          0 !== localIdCounter
+            ? ((task.treeContext = pushTreeContext(task.treeContext, 1, 0)),
+              renderNode(request, task, props, 0))
+            : renderNodeDestructiveImpl(request, task, null, props, 0);
           return;
         case REACT_MEMO_TYPE:
           type = type.type;
@@ -3515,21 +3511,22 @@ function renderNodeDestructiveImpl(
 }
 function renderChildrenArray(request, task, children, childIndex) {
   for (
-    var prevKeyPath = task.keyPath, totalChildren = children.length, i = 0;
+    var prevTreeContext = task.treeContext,
+      totalChildren = children.length,
+      i = 0;
     i < totalChildren;
     i++
   ) {
-    var prevTreeContext = task.treeContext;
+    var node = children[i];
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
-    try {
-      var node = children[i];
-      if (isArrayImpl(node) || getIteratorFn(node))
-        task.keyPath = [task.keyPath, "", childIndex];
+    if (isArrayImpl(node) || getIteratorFn(node)) {
+      var prevKeyPath = task.keyPath;
+      task.keyPath = [task.keyPath, "", childIndex];
       renderNode(request, task, node, i);
-    } finally {
-      (task.treeContext = prevTreeContext), (task.keyPath = prevKeyPath);
-    }
+      task.keyPath = prevKeyPath;
+    } else renderNode(request, task, node, i);
   }
+  task.treeContext = prevTreeContext;
 }
 function renderNode(request, task, node, childIndex) {
   var segment = task.blockedSegment,
@@ -3538,7 +3535,8 @@ function renderNode(request, task, node, childIndex) {
     previousFormatContext = task.formatContext,
     previousLegacyContext = task.legacyContext,
     previousContext = task.context,
-    previousKeyPath = task.keyPath;
+    previousKeyPath = task.keyPath,
+    previousTreeContext = task.treeContext;
   try {
     return renderNodeDestructiveImpl(request, task, null, node, childIndex);
   } catch (thrownValue) {
@@ -3584,6 +3582,7 @@ function renderNode(request, task, node, childIndex) {
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
         (task.keyPath = previousKeyPath),
+        (task.treeContext = previousTreeContext),
         switchContext(previousContext);
     else
       throw (
@@ -3591,6 +3590,7 @@ function renderNode(request, task, node, childIndex) {
         (task.legacyContext = previousLegacyContext),
         (task.context = previousContext),
         (task.keyPath = previousKeyPath),
+        (task.treeContext = previousTreeContext),
         switchContext(previousContext),
         node)
       );
@@ -4431,4 +4431,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-01cd1133";
+exports.version = "18.3.0-www-classic-5ae5e167";
