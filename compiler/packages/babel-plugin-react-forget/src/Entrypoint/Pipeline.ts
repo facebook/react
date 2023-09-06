@@ -7,7 +7,7 @@
 
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
-import { lowerUseState } from "../Forest";
+import { lowerToForest } from "../Forest";
 import {
   HIRFunction,
   ReactiveFunction,
@@ -247,12 +247,7 @@ export function* run(
   });
 
   if (config?.enableForest) {
-    lowerUseState(reactiveFunction);
-    yield log({
-      kind: "reactive",
-      name: "LowerUseState",
-      value: reactiveFunction,
-    });
+    yield* lowerToForest(reactiveFunction);
   }
 
   promoteUsedTemporaries(reactiveFunction);
