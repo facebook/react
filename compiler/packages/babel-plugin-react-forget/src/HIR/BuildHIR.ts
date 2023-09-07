@@ -913,6 +913,68 @@ function lowerStatement(
     case "EmptyStatement": {
       return;
     }
+    case "TryStatement": {
+      const stmt = stmtPath as NodePath<t.TryStatement>;
+      const continuationBlock = builder.reserve("block");
+
+      const handlerPath = stmt.get("handler");
+      // NOTE: null check is for older babel versions, the hasNode() check is for TS to refine the type
+      if (handlerPath.node == null || !handlerPath.hasNode()) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerStatement) Handle TryStatement without a catch clause`,
+          severity: ErrorSeverity.Todo,
+          loc: stmt.node.loc ?? null,
+          suggestions: null,
+        });
+        return;
+      }
+      const handler = builder.enter("block", (_blockId) => {
+        lowerStatement(builder, handlerPath.get("body"));
+        return {
+          kind: "goto",
+          block: continuationBlock.id,
+          variant: GotoVariant.Break,
+          id: makeInstructionId(0),
+          loc: handlerPath.node.loc ?? GeneratedSource,
+        };
+      });
+      if (stmt.get("finalizer").node != null) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause`,
+          severity: ErrorSeverity.Todo,
+          loc: stmt.node.loc ?? null,
+          suggestions: null,
+        });
+      }
+
+      const block = builder.enter("block", (_blockId) => {
+        const block = stmt.get("block");
+        builder.enterTryCatch(handler, () => {
+          lowerStatement(builder, block);
+        });
+        return {
+          kind: "goto",
+          block: continuationBlock.id,
+          variant: GotoVariant.Break,
+          id: makeInstructionId(0),
+          loc: block.node.loc ?? GeneratedSource,
+        };
+      });
+
+      builder.terminateWithContinuation(
+        {
+          kind: "try",
+          block,
+          handler,
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+          loc: stmt.node.loc ?? GeneratedSource,
+        },
+        continuationBlock
+      );
+
+      return;
+    }
     case "ForInStatement":
     case "ClassDeclaration":
     case "DeclareClass":
@@ -932,7 +994,6 @@ function lowerStatement(
     case "ImportDeclaration":
     case "InterfaceDeclaration":
     case "OpaqueType":
-    case "TryStatement":
     case "TypeAlias":
     case "TSDeclareFunction":
     case "TSEnumDeclaration":

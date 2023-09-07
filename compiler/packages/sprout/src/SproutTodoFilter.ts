@@ -412,6 +412,9 @@ const skipFilter = new Set([
   "fbt-call-complex-param-value",
   "fbt-template-string-same-scope",
   "component-declaration-basic.flow",
+  "try-catch-mutate-outer-value",
+  "try-catch-within-mutable-range",
+  "try-catch",
 
   // TODO: 🌲
   "forest-basic",

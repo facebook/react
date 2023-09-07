@@ -79,7 +79,7 @@ export type Bindings = Map<
 
 // Determines how instructions should be constructed in order to preserve
 // exception semantics
-type ExceptionsMode =
+export type ExceptionsMode =
   // Mode used for code not covered by explicit exception handling, any
   // errors are assumed to be thrown out of the function
   | { kind: "ThrowExceptions" }
@@ -156,6 +156,13 @@ export default class HIRBuilder {
         continuationBlock
       );
     }
+  }
+
+  enterTryCatch(handler: BlockId, fn: () => void): void {
+    const prevMode = this.#mode;
+    this.#mode = { kind: "CatchExceptions", handler };
+    fn();
+    this.#mode = prevMode;
   }
 
   makeTemporary(): Identifier {
