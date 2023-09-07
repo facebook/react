@@ -80,6 +80,7 @@ export function printMixedHIR(
     return printInstruction(value);
   }
   switch (value.kind) {
+    case "maybe-throw":
     case "sequence":
     case "label":
     case "optional":
@@ -228,6 +229,10 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "unsupported": {
       value = `Unsupported`;
+      break;
+    }
+    case "maybe-throw": {
+      value = `MaybeThrow continuation=bb${terminal.continuation} handler=bb${terminal.handler}`;
       break;
     }
     default: {

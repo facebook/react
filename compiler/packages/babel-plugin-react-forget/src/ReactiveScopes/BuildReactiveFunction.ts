@@ -636,6 +636,13 @@ class Driver {
         }
         break;
       }
+      case "maybe-throw": {
+        this.visitBlock(
+          this.cx.ir.blocks.get(terminal.continuation)!,
+          blockValue
+        );
+        break;
+      }
       case "unsupported": {
         CompilerError.invariant(false, {
           reason: "Unexpected unsupported terminal",

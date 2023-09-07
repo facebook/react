@@ -731,6 +731,17 @@ export function mapTerminalSuccessors(
         loc: terminal.loc,
       };
     }
+    case "maybe-throw": {
+      const continuation = fn(terminal.continuation);
+      const handler = fn(terminal.handler);
+      return {
+        kind: "maybe-throw",
+        continuation,
+        handler,
+        id: makeInstructionId(0),
+        loc: terminal.loc,
+      };
+    }
     case "unsupported": {
       return terminal;
     }
@@ -750,6 +761,7 @@ export function mapTerminalSuccessors(
  */
 export function terminalFallthrough(terminal: Terminal): BlockId | null {
   switch (terminal.kind) {
+    case "maybe-throw":
     case "branch":
     case "goto":
     case "return":
@@ -784,6 +796,7 @@ export function mapOptionalFallthroughs(
   fn: (block: BlockId) => BlockId | null
 ): void {
   switch (terminal.kind) {
+    case "maybe-throw":
     case "branch":
     case "goto":
     case "return":
@@ -917,6 +930,11 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.block;
       break;
     }
+    case "maybe-throw": {
+      yield terminal.continuation;
+      yield terminal.handler;
+      break;
+    }
     case "unsupported":
       break;
     default: {
@@ -956,6 +974,7 @@ export function mapTerminalOperands(
       terminal.value = fn(terminal.value);
       break;
     }
+    case "maybe-throw":
     case "sequence":
     case "label":
     case "optional":
@@ -1004,6 +1023,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
       yield terminal.value;
       break;
     }
+    case "maybe-throw":
     case "sequence":
     case "label":
     case "optional":

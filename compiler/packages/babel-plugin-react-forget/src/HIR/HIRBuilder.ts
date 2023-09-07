@@ -77,6 +77,17 @@ export type Bindings = Map<
   { node: t.Identifier; identifier: Identifier }
 >;
 
+// Determines how instructions should be constructed in order to preserve
+// exception semantics
+type ExceptionsMode =
+  // Mode used for code not covered by explicit exception handling, any
+  // errors are assumed to be thrown out of the function
+  | { kind: "ThrowExceptions" }
+  // Mode used for code that *is* covered by explicit exception handling
+  // (ie try/catch), which requires modeling the possibility of control
+  // flow to the exception handler.
+  | { kind: "CatchExceptions"; handler: BlockId };
+
 /**
  * Helper class for constructing a CFG
  */
@@ -88,6 +99,7 @@ export default class HIRBuilder {
   #context: t.Identifier[];
   #bindings: Bindings;
   #env: Environment;
+  #mode: ExceptionsMode = { kind: "ThrowExceptions" };
   parentFunction: NodePath<t.Function>;
   errors: CompilerError = new CompilerError();
 
@@ -130,6 +142,20 @@ export default class HIRBuilder {
    */
   push(instruction: Instruction): void {
     this.#current.instructions.push(instruction);
+    if (this.#mode.kind === "CatchExceptions") {
+      const handler = this.#mode.handler;
+      const continuationBlock = this.reserve(this.currentBlockKind());
+      this.terminateWithContinuation(
+        {
+          kind: "maybe-throw",
+          continuation: continuationBlock.id,
+          handler,
+          id: makeInstructionId(0),
+          loc: instruction.loc,
+        },
+        continuationBlock
+      );
+    }
   }
 
   makeTemporary(): Identifier {
@@ -721,6 +747,11 @@ export function reversePostorderBlocks(func: HIR): void {
       }
       case "sequence": {
         visit(terminal.block);
+        break;
+      }
+      case "maybe-throw": {
+        visit(terminal.handler);
+        visit(terminal.continuation);
         break;
       }
       case "unsupported": {

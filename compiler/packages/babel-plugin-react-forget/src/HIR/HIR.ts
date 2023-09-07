@@ -279,7 +279,8 @@ export type Terminal =
   | TernaryTerminal
   | OptionalTerminal
   | LabelTerminal
-  | SequenceTerminal;
+  | SequenceTerminal
+  | MaybeThrowTerminal;
 
 function _staticInvariantTerminalHasLocation(
   terminal: Terminal
@@ -440,6 +441,14 @@ export type SequenceTerminal = {
   kind: "sequence";
   block: BlockId;
   fallthrough: BlockId;
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
+export type MaybeThrowTerminal = {
+  kind: "maybe-throw";
+  continuation: BlockId;
+  handler: BlockId;
   id: InstructionId;
   loc: SourceLocation;
 };
