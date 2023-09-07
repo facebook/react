@@ -2751,7 +2751,7 @@ function flushCompletedQueues(
   }
 }
 
-export function startRender(request: Request): void {
+export function startWork(request: Request): void {
   request.flushScheduled = request.destination !== null;
   if (supportsRequestStorage) {
     scheduleWork(() => requestStorage.run(request, performWork, request));
@@ -2760,10 +2760,10 @@ export function startRender(request: Request): void {
   }
 }
 
-export function startPrerender(request: Request): void {
+export function startPrerenderWork(request: Request): void {
   // Start tracking postponed holes during this render.
   request.trackedPostpones = {workingMap: new Map(), root: []};
-  startRender(request);
+  startWork(request);
 }
 
 function enqueueFlush(request: Request): void {

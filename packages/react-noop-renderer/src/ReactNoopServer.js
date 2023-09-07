@@ -304,7 +304,7 @@ function render(children: React$Element<any>, options?: Options): Destination {
     options ? options.onAllReady : undefined,
     options ? options.onShellReady : undefined,
   );
-  ReactNoopServer.startRender(request);
+  ReactNoopServer.startWork(request);
   ReactNoopServer.startFlowing(request, destination);
   return destination;
 }

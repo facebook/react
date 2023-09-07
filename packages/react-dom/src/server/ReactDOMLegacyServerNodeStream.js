@@ -13,7 +13,7 @@ import type {Request} from 'react-server/src/ReactFizzServer';
 
 import {
   createRequest,
-  startRender,
+  startWork,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
@@ -92,7 +92,7 @@ function renderToNodeStreamImpl(
     undefined,
   );
   destination.request = request;
-  startRender(request);
+  startWork(request);
   return destination;
 }
 
