@@ -9,7 +9,9 @@
 
 export {
   preinit,
+  preinitModule,
   preload,
+  preloadModule,
   preconnect,
   prefetchDNS,
 } from '../shared/ReactDOMFloat';
