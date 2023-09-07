@@ -739,6 +739,57 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
+    it('onTransitionRun', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionRun',
+        reactEventType: 'transitionrun',
+        nativeEvent: 'transitionrun',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitionrun', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onTransitionStart', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionStart',
+        reactEventType: 'transitionstart',
+        nativeEvent: 'transitionstart',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitionstart', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onTransitionCancel', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionCancel',
+        reactEventType: 'transitioncancel',
+        nativeEvent: 'transitioncancel',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitioncancel', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
     it('onTransitionEnd', () => {
       testNativeBubblingEvent({
         type: 'div',
