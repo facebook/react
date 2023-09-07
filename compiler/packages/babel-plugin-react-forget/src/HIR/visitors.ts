@@ -277,9 +277,7 @@ export function* eachPatternOperand(pattern: Pattern): Iterable<Place> {
     case "ObjectPattern": {
       for (const property of pattern.properties) {
         if (property.kind === "ObjectProperty") {
-          if (property.place.kind === "Identifier") {
-            yield property.place;
-          }
+          yield property.place;
         } else if (property.kind === "Spread") {
           yield property.place;
         } else {
