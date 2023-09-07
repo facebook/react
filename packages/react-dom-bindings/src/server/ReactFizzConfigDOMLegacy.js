@@ -101,6 +101,8 @@ export {
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,
   pushEndCompletedSuspenseBoundary,
+  pushFormStateMarkerIsMatching,
+  pushFormStateMarkerIsNotMatching,
   writeStartSegment,
   writeEndSegment,
   writeCompletedSegmentInstruction,

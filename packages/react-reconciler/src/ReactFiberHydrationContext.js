@@ -76,6 +76,8 @@ import {
   canHydrateInstance,
   canHydrateTextInstance,
   canHydrateSuspenseInstance,
+  canHydrateFormStateMarker,
+  isFormStateMarkerMatching,
   isHydratableText,
 } from './ReactFiberConfig';
 import {OffscreenLane} from './ReactFiberLane';
@@ -593,6 +595,34 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
     // fiber associated with it.
     deleteHydratableInstance(prevHydrationParentFiber, firstAttemptedInstance);
   }
+}
+
+export function tryToClaimNextHydratableFormMarkerInstance(
+  fiber: Fiber,
+): boolean {
+  if (!isHydrating) {
+    return false;
+  }
+  if (nextHydratableInstance) {
+    const markerInstance = canHydrateFormStateMarker(
+      nextHydratableInstance,
+      rootOrSingletonContext,
+    );
+    if (markerInstance) {
+      // Found the marker instance.
+      nextHydratableInstance = getNextHydratableSibling(markerInstance);
+      // Return true if this marker instance should use the state passed
+      // to hydrateRoot.
+      // TODO: As an optimization, Fizz should only emit these markers if form
+      // state is passed at the root.
+      return isFormStateMarkerMatching(markerInstance);
+    }
+  }
+  // Should have found a marker instance. Throw an error to trigger client
+  // rendering. We don't bother to check if we're in a concurrent root because
+  // useFormState is a new API, so backwards compat is not an issue.
+  throwOnHydrationMismatch(fiber);
+  return false;
 }
 
 function prepareToHydrateHostInstance(

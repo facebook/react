@@ -53,6 +53,10 @@ export const pushStartCompletedSuspenseBoundary =
 export const pushEndCompletedSuspenseBoundary =
   $$$config.pushEndCompletedSuspenseBoundary;
 export const pushSegmentFinale = $$$config.pushSegmentFinale;
+export const pushFormStateMarkerIsMatching =
+  $$$config.pushFormStateMarkerIsMatching;
+export const pushFormStateMarkerIsNotMatching =
+  $$$config.pushFormStateMarkerIsNotMatching;
 export const writeCompletedRoot = $$$config.writeCompletedRoot;
 export const writePlaceholder = $$$config.writePlaceholder;
 export const writeStartCompletedSuspenseBoundary =

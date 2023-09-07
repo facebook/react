@@ -142,6 +142,8 @@ export const getSuspenseInstanceFallbackErrorDetails =
   $$$config.getSuspenseInstanceFallbackErrorDetails;
 export const registerSuspenseInstanceRetry =
   $$$config.registerSuspenseInstanceRetry;
+export const canHydrateFormStateMarker = $$$config.canHydrateFormStateMarker;
+export const isFormStateMarkerMatching = $$$config.isFormStateMarkerMatching;
 export const getNextHydratableSibling = $$$config.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$config.getFirstHydratableChild;
 export const getFirstHydratableChildWithinContainer =
