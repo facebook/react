@@ -230,7 +230,8 @@ type SuspenseBoundary = {
   keyPath: Root | KeyNode,
 };
 
-export type Task = {
+type RenderTask = {
+  replay: null,
   node: ReactNodeList,
   childIndex: number,
   ping: () => void,
@@ -245,6 +246,25 @@ export type Task = {
   componentStack: null | ComponentStackNode, // DEV-only component stack
   thenableState: null | ThenableState,
 };
+
+type ReplayTask = {
+  replay: ResumableNode,
+  node: ReactNodeList,
+  childIndex: number,
+  ping: () => void,
+  blockedBoundary: Root | SuspenseBoundary,
+  blockedSegment: null, // we don't write to anything when we replay
+  abortSet: Set<Task>, // the abortable set that this task belongs to
+  keyPath: Root | KeyNode, // the path of all parent keys currently rendering
+  formatContext: FormatContext, // the format's specific context (e.g. HTML/SVG/MathML)
+  legacyContext: LegacyContext, // the current legacy context that this task is executing in
+  context: ContextSnapshot, // the current new context that this task is executing in
+  treeContext: TreeContext, // the current tree context that this task is executing in
+  componentStack: null | ComponentStackNode, // DEV-only component stack
+  thenableState: null | ThenableState,
+};
+
+export type Task = RenderTask | ReplayTask;
 
 const PENDING = 0;
 const COMPLETED = 1;
@@ -400,7 +420,7 @@ export function createRequest(
   );
   // There is no parent so conceptually, we're unblocked to flush this segment.
   rootSegment.parentFlushed = true;
-  const rootTask = createTask(
+  const rootTask = createRenderTask(
     request,
     null,
     children,
@@ -490,25 +510,13 @@ export function resumeRequest(
     onFatalError: onFatalError === undefined ? noop : onFatalError,
     formState: null,
   };
-  // This segment represents the root fallback.
-  const rootSegment = createPendingSegment(
-    request,
-    0,
-    null,
-    postponedState.rootFormatContext,
-    // Root segments are never embedded in Text on either edge
-    false,
-    false,
-  );
-  // There is no parent so conceptually, we're unblocked to flush this segment.
-  rootSegment.parentFlushed = true;
-  const rootTask = createTask(
+  const rootTask = createReplayTask(
     request,
     null,
+    postponedState.resumablePath[0],
     children,
     -1,
     null,
-    rootSegment,
     abortSet,
     null,
     postponedState.rootFormatContext,
@@ -560,7 +568,7 @@ function createSuspenseBoundary(
   };
 }
 
-function createTask(
+function createRenderTask(
   request: Request,
   thenableState: ThenableState | null,
   node: ReactNodeList,
@@ -573,19 +581,62 @@ function createTask(
   legacyContext: LegacyContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
-): Task {
+): RenderTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
     request.pendingRootTasks++;
   } else {
     blockedBoundary.pendingTasks++;
   }
-  const task: Task = ({
+  const task: RenderTask = ({
+    replay: null,
     node,
     childIndex,
     ping: () => pingTask(request, task),
     blockedBoundary,
     blockedSegment,
+    abortSet,
+    keyPath,
+    formatContext,
+    legacyContext,
+    context,
+    treeContext,
+    thenableState,
+  }: any);
+  if (__DEV__) {
+    task.componentStack = null;
+  }
+  abortSet.add(task);
+  return task;
+}
+
+function createReplayTask(
+  request: Request,
+  thenableState: ThenableState | null,
+  replay: ResumableNode,
+  node: ReactNodeList,
+  childIndex: number,
+  blockedBoundary: Root | SuspenseBoundary,
+  abortSet: Set<Task>,
+  keyPath: Root | KeyNode,
+  formatContext: FormatContext,
+  legacyContext: LegacyContext,
+  context: ContextSnapshot,
+  treeContext: TreeContext,
+): ReplayTask {
+  request.allPendingTasks++;
+  if (blockedBoundary === null) {
+    request.pendingRootTasks++;
+  } else {
+    blockedBoundary.pendingTasks++;
+  }
+  const task: ReplayTask = ({
+    replay,
+    node,
+    childIndex,
+    ping: () => pingTask(request, task),
+    blockedBoundary,
+    blockedSegment: null,
     abortSet,
     keyPath,
     formatContext,
@@ -866,7 +917,7 @@ function renderSuspenseBoundary(
 
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
-  const suspendedFallbackTask = createTask(
+  const suspendedFallbackTask = createRenderTask(
     request,
     null,
     fallback,
@@ -2049,7 +2100,7 @@ function spawnNewSuspendedTask(
   segment.children.push(newSegment);
   // Reset lastPushedText for current Segment since the new Segment "consumed" it
   segment.lastPushedText = false;
-  const newTask = createTask(
+  const newTask = createRenderTask(
     request,
     thenableState,
     task.node,
