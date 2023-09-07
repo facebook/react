@@ -955,7 +955,7 @@ function lowerStatement(
         return {
           kind: "goto",
           block: continuationBlock.id,
-          variant: GotoVariant.Break,
+          variant: GotoVariant.Try,
           id: makeInstructionId(0),
           loc: block.node.loc ?? GeneratedSource,
         };

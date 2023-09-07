@@ -415,6 +415,7 @@ const skipFilter = new Set([
   "try-catch-mutate-outer-value",
   "try-catch-within-mutable-range",
   "try-catch",
+  "try-catch-with-return",
 
   // TODO: 🌲
   "forest-basic",

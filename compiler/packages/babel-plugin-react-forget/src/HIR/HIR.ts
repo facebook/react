@@ -339,6 +339,7 @@ export type GotoTerminal = {
 export enum GotoVariant {
   Break = "Break",
   Continue = "Continue",
+  Try = "Try",
 }
 
 export type IfTerminal = {

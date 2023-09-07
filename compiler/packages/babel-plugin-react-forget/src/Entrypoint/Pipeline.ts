@@ -26,7 +26,11 @@ import {
   inferReferenceEffects,
   inlineUseMemo,
 } from "../Inference";
-import { constantPropagation, deadCodeElimination } from "../Optimization";
+import {
+  constantPropagation,
+  deadCodeElimination,
+  pruneMaybeThrows,
+} from "../Optimization";
 import {
   CodegenFunction,
   alignReactiveScopesToBlockScopes,
@@ -77,6 +81,9 @@ export function* run(
   const env = new Environment(config ?? null, contextIdentifiers);
   const hir = lower(func, env).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
+
+  pruneMaybeThrows(hir);
+  yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
 
   if (config?.inlineUseMemo) {
     inlineUseMemo(hir);

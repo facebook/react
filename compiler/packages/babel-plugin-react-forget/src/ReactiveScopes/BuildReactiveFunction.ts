@@ -627,6 +627,9 @@ class Driver {
             }
             break;
           }
+          case GotoVariant.Try: {
+            break;
+          }
           default: {
             assertExhaustive(
               terminal.variant,
@@ -639,10 +642,12 @@ class Driver {
       case "maybe-throw": {
         // ReactiveFunction does not explicit model maybe-throw semantics,
         // so these terminals flatten away
-        this.visitBlock(
-          this.cx.ir.blocks.get(terminal.continuation)!,
-          blockValue
-        );
+        if (!this.cx.isScheduled(terminal.continuation)) {
+          this.visitBlock(
+            this.cx.ir.blocks.get(terminal.continuation)!,
+            blockValue
+          );
+        }
         break;
       }
       case "try": {
@@ -655,6 +660,7 @@ class Driver {
           const scheduleId = this.cx.schedule(fallthroughId, "if");
           scheduleIds.push(scheduleId);
         }
+        this.cx.scheduleCatchHandler(terminal.handler);
 
         const block = this.traverseBlock(
           this.cx.ir.blocks.get(terminal.block)!
@@ -1091,6 +1097,8 @@ class Context {
    */
   #scheduled: Set<BlockId> = new Set();
 
+  #catchHandlers: Set<BlockId> = new Set();
+
   /**
    * Represents which control flow operations are currently in scope, with the innermost
    * scope last. Roughly speaking, the last ControlFlowTarget on the stack indicates where
@@ -1106,6 +1114,10 @@ class Context {
 
   block(id: BlockId): BasicBlock {
     return this.ir.blocks.get(id)!;
+  }
+
+  scheduleCatchHandler(block: BlockId): void {
+    this.#catchHandlers.add(block);
   }
 
   /**
@@ -1194,7 +1206,7 @@ class Context {
    * Check if the given @param block is scheduled or not.
    */
   isScheduled(block: BlockId): boolean {
-    return this.#scheduled.has(block);
+    return this.#scheduled.has(block) || this.#catchHandlers.has(block);
   }
 
   /**
