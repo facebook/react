@@ -99,7 +99,7 @@ export default class HIRBuilder {
   #context: t.Identifier[];
   #bindings: Bindings;
   #env: Environment;
-  #mode: ExceptionsMode = { kind: "ThrowExceptions" };
+  #exceptionHandlerStack: Array<BlockId> = [];
   parentFunction: NodePath<t.Function>;
   errors: CompilerError = new CompilerError();
 
@@ -142,14 +142,14 @@ export default class HIRBuilder {
    */
   push(instruction: Instruction): void {
     this.#current.instructions.push(instruction);
-    if (this.#mode.kind === "CatchExceptions") {
-      const handler = this.#mode.handler;
+    const exceptionHandler = this.#exceptionHandlerStack.at(-1);
+    if (exceptionHandler !== undefined) {
       const continuationBlock = this.reserve(this.currentBlockKind());
       this.terminateWithContinuation(
         {
           kind: "maybe-throw",
           continuation: continuationBlock.id,
-          handler,
+          handler: exceptionHandler,
           id: makeInstructionId(0),
           loc: instruction.loc,
         },
@@ -159,10 +159,14 @@ export default class HIRBuilder {
   }
 
   enterTryCatch(handler: BlockId, fn: () => void): void {
-    const prevMode = this.#mode;
-    this.#mode = { kind: "CatchExceptions", handler };
+    this.#exceptionHandlerStack.push(handler);
     fn();
-    this.#mode = prevMode;
+    this.#exceptionHandlerStack.pop();
+  }
+
+  resolveThrowHandler(): BlockId | null {
+    const handler = this.#exceptionHandlerStack.at(-1);
+    return handler ?? null;
   }
 
   makeTemporary(): Identifier {

@@ -199,6 +199,19 @@ function lowerStatement(
     case "ThrowStatement": {
       const stmt = stmtPath as NodePath<t.ThrowStatement>;
       const value = lowerExpressionToTemporary(builder, stmt.get("argument"));
+      const handler = builder.resolveThrowHandler();
+      if (handler != null) {
+        // NOTE: we could support this, but a `throw` inside try/catch is using exceptions
+        // for control-flow and is generally considered an anti-pattern. we can likely
+        // just not support this pattern, unless it really becomes necessary for some reason.
+        builder.errors.push({
+          reason:
+            "(BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch",
+          severity: ErrorSeverity.Todo,
+          loc: stmt.node.loc ?? null,
+          suggestions: null,
+        });
+      }
       const terminal: ThrowTerminal = {
         kind: "throw",
         value,
