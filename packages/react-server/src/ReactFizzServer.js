@@ -396,6 +396,106 @@ export function createRequest(
   return request;
 }
 
+export function createPrerenderRequest(
+  children: ReactNodeList,
+  resumableState: ResumableState,
+  renderState: RenderState,
+  rootFormatContext: FormatContext,
+  progressiveChunkSize: void | number,
+  onError: void | ((error: mixed) => ?string),
+  onAllReady: void | (() => void),
+  onShellReady: void | (() => void),
+  onShellError: void | ((error: mixed) => void),
+  onFatalError: void | ((error: mixed) => void),
+  onPostpone: void | ((reason: string) => void),
+): Request {
+  const request = createRequest(
+    children,
+    resumableState,
+    renderState,
+    rootFormatContext,
+    progressiveChunkSize,
+    onError,
+    onAllReady,
+    onShellReady,
+    onShellError,
+    onFatalError,
+    onPostpone,
+  );
+  // Start tracking postponed holes during this render.
+  request.trackedPostpones = {workingMap: new Map(), root: []};
+  return request;
+}
+
+export function resumeRequest(
+  children: ReactNodeList,
+  postponedState: PostponedState,
+  renderState: RenderState,
+  onError: void | ((error: mixed) => ?string),
+  onAllReady: void | (() => void),
+  onShellReady: void | (() => void),
+  onShellError: void | ((error: mixed) => void),
+  onFatalError: void | ((error: mixed) => void),
+  onPostpone: void | ((reason: string) => void),
+): Request {
+  prepareHostDispatcher();
+  const pingedTasks: Array<Task> = [];
+  const abortSet: Set<Task> = new Set();
+  const request: Request = {
+    destination: null,
+    flushScheduled: false,
+    resumableState: postponedState.resumableState,
+    renderState,
+    rootFormatContext: postponedState.rootFormatContext,
+    progressiveChunkSize: postponedState.progressiveChunkSize,
+    status: OPEN,
+    fatalError: null,
+    nextSegmentId: 0,
+    allPendingTasks: 0,
+    pendingRootTasks: 0,
+    completedRootSegment: null,
+    abortableTasks: abortSet,
+    pingedTasks: pingedTasks,
+    clientRenderedBoundaries: ([]: Array<SuspenseBoundary>),
+    completedBoundaries: ([]: Array<SuspenseBoundary>),
+    partialBoundaries: ([]: Array<SuspenseBoundary>),
+    trackedPostpones: null,
+    onError: onError === undefined ? defaultErrorHandler : onError,
+    onPostpone: onPostpone === undefined ? noop : onPostpone,
+    onAllReady: onAllReady === undefined ? noop : onAllReady,
+    onShellReady: onShellReady === undefined ? noop : onShellReady,
+    onShellError: onShellError === undefined ? noop : onShellError,
+    onFatalError: onFatalError === undefined ? noop : onFatalError,
+  };
+  // This segment represents the root fallback.
+  const rootSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    postponedState.rootFormatContext,
+    // Root segments are never embedded in Text on either edge
+    false,
+    false,
+  );
+  // There is no parent so conceptually, we're unblocked to flush this segment.
+  rootSegment.parentFlushed = true;
+  const rootTask = createTask(
+    request,
+    null,
+    children,
+    null,
+    rootSegment,
+    abortSet,
+    null,
+    postponedState.rootFormatContext,
+    emptyContextObject,
+    rootContextSnapshot,
+    emptyTreeContext,
+  );
+  pingedTasks.push(rootTask);
+  return request;
+}
+
 let currentRequest: null | Request = null;
 
 export function resolveRequest(): null | Request {
@@ -2751,19 +2851,13 @@ function flushCompletedQueues(
   }
 }
 
-export function startRender(request: Request): void {
+export function startWork(request: Request): void {
   request.flushScheduled = request.destination !== null;
   if (supportsRequestStorage) {
     scheduleWork(() => requestStorage.run(request, performWork, request));
   } else {
     scheduleWork(() => performWork(request));
   }
-}
-
-export function startPrerender(request: Request): void {
-  // Start tracking postponed holes during this render.
-  request.trackedPostpones = {workingMap: new Map(), root: []};
-  startRender(request);
 }
 
 function enqueueFlush(request: Request): void {

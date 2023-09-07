@@ -84,7 +84,7 @@ function render(model: ReactClientValue, options?: Options): Destination {
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
   );
-  ReactNoopFlightServer.startRender(request);
+  ReactNoopFlightServer.startWork(request);
   ReactNoopFlightServer.startFlowing(request, destination);
   return destination;
 }

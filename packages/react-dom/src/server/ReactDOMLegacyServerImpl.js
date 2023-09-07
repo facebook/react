@@ -13,7 +13,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {
   createRequest,
-  startRender,
+  startWork,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
@@ -81,7 +81,7 @@ function renderToStringImpl(
     undefined,
     undefined,
   );
-  startRender(request);
+  startWork(request);
   // If anything suspended and is still pending, we'll abort it before writing.
   // That way we write only client-rendered boundaries from the start.
   abort(request, abortReason);
