@@ -504,17 +504,20 @@ export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
   noscriptTagInScope: boolean,
+  pictureTagInScope: boolean,
 };
 
 function createFormatContext(
   insertionMode: InsertionMode,
   selectedValue: null | string,
   noscriptTagInScope: boolean,
+  pictureTagInScope: boolean,
 ): FormatContext {
   return {
     insertionMode,
     selectedValue,
     noscriptTagInScope,
+    pictureTagInScope,
   };
 }
 
@@ -525,7 +528,7 @@ export function createRootFormatContext(namespaceURI?: string): FormatContext {
       : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
       ? MATHML_MODE
       : ROOT_HTML_MODE;
-  return createFormatContext(insertionMode, null, false);
+  return createFormatContext(insertionMode, null, false, false);
 }
 
 export function getChildFormatContext(
@@ -535,30 +538,46 @@ export function getChildFormatContext(
 ): FormatContext {
   switch (type) {
     case 'noscript':
-      return createFormatContext(HTML_MODE, null, true);
+      return createFormatContext(
+        HTML_MODE,
+        null,
+        true,
+        parentContext.pictureTagInScope,
+      );
     case 'select':
       return createFormatContext(
         HTML_MODE,
         props.value != null ? props.value : props.defaultValue,
         parentContext.noscriptTagInScope,
+        parentContext.pictureTagInScope,
       );
     case 'svg':
       return createFormatContext(
         SVG_MODE,
         null,
         parentContext.noscriptTagInScope,
+        parentContext.pictureTagInScope,
+      );
+    case 'picture':
+      return createFormatContext(
+        HTML_MODE,
+        null,
+        parentContext.noscriptTagInScope,
+        true,
       );
     case 'math':
       return createFormatContext(
         MATHML_MODE,
         null,
         parentContext.noscriptTagInScope,
+        parentContext.pictureTagInScope,
       );
     case 'foreignObject':
       return createFormatContext(
         HTML_MODE,
         null,
         parentContext.noscriptTagInScope,
+        parentContext.pictureTagInScope,
       );
     // Table parents are special in that their children can only be created at all if they're
     // wrapped in a table parent. So we need to encode that we're entering this mode.
@@ -567,6 +586,7 @@ export function getChildFormatContext(
         HTML_TABLE_MODE,
         null,
         parentContext.noscriptTagInScope,
+        parentContext.pictureTagInScope,
       );
     case 'thead':
     case 'tbody':
@@ -575,18 +595,21 @@ export function getChildFormatContext(
         HTML_TABLE_BODY_MODE,
         null,
         parentContext.noscriptTagInScope,
+        parentContext.pictureTagInScope,
       );
     case 'colgroup':
       return createFormatContext(
         HTML_COLGROUP_MODE,
         null,
         parentContext.noscriptTagInScope,
+        parentContext.pictureTagInScope,
       );
     case 'tr':
       return createFormatContext(
         HTML_TABLE_ROW_MODE,
         null,
         parentContext.noscriptTagInScope,
+        parentContext.pictureTagInScope,
       );
   }
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
@@ -596,19 +619,20 @@ export function getChildFormatContext(
       HTML_MODE,
       null,
       parentContext.noscriptTagInScope,
+      parentContext.pictureTagInScope,
     );
   }
   if (parentContext.insertionMode === ROOT_HTML_MODE) {
     if (type === 'html') {
       // We've emitted the root and is now in <html> mode.
-      return createFormatContext(HTML_HTML_MODE, null, false);
+      return createFormatContext(HTML_HTML_MODE, null, false, false);
     } else {
       // We've emitted the root and is now in plain HTML mode.
-      return createFormatContext(HTML_MODE, null, false);
+      return createFormatContext(HTML_MODE, null, false, false);
     }
   } else if (parentContext.insertionMode === HTML_HTML_MODE) {
     // We've emitted the document element and is now in plain HTML mode.
-    return createFormatContext(HTML_MODE, null, false);
+    return createFormatContext(HTML_MODE, null, false, false);
   }
   return parentContext;
 }
@@ -2457,12 +2481,14 @@ function pushImg(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   resumableState: ResumableState,
+  pictureTagInScope: boolean,
 ): null {
   const {src, srcSet} = props;
   if (
     props.loading !== 'lazy' &&
     (typeof src === 'string' || typeof srcSet === 'string') &&
     props.fetchPriority !== 'low' &&
+    pictureTagInScope === false &&
     // We exclude data URIs in src and srcSet since these should not be preloaded
     !(
       typeof src === 'string' &&
@@ -3280,7 +3306,12 @@ export function pushStartInstance(
     }
     case 'img': {
       return enableFloat
-        ? pushImg(target, props, resumableState)
+        ? pushImg(
+            target,
+            props,
+            resumableState,
+            formatContext.pictureTagInScope,
+          )
         : pushSelfClosing(target, props, type);
     }
     // Omitted close tags
