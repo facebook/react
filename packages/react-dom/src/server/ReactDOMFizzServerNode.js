@@ -18,6 +18,7 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
+  resumeRequest,
   startWork,
   startFlowing,
   abort,
@@ -140,16 +141,14 @@ function resumeRequestImpl(
   postponedState: PostponedState,
   options: void | ResumeOptions,
 ) {
-  return createRequest(
+  return resumeRequest(
     children,
-    postponedState.resumableState,
+    postponedState,
     createRenderState(
       postponedState.resumableState,
       options ? options.nonce : undefined,
       undefined, // importMap
     ),
-    postponedState.rootFormatContext,
-    postponedState.progressiveChunkSize,
     options ? options.onError : undefined,
     options ? options.onAllReady : undefined,
     options ? options.onShellReady : undefined,

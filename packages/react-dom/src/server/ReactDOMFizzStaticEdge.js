@@ -15,7 +15,7 @@ import type {ImportMap} from '../shared/ReactDOMTypes';
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
+  createPrerenderRequest,
   startWork,
   startFlowing,
   abort,
@@ -80,7 +80,7 @@ function prerender(
       options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     );
-    const request = createRequest(
+    const request = createPrerenderRequest(
       children,
       resources,
       createRenderState(

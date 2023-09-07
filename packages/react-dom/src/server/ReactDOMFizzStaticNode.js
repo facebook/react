@@ -17,7 +17,7 @@ import {Writable, Readable} from 'stream';
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
+  createPrerenderRequest,
   startWork,
   startFlowing,
   abort,
@@ -94,7 +94,7 @@ function prerenderToNodeStream(
       options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     );
-    const request = createRequest(
+    const request = createPrerenderRequest(
       children,
       resumableState,
       createRenderState(
