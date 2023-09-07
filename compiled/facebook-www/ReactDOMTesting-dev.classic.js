@@ -148,6 +148,7 @@ var enableHostSingletons = true;
 var enableClientRenderFallbackOnTextMismatch = false;
 
 var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
+var enableFormActions = false;
 var enableSuspenseCallback = true;
 
 var FunctionComponent = 0;
@@ -34625,7 +34626,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-8046a020";
+var ReactVersion = "18.3.0-www-classic-d80c0530";
 
 function createPortal$1(
   children,
@@ -43555,7 +43556,8 @@ function getNextHydratable(node) {
       if (
         nodeData === SUSPENSE_START_DATA ||
         nodeData === SUSPENSE_FALLBACK_START_DATA ||
-        nodeData === SUSPENSE_PENDING_START_DATA
+        nodeData === SUSPENSE_PENDING_START_DATA ||
+        enableFormActions
       ) {
         break;
       }

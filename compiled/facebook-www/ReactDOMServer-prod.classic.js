@@ -2641,6 +2641,8 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   isReRender = !1,
   didScheduleRenderPhaseUpdate = !1,
   localIdCounter = 0,
+  formStateCounter = 0,
+  formStateMatchingIndex = -1,
   thenableIndexCounter = 0,
   thenableState = null,
   renderPhaseUpdates = null,
@@ -2669,7 +2671,9 @@ function createWorkInProgressHook() {
 function finishHooks(Component, props, children, refOrContext) {
   for (; didScheduleRenderPhaseUpdate; )
     (didScheduleRenderPhaseUpdate = !1),
-      (thenableIndexCounter = localIdCounter = 0),
+      (formStateCounter = localIdCounter = 0),
+      (formStateMatchingIndex = -1),
+      (thenableIndexCounter = 0),
       (numberOfReRenders += 1),
       (workInProgressHook = null),
       (children = Component(props, refOrContext));
@@ -2785,6 +2789,7 @@ function useFormState(action, initialState, permalink) {
     boundAction(payload);
   }
   resolveCurrentlyRenderingComponent();
+  formStateCounter++;
   var boundAction = action.bind(null, initialState);
   "function" === typeof boundAction.$$FORM_ACTION &&
     (dispatch.$$FORM_ACTION = function (prefix) {
@@ -3054,6 +3059,35 @@ function fatalError(request, error) {
     ? ((request.status = 2), request.destination.destroy(error))
     : ((request.status = 1), (request.fatalError = error));
 }
+function finishFunctionComponent(
+  request,
+  task,
+  children,
+  hasId,
+  formStateCount,
+  formStateMatchingIndex
+) {
+  var didEmitFormStateMarkers = !1;
+  if (0 !== formStateCount) {
+    var segment = task.blockedSegment;
+    if (null !== segment) {
+      didEmitFormStateMarkers = !0;
+      segment = segment.chunks;
+      for (var i = 0; i < formStateCount; i++)
+        i === formStateMatchingIndex
+          ? segment.push("\x3c!--F!--\x3e")
+          : segment.push("\x3c!--F--\x3e");
+    }
+  }
+  hasId
+    ? ((hasId = task.treeContext),
+      (task.treeContext = pushTreeContext(hasId, 1, 0)),
+      renderNode(request, task, children, 0),
+      (task.treeContext = hasId))
+    : didEmitFormStateMarkers
+    ? renderNode(request, task, children, 0)
+    : renderNodeDestructiveImpl(request, task, null, children, 0);
+}
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
     baseProps = assign({}, baseProps);
@@ -3181,7 +3215,9 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       (contextKey = getMaskedContext(type, task.legacyContext)),
         (currentlyRenderingComponent = {}),
         (currentlyRenderingTask = task),
-        (thenableIndexCounter = localIdCounter = 0),
+        (formStateCounter = localIdCounter = 0),
+        (formStateMatchingIndex = -1),
+        (thenableIndexCounter = 0),
         (thenableState = prevThenableState),
         (JSCompiler_inline_result = type(props, contextKey)),
         (props = finishHooks(
@@ -3190,12 +3226,14 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           JSCompiler_inline_result,
           contextKey
         )),
-        0 !== localIdCounter
-          ? ((type = task.treeContext),
-            (task.treeContext = pushTreeContext(type, 1, 0)),
-            renderNode(request, task, props, 0),
-            (task.treeContext = type))
-          : renderNodeDestructiveImpl(request, task, null, props, 0);
+        finishFunctionComponent(
+          request,
+          task,
+          props,
+          0 !== localIdCounter,
+          formStateCounter,
+          formStateMatchingIndex
+        );
   else if ("string" === typeof type) {
     contextKey = task.blockedSegment;
     prevThenableState = pushStartInstance(
@@ -3365,14 +3403,20 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           type = type.render;
           currentlyRenderingComponent = {};
           currentlyRenderingTask = task;
-          thenableIndexCounter = localIdCounter = 0;
+          formStateCounter = localIdCounter = 0;
+          formStateMatchingIndex = -1;
+          thenableIndexCounter = 0;
           thenableState = prevThenableState;
           contextKey = type(props, ref);
           props = finishHooks(type, props, contextKey, ref);
-          0 !== localIdCounter
-            ? ((task.treeContext = pushTreeContext(task.treeContext, 1, 0)),
-              renderNode(request, task, props, 0))
-            : renderNodeDestructiveImpl(request, task, null, props, 0);
+          finishFunctionComponent(
+            request,
+            task,
+            props,
+            0 !== localIdCounter,
+            formStateCounter,
+            formStateMatchingIndex
+          );
           return;
         case REACT_MEMO_TYPE:
           type = type.type;
@@ -4434,4 +4478,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-25483e90";
+exports.version = "18.3.0-www-classic-9c45eb83";

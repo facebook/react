@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-4a509011";
+var ReactVersion = "18.3.0-www-modern-d8aac565";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -3151,6 +3151,15 @@ function pushStartOption(target, props, formatContext) {
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
   return children;
+}
+
+var formStateMarkerIsMatching = stringToPrecomputedChunk("<!--F!-->");
+var formStateMarkerIsNotMatching = stringToPrecomputedChunk("<!--F-->");
+function pushFormStateMarkerIsMatching(target) {
+  target.push(formStateMarkerIsMatching);
+}
+function pushFormStateMarkerIsNotMatching(target) {
+  target.push(formStateMarkerIsNotMatching);
 }
 
 function pushStartForm(target, props, resumableState, renderState) {
@@ -8911,7 +8920,14 @@ var isReRender = false; // Whether an update was scheduled during the currently 
 
 var didScheduleRenderPhaseUpdate = false; // Counts the number of useId hooks in this component
 
-var localIdCounter = 0; // Counts the number of use(thenable) calls in this component
+var localIdCounter = 0; // Chunks that should be pushed to the stream once the component
+// finishes rendering.
+// Counts the number of useFormState calls in this component
+
+var formStateCounter = 0; // The index of the useFormState hook that matches the one passed in at the
+// root during an MPA navigation, if any.
+
+var formStateMatchingIndex = -1; // Counts the number of use(thenable) calls in this component
 
 var thenableIndexCounter = 0;
 var thenableState = null; // Lazily created map of render-phase updates
@@ -9044,6 +9060,8 @@ function prepareToUseHooks(task, componentIdentity, prevThenableState) {
   // workInProgressHook = null;
 
   localIdCounter = 0;
+  formStateCounter = 0;
+  formStateMatchingIndex = -1;
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
 }
@@ -9057,6 +9075,8 @@ function finishHooks(Component, props, children, refOrContext) {
     // restarting until no more updates are scheduled.
     didScheduleRenderPhaseUpdate = false;
     localIdCounter = 0;
+    formStateCounter = 0;
+    formStateMatchingIndex = -1;
     thenableIndexCounter = 0;
     numberOfReRenders += 1; // Start over from the beginning of the list
 
@@ -9078,6 +9098,18 @@ function checkDidRenderIdHook() {
   // separate function to avoid using an array tuple.
   var didRenderIdHook = localIdCounter !== 0;
   return didRenderIdHook;
+}
+function getFormStateCount() {
+  // This should be called immediately after every finishHooks call.
+  // Conceptually, it's part of the return value of finishHooks; it's only a
+  // separate function to avoid using an array tuple.
+  return formStateCounter;
+}
+function getFormStateMatchingIndex() {
+  // This should be called immediately after every finishHooks call.
+  // Conceptually, it's part of the return value of finishHooks; it's only a
+  // separate function to avoid using an array tuple.
+  return formStateMatchingIndex;
 } // Reset the internal hooks state if an error occurs while rendering a component
 
 function resetHooksState() {
@@ -9367,7 +9399,11 @@ function useOptimistic(passthrough, reducer) {
 }
 
 function useFormState(action, initialState, permalink) {
-  resolveCurrentlyRenderingComponent(); // Bind the initial state to the first argument of the action.
+  resolveCurrentlyRenderingComponent(); // Count the number of useFormState hooks per component.
+  // TODO: We should also track which hook matches the form state passed at
+  // the root, if any. Matching is not yet implemented.
+
+  formStateCounter++; // Bind the initial state to the first argument of the action.
   // TODO: Use the keypath (or permalink) to check if there's matching state
   // from the previous page.
 
@@ -10137,6 +10173,8 @@ function renderIndeterminateComponent(
     legacyContext
   );
   var hasId = checkDidRenderIdHook();
+  var formStateCount = getFormStateCount();
+  var formStateMatchingIndex = getFormStateMatchingIndex();
 
   {
     // Support for module components is deprecated and is removed behind a flag.
@@ -10180,28 +10218,77 @@ function renderIndeterminateComponent(
 
     {
       validateFunctionComponentInDev(Component);
-    } // We're now successfully past this task, and we don't have to pop back to
-    // the previous task every again, so we can use the destructive recursive form.
-
-    if (hasId) {
-      // This component materialized an id. We treat this as its own level, with
-      // a single "child" slot.
-      var prevTreeContext = task.treeContext;
-      var totalChildren = 1;
-      var index = 0; // Modify the id context. Because we'll need to reset this if something
-      // suspends or errors, we'll use the non-destructive render path.
-
-      task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
-      renderNode(request, task, value, 0); // Like the other contexts, this does not need to be in a finally block
-      // because renderNode takes care of unwinding the stack.
-
-      task.treeContext = prevTreeContext;
-    } else {
-      renderNodeDestructive(request, task, null, value, 0);
     }
+
+    finishFunctionComponent(
+      request,
+      task,
+      value,
+      hasId,
+      formStateCount,
+      formStateMatchingIndex
+    );
   }
 
   popComponentStackInDEV(task);
+}
+
+function finishFunctionComponent(
+  request,
+  task,
+  children,
+  hasId,
+  formStateCount,
+  formStateMatchingIndex
+) {
+  var didEmitFormStateMarkers = false;
+
+  if (formStateCount !== 0) {
+    // For each useFormState hook, emit a marker that indicates whether we
+    // rendered using the form state passed at the root.
+    // TODO: As an optimization, Fizz should only emit these markers if form
+    // state is passed at the root.
+    var segment = task.blockedSegment;
+
+    if (segment === null);
+    else {
+      didEmitFormStateMarkers = true;
+      var target = segment.chunks;
+
+      for (var i = 0; i < formStateCount; i++) {
+        if (i === formStateMatchingIndex) {
+          pushFormStateMarkerIsMatching(target);
+        } else {
+          pushFormStateMarkerIsNotMatching(target);
+        }
+      }
+    }
+  }
+
+  if (hasId) {
+    // This component materialized an id. We treat this as its own level, with
+    // a single "child" slot.
+    var prevTreeContext = task.treeContext;
+    var totalChildren = 1;
+    var index = 0; // Modify the id context. Because we'll need to reset this if something
+    // suspends or errors, we'll use the non-destructive render path.
+
+    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
+    renderNode(request, task, children, 0); // Like the other contexts, this does not need to be in a finally block
+    // because renderNode takes care of unwinding the stack.
+
+    task.treeContext = prevTreeContext;
+  } else if (didEmitFormStateMarkers) {
+    // If there were formState hooks, we must use the non-destructive path
+    // because this component is not a pure indirection; we emitted markers
+    // to the stream.
+    renderNode(request, task, children, 0);
+  } else {
+    // We're now successfully past this task, and we haven't modified the
+    // context stack. We don't have to pop back to the previous task every
+    // again, so we can use the destructive recursive form.
+    renderNodeDestructive(request, task, null, children, 0);
+  }
 }
 
 function validateFunctionComponentInDev(Component) {
@@ -10289,22 +10376,16 @@ function renderForwardRef(request, task, prevThenableState, type, props, ref) {
     ref
   );
   var hasId = checkDidRenderIdHook();
-
-  if (hasId) {
-    // This component materialized an id. We treat this as its own level, with
-    // a single "child" slot.
-    var prevTreeContext = task.treeContext;
-    var totalChildren = 1;
-    var index = 0; // Modify the id context. Because we'll need to reset this if something
-    // suspends or errors, we'll use the non-destructive render path.
-
-    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
-    renderNode(request, task, children, 0); // Like the other contexts, this does not need to be in a finally block
-    // because renderNode takes care of unwinding the stack.
-  } else {
-    renderNodeDestructive(request, task, null, children, 0);
-  }
-
+  var formStateCount = getFormStateCount();
+  var formStateMatchingIndex = getFormStateMatchingIndex();
+  finishFunctionComponent(
+    request,
+    task,
+    children,
+    hasId,
+    formStateCount,
+    formStateMatchingIndex
+  );
   popComponentStackInDEV(task);
 }
 

@@ -2481,6 +2481,8 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
   isReRender = !1,
   didScheduleRenderPhaseUpdate = !1,
   localIdCounter = 0,
+  formStateCounter = 0,
+  formStateMatchingIndex = -1,
   thenableIndexCounter = 0,
   thenableState = null,
   renderPhaseUpdates = null,
@@ -2512,7 +2514,9 @@ function createWorkInProgressHook() {
 function finishHooks(Component, props, children, refOrContext) {
   for (; didScheduleRenderPhaseUpdate; )
     (didScheduleRenderPhaseUpdate = !1),
-      (thenableIndexCounter = localIdCounter = 0),
+      (formStateCounter = localIdCounter = 0),
+      (formStateMatchingIndex = -1),
+      (thenableIndexCounter = 0),
       (numberOfReRenders += 1),
       (workInProgressHook = null),
       (children = Component(props, refOrContext));
@@ -2633,6 +2637,7 @@ function useFormState(action, initialState, permalink) {
     boundAction(payload);
   }
   resolveCurrentlyRenderingComponent();
+  formStateCounter++;
   var boundAction = action.bind(null, initialState);
   "function" === typeof boundAction.$$FORM_ACTION &&
     (dispatch.$$FORM_ACTION = function (prefix) {
@@ -2843,6 +2848,35 @@ function fatalError(request, error) {
       (request.error = error))
     : ((request.status = 1), (request.fatalError = error));
 }
+function finishFunctionComponent(
+  request,
+  task,
+  children,
+  hasId,
+  formStateCount,
+  formStateMatchingIndex
+) {
+  var didEmitFormStateMarkers = !1;
+  if (0 !== formStateCount) {
+    var segment = task.blockedSegment;
+    if (null !== segment) {
+      didEmitFormStateMarkers = !0;
+      segment = segment.chunks;
+      for (var i = 0; i < formStateCount; i++)
+        i === formStateMatchingIndex
+          ? segment.push("\x3c!--F!--\x3e")
+          : segment.push("\x3c!--F--\x3e");
+    }
+  }
+  hasId
+    ? ((hasId = task.treeContext),
+      (task.treeContext = pushTreeContext(hasId, 1, 0)),
+      renderNode(request, task, children, 0),
+      (task.treeContext = hasId))
+    : didEmitFormStateMarkers
+    ? renderNode(request, task, children, 0)
+    : renderNodeDestructiveImpl(request, task, null, children, 0);
+}
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
     baseProps = assign({}, baseProps);
@@ -2955,16 +2989,20 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
     } else
       (currentlyRenderingComponent = {}),
         (currentlyRenderingTask = task),
-        (thenableIndexCounter = localIdCounter = 0),
+        (formStateCounter = localIdCounter = 0),
+        (formStateMatchingIndex = -1),
+        (thenableIndexCounter = 0),
         (thenableState = prevThenableState),
         (JSCompiler_inline_result = type(props, void 0)),
         (props = finishHooks(type, props, JSCompiler_inline_result, void 0)),
-        0 !== localIdCounter
-          ? ((type = task.treeContext),
-            (task.treeContext = pushTreeContext(type, 1, 0)),
-            renderNode(request, task, props, 0),
-            (task.treeContext = type))
-          : renderNodeDestructiveImpl(request, task, null, props, 0);
+        finishFunctionComponent(
+          request,
+          task,
+          props,
+          0 !== localIdCounter,
+          formStateCounter,
+          formStateMatchingIndex
+        );
   else if ("string" === typeof type) {
     JSCompiler_inline_result = task.blockedSegment;
     ref = pushStartInstance(
@@ -3129,14 +3167,20 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           type = type.render;
           currentlyRenderingComponent = {};
           currentlyRenderingTask = task;
-          thenableIndexCounter = localIdCounter = 0;
+          formStateCounter = localIdCounter = 0;
+          formStateMatchingIndex = -1;
+          thenableIndexCounter = 0;
           thenableState = prevThenableState;
           JSCompiler_inline_result = type(props, ref);
           props = finishHooks(type, props, JSCompiler_inline_result, ref);
-          0 !== localIdCounter
-            ? ((task.treeContext = pushTreeContext(task.treeContext, 1, 0)),
-              renderNode(request, task, props, 0))
-            : renderNodeDestructiveImpl(request, task, null, props, 0);
+          finishFunctionComponent(
+            request,
+            task,
+            props,
+            0 !== localIdCounter,
+            formStateCounter,
+            formStateMatchingIndex
+          );
           return;
         case REACT_MEMO_TYPE:
           type = type.type;
