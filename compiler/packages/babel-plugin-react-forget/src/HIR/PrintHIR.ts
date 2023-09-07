@@ -19,6 +19,7 @@ import {
   InstructionValue,
   LValue,
   MutableRange,
+  ObjectProperty,
   Pattern,
   Phi,
   Place,
@@ -243,6 +244,15 @@ function printHole(): string {
   return "<hole>";
 }
 
+function printObjectPropertyKey(property: ObjectProperty): string {
+  switch (property.type) {
+    case "identifier":
+      return property.name;
+    case "string":
+      return `'${property.name}'`;
+  }
+}
+
 export function printInstructionValue(instrValue: ReactiveValue): string {
   let value = "";
   switch (instrValue.kind) {
@@ -265,7 +275,11 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       if (instrValue.properties !== null) {
         for (const property of instrValue.properties) {
           if (property.kind === "ObjectProperty") {
-            properties.push(`${property.name}: ${printPlace(property.place)}`);
+            properties.push(
+              `${printObjectPropertyKey(property)}: ${printPlace(
+                property.place
+              )}`
+            );
           } else {
             properties.push(`...${printPlace(property.place)}`);
           }
@@ -591,7 +605,9 @@ export function printPattern(pattern: Pattern | Place | SpreadPattern): string {
           .map((item) => {
             switch (item.kind) {
               case "ObjectProperty": {
-                return `${item.name}: ${printPattern(item.place)}`;
+                return `${printObjectPropertyKey(item)}: ${printPattern(
+                  item.place
+                )}`;
               }
               case "Spread": {
                 return printPattern(item);
