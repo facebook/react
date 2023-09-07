@@ -1,14 +1,21 @@
+const { shallowCopy, throwInput } = require("shared-runtime");
+
 // @debug
 function Component(props) {
   let x = [];
   try {
-    const y = foo();
+    const y = shallowCopy({});
     if (y == null) {
       return;
     }
-    x.push(bar(y));
+    x.push(throwInput(y));
   } catch {
     return null;
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};

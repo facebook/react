@@ -2,15 +2,22 @@
 ## Input
 
 ```javascript
+const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
+
 function Component(props) {
   const x = [];
   try {
-    x.push(foo());
+    x.push(throwErrorWithMessage("oops"));
   } catch {
-    x.push(bar());
+    x.push(shallowCopy({ a: props.a }));
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ a: 1 }],
+};
 
 ```
 
@@ -18,36 +25,47 @@ function Component(props) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
+
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(5);
+  const c_0 = $[0] !== props.a;
   let x;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if (c_0) {
     x = [];
     try {
       let t0;
-      if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-        t0 = foo();
-        $[1] = t0;
+      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+        t0 = throwErrorWithMessage("oops");
+        $[2] = t0;
       } else {
-        t0 = $[1];
+        t0 = $[2];
       }
       x.push(t0);
     } catch {
+      const c_3 = $[3] !== props.a;
       let t1;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = bar();
-        $[2] = t1;
+      if (c_3) {
+        t1 = shallowCopy({ a: props.a });
+        $[3] = props.a;
+        $[4] = t1;
       } else {
-        t1 = $[2];
+        t1 = $[4];
       }
       x.push(t1);
     }
-    $[0] = x;
+    $[0] = props.a;
+    $[1] = x;
   } else {
-    x = $[0];
+    x = $[1];
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ a: 1 }],
+};
 
 ```
       

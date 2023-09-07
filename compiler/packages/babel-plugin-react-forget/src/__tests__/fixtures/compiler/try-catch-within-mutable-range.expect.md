@@ -2,16 +2,23 @@
 ## Input
 
 ```javascript
+const { throwErrorWithMessage, shallowCopy } = require("shared-runtime");
+
 function Component(props) {
   const x = [];
   try {
-    x.push(foo());
+    x.push(throwErrorWithMessage("oops"));
   } catch {
-    x.push(bar());
+    x.push(shallowCopy({}));
   }
   x.push(props.value); // extend the mutable range to include the try/catch
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
 
 ```
 
@@ -19,6 +26,8 @@ function Component(props) {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+const { throwErrorWithMessage, shallowCopy } = require("shared-runtime");
+
 function Component(props) {
   const $ = useMemoCache(4);
   const c_0 = $[0] !== props.value;
@@ -28,7 +37,7 @@ function Component(props) {
     try {
       let t0;
       if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-        t0 = foo();
+        t0 = throwErrorWithMessage("oops");
         $[2] = t0;
       } else {
         t0 = $[2];
@@ -37,7 +46,7 @@ function Component(props) {
     } catch {
       let t1;
       if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = bar();
+        t1 = shallowCopy({});
         $[3] = t1;
       } else {
         t1 = $[3];
@@ -53,6 +62,11 @@ function Component(props) {
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
 
 ```
       

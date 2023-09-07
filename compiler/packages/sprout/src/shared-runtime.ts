@@ -73,6 +73,14 @@ export function sum(...args: Array<number>): number {
   return args.reduce((result, arg) => result + arg, 0);
 }
 
+export function throwErrorWithMessage(message: string): never {
+  throw new Error(message);
+}
+
+export function throwInput(x: Object): never {
+  throw x;
+}
+
 /**
  * React Components
  */

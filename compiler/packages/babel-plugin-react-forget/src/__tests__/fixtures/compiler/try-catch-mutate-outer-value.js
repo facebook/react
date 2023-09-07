@@ -1,9 +1,16 @@
+const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
+
 function Component(props) {
   const x = [];
   try {
-    x.push(foo());
+    x.push(throwErrorWithMessage("oops"));
   } catch {
-    x.push(bar());
+    x.push(shallowCopy({ a: props.a }));
   }
   return x;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ a: 1 }],
+};
