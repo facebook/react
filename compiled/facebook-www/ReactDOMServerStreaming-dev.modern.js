@@ -11623,7 +11623,7 @@ function flushCompletedQueues(request, destination) {
   }
 }
 
-function startRender(request) {
+function startWork(request) {
   request.flushScheduled = request.destination !== null;
 }
 
@@ -11719,7 +11719,7 @@ function renderToStream(children, options) {
     undefined,
     undefined
   );
-  startRender(request);
+  startWork(request);
 
   if (destination.fatal) {
     throw destination.error;

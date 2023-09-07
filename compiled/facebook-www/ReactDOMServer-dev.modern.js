@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-7792b590";
+var ReactVersion = "18.3.0-www-modern-f69016b7";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -11723,7 +11723,7 @@ function flushCompletedQueues(request, destination) {
   }
 }
 
-function startRender(request) {
+function startWork(request) {
   request.flushScheduled = request.destination !== null;
 
   {
@@ -11859,7 +11859,7 @@ function renderToStringImpl(
     undefined,
     undefined
   );
-  startRender(request); // If anything suspended and is still pending, we'll abort it before writing.
+  startWork(request); // If anything suspended and is still pending, we'll abort it before writing.
   // That way we write only client-rendered boundaries from the start.
 
   abort(request, abortReason);
