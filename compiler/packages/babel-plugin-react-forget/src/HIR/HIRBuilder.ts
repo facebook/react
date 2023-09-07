@@ -754,6 +754,10 @@ export function reversePostorderBlocks(func: HIR): void {
         visit(terminal.continuation);
         break;
       }
+      case "try": {
+        visit(terminal.block);
+        break;
+      }
       case "unsupported": {
         break;
       }

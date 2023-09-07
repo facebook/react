@@ -515,6 +515,12 @@ function codegenTerminal(
     case "label": {
       return codegenBlock(cx, terminal.block);
     }
+    case "try": {
+      return t.tryStatement(
+        codegenBlock(cx, terminal.block),
+        t.catchClause(null, codegenBlock(cx, terminal.handler))
+      );
+    }
     default: {
       assertExhaustive(
         terminal,

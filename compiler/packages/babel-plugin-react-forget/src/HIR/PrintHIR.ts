@@ -80,6 +80,7 @@ export function printMixedHIR(
     return printInstruction(value);
   }
   switch (value.kind) {
+    case "try":
     case "maybe-throw":
     case "sequence":
     case "label":
@@ -233,6 +234,14 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "maybe-throw": {
       value = `MaybeThrow continuation=bb${terminal.continuation} handler=bb${terminal.handler}`;
+      break;
+    }
+    case "try": {
+      value = `Try block=bb${terminal.block} catch=bb${
+        terminal.handler
+      } fallthrough=${
+        terminal.fallthrough != null ? `bb${terminal.fallthrough}` : ""
+      }`;
       break;
     }
     default: {

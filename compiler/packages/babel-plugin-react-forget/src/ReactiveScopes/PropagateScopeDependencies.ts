@@ -670,6 +670,11 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         this.visitBlock(terminal.block, context);
         break;
       }
+      case "try": {
+        this.visitBlock(terminal.block, context);
+        this.visitBlock(terminal.handler, context);
+        break;
+      }
       default: {
         assertExhaustive(
           terminal,

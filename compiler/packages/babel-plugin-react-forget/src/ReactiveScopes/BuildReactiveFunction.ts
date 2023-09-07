@@ -637,10 +637,47 @@ class Driver {
         break;
       }
       case "maybe-throw": {
+        // ReactiveFunction does not explicit model maybe-throw semantics,
+        // so these terminals flatten away
         this.visitBlock(
           this.cx.ir.blocks.get(terminal.continuation)!,
           blockValue
         );
+        break;
+      }
+      case "try": {
+        const fallthroughId =
+          terminal.fallthrough !== null &&
+          !this.cx.isScheduled(terminal.fallthrough)
+            ? terminal.fallthrough
+            : null;
+        if (fallthroughId !== null) {
+          const scheduleId = this.cx.schedule(fallthroughId, "if");
+          scheduleIds.push(scheduleId);
+        }
+
+        const block = this.traverseBlock(
+          this.cx.ir.blocks.get(terminal.block)!
+        );
+        const handler = this.traverseBlock(
+          this.cx.ir.blocks.get(terminal.handler)!
+        );
+
+        this.cx.unscheduleAll(scheduleIds);
+        blockValue.push({
+          kind: "terminal",
+          label: fallthroughId,
+          terminal: {
+            kind: "try",
+            block,
+            handler,
+            id: terminal.id,
+          },
+        });
+
+        if (fallthroughId !== null) {
+          this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        }
         break;
       }
       case "unsupported": {

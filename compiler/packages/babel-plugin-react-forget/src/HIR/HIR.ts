@@ -138,7 +138,8 @@ export type ReactiveTerminal =
   | ReactiveForTerminal
   | ReactiveForOfTerminal
   | ReactiveIfTerminal
-  | ReactiveLabelTerminal;
+  | ReactiveLabelTerminal
+  | ReactiveTryTerminal;
 
 export type ReactiveBreakTerminal = {
   kind: "break";
@@ -207,6 +208,12 @@ export type ReactiveIfTerminal = {
 export type ReactiveLabelTerminal = {
   kind: "label";
   block: ReactiveBlock;
+  id: InstructionId;
+};
+export type ReactiveTryTerminal = {
+  kind: "try";
+  block: ReactiveBlock;
+  handler: ReactiveBlock;
   id: InstructionId;
 };
 
@@ -280,7 +287,8 @@ export type Terminal =
   | OptionalTerminal
   | LabelTerminal
   | SequenceTerminal
-  | MaybeThrowTerminal;
+  | MaybeThrowTerminal
+  | TryTerminal;
 
 function _staticInvariantTerminalHasLocation(
   terminal: Terminal
@@ -441,6 +449,16 @@ export type SequenceTerminal = {
   kind: "sequence";
   block: BlockId;
   fallthrough: BlockId;
+  id: InstructionId;
+  loc: SourceLocation;
+};
+
+export type TryTerminal = {
+  kind: "try";
+  block: BlockId;
+  handler: BlockId;
+  // TODO: support `finally`
+  fallthrough: BlockId | null;
   id: InstructionId;
   loc: SourceLocation;
 };

@@ -151,6 +151,11 @@ export class ReactiveFunctionVisitor<TState = void> {
         this.visitBlock(terminal.block, state);
         break;
       }
+      case "try": {
+        this.visitBlock(terminal.block, state);
+        this.visitBlock(terminal.handler, state);
+        break;
+      }
       default: {
         assertExhaustive(
           terminal,
@@ -359,6 +364,11 @@ export function mapTerminalBlocks(
     }
     case "label": {
       terminal.block = fn(terminal.block);
+      break;
+    }
+    case "try": {
+      terminal.block = fn(terminal.block);
+      terminal.handler = fn(terminal.handler);
       break;
     }
     default: {

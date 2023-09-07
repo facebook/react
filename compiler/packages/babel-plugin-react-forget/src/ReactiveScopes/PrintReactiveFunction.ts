@@ -276,6 +276,14 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
       writer.writeLine("}");
       break;
     }
+    case "try": {
+      writer.writeLine(`[${terminal.id}] try {`);
+      printReactiveInstructions(writer, terminal.block);
+      writer.writeLine(`} catch {`);
+      printReactiveInstructions(writer, terminal.handler);
+      writer.writeLine("}");
+      break;
+    }
     default:
       assertExhaustive(terminal, `Unhandled terminal ${terminal}`);
   }
