@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-f69016b7";
+var ReactVersion = "18.3.0-www-modern-4a509011";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2189,13 +2189,22 @@ var HTML_TABLE_BODY_MODE = 6;
 var HTML_TABLE_ROW_MODE = 7;
 var HTML_COLGROUP_MODE = 8; // We have a greater than HTML_TABLE_MODE check elsewhere. If you add more cases here, make sure it
 // still makes sense
-// Lets us keep track of contextual state and pick it back up after suspending.
 
-function createFormatContext(insertionMode, selectedValue, noscriptTagInScope) {
+var NO_SCOPE =
+  /*         */
+  0;
+var NOSCRIPT_SCOPE =
+  /*   */
+  1;
+var PICTURE_SCOPE =
+  /*    */
+  2; // Lets us keep track of contextual state and pick it back up after suspending.
+
+function createFormatContext(insertionMode, selectedValue, tagScope) {
   return {
     insertionMode: insertionMode,
     selectedValue: selectedValue,
-    noscriptTagInScope: noscriptTagInScope
+    tagScope: tagScope
   };
 }
 
@@ -2206,49 +2215,44 @@ function createRootFormatContext(namespaceURI) {
       : namespaceURI === "http://www.w3.org/1998/Math/MathML"
       ? MATHML_MODE
       : ROOT_HTML_MODE;
-  return createFormatContext(insertionMode, null, false);
+  return createFormatContext(insertionMode, null, NO_SCOPE);
 }
 function getChildFormatContext(parentContext, type, props) {
   switch (type) {
     case "noscript":
-      return createFormatContext(HTML_MODE, null, true);
+      return createFormatContext(
+        HTML_MODE,
+        null,
+        parentContext.tagScope | NOSCRIPT_SCOPE
+      );
 
     case "select":
       return createFormatContext(
         HTML_MODE,
         props.value != null ? props.value : props.defaultValue,
-        parentContext.noscriptTagInScope
+        parentContext.tagScope
       );
 
     case "svg":
-      return createFormatContext(
-        SVG_MODE,
-        null,
-        parentContext.noscriptTagInScope
-      );
+      return createFormatContext(SVG_MODE, null, parentContext.tagScope);
 
-    case "math":
-      return createFormatContext(
-        MATHML_MODE,
-        null,
-        parentContext.noscriptTagInScope
-      );
-
-    case "foreignObject":
+    case "picture":
       return createFormatContext(
         HTML_MODE,
         null,
-        parentContext.noscriptTagInScope
+        parentContext.tagScope | PICTURE_SCOPE
       );
+
+    case "math":
+      return createFormatContext(MATHML_MODE, null, parentContext.tagScope);
+
+    case "foreignObject":
+      return createFormatContext(HTML_MODE, null, parentContext.tagScope);
     // Table parents are special in that their children can only be created at all if they're
     // wrapped in a table parent. So we need to encode that we're entering this mode.
 
     case "table":
-      return createFormatContext(
-        HTML_TABLE_MODE,
-        null,
-        parentContext.noscriptTagInScope
-      );
+      return createFormatContext(HTML_TABLE_MODE, null, parentContext.tagScope);
 
     case "thead":
     case "tbody":
@@ -2256,45 +2260,41 @@ function getChildFormatContext(parentContext, type, props) {
       return createFormatContext(
         HTML_TABLE_BODY_MODE,
         null,
-        parentContext.noscriptTagInScope
+        parentContext.tagScope
       );
 
     case "colgroup":
       return createFormatContext(
         HTML_COLGROUP_MODE,
         null,
-        parentContext.noscriptTagInScope
+        parentContext.tagScope
       );
 
     case "tr":
       return createFormatContext(
         HTML_TABLE_ROW_MODE,
         null,
-        parentContext.noscriptTagInScope
+        parentContext.tagScope
       );
   }
 
   if (parentContext.insertionMode >= HTML_TABLE_MODE) {
     // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
     // entered plain HTML again.
-    return createFormatContext(
-      HTML_MODE,
-      null,
-      parentContext.noscriptTagInScope
-    );
+    return createFormatContext(HTML_MODE, null, parentContext.tagScope);
   }
 
   if (parentContext.insertionMode === ROOT_HTML_MODE) {
     if (type === "html") {
       // We've emitted the root and is now in <html> mode.
-      return createFormatContext(HTML_HTML_MODE, null, false);
+      return createFormatContext(HTML_HTML_MODE, null, parentContext.tagScope);
     } else {
       // We've emitted the root and is now in plain HTML mode.
-      return createFormatContext(HTML_MODE, null, false);
+      return createFormatContext(HTML_MODE, null, parentContext.tagScope);
     }
   } else if (parentContext.insertionMode === HTML_HTML_MODE) {
     // We've emitted the document element and is now in plain HTML mode.
-    return createFormatContext(HTML_MODE, null, false);
+    return createFormatContext(HTML_MODE, null, parentContext.tagScope);
   }
 
   return parentContext;
@@ -4070,14 +4070,15 @@ function getImagePreloadKey(href, imageSrcSet, imageSizes) {
   return getResourceKey("image", uniquePart);
 }
 
-function pushImg(target, props, resumableState) {
+function pushImg(target, props, resumableState, pictureTagInScope) {
   var src = props.src,
     srcSet = props.srcSet;
 
   if (
     props.loading !== "lazy" &&
     (typeof src === "string" || typeof srcSet === "string") &&
-    props.fetchPriority !== "low" && // We exclude data URIs in src and srcSet since these should not be preloaded
+    props.fetchPriority !== "low" &&
+    pictureTagInScope === false && // We exclude data URIs in src and srcSet since these should not be preloaded
     !(
       typeof src === "string" &&
       src[4] === ":" &&
@@ -4778,7 +4779,7 @@ function pushStartInstance(
         props,
         renderState,
         formatContext.insertionMode,
-        formatContext.noscriptTagInScope
+        !!(formatContext.tagScope & NOSCRIPT_SCOPE)
       );
 
     case "link":
@@ -4789,7 +4790,7 @@ function pushStartInstance(
         renderState,
         textEmbedded,
         formatContext.insertionMode,
-        formatContext.noscriptTagInScope
+        !!(formatContext.tagScope & NOSCRIPT_SCOPE)
       );
 
     case "script":
@@ -4799,7 +4800,7 @@ function pushStartInstance(
         resumableState,
         textEmbedded,
         formatContext.insertionMode,
-        formatContext.noscriptTagInScope
+        !!(formatContext.tagScope & NOSCRIPT_SCOPE)
       );
 
     case "style":
@@ -4810,7 +4811,7 @@ function pushStartInstance(
         renderState,
         textEmbedded,
         formatContext.insertionMode,
-        formatContext.noscriptTagInScope
+        !!(formatContext.tagScope & NOSCRIPT_SCOPE)
       );
 
     case "meta":
@@ -4820,7 +4821,7 @@ function pushStartInstance(
         renderState,
         textEmbedded,
         formatContext.insertionMode,
-        formatContext.noscriptTagInScope
+        !!(formatContext.tagScope & NOSCRIPT_SCOPE)
       );
     // Newline eating tags
 
@@ -4830,7 +4831,12 @@ function pushStartInstance(
     }
 
     case "img": {
-      return pushImg(target, props, resumableState);
+      return pushImg(
+        target,
+        props,
+        resumableState,
+        !!(formatContext.tagScope & PICTURE_SCOPE)
+      );
     }
     // Omitted close tags
 

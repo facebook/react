@@ -378,48 +378,50 @@ function createResumableState(
         identifierPrefix.push('" async="">\x3c/script>');
   return bootstrapScriptContent;
 }
-function createFormatContext(insertionMode, selectedValue, noscriptTagInScope) {
+function createFormatContext(insertionMode, selectedValue, tagScope) {
   return {
     insertionMode: insertionMode,
     selectedValue: selectedValue,
-    noscriptTagInScope: noscriptTagInScope
+    tagScope: tagScope
   };
 }
 function getChildFormatContext(parentContext, type, props) {
   switch (type) {
     case "noscript":
-      return createFormatContext(2, null, !0);
+      return createFormatContext(2, null, parentContext.tagScope | 1);
     case "select":
       return createFormatContext(
         2,
         null != props.value ? props.value : props.defaultValue,
-        parentContext.noscriptTagInScope
+        parentContext.tagScope
       );
     case "svg":
-      return createFormatContext(3, null, parentContext.noscriptTagInScope);
+      return createFormatContext(3, null, parentContext.tagScope);
+    case "picture":
+      return createFormatContext(2, null, parentContext.tagScope | 2);
     case "math":
-      return createFormatContext(4, null, parentContext.noscriptTagInScope);
+      return createFormatContext(4, null, parentContext.tagScope);
     case "foreignObject":
-      return createFormatContext(2, null, parentContext.noscriptTagInScope);
+      return createFormatContext(2, null, parentContext.tagScope);
     case "table":
-      return createFormatContext(5, null, parentContext.noscriptTagInScope);
+      return createFormatContext(5, null, parentContext.tagScope);
     case "thead":
     case "tbody":
     case "tfoot":
-      return createFormatContext(6, null, parentContext.noscriptTagInScope);
+      return createFormatContext(6, null, parentContext.tagScope);
     case "colgroup":
-      return createFormatContext(8, null, parentContext.noscriptTagInScope);
+      return createFormatContext(8, null, parentContext.tagScope);
     case "tr":
-      return createFormatContext(7, null, parentContext.noscriptTagInScope);
+      return createFormatContext(7, null, parentContext.tagScope);
   }
   return 5 <= parentContext.insertionMode
-    ? createFormatContext(2, null, parentContext.noscriptTagInScope)
+    ? createFormatContext(2, null, parentContext.tagScope)
     : 0 === parentContext.insertionMode
     ? "html" === type
-      ? createFormatContext(1, null, !1)
-      : createFormatContext(2, null, !1)
+      ? createFormatContext(1, null, parentContext.tagScope)
+      : createFormatContext(2, null, parentContext.tagScope)
     : 1 === parentContext.insertionMode
-    ? createFormatContext(2, null, !1)
+    ? createFormatContext(2, null, parentContext.tagScope)
     : parentContext;
 }
 var styleNameCache = new Map();
@@ -1263,7 +1265,7 @@ function pushStartInstance(
     case "title":
       if (
         3 === formatContext.insertionMode ||
-        formatContext.noscriptTagInScope ||
+        formatContext.tagScope & 1 ||
         null != props.itemProp
       )
         var JSCompiler_inline_result$jscomp$1 = pushTitleImpl(
@@ -1282,7 +1284,7 @@ function pushStartInstance(
         renderState,
         textEmbedded,
         formatContext.insertionMode,
-        formatContext.noscriptTagInScope
+        !!(formatContext.tagScope & 1)
       );
     case "script":
       var asyncProp = props.async;
@@ -1295,7 +1297,7 @@ function pushStartInstance(
         props.onLoad ||
         props.onError ||
         3 === formatContext.insertionMode ||
-        formatContext.noscriptTagInScope ||
+        formatContext.tagScope & 1 ||
         null != props.itemProp
       )
         var JSCompiler_inline_result$jscomp$2 = pushScriptImpl(
@@ -1331,7 +1333,7 @@ function pushStartInstance(
         href = props.href;
       if (
         3 === formatContext.insertionMode ||
-        formatContext.noscriptTagInScope ||
+        formatContext.tagScope & 1 ||
         null != props.itemProp ||
         "string" !== typeof precedence ||
         "string" !== typeof href ||
@@ -1433,7 +1435,7 @@ function pushStartInstance(
     case "meta":
       if (
         3 === formatContext.insertionMode ||
-        formatContext.noscriptTagInScope ||
+        formatContext.tagScope & 1 ||
         null != props.itemProp
       )
         var JSCompiler_inline_result$jscomp$4 = pushSelfClosing(
@@ -1501,6 +1503,7 @@ function pushStartInstance(
         "lazy" !== props.loading &&
         ("string" === typeof src || "string" === typeof srcSet) &&
         "low" !== props.fetchPriority &&
+        !1 === !!(formatContext.tagScope & 2) &&
         ("string" !== typeof src ||
           ":" !== src[4] ||
           ("d" !== src[0] && "D" !== src[0]) ||
@@ -4354,7 +4357,7 @@ function renderToStringImpl(
     children,
     options,
     createRenderState(options, void 0, generateStaticMarkup),
-    createFormatContext(0, null, !1),
+    createFormatContext(0, null, 0),
     Infinity,
     onError,
     void 0,
@@ -4405,4 +4408,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-91b9be2c";
+exports.version = "18.3.0-www-modern-9a25d12d";

@@ -189,48 +189,50 @@ var isArrayImpl = Array.isArray,
 function scriptReplacer(match, prefix, s, suffix) {
   return "" + prefix + ("s" === s ? "\\u0073" : "\\u0053") + suffix;
 }
-function createFormatContext(insertionMode, selectedValue, noscriptTagInScope) {
+function createFormatContext(insertionMode, selectedValue, tagScope) {
   return {
     insertionMode: insertionMode,
     selectedValue: selectedValue,
-    noscriptTagInScope: noscriptTagInScope
+    tagScope: tagScope
   };
 }
 function getChildFormatContext(parentContext, type, props) {
   switch (type) {
     case "noscript":
-      return createFormatContext(2, null, !0);
+      return createFormatContext(2, null, parentContext.tagScope | 1);
     case "select":
       return createFormatContext(
         2,
         null != props.value ? props.value : props.defaultValue,
-        parentContext.noscriptTagInScope
+        parentContext.tagScope
       );
     case "svg":
-      return createFormatContext(3, null, parentContext.noscriptTagInScope);
+      return createFormatContext(3, null, parentContext.tagScope);
+    case "picture":
+      return createFormatContext(2, null, parentContext.tagScope | 2);
     case "math":
-      return createFormatContext(4, null, parentContext.noscriptTagInScope);
+      return createFormatContext(4, null, parentContext.tagScope);
     case "foreignObject":
-      return createFormatContext(2, null, parentContext.noscriptTagInScope);
+      return createFormatContext(2, null, parentContext.tagScope);
     case "table":
-      return createFormatContext(5, null, parentContext.noscriptTagInScope);
+      return createFormatContext(5, null, parentContext.tagScope);
     case "thead":
     case "tbody":
     case "tfoot":
-      return createFormatContext(6, null, parentContext.noscriptTagInScope);
+      return createFormatContext(6, null, parentContext.tagScope);
     case "colgroup":
-      return createFormatContext(8, null, parentContext.noscriptTagInScope);
+      return createFormatContext(8, null, parentContext.tagScope);
     case "tr":
-      return createFormatContext(7, null, parentContext.noscriptTagInScope);
+      return createFormatContext(7, null, parentContext.tagScope);
   }
   return 5 <= parentContext.insertionMode
-    ? createFormatContext(2, null, parentContext.noscriptTagInScope)
+    ? createFormatContext(2, null, parentContext.tagScope)
     : 0 === parentContext.insertionMode
     ? "html" === type
-      ? createFormatContext(1, null, !1)
-      : createFormatContext(2, null, !1)
+      ? createFormatContext(1, null, parentContext.tagScope)
+      : createFormatContext(2, null, parentContext.tagScope)
     : 1 === parentContext.insertionMode
-    ? createFormatContext(2, null, !1)
+    ? createFormatContext(2, null, parentContext.tagScope)
     : parentContext;
 }
 function pushTextInstance(target, text, renderState, textEmbedded) {
@@ -1104,7 +1106,7 @@ function pushStartInstance(
     case "title":
       if (
         3 === formatContext.insertionMode ||
-        formatContext.noscriptTagInScope ||
+        formatContext.tagScope & 1 ||
         null != props.itemProp
       )
         var JSCompiler_inline_result$jscomp$1 = pushTitleImpl(
@@ -1123,7 +1125,7 @@ function pushStartInstance(
         renderState,
         textEmbedded,
         formatContext.insertionMode,
-        formatContext.noscriptTagInScope
+        !!(formatContext.tagScope & 1)
       );
     case "script":
       var asyncProp = props.async;
@@ -1136,7 +1138,7 @@ function pushStartInstance(
         props.onLoad ||
         props.onError ||
         3 === formatContext.insertionMode ||
-        formatContext.noscriptTagInScope ||
+        formatContext.tagScope & 1 ||
         null != props.itemProp
       )
         var JSCompiler_inline_result$jscomp$2 = pushScriptImpl(
@@ -1172,7 +1174,7 @@ function pushStartInstance(
         href = props.href;
       if (
         3 === formatContext.insertionMode ||
-        formatContext.noscriptTagInScope ||
+        formatContext.tagScope & 1 ||
         null != props.itemProp ||
         "string" !== typeof precedence ||
         "string" !== typeof href ||
@@ -1274,7 +1276,7 @@ function pushStartInstance(
     case "meta":
       if (
         3 === formatContext.insertionMode ||
-        formatContext.noscriptTagInScope ||
+        formatContext.tagScope & 1 ||
         null != props.itemProp
       )
         var JSCompiler_inline_result$jscomp$4 = pushSelfClosing(
@@ -1347,6 +1349,7 @@ function pushStartInstance(
         "lazy" !== props.loading &&
         ("string" === typeof src || "string" === typeof srcSet) &&
         "low" !== props.fetchPriority &&
+        !1 === !!(formatContext.tagScope & 2) &&
         ("string" !== typeof src ||
           ":" !== src[4] ||
           ("d" !== src[0] && "D" !== src[0]) ||
@@ -4335,7 +4338,7 @@ exports.renderToStream = function (children, options) {
     boundaryResources: null,
     stylesToHoist: !1
   };
-  bootstrapModules = createFormatContext(0, null, !1);
+  bootstrapModules = createFormatContext(0, null, 0);
   externalRuntimeConfig = options ? options.progressiveChunkSize : void 0;
   idPrefix = options.onError;
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
