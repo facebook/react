@@ -941,7 +941,52 @@ function lowerStatement(
         });
         return;
       }
+      if (stmt.get("finalizer").node != null) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause`,
+          severity: ErrorSeverity.Todo,
+          loc: stmt.node.loc ?? null,
+          suggestions: null,
+        });
+      }
+
+      const handlerBindingPath = handlerPath.get("param");
+      let handlerBinding: {
+        place: Place;
+        path: NodePath<t.Identifier | t.ArrayPattern | t.ObjectPattern>;
+      } | null = null;
+      if (handlerBindingPath.node != null && handlerBindingPath.hasNode()) {
+        const place: Place = {
+          kind: "Identifier",
+          identifier: builder.makeTemporary(),
+          effect: Effect.Unknown,
+          loc: handlerBindingPath.node.loc ?? GeneratedSource,
+        };
+        lowerValueToTemporary(builder, {
+          kind: "DeclareLocal",
+          lvalue: {
+            kind: InstructionKind.Catch,
+            place: { ...place },
+          },
+          loc: handlerBindingPath.node.loc ?? GeneratedSource,
+        });
+
+        handlerBinding = {
+          path: handlerBindingPath,
+          place,
+        };
+      }
+
       const handler = builder.enter("block", (_blockId) => {
+        if (handlerBinding !== null) {
+          lowerAssignment(
+            builder,
+            handlerBinding.path.node.loc ?? GeneratedSource,
+            InstructionKind.Catch,
+            handlerBinding.path,
+            { ...handlerBinding.place }
+          );
+        }
         lowerStatement(builder, handlerPath.get("body"));
         return {
           kind: "goto",
@@ -951,14 +996,6 @@ function lowerStatement(
           loc: handlerPath.node.loc ?? GeneratedSource,
         };
       });
-      if (stmt.get("finalizer").node != null) {
-        builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause`,
-          severity: ErrorSeverity.Todo,
-          loc: stmt.node.loc ?? null,
-          suggestions: null,
-        });
-      }
 
       const block = builder.enter("block", (_blockId) => {
         const block = stmt.get("block");
@@ -978,6 +1015,8 @@ function lowerStatement(
         {
           kind: "try",
           block,
+          handlerBinding:
+            handlerBinding !== null ? { ...handlerBinding.place } : null,
           handler,
           fallthrough: continuationBlock.id,
           id: makeInstructionId(0),

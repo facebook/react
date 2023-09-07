@@ -213,6 +213,7 @@ export type ReactiveLabelTerminal = {
 export type ReactiveTryTerminal = {
   kind: "try";
   block: ReactiveBlock;
+  handlerBinding: Place | null;
   handler: ReactiveBlock;
   id: InstructionId;
 };
@@ -457,6 +458,7 @@ export type SequenceTerminal = {
 export type TryTerminal = {
   kind: "try";
   block: BlockId;
+  handlerBinding: Place | null;
   handler: BlockId;
   // TODO: support `finally`
   fallthrough: BlockId | null;
@@ -547,6 +549,10 @@ export enum InstructionKind {
    * assing a new value to a let binding
    */
   Reassign = "Reassign",
+  /**
+   * catch clause binding
+   */
+  Catch = "Catch",
 }
 
 function _staticInvariantInstructionValueHasLocation(

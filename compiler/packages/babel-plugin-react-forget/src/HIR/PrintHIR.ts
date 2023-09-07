@@ -590,6 +590,9 @@ export function printLValue(lval: LValue): string {
     case InstructionKind.Reassign: {
       return `Reassign ${lvalue}`;
     }
+    case InstructionKind.Catch: {
+      return `Catch ${lvalue}`;
+    }
     default: {
       assertExhaustive(lval.kind, `Unexpected lvalue kind '${lval.kind}'`);
     }

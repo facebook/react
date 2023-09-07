@@ -454,6 +454,13 @@ function codegenTerminal(
             loc: iterableItem.loc,
             suggestions: null,
           });
+        case InstructionKind.Catch:
+          CompilerError.invariant(false, {
+            reason: "Unexpected catch variable as for-of collection",
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
         default:
           assertExhaustive(
             iterableItem.value.lvalue.kind,
@@ -516,9 +523,14 @@ function codegenTerminal(
       return codegenBlock(cx, terminal.block);
     }
     case "try": {
+      let catchParam = null;
+      if (terminal.handlerBinding !== null) {
+        catchParam = convertIdentifier(terminal.handlerBinding.identifier);
+        cx.temp.set(terminal.handlerBinding.identifier.id, null);
+      }
       return t.tryStatement(
         codegenBlock(cx, terminal.block),
-        t.catchClause(null, codegenBlock(cx, terminal.handler))
+        t.catchClause(catchParam, codegenBlock(cx, terminal.handler))
       );
     }
     default: {
@@ -637,6 +649,9 @@ function codegenInstructionNullable(
         } else {
           return createExpressionStatement(instr.loc, expr);
         }
+      }
+      case InstructionKind.Catch: {
+        return t.emptyStatement();
       }
       default: {
         assertExhaustive(kind, `Unexpected instruction kind '${kind}'`);

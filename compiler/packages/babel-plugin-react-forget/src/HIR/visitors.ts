@@ -750,6 +750,7 @@ export function mapTerminalSuccessors(
       return {
         kind: "try",
         block,
+        handlerBinding: terminal.handlerBinding,
         handler,
         fallthrough,
         id: makeInstructionId(0),
@@ -1001,7 +1002,14 @@ export function mapTerminalOperands(
       terminal.value = fn(terminal.value);
       break;
     }
-    case "try":
+    case "try": {
+      if (terminal.handlerBinding !== null) {
+        terminal.handlerBinding = fn(terminal.handlerBinding);
+      } else {
+        terminal.handlerBinding = null;
+      }
+      break;
+    }
     case "maybe-throw":
     case "sequence":
     case "label":

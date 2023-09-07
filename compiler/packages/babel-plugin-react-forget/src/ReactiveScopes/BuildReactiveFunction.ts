@@ -676,6 +676,7 @@ class Driver {
           terminal: {
             kind: "try",
             block,
+            handlerBinding: terminal.handlerBinding,
             handler,
             id: terminal.id,
           },
