@@ -16,6 +16,7 @@ import {
   IdentifierId,
   InstructionKind,
   JsxAttribute,
+  ObjectProperty,
   Pattern,
   Place,
   ReactiveBlock,
@@ -898,14 +899,14 @@ function codegenInstructionValue(
       const properties = [];
       for (const property of instrValue.properties) {
         if (property.kind === "ObjectProperty") {
-          const key = t.identifier(property.name);
+          const key = codegenObjectPropertyKey(property);
           const value = codegenPlace(cx, property.place);
           properties.push(
             t.objectProperty(
               key,
               value,
               false,
-              value.type === "Identifier" && value.name === key.name
+              value.type === "Identifier" && value.name === property.name
             )
           );
         } else {
@@ -1310,6 +1311,17 @@ function convertMemberExpressionToJsx(
   }
 }
 
+function codegenObjectPropertyKey(
+  property: ObjectProperty
+): t.StringLiteral | t.Identifier {
+  switch (property.type) {
+    case "identifier":
+      return t.identifier(property.name);
+    case "string":
+      return t.stringLiteral(property.name);
+  }
+}
+
 function codegenLValue(
   pattern: Pattern | Place | SpreadPattern
 ): t.ArrayPattern | t.ObjectPattern | t.RestElement | t.Identifier {
@@ -1328,13 +1340,13 @@ function codegenLValue(
       return t.objectPattern(
         pattern.properties.map((property) => {
           if (property.kind === "ObjectProperty") {
-            const key = t.identifier(property.name);
+            const key = codegenObjectPropertyKey(property);
             const value = codegenLValue(property.place);
             return t.objectProperty(
               key,
               value,
               false,
-              value.type === "Identifier" && value.name === key.name
+              value.type === "Identifier" && value.name === property.name
             );
           } else {
             return t.restElement(codegenLValue(property.place));

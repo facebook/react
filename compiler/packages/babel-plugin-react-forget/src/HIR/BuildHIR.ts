@@ -967,6 +967,33 @@ function lowerStatement(
   }
 }
 
+function lowerObjectPropertyKey(
+  builder: HIRBuilder,
+  key: t.PrivateName | t.Expression
+): { name: string; type: "string" | "identifier" } | null {
+  if (key.type === "Identifier") {
+    return {
+      name: key.name,
+      type: "identifier",
+    };
+  }
+
+  if (key.type === "StringLiteral") {
+    return {
+      name: key.value,
+      type: "string",
+    };
+  }
+
+  builder.errors.push({
+    reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
+    severity: ErrorSeverity.Todo,
+    loc: key.loc ?? null,
+    suggestions: null,
+  });
+  return null;
+}
+
 function lowerExpression(
   builder: HIRBuilder,
   exprPath: NodePath<t.Expression>
@@ -1009,19 +1036,11 @@ function lowerExpression(
       const properties: Array<ObjectProperty | SpreadPattern> = [];
       for (const propertyPath of propertyPaths) {
         if (propertyPath.isObjectProperty()) {
-          const key = propertyPath.node.key;
-          let keyName: string;
-          if (key.type === "Identifier") {
-            keyName = key.name;
-          } else if (key.type === "StringLiteral") {
-            keyName = key.value;
-          } else {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
-              severity: ErrorSeverity.Todo,
-              loc: propertyPath.node.loc ?? null,
-              suggestions: null,
-            });
+          const loweredKey = lowerObjectPropertyKey(
+            builder,
+            propertyPath.node.key
+          );
+          if (!loweredKey) {
             continue;
           }
           const valuePath = propertyPath.get("value");
@@ -1037,8 +1056,8 @@ function lowerExpression(
           const value = lowerExpressionToTemporary(builder, valuePath);
           properties.push({
             kind: "ObjectProperty",
-            name: keyName,
             place: value,
+            ...loweredKey,
           });
         } else if (propertyPath.isSpreadElement()) {
           const place = lowerExpressionToTemporary(
@@ -2800,14 +2819,8 @@ function lowerAssignment(
             });
             continue;
           }
-          const key = property.get("key");
-          if (!key.isIdentifier()) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerAssignment) Handle ${key.type} keys in ObjectPattern`,
-              severity: ErrorSeverity.Todo,
-              loc: key.node.loc ?? null,
-              suggestions: null,
-            });
+          const loweredKey = lowerObjectPropertyKey(builder, property.node.key);
+          if (!loweredKey) {
             continue;
           }
           const element = property.get("value");
@@ -2832,8 +2845,8 @@ function lowerAssignment(
             }
             properties.push({
               kind: "ObjectProperty",
-              name: key.node.name,
               place: identifier,
+              ...loweredKey,
             });
           } else {
             const temp = buildTemporaryPlace(
@@ -2842,8 +2855,8 @@ function lowerAssignment(
             );
             properties.push({
               kind: "ObjectProperty",
-              name: key.node.name,
               place: { ...temp },
+              ...loweredKey,
             });
             followups.push({ place: temp, path: element as NodePath<t.LVal> }); // TODO remove type cast
           }

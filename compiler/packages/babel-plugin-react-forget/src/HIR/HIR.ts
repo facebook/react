@@ -501,6 +501,7 @@ export type ObjectPattern = {
 
 export type ObjectProperty = {
   kind: "ObjectProperty";
+  type: "string" | "identifier";
   name: string; // TODO: make a Place
   place: Place;
 };
