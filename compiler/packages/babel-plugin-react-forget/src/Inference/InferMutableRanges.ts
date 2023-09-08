@@ -11,6 +11,7 @@ import { inferAliasForPhis } from "./InferAliasForPhis";
 import { inferAliasForStores } from "./InferAliasForStores";
 import { inferMutableLifetimes } from "./InferMutableLifetimes";
 import { inferMutableRangesForAlias } from "./InferMutableRangesForAlias";
+import { inferTryCatchAliases } from "./InferTryCatchAliases";
 
 export function inferMutableRanges(ir: HIRFunction): void {
   // Infer mutable ranges for non fields
@@ -18,6 +19,10 @@ export function inferMutableRanges(ir: HIRFunction): void {
 
   // Calculate aliases
   const aliases = inferAliases(ir);
+  // Calculate aliases for try/catch, where any value created
+  // in the try block could be aliased to the catch param
+  inferTryCatchAliases(ir, aliases);
+
   // Eagerly canonicalize so that if nothing changes we can bail out
   // after a single iteration
   let prevAliases: Map<Identifier, Identifier> = aliases.canonicalize();

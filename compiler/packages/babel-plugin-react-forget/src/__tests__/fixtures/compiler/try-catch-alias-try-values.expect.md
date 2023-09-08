@@ -5,15 +5,16 @@
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {
+  let y;
   let x = [];
   try {
-    // foo could throw its argument...
+    // throws x
     throwInput(x);
   } catch (e) {
-    // ... in which case this could be mutating `x`!
-    e.push(null);
-    return e;
+    // e = x
+    y = e; // y = x
   }
+  y.push(null);
   return x;
 }
 
@@ -27,17 +28,27 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {
-  const x = [];
-  try {
-    throwInput(x);
-  } catch (t22) {
-    const e = t22;
+  const $ = useMemoCache(1);
+  let x;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    let y;
+    x = [];
+    try {
+      throwInput(x);
+    } catch (t27) {
+      const e = t27;
 
-    e.push(null);
-    return e;
+      y = e;
+    }
+
+    y.push(null);
+    $[0] = x;
+  } else {
+    x = $[0];
   }
   return x;
 }

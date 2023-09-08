@@ -5,21 +5,20 @@
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {
-  let x = [];
   try {
-    // foo could throw its argument...
-    throwInput(x);
+    const y = [];
+    y.push(props.y);
+    throwInput(y);
   } catch (e) {
-    // ... in which case this could be mutating `x`!
-    e.push(null);
+    e.push(props.e);
     return e;
   }
-  return x;
+  return null;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{}],
+  params: [{ y: "foo", e: "bar" }],
 };
 
 ```
@@ -30,21 +29,21 @@ export const FIXTURE_ENTRYPOINT = {
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {
-  const x = [];
   try {
-    throwInput(x);
-  } catch (t22) {
-    const e = t22;
-
-    e.push(null);
+    const y = [];
+    y.push(props.y);
+    throwInput(y);
+  } catch (t25) {
+    const e = t25;
+    e.push(props.e);
     return e;
   }
-  return x;
+  return null;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{}],
+  params: [{ y: "foo", e: "bar" }],
 };
 
 ```

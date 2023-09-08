@@ -14,6 +14,7 @@ import {
   Effect,
   HIRFunction,
   IdentifierId,
+  InstructionKind,
   InstructionValue,
   isMutableEffect,
   isObjectType,
@@ -924,7 +925,13 @@ function inferBlock(
           loc: instrValue.loc,
           value: undefined,
         };
-        state.initialize(value, ValueKind.Immutable);
+        state.initialize(
+          value,
+          // Catch params may be aliased to mutable values
+          instrValue.lvalue.kind === InstructionKind.Catch
+            ? ValueKind.Mutable
+            : ValueKind.Immutable
+        );
         state.define(instrValue.lvalue.place, value);
         continue;
       }
