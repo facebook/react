@@ -2238,6 +2238,20 @@ function isReorderableExpression(
     case "BigIntLiteral": {
       return true;
     }
+    case "TypeCastExpression": {
+      return isReorderableExpression(
+        builder,
+        (expr as NodePath<t.TypeCastExpression>).get("expression")
+      );
+    }
+    case "ConditionalExpression": {
+      const conditional = expr as NodePath<t.ConditionalExpression>;
+      return (
+        isReorderableExpression(builder, conditional.get("test")) &&
+        isReorderableExpression(builder, conditional.get("consequent")) &&
+        isReorderableExpression(builder, conditional.get("alternate"))
+      );
+    }
     case "ArrayExpression": {
       return (expr as NodePath<t.ArrayExpression>)
         .get("elements")

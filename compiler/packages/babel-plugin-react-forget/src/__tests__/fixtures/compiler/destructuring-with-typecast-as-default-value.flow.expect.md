@@ -1,0 +1,43 @@
+
+## Input
+
+```javascript
+// @flow
+function Component(props) {
+  const [x = ([]: Array<number>)] = props.y;
+  return x;
+}
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{y: []}],
+};
+```
+
+## Code
+
+```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+function Component(props) {
+  const $ = useMemoCache(2);
+  const [t0] = props.y;
+  const c_0 = $[0] !== t0;
+  let t1;
+  if (c_0) {
+    t1 = t0 === undefined ? ([]: Array<number>) : t0;
+    $[0] = t0;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const x = t1;
+  return x;
+}
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ y: [] }],
+};
+
+```
+      
