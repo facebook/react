@@ -15,6 +15,7 @@ export * from "./HIR";
 export {
   markInstructionIds,
   markPredecessors,
+  removeUnnecessaryTryCatch,
   removeUnreachableFallthroughs,
   reversePostorderBlocks,
 } from "./HIRBuilder";

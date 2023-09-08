@@ -9,8 +9,20 @@ import {
   GotoVariant,
   HIRFunction,
   Instruction,
+  assertConsistentIdentifiers,
+  assertTerminalSuccessorsExist,
   mergeConsecutiveBlocks,
+  removeUnreachableFallthroughs,
+  reversePostorderBlocks,
 } from "../HIR";
+import {
+  markInstructionIds,
+  markPredecessors,
+  removeDeadDoWhileStatements,
+  removeUnnecessaryTryCatch,
+  removeUnreachableForUpdates,
+} from "../HIR/HIRBuilder";
+import { eliminateRedundantPhi } from "../SSA";
 
 /**
  * This pass prunes `maybe-throw` terminals for blocks that can provably *never* throw.
@@ -20,7 +32,35 @@ import {
 export function pruneMaybeThrows(fn: HIRFunction): void {
   const didPrune = pruneMaybeThrowsImpl(fn);
   if (didPrune) {
+    // If terminals have changed then blocks may have become newly unreachable.
+    // Re-run minification of the graph (incl reordering instruction ids)
+    reversePostorderBlocks(fn.body);
+    removeUnreachableFallthroughs(fn.body);
+    removeUnreachableForUpdates(fn.body);
+    removeDeadDoWhileStatements(fn.body);
+    removeUnnecessaryTryCatch(fn.body);
+    markInstructionIds(fn.body);
+    markPredecessors(fn.body);
+
+    // Now that predecessors are updated, prune phi operands that can never be reached
+    for (const [, block] of fn.body.blocks) {
+      for (const phi of block.phis) {
+        for (const [predecessor] of phi.operands) {
+          if (!block.preds.has(predecessor)) {
+            phi.operands.delete(predecessor);
+          }
+        }
+      }
+    }
+    // By removing some phi operands, there may be phis that were not previously
+    // redundant but now are
+    eliminateRedundantPhi(fn);
+    // Finally, merge together any blocks that are now guaranteed to execute
+    // consecutively
     mergeConsecutiveBlocks(fn);
+
+    assertConsistentIdentifiers(fn);
+    assertTerminalSuccessorsExist(fn);
   }
 }
 

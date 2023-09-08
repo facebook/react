@@ -316,6 +316,7 @@ export default class HIRBuilder {
     removeUnreachableForUpdates(ir);
     removeUnreachableFallthroughs(ir);
     removeDeadDoWhileStatements(ir);
+    removeUnnecessaryTryCatch(ir);
     markInstructionIds(ir);
     markPredecessors(ir);
 
@@ -845,4 +846,25 @@ function getTargetIfIndirection(block: BasicBlock): number | null {
     block.terminal.variant === GotoVariant.Break
     ? block.terminal.block
     : null;
+}
+
+/**
+ * Finds try terminals where the handler is unreachable, and converts the try
+ * to a goto(terminal.fallthrough)
+ */
+export function removeUnnecessaryTryCatch(fn: HIR): void {
+  for (const [, block] of fn.blocks) {
+    if (
+      block.terminal.kind === "try" &&
+      !fn.blocks.has(block.terminal.handler)
+    ) {
+      block.terminal = {
+        kind: "goto",
+        block: block.terminal.block,
+        id: makeInstructionId(0),
+        loc: block.terminal.loc,
+        variant: GotoVariant.Break,
+      };
+    }
+  }
 }

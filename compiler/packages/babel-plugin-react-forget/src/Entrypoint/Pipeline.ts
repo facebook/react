@@ -137,6 +137,9 @@ export function* run(
   deadCodeElimination(hir);
   yield log({ kind: "hir", name: "DeadCodeElimination", value: hir });
 
+  pruneMaybeThrows(hir);
+  yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
+
   inferMutableRanges(hir);
   yield log({ kind: "hir", name: "InferMutableRanges", value: hir });
 

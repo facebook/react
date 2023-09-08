@@ -28,6 +28,7 @@ import {
 } from "../HIR";
 import {
   removeDeadDoWhileStatements,
+  removeUnnecessaryTryCatch,
   removeUnreachableForUpdates,
 } from "../HIR/HIRBuilder";
 import { eliminateRedundantPhi } from "../SSA";
@@ -66,6 +67,7 @@ function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
     removeUnreachableFallthroughs(fn.body);
     removeUnreachableForUpdates(fn.body);
     removeDeadDoWhileStatements(fn.body);
+    removeUnnecessaryTryCatch(fn.body);
     markInstructionIds(fn.body);
     markPredecessors(fn.body);
 
