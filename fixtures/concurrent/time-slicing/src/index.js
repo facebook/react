@@ -1,22 +1,22 @@
-import React, {PureComponent, startTransition} from 'react';
-import {createRoot} from 'react-dom/client';
+import React, { useState, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
 import _ from 'lodash';
 import Charts from './Charts';
 import Clock from './Clock';
 import './index.css';
+import { useTransition } from 'react';
 
 let cachedData = new Map();
 
-class App extends PureComponent {
-  state = {
-    value: '',
-    strategy: 'sync',
-    showDemo: true,
-    showClock: false,
-  };
+function App() {
+  const [value, setValue] = useState('');
+  const [strategy, setStrategy] = useState('sync');
+  const [showDemo, setShowDemo] = useState(true);
+  const [showClock, setShowClock] = useState(false);
+  const [isPending, startTransition] = useTransition();
 
   // Random data for the chart
-  getStreamData(input) {
+  function getStreamData(input) {
     if (cachedData.has(input)) {
       return cachedData.get(input);
     }
@@ -35,76 +35,70 @@ class App extends PureComponent {
     return data;
   }
 
-  componentDidMount() {
-    window.addEventListener('keydown', e => {
+  useEffect(() => {
+    function handleKeyDown(e) {
       if (e.key.toLowerCase() === '?') {
         e.preventDefault();
-        this.setState(state => ({
-          showClock: !state.showClock,
-        }));
+        setShowClock(prevShowClock => !prevShowClock);
       }
-    });
-  }
+    }
 
-  handleChartClick = e => {
-    if (this.state.showDemo) {
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+  const handleChartClick = e => {
+    if (showDemo) {
       if (e.shiftKey) {
-        this.setState({showDemo: false});
+        setShowDemo(false);
       }
       return;
     }
-    if (this.state.strategy !== 'async') {
-      this.setState(state => ({
-        showDemo: !state.showDemo,
-      }));
+    if (strategy !== 'async') {
+      setShowDemo(prevShowDemo => !prevShowDemo);
       return;
     }
-    if (this._ignoreClick) {
+    if (ignoreClick) {
       return;
     }
-    this._ignoreClick = true;
+    ignoreClick = true;
 
-    startTransition(() => {
-      this.setState({showDemo: true}, () => {
-        this._ignoreClick = false;
-      });
-    });
+    setShowDemo(true);
+    ignoreClick = false;
   };
 
-  debouncedHandleChange = _.debounce(value => {
-    if (this.state.strategy === 'debounced') {
-      this.setState({value: value});
+  const debouncedHandleChange = _.debounce(newValue => {
+    if (strategy === 'debounced') {
+      setValue(newValue);
     }
   }, 1000);
 
-  renderOption(strategy, label) {
-    const {strategy: currentStrategy} = this.state;
-    return (
-      <label className={strategy === currentStrategy ? 'selected' : null}>
-        <input
-          type="radio"
-          checked={strategy === currentStrategy}
-          onChange={() => this.setState({strategy})}
-        />
-        {label}
-      </label>
-    );
-  }
+  const renderOption = (strategyOption, label) => (
+    <label className={strategyOption === strategy ? 'selected' : null}>
+      <input
+        type="radio"
+        checked={strategyOption === strategy}
+        onChange={() => setStrategy(strategyOption)}
+      />
+      {label}
+    </label>
+  );
 
-  handleChange = e => {
-    const value = e.target.value;
-    const {strategy} = this.state;
+  const handleChange = e => {
+    const newValue = e.target.value;
     switch (strategy) {
       case 'sync':
-        this.setState({value});
+        setValue(newValue);
         break;
       case 'debounced':
-        this.debouncedHandleChange(value);
+        debouncedHandleChange(newValue);
         break;
       case 'async':
-        // TODO: useTransition hook instead.
         startTransition(() => {
-          this.setState({value});
+          setValue(newValue)
         });
         break;
       default:
@@ -112,34 +106,32 @@ class App extends PureComponent {
     }
   };
 
-  render() {
-    const {showClock} = this.state;
-    const data = this.getStreamData(this.state.value);
-    return (
-      <div className="container">
-        <div className="rendering">
-          {this.renderOption('sync', 'Synchronous')}
-          {this.renderOption('debounced', 'Debounced')}
-          {this.renderOption('async', 'Concurrent')}
-        </div>
-        <input
-          className={'input ' + this.state.strategy}
-          placeholder="longer input → more components and DOM nodes"
-          defaultValue={this.state.input}
-          onChange={this.handleChange}
-        />
-        <div className="demo" onClick={this.handleChartClick}>
-          {this.state.showDemo && (
-            <Charts data={data} onClick={this.handleChartClick} />
-          )}
-          <div style={{display: showClock ? 'block' : 'none'}}>
-            <Clock />
-          </div>
+  const data = getStreamData(value);
+
+  return (
+    <div className="container">
+      <div className="rendering">
+        {renderOption('sync', 'Synchronous')}
+        {renderOption('debounced', 'Debounced')}
+        {renderOption('async', 'Concurrent')}
+      </div>
+      <input
+        className={'input ' + strategy}
+        placeholder="longer input → more components and DOM nodes"
+        defaultValue={value}
+        onChange={handleChange}
+      />
+      <div className="demo" onClick={handleChartClick}>
+        {showDemo && <Charts data={data} onClick={handleChartClick} />}
+        <div style={{ display: showClock ? 'block' : 'none' }}>
+          <Clock />
         </div>
       </div>
-    );
-  }
+    </div>
+  );
 }
+
+let ignoreClick = false;
 
 const container = document.getElementById('root');
 const root = createRoot(container);

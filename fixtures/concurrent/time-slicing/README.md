@@ -18,11 +18,11 @@ There are also known bugs and inefficiencies in main so **don't use this fixture
 
 ```
 # 1: Install fixture dependencies
-cd fixtures/unstable-async/time-slicing/
+cd fixtures/concurrent/time-slicing/
 yarn
 
 # 2: Run the app
-yarn start
+yarn dev
 ```
 
 ### From React source code
@@ -33,12 +33,12 @@ yarn
 yarn build react-dom/index,react/index,react-cache,scheduler --type=NODE
 
 # 2: Install fixture dependencies
-cd fixtures/unstable-async/time-slicing/
+cd fixtures/concurrent/time-slicing/
 yarn
 
 # 3: Copy React source code over
 yarn copy-source
 
 # 3: Run the app
-yarn start
+yarn dev
 ```
