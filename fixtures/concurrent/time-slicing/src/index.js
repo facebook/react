@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { createRoot } from 'react-dom/client';
+import React, {useState, useEffect} from 'react';
+import {createRoot} from 'react-dom/client';
 import _ from 'lodash';
 import Charts from './Charts';
 import Clock from './Clock';
 import './index.css';
-import { useTransition } from 'react';
+import {useTransition} from 'react';
 
 let cachedData = new Map();
 
@@ -98,7 +98,7 @@ function App() {
         break;
       case 'async':
         startTransition(() => {
-          setValue(newValue)
+          setValue(newValue);
         });
         break;
       default:
@@ -123,7 +123,7 @@ function App() {
       />
       <div className="demo" onClick={handleChartClick}>
         {showDemo && <Charts data={data} onClick={handleChartClick} />}
-        <div style={{ display: showClock ? 'block' : 'none' }}>
+        <div style={{display: showClock ? 'block' : 'none'}}>
           <Clock />
         </div>
       </div>
