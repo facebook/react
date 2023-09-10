@@ -1,0 +1,92 @@
+Vercel KV
+Vercel KV is a durable Redis database that enables you to store and retrieve JSON data.
+Table of Contents
+Vercel KV is available on all plans
+Vercel KV provides durable, serverless Redis storage. KV has been designed to be fast, scalable, and secure, and it's a great choice for storing and retrieving key-value and JSON data in your apps.
+
+KV stores are single region by default, but can be replicated to multiple regions for distributed workloads. Learn how Vercel KV works.
+
+Use cases
+The following are just a few use cases for Vercel KV:
+
+Ecommerce carts: Vercel KV can persist user session data across multiple page requests, enabling you to keep track of items in a shopping cart
+Rate limiting: Kev-value stores with fast reads and writes work well for rate-limiting traffic to prevent malicious activity, such as DDoS attacks or unintended traffic
+Getting started
+Read the Vercel KV quickstart or deploy a template with Vercel KV preconfigured. Learn more about the KV SDK.
+
+Get started in minutes
+Deploy a Vercel KV Template
+Next.js AI Chatbot
+Next.js AI Chatbot
+A full-featured, hackable Next.js AI chatbot built by Vercel Labs
+Vercel KV for Redis Nuxt.js Starter
+Vercel KV for Redis Nuxt.js Starter
+Simple Nuxt.js template that uses Vercel KV for Redis to track pageviews.
+Vercel KV for Redis SvelteKit Starter
+Vercel KV for Redis SvelteKit Starter
+Simple SvelteKit template that uses Vercel KV for Redis to track pageviews.
+View All Templates
+How Vercel KV works
+By default, a single Redis database is provisioned in the primary region you specify when you create a KV database. This primary region is where write operations will be routed.
+
+A KV database may have additional read regions, and read operations will be run in the nearest region to the request that triggers them. This will result in lower latency reads for users close to your replicas.
+
+Upstash partnership
+Vercel KV is powered by a partnership with Upstash. This means:
+
+Creating, deleting, and managing KV happens in the Vercel dashboard
+You do not need to create an Upstash account to use Vercel KV
+Using Vercel KV in your workflow
+Here are some important points to note about how you can use Vercel KV with your workflow on Vercel:
+
+You can use Vercel KV with any Redis client you prefer
+You can have multiple Vercel KV database per account, depending on your plan, as explained in our KV Limits docs
+You can use multiple Vercel KV database in one project
+You can connect multiple projects to a single Vercel KV database
+You can send Redis commands to your KV database without connecting it to your project. All you need are the API URL and appropriate token, which you can find on the dashboard. You can add them with the createClient method if you're using the SDK
+Vercel KV database can be scoped to different environments within projects using Environment Variables
+Vercel KV should be used in server environments, like Vercel Functions, versus from the browser. An API token, either set as an Environment Variable or added with the createClient method, is required to read and write to a database
+Import and export data
+You can import/export your Redis database using the upstash-redis-dump tool. Learn more about importing and exporting data.
+
+Limitations
+To learn more about Vercel KV limitations, see KV Limits.
+
+More resources
+Quickstart
+Create a Vercel KV database with our quickstart docs.
+Vercel KV SDK
+Learn how to use Vercel KV with the API or SDK.
+Limits
+Learn about Vercel KV's technical limitations.
+Pricing
+Learn about Vercel KV usage and pricing model.
+Last updated on September 10, 2023
+Previous
+Storage
+Next
+Quickstart
+Was this helpful?
+
+
+
+
+
+supported.
+
+Send
+© 2023
+All systems normal.
+
+Product
+
+
+Resources
+
+
+Company
+
+
+
+
+
