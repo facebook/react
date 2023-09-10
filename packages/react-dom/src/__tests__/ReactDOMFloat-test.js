@@ -3385,6 +3385,92 @@ body {
     );
   });
 
+  it('loading a stylesheet as part of an error boundary UI, during initial render', async () => {
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        const error = this.state.error;
+        if (error !== null) {
+          return (
+            <>
+              <link rel="stylesheet" href="A" precedence="default" />
+              {error.message}
+            </>
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    function Throws() {
+      throw new Error('Oops!');
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <ErrorBoundary>
+              <Suspense fallback="Loading...">
+                <Throws />
+              </Suspense>
+            </ErrorBoundary>
+          </body>
+        </html>
+      );
+    }
+
+    // Initial server render. Because something threw, a Suspense fallback
+    // is shown.
+    await act(() => {
+      renderToPipeableStream(<App />, {
+        onError(x) {
+          Scheduler.log('Caught server error: ' + x.message);
+        },
+      }).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>Loading...</body>
+      </html>,
+    );
+    assertLog(['Caught server error: Oops!']);
+
+    // Hydrate the tree. The error boundary will capture the error and attempt
+    // to show an error screen. However, the error screen includes a stylesheet,
+    // so the commit should suspend until the stylesheet loads.
+    ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+
+    // A preload for the stylesheet is inserted, but we still haven't committed
+    // the error screen.
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link as="style" href="A" rel="preload" />
+        </head>
+        <body>Loading...</body>
+      </html>,
+    );
+
+    // Finish loading the stylesheets. The commit should be unblocked, and the
+    // error screen should appear.
+    await clientAct(() => loadStylesheets());
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link data-precedence="default" href="A" rel="stylesheet" />
+          <link as="style" href="A" rel="preload" />
+        </head>
+        <body>Oops!</body>
+      </html>,
+    );
+  });
+
   it('will not flush a preload for a new rendered Stylesheet Resource if one was already flushed', async () => {
     function Component() {
       ReactDOM.preload('foo', {as: 'style'});
@@ -3999,6 +4085,40 @@ body {
     );
   });
 
+  // https://github.com/vercel/next.js/discussions/54799
+  it('omits preloads when an <img> is inside a <picture>', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <picture>
+              <img src="foo" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcSet="webpsrc" />
+              <img src="jpg fallback" />
+            </picture>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <picture>
+            <img src="foo" />
+          </picture>
+          <picture>
+            <source type="image/webp" srcset="webpsrc" />
+            <img src="jpg fallback" />
+          </picture>
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
@@ -4439,6 +4559,138 @@ body {
           </body>
         </html>,
       );
+    });
+  });
+
+  describe('ReactDOM.preloadModule(href, options)', () => {
+    it('preloads scripts as modules', async () => {
+      function App({ssr}) {
+        const prefix = ssr ? 'ssr ' : 'browser ';
+        ReactDOM.preloadModule(prefix + 'plain');
+        ReactDOM.preloadModule(prefix + 'default', {as: 'script'});
+        ReactDOM.preloadModule(prefix + 'cors', {
+          crossOrigin: 'use-credentials',
+        });
+        ReactDOM.preloadModule(prefix + 'integrity', {integrity: 'some hash'});
+        ReactDOM.preloadModule(prefix + 'serviceworker', {as: 'serviceworker'});
+        return <div>hello</div>;
+      }
+      await act(() => {
+        renderToPipeableStream(<App ssr={true} />).pipe(writable);
+      });
+      expect(getMeaningfulChildren(document.body)).toEqual(
+        <div id="container">
+          <link rel="modulepreload" href="ssr plain" />
+          <link rel="modulepreload" href="ssr default" />
+          <link
+            rel="modulepreload"
+            href="ssr cors"
+            crossorigin="use-credentials"
+          />
+          <link
+            rel="modulepreload"
+            href="ssr integrity"
+            integrity="some hash"
+          />
+          <link
+            rel="modulepreload"
+            href="ssr serviceworker"
+            as="serviceworker"
+          />
+          <div>hello</div>
+        </div>,
+      );
+
+      ReactDOMClient.hydrateRoot(container, <App />);
+      await waitForAll([]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <link rel="modulepreload" href="browser plain" />
+            <link rel="modulepreload" href="browser default" />
+            <link
+              rel="modulepreload"
+              href="browser cors"
+              crossorigin="use-credentials"
+            />
+            <link
+              rel="modulepreload"
+              href="browser integrity"
+              integrity="some hash"
+            />
+            <link
+              rel="modulepreload"
+              href="browser serviceworker"
+              as="serviceworker"
+            />
+          </head>
+          <body>
+            <div id="container">
+              <link rel="modulepreload" href="ssr plain" />
+              <link rel="modulepreload" href="ssr default" />
+              <link
+                rel="modulepreload"
+                href="ssr cors"
+                crossorigin="use-credentials"
+              />
+              <link
+                rel="modulepreload"
+                href="ssr integrity"
+                integrity="some hash"
+              />
+              <link
+                rel="modulepreload"
+                href="ssr serviceworker"
+                as="serviceworker"
+              />
+              <div>hello</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+
+    it('warns if you provide invalid arguments', async () => {
+      function App() {
+        ReactDOM.preloadModule();
+        ReactDOM.preloadModule(() => {});
+        ReactDOM.preloadModule('');
+        ReactDOM.preloadModule('1', true);
+        ReactDOM.preloadModule('2', {as: true});
+        return <div>hello</div>;
+      }
+      await expect(async () => {
+        await act(() => {
+          renderToPipeableStream(<App />).pipe(writable);
+        });
+      }).toErrorDev([
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was `undefined`',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was something with type "function"',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was an empty string',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `options` argument encountered was something with type "boolean"',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `as` option encountered was something with type "boolean"',
+      ]);
+      expect(getMeaningfulChildren(document.body)).toEqual(
+        <div id="container">
+          <link rel="modulepreload" href="1" />
+          <link rel="modulepreload" href="2" />
+          <div>hello</div>
+        </div>,
+      );
+
+      const root = ReactDOMClient.createRoot(
+        document.getElementById('container'),
+      );
+      root.render(<App />);
+      await expect(async () => {
+        await waitForAll([]);
+      }).toErrorDev([
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was `undefined`',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was something with type "function"',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `href` argument encountered was an empty string',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `options` argument encountered was something with type "boolean"',
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag. The `as` option encountered was something with type "boolean"',
+      ]);
     });
   });
 
@@ -4977,6 +5229,137 @@ body {
           <body>hello</body>
         </html>,
       );
+    });
+  });
+
+  describe('ReactDOM.preinitModule(href, options)', () => {
+    it('creates a script module resources', async () => {
+      function App({ssr}) {
+        const prefix = ssr ? 'ssr ' : 'browser ';
+        ReactDOM.preinitModule(prefix + 'plain');
+        ReactDOM.preinitModule(prefix + 'default', {as: 'script'});
+        ReactDOM.preinitModule(prefix + 'cors', {
+          crossOrigin: 'use-credentials',
+        });
+        ReactDOM.preinitModule(prefix + 'integrity', {integrity: 'some hash'});
+        ReactDOM.preinitModule(prefix + 'warning', {as: 'style'});
+        return <div>hello</div>;
+      }
+      await expect(async () => {
+        await act(() => {
+          renderToPipeableStream(<App ssr={true} />).pipe(writable);
+        });
+      }).toErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `as` option encountered was "style"',
+      ]);
+      expect(getMeaningfulChildren(document.body)).toEqual(
+        <div id="container">
+          <script type="module" src="ssr plain" async="" />
+          <script type="module" src="ssr default" async="" />
+          <script
+            type="module"
+            src="ssr cors"
+            crossorigin="use-credentials"
+            async=""
+          />
+          <script
+            type="module"
+            src="ssr integrity"
+            integrity="some hash"
+            async=""
+          />
+          <div>hello</div>
+        </div>,
+      );
+
+      ReactDOMClient.hydrateRoot(container, <App />);
+      await expect(async () => {
+        await waitForAll([]);
+      }).toErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `as` option encountered was "style"',
+      ]);
+      expect(getMeaningfulChildren(document)).toEqual(
+        <html>
+          <head>
+            <script type="module" src="browser plain" async="" />
+            <script type="module" src="browser default" async="" />
+            <script
+              type="module"
+              src="browser cors"
+              crossorigin="use-credentials"
+              async=""
+            />
+            <script
+              type="module"
+              src="browser integrity"
+              integrity="some hash"
+              async=""
+            />
+          </head>
+          <body>
+            <div id="container">
+              <script type="module" src="ssr plain" async="" />
+              <script type="module" src="ssr default" async="" />
+              <script
+                type="module"
+                src="ssr cors"
+                crossorigin="use-credentials"
+                async=""
+              />
+              <script
+                type="module"
+                src="ssr integrity"
+                integrity="some hash"
+                async=""
+              />
+              <div>hello</div>
+            </div>
+          </body>
+        </html>,
+      );
+    });
+
+    it('warns if you provide invalid arguments', async () => {
+      function App() {
+        ReactDOM.preinitModule();
+        ReactDOM.preinitModule(() => {});
+        ReactDOM.preinitModule('');
+        ReactDOM.preinitModule('1', true);
+        ReactDOM.preinitModule('2', {as: true});
+        return <div>hello</div>;
+      }
+      await expect(async () => {
+        await act(() => {
+          renderToPipeableStream(<App />).pipe(writable);
+        });
+      }).toErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was `undefined`',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was something with type "function"',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was an empty string',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `options` argument encountered was something with type "boolean"',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `as` option encountered was something with type "boolean"',
+      ]);
+      expect(getMeaningfulChildren(document.body)).toEqual(
+        <div id="container">
+          <script type="module" src="1" async="" />
+          <script type="module" src="2" async="" />
+          <div>hello</div>
+        </div>,
+      );
+
+      const root = ReactDOMClient.createRoot(
+        document.getElementById('container'),
+      );
+      root.render(<App />);
+      await expect(async () => {
+        await waitForAll([]);
+      }).toErrorDev([
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was `undefined`',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was something with type "function"',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `href` argument encountered was an empty string',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `options` argument encountered was something with type "boolean"',
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property. The `as` option encountered was something with type "boolean"',
+      ]);
     });
   });
 

@@ -9,23 +9,37 @@
 
 'use strict';
 
+import {
+  getVisibleChildren,
+  insertNodesAndExecuteScripts,
+} from '../test-utils/FizzTestUtils';
+
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
+let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
+let container;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    ReactDOMFizzServer = require('react-dom/server.browser');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static.browser');
     }
     Suspense = React.Suspense;
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
   });
 
   const theError = new Error('This is an error');
@@ -35,6 +49,36 @@ describe('ReactDOMFizzStaticBrowser', () => {
   const theInfinitePromise = new Promise(() => {});
   function InfiniteSuspend() {
     throw theInfinitePromise;
+  }
+
+  function concat(streamA, streamB) {
+    const readerA = streamA.getReader();
+    const readerB = streamB.getReader();
+    return new ReadableStream({
+      start(controller) {
+        function readA() {
+          readerA.read().then(({done, value}) => {
+            if (done) {
+              readB();
+              return;
+            }
+            controller.enqueue(value);
+            readA();
+          });
+        }
+        function readB() {
+          readerB.read().then(({done, value}) => {
+            if (done) {
+              controller.close();
+              return;
+            }
+            controller.enqueue(value);
+            readB();
+          });
+        }
+        readA();
+      },
+    });
   }
 
   async function readContent(stream) {
@@ -47,6 +91,21 @@ describe('ReactDOMFizzStaticBrowser', () => {
       }
       content += Buffer.from(value).toString('utf8');
     }
+  }
+
+  async function readIntoContainer(stream) {
+    const reader = stream.getReader();
+    let result = '';
+    while (true) {
+      const {done, value} = await reader.read();
+      if (done) {
+        break;
+      }
+      result += Buffer.from(value).toString('utf8');
+    }
+    const temp = document.createElement('div');
+    temp.innerHTML = result;
+    insertNodesAndExecuteScripts(temp, container, null);
   }
 
   // @gate experimental
@@ -393,5 +452,83 @@ describe('ReactDOMFizzStaticBrowser', () => {
     await resultPromise;
 
     expect(errors).toEqual(['uh oh', 'uh oh']);
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in prerender and resuming later', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Postpone />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      prerendered.postponed,
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
+
+  // @gate enablePostpone
+  it('only emits end tags once when resuming', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="Loading...">
+              <Postpone />
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const content = await ReactDOMFizzServer.resume(
+      <App />,
+      prerendered.postponed,
+    );
+
+    const html = await readContent(concat(prerendered.prelude, content));
+    const htmlEndTags = /<\/html\s*>/gi;
+    const bodyEndTags = /<\/body\s*>/gi;
+    expect(Array.from(html.matchAll(htmlEndTags)).length).toBe(1);
+    expect(Array.from(html.matchAll(bodyEndTags)).length).toBe(1);
   });
 });

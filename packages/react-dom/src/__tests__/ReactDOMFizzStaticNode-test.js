@@ -47,8 +47,8 @@ describe('ReactDOMFizzStaticNode', () => {
   }
 
   // @gate experimental
-  it('should call prerenderToNodeStreams', async () => {
-    const result = await ReactDOMFizzStatic.prerenderToNodeStreams(
+  it('should call prerenderToNodeStream', async () => {
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>hello world</div>,
     );
     const prelude = await readContent(result.prelude);
@@ -57,7 +57,7 @@ describe('ReactDOMFizzStaticNode', () => {
 
   // @gate experimental
   it('should emit DOCTYPE at the root of the document', async () => {
-    const result = await ReactDOMFizzStatic.prerenderToNodeStreams(
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <html>
         <body>hello world</body>
       </html>,
@@ -76,7 +76,7 @@ describe('ReactDOMFizzStaticNode', () => {
 
   // @gate experimental
   it('should emit bootstrap script src at the end', async () => {
-    const result = await ReactDOMFizzStatic.prerenderToNodeStreams(
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>hello world</div>,
       {
         bootstrapScriptContent: 'INIT();',
@@ -101,7 +101,7 @@ describe('ReactDOMFizzStaticNode', () => {
       }
       return 'Done';
     }
-    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <Suspense fallback="Loading">
           <Wait />
@@ -127,7 +127,7 @@ describe('ReactDOMFizzStaticNode', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzStatic.prerenderToNodeStreams(
+      await ReactDOMFizzStatic.prerenderToNodeStream(
         <div>
           <Throw />
         </div>,
@@ -149,7 +149,7 @@ describe('ReactDOMFizzStaticNode', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzStatic.prerenderToNodeStreams(
+      await ReactDOMFizzStatic.prerenderToNodeStream(
         <div>
           <Suspense fallback={<Throw />}>
             <InfiniteSuspend />
@@ -171,7 +171,7 @@ describe('ReactDOMFizzStaticNode', () => {
   // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
-    const result = await ReactDOMFizzStatic.prerenderToNodeStreams(
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Throw />
@@ -193,7 +193,7 @@ describe('ReactDOMFizzStaticNode', () => {
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     const errors = [];
     const controller = new AbortController();
-    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
@@ -223,7 +223,7 @@ describe('ReactDOMFizzStaticNode', () => {
   it('should reject if aborting before the shell is complete', async () => {
     const errors = [];
     const controller = new AbortController();
-    const promise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const promise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <InfiniteSuspend />
       </div>,
@@ -262,7 +262,7 @@ describe('ReactDOMFizzStaticNode', () => {
         </Suspense>
       );
     }
-    const streamPromise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const streamPromise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <App />
       </div>,
@@ -291,7 +291,7 @@ describe('ReactDOMFizzStaticNode', () => {
     const theReason = new Error('aborted for reasons');
     controller.abort(theReason);
 
-    const promise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const promise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
@@ -342,7 +342,7 @@ describe('ReactDOMFizzStaticNode', () => {
 
     const errors = [];
     const controller = new AbortController();
-    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStreams(<App />, {
+    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
       signal: controller.signal,
       onError(x) {
         errors.push(x);
@@ -384,7 +384,7 @@ describe('ReactDOMFizzStaticNode', () => {
 
     const errors = [];
     const controller = new AbortController();
-    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStreams(<App />, {
+    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
       signal: controller.signal,
       onError(x) {
         errors.push(x.message);

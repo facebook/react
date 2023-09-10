@@ -14,9 +14,10 @@ import type {
   StartTransitionOptions,
   Thenable,
   Usable,
+  ReactCustomFormAction,
 } from 'shared/ReactTypes';
 
-import type {ResponseState} from './ReactFizzConfig';
+import type {ResumableState} from './ReactFizzConfig';
 import type {Task} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
 import type {TransitionStatus} from './ReactFizzConfig';
@@ -40,6 +41,7 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -70,6 +72,13 @@ let isReRender: boolean = false;
 let didScheduleRenderPhaseUpdate: boolean = false;
 // Counts the number of useId hooks in this component
 let localIdCounter: number = 0;
+// Chunks that should be pushed to the stream once the component
+// finishes rendering.
+// Counts the number of useFormState calls in this component
+let formStateCounter: number = 0;
+// The index of the useFormState hook that matches the one passed in at the
+// root during an MPA navigation, if any.
+let formStateMatchingIndex: number = -1;
 // Counts the number of use(thenable) calls in this component
 let thenableIndexCounter: number = 0;
 let thenableState: ThenableState | null = null;
@@ -206,6 +215,8 @@ export function prepareToUseHooks(
   // workInProgressHook = null;
 
   localIdCounter = 0;
+  formStateCounter = 0;
+  formStateMatchingIndex = -1;
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
 }
@@ -226,6 +237,8 @@ export function finishHooks(
     // restarting until no more updates are scheduled.
     didScheduleRenderPhaseUpdate = false;
     localIdCounter = 0;
+    formStateCounter = 0;
+    formStateMatchingIndex = -1;
     thenableIndexCounter = 0;
     numberOfReRenders += 1;
 
@@ -234,6 +247,7 @@ export function finishHooks(
 
     children = Component(props, refOrContext);
   }
+
   resetHooksState();
   return children;
 }
@@ -250,6 +264,19 @@ export function checkDidRenderIdHook(): boolean {
   // separate function to avoid using an array tuple.
   const didRenderIdHook = localIdCounter !== 0;
   return didRenderIdHook;
+}
+
+export function getFormStateCount(): number {
+  // This should be called immediately after every finishHooks call.
+  // Conceptually, it's part of the return value of finishHooks; it's only a
+  // separate function to avoid using an array tuple.
+  return formStateCounter;
+}
+export function getFormStateMatchingIndex(): number {
+  // This should be called immediately after every finishHooks call.
+  // Conceptually, it's part of the return value of finishHooks; it's only a
+  // separate function to avoid using an array tuple.
+  return formStateMatchingIndex;
 }
 
 // Reset the internal hooks state if an error occurs while rendering a component
@@ -550,19 +577,64 @@ function useOptimistic<S, A>(
   return [passthrough, unsupportedSetOptimisticState];
 }
 
+function useFormState<S, P>(
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  permalink?: string,
+): [S, (P) => void] {
+  resolveCurrentlyRenderingComponent();
+
+  // Count the number of useFormState hooks per component.
+  // TODO: We should also track which hook matches the form state passed at
+  // the root, if any. Matching is not yet implemented.
+  formStateCounter++;
+
+  // Bind the initial state to the first argument of the action.
+  // TODO: Use the keypath (or permalink) to check if there's matching state
+  // from the previous page.
+  const boundAction = action.bind(null, initialState);
+
+  // Wrap the action so the return value is void.
+  const dispatch = (payload: P): void => {
+    boundAction(payload);
+  };
+
+  // $FlowIgnore[prop-missing]
+  if (typeof boundAction.$$FORM_ACTION === 'function') {
+    // $FlowIgnore[prop-missing]
+    dispatch.$$FORM_ACTION = (prefix: string) => {
+      // $FlowIgnore[prop-missing]
+      const metadata: ReactCustomFormAction = boundAction.$$FORM_ACTION(prefix);
+      // Override the action URL
+      if (permalink !== undefined) {
+        if (__DEV__) {
+          checkAttributeStringCoercion(permalink, 'target');
+        }
+        metadata.action = permalink + '';
+      }
+      return metadata;
+    };
+  } else {
+    // This is not a server action, so the permalink argument has
+    // no effect. The form will have to be hydrated before it's submitted.
+  }
+
+  return [initialState, dispatch];
+}
+
 function useId(): string {
   const task: Task = (currentlyRenderingTask: any);
   const treeId = getTreeId(task.treeContext);
 
-  const responseState = currentResponseState;
-  if (responseState === null) {
+  const resumableState = currentResumableState;
+  if (resumableState === null) {
     throw new Error(
       'Invalid hook call. Hooks can only be called inside of the body of a function component.',
     );
   }
 
   const localId = localIdCounter++;
-  return makeId(responseState, treeId, localId);
+  return makeId(resumableState, treeId, localId);
 }
 
 function use<T>(usable: Usable<T>): T {
@@ -650,11 +722,12 @@ if (enableFormActions && enableAsyncActions) {
 }
 if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
+  HooksDispatcher.useFormState = useFormState;
 }
 
-export let currentResponseState: null | ResponseState = (null: any);
-export function setCurrentResponseState(
-  responseState: null | ResponseState,
+export let currentResumableState: null | ResumableState = (null: any);
+export function setCurrentResumableState(
+  resumableState: null | ResumableState,
 ): void {
-  currentResponseState = responseState;
+  currentResumableState = resumableState;
 }

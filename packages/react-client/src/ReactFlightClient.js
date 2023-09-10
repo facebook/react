@@ -21,7 +21,9 @@ import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
 
 import type {CallServerCallback} from './ReactFlightReplyClient';
 
-import {enableBinaryFlight} from 'shared/ReactFeatureFlags';
+import type {Postpone} from 'react/src/ReactPostpone';
+
+import {enableBinaryFlight, enablePostpone} from 'shared/ReactFeatureFlags';
 
 import {
   resolveClientReference,
@@ -31,15 +33,15 @@ import {
   readPartialStringChunk,
   readFinalStringChunk,
   createStringDecoder,
-  usedWithSSR,
 } from './ReactFlightClientConfig';
 
-import {
-  encodeFormAction,
-  knownServerReferences,
-} from './ReactFlightReplyClient';
+import {registerServerReference} from './ReactFlightReplyClient';
 
-import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_LAZY_TYPE,
+  REACT_ELEMENT_TYPE,
+  REACT_POSTPONE_TYPE,
+} from 'shared/ReactSymbols';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 
@@ -226,7 +228,7 @@ function createBlockedChunk<T>(response: Response): BlockedChunk<T> {
 
 function createErrorChunk<T>(
   response: Response,
-  error: ErrorWithDigest,
+  error: Error | Postpone,
 ): ErroredChunk<T> {
   // $FlowFixMe[invalid-constructor] Flow doesn't support functions as constructors
   return new Chunk(ERRORED, null, error, response);
@@ -539,12 +541,7 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
       return callServer(metaData.id, bound.concat(args));
     });
   };
-  // Expose encoder for use by SSR.
-  if (usedWithSSR) {
-    // Only expose this in builds that would actually use it. Not needed on the client.
-    (proxy: any).$$FORM_ACTION = encodeFormAction;
-  }
-  knownServerReferences.set(proxy, metaData);
+  registerServerReference(proxy, metaData);
   return proxy;
 }
 
@@ -867,6 +864,57 @@ function resolveErrorDev(
   }
 }
 
+function resolvePostponeProd(response: Response, id: number): void {
+  if (__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'resolvePostponeProd should never be called in development mode. Use resolvePostponeDev instead. This is a bug in React.',
+    );
+  }
+  const error = new Error(
+    'A Server Component was postponed. The reason is omitted in production' +
+      ' builds to avoid leaking sensitive details.',
+  );
+  const postponeInstance: Postpone = (error: any);
+  postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
+  postponeInstance.stack = 'Error: ' + error.message;
+  const chunks = response._chunks;
+  const chunk = chunks.get(id);
+  if (!chunk) {
+    chunks.set(id, createErrorChunk(response, postponeInstance));
+  } else {
+    triggerErrorOnChunk(chunk, postponeInstance);
+  }
+}
+
+function resolvePostponeDev(
+  response: Response,
+  id: number,
+  reason: string,
+  stack: string,
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'resolvePostponeDev should never be called in production mode. Use resolvePostponeProd instead. This is a bug in React.',
+    );
+  }
+  // eslint-disable-next-line react-internal/prod-error-codes
+  const error = new Error(reason || '');
+  const postponeInstance: Postpone = (error: any);
+  postponeInstance.$$typeof = REACT_POSTPONE_TYPE;
+  postponeInstance.stack = stack;
+  const chunks = response._chunks;
+  const chunk = chunks.get(id);
+  if (!chunk) {
+    chunks.set(id, createErrorChunk(response, postponeInstance));
+  } else {
+    triggerErrorOnChunk(chunk, postponeInstance);
+  }
+}
+
 function resolveHint(
   response: Response,
   code: string,
@@ -1019,6 +1067,23 @@ function processFullRow(
       resolveText(response, id, row);
       return;
     }
+    case 80 /* "P" */: {
+      if (enablePostpone) {
+        if (__DEV__) {
+          const postponeInfo = JSON.parse(row);
+          resolvePostponeDev(
+            response,
+            id,
+            postponeInfo.reason,
+            postponeInfo.stack,
+          );
+        } else {
+          resolvePostponeProd(response, id);
+        }
+        return;
+      }
+    }
+    // Fallthrough
     default: /* """ "{" "[" "t" "f" "n" "0" - "9" */ {
       // We assume anything else is JSON.
       resolveModel(response, id, row);

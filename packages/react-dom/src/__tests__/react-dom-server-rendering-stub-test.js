@@ -39,15 +39,17 @@ describe('react-dom-server-rendering-stub', () => {
   });
 
   // @gate enableFloat
-  it('provides preload and preinit exports', async () => {
+  it('provides preload, preloadModule, preinit, and preinitModule exports', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
+      ReactDOM.preloadModule('foomodule');
       ReactDOM.preinit('bar', {as: 'style'});
+      ReactDOM.preinitModule('barmodule');
       return <div>foo</div>;
     }
     const html = ReactDOMFizzServer.renderToString(<App />);
     expect(html).toEqual(
-      '<link rel="stylesheet" href="bar" data-precedence="default"/><link rel="preload" as="style" href="foo"/><div>foo</div>',
+      '<link rel="stylesheet" href="bar" data-precedence="default"/><script src="barmodule" type="module" async=""></script><link rel="preload" as="style" href="foo"/><link rel="modulepreload" href="foomodule"/><div>foo</div>',
     );
   });
 

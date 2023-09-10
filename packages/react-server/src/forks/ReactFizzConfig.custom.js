@@ -28,8 +28,8 @@ import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
 declare var $$$config: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
-export opaque type ResponseState = mixed;
-export opaque type Resources = mixed;
+export opaque type RenderState = mixed;
+export opaque type ResumableState = mixed;
 export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
 export opaque type SuspenseBoundaryID = mixed;
@@ -53,6 +53,10 @@ export const pushStartCompletedSuspenseBoundary =
 export const pushEndCompletedSuspenseBoundary =
   $$$config.pushEndCompletedSuspenseBoundary;
 export const pushSegmentFinale = $$$config.pushSegmentFinale;
+export const pushFormStateMarkerIsMatching =
+  $$$config.pushFormStateMarkerIsMatching;
+export const pushFormStateMarkerIsNotMatching =
+  $$$config.pushFormStateMarkerIsNotMatching;
 export const writeCompletedRoot = $$$config.writeCompletedRoot;
 export const writePlaceholder = $$$config.writePlaceholder;
 export const writeStartCompletedSuspenseBoundary =

@@ -49,6 +49,8 @@ export const REACT_MEMO_CACHE_SENTINEL: symbol = Symbol.for(
   'react.memo_cache_sentinel',
 );
 
+export const REACT_POSTPONE_TYPE: symbol = Symbol.for('react.postpone');
+
 const MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator';
 
