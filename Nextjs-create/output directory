@@ -1,0 +1,47 @@
+A Production Deployment will be created each time you merge to the Production Branch.
+
+Default Configuration
+When you create a new Project from a Git repository on Vercel, the Production Branch will be selected in the following order:
+
+The main branch.
+If not present, the master branch (more details).
+[Only for Bitbucket] If not present, the "Production Branch" setting of your Git repository is used.
+If not present, the Git repository's default branch.
+Customizing the Production Branch
+On the Git page in the Project Settings, you can change your Production Branch.
+
+Whenever a new commit is then pushed to the branch you configured here, a Production Deployment will be created for you.
+
+Preview Branches
+While the Production Branch (mentioned above) is a single Git branch that contains the code that is served to your visitors, Preview Branches are all the Git branches that are not the Production Branch.
+
+For example, if your Production Branch is main, then all the Git branches that are not main are considered Preview Branches. That means there can be many Preview Branches, but only a single Production Branch.
+
+Preview Branches, like the name already suggests, are used for previewing changes before presenting them to your visitors (merging them into Production).
+
+By default, every Preview Branch automatically receives its own Domain similar to the one shown below, whenever a commit is pushed to it:
+
+url-composition
+
+<project-name>-git-<branch-name>-<scope-slug>.vercel.app;
+Additionally, any Environment Variables defined for the Preview Environment are applied.
+
+You can also receive feedback from team members and other collaborators through Vercel's Comments feature. Comments can be tracked and resolved from within a PR on GitHub.
+
+Once you're happy with your changes, you would then merge the respective Preview Branch into your Production Branch.
+
+Multiple Preview Phases
+For most use cases, the default Preview behavior mentioned above is enough.
+
+If you'd like your changes to pass through multiple phases of previewing instead of just one, you can accomplish it like so:
+
+Domains and Environment Variables can both be assigned to specific Preview Branches on their individual settings pages. For Domains, it can be done like this and for Environment Variables like this.
+
+For example, you could create a phase called "Staging" where you can accumulate Preview changes before merging them onto Production by following these steps:
+
+Create a Git branch called "staging" in your Git repository.
+Add a Domain of your choice (like "staging.example.com") on your Vercel project and assign it to the "staging" Git branch like this.
+Add Environment Variables that you'd like to use for your new Staging phase on your Vercel project like this.
+Afterwards, you can push to the "staging" Git branch to update your Staging phase and it will automatically receive the Domain and Environment Variables you've defined.
+
+Once you're happy with your changes, you would then merge the respective Preview Branch into your Production Branch. However, unlike with the default Preview behavior, you'd then keep the branch around instead of deleting it, so that you can push to it again in the future.
