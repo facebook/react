@@ -1,0 +1,140 @@
+https://vercel.com/docs/incremental-static-regeneration#
+
+Learn how Vercel's Incremental Static Regeneration (ISR) provides better performance and faster builds.
+Table of Contents
+Incremental Static Regeneration is available on all plans
+Incremental Static Regeneration (ISR) allows you to create or update content on your site without redeploying. ISR's main benefits for developers include:
+
+Better Performance: Static pages can be consistently fast because ISR allows Vercel to cache generated pages in every region on our global Edge Network and persist files into durable storage
+Reduced Backend Load: ISR helps reduce backend load by using cached content to make fewer requests to your data sources
+Faster Builds: Pages can be generated when requested by a visitor or through an API instead of during the build, speeding up build times as your application grows
+ISR is available to applications built with:
+
+<Next.js>
+<SvelteKit>
+<Nuxt>
+Or any custom framework solution that implements the Build Output API
+Get started in minutes
+Explore ISR with a project template
+On-Demand ISR
+On-Demand ISR
+Instantly update content without redeploying.
+ISR Blog with Next.js and WordPress
+ISR Blog with Next.js and WordPress
+An Incremental Static Regeneration Blog Example Using Next.js and WordPress
+SvelteKit Route Config
+SvelteKit Route Config
+This template shows how to configure Edge Functions, Serverless Functions, and ISR in SvelteKit applications on a per-route basis.
+View All Templates
+Using ISR with Next.js
+Next.js will automatically create a Serverless Vercel Function that can revalidate when you add next: { revalidate: 10 } to the options object passed to a fetch request.
+
+The following example demonstrates a Next.js page that uses ISR to render a list of blog posts:
+
+Next.js (/app)
+Next.js (/pages)
+app/blog-posts/page.tsx
+
+TypeScript
+
+interface Post {
+  title: string;
+  id: number;
+}
+ 
+export default async function Page() {
+  const res = await fetch('https://api.vercel.app/blog', {
+    next: { revalidate: 10 },
+  });
+  const posts = (await res.json()) as Post[];
+  return (
+    <ul>
+      {posts.map((post: Post) => {
+        return <li key={post.id}>{post.title}</li>;
+      })}
+    </ul>
+  );
+}
+To learn more about using ISR with Next.js in the App router, such as enabling on-demand revalidation, see the official Next.js documentation.
+
+Using ISR with SvelteKit or Nuxt
+See our dedicated SvelteKit docs to learn how to use ISR with your SvelteKit projects on Vercel
+See our dedicated Nuxt docs to use ISR with Nuxt
+Using ISR with the Build Output API
+When using the Build Output API, the Serverless Vercel Functions generated for your ISR routes are called Prerender Functions.
+
+Build Output API Prerender Functions are Serverless Functions with accompanying JSON files that describe the Function's cache invalidation rules. See our Prerender configuration file docs to learn more.
+
+Differences between ISR and Cache-Control headers
+Both ISR and Cache-Control headers help reduce backend load by using cached content to make fewer requests to your data source. However, there are key architectural differences between the two.
+
+Shared Global Cache: ISR has cache shielding built-in automatically, which helps improve the cache HIT ratio. The cache for your ISR route's Vercel Function output is distributed globally. In the case of a cache MISS, it looks up the value in a single, global bucket. With only cache-control headers, caches expire (by design) and are not shared across regions
+300ms Global Purges: When revalidating (either on-demand or in the background), your ISR route's Vercel Function is re-run, and the cache is brought up to date with the newest content within 300ms in all regions globally
+Instant Rollbacks: ISR allows you to roll back instantly and not lose your previously generated pages by persisting them between deployments
+Simplified Caching Experience: ISR abstracts common issues with HTTP-based caching implementations, adds additional features for availability and global performance, and provides a better developer experience for implementation
+See our Cache control options docs to learn more about Cache-Control headers.
+
+ISR vs Cache-Control comparison table
+Feature
+ISR
+Caching Headers
+On-demand purging & regeneration
+Limited 
+Synchronized global purging
+Limited 
+Support for fallbacks upon MISS
+Durable storage
+Atomic updates
+Cache shielding
+Slow origin protection
+Limited 
+Automatic support for stale-if-error
+Limited 
+Automatic support for stale-while-revalidate
+Usage within popular frontend frameworks
+Caching static page responses
+ISR pricing
+When using ISR with a framework on Vercel, a Function is created based on your framework code. This means that using ISR incurs both Function usage as well as bandwidth:
+
+Incur usage when invoked – ISR functions are invoked whenever they revalidate in the background or through on-demand revalidation
+Add to your bandwidth usage
+Explore your usage top paths to better understand ISR usage and pricing.
+
+More resources
+Monitor ISR on Vercel
+Observe your ISR routes to understand traffic and usage.
+Next.js Caching
+See Next's Caching docs to learn more about implementing ISR.
+Quickstart
+Incremental Static Regeneration Quickstart
+Get started using ISR on Vercel with Next.js or the Build Output API.
+Last updated on February 6, 2023
+Previous
+Managing Costs
+Next
+Quickstart
+Was this helpful?
+
+
+
+
+
+supported.
+
+Send
+© 2023
+All systems normal.
+
+Product
+
+
+Resources
+
+
+Company
+
+
+
+
+
+Inc
