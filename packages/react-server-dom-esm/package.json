@@ -17,6 +17,7 @@
     "client.node.js",
     "server.js",
     "server.node.js",
+    "server.edge.js",
     "cjs/",
     "esm/"
   ],
@@ -29,9 +30,15 @@
     "./client.browser": "./client.browser.js",
     "./client.node": "./client.node.js",
     "./server": {
-      "react-server": "./server.node.js",
+      "react-server": {
+        "workerd": "./esm/react-server-dom-esm-server.edge.production.min.js",
+        "edge-light": "./esm/react-server-dom-esm-server.edge.production.min.js",
+        "node": "./server.node.js",
+        "default": "./server.node.js"
+      },
       "default": "./server.js"
     },
+    "./server.edge": "./server.edge.js",
     "./server.node": "./server.node.js",
     "./node-loader": "./esm/react-server-dom-esm-node-loader.production.min.js",
     "./src/*": "./src/*.js",

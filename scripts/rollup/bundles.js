@@ -420,7 +420,7 @@ const bundles = [
     externals: ['url', 'module', 'react-server-dom-webpack/server'],
   },
 
-  /******* React Server DOM ESM Server *******/
+  /******* React Server DOM ESM Node.js Server *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
@@ -428,6 +428,16 @@ const bundles = [
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['react', 'util', 'async_hooks', 'react-dom'],
+  },
+
+  /******* React Server DOM ESM Edge Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, ESM_DEV, ESM_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-esm/server.edge',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'async_hooks', 'react-dom'],
   },
 
   /******* React Server DOM ESM Client *******/

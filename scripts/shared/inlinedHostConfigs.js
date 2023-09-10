@@ -185,6 +185,32 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-edge-esm',
+    entryPoints: ['react-server-dom-esm/server.edge'],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server.edge',
+      'react-dom/static.edge',
+      'react-dom/src/server/react-dom-server.edge',
+      'react-dom/src/server/ReactDOMFizzServerEdge.js', // react-dom/server.edge
+      'react-dom/src/server/ReactDOMFizzStaticEdge.js',
+      'react-server-dom-esm',
+      'react-server-dom-esm/server',
+      'react-server-dom-esm/server.edge',
+      'react-server-dom-esm/src/ReactFlightDOMServerEdge.js', // react-server-dom-esm/server.edge
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-node-esm',
     entryPoints: [
       'react-server-dom-esm/server.node',
