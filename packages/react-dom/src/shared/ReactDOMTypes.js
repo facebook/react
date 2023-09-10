@@ -39,13 +39,55 @@ export type PreinitModuleOptions = {
   integrity?: string,
 };
 
+export type CrossOriginEnum = '' | 'use-credentials';
+export type FetchPriorityEnum = 'high' | 'low' | 'auto';
+
+export type PreloadImplOptions = {
+  crossOrigin?: ?CrossOriginEnum,
+  integrity?: ?string,
+  nonce?: ?string,
+  type?: ?string,
+  fetchPriority?: ?FetchPriorityEnum,
+  referrerPolicy?: ?string,
+  imageSrcSet?: ?string,
+  imageSizes?: ?string,
+};
+export type PreloadModuleImplOptions = {
+  as?: ?string,
+  crossOrigin?: ?CrossOriginEnum,
+  integrity?: ?string,
+};
+export type PreinitStyleOptions = {
+  crossOrigin?: ?string,
+  integrity?: ?string,
+  fetchPriority?: ?FetchPriorityEnum,
+};
+export type PreinitScriptOptions = {
+  crossOrigin?: ?string,
+  integrity?: ?string,
+  fetchPriority?: ?FetchPriorityEnum,
+  nonce?: ?string,
+};
+export type PreinitModuleScriptOptions = {
+  crossOrigin?: ?CrossOriginEnum,
+  integrity?: string,
+};
+
 export type HostDispatcher = {
-  prefetchDNS: (href: string, options?: ?PrefetchDNSOptions) => void,
-  preconnect: (href: string, options?: ?PreconnectOptions) => void,
-  preload: (href: string, options: PreloadOptions) => void,
-  preloadModule: (href: string, options?: ?PreloadModuleOptions) => void,
-  preinit: (href: string, options: PreinitOptions) => void,
-  preinitModule: (href: string, options?: ?PreinitModuleOptions) => void,
+  prefetchDNS: (href: string) => void,
+  preconnect: (href: string, crossOrigin?: ?CrossOriginEnum) => void,
+  preload: (href: string, as: string, options?: ?PreloadImplOptions) => void,
+  preloadModule: (href: string, options?: ?PreloadModuleImplOptions) => void,
+  preinitStyle: (
+    href: string,
+    precedence: ?string,
+    options?: ?PreinitStyleOptions,
+  ) => void,
+  preinitScript: (src: string, options?: PreinitScriptOptions) => void,
+  preinitModuleScript: (
+    src: string,
+    options?: ?PreinitModuleScriptOptions,
+  ) => void,
 };
 
 export type ImportMap = {

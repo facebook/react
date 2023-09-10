@@ -10,56 +10,103 @@
 // This client file is in the shared folder because it applies to both SSR and browser contexts.
 // It is the configuraiton of the FlightClient behavior which can run in either environment.
 
-import type {HintModel} from '../server/ReactFlightServerConfigDOM';
+import type {HintCode, HintModel} from '../server/ReactFlightServerConfigDOM';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
-export function dispatchHint(code: string, model: HintModel): void {
+export function dispatchHint<Code: HintCode>(
+  code: Code,
+  model: HintModel<Code>,
+): void {
   const dispatcher = ReactDOMCurrentDispatcher.current;
   if (dispatcher) {
-    let href, options;
-    if (typeof model === 'string') {
-      href = model;
-    } else {
-      href = model[0];
-      options = model[1];
-    }
     switch (code) {
       case 'D': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        dispatcher.prefetchDNS(href, options);
+        const refined = refineModel(code, model);
+        const href = refined;
+        dispatcher.prefetchDNS(href);
         return;
       }
       case 'C': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        dispatcher.preconnect(href, options);
+        const refined = refineModel(code, model);
+        if (typeof refined === 'string') {
+          const href = refined;
+          dispatcher.preconnect(href);
+        } else {
+          const href = refined[0];
+          const crossOrigin = refined[1];
+          dispatcher.preconnect(href, crossOrigin);
+        }
         return;
       }
       case 'L': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        // $FlowFixMe[incompatible-call] options are not refined to their types by code
-        dispatcher.preload(href, options);
+        const refined = refineModel(code, model);
+        const href = refined[0];
+        const as = refined[1];
+        if (refined.length === 3) {
+          const options = refined[2];
+          dispatcher.preload(href, as, options);
+        } else {
+          dispatcher.preload(href, as);
+        }
         return;
       }
       case 'm': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        // $FlowFixMe[incompatible-call] options are not refined to their types by code
-        dispatcher.preloadModule(href, options);
+        const refined = refineModel(code, model);
+        if (typeof refined === 'string') {
+          const href = refined;
+          dispatcher.preloadModule(href);
+        } else {
+          const href = refined[0];
+          const options = refined[1];
+          dispatcher.preloadModule(href, options);
+        }
         return;
       }
-      case 'I': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        // $FlowFixMe[incompatible-call] options are not refined to their types by code
-        dispatcher.preinit(href, options);
+      case 'S': {
+        const refined = refineModel(code, model);
+        if (typeof refined === 'string') {
+          const href = refined;
+          dispatcher.preinitStyle(href);
+        } else {
+          const href = refined[0];
+          const precedence = refined[1] === 0 ? undefined : refined[1];
+          const options = refined.length === 3 ? refined[2] : undefined;
+          dispatcher.preinitStyle(href, precedence, options);
+        }
+        return;
+      }
+      case 'X': {
+        const refined = refineModel(code, model);
+        if (typeof refined === 'string') {
+          const href = refined;
+          dispatcher.preinitScript(href);
+        } else {
+          const href = refined[0];
+          const options = refined[1];
+          dispatcher.preinitScript(href, options);
+        }
         return;
       }
       case 'M': {
-        // $FlowFixMe[prop-missing] options are not refined to their types by code
-        // $FlowFixMe[incompatible-call] options are not refined to their types by code
-        dispatcher.preinitModule(href, options);
+        const refined = refineModel(code, model);
+        if (typeof refined === 'string') {
+          const href = refined;
+          dispatcher.preinitModuleScript(href);
+        } else {
+          const href = refined[0];
+          const options = refined[1];
+          dispatcher.preinitModuleScript(href, options);
+        }
         return;
       }
     }
   }
+}
+
+// Flow is having troulbe refining the HintModels so we help it a bit.
+// This should be compiled out in the production build.
+function refineModel<T>(code: T, model: HintModel<any>): HintModel<T> {
+  return model;
 }

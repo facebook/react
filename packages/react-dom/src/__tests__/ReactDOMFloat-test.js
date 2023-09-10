@@ -5341,8 +5341,6 @@ body {
       ]);
       expect(getMeaningfulChildren(document.body)).toEqual(
         <div id="container">
-          <script type="module" src="1" async="" />
-          <script type="module" src="2" async="" />
           <div>hello</div>
         </div>,
       );
