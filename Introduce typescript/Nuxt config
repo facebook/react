@@ -1,0 +1,6 @@
+export default defineNuxtConfig({
+  routeRules: {
+    // Use client-side rendering for all routes
+    '/**': { ssr: false },
+  },
+});
