@@ -1,0 +1,76 @@
+Nextjs run:
+
+name: Visual Editing
+Discover how Vercel's Visual Editing enhances content management for headless CMSs, enabling real-time editing, and seamless collaboration.
+Table of Contents
+Visual Editing is available in Beta on Pro and Enterprise plans
+Visual Editing allows you to edit content in real-time on websites using headless Content Management Systems (CMSs). By offering real-time content visualization, it enables collaborators to make changes on preview deployments without requiring a developer's intervention.
+
+Get started
+Visual Editing is accessible for Pro and Enterprise Teams using the following content editing workflows:
+
+Sanity
+Builder
+TinaCMS
+DatoCMS
+Payload
+If you'd like your CMS to support Visual Editing, follow our getting started docs:
+
+I'm a CMS Provider
+Beta
+Use the docs to implement Visual Editing in your CMS.
+Using Visual Editing
+Once setup, Visual Editing can be enabled on a preview deployment through the toolbar's edit mode button. Using this feature doesn't require any additional configuration or code changes to the page you want to edit.
+
+Edit mode
+When editable information is detected on a page, the toolbar shows an edit button to interact with the editable fields.
+
+Toolbar with edit mode button - Indicated by the pencil icon
+Toolbar with edit mode button - Indicated by the pencil icon
+Selecting the button activates edit mode, which highlights editable fields in blue as you hover near them. An editable field is determined by it having a corresponding model in the CMS. Hover over an element to display a link in the top-right corner, click to open the related CMS field for editing.
+
+An editable element with a link to open the related field in the CMS
+An editable element with a link to open the related field in the CMS
+
+
+Streamlining CMS Workflows through Visual Editing
+Headless CMSs can face challenges in content editing and management, especially in real-time visualization and collaboration. Visual Editing overcomes these challenges by integrating directly into your site and offering the following enhancements:
+
+Real-time visualization
+Most CMSs, even with built-in visual editing, don't integrate seamlessly into your site. This lack of integration forces authors to save and refresh the site to see updates, slowing down the editing process. Visual Editing lets authors select a content area on the page and edit it in the CMS. Combined with Incremental Static Regeneration (ISR), authors get near-instant feedback.
+
+Collaboration
+Content changes and feedback typically involve back-and-forth communication, causing inefficiencies and potential miscommunication. Visual Editing improves collaboration by allowing team members to make changes and provide feedback on preview deployments, reducing communication overhead.
+
+Contextual editing
+Content editing in CMSs usually occurs separately from the website's layout and design. This separation makes it hard for authors to visualize their changes. Visual Editing allows authors to edit content within the website's context, offering a clearer understanding of the impact on design and user experience. The ability to jump from content to the editing interface further enhances this experience.
+
+Last updated on September 10, 2023
+Previous
+Specialized Usage
+Next
+Support Visual Editing
+Was this helpful?
+
+
+
+
+
+supported.
+
+Send
+© 2023
+All systems normal.
+
+Product
+
+
+Resources
+
+
+Company
+
+
+
+
+
