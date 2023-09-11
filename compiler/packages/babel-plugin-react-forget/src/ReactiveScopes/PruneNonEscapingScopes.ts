@@ -430,6 +430,7 @@ function computeMemoizationInputs(
         rvalues: value.children,
       };
     }
+    case "NextPropertyOf":
     case "Debugger":
     case "ComputedDelete":
     case "PropertyDelete":

@@ -1212,6 +1212,10 @@ function codegenInstructionValue(
       value = codegenPlace(cx, instrValue.value);
       break;
     }
+    case "NextPropertyOf": {
+      value = codegenPlace(cx, instrValue.value);
+      break;
+    }
     case "PostfixUpdate": {
       value = t.updateExpression(
         instrValue.operation,

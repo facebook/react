@@ -260,6 +260,11 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "NextPropertyOf": {
+      yield equation(left, { kind: "Primitive" });
+      break;
+    }
+
     case "DeclareLocal":
     case "NewExpression":
     case "JsxExpression":

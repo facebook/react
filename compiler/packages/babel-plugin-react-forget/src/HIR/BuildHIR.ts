@@ -943,7 +943,7 @@ function lowerStatement(
         initBlock
       );
 
-      // The init of a ForOf statement is compound over a left (VariableDeclaration | LVal) and
+      // The init of a ForIn statement is compound over a left (VariableDeclaration | LVal) and
       // right (Expression), so we synthesize a new InstrValue and assignment (potentially multiple
       // instructions when we handle other syntax like Patterns)
       const left = stmt.get("left");
@@ -952,14 +952,14 @@ function lowerStatement(
       if (left.isVariableDeclaration()) {
         const declarations = left.get("declarations");
         CompilerError.invariant(declarations.length === 1, {
-          reason: `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`,
+          reason: `Expected only one declaration in the init of a ForInStatement, got ${declarations.length}`,
           description: null,
           loc: left.node.loc ?? null,
           suggestions: null,
         });
         const id = declarations[0].get("id");
         const nextIterableOf = lowerValueToTemporary(builder, {
-          kind: "NextIterableOf", // TODO: change this to reflect for-in semantics (returns immutable keys, does not modify collection)
+          kind: "NextPropertyOf",
           loc: leftLoc,
           value,
         });
@@ -973,7 +973,7 @@ function lowerStatement(
         test = lowerValueToTemporary(builder, assign);
       } else {
         builder.errors.push({
-          reason: `(BuildHIR::lowerStatement) Handle ${left.type} inits in ForOfStatement`,
+          reason: `(BuildHIR::lowerStatement) Handle ${left.type} inits in ForInStatement`,
           severity: ErrorSeverity.Todo,
           loc: left.node.loc ?? null,
           suggestions: null,

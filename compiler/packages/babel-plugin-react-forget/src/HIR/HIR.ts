@@ -788,6 +788,11 @@ export type InstructionValue =
       value: Place; // the collection
       loc: SourceLocation;
     }
+  | {
+      kind: "NextPropertyOf";
+      value: Place; // the collection
+      loc: SourceLocation;
+    }
   // Models a prefix update expression such as --x or ++y
   // This instructions increments or decrements the <lvalue>
   // but evaluates to the value of <value> prior to the update.

@@ -193,6 +193,10 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
+    case "NextPropertyOf": {
+      yield instrValue.value;
+      break;
+    }
     case "PostfixUpdate":
     case "PrefixUpdate": {
       yield instrValue.value;
@@ -473,6 +477,10 @@ export function mapInstructionOperands(
       break;
     }
     case "NextIterableOf": {
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "NextPropertyOf": {
       instrValue.value = fn(instrValue.value);
       break;
     }

@@ -542,6 +542,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       value = `NextIterableOf ${printPlace(instrValue.value)}`;
       break;
     }
+    case "NextPropertyOf": {
+      value = `NextPropertyOf ${printPlace(instrValue.value)}`;
+      break;
+    }
     case "Debugger": {
       value = `Debugger`;
       break;

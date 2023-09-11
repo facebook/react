@@ -1020,6 +1020,12 @@ function inferBlock(
         valueKind = ValueKind.Mutable;
         break;
       }
+      case "NextPropertyOf": {
+        effectKind = Effect.Read;
+        lvalueEffect = Effect.Store;
+        valueKind = ValueKind.Immutable;
+        break;
+      }
       default: {
         assertExhaustive(instrValue, "Unexpected instruction kind");
       }

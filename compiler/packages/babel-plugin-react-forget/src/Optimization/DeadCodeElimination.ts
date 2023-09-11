@@ -217,9 +217,11 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
       // Potentially safe to prune, since they should just be creating new values
       return false;
     }
+    case "NextPropertyOf":
     case "NextIterableOf": {
-      // Technically a NextIterableOf will never be unused because it's always used later by
-      // another StoreLocal or Destructure instruction, but conceptually we can't prune
+      // Technically a NextIterableOf/NextPropertyOf will never be unused because it's
+      // always used later by another StoreLocal or Destructure instruction, but conceptually
+      // we can't prune
       return false;
     }
     case "LoadContext":
