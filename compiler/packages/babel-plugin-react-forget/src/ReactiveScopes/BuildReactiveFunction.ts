@@ -499,6 +499,81 @@ class Driver {
         }
         break;
       }
+      case "for-in": {
+        const loopId =
+          !this.cx.isScheduled(terminal.loop) &&
+          terminal.loop !== terminal.fallthrough
+            ? terminal.loop
+            : null;
+
+        const fallthroughId =
+          terminal.fallthrough !== null &&
+          !this.cx.isScheduled(terminal.fallthrough)
+            ? terminal.fallthrough
+            : null;
+
+        const scheduleId = this.cx.scheduleLoop(
+          terminal.fallthrough,
+          terminal.init,
+          terminal.loop
+        );
+        scheduleIds.push(scheduleId);
+
+        const init = this.visitValueBlock(terminal.init, terminal.loc);
+        const initBlock = this.cx.ir.blocks.get(init.block)!;
+        let initValue = init.value;
+        if (initValue.kind === "SequenceExpression") {
+          const last = initBlock.instructions.at(-1)!;
+          initValue.instructions.push(last);
+          initValue.value = {
+            kind: "Primitive",
+            value: undefined,
+            loc: terminal.loc,
+          };
+        } else {
+          initValue = {
+            kind: "SequenceExpression",
+            instructions: [initBlock.instructions.at(-1)!],
+            id: terminal.id,
+            loc: terminal.loc,
+            value: {
+              kind: "Primitive",
+              value: undefined,
+              loc: terminal.loc,
+            },
+          };
+        }
+
+        let loopBody: ReactiveBlock;
+        if (loopId) {
+          loopBody = this.traverseBlock(this.cx.ir.blocks.get(loopId)!);
+        } else {
+          const break_ = this.visitBreak(terminal.loop, null);
+          CompilerError.invariant(break_ !== null, {
+            reason: "If loop body is already scheduled it must be a break",
+            description: null,
+            loc: null,
+            suggestions: null,
+          });
+          loopBody = [break_];
+        }
+
+        this.cx.unscheduleAll(scheduleIds);
+        blockValue.push({
+          kind: "terminal",
+          terminal: {
+            kind: "for-in",
+            init: initValue,
+            loop: loopBody,
+            id: terminal.id,
+          },
+          label: fallthroughId,
+        });
+        if (fallthroughId !== null) {
+          this.visitBlock(this.cx.ir.blocks.get(fallthroughId)!, blockValue);
+        }
+        break;
+      }
       case "branch": {
         let consequent: ReactiveBlock | null = null;
         if (this.cx.isScheduled(terminal.consequent)) {

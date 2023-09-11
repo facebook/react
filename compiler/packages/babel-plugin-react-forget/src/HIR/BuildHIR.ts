@@ -910,6 +910,89 @@ function lowerStatement(
       );
       return;
     }
+    case "ForInStatement": {
+      const stmt = stmtPath as NodePath<t.ForInStatement>;
+      const continuationBlock = builder.reserve("block");
+      const initBlock = builder.reserve("loop");
+
+      const loopBlock = builder.enter("block", (_blockId) => {
+        return builder.loop(label, initBlock.id, continuationBlock.id, () => {
+          const body = stmt.get("body");
+          lowerStatement(builder, body);
+          return {
+            kind: "goto",
+            block: initBlock.id,
+            variant: GotoVariant.Continue,
+            id: makeInstructionId(0),
+            loc: body.node.loc ?? GeneratedSource,
+          };
+        });
+      });
+
+      const loc = stmt.node.loc ?? GeneratedSource;
+      const value = lowerExpressionToTemporary(builder, stmt.get("right"));
+      builder.terminateWithContinuation(
+        {
+          kind: "for-in",
+          loc,
+          init: initBlock.id,
+          loop: loopBlock,
+          fallthrough: continuationBlock.id,
+          id: makeInstructionId(0),
+        },
+        initBlock
+      );
+
+      // The init of a ForOf statement is compound over a left (VariableDeclaration | LVal) and
+      // right (Expression), so we synthesize a new InstrValue and assignment (potentially multiple
+      // instructions when we handle other syntax like Patterns)
+      const left = stmt.get("left");
+      const leftLoc = left.node.loc ?? GeneratedSource;
+      let test: Place;
+      if (left.isVariableDeclaration()) {
+        const declarations = left.get("declarations");
+        CompilerError.invariant(declarations.length === 1, {
+          reason: `Expected only one declaration in the init of a ForOfStatement, got ${declarations.length}`,
+          description: null,
+          loc: left.node.loc ?? null,
+          suggestions: null,
+        });
+        const id = declarations[0].get("id");
+        const nextIterableOf = lowerValueToTemporary(builder, {
+          kind: "NextIterableOf", // TODO: change this to reflect for-in semantics (returns immutable keys, does not modify collection)
+          loc: leftLoc,
+          value,
+        });
+        const assign = lowerAssignment(
+          builder,
+          leftLoc,
+          InstructionKind.Let,
+          id,
+          nextIterableOf
+        );
+        test = lowerValueToTemporary(builder, assign);
+      } else {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerStatement) Handle ${left.type} inits in ForOfStatement`,
+          severity: ErrorSeverity.Todo,
+          loc: left.node.loc ?? null,
+          suggestions: null,
+        });
+        return;
+      }
+      builder.terminateWithContinuation(
+        {
+          id: makeInstructionId(0),
+          kind: "branch",
+          test,
+          consequent: loopBlock,
+          alternate: continuationBlock.id,
+          loc: stmt.node.loc ?? GeneratedSource,
+        },
+        continuationBlock
+      );
+      return;
+    }
     case "DebuggerStatement": {
       const stmt = stmtPath as NodePath<t.DebuggerStatement>;
       const loc = stmt.node.loc ?? GeneratedSource;
@@ -1028,7 +1111,6 @@ function lowerStatement(
 
       return;
     }
-    case "ForInStatement":
     case "ClassDeclaration":
     case "DeclareClass":
     case "DeclareExportAllDeclaration":

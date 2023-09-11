@@ -97,6 +97,7 @@ export function printMixedHIR(
     case "unsupported":
     case "goto":
     case "do-while":
+    case "for-in":
     case "for-of": {
       const terminal = printTerminal(value);
       if (Array.isArray(terminal)) {
@@ -216,6 +217,10 @@ export function printTerminal(terminal: Terminal): Array<string> | string {
     }
     case "for-of": {
       value = `[${terminal.id}] ForOf init=bb${terminal.init} loop=bb${terminal.loop} fallthrough=bb${terminal.fallthrough}`;
+      break;
+    }
+    case "for-in": {
+      value = `[${terminal.id}] ForIn init=bb${terminal.init} loop=bb${terminal.loop} fallthrough=bb${terminal.fallthrough}`;
       break;
     }
     case "label": {

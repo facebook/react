@@ -352,7 +352,11 @@ export function leaveSSA(fn: HIRFunction): void {
       const loop = fn.body.blocks.get(terminal.loop)!;
       pushPhis(loop);
     }
-    if (terminal.kind === "for" || terminal.kind === "for-of") {
+    if (
+      terminal.kind === "for" ||
+      terminal.kind === "for-of" ||
+      terminal.kind === "for-in"
+    ) {
       const init = fn.body.blocks.get(terminal.init)!;
       pushPhis(init);
 

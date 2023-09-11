@@ -107,8 +107,6 @@ let moduleLocal = false;
 
 [ReactForget] Todo: (BuildHIR::lowerStatement) Handle ObjectPattern inits in ForOfStatement (40:40)
 
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle ForInStatement statements (43:44)
-
 [ReactForget] Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (49:49)
 
 [ReactForget] Todo: (BuildHIR::lowerExpression) Handle UpdateExpression with MemberExpression argument (50:50)

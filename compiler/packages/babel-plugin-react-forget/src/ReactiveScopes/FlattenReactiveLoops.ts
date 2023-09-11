@@ -49,7 +49,8 @@ class Transform extends ReactiveFunctionTransform<boolean> {
       case "do-while":
       case "while":
       case "for":
-      case "for-of": {
+      case "for-of":
+      case "for-in": {
         this.traverseTerminal(stmt, true);
         break;
       }

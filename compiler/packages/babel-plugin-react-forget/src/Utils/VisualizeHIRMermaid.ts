@@ -139,6 +139,7 @@ function printTerminalLabel(terminal: Terminal): string {
       buffer.push("Sequence");
       break;
     }
+    case "for-in":
     case "try":
     case "maybe-throw":
     case "unsupported": {
@@ -248,6 +249,7 @@ function printTerminalArrows(blockId: BlockId, terminal: Terminal): string {
       buffer.push(printJumpArrow(blockId, terminal.fallthrough, "fallthrough"));
       break;
     }
+    case "for-in":
     case "try":
     case "maybe-throw":
     case "throw":

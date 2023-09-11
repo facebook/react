@@ -403,6 +403,7 @@ function codegenTerminal(
         codegenBlock(cx, terminal.loop)
       );
     }
+    case "for-in":
     case "for-of": {
       CompilerError.invariant(terminal.init.kind === "SequenceExpression", {
         reason: `Expected a sequence expression init for ForOf`,
@@ -467,15 +468,27 @@ function codegenTerminal(
             `Unhandled lvalue kind: ${iterableItem.value.lvalue.kind}`
           );
       }
-      return t.forOfStatement(
-        // Special handling here since we only want the VariableDeclarators without any inits
-        // This needs to be updated when we handle non-trivial ForOf inits
-        createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
-          t.variableDeclarator(lval, null),
-        ]),
-        codegenInstructionValue(cx, iterableCollection.value),
-        codegenBlock(cx, terminal.loop)
-      );
+      if (terminal.kind === "for-of") {
+        return t.forOfStatement(
+          // Special handling here since we only want the VariableDeclarators without any inits
+          // This needs to be updated when we handle non-trivial ForOf inits
+          createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
+            t.variableDeclarator(lval, null),
+          ]),
+          codegenInstructionValue(cx, iterableCollection.value),
+          codegenBlock(cx, terminal.loop)
+        );
+      } else {
+        return t.forInStatement(
+          // Special handling here since we only want the VariableDeclarators without any inits
+          // This needs to be updated when we handle non-trivial ForOf inits
+          createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
+            t.variableDeclarator(lval, null),
+          ]),
+          codegenInstructionValue(cx, iterableCollection.value),
+          codegenBlock(cx, terminal.loop)
+        );
+      }
     }
     case "if": {
       const test = codegenPlace(cx, terminal.test);

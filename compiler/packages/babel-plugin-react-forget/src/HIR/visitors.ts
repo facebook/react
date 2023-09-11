@@ -708,6 +708,19 @@ export function mapTerminalSuccessors(
         id: makeInstructionId(0),
       };
     }
+    case "for-in": {
+      const init = fn(terminal.init);
+      const loop = fn(terminal.loop);
+      const fallthrough = fn(terminal.fallthrough);
+      return {
+        kind: "for-in",
+        loc: terminal.loc,
+        init,
+        loop,
+        fallthrough,
+        id: makeInstructionId(0),
+      };
+    }
     case "label": {
       const block = fn(terminal.block);
       const fallthrough =
@@ -787,6 +800,7 @@ export function terminalFallthrough(terminal: Terminal): BlockId | null {
     case "try":
     case "do-while":
     case "for-of":
+    case "for-in":
     case "for":
     case "if":
     case "label":
@@ -829,6 +843,10 @@ export function mapOptionalFallthroughs(
       break;
     }
     case "for-of": {
+      const _: BlockId = terminal.fallthrough;
+      break;
+    }
+    case "for-in": {
       const _: BlockId = terminal.fallthrough;
       break;
     }
@@ -946,6 +964,10 @@ export function* eachTerminalSuccessor(terminal: Terminal): Iterable<BlockId> {
       yield terminal.init;
       break;
     }
+    case "for-in": {
+      yield terminal.init;
+      break;
+    }
     case "label": {
       yield terminal.block;
       break;
@@ -1020,6 +1042,7 @@ export function mapTerminalOperands(
     case "while":
     case "for":
     case "for-of":
+    case "for-in":
     case "goto":
     case "unsupported": {
       // no-op
@@ -1070,6 +1093,7 @@ export function* eachTerminalOperand(terminal: Terminal): Iterable<Place> {
     case "while":
     case "for":
     case "for-of":
+    case "for-in":
     case "goto":
     case "unsupported": {
       // no-op

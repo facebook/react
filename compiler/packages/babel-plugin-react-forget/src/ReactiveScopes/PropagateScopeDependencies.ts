@@ -612,6 +612,13 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         });
         break;
       }
+      case "for-in": {
+        this.visitReactiveValue(context, terminal.id, terminal.init);
+        context.enterConditional(() => {
+          this.visitBlock(terminal.loop, context);
+        });
+        break;
+      }
       case "do-while": {
         this.visitBlock(terminal.loop, context);
         context.enterConditional(() => {
