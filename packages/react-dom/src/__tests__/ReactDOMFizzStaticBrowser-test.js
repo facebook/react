@@ -494,6 +494,47 @@ describe('ReactDOMFizzStaticBrowser', () => {
   });
 
   // @gate enablePostpone
+  it('supports postponing in lazy in prerender and resuming later', async () => {
+    let prerendering = true;
+    const Hole = React.lazy(async () => {
+      React.unstable_postpone();
+    });
+
+    function Postpone() {
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            Hi
+            {prerendering ? Hole : <Postpone />}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      prerendered.postponed,
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
+
+  // @gate enablePostpone
   it('only emits end tags once when resuming', async () => {
     let prerendering = true;
     function Postpone() {

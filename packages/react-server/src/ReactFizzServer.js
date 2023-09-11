@@ -186,8 +186,7 @@ type ResumableNode =
   | ResumableParentNode
   | [
       2, // RESUME_SEGMENT
-      string | null /* name */,
-      string | number /* key */,
+      number /* index */,
       number /* segment id */,
     ];
 
@@ -220,6 +219,7 @@ type SuspenseBoundary = {
 
 export type Task = {
   node: ReactNodeList,
+  childIndex: number,
   ping: () => void,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
@@ -1632,6 +1632,7 @@ function renderNodeDestructiveImpl(
   // Stash the node we're working on. We'll pick up from this task in case
   // something suspends.
   task.node = node;
+  task.childIndex = childIndex;
 
   // Handle object types
   if (typeof node === 'object' && node !== null) {
@@ -1831,6 +1832,7 @@ function trackPostpone(
   request: Request,
   trackedPostpones: PostponedHoles,
   task: Task,
+  childIndex: number,
   segment: Segment,
 ): void {
   segment.status = POSTPONED;
@@ -1862,7 +1864,7 @@ function trackPostpone(
       boundary.id,
     ];
     trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
-    addToResumableParent(boundaryNode, boundaryKeyPath, trackedPostpones);
+    addToResumableParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
   }
 
   const keyPath = task.keyPath;
@@ -1872,12 +1874,7 @@ function trackPostpone(
     );
   }
 
-  const segmentNode: ResumableNode = [
-    RESUME_SEGMENT,
-    keyPath[1],
-    keyPath[2],
-    segment.id,
-  ];
+  const segmentNode: ResumableNode = [RESUME_SEGMENT, childIndex, segment.id];
   addToResumableParent(segmentNode, keyPath, trackedPostpones);
 }
 
@@ -1941,6 +1938,7 @@ function spawnNewSuspendedTask(
     task.context,
     task.treeContext,
   );
+  newTask.childIndex = task.childIndex;
 
   if (__DEV__) {
     if (task.componentStack !== null) {
@@ -2035,7 +2033,13 @@ function renderNode(
           task,
           postponeInstance.message,
         );
-        trackPostpone(request, trackedPostpones, task, postponedSegment);
+        trackPostpone(
+          request,
+          trackedPostpones,
+          task,
+          childIndex,
+          postponedSegment,
+        );
 
         // Restore the context. We assume that this will be restored by the inner
         // functions in case nothing throws so we don't use "finally" here.
@@ -2328,7 +2332,13 @@ function retryTask(request: Request, task: Task): void {
     const prevThenableState = task.thenableState;
     task.thenableState = null;
 
-    renderNodeDestructive(request, task, prevThenableState, task.node, 0);
+    renderNodeDestructive(
+      request,
+      task,
+      prevThenableState,
+      task.node,
+      task.childIndex,
+    );
     pushSegmentFinale(
       segment.chunks,
       request.renderState,
@@ -2377,8 +2387,15 @@ function retryTask(request: Request, task: Task): void {
         task.abortSet.delete(task);
         const postponeInstance: Postpone = (x: any);
         logPostpone(request, postponeInstance.message);
-        trackPostpone(request, trackedPostpones, task, segment);
+        trackPostpone(
+          request,
+          trackedPostpones,
+          task,
+          task.childIndex,
+          segment,
+        );
         finishedTask(request, task.blockedBoundary, segment);
+        return;
       }
     }
     task.abortSet.delete(task);
@@ -2975,10 +2992,9 @@ export function getResumableState(request: Request): ResumableState {
 
 function addToResumableParent(
   node: ResumableNode,
-  keyPath: KeyNode,
+  parentKeyPath: Root | KeyNode,
   trackedPostpones: PostponedHoles,
 ): void {
-  const parentKeyPath = keyPath[0];
   if (parentKeyPath === null) {
     trackedPostpones.root.push(node);
   } else {
@@ -2992,7 +3008,7 @@ function addToResumableParent(
         ([]: Array<ResumableNode>),
       ]: ResumableParentNode);
       workingMap.set(parentKeyPath, parentNode);
-      addToResumableParent(parentNode, parentKeyPath, trackedPostpones);
+      addToResumableParent(parentNode, parentKeyPath[0], trackedPostpones);
     }
     parentNode[3].push(node);
   }
