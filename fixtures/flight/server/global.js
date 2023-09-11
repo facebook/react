@@ -138,11 +138,15 @@ app.all('/', async function (req, res, next) {
       // For HTML, we're a "client" emulator that runs the client code,
       // so we start by consuming the RSC payload. This needs a module
       // map that reverse engineers the client-side path to the SSR path.
-      const root = await createFromNodeStream(rscResponse, moduleMap);
+      const {root, formState} = await createFromNodeStream(
+        rscResponse,
+        moduleMap
+      );
       // Render it into HTML by resolving the client components
       res.set('Content-type', 'text/html');
       const {pipe} = renderToPipeableStream(root, {
         bootstrapScripts: mainJSChunks,
+        experimental_formState: formState,
       });
       pipe(res);
     } catch (e) {

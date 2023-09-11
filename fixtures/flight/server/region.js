@@ -46,7 +46,7 @@ const {readFile} = require('fs').promises;
 
 const React = require('react');
 
-async function renderApp(res, returnValue) {
+async function renderApp(res, returnValue, formState) {
   const {renderToPipeableStream} = await import(
     'react-server-dom-webpack/server'
   );
@@ -93,13 +93,13 @@ async function renderApp(res, returnValue) {
     React.createElement(App),
   ];
   // For client-invoked server actions we refresh the tree and return a return value.
-  const payload = returnValue ? {returnValue, root} : root;
+  const payload = {root, returnValue, formState};
   const {pipe} = renderToPipeableStream(payload, moduleMap);
   pipe(res);
 }
 
 app.get('/', async function (req, res) {
-  await renderApp(res, null);
+  await renderApp(res, null, null);
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {
@@ -108,6 +108,7 @@ app.post('/', bodyParser.text(), async function (req, res) {
     decodeReply,
     decodeReplyFromBusboy,
     decodeAction,
+    decodeFormState,
   } = await import('react-server-dom-webpack/server');
   const serverReference = req.get('rsc-action');
   if (serverReference) {
@@ -139,7 +140,7 @@ app.post('/', bodyParser.text(), async function (req, res) {
       // We handle the error on the client
     }
     // Refresh the client and return the value
-    renderApp(res, result);
+    renderApp(res, result, null);
   } else {
     // This is the progressive enhancement case
     const UndiciRequest = require('undici').Request;
@@ -153,12 +154,14 @@ app.post('/', bodyParser.text(), async function (req, res) {
     const action = await decodeAction(formData);
     try {
       // Wait for any mutations
-      await action();
+      const result = await action();
+      const formState = decodeFormState(result, formData);
+      renderApp(res, null, formState);
     } catch (x) {
       const {setServerState} = await import('../src/ServerState.js');
       setServerState('Error: ' + x.message);
+      renderApp(res, null, null);
     }
-    renderApp(res, null);
   }
 });
 

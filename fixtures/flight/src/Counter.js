@@ -1,14 +1,17 @@
 'use client';
 
 import * as React from 'react';
+import {experimental_useFormState as useFormState} from 'react-dom';
 
 import Container from './Container.js';
 
-export function Counter() {
-  const [count, setCount] = React.useState(0);
+export function Counter({incrementAction}) {
+  const [count, incrementFormAction] = useFormState(incrementAction, 0);
   return (
     <Container>
-      <button onClick={() => setCount(c => c + 1)}>Count: {count}</button>
+      <form>
+        <button formAction={incrementFormAction}>Count: {count}</button>
+      </form>
     </Container>
   );
 }
