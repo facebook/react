@@ -2910,28 +2910,31 @@ function lowerAssignment(
         }
         if (element.isRestElement()) {
           const argument = element.get("argument");
-          if (!argument.isIdentifier()) {
-            builder.errors.push({
-              reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ArrayPattern`,
-              severity: ErrorSeverity.Todo,
-              loc: element.node.loc ?? null,
-              suggestions: null,
+          if (argument.isIdentifier()) {
+            const identifier = lowerIdentifierForAssignment(
+              builder,
+              element.node.loc ?? GeneratedSource,
+              kind,
+              argument
+            );
+            if (identifier === null) {
+              continue;
+            }
+            items.push({
+              kind: "Spread",
+              place: identifier,
             });
-            continue;
+          } else {
+            const temp = buildTemporaryPlace(
+              builder,
+              element.node.loc ?? GeneratedSource
+            );
+            items.push({
+              kind: "Spread",
+              place: { ...temp },
+            });
+            followups.push({ place: temp, path: argument as NodePath<t.LVal> }); // TODO remove type cast
           }
-          const identifier = lowerIdentifierForAssignment(
-            builder,
-            element.node.loc ?? GeneratedSource,
-            kind,
-            argument
-          );
-          if (identifier === null) {
-            continue;
-          }
-          items.push({
-            kind: "Spread",
-            place: identifier,
-          });
         } else if (element.isIdentifier()) {
           const identifier = lowerIdentifierForAssignment(
             builder,
@@ -2980,7 +2983,7 @@ function lowerAssignment(
           const argument = property.get("argument");
           if (!argument.isIdentifier()) {
             builder.errors.push({
-              reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ArrayPattern`,
+              reason: `(BuildHIR::lowerAssignment) Handle ${argument.node.type} rest element in ObjectPattern`,
               severity: ErrorSeverity.Todo,
               loc: argument.node.loc ?? null,
               suggestions: null,
