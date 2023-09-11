@@ -8,6 +8,7 @@
 import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
 import { Expression } from "@babel/types";
+import invariant from "invariant";
 import {
   CompilerError,
   CompilerSuggestionOperation,
@@ -2238,6 +2239,19 @@ function isReorderableExpression(
     case "BigIntLiteral": {
       return true;
     }
+    case "UnaryExpression": {
+      const unary = expr as NodePath<t.UnaryExpression>;
+      switch (expr.node.operator) {
+        case "!":
+        case "+":
+        case "-": {
+          return isReorderableExpression(builder, unary.get("argument"));
+        }
+        default: {
+          return false;
+        }
+      }
+    }
     case "TypeCastExpression": {
       return isReorderableExpression(
         builder,
@@ -2291,6 +2305,17 @@ function isReorderableExpression(
         return true;
       } else {
         return false;
+      }
+    }
+    case "ArrowFunctionExpression": {
+      const fn = expr as NodePath<t.ArrowFunctionExpression>;
+      const body = fn.get("body");
+      if (body.node.type === "BlockStatement") {
+        return body.node.body.length === 0;
+      } else {
+        // For TypeScript
+        invariant(body.isExpression(), "Expected an expression");
+        return isReorderableExpression(builder, body);
       }
     }
     default: {

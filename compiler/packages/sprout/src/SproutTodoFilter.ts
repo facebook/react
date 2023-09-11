@@ -412,6 +412,7 @@ const skipFilter = new Set([
   "fbt-call-complex-param-value",
   "fbt-template-string-same-scope",
   "component-declaration-basic.flow",
+  "nested-function-with-param-as-captured-dep",
 
   // TODO: 🌲
   "forest-basic",

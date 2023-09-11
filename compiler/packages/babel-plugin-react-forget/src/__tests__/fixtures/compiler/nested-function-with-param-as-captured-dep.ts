@@ -1,5 +1,5 @@
 function Foo() {
-  (function t() {
+  return (function t() {
     let x = {};
     return function a(x = () => {}) {
       return x;
