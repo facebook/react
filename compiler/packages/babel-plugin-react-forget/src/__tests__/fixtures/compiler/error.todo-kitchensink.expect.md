@@ -115,8 +115,6 @@ let moduleLocal = false;
 
 [ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'MemberExpression' cannot be safely reordered (57:57)
 
-[ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'CallExpression' cannot be safely reordered (55:55)
-
 [ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered (53:53)
 ```
           

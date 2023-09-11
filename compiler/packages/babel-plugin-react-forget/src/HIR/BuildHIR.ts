@@ -2214,7 +2214,7 @@ function lowerReorderableExpression(
   builder: HIRBuilder,
   expr: NodePath<t.Expression>
 ): Place {
-  if (!isReorderableExpression(builder, expr)) {
+  if (!isReorderableExpression(builder, expr, true)) {
     builder.errors.push({
       reason: `(BuildHIR::node.lowerReorderableExpression) Expression type '${expr.type}' cannot be safely reordered`,
       severity: ErrorSeverity.Todo,
@@ -2227,10 +2227,21 @@ function lowerReorderableExpression(
 
 function isReorderableExpression(
   builder: HIRBuilder,
-  expr: NodePath<t.Expression>
+  expr: NodePath<t.Expression>,
+  allowLocalIdentifiers: boolean
 ): boolean {
   switch (expr.node.type) {
-    case "Identifier":
+    case "Identifier": {
+      const identifier = builder.resolveIdentifier(
+        expr as NodePath<t.Identifier>
+      );
+      if (identifier === null) {
+        // global, definitely safe
+        return true;
+      } else {
+        return allowLocalIdentifiers;
+      }
+    }
     case "RegExpLiteral":
     case "StringLiteral":
     case "NumericLiteral":
@@ -2245,7 +2256,11 @@ function isReorderableExpression(
         case "!":
         case "+":
         case "-": {
-          return isReorderableExpression(builder, unary.get("argument"));
+          return isReorderableExpression(
+            builder,
+            unary.get("argument"),
+            allowLocalIdentifiers
+          );
         }
         default: {
           return false;
@@ -2255,15 +2270,28 @@ function isReorderableExpression(
     case "TypeCastExpression": {
       return isReorderableExpression(
         builder,
-        (expr as NodePath<t.TypeCastExpression>).get("expression")
+        (expr as NodePath<t.TypeCastExpression>).get("expression"),
+        allowLocalIdentifiers
       );
     }
     case "ConditionalExpression": {
       const conditional = expr as NodePath<t.ConditionalExpression>;
       return (
-        isReorderableExpression(builder, conditional.get("test")) &&
-        isReorderableExpression(builder, conditional.get("consequent")) &&
-        isReorderableExpression(builder, conditional.get("alternate"))
+        isReorderableExpression(
+          builder,
+          conditional.get("test"),
+          allowLocalIdentifiers
+        ) &&
+        isReorderableExpression(
+          builder,
+          conditional.get("consequent"),
+          allowLocalIdentifiers
+        ) &&
+        isReorderableExpression(
+          builder,
+          conditional.get("alternate"),
+          allowLocalIdentifiers
+        )
       );
     }
     case "ArrayExpression": {
@@ -2271,7 +2299,8 @@ function isReorderableExpression(
         .get("elements")
         .every(
           (element) =>
-            element.isExpression() && isReorderableExpression(builder, element)
+            element.isExpression() &&
+            isReorderableExpression(builder, element, allowLocalIdentifiers)
         );
     }
     case "ObjectExpression": {
@@ -2283,7 +2312,8 @@ function isReorderableExpression(
           }
           const value = property.get("value");
           return (
-            value.isExpression() && isReorderableExpression(builder, value)
+            value.isExpression() &&
+            isReorderableExpression(builder, value, allowLocalIdentifiers)
           );
         });
     }
@@ -2315,8 +2345,27 @@ function isReorderableExpression(
       } else {
         // For TypeScript
         invariant(body.isExpression(), "Expected an expression");
-        return isReorderableExpression(builder, body);
+        return isReorderableExpression(
+          builder,
+          body,
+          /* disallow local identifiers in the body */ false
+        );
       }
+    }
+    case "CallExpression": {
+      const call = expr as NodePath<t.CallExpression>;
+      const callee = call.get("callee");
+      return (
+        callee.isExpression() &&
+        isReorderableExpression(builder, callee, allowLocalIdentifiers) &&
+        call
+          .get("arguments")
+          .every(
+            (arg) =>
+              arg.isExpression() &&
+              isReorderableExpression(builder, arg, allowLocalIdentifiers)
+          )
+      );
     }
     default: {
       return false;
