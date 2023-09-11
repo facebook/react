@@ -3,7 +3,7 @@ export default defineNuxtConfig({
     // Use client-side rendering for all routes
     '/**': { ssr: false },
   },
-});
+}); 
 
 Setting ssr: false for routes will cause them to deploy with client-side rendering.
 
