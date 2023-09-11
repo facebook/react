@@ -3248,6 +3248,7 @@ function renderNodeDestructiveImpl(
   childIndex
 ) {
   task.node = node;
+  task.childIndex = childIndex;
   if ("object" === typeof node && null !== node) {
     switch (node.$$typeof) {
       case REACT_ELEMENT_TYPE:
@@ -3341,12 +3342,28 @@ function renderChildrenArray(request, task, children, childIndex) {
   ) {
     var node = children[i];
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
-    if (isArrayImpl(node) || getIteratorFn(node)) {
+    if (isArrayImpl(node)) {
       var prevKeyPath = task.keyPath;
       task.keyPath = [task.keyPath, "", childIndex];
-      renderNode(request, task, node, i);
+      renderChildrenArray(request, task, node, i);
       task.keyPath = prevKeyPath;
-    } else renderNode(request, task, node, i);
+    } else {
+      if ((prevKeyPath = getIteratorFn(node)))
+        if ((prevKeyPath = prevKeyPath.call(node))) {
+          node = prevKeyPath.next();
+          if (!node.done) {
+            var prevKeyPath$13 = task.keyPath;
+            task.keyPath = [task.keyPath, "", childIndex];
+            var nestedChildren = [];
+            do nestedChildren.push(node.value), (node = prevKeyPath.next());
+            while (!node.done);
+            renderChildrenArray(request, task, nestedChildren, i);
+            task.keyPath = prevKeyPath$13;
+          }
+          continue;
+        }
+      renderNode(request, task, node, i);
+    }
   }
   task.treeContext = prevTreeContext;
 }
@@ -3398,7 +3415,9 @@ function renderNode(request, task, node, childIndex) {
           task.legacyContext,
           task.context,
           task.treeContext
-        ).ping),
+        )),
+        (request.childIndex = task.childIndex),
+        (request = request.ping),
         node.then(request, request),
         (task.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
@@ -3973,13 +3992,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$15 = partialBoundaries[i];
+      var boundary$16 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.renderState.boundaryResources =
-          boundary$15.resources;
-        var completedSegments = boundary$15.completedSegments;
+          boundary$16.resources;
+        var completedSegments = boundary$16.completedSegments;
         for (
           resumableState$jscomp$1 = 0;
           resumableState$jscomp$1 < completedSegments.length;
@@ -3989,7 +4008,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$15,
+              boundary$16,
               completedSegments[resumableState$jscomp$1]
             )
           ) {
@@ -4001,7 +4020,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$1);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$15.resources,
+          boundary$16.resources,
           clientRenderedBoundaries.renderState
         );
       }
@@ -4061,8 +4080,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$17) {
-    logRecoverableError(request, error$17), fatalError(request, error$17);
+  } catch (error$18) {
+    logRecoverableError(request, error$18), fatalError(request, error$18);
   }
 }
 exports.abortStream = function (stream) {
@@ -4117,7 +4136,7 @@ exports.renderNextChunk = function (stream) {
               task,
               prevThenableState,
               task.node,
-              0
+              task.childIndex
             );
             segment.lastPushedText &&
               segment.textEmbedded &&

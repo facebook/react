@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-de28fc21";
+var ReactVersion = "18.3.0-www-classic-ae77ec0b";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -10959,7 +10959,8 @@ function renderNodeDestructiveImpl(
 ) {
   // Stash the node we're working on. We'll pick up from this task in case
   // something suspends.
-  task.node = node; // Handle object types
+  task.node = node;
+  task.childIndex = childIndex; // Handle object types
 
   if (typeof node === "object" && node !== null) {
     switch (node.$$typeof) {
@@ -11138,20 +11139,50 @@ function renderChildrenArray(request, task, children, childIndex) {
 
   for (var i = 0; i < totalChildren; i++) {
     var node = children[i];
-    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i); // Nested arrays behave like a "fragment node" which is keyed.
+    // Therefore we need to add the current index as a parent key.
+    // We first check if the nested nodes are arrays or iterables.
 
-    if (isArray(node) || getIteratorFn(node)) {
-      // Nested arrays behave like a "fragment node" which is keyed.
-      // Therefore we need to add the current index as a parent key.
+    if (isArray(node)) {
       var prevKeyPath = task.keyPath;
       task.keyPath = [task.keyPath, "", childIndex];
-      renderNode(request, task, node, i);
+      renderChildrenArray(request, task, node, i);
       task.keyPath = prevKeyPath;
-    } else {
-      // We need to use the non-destructive form so that we can safely pop back
-      // up and render the sibling if something suspends.
-      renderNode(request, task, node, i);
+      continue;
     }
+
+    var iteratorFn = getIteratorFn(node);
+
+    if (iteratorFn) {
+      {
+        validateIterable(node, iteratorFn);
+      }
+
+      var iterator = iteratorFn.call(node);
+
+      if (iterator) {
+        var step = iterator.next();
+
+        if (!step.done) {
+          var _prevKeyPath = task.keyPath;
+          task.keyPath = [task.keyPath, "", childIndex];
+          var nestedChildren = [];
+
+          do {
+            nestedChildren.push(step.value);
+            step = iterator.next();
+          } while (!step.done);
+
+          renderChildrenArray(request, task, nestedChildren, i);
+          task.keyPath = _prevKeyPath;
+        }
+
+        continue;
+      }
+    } // We need to use the non-destructive form so that we can safely pop back
+    // up and render the sibling if something suspends.
+
+    renderNode(request, task, node, i);
   } // Because this context is always set right before rendering every child, we
   // only need to reset it to the previous value at the very end.
 
@@ -11186,6 +11217,7 @@ function spawnNewSuspendedTask(request, task, thenableState, x) {
     task.context,
     task.treeContext
   );
+  newTask.childIndex = task.childIndex;
 
   {
     if (task.componentStack !== null) {
@@ -11528,7 +11560,13 @@ function retryTask(request, task) {
     // component suspends again, the thenable state will be restored.
     var prevThenableState = task.thenableState;
     task.thenableState = null;
-    renderNodeDestructive(request, task, prevThenableState, task.node, 0);
+    renderNodeDestructive(
+      request,
+      task,
+      prevThenableState,
+      task.node,
+      task.childIndex
+    );
     pushSegmentFinale(
       segment.chunks,
       request.renderState,
