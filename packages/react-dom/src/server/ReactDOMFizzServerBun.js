@@ -15,7 +15,7 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
-  startRender,
+  startWork,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
@@ -121,7 +121,7 @@ function renderToReadableStream(
         signal.addEventListener('abort', listener);
       }
     }
-    startRender(request);
+    startWork(request);
   });
 }
 

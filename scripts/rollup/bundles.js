@@ -286,36 +286,6 @@ const bundles = [
     externals: ['react', 'react-dom'],
   },
 
-  /******* React DOM Fizz Static *******/
-  {
-    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
-    moduleType: RENDERER,
-    entry: 'react-dom/static.browser',
-    global: 'ReactDOMStatic',
-    minifyWithProdErrorCodes: true,
-    wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom'],
-  },
-  {
-    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
-    moduleType: RENDERER,
-    entry: 'react-dom/static.node',
-    name: 'react-dom-static.node',
-    global: 'ReactDOMStatic',
-    minifyWithProdErrorCodes: false,
-    wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'stream', 'react-dom'],
-  },
-  {
-    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
-    moduleType: RENDERER,
-    entry: 'react-dom/static.edge',
-    global: 'ReactDOMStatic',
-    minifyWithProdErrorCodes: true,
-    wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom'],
-  },
-
   /******* React DOM Fizz Server External Runtime *******/
   {
     bundleTypes: [BROWSER_SCRIPT],

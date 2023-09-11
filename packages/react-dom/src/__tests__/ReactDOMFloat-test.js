@@ -4085,6 +4085,40 @@ body {
     );
   });
 
+  // https://github.com/vercel/next.js/discussions/54799
+  it('omits preloads when an <img> is inside a <picture>', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <picture>
+              <img src="foo" />
+            </picture>
+            <picture>
+              <source type="image/webp" srcSet="webpsrc" />
+              <img src="jpg fallback" />
+            </picture>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <picture>
+            <img src="foo" />
+          </picture>
+          <picture>
+            <source type="image/webp" srcset="webpsrc" />
+            <img src="jpg fallback" />
+          </picture>
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {

@@ -72,6 +72,13 @@ let isReRender: boolean = false;
 let didScheduleRenderPhaseUpdate: boolean = false;
 // Counts the number of useId hooks in this component
 let localIdCounter: number = 0;
+// Chunks that should be pushed to the stream once the component
+// finishes rendering.
+// Counts the number of useFormState calls in this component
+let formStateCounter: number = 0;
+// The index of the useFormState hook that matches the one passed in at the
+// root during an MPA navigation, if any.
+let formStateMatchingIndex: number = -1;
 // Counts the number of use(thenable) calls in this component
 let thenableIndexCounter: number = 0;
 let thenableState: ThenableState | null = null;
@@ -208,6 +215,8 @@ export function prepareToUseHooks(
   // workInProgressHook = null;
 
   localIdCounter = 0;
+  formStateCounter = 0;
+  formStateMatchingIndex = -1;
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
 }
@@ -228,6 +237,8 @@ export function finishHooks(
     // restarting until no more updates are scheduled.
     didScheduleRenderPhaseUpdate = false;
     localIdCounter = 0;
+    formStateCounter = 0;
+    formStateMatchingIndex = -1;
     thenableIndexCounter = 0;
     numberOfReRenders += 1;
 
@@ -236,6 +247,7 @@ export function finishHooks(
 
     children = Component(props, refOrContext);
   }
+
   resetHooksState();
   return children;
 }
@@ -252,6 +264,19 @@ export function checkDidRenderIdHook(): boolean {
   // separate function to avoid using an array tuple.
   const didRenderIdHook = localIdCounter !== 0;
   return didRenderIdHook;
+}
+
+export function getFormStateCount(): number {
+  // This should be called immediately after every finishHooks call.
+  // Conceptually, it's part of the return value of finishHooks; it's only a
+  // separate function to avoid using an array tuple.
+  return formStateCounter;
+}
+export function getFormStateMatchingIndex(): number {
+  // This should be called immediately after every finishHooks call.
+  // Conceptually, it's part of the return value of finishHooks; it's only a
+  // separate function to avoid using an array tuple.
+  return formStateMatchingIndex;
 }
 
 // Reset the internal hooks state if an error occurs while rendering a component
@@ -558,6 +583,11 @@ function useFormState<S, P>(
   permalink?: string,
 ): [S, (P) => void] {
   resolveCurrentlyRenderingComponent();
+
+  // Count the number of useFormState hooks per component.
+  // TODO: We should also track which hook matches the form state passed at
+  // the root, if any. Matching is not yet implemented.
+  formStateCounter++;
 
   // Bind the initial state to the first argument of the action.
   // TODO: Use the keypath (or permalink) to check if there's matching state

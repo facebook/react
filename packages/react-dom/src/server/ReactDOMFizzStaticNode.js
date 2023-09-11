@@ -17,8 +17,8 @@ import {Writable, Readable} from 'stream';
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
-  startPrerender,
+  createPrerenderRequest,
+  startWork,
   startFlowing,
   abort,
   getPostponedState,
@@ -94,7 +94,7 @@ function prerenderToNodeStream(
       options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     );
-    const request = createRequest(
+    const request = createPrerenderRequest(
       children,
       resumableState,
       createRenderState(
@@ -123,7 +123,7 @@ function prerenderToNodeStream(
         signal.addEventListener('abort', listener);
       }
     }
-    startPrerender(request);
+    startWork(request);
   });
 }
 

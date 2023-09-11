@@ -18,7 +18,8 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
-  startRender,
+  resumeRequest,
+  startWork,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
@@ -105,7 +106,7 @@ function renderToPipeableStream(
 ): PipeableStream {
   const request = createRequestImpl(children, options);
   let hasStartedFlowing = false;
-  startRender(request);
+  startWork(request);
   return {
     pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {
@@ -140,16 +141,14 @@ function resumeRequestImpl(
   postponedState: PostponedState,
   options: void | ResumeOptions,
 ) {
-  return createRequest(
+  return resumeRequest(
     children,
-    postponedState.resumableState,
+    postponedState,
     createRenderState(
       postponedState.resumableState,
       options ? options.nonce : undefined,
       undefined, // importMap
     ),
-    postponedState.rootFormatContext,
-    postponedState.progressiveChunkSize,
     options ? options.onError : undefined,
     options ? options.onAllReady : undefined,
     options ? options.onShellReady : undefined,
@@ -166,7 +165,7 @@ function resumeToPipeableStream(
 ): PipeableStream {
   const request = resumeRequestImpl(children, postponedState, options);
   let hasStartedFlowing = false;
-  startRender(request);
+  startWork(request);
   return {
     pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {

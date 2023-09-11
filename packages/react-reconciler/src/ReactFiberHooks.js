@@ -111,7 +111,10 @@ import {
   markWorkInProgressReceivedUpdate,
   checkIfWorkInProgressReceivedUpdate,
 } from './ReactFiberBeginWork';
-import {getIsHydrating} from './ReactFiberHydrationContext';
+import {
+  getIsHydrating,
+  tryToClaimNextHydratableFormMarkerInstance,
+} from './ReactFiberHydrationContext';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {
   markStateUpdateScheduled,
@@ -2010,6 +2013,12 @@ function mountFormState<S, P>(
   initialState: S,
   permalink?: string,
 ): [S, (P) => void] {
+  if (getIsHydrating()) {
+    // TODO: If this function returns true, it means we should use the form
+    // state passed to hydrateRoot instead of initialState.
+    tryToClaimNextHydratableFormMarkerInstance(currentlyRenderingFiber);
+  }
+
   // State hook. The state is stored in a thenable which is then unwrapped by
   // the `use` algorithm during render.
   const stateHook = mountWorkInProgressHook();
@@ -2145,7 +2154,8 @@ function rerenderFormState<S, P>(
   }
 
   // This is a mount. No updates to process.
-  const state = stateHook.memoizedState;
+  const thenable: Thenable<S> = stateHook.memoizedState;
+  const state = useThenable(thenable);
 
   const actionQueueHook = updateWorkInProgressHook();
   const actionQueue = actionQueueHook.queue;

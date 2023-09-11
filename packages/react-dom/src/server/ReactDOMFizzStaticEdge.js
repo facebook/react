@@ -15,8 +15,8 @@ import type {ImportMap} from '../shared/ReactDOMTypes';
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
-  startPrerender,
+  createPrerenderRequest,
+  startWork,
   startFlowing,
   abort,
   getPostponedState,
@@ -80,7 +80,7 @@ function prerender(
       options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     );
-    const request = createRequest(
+    const request = createPrerenderRequest(
       children,
       resources,
       createRenderState(
@@ -109,7 +109,7 @@ function prerender(
         signal.addEventListener('abort', listener);
       }
     }
-    startPrerender(request);
+    startWork(request);
   });
 }
 

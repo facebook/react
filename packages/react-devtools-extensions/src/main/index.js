@@ -27,6 +27,7 @@ import injectBackendManager from './injectBackendManager';
 import syncSavedPreferences from './syncSavedPreferences';
 import registerEventsLogger from './registerEventsLogger';
 import getProfilingFlags from './getProfilingFlags';
+import debounce from './debounce';
 import './requestAnimationFramePolyfill';
 
 // Try polling for at least 5 seconds, in case if it takes too long to load react
@@ -34,13 +35,13 @@ const REACT_POLLING_TICK_COOLDOWN = 250;
 const REACT_POLLING_ATTEMPTS_THRESHOLD = 20;
 
 let reactPollingTimeoutId = null;
-function clearReactPollingTimeout() {
+export function clearReactPollingTimeout() {
   clearTimeout(reactPollingTimeoutId);
   reactPollingTimeoutId = null;
 }
 
-function executeIfReactHasLoaded(callback, attempt = 1) {
-  reactPollingTimeoutId = null;
+export function executeIfReactHasLoaded(callback, attempt = 1) {
+  clearReactPollingTimeout();
 
   if (attempt > REACT_POLLING_ATTEMPTS_THRESHOLD) {
     return;
@@ -81,21 +82,26 @@ function executeIfReactHasLoaded(callback, attempt = 1) {
   );
 }
 
+let lastSubscribedBridgeListener = null;
+
 function createBridge() {
   bridge = new Bridge({
     listen(fn) {
-      const listener = message => fn(message);
+      const bridgeListener = message => fn(message);
       // Store the reference so that we unsubscribe from the same object.
       const portOnMessage = port.onMessage;
-      portOnMessage.addListener(listener);
+      portOnMessage.addListener(bridgeListener);
+
+      lastSubscribedBridgeListener = bridgeListener;
 
       return () => {
-        portOnMessage.removeListener(listener);
+        port?.onMessage.removeListener(bridgeListener);
+        lastSubscribedBridgeListener = null;
       };
     },
 
     send(event: string, payload: any, transferable?: Array<any>) {
-      port.postMessage({event, payload}, transferable);
+      port?.postMessage({event, payload}, transferable);
     },
   });
 
@@ -469,9 +475,6 @@ function performInTabNavigationCleanup() {
   bridge = null;
   render = null;
   root = null;
-
-  port?.disconnect();
-  port = null;
 }
 
 function performFullCleanup() {
@@ -499,22 +502,36 @@ function performFullCleanup() {
 }
 
 function connectExtensionPort() {
+  if (port) {
+    throw new Error('DevTools port was already connected');
+  }
+
   const tabId = chrome.devtools.inspectedWindow.tabId;
   port = chrome.runtime.connect({
     name: String(tabId),
   });
 
+  // If DevTools port was reconnected and Bridge was already created
+  // We should subscribe bridge to this port events
+  // This could happen if service worker dies and all ports are disconnected,
+  // but later user continues the session and Chrome reconnects all ports
+  // Bridge object is still in-memory, though
+  if (lastSubscribedBridgeListener) {
+    port.onMessage.addListener(lastSubscribedBridgeListener);
+  }
+
   // This port may be disconnected by Chrome at some point, this callback
   // will be executed only if this port was disconnected from the other end
   // so, when we call `port.disconnect()` from this script,
   // this should not trigger this callback and port reconnection
-  port.onDisconnect.addListener(connectExtensionPort);
+  port.onDisconnect.addListener(() => {
+    port = null;
+    connectExtensionPort();
+  });
 }
 
 function mountReactDevTools() {
   registerEventsLogger();
-
-  connectExtensionPort();
 
   createBridgeAndStore();
 
@@ -532,7 +549,7 @@ function mountReactDevToolsWhenReactHasLoaded() {
     mountReactDevTools();
   }
 
-  executeIfReactHasLoaded(onReactReady);
+  executeIfReactHasLoaded(onReactReady, 1);
 }
 
 let bridge = null;
@@ -555,11 +572,18 @@ let port = null;
 // since global values stored on window get reset in this case.
 chrome.devtools.network.onNavigated.addListener(syncSavedPreferences);
 
-// Cleanup previous page state and remount everything
-chrome.devtools.network.onNavigated.addListener(() => {
+// In case when multiple navigation events emitted in a short period of time
+// This debounced callback primarily used to avoid mounting React DevTools multiple times, which results
+// into subscribing to the same events from Bridge and window multiple times
+// In this case, we will handle `operations` event twice or more and user will see
+// `Cannot add node "1" because a node with that id is already in the Store.`
+const debouncedOnNavigatedListener = debounce(() => {
   performInTabNavigationCleanup();
   mountReactDevToolsWhenReactHasLoaded();
-});
+}, 500);
+
+// Cleanup previous page state and remount everything
+chrome.devtools.network.onNavigated.addListener(debouncedOnNavigatedListener);
 
 // Should be emitted when browser DevTools are closed
 if (IS_FIREFOX) {
@@ -568,6 +592,8 @@ if (IS_FIREFOX) {
 } else {
   window.addEventListener('beforeunload', performFullCleanup);
 }
+
+connectExtensionPort();
 
 syncSavedPreferences();
 mountReactDevToolsWhenReactHasLoaded();

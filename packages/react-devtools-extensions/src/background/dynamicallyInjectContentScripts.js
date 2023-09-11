@@ -2,26 +2,46 @@
 
 import {IS_FIREFOX} from '../utils';
 
-async function dynamicallyInjectContentScripts() {
-  const contentScriptsToInject = [
-    {
-      id: '@react-devtools/hook',
-      js: ['build/installHook.js'],
-      matches: ['<all_urls>'],
-      persistAcrossSessions: true,
-      runAt: 'document_start',
-      world: chrome.scripting.ExecutionWorld.MAIN,
-    },
-    {
-      id: '@react-devtools/renderer',
-      js: ['build/renderer.js'],
-      matches: ['<all_urls>'],
-      persistAcrossSessions: true,
-      runAt: 'document_start',
-      world: chrome.scripting.ExecutionWorld.MAIN,
-    },
-  ];
+// Firefox doesn't support ExecutionWorld.MAIN yet
+// equivalent logic for Firefox is in prepareInjection.js
+const contentScriptsToInject = IS_FIREFOX
+  ? [
+      {
+        id: '@react-devtools/proxy',
+        js: ['build/proxy.js'],
+        matches: ['<all_urls>'],
+        persistAcrossSessions: true,
+        runAt: 'document_idle',
+      },
+    ]
+  : [
+      {
+        id: '@react-devtools/proxy',
+        js: ['build/proxy.js'],
+        matches: ['<all_urls>'],
+        persistAcrossSessions: true,
+        runAt: 'document_end',
+        world: chrome.scripting.ExecutionWorld.ISOLATED,
+      },
+      {
+        id: '@react-devtools/hook',
+        js: ['build/installHook.js'],
+        matches: ['<all_urls>'],
+        persistAcrossSessions: true,
+        runAt: 'document_start',
+        world: chrome.scripting.ExecutionWorld.MAIN,
+      },
+      {
+        id: '@react-devtools/renderer',
+        js: ['build/renderer.js'],
+        matches: ['<all_urls>'],
+        persistAcrossSessions: true,
+        runAt: 'document_start',
+        world: chrome.scripting.ExecutionWorld.MAIN,
+      },
+    ];
 
+async function dynamicallyInjectContentScripts() {
   try {
     const alreadyRegisteredContentScripts =
       await chrome.scripting.getRegisteredContentScripts();
@@ -48,6 +68,4 @@ async function dynamicallyInjectContentScripts() {
   }
 }
 
-if (!IS_FIREFOX) {
-  dynamicallyInjectContentScripts();
-}
+dynamicallyInjectContentScripts();

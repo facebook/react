@@ -16,7 +16,8 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
-  startRender,
+  resumeRequest,
+  startWork,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
@@ -129,7 +130,7 @@ function renderToReadableStream(
         signal.addEventListener('abort', listener);
       }
     }
-    startRender(request);
+    startWork(request);
   });
 }
 
@@ -171,16 +172,14 @@ function resume(
       allReady.catch(() => {});
       reject(error);
     }
-    const request = createRequest(
+    const request = resumeRequest(
       children,
-      postponedState.resumableState,
+      postponedState,
       createRenderState(
         postponedState.resumableState,
         options ? options.nonce : undefined,
         undefined, // importMap
       ),
-      postponedState.rootFormatContext,
-      postponedState.progressiveChunkSize,
       options ? options.onError : undefined,
       onAllReady,
       onShellReady,
@@ -200,7 +199,7 @@ function resume(
         signal.addEventListener('abort', listener);
       }
     }
-    startRender(request);
+    startWork(request);
   });
 }
 

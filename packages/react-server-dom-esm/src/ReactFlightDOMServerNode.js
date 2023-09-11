@@ -20,7 +20,7 @@ import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
 
 import {
   createRequest,
-  startRender,
+  startWork,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
@@ -73,7 +73,7 @@ function renderToPipeableStream(
     options ? options.onPostpone : undefined,
   );
   let hasStartedFlowing = false;
-  startRender(request);
+  startWork(request);
   return {
     pipe<T: Writable>(destination: T): T {
       if (hasStartedFlowing) {
