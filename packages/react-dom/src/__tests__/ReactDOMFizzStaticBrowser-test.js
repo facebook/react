@@ -461,7 +461,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
       if (prerendering) {
         React.unstable_postpone();
       }
-      return 'Hello';
+      return ['Hello', 'World'];
     }
 
     function App() {

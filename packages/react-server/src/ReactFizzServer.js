@@ -166,7 +166,8 @@ type KeyNode = [
 
 const REPLAY_NODE = 0;
 const REPLAY_SUSPENSE_BOUNDARY = 1;
-const RESUME_SEGMENT = 2;
+const RESUME_ELEMENT = 2;
+const RESUME_SLOT = 3;
 
 type ResumableParentNode =
   | [
@@ -185,7 +186,13 @@ type ResumableParentNode =
 type ResumableNode =
   | ResumableParentNode
   | [
-      2, // RESUME_SEGMENT
+      2, // RESUME_ELEMENT
+      string | null /* name */,
+      string | number /* key */,
+      number /* segment id */,
+    ]
+  | [
+      3, // RESUME_SLOT
       number /* index */,
       number /* segment id */,
     ];
@@ -784,7 +791,7 @@ function renderSuspenseBoundary(
   }
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
-    renderNode(request, task, content, 0);
+    renderNode(request, task, content, -1);
     pushSegmentFinale(
       contentRootSegment.chunks,
       request.renderState,
@@ -873,7 +880,7 @@ function renderBackupSuspenseBoundary(
   const segment = task.blockedSegment;
 
   pushStartCompletedSuspenseBoundary(segment.chunks);
-  renderNode(request, task, content, 0);
+  renderNode(request, task, content, -1);
   pushEndCompletedSuspenseBoundary(segment.chunks);
 
   popComponentStackInDEV(task);
@@ -903,7 +910,7 @@ function renderHostElement(
 
   // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
-  renderNode(request, task, children, 0);
+  renderNode(request, task, children, -1);
 
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
@@ -970,13 +977,13 @@ function finishClassComponent(
         childContextTypes,
       );
       task.legacyContext = mergedContext;
-      renderNodeDestructive(request, task, null, nextChildren, 0);
+      renderNodeDestructive(request, task, null, nextChildren, -1);
       task.legacyContext = previousContext;
       return;
     }
   }
 
-  renderNodeDestructive(request, task, null, nextChildren, 0);
+  renderNodeDestructive(request, task, null, nextChildren, -1);
 }
 
 function renderClassComponent(
@@ -1170,7 +1177,7 @@ function finishFunctionComponent(
     // Modify the id context. Because we'll need to reset this if something
     // suspends or errors, we'll use the non-destructive render path.
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
-    renderNode(request, task, children, 0);
+    renderNode(request, task, children, -1);
     // Like the other contexts, this does not need to be in a finally block
     // because renderNode takes care of unwinding the stack.
     task.treeContext = prevTreeContext;
@@ -1178,12 +1185,12 @@ function finishFunctionComponent(
     // If there were formState hooks, we must use the non-destructive path
     // because this component is not a pure indirection; we emitted markers
     // to the stream.
-    renderNode(request, task, children, 0);
+    renderNode(request, task, children, -1);
   } else {
     // We're now successfully past this task, and we haven't modified the
     // context stack. We don't have to pop back to the previous task every
     // again, so we can use the destructive recursive form.
-    renderNodeDestructive(request, task, null, children, 0);
+    renderNodeDestructive(request, task, null, children, -1);
   }
 }
 
@@ -1353,7 +1360,7 @@ function renderContextConsumer(
   const newValue = readContext(context);
   const newChildren = render(newValue);
 
-  renderNodeDestructive(request, task, null, newChildren, 0);
+  renderNodeDestructive(request, task, null, newChildren, -1);
 }
 
 function renderContextProvider(
@@ -1370,7 +1377,7 @@ function renderContextProvider(
     prevSnapshot = task.context;
   }
   task.context = pushProvider(context, value);
-  renderNodeDestructive(request, task, null, children, 0);
+  renderNodeDestructive(request, task, null, children, -1);
   task.context = popProvider(context);
   if (__DEV__) {
     if (prevSnapshot !== task.context) {
@@ -1413,7 +1420,7 @@ function renderOffscreen(request: Request, task: Task, props: Object): void {
   } else {
     // A visible Offscreen boundary is treated exactly like a fragment: a
     // pure indirection.
-    renderNodeDestructive(request, task, null, props.children, 0);
+    renderNodeDestructive(request, task, null, props.children, -1);
   }
 }
 
@@ -1460,7 +1467,7 @@ function renderElement(
     case REACT_STRICT_MODE_TYPE:
     case REACT_PROFILER_TYPE:
     case REACT_FRAGMENT_TYPE: {
-      renderNodeDestructive(request, task, null, props.children, 0);
+      renderNodeDestructive(request, task, null, props.children, -1);
       return;
     }
     case REACT_OFFSCREEN_TYPE: {
@@ -1470,13 +1477,13 @@ function renderElement(
     case REACT_SUSPENSE_LIST_TYPE: {
       pushBuiltInComponentStackInDEV(task, 'SuspenseList');
       // TODO: SuspenseList should control the boundaries.
-      renderNodeDestructive(request, task, null, props.children, 0);
+      renderNodeDestructive(request, task, null, props.children, -1);
       popComponentStackInDEV(task);
       return;
     }
     case REACT_SCOPE_TYPE: {
       if (enableScopeAPI) {
-        renderNodeDestructive(request, task, null, props.children, 0);
+        renderNodeDestructive(request, task, null, props.children, -1);
         return;
       }
       throw new Error('ReactDOMServer does not yet support scope components.');
@@ -1645,7 +1652,11 @@ function renderNodeDestructiveImpl(
         const ref = element.ref;
         const name = getComponentNameFromType(type);
         const prevKeyPath = task.keyPath;
-        task.keyPath = [task.keyPath, name, key == null ? childIndex : key];
+        task.keyPath = [
+          task.keyPath,
+          name,
+          key == null ? (childIndex === -1 ? 0 : childIndex) : key,
+        ];
         renderElement(request, task, prevThenableState, type, props, ref);
         task.keyPath = prevKeyPath;
         return;
@@ -1805,47 +1816,15 @@ function renderChildrenArray(
   children: Array<any>,
   childIndex: number,
 ) {
+  const prevKeyPath = task.keyPath;
+  if (childIndex !== -1) {
+    task.keyPath = [task.keyPath, '', childIndex];
+  }
   const prevTreeContext = task.treeContext;
   const totalChildren = children.length;
   for (let i = 0; i < totalChildren; i++) {
     const node = children[i];
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
-
-    // Nested arrays behave like a "fragment node" which is keyed.
-    // Therefore we need to add the current index as a parent key.
-    // We first check if the nested nodes are arrays or iterables.
-
-    if (isArray(node)) {
-      const prevKeyPath = task.keyPath;
-      task.keyPath = [task.keyPath, '', childIndex];
-      renderChildrenArray(request, task, node, i);
-      task.keyPath = prevKeyPath;
-      continue;
-    }
-
-    const iteratorFn = getIteratorFn(node);
-    if (iteratorFn) {
-      if (__DEV__) {
-        validateIterable(node, iteratorFn);
-      }
-      const iterator = iteratorFn.call(node);
-      if (iterator) {
-        let step = iterator.next();
-        if (!step.done) {
-          const prevKeyPath = task.keyPath;
-          task.keyPath = [task.keyPath, '', childIndex];
-          const nestedChildren = [];
-          do {
-            nestedChildren.push(step.value);
-            step = iterator.next();
-          } while (!step.done);
-          renderChildrenArray(request, task, nestedChildren, i);
-          task.keyPath = prevKeyPath;
-        }
-        continue;
-      }
-    }
-
     // We need to use the non-destructive form so that we can safely pop back
     // up and render the sibling if something suspends.
     renderNode(request, task, node, i);
@@ -1853,13 +1832,13 @@ function renderChildrenArray(
   // Because this context is always set right before rendering every child, we
   // only need to reset it to the previous value at the very end.
   task.treeContext = prevTreeContext;
+  task.keyPath = prevKeyPath;
 }
 
 function trackPostpone(
   request: Request,
   trackedPostpones: PostponedHoles,
   task: Task,
-  childIndex: number,
   segment: Segment,
 ): void {
   segment.status = POSTPONED;
@@ -1901,8 +1880,20 @@ function trackPostpone(
     );
   }
 
-  const segmentNode: ResumableNode = [RESUME_SEGMENT, childIndex, segment.id];
-  addToResumableParent(segmentNode, keyPath, trackedPostpones);
+  if (task.childIndex === -1) {
+    // Resume at the position before the first array
+    const resumableElement = [
+      RESUME_ELEMENT,
+      keyPath[1],
+      keyPath[2],
+      segment.id,
+    ];
+    addToResumableParent(resumableElement, keyPath[0], trackedPostpones);
+  } else {
+    // Resume at the slot within the array
+    const resumableNode = [RESUME_SLOT, task.childIndex, segment.id];
+    addToResumableParent(resumableNode, keyPath, trackedPostpones);
+  }
 }
 
 function injectPostponedHole(
@@ -2060,13 +2051,7 @@ function renderNode(
           task,
           postponeInstance.message,
         );
-        trackPostpone(
-          request,
-          trackedPostpones,
-          task,
-          childIndex,
-          postponedSegment,
-        );
+        trackPostpone(request, trackedPostpones, task, postponedSegment);
 
         // Restore the context. We assume that this will be restored by the inner
         // functions in case nothing throws so we don't use "finally" here.
@@ -2414,13 +2399,7 @@ function retryTask(request: Request, task: Task): void {
         task.abortSet.delete(task);
         const postponeInstance: Postpone = (x: any);
         logPostpone(request, postponeInstance.message);
-        trackPostpone(
-          request,
-          trackedPostpones,
-          task,
-          task.childIndex,
-          segment,
-        );
+        trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, task.blockedBoundary, segment);
         return;
       }
