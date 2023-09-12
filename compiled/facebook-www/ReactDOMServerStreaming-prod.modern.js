@@ -2187,13 +2187,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-function getIteratorFn(maybeIterable) {
-  if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
-  maybeIterable =
-    (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
-    maybeIterable["@@iterator"];
-  return "function" === typeof maybeIterable ? maybeIterable : null;
-}
 function getComponentNameFromType(type) {
   if (null == type) return null;
   if ("function" === typeof type) return type.displayName || type.name || null;
@@ -2825,11 +2818,11 @@ function finishFunctionComponent(
   hasId
     ? ((hasId = task.treeContext),
       (task.treeContext = pushTreeContext(hasId, 1, 0)),
-      renderNode(request, task, children, 0),
+      renderNode(request, task, children, -1),
       (task.treeContext = hasId))
     : didEmitFormStateMarkers
-    ? renderNode(request, task, children, 0)
-    : renderNodeDestructiveImpl(request, task, null, children, 0);
+    ? renderNode(request, task, children, -1)
+    : renderNodeDestructiveImpl(request, task, null, children, -1);
 }
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
@@ -2939,7 +2932,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           }
         else prevThenableState.queue = null;
       props = JSCompiler_inline_result.render();
-      renderNodeDestructiveImpl(request, task, null, props, 0);
+      renderNodeDestructiveImpl(request, task, null, props, -1);
     } else
       (currentlyRenderingComponent = {}),
         (currentlyRenderingTask = task),
@@ -2971,7 +2964,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
     JSCompiler_inline_result.lastPushedText = !1;
     prevThenableState = task.formatContext;
     task.formatContext = getChildFormatContext(prevThenableState, type, props);
-    renderNode(request, task, ref, 0);
+    renderNode(request, task, ref, -1);
     task.formatContext = prevThenableState;
     a: {
       task = JSCompiler_inline_result.chunks;
@@ -3018,17 +3011,17 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
       case REACT_STRICT_MODE_TYPE:
       case REACT_PROFILER_TYPE:
       case REACT_FRAGMENT_TYPE:
-        renderNodeDestructiveImpl(request, task, null, props.children, 0);
+        renderNodeDestructiveImpl(request, task, null, props.children, -1);
         return;
       case REACT_OFFSCREEN_TYPE:
         "hidden" !== props.mode &&
-          renderNodeDestructiveImpl(request, task, null, props.children, 0);
+          renderNodeDestructiveImpl(request, task, null, props.children, -1);
         return;
       case REACT_SUSPENSE_LIST_TYPE:
-        renderNodeDestructiveImpl(request, task, null, props.children, 0);
+        renderNodeDestructiveImpl(request, task, null, props.children, -1);
         return;
       case REACT_SCOPE_TYPE:
-        renderNodeDestructiveImpl(request, task, null, props.children, 0);
+        renderNodeDestructiveImpl(request, task, null, props.children, -1);
         return;
       case REACT_SUSPENSE_TYPE:
         a: {
@@ -3075,7 +3068,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
           request.renderState.boundaryResources = partial.resources;
           try {
             if (
-              (renderNode(request, task, props, 0),
+              (renderNode(request, task, props, -1),
               contentRootSegment.lastPushedText &&
                 contentRootSegment.textEmbedded &&
                 contentRootSegment.chunks.push("\x3c!-- --\x3e"),
@@ -3161,7 +3154,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
             task,
             null,
             JSCompiler_inline_result,
-            0
+            -1
           );
           request = currentActiveSnapshot;
           if (null === request)
@@ -3179,7 +3172,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
         case REACT_CONTEXT_TYPE:
           props = props.children;
           props = props(type._currentValue);
-          renderNodeDestructiveImpl(request, task, null, props, 0);
+          renderNodeDestructiveImpl(request, task, null, props, -1);
           return;
         case REACT_LAZY_TYPE:
           JSCompiler_inline_result = type._init;
@@ -3212,7 +3205,11 @@ function renderNodeDestructiveImpl(
         node = node.ref;
         var name = getComponentNameFromType(type),
           prevKeyPath = task.keyPath;
-        task.keyPath = [task.keyPath, name, null == key ? childIndex : key];
+        task.keyPath = [
+          task.keyPath,
+          name,
+          null == key ? (-1 === childIndex ? 0 : childIndex) : key
+        ];
         renderElement(request, task, prevThenableState, type, props, node);
         task.keyPath = prevKeyPath;
         return;
@@ -3230,17 +3227,26 @@ function renderNodeDestructiveImpl(
       renderChildrenArray(request, task, node, childIndex);
       return;
     }
-    if ((prevThenableState = getIteratorFn(node)))
-      if ((prevThenableState = prevThenableState.call(node))) {
-        node = prevThenableState.next();
-        if (!node.done) {
-          type = [];
-          do type.push(node.value), (node = prevThenableState.next());
-          while (!node.done);
-          renderChildrenArray(request, task, type, childIndex);
-        }
-        return;
+    null === node || "object" !== typeof node
+      ? (prevThenableState = null)
+      : ((prevThenableState =
+          (MAYBE_ITERATOR_SYMBOL && node[MAYBE_ITERATOR_SYMBOL]) ||
+          node["@@iterator"]),
+        (prevThenableState =
+          "function" === typeof prevThenableState ? prevThenableState : null));
+    if (
+      prevThenableState &&
+      (prevThenableState = prevThenableState.call(node))
+    ) {
+      node = prevThenableState.next();
+      if (!node.done) {
+        type = [];
+        do type.push(node.value), (node = prevThenableState.next());
+        while (!node.done);
+        renderChildrenArray(request, task, type, childIndex);
       }
+      return;
+    }
     if ("function" === typeof node.then)
       return renderNodeDestructiveImpl(
         request,
@@ -3287,39 +3293,16 @@ function renderNodeDestructiveImpl(
       )));
 }
 function renderChildrenArray(request, task, children, childIndex) {
-  for (
-    var prevTreeContext = task.treeContext,
-      totalChildren = children.length,
-      i = 0;
-    i < totalChildren;
-    i++
-  ) {
+  var prevKeyPath = task.keyPath;
+  -1 !== childIndex && (task.keyPath = [task.keyPath, "", childIndex]);
+  childIndex = task.treeContext;
+  for (var totalChildren = children.length, i = 0; i < totalChildren; i++) {
     var node = children[i];
-    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
-    if (isArrayImpl(node)) {
-      var prevKeyPath = task.keyPath;
-      task.keyPath = [task.keyPath, "", childIndex];
-      renderChildrenArray(request, task, node, i);
-      task.keyPath = prevKeyPath;
-    } else {
-      if ((prevKeyPath = getIteratorFn(node)))
-        if ((prevKeyPath = prevKeyPath.call(node))) {
-          node = prevKeyPath.next();
-          if (!node.done) {
-            var prevKeyPath$11 = task.keyPath;
-            task.keyPath = [task.keyPath, "", childIndex];
-            var nestedChildren = [];
-            do nestedChildren.push(node.value), (node = prevKeyPath.next());
-            while (!node.done);
-            renderChildrenArray(request, task, nestedChildren, i);
-            task.keyPath = prevKeyPath$11;
-          }
-          continue;
-        }
-      renderNode(request, task, node, i);
-    }
+    task.treeContext = pushTreeContext(childIndex, totalChildren, i);
+    renderNode(request, task, node, i);
   }
-  task.treeContext = prevTreeContext;
+  task.treeContext = childIndex;
+  task.keyPath = prevKeyPath;
 }
 function renderNode(request, task, node, childIndex) {
   var segment = task.blockedSegment,
@@ -3946,13 +3929,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$14 = partialBoundaries[i];
+      var boundary$13 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.renderState.boundaryResources =
-          boundary$14.resources;
-        var completedSegments = boundary$14.completedSegments;
+          boundary$13.resources;
+        var completedSegments = boundary$13.completedSegments;
         for (
           resumableState$jscomp$1 = 0;
           resumableState$jscomp$1 < completedSegments.length;
@@ -3962,7 +3945,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$14,
+              boundary$13,
               completedSegments[resumableState$jscomp$1]
             )
           ) {
@@ -3974,7 +3957,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$1);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$14.resources,
+          boundary$13.resources,
           clientRenderedBoundaries.renderState
         );
       }
@@ -4034,8 +4017,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$16) {
-    logRecoverableError(request, error$16), fatalError(request, error$16);
+  } catch (error$15) {
+    logRecoverableError(request, error$15), fatalError(request, error$15);
   }
 }
 exports.abortStream = function (stream) {

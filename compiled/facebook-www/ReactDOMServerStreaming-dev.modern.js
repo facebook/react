@@ -9652,7 +9652,7 @@ function renderSuspenseBoundary(request, task, props) {
 
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
-    renderNode(request, task, content, 0);
+    renderNode(request, task, content, -1);
     pushSegmentFinale(
       contentRootSegment.chunks,
       request.renderState,
@@ -9739,7 +9739,7 @@ function renderHostElement(request, task, type, props) {
   task.formatContext = getChildFormatContext(prevContext, type, props); // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
 
-  renderNode(request, task, children, 0); // We expect that errors will fatal the whole task and that we don't need
+  renderNode(request, task, children, -1); // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
 
   task.formatContext = prevContext;
@@ -9789,7 +9789,7 @@ function finishClassComponent(request, task, instance, Component, props) {
     }
   }
 
-  renderNodeDestructive(request, task, null, nextChildren, 0);
+  renderNodeDestructive(request, task, null, nextChildren, -1);
 }
 
 function renderClassComponent(request, task, Component, props) {
@@ -9953,7 +9953,7 @@ function finishFunctionComponent(
     // suspends or errors, we'll use the non-destructive render path.
 
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, index);
-    renderNode(request, task, children, 0); // Like the other contexts, this does not need to be in a finally block
+    renderNode(request, task, children, -1); // Like the other contexts, this does not need to be in a finally block
     // because renderNode takes care of unwinding the stack.
 
     task.treeContext = prevTreeContext;
@@ -9961,12 +9961,12 @@ function finishFunctionComponent(
     // If there were formState hooks, we must use the non-destructive path
     // because this component is not a pure indirection; we emitted markers
     // to the stream.
-    renderNode(request, task, children, 0);
+    renderNode(request, task, children, -1);
   } else {
     // We're now successfully past this task, and we haven't modified the
     // context stack. We don't have to pop back to the previous task every
     // again, so we can use the destructive recursive form.
-    renderNodeDestructive(request, task, null, children, 0);
+    renderNodeDestructive(request, task, null, children, -1);
   }
 }
 
@@ -10124,7 +10124,7 @@ function renderContextConsumer(request, task, context, props) {
 
   var newValue = readContext$1(context);
   var newChildren = render(newValue);
-  renderNodeDestructive(request, task, null, newChildren, 0);
+  renderNodeDestructive(request, task, null, newChildren, -1);
 }
 
 function renderContextProvider(request, task, type, props) {
@@ -10138,7 +10138,7 @@ function renderContextProvider(request, task, type, props) {
   }
 
   task.context = pushProvider(context, value);
-  renderNodeDestructive(request, task, null, children, 0);
+  renderNodeDestructive(request, task, null, children, -1);
   task.context = popProvider(context);
 
   {
@@ -10181,7 +10181,7 @@ function renderOffscreen(request, task, props) {
   else {
     // A visible Offscreen boundary is treated exactly like a fragment: a
     // pure indirection.
-    renderNodeDestructive(request, task, null, props.children, 0);
+    renderNodeDestructive(request, task, null, props.children, -1);
   }
 }
 
@@ -10222,7 +10222,7 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
     case REACT_STRICT_MODE_TYPE:
     case REACT_PROFILER_TYPE:
     case REACT_FRAGMENT_TYPE: {
-      renderNodeDestructive(request, task, null, props.children, 0);
+      renderNodeDestructive(request, task, null, props.children, -1);
       return;
     }
 
@@ -10234,14 +10234,14 @@ function renderElement(request, task, prevThenableState, type, props, ref) {
     case REACT_SUSPENSE_LIST_TYPE: {
       pushBuiltInComponentStackInDEV(task, "SuspenseList"); // TODO: SuspenseList should control the boundaries.
 
-      renderNodeDestructive(request, task, null, props.children, 0);
+      renderNodeDestructive(request, task, null, props.children, -1);
       popComponentStackInDEV(task);
       return;
     }
 
     case REACT_SCOPE_TYPE: {
       {
-        renderNodeDestructive(request, task, null, props.children, 0);
+        renderNodeDestructive(request, task, null, props.children, -1);
         return;
       }
     }
@@ -10399,7 +10399,11 @@ function renderNodeDestructiveImpl(
         var ref = element.ref;
         var name = getComponentNameFromType(type);
         var prevKeyPath = task.keyPath;
-        task.keyPath = [task.keyPath, name, key == null ? childIndex : key];
+        task.keyPath = [
+          task.keyPath,
+          name,
+          key == null ? (childIndex === -1 ? 0 : childIndex) : key
+        ];
         renderElement(request, task, prevThenableState, type, props, ref);
         task.keyPath = prevKeyPath;
         return;
@@ -10561,52 +10565,18 @@ function renderNodeDestructiveImpl(
 }
 
 function renderChildrenArray(request, task, children, childIndex) {
+  var prevKeyPath = task.keyPath;
+
+  if (childIndex !== -1) {
+    task.keyPath = [task.keyPath, "", childIndex];
+  }
+
   var prevTreeContext = task.treeContext;
   var totalChildren = children.length;
 
   for (var i = 0; i < totalChildren; i++) {
     var node = children[i];
-    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i); // Nested arrays behave like a "fragment node" which is keyed.
-    // Therefore we need to add the current index as a parent key.
-    // We first check if the nested nodes are arrays or iterables.
-
-    if (isArray(node)) {
-      var prevKeyPath = task.keyPath;
-      task.keyPath = [task.keyPath, "", childIndex];
-      renderChildrenArray(request, task, node, i);
-      task.keyPath = prevKeyPath;
-      continue;
-    }
-
-    var iteratorFn = getIteratorFn(node);
-
-    if (iteratorFn) {
-      {
-        validateIterable(node, iteratorFn);
-      }
-
-      var iterator = iteratorFn.call(node);
-
-      if (iterator) {
-        var step = iterator.next();
-
-        if (!step.done) {
-          var _prevKeyPath = task.keyPath;
-          task.keyPath = [task.keyPath, "", childIndex];
-          var nestedChildren = [];
-
-          do {
-            nestedChildren.push(step.value);
-            step = iterator.next();
-          } while (!step.done);
-
-          renderChildrenArray(request, task, nestedChildren, i);
-          task.keyPath = _prevKeyPath;
-        }
-
-        continue;
-      }
-    } // We need to use the non-destructive form so that we can safely pop back
+    task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i); // We need to use the non-destructive form so that we can safely pop back
     // up and render the sibling if something suspends.
 
     renderNode(request, task, node, i);
@@ -10614,6 +10584,7 @@ function renderChildrenArray(request, task, children, childIndex) {
   // only need to reset it to the previous value at the very end.
 
   task.treeContext = prevTreeContext;
+  task.keyPath = prevKeyPath;
 }
 
 function spawnNewSuspendedTask(request, task, thenableState, x) {
