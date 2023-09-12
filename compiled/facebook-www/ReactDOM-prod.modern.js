@@ -12902,19 +12902,19 @@ function getTargetInstForChangeEvent(domEventName, targetInst) {
 }
 var isInputEventSupported = !1;
 if (canUseDOM) {
-  var JSCompiler_inline_result$jscomp$365;
+  var JSCompiler_inline_result$jscomp$361;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1533 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1533) {
-      var element$jscomp$inline_1534 = document.createElement("div");
-      element$jscomp$inline_1534.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1533 =
-        "function" === typeof element$jscomp$inline_1534.oninput;
+    var isSupported$jscomp$inline_1529 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1529) {
+      var element$jscomp$inline_1530 = document.createElement("div");
+      element$jscomp$inline_1530.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1529 =
+        "function" === typeof element$jscomp$inline_1530.oninput;
     }
-    JSCompiler_inline_result$jscomp$365 = isSupported$jscomp$inline_1533;
-  } else JSCompiler_inline_result$jscomp$365 = !1;
+    JSCompiler_inline_result$jscomp$361 = isSupported$jscomp$inline_1529;
+  } else JSCompiler_inline_result$jscomp$361 = !1;
   isInputEventSupported =
-    JSCompiler_inline_result$jscomp$365 &&
+    JSCompiler_inline_result$jscomp$361 &&
     (!document.documentMode || 9 < document.documentMode);
 }
 function stopWatchingForValueChange() {
@@ -13223,20 +13223,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1574 = 0;
-  i$jscomp$inline_1574 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1574++
+  var i$jscomp$inline_1570 = 0;
+  i$jscomp$inline_1570 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1570++
 ) {
-  var eventName$jscomp$inline_1575 =
-      simpleEventPluginEvents[i$jscomp$inline_1574],
-    domEventName$jscomp$inline_1576 =
-      eventName$jscomp$inline_1575.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1577 =
-      eventName$jscomp$inline_1575[0].toUpperCase() +
-      eventName$jscomp$inline_1575.slice(1);
+  var eventName$jscomp$inline_1571 =
+      simpleEventPluginEvents[i$jscomp$inline_1570],
+    domEventName$jscomp$inline_1572 =
+      eventName$jscomp$inline_1571.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1573 =
+      eventName$jscomp$inline_1571[0].toUpperCase() +
+      eventName$jscomp$inline_1571.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1576,
-    "on" + capitalizedEvent$jscomp$inline_1577
+    domEventName$jscomp$inline_1572,
+    "on" + capitalizedEvent$jscomp$inline_1573
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -15397,10 +15397,11 @@ var ReactDOMClientDispatcher = {
   preconnect: preconnect$1,
   preload: preload$1,
   preloadModule: preloadModule$1,
-  preinit: preinit$1,
-  preinitModule: preinitModule$1
+  preinitStyle: preinitStyle,
+  preinitScript: preinitScript,
+  preinitModuleScript: preinitModuleScript
 };
-function preconnectAs(rel, crossOrigin, href) {
+function preconnectAs(rel, href, crossOrigin) {
   var ownerDocument = document;
   if ("string" === typeof href && href) {
     var limitedEscapedHref =
@@ -15413,92 +15414,72 @@ function preconnectAs(rel, crossOrigin, href) {
       (preconnectsSet.add(limitedEscapedHref),
       (rel = { rel: rel, crossOrigin: crossOrigin, href: href }),
       null === ownerDocument.querySelector(limitedEscapedHref) &&
-        ((crossOrigin = ownerDocument.createElement("link")),
-        setInitialProperties(crossOrigin, "link", rel),
-        markNodeAsHoistable(crossOrigin),
-        ownerDocument.head.appendChild(crossOrigin)));
+        ((href = ownerDocument.createElement("link")),
+        setInitialProperties(href, "link", rel),
+        markNodeAsHoistable(href),
+        ownerDocument.head.appendChild(href)));
   }
 }
 function prefetchDNS$1(href) {
-  preconnectAs("dns-prefetch", null, href);
+  preconnectAs("dns-prefetch", href, null);
 }
-function preconnect$1(href, options) {
-  preconnectAs(
-    "preconnect",
-    null == options || "string" !== typeof options.crossOrigin
-      ? null
-      : "use-credentials" === options.crossOrigin
-      ? "use-credentials"
-      : "",
-    href
-  );
+function preconnect$1(href, crossOrigin) {
+  preconnectAs("preconnect", href, crossOrigin);
 }
-function preload$1(href, options) {
+function preload$1(href, as, options) {
   var ownerDocument = document;
-  if (
-    "string" === typeof href &&
-    href &&
-    "object" === typeof options &&
-    null !== options &&
-    "string" === typeof options.as &&
-    options.as &&
-    ownerDocument
-  ) {
-    var as = options.as,
-      preloadSelector =
-        'link[rel="preload"][as="' +
-        escapeSelectorAttributeValueInsideDoubleQuotes(as) +
-        '"]';
-    if ("image" === as) {
-      var imageSrcSet = options.imageSrcSet,
-        imageSizes = options.imageSizes;
-      "string" === typeof imageSrcSet && "" !== imageSrcSet
+  if (href && as && ownerDocument) {
+    var preloadSelector =
+      'link[rel="preload"][as="' +
+      escapeSelectorAttributeValueInsideDoubleQuotes(as) +
+      '"]';
+    "image" === as
+      ? options && options.imageSrcSet
         ? ((preloadSelector +=
             '[imagesrcset="' +
-            escapeSelectorAttributeValueInsideDoubleQuotes(imageSrcSet) +
+            escapeSelectorAttributeValueInsideDoubleQuotes(
+              options.imageSrcSet
+            ) +
             '"]'),
-          "string" === typeof imageSizes &&
+          "string" === typeof options.imageSizes &&
             (preloadSelector +=
               '[imagesizes="' +
-              escapeSelectorAttributeValueInsideDoubleQuotes(imageSizes) +
+              escapeSelectorAttributeValueInsideDoubleQuotes(
+                options.imageSizes
+              ) +
               '"]'))
         : (preloadSelector +=
             '[href="' +
             escapeSelectorAttributeValueInsideDoubleQuotes(href) +
-            '"]');
-    } else
-      preloadSelector +=
-        '[href="' + escapeSelectorAttributeValueInsideDoubleQuotes(href) + '"]';
-    imageSrcSet = preloadSelector;
+            '"]')
+      : (preloadSelector +=
+          '[href="' +
+          escapeSelectorAttributeValueInsideDoubleQuotes(href) +
+          '"]');
+    var key = preloadSelector;
     switch (as) {
       case "style":
-        imageSrcSet = getStyleKey(href);
+        key = getStyleKey(href);
         break;
       case "script":
-        imageSrcSet = getScriptKey(href);
+        key = getScriptKey(href);
     }
-    preloadPropsMap.has(imageSrcSet) ||
-      ((href = {
-        rel: "preload",
-        as: as,
-        href: "image" === as && options.imageSrcSet ? void 0 : href,
-        crossOrigin: "font" === as ? "" : options.crossOrigin,
-        integrity: options.integrity,
-        type: options.type,
-        nonce: options.nonce,
-        fetchPriority: options.fetchPriority,
-        imageSrcSet: options.imageSrcSet,
-        imageSizes: options.imageSizes,
-        referrerPolicy: options.referrerPolicy
-      }),
-      preloadPropsMap.set(imageSrcSet, href),
+    preloadPropsMap.has(key) ||
+      ((href = assign(
+        {
+          rel: "preload",
+          href:
+            "image" === as && options && options.imageSrcSet ? void 0 : href,
+          as: as
+        },
+        options
+      )),
+      preloadPropsMap.set(key, href),
       null !== ownerDocument.querySelector(preloadSelector) ||
         ("style" === as &&
-          ownerDocument.querySelector(
-            getStylesheetSelectorFromKey(imageSrcSet)
-          )) ||
+          ownerDocument.querySelector(getStylesheetSelectorFromKey(key))) ||
         ("script" === as &&
-          ownerDocument.querySelector(getScriptSelectorFromKey(imageSrcSet))) ||
+          ownerDocument.querySelector(getScriptSelectorFromKey(key))) ||
         ((as = ownerDocument.createElement("link")),
         setInitialProperties(as, "link", href),
         markNodeAsHoistable(as),
@@ -15507,7 +15488,7 @@ function preload$1(href, options) {
 }
 function preloadModule$1(href, options) {
   var ownerDocument = document;
-  if ("string" === typeof href && href) {
+  if (href) {
     var as = options && "string" === typeof options.as ? options.as : "script",
       preloadSelector =
         'link[rel="modulepreload"][as="' +
@@ -15527,13 +15508,7 @@ function preloadModule$1(href, options) {
     }
     if (
       !preloadPropsMap.has(key) &&
-      ((href = {
-        rel: "modulepreload",
-        as: "script" !== as ? as : void 0,
-        href: href,
-        crossOrigin: options ? options.crossOrigin : void 0,
-        integrity: options ? options.integrity : void 0
-      }),
+      ((href = assign({ rel: "modulepreload", href: href }, options)),
       preloadPropsMap.set(key, href),
       null === ownerDocument.querySelector(preloadSelector))
     ) {
@@ -15554,129 +15529,103 @@ function preloadModule$1(href, options) {
     }
   }
 }
-function preinit$1(href, options) {
+function preinitStyle(href, precedence, options) {
   var ownerDocument = document;
-  if (
-    "string" === typeof href &&
-    href &&
-    "object" === typeof options &&
-    null !== options
-  )
-    switch (options.as) {
-      case "style":
-        var styles = getResourcesFromRoot(ownerDocument).hoistableStyles,
-          key = getStyleKey(href),
-          precedence = options.precedence || "default",
-          resource = styles.get(key);
-        if (resource) break;
-        var state = { loading: 0, preload: null };
-        if (
-          (resource = ownerDocument.querySelector(
-            getStylesheetSelectorFromKey(key)
-          ))
-        )
-          state.loading = 1;
-        else {
-          href = {
-            rel: "stylesheet",
-            href: href,
-            "data-precedence": precedence,
-            crossOrigin: options.crossOrigin,
-            integrity: options.integrity,
-            fetchPriority: options.fetchPriority
-          };
-          (options = preloadPropsMap.get(key)) &&
-            adoptPreloadPropsForStylesheet(href, options);
-          var link = (resource = ownerDocument.createElement("link"));
-          markNodeAsHoistable(link);
-          setInitialProperties(link, "link", href);
-          link._p = new Promise(function (resolve, reject) {
-            link.onload = resolve;
-            link.onerror = reject;
-          });
-          link.addEventListener("load", function () {
-            state.loading |= 1;
-          });
-          link.addEventListener("error", function () {
-            state.loading |= 2;
-          });
-          state.loading |= 4;
-          insertStylesheet(resource, precedence, ownerDocument);
-        }
-        resource = {
-          type: "stylesheet",
-          instance: resource,
-          count: 1,
-          state: state
-        };
-        styles.set(key, resource);
-        break;
-      case "script":
-        (styles = getResourcesFromRoot(ownerDocument).hoistableScripts),
-          (key = getScriptKey(href)),
-          (precedence = styles.get(key)),
-          precedence ||
-            ((precedence = ownerDocument.querySelector(
-              getScriptSelectorFromKey(key)
-            )),
-            precedence ||
-              ((href = {
-                src: href,
-                async: !0,
-                crossOrigin: options.crossOrigin,
-                integrity: options.integrity,
-                nonce: options.nonce,
-                fetchPriority: options.fetchPriority
-              }),
-              (options = preloadPropsMap.get(key)) &&
-                adoptPreloadPropsForScript(href, options),
-              (precedence = ownerDocument.createElement("script")),
-              markNodeAsHoistable(precedence),
-              setInitialProperties(precedence, "link", href),
-              ownerDocument.head.appendChild(precedence)),
-            (precedence = {
-              type: "script",
-              instance: precedence,
-              count: 1,
-              state: null
-            }),
-            styles.set(key, precedence));
+  if (href) {
+    var styles = getResourcesFromRoot(ownerDocument).hoistableStyles,
+      key = getStyleKey(href);
+    precedence = precedence || "default";
+    var resource = styles.get(key);
+    if (!resource) {
+      var state = { loading: 0, preload: null };
+      if (
+        (resource = ownerDocument.querySelector(
+          getStylesheetSelectorFromKey(key)
+        ))
+      )
+        state.loading = 1;
+      else {
+        href = assign(
+          { rel: "stylesheet", href: href, "data-precedence": precedence },
+          options
+        );
+        (options = preloadPropsMap.get(key)) &&
+          adoptPreloadPropsForStylesheet(href, options);
+        var link = (resource = ownerDocument.createElement("link"));
+        markNodeAsHoistable(link);
+        setInitialProperties(link, "link", href);
+        link._p = new Promise(function (resolve, reject) {
+          link.onload = resolve;
+          link.onerror = reject;
+        });
+        link.addEventListener("load", function () {
+          state.loading |= 1;
+        });
+        link.addEventListener("error", function () {
+          state.loading |= 2;
+        });
+        state.loading |= 4;
+        insertStylesheet(resource, precedence, ownerDocument);
+      }
+      resource = {
+        type: "stylesheet",
+        instance: resource,
+        count: 1,
+        state: state
+      };
+      styles.set(key, resource);
     }
+  }
 }
-function preinitModule$1(href, options) {
+function preinitScript(src, options) {
   var ownerDocument = document;
-  if ("string" === typeof href && href)
-    switch (options && "string" === typeof options.as ? options.as : "script") {
-      case "script":
-        var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts,
-          key = getScriptKey(href),
-          resource = scripts.get(key);
-        resource ||
-          ((resource = ownerDocument.querySelector(
-            getScriptSelectorFromKey(key)
-          )),
-          resource ||
-            ((href = {
-              src: href,
-              async: !0,
-              type: "module",
-              crossOrigin: options ? options.crossOrigin : void 0,
-              integrity: options ? options.integrity : void 0
-            }),
-            (options = preloadPropsMap.get(key)) &&
-              adoptPreloadPropsForScript(href, options),
-            (resource = ownerDocument.createElement("script")),
-            markNodeAsHoistable(resource),
-            setInitialProperties(resource, "link", href),
-            ownerDocument.head.appendChild(resource)),
-          (resource = {
-            type: "script",
-            instance: resource,
-            count: 1,
-            state: null
-          }),
-          scripts.set(key, resource));
-    }
+  if (src) {
+    var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts,
+      key = getScriptKey(src),
+      resource = scripts.get(key);
+    resource ||
+      ((resource = ownerDocument.querySelector(getScriptSelectorFromKey(key))),
+      resource ||
+        ((src = assign({ src: src, async: !0 }, options)),
+        (options = preloadPropsMap.get(key)) &&
+          adoptPreloadPropsForScript(src, options),
+        (resource = ownerDocument.createElement("script")),
+        markNodeAsHoistable(resource),
+        setInitialProperties(resource, "link", src),
+        ownerDocument.head.appendChild(resource)),
+      (resource = {
+        type: "script",
+        instance: resource,
+        count: 1,
+        state: null
+      }),
+      scripts.set(key, resource));
+  }
+}
+function preinitModuleScript(src, options) {
+  var ownerDocument = document;
+  if (src) {
+    var scripts = getResourcesFromRoot(ownerDocument).hoistableScripts,
+      key = getScriptKey(src),
+      resource = scripts.get(key);
+    resource ||
+      ((resource = ownerDocument.querySelector(getScriptSelectorFromKey(key))),
+      resource ||
+        ((src = assign({ src: src, async: !0, type: "module" }, options)),
+        (options = preloadPropsMap.get(key)) &&
+          adoptPreloadPropsForScript(src, options),
+        (resource = ownerDocument.createElement("script")),
+        markNodeAsHoistable(resource),
+        setInitialProperties(resource, "link", src),
+        ownerDocument.head.appendChild(resource)),
+      (resource = {
+        type: "script",
+        instance: resource,
+        count: 1,
+        state: null
+      }),
+      scripts.set(key, resource));
+  }
 }
 function getResource(type, currentProps, pendingProps) {
   currentProps = (currentProps = rootInstanceStackCursor.current)
@@ -15705,17 +15654,17 @@ function getResource(type, currentProps, pendingProps) {
         "string" === typeof pendingProps.precedence
       ) {
         type = getStyleKey(pendingProps.href);
-        var styles$280 = getResourcesFromRoot(currentProps).hoistableStyles,
-          resource$281 = styles$280.get(type);
-        resource$281 ||
+        var styles$276 = getResourcesFromRoot(currentProps).hoistableStyles,
+          resource$277 = styles$276.get(type);
+        resource$277 ||
           ((currentProps = currentProps.ownerDocument || currentProps),
-          (resource$281 = {
+          (resource$277 = {
             type: "stylesheet",
             instance: null,
             count: 0,
             state: { loading: 0, preload: null }
           }),
-          styles$280.set(type, resource$281),
+          styles$276.set(type, resource$277),
           preloadPropsMap.has(type) ||
             preloadStylesheet(
               currentProps,
@@ -15730,9 +15679,9 @@ function getResource(type, currentProps, pendingProps) {
                 hrefLang: pendingProps.hrefLang,
                 referrerPolicy: pendingProps.referrerPolicy
               },
-              resource$281.state
+              resource$277.state
             ));
-        return resource$281;
+        return resource$277;
       }
       return null;
     case "script":
@@ -15815,36 +15764,36 @@ function acquireResource(hoistableRoot, resource, props) {
         return (resource.instance = instance);
       case "stylesheet":
         styleProps = getStyleKey(props.href);
-        var instance$285 = hoistableRoot.querySelector(
+        var instance$281 = hoistableRoot.querySelector(
           getStylesheetSelectorFromKey(styleProps)
         );
-        if (instance$285)
+        if (instance$281)
           return (
-            (resource.instance = instance$285),
-            markNodeAsHoistable(instance$285),
-            instance$285
+            (resource.instance = instance$281),
+            markNodeAsHoistable(instance$281),
+            instance$281
           );
         instance = stylesheetPropsFromRawProps(props);
         (styleProps = preloadPropsMap.get(styleProps)) &&
           adoptPreloadPropsForStylesheet(instance, styleProps);
-        instance$285 = (
+        instance$281 = (
           hoistableRoot.ownerDocument || hoistableRoot
         ).createElement("link");
-        markNodeAsHoistable(instance$285);
-        var linkInstance = instance$285;
+        markNodeAsHoistable(instance$281);
+        var linkInstance = instance$281;
         linkInstance._p = new Promise(function (resolve, reject) {
           linkInstance.onload = resolve;
           linkInstance.onerror = reject;
         });
-        setInitialProperties(instance$285, "link", instance);
+        setInitialProperties(instance$281, "link", instance);
         resource.state.loading |= 4;
-        insertStylesheet(instance$285, props.precedence, hoistableRoot);
-        return (resource.instance = instance$285);
+        insertStylesheet(instance$281, props.precedence, hoistableRoot);
+        return (resource.instance = instance$281);
       case "script":
-        instance$285 = getScriptKey(props.src);
+        instance$281 = getScriptKey(props.src);
         if (
           (styleProps = hoistableRoot.querySelector(
-            getScriptSelectorFromKey(instance$285)
+            getScriptSelectorFromKey(instance$281)
           ))
         )
           return (
@@ -15853,7 +15802,7 @@ function acquireResource(hoistableRoot, resource, props) {
             styleProps
           );
         instance = props;
-        if ((styleProps = preloadPropsMap.get(instance$285)))
+        if ((styleProps = preloadPropsMap.get(instance$281)))
           (instance = assign({}, props)),
             adoptPreloadPropsForScript(instance, styleProps);
         hoistableRoot = hoistableRoot.ownerDocument || hoistableRoot;
@@ -16208,6 +16157,15 @@ function registerReactDOMEvent(target, domEventName, isCapturePhaseListener) {
     } else throw Error(formatProdErrorMessage(369));
 }
 var Dispatcher = Internals.Dispatcher;
+function getCrossOrigin(as, crossOrigin) {
+  return "font" === as
+    ? ""
+    : "string" === typeof crossOrigin
+    ? "use-credentials" === crossOrigin
+      ? "use-credentials"
+      : ""
+    : void 0;
+}
 Internals.Events = [
   getInstanceFromNode$1,
   getNodeFromInstance,
@@ -16216,17 +16174,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1741 = {
+var devToolsConfig$jscomp$inline_1737 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-3501ad4f",
+  version: "18.3.0-www-modern-cb1eb6e1",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2103 = {
-  bundleType: devToolsConfig$jscomp$inline_1741.bundleType,
-  version: devToolsConfig$jscomp$inline_1741.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1741.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1741.rendererConfig,
+var internals$jscomp$inline_2099 = {
+  bundleType: devToolsConfig$jscomp$inline_1737.bundleType,
+  version: devToolsConfig$jscomp$inline_1737.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1737.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1737.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16243,26 +16201,26 @@ var internals$jscomp$inline_2103 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1741.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1737.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-3501ad4f"
+  reconcilerVersion: "18.3.0-www-modern-cb1eb6e1"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2104 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2100 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2104.isDisabled &&
-    hook$jscomp$inline_2104.supportsFiber
+    !hook$jscomp$inline_2100.isDisabled &&
+    hook$jscomp$inline_2100.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2104.inject(
-        internals$jscomp$inline_2103
+      (rendererID = hook$jscomp$inline_2100.inject(
+        internals$jscomp$inline_2099
       )),
-        (injectedHook = hook$jscomp$inline_2104);
+        (injectedHook = hook$jscomp$inline_2100);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -16364,27 +16322,120 @@ exports.hydrateRoot = function (container, initialChildren, options) {
 };
 exports.preconnect = function (href, options) {
   var dispatcher = Dispatcher.current;
-  dispatcher && dispatcher.preconnect(href, options);
+  dispatcher &&
+    "string" === typeof href &&
+    ((options = options
+      ? getCrossOrigin("preconnect", options.crossOrigin)
+      : null),
+    dispatcher.preconnect(href, options));
 };
 exports.prefetchDNS = function (href) {
   var dispatcher = Dispatcher.current;
-  dispatcher && dispatcher.prefetchDNS(href);
+  dispatcher && "string" === typeof href && dispatcher.prefetchDNS(href);
 };
 exports.preinit = function (href, options) {
   var dispatcher = Dispatcher.current;
-  dispatcher && dispatcher.preinit(href, options);
+  if (
+    dispatcher &&
+    "string" === typeof href &&
+    options &&
+    "string" === typeof options.as
+  ) {
+    var as = options.as,
+      crossOrigin = getCrossOrigin(as, options.crossOrigin),
+      integrity =
+        "string" === typeof options.integrity ? options.integrity : void 0,
+      fetchPriority =
+        "string" === typeof options.fetchPriority
+          ? options.fetchPriority
+          : void 0;
+    "style" === as
+      ? dispatcher.preinitStyle(
+          href,
+          "string" === typeof options.precedence ? options.precedence : void 0,
+          {
+            crossOrigin: crossOrigin,
+            integrity: integrity,
+            fetchPriority: fetchPriority
+          }
+        )
+      : "script" === as &&
+        dispatcher.preinitScript(href, {
+          crossOrigin: crossOrigin,
+          integrity: integrity,
+          fetchPriority: fetchPriority,
+          nonce: "string" === typeof options.nonce ? options.nonce : void 0
+        });
+  }
 };
 exports.preinitModule = function (href, options) {
   var dispatcher = Dispatcher.current;
-  dispatcher && dispatcher.preinitModule(href, options);
+  if (
+    dispatcher &&
+    "string" === typeof href &&
+    (null == options ||
+      ("object" === typeof options &&
+        (null == options.as || "script" === options.as)))
+  ) {
+    var crossOrigin = options
+      ? getCrossOrigin(void 0, options.crossOrigin)
+      : void 0;
+    dispatcher.preinitModuleScript(href, {
+      crossOrigin: crossOrigin,
+      integrity:
+        options && "string" === typeof options.integrity
+          ? options.integrity
+          : void 0
+    });
+  }
 };
 exports.preload = function (href, options) {
   var dispatcher = Dispatcher.current;
-  dispatcher && dispatcher.preload(href, options);
+  if (
+    dispatcher &&
+    "string" === typeof href &&
+    "object" === typeof options &&
+    null !== options &&
+    "string" === typeof options.as
+  ) {
+    var as = options.as,
+      crossOrigin = getCrossOrigin(as, options.crossOrigin);
+    dispatcher.preload(href, as, {
+      crossOrigin: crossOrigin,
+      integrity:
+        "string" === typeof options.integrity ? options.integrity : void 0,
+      nonce: "string" === typeof options.nonce ? options.nonce : void 0,
+      type: "string" === typeof options.type ? options.type : void 0,
+      fetchPriority:
+        "string" === typeof options.fetchPriority
+          ? options.fetchPriority
+          : void 0,
+      referrerPolicy:
+        "string" === typeof options.referrerPolicy
+          ? options.referrerPolicy
+          : void 0,
+      imageSrcSet:
+        "string" === typeof options.imageSrcSet ? options.imageSrcSet : void 0,
+      imageSizes:
+        "string" === typeof options.imageSizes ? options.imageSizes : void 0
+    });
+  }
 };
 exports.preloadModule = function (href, options) {
   var dispatcher = Dispatcher.current;
-  dispatcher && dispatcher.preloadModule(href, options);
+  if (dispatcher && "string" === typeof href)
+    if (options) {
+      var crossOrigin = getCrossOrigin(options.as, options.crossOrigin);
+      dispatcher.preloadModule(href, {
+        as:
+          "string" === typeof options.as && "script" !== options.as
+            ? options.as
+            : void 0,
+        crossOrigin: crossOrigin,
+        integrity:
+          "string" === typeof options.integrity ? options.integrity : void 0
+      });
+    } else dispatcher.preloadModule(href);
 };
 exports.unstable_batchedUpdates = batchedUpdates$1;
 exports.unstable_createEventHandle = function (type, options) {
@@ -16417,4 +16468,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-3501ad4f";
+exports.version = "18.3.0-www-modern-cb1eb6e1";

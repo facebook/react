@@ -1845,17 +1845,6 @@ function getValueDescriptorExpectingObjectForWarning(thing) {
     ? "an empty string"
     : 'something with type "' + typeof thing + '"';
 }
-function getValueDescriptorExpectingEnumForWarning(thing) {
-  return thing === null
-    ? "`null`"
-    : thing === undefined
-    ? "`undefined`"
-    : thing === ""
-    ? "an empty string"
-    : typeof thing === "string"
-    ? JSON.stringify(thing)
-    : 'something with type "' + typeof thing + '"';
-}
 
 var ReactSharedInternals =
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
@@ -1869,8 +1858,9 @@ var ReactDOMServerDispatcher = {
   preconnect: preconnect,
   preload: preload,
   preloadModule: preloadModule,
-  preinit: preinit,
-  preinitModule: preinitModule
+  preinitStyle: preinitStyle,
+  preinitScript: preinitScript,
+  preinitModuleScript: preinitModuleScript
 };
 function prepareHostDispatcher() {
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
@@ -6436,7 +6426,7 @@ function getResourceKey(as, href) {
   return "[" + as + "]" + href;
 }
 
-function prefetchDNS(href, options) {
+function prefetchDNS(href) {
   var request = resolveRequest();
 
   if (!request) {
@@ -6449,30 +6439,6 @@ function prefetchDNS(href, options) {
   }
 
   var resumableState = getResumableState(request);
-
-  {
-    if (typeof href !== "string" || !href) {
-      error(
-        "ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
-        getValueDescriptorExpectingObjectForWarning(href)
-      );
-    } else if (options != null) {
-      if (
-        typeof options === "object" &&
-        options.hasOwnProperty("crossOrigin")
-      ) {
-        error(
-          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
-          getValueDescriptorExpectingEnumForWarning(options)
-        );
-      } else {
-        error(
-          "ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.",
-          getValueDescriptorExpectingEnumForWarning(options)
-        );
-      }
-    }
-  }
 
   if (typeof href === "string" && href) {
     var key = getResourceKey("prefetchDNS", href);
@@ -6497,7 +6463,7 @@ function prefetchDNS(href, options) {
   }
 }
 
-function preconnect(href, options) {
+function preconnect(href, crossOrigin) {
   var request = resolveRequest();
 
   if (!request) {
@@ -6511,35 +6477,10 @@ function preconnect(href, options) {
 
   var resumableState = getResumableState(request);
 
-  {
-    if (typeof href !== "string" || !href) {
-      error(
-        "ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
-        getValueDescriptorExpectingObjectForWarning(href)
-      );
-    } else if (options != null && typeof options !== "object") {
-      error(
-        "ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.",
-        getValueDescriptorExpectingEnumForWarning(options)
-      );
-    } else if (options != null && typeof options.crossOrigin !== "string") {
-      error(
-        "ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.",
-        getValueDescriptorExpectingObjectForWarning(options.crossOrigin)
-      );
-    }
-  }
-
   if (typeof href === "string" && href) {
-    var crossOrigin =
-      options == null || typeof options.crossOrigin !== "string"
-        ? null
-        : options.crossOrigin === "use-credentials"
-        ? "use-credentials"
-        : "";
     var key =
       "[preconnect][" +
-      (crossOrigin === null ? "null" : crossOrigin) +
+      (typeof crossOrigin === "string" ? crossOrigin : "null") +
       "]" +
       href;
     var resource = resumableState.preconnectsMap.get(key);
@@ -6564,7 +6505,7 @@ function preconnect(href, options) {
   }
 }
 
-function preload(href, options) {
+function preload(href, as, options) {
   var request = resolveRequest();
 
   if (!request) {
@@ -6578,54 +6519,15 @@ function preload(href, options) {
 
   var resumableState = getResumableState(request);
 
-  {
-    var encountered = "";
-
-    if (typeof href !== "string" || !href) {
-      encountered +=
-        " The `href` argument encountered was " +
-        getValueDescriptorExpectingObjectForWarning(href) +
-        ".";
-    }
-
-    if (options == null || typeof options !== "object") {
-      encountered +=
-        " The `options` argument encountered was " +
-        getValueDescriptorExpectingObjectForWarning(options) +
-        ".";
-    } else if (typeof options.as !== "string" || !options.as) {
-      encountered +=
-        " The `as` option encountered was " +
-        getValueDescriptorExpectingObjectForWarning(options.as) +
-        ".";
-    }
-
-    if (encountered) {
-      error(
-        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag.%s',
-        encountered
-      );
-    }
-  }
-
-  if (
-    typeof href === "string" &&
-    href &&
-    typeof options === "object" &&
-    options !== null &&
-    typeof options.as === "string" &&
-    options.as
-  ) {
-    var as = options.as;
+  if (as && href) {
+    options = options || {};
     var key;
 
     if (as === "image") {
       // For image preloads the key contains either the imageSrcSet + imageSizes or the href but not
       // both. This is to prevent identical calls with the same srcSet and sizes to be duplicated
       // by varying the href. this is an edge case but it is the most correct behavior.
-      var imageSrcSet = options.imageSrcSet,
-        imageSizes = options.imageSizes;
-      key = getImagePreloadKey(href, imageSrcSet, imageSizes);
+      key = getImagePreloadKey(href, options.imageSrcSet, options.imageSizes);
     } else {
       key = getResourceKey(as, href);
     }
@@ -6633,11 +6535,20 @@ function preload(href, options) {
     var resource = resumableState.preloadsMap.get(key);
 
     if (!resource) {
+      var props = assign(
+        {
+          rel: "preload",
+          href: as === "image" && options.imageSrcSet ? undefined : href,
+          as: as
+        },
+        options
+      );
+
       resource = {
         type: "preload",
         chunks: [],
         state: NoState,
-        props: preloadPropsFromPreloadOptions(href, as, options)
+        props: props
       };
       resumableState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
@@ -6645,7 +6556,7 @@ function preload(href, options) {
 
     if (as === "font") {
       resumableState.fontPreloads.add(resource);
-    } else if (as === "image" && options.fetchPriority === "high") {
+    } else if (as === "image" && resource.props.fetchPriority === "high") {
       resumableState.highImagePreloads.add(resource);
     } else {
       resumableState.bulkPreloads.add(resource);
@@ -6669,47 +6580,25 @@ function preloadModule(href, options) {
 
   var resumableState = getResumableState(request);
 
-  {
-    var encountered = "";
-
-    if (typeof href !== "string" || !href) {
-      encountered +=
-        " The `href` argument encountered was " +
-        getValueDescriptorExpectingObjectForWarning(href) +
-        ".";
-    }
-
-    if (options !== undefined && typeof options !== "object") {
-      encountered +=
-        " The `options` argument encountered was " +
-        getValueDescriptorExpectingObjectForWarning(options) +
-        ".";
-    } else if (options && "as" in options && typeof options.as !== "string") {
-      encountered +=
-        " The `as` option encountered was " +
-        getValueDescriptorExpectingObjectForWarning(options.as) +
-        ".";
-    }
-
-    if (encountered) {
-      error(
-        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag.%s',
-        encountered
-      );
-    }
-  }
-
-  if (typeof href === "string" && href) {
+  if (href) {
     var as = options && typeof options.as === "string" ? options.as : "script";
     var key = getResourceKey(as, href);
     var resource = resumableState.preloadsMap.get(key);
+
+    var props = assign(
+      {
+        rel: "modulepreload",
+        href: href
+      },
+      options
+    );
 
     if (!resource) {
       resource = {
         type: "preload",
         chunks: [],
         state: NoState,
-        props: preloadModulePropsFromPreloadModuleOptions(href, as, options)
+        props: props
       };
       resumableState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
@@ -6720,7 +6609,7 @@ function preloadModule(href, options) {
   }
 }
 
-function preinit(href, options) {
+function preinitStyle(href, precedence, options) {
   var request = resolveRequest();
 
   if (!request) {
@@ -6734,117 +6623,73 @@ function preinit(href, options) {
 
   var resumableState = getResumableState(request);
 
-  {
-    if (typeof href !== "string" || !href) {
-      error(
-        "ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.",
-        getValueDescriptorExpectingObjectForWarning(href)
-      );
-    } else if (options == null || typeof options !== "object") {
-      error(
-        "ReactDOM.preinit(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preinitialized but encountered %s instead.",
-        getValueDescriptorExpectingEnumForWarning(options)
-      );
-    } else if (options.as !== "style" && options.as !== "script") {
-      error(
-        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain a valid value describing the type of resource to be preinitialized but encountered %s instead. Valid values for `as` are "style" and "script".',
-        getValueDescriptorExpectingEnumForWarning(options.as)
-      );
-    }
-  }
+  if (href) {
+    var as = "style";
+    var key = getResourceKey(as, href);
+    var resource = resumableState.stylesMap.get(key);
 
-  if (
-    typeof href === "string" &&
-    href &&
-    typeof options === "object" &&
-    options !== null
-  ) {
-    var as = options.as;
+    if (!resource) {
+      precedence = precedence || "default";
+      var state = NoState;
+      var preloadResource = resumableState.preloadsMap.get(key);
 
-    switch (as) {
-      case "style": {
-        var key = getResourceKey(as, href);
-        var resource = resumableState.stylesMap.get(key);
-        var precedence = options.precedence || "default";
-
-        if (!resource) {
-          var state = NoState;
-          var preloadResource = resumableState.preloadsMap.get(key);
-
-          if (preloadResource && preloadResource.state & Flushed) {
-            state = PreloadFlushed;
-          }
-
-          resource = {
-            type: "stylesheet",
-            chunks: [],
-            state: state,
-            props: stylesheetPropsFromPreinitOptions(href, precedence, options)
-          };
-          resumableState.stylesMap.set(key, resource);
-          var precedenceSet = resumableState.precedences.get(precedence);
-
-          if (!precedenceSet) {
-            precedenceSet = new Set();
-            resumableState.precedences.set(precedence, precedenceSet);
-            var emptyStyleResource = {
-              type: "style",
-              chunks: [],
-              state: NoState,
-              props: {
-                precedence: precedence,
-                hrefs: []
-              }
-            };
-            precedenceSet.add(emptyStyleResource);
-
-            {
-              if (resumableState.stylePrecedences.has(precedence)) {
-                error(
-                  'React constructed an empty style resource when a style resource already exists for this precedence: "%s". This is a bug in React.',
-                  precedence
-                );
-              }
-            }
-
-            resumableState.stylePrecedences.set(precedence, emptyStyleResource);
-          }
-
-          precedenceSet.add(resource);
-          flushResources(request);
-        }
-
-        return;
+      if (preloadResource && preloadResource.state & Flushed) {
+        state = PreloadFlushed;
       }
 
-      case "script": {
-        var src = href;
+      var props = assign(
+        {
+          rel: "stylesheet",
+          href: href,
+          "data-precedence": precedence
+        },
+        options
+      );
 
-        var _key = getResourceKey(as, src);
+      resource = {
+        type: "stylesheet",
+        chunks: [],
+        state: state,
+        props: props
+      };
+      resumableState.stylesMap.set(key, resource);
+      var precedenceSet = resumableState.precedences.get(precedence);
 
-        var _resource = resumableState.scriptsMap.get(_key);
+      if (!precedenceSet) {
+        precedenceSet = new Set();
+        resumableState.precedences.set(precedence, precedenceSet);
+        var emptyStyleResource = {
+          type: "style",
+          chunks: [],
+          state: NoState,
+          props: {
+            precedence: precedence,
+            hrefs: []
+          }
+        };
+        precedenceSet.add(emptyStyleResource);
 
-        if (!_resource) {
-          _resource = {
-            type: "script",
-            chunks: [],
-            state: NoState,
-            props: null
-          };
-          resumableState.scriptsMap.set(_key, _resource);
-          var resourceProps = scriptPropsFromPreinitOptions(src, options);
-          resumableState.scripts.add(_resource);
-          pushScriptImpl(_resource.chunks, resourceProps);
-          flushResources(request);
+        {
+          if (resumableState.stylePrecedences.has(precedence)) {
+            error(
+              'React constructed an empty style resource when a style resource already exists for this precedence: "%s". This is a bug in React.',
+              precedence
+            );
+          }
         }
 
-        return;
+        resumableState.stylePrecedences.set(precedence, emptyStyleResource);
       }
+
+      precedenceSet.add(resource);
+      flushResources(request);
     }
+
+    return;
   }
 }
 
-function preinitModule(href, options) {
+function preinitScript(src, options) {
   var request = resolveRequest();
 
   if (!request) {
@@ -6858,85 +6703,78 @@ function preinitModule(href, options) {
 
   var resumableState = getResumableState(request);
 
-  {
-    var encountered = "";
+  if (src) {
+    var key = getResourceKey("script", src);
+    var resource = resumableState.scriptsMap.get(key);
 
-    if (typeof href !== "string" || !href) {
-      encountered +=
-        " The `href` argument encountered was " +
-        getValueDescriptorExpectingObjectForWarning(href) +
-        ".";
-    }
+    if (!resource) {
+      resource = {
+        type: "script",
+        chunks: [],
+        state: NoState,
+        props: null
+      };
+      resumableState.scriptsMap.set(key, resource);
 
-    if (options !== undefined && typeof options !== "object") {
-      encountered +=
-        " The `options` argument encountered was " +
-        getValueDescriptorExpectingObjectForWarning(options) +
-        ".";
-    } else if (options && "as" in options && options.as !== "script") {
-      encountered +=
-        " The `as` option encountered was " +
-        getValueDescriptorExpectingEnumForWarning(options.as) +
-        ".";
-    }
-
-    if (encountered) {
-      error(
-        "ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property.%s",
-        encountered
+      var props = assign(
+        {
+          src: src,
+          async: true
+        },
+        options
       );
-    } else {
-      var as =
-        options && typeof options.as === "string" ? options.as : "script";
 
-      switch (as) {
-        case "script": {
-          break;
-        }
-        // We have an invalid as type and need to warn
-
-        default: {
-          var typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
-
-          error(
-            'ReactDOM.preinitModule(): Currently the only supported "as" type for this function is "script"' +
-              ' but received "%s" instead. This warning was generated for `href` "%s". In the future other' +
-              " module types will be supported, aligning with the import-attributes proposal. Learn more here:" +
-              " (https://github.com/tc39/proposal-import-attributes)",
-            typeOfAs,
-            href
-          );
-        }
-      }
+      resumableState.scripts.add(resource);
+      pushScriptImpl(resource.chunks, props);
+      flushResources(request);
     }
+
+    return;
+  }
+}
+
+function preinitModuleScript(src, options) {
+  var request = resolveRequest();
+
+  if (!request) {
+    // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
+    // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
+    // the resources for this call in either case we opt to do nothing. We can consider making this a warning
+    // but there may be times where calling a function outside of render is intentional (i.e. to warm up data
+    // fetching) and we don't want to warn in those cases.
+    return;
   }
 
-  if (typeof href === "string" && href) {
-    var _as = options && typeof options.as === "string" ? options.as : "script";
+  var resumableState = getResumableState(request);
 
-    switch (_as) {
-      case "script": {
-        var src = href;
-        var key = getResourceKey(_as, src);
-        var resource = resumableState.scriptsMap.get(key);
+  if (src) {
+    var key = getResourceKey("script", src);
+    var resource = resumableState.scriptsMap.get(key);
 
-        if (!resource) {
-          resource = {
-            type: "script",
-            chunks: [],
-            state: NoState,
-            props: null
-          };
-          resumableState.scriptsMap.set(key, resource);
-          var resourceProps = modulePropsFromPreinitModuleOptions(src, options);
-          resumableState.scripts.add(resource);
-          pushScriptImpl(resource.chunks, resourceProps);
-          flushResources(request);
-        }
+    if (!resource) {
+      resource = {
+        type: "script",
+        chunks: [],
+        state: NoState,
+        props: null
+      };
+      resumableState.scriptsMap.set(key, resource);
 
-        return;
-      }
+      var props = assign(
+        {
+          src: src,
+          type: "module",
+          async: true
+        },
+        options
+      );
+
+      resumableState.scripts.add(resource);
+      pushScriptImpl(resource.chunks, props);
+      flushResources(request);
     }
+
+    return;
   }
 } // This function is only safe to call at Request start time since it assumes
 // that each script has not already been preloaded. If we find a need to preload
@@ -7046,36 +6884,6 @@ function internalPreinitScript(resumableState, src, chunks) {
   return;
 }
 
-function preloadPropsFromPreloadOptions(href, as, options) {
-  return {
-    rel: "preload",
-    as: as,
-    // There is a bug in Safari where imageSrcSet is not respected on preload links
-    // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-    // This harms older browers that do not support imageSrcSet by making their preloads not work
-    // but this population is shrinking fast and is already small so we accept this tradeoff.
-    href: as === "image" && options.imageSrcSet ? undefined : href,
-    crossOrigin: as === "font" ? "" : options.crossOrigin,
-    integrity: options.integrity,
-    type: options.type,
-    nonce: options.nonce,
-    fetchPriority: options.fetchPriority,
-    imageSrcSet: options.imageSrcSet,
-    imageSizes: options.imageSizes,
-    referrerPolicy: options.referrerPolicy
-  };
-}
-
-function preloadModulePropsFromPreloadModuleOptions(href, as, options) {
-  return {
-    rel: "modulepreload",
-    as: as !== "script" ? as : undefined,
-    href: href,
-    crossOrigin: options ? options.crossOrigin : undefined,
-    integrity: options ? options.integrity : undefined
-  };
-}
-
 function preloadAsStylePropsFromProps(href, props) {
   return {
     rel: "preload",
@@ -7087,17 +6895,6 @@ function preloadAsStylePropsFromProps(href, props) {
     media: props.media,
     hrefLang: props.hrefLang,
     referrerPolicy: props.referrerPolicy
-  };
-}
-
-function stylesheetPropsFromPreinitOptions(href, precedence, options) {
-  return {
-    rel: "stylesheet",
-    href: href,
-    "data-precedence": precedence,
-    crossOrigin: options.crossOrigin,
-    integrity: options.integrity,
-    fetchPriority: options.fetchPriority
   };
 }
 
@@ -7113,27 +6910,6 @@ function adoptPreloadPropsForStylesheetProps(resourceProps, preloadProps) {
     resourceProps.crossOrigin = preloadProps.crossOrigin;
   if (resourceProps.integrity == null)
     resourceProps.integrity = preloadProps.integrity;
-}
-
-function scriptPropsFromPreinitOptions(src, options) {
-  return {
-    src: src,
-    async: true,
-    crossOrigin: options.crossOrigin,
-    integrity: options.integrity,
-    nonce: options.nonce,
-    fetchPriority: options.fetchPriority
-  };
-}
-
-function modulePropsFromPreinitModuleOptions(src, options) {
-  return {
-    src: src,
-    type: "module",
-    async: true,
-    crossOrigin: options ? options.crossOrigin : undefined,
-    integrity: options ? options.integrity : undefined
-  };
 }
 
 function adoptPreloadPropsForScriptProps(resourceProps, preloadProps) {

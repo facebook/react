@@ -182,8 +182,9 @@ var isArrayImpl = Array.isArray,
     preconnect: preconnect,
     preload: preload,
     preloadModule: preloadModule,
-    preinit: preinit,
-    preinitModule: preinitModule
+    preinitStyle: preinitStyle,
+    preinitScript: preinitScript,
+    preinitModuleScript: preinitModuleScript
   },
   scriptRegex = /(<\/|<)(s)(cript)/gi;
 function scriptReplacer(match, prefix, s, suffix) {
@@ -2003,19 +2004,16 @@ function prefetchDNS(href) {
     }
   }
 }
-function preconnect(href, options) {
+function preconnect(href, crossOrigin) {
   var request = currentRequest ? currentRequest : null;
   if (request) {
     var resumableState = request.resumableState;
     if ("string" === typeof href && href) {
-      options =
-        null == options || "string" !== typeof options.crossOrigin
-          ? null
-          : "use-credentials" === options.crossOrigin
-          ? "use-credentials"
-          : "";
       var key =
-          "[preconnect][" + (null === options ? "null" : options) + "]" + href,
+          "[preconnect][" +
+          ("string" === typeof crossOrigin ? crossOrigin : "null") +
+          "]" +
+          href,
         resource = resumableState.preconnectsMap.get(key);
       resource ||
         ((resource = { type: "preconnect", chunks: [], state: 0, props: null }),
@@ -2023,26 +2021,19 @@ function preconnect(href, options) {
         pushLinkImpl(resource.chunks, {
           rel: "preconnect",
           href: href,
-          crossOrigin: options
+          crossOrigin: crossOrigin
         }));
       resumableState.preconnects.add(resource);
       enqueueFlush(request);
     }
   }
 }
-function preload(href, options) {
+function preload(href, as, options) {
   var request = currentRequest ? currentRequest : null;
   if (request) {
     var resumableState = request.resumableState;
-    if (
-      "string" === typeof href &&
-      href &&
-      "object" === typeof options &&
-      null !== options &&
-      "string" === typeof options.as &&
-      options.as
-    ) {
-      var as = options.as;
+    if (as && href) {
+      options = options || {};
       var key =
         "image" === as
           ? getImagePreloadKey(href, options.imageSrcSet, options.imageSizes)
@@ -2053,25 +2044,20 @@ function preload(href, options) {
           type: "preload",
           chunks: [],
           state: 0,
-          props: {
-            rel: "preload",
-            as: as,
-            href: "image" === as && options.imageSrcSet ? void 0 : href,
-            crossOrigin: "font" === as ? "" : options.crossOrigin,
-            integrity: options.integrity,
-            type: options.type,
-            nonce: options.nonce,
-            fetchPriority: options.fetchPriority,
-            imageSrcSet: options.imageSrcSet,
-            imageSizes: options.imageSizes,
-            referrerPolicy: options.referrerPolicy
-          }
+          props: assign(
+            {
+              rel: "preload",
+              href: "image" === as && options.imageSrcSet ? void 0 : href,
+              as: as
+            },
+            options
+          )
         }),
         resumableState.preloadsMap.set(key, resource),
         pushLinkImpl(resource.chunks, resource.props));
       "font" === as
         ? resumableState.fontPreloads.add(resource)
-        : "image" === as && "high" === options.fetchPriority
+        : "image" === as && "high" === resource.props.fetchPriority
         ? resumableState.highImagePreloads.add(resource)
         : resumableState.bulkPreloads.add(resource);
       enqueueFlush(request);
@@ -2082,24 +2068,16 @@ function preloadModule(href, options) {
   var request = currentRequest ? currentRequest : null;
   if (request) {
     var resumableState = request.resumableState;
-    if ("string" === typeof href && href) {
-      var as =
-          options && "string" === typeof options.as ? options.as : "script",
-        key = "[" + as + "]" + href,
+    if (href) {
+      var key =
+          "[" +
+          (options && "string" === typeof options.as ? options.as : "script") +
+          "]" +
+          href,
         resource = resumableState.preloadsMap.get(key);
+      href = assign({ rel: "modulepreload", href: href }, options);
       resource ||
-        ((resource = {
-          type: "preload",
-          chunks: [],
-          state: 0,
-          props: {
-            rel: "modulepreload",
-            as: "script" !== as ? as : void 0,
-            href: href,
-            crossOrigin: options ? options.crossOrigin : void 0,
-            integrity: options ? options.integrity : void 0
-          }
-        }),
+        ((resource = { type: "preload", chunks: [], state: 0, props: href }),
         resumableState.preloadsMap.set(key, resource),
         pushLinkImpl(resource.chunks, resource.props));
       resumableState.bulkPreloads.add(resource);
@@ -2107,102 +2085,78 @@ function preloadModule(href, options) {
     }
   }
 }
-function preinit(href, options) {
+function preinitStyle(href, precedence, options) {
   var request = currentRequest ? currentRequest : null;
   if (request) {
     var resumableState = request.resumableState;
-    if (
-      "string" === typeof href &&
-      href &&
-      "object" === typeof options &&
-      null !== options
-    ) {
-      var as = options.as;
-      switch (as) {
-        case "style":
-          var key = "[" + as + "]" + href,
-            resource = resumableState.stylesMap.get(key);
-          as = options.precedence || "default";
-          if (!resource) {
-            resource = 0;
-            var preloadResource = resumableState.preloadsMap.get(key);
-            preloadResource && preloadResource.state & 3 && (resource = 8);
-            resource = {
-              type: "stylesheet",
-              chunks: [],
-              state: resource,
-              props: {
-                rel: "stylesheet",
-                href: href,
-                "data-precedence": as,
-                crossOrigin: options.crossOrigin,
-                integrity: options.integrity,
-                fetchPriority: options.fetchPriority
-              }
-            };
-            resumableState.stylesMap.set(key, resource);
-            href = resumableState.precedences.get(as);
-            href ||
-              ((href = new Set()),
-              resumableState.precedences.set(as, href),
-              (options = {
-                type: "style",
-                chunks: [],
-                state: 0,
-                props: { precedence: as, hrefs: [] }
-              }),
-              href.add(options),
-              resumableState.stylePrecedences.set(as, options));
-            href.add(resource);
-            enqueueFlush(request);
-          }
-          break;
-        case "script":
-          (key = "[" + as + "]" + href),
-            (as = resumableState.scriptsMap.get(key)),
-            as ||
-              ((as = { type: "script", chunks: [], state: 0, props: null }),
-              resumableState.scriptsMap.set(key, as),
-              (href = {
-                src: href,
-                async: !0,
-                crossOrigin: options.crossOrigin,
-                integrity: options.integrity,
-                nonce: options.nonce,
-                fetchPriority: options.fetchPriority
-              }),
-              resumableState.scripts.add(as),
-              pushScriptImpl(as.chunks, href),
-              enqueueFlush(request));
+    if (href) {
+      var key = "[style]" + href,
+        resource = resumableState.stylesMap.get(key);
+      if (!resource) {
+        precedence = precedence || "default";
+        resource = 0;
+        var preloadResource = resumableState.preloadsMap.get(key);
+        preloadResource && preloadResource.state & 3 && (resource = 8);
+        href = assign(
+          { rel: "stylesheet", href: href, "data-precedence": precedence },
+          options
+        );
+        resource = {
+          type: "stylesheet",
+          chunks: [],
+          state: resource,
+          props: href
+        };
+        resumableState.stylesMap.set(key, resource);
+        key = resumableState.precedences.get(precedence);
+        key ||
+          ((key = new Set()),
+          resumableState.precedences.set(precedence, key),
+          (href = {
+            type: "style",
+            chunks: [],
+            state: 0,
+            props: { precedence: precedence, hrefs: [] }
+          }),
+          key.add(href),
+          resumableState.stylePrecedences.set(precedence, href));
+        key.add(resource);
+        enqueueFlush(request);
       }
     }
   }
 }
-function preinitModule(href, options) {
+function preinitScript(src, options) {
   var request = currentRequest ? currentRequest : null;
   if (request) {
     var resumableState = request.resumableState;
-    if ("string" === typeof href && href) {
-      var as =
-        options && "string" === typeof options.as ? options.as : "script";
-      switch (as) {
-        case "script":
-          var key = "[" + as + "]" + href;
-          as = resumableState.scriptsMap.get(key);
-          as ||
-            ((as = { type: "script", chunks: [], state: 0, props: null }),
-            resumableState.scriptsMap.set(key, as),
-            (href = {
-              src: href,
-              type: "module",
-              async: !0,
-              crossOrigin: options ? options.crossOrigin : void 0,
-              integrity: options ? options.integrity : void 0
-            }),
-            resumableState.scripts.add(as),
-            pushScriptImpl(as.chunks, href),
-            enqueueFlush(request));
-      }
+    if (src) {
+      var key = "[script]" + src,
+        resource = resumableState.scriptsMap.get(key);
+      resource ||
+        ((resource = { type: "script", chunks: [], state: 0, props: null }),
+        resumableState.scriptsMap.set(key, resource),
+        (src = assign({ src: src, async: !0 }, options)),
+        resumableState.scripts.add(resource),
+        pushScriptImpl(resource.chunks, src),
+        enqueueFlush(request));
+    }
+  }
+}
+function preinitModuleScript(src, options) {
+  var request = currentRequest ? currentRequest : null;
+  if (request) {
+    var resumableState = request.resumableState;
+    if (src) {
+      var key = "[script]" + src,
+        resource = resumableState.scriptsMap.get(key);
+      resource ||
+        ((resource = { type: "script", chunks: [], state: 0, props: null }),
+        resumableState.scriptsMap.set(key, resource),
+        (src = assign({ src: src, type: "module", async: !0 }, options)),
+        resumableState.scripts.add(resource),
+        pushScriptImpl(resource.chunks, src),
+        enqueueFlush(request));
     }
   }
 }
@@ -3352,13 +3306,13 @@ function renderChildrenArray(request, task, children, childIndex) {
         if ((prevKeyPath = prevKeyPath.call(node))) {
           node = prevKeyPath.next();
           if (!node.done) {
-            var prevKeyPath$13 = task.keyPath;
+            var prevKeyPath$11 = task.keyPath;
             task.keyPath = [task.keyPath, "", childIndex];
             var nestedChildren = [];
             do nestedChildren.push(node.value), (node = prevKeyPath.next());
             while (!node.done);
             renderChildrenArray(request, task, nestedChildren, i);
-            task.keyPath = prevKeyPath$13;
+            task.keyPath = prevKeyPath$11;
           }
           continue;
         }
@@ -3992,13 +3946,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$16 = partialBoundaries[i];
+      var boundary$14 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.renderState.boundaryResources =
-          boundary$16.resources;
-        var completedSegments = boundary$16.completedSegments;
+          boundary$14.resources;
+        var completedSegments = boundary$14.completedSegments;
         for (
           resumableState$jscomp$1 = 0;
           resumableState$jscomp$1 < completedSegments.length;
@@ -4008,7 +3962,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$16,
+              boundary$14,
               completedSegments[resumableState$jscomp$1]
             )
           ) {
@@ -4020,7 +3974,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$1);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$16.resources,
+          boundary$14.resources,
           clientRenderedBoundaries.renderState
         );
       }
@@ -4080,8 +4034,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$18) {
-    logRecoverableError(request, error$18), fatalError(request, error$18);
+  } catch (error$16) {
+    logRecoverableError(request, error$16), fatalError(request, error$16);
   }
 }
 exports.abortStream = function (stream) {
