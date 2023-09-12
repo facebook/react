@@ -11,8 +11,9 @@ import {
   unstable_getCacheForType as getCacheForType,
   startTransition,
 } from 'react';
-import Store from './devtools/store';
-import {inspectElement as inspectElementMutableSource} from './inspectedElementMutableSource';
+import Store from 'react-devtools-shared/src/devtools/store';
+import {inspectElement as inspectElementMutableSource} from 'react-devtools-shared/src/inspectedElementMutableSource';
+import ElementPollingCancellationError from 'react-devtools-shared/src//errors/ElementPollingCancellationError';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Wakeable} from 'shared/ReactTypes';
@@ -177,7 +178,7 @@ export function checkForUpdate({
   element: Element,
   refresh: RefreshFunction,
   store: Store,
-}): void {
+}): void | Promise<void> {
   const {id} = element;
   const rendererID = store.getRendererIDForElement(id);
 
@@ -185,7 +186,7 @@ export function checkForUpdate({
     return;
   }
 
-  inspectElementMutableSource({
+  return inspectElementMutableSource({
     bridge,
     element,
     path: null,
@@ -202,13 +203,86 @@ export function checkForUpdate({
         });
       }
     },
-
-    // There isn't much to do about errors in this case,
-    // but we should at least log them so they aren't silent.
-    error => {
-      console.error(error);
-    },
   );
+}
+
+function createPromiseWhichResolvesInOneSecond() {
+  return new Promise(resolve => setTimeout(resolve, 1000));
+}
+
+type PollingStatus = 'idle' | 'running' | 'paused' | 'aborted';
+
+export function startElementUpdatesPolling({
+  bridge,
+  element,
+  refresh,
+  store,
+}: {
+  bridge: FrontendBridge,
+  element: Element,
+  refresh: RefreshFunction,
+  store: Store,
+}): {abort: () => void, pause: () => void, resume: () => void} {
+  let status: PollingStatus = 'idle';
+
+  function abort() {
+    status = 'aborted';
+  }
+
+  function resume() {
+    if (status === 'running' || status === 'aborted') {
+      return;
+    }
+
+    status = 'idle';
+    poll();
+  }
+
+  function pause() {
+    if (status === 'paused' || status === 'aborted') {
+      return;
+    }
+
+    status = 'paused';
+  }
+
+  function poll(): Promise<void> {
+    status = 'running';
+
+    return Promise.allSettled([
+      checkForUpdate({bridge, element, refresh, store}),
+      createPromiseWhichResolvesInOneSecond(),
+    ])
+      .then(([{status: updateStatus, reason}]) => {
+        // There isn't much to do about errors in this case,
+        // but we should at least log them, so they aren't silent.
+        // Log only if polling is still active, we can't handle the case when
+        // request was sent, and then bridge was remounted (for example, when user did navigate to a new page),
+        // but at least we can mark that polling was aborted
+        if (updateStatus === 'rejected' && status !== 'aborted') {
+          // This is expected Promise rejection, no need to log it
+          if (reason instanceof ElementPollingCancellationError) {
+            return;
+          }
+
+          console.error(reason);
+        }
+      })
+      .finally(() => {
+        const shouldContinuePolling =
+          status !== 'aborted' && status !== 'paused';
+
+        status = 'idle';
+
+        if (shouldContinuePolling) {
+          return poll();
+        }
+      });
+  }
+
+  poll();
+
+  return {abort, resume, pause};
 }
 
 export function clearCacheBecauseOfError(refresh: RefreshFunction): void {

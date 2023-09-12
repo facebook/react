@@ -83,7 +83,7 @@ chrome.runtime.onConnect.addListener(port => {
   }
 
   if (isNumeric(port.name)) {
-    // Extension port doesn't have tab id specified, because its sender is the extension.
+    // DevTools page port doesn't have tab id specified, because its sender is the extension.
     const tabId = +port.name;
 
     registerTab(tabId);
@@ -228,6 +228,23 @@ chrome.runtime.onMessage.addListener((message, sender) => {
         files: ['/build/backendManager.js'],
         world: chrome.scripting.ExecutionWorld.MAIN,
       });
+    }
+  }
+});
+
+chrome.tabs.onActivated.addListener(({tabId: activeTabId}) => {
+  for (const registeredTabId in ports) {
+    if (
+      ports[registeredTabId].proxy != null &&
+      ports[registeredTabId].extension != null
+    ) {
+      const numericRegisteredTabId = +registeredTabId;
+      const event =
+        activeTabId === numericRegisteredTabId
+          ? 'resumeElementPolling'
+          : 'pauseElementPolling';
+
+      ports[registeredTabId].extension.postMessage({event});
     }
   }
 });

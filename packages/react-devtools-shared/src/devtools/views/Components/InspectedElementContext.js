@@ -24,8 +24,8 @@ import {
 import {TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
 import {
-  checkForUpdate,
   inspectElement,
+  startElementUpdatesPolling,
 } from 'react-devtools-shared/src/inspectedElementCache';
 import {
   clearHookNamesCache,
@@ -58,8 +58,6 @@ type Context = {
 
 export const InspectedElementContext: ReactContext<Context> =
   createContext<Context>(((null: any): Context));
-
-const POLL_INTERVAL = 1000;
 
 export type Props = {
   children: ReactNodeList,
@@ -228,14 +226,21 @@ export function InspectedElementContextController({
   // Periodically poll the selected element for updates.
   useEffect(() => {
     if (element !== null && bridgeIsAlive) {
-      const checkForUpdateWrapper = () => {
-        checkForUpdate({bridge, element, refresh, store});
-        timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
-      };
-      let timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
+      const {abort, pause, resume} = startElementUpdatesPolling({
+        bridge,
+        element,
+        refresh,
+        store,
+      });
+
+      bridge.addListener('resumeElementPolling', resume);
+      bridge.addListener('pauseElementPolling', pause);
 
       return () => {
-        clearTimeout(timeoutID);
+        bridge.removeListener('resumeElementPolling', resume);
+        bridge.removeListener('pauseElementPolling', pause);
+
+        abort();
       };
     }
   }, [

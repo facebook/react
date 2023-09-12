@@ -11,6 +11,7 @@ import {hydrate, fillInPath} from 'react-devtools-shared/src/hydration';
 import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
 import Store from 'react-devtools-shared/src/devtools/store';
 import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
+import ElementPollingCancellationError from 'react-devtools-shared/src/errors/ElementPollingCancellationError';
 
 import type {
   InspectedElement as InspectedElementBackend,
@@ -138,7 +139,7 @@ export function storeAsGlobal({
   });
 }
 
-const TIMEOUT_DELAY = 5000;
+const TIMEOUT_DELAY = 10_000;
 
 let requestCounter = 0;
 
@@ -151,8 +152,15 @@ function getPromiseForRequestID<T>(
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       bridge.removeListener(eventType, onInspectedElement);
+      bridge.removeListener('shutdown', onDisconnect);
+      bridge.removeListener('pauseElementPolling', onDisconnect);
 
       clearTimeout(timeoutID);
+    };
+
+    const onDisconnect = () => {
+      cleanup();
+      reject(new ElementPollingCancellationError());
     };
 
     const onInspectedElement = (data: any) => {
@@ -168,6 +176,8 @@ function getPromiseForRequestID<T>(
     };
 
     bridge.addListener(eventType, onInspectedElement);
+    bridge.addListener('shutdown', onDisconnect);
+    bridge.addListener('pauseElementPolling', onDisconnect);
 
     const timeoutID = setTimeout(onTimeout, TIMEOUT_DELAY);
   });

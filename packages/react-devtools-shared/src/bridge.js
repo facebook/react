@@ -263,6 +263,9 @@ type FrontendEvents = {
   overrideHookState: [OverrideHookState],
   overrideProps: [OverrideValue],
   overrideState: [OverrideValue],
+
+  resumeElementPolling: [],
+  pauseElementPolling: [],
 };
 
 class Bridge<
