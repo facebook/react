@@ -37,6 +37,7 @@ import type {
   ServerReference,
   ServerReferenceId,
   Hints,
+  HintCode,
   HintModel,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
@@ -370,10 +371,10 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
   return newTask.id;
 }
 
-export function emitHint(
+export function emitHint<Code: HintCode>(
   request: Request,
-  code: string,
-  model: HintModel,
+  code: Code,
+  model: HintModel<Code>,
 ): void {
   emitHintChunk(request, code, model);
   enqueueFlush(request);
@@ -1272,7 +1273,11 @@ function emitImportChunk(
   request.completedImportChunks.push(processedChunk);
 }
 
-function emitHintChunk(request: Request, code: string, model: HintModel): void {
+function emitHintChunk<Code: HintCode>(
+  request: Request,
+  code: Code,
+  model: HintModel<Code>,
+): void {
   const json: string = stringify(model);
   const id = request.nextChunkId++;
   const row = serializeRowHeader('H' + code, id) + json + '\n';

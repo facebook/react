@@ -1270,29 +1270,19 @@ describe('ReactFlightDOM', () => {
           <link rel="preconnect" href="c2 before" crossorigin="" />
           <link rel="preload" as="style" href="l before" />
           <link rel="modulepreload" href="lm before" />
-          <link rel="modulepreload" href="lm2 before" crossorigin="anonymous" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="" />
           <script async="" src="i before" />
           <script type="module" async="" src="m before" />
-          <script
-            type="module"
-            async=""
-            src="m2 before"
-            crossorigin="anonymous"
-          />
+          <script type="module" async="" src="m2 before" crossorigin="" />
           <link rel="dns-prefetch" href="d after" />
           <link rel="preconnect" href="c after" />
           <link rel="preconnect" href="c2 after" crossorigin="" />
           <link rel="preload" as="style" href="l after" />
           <link rel="modulepreload" href="lm after" />
-          <link rel="modulepreload" href="lm2 after" crossorigin="anonymous" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="" />
           <script async="" src="i after" />
           <script type="module" async="" src="m after" />
-          <script
-            type="module"
-            async=""
-            src="m2 after"
-            crossorigin="anonymous"
-          />
+          <script type="module" async="" src="m2 after" crossorigin="" />
         </head>
         <body />
       </html>,
@@ -1390,26 +1380,16 @@ describe('ReactFlightDOM', () => {
           <link rel="preconnect" href="c2 after" crossorigin="" />
           <script async="" src="i before" />
           <script type="module" async="" src="m before" />
-          <script
-            type="module"
-            async=""
-            src="m2 before"
-            crossorigin="anonymous"
-          />
+          <script type="module" async="" src="m2 before" crossorigin="" />
           <script async="" src="i after" />
           <script type="module" async="" src="m after" />
-          <script
-            type="module"
-            async=""
-            src="m2 after"
-            crossorigin="anonymous"
-          />
+          <script type="module" async="" src="m2 after" crossorigin="" />
           <link rel="preload" as="style" href="l before" />
           <link rel="modulepreload" href="lm before" />
-          <link rel="modulepreload" href="lm2 before" crossorigin="anonymous" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="" />
           <link rel="preload" as="style" href="l after" />
           <link rel="modulepreload" href="lm after" />
-          <link rel="modulepreload" href="lm2 after" crossorigin="anonymous" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="" />
         </head>
         <body>
           <p>hello world</p>
@@ -1509,12 +1489,12 @@ describe('ReactFlightDOM', () => {
     ]);
 
     expect(content1).toEqual(
-      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before1"/>' +
-        '<link rel="preload" as="style" href="after1"/></head><body><p>hello world</p></body></html>',
+      '<!DOCTYPE html><html><head><link rel="preload" href="before1" as="style"/>' +
+        '<link rel="preload" href="after1" as="style"/></head><body><p>hello world</p></body></html>',
     );
     expect(content2).toEqual(
-      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before2"/>' +
-        '<link rel="preload" as="style" href="after2"/></head><body><p>hello world</p></body></html>',
+      '<!DOCTYPE html><html><head><link rel="preload" href="before2" as="style"/>' +
+        '<link rel="preload" href="after2" as="style"/></head><body><p>hello world</p></body></html>',
     );
   });
 

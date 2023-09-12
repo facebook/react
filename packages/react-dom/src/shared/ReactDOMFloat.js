@@ -7,6 +7,7 @@
  * @flow
  */
 import type {
+  CrossOriginEnum,
   PreconnectOptions,
   PreloadOptions,
   PreloadModuleOptions,
@@ -18,27 +19,33 @@ import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const Dispatcher = ReactDOMSharedInternals.Dispatcher;
 
 export function prefetchDNS(href: string) {
-  let passedOptionArg: any;
   if (__DEV__) {
-    if (arguments[1] !== undefined) {
-      passedOptionArg = arguments[1];
+    if (typeof href !== 'string' || !href) {
+      console.error(
+        'ReactDOM.prefetchDNS(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
+        getValueDescriptorExpectingObjectForWarning(href),
+      );
+    } else if (arguments.length > 1) {
+      const options = arguments[1];
+      if (
+        typeof options === 'object' &&
+        options.hasOwnProperty('crossOrigin')
+      ) {
+        console.error(
+          'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. It looks like the you are attempting to set a crossOrigin property for this DNS lookup hint. Browsers do not perform DNS queries using CORS and setting this attribute on the resource hint has no effect. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+          getValueDescriptorExpectingEnumForWarning(options),
+        );
+      } else {
+        console.error(
+          'ReactDOM.prefetchDNS(): Expected only one argument, `href`, but encountered %s as a second argument instead. This argument is reserved for future options and is currently disallowed. Try calling ReactDOM.prefetchDNS() with just a single string argument, `href`.',
+          getValueDescriptorExpectingEnumForWarning(options),
+        );
+      }
     }
   }
   const dispatcher = Dispatcher.current;
-  if (dispatcher) {
-    if (__DEV__) {
-      if (passedOptionArg !== undefined) {
-        // prefetchDNS will warn if you pass reserved options arg. We pass it along in Dev only to
-        // elicit the warning. In prod we do not forward since it is not a part of the interface.
-        // @TODO move all arg validation into this file. It needs to be universal anyway so may as well lock down the interace here and
-        // let the rest of the codebase trust the types
-        dispatcher.prefetchDNS(href, passedOptionArg);
-      } else {
-        dispatcher.prefetchDNS(href);
-      }
-    } else {
-      dispatcher.prefetchDNS(href);
-    }
+  if (dispatcher && typeof href === 'string') {
+    dispatcher.prefetchDNS(href);
   }
   // We don't error because preconnect needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -46,9 +53,30 @@ export function prefetchDNS(href: string) {
 }
 
 export function preconnect(href: string, options?: ?PreconnectOptions) {
+  if (__DEV__) {
+    if (typeof href !== 'string' || !href) {
+      console.error(
+        'ReactDOM.preconnect(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
+        getValueDescriptorExpectingObjectForWarning(href),
+      );
+    } else if (options != null && typeof options !== 'object') {
+      console.error(
+        'ReactDOM.preconnect(): Expected the `options` argument (second) to be an object but encountered %s instead. The only supported option at this time is `crossOrigin` which accepts a string.',
+        getValueDescriptorExpectingEnumForWarning(options),
+      );
+    } else if (options != null && typeof options.crossOrigin !== 'string') {
+      console.error(
+        'ReactDOM.preconnect(): Expected the `crossOrigin` option (second argument) to be a string but encountered %s instead. Try removing this option or passing a string value instead.',
+        getValueDescriptorExpectingObjectForWarning(options.crossOrigin),
+      );
+    }
+  }
   const dispatcher = Dispatcher.current;
-  if (dispatcher) {
-    dispatcher.preconnect(href, options);
+  if (dispatcher && typeof href === 'string') {
+    const crossOrigin = options
+      ? getCrossOrigin('preconnect', options.crossOrigin)
+      : null;
+    dispatcher.preconnect(href, crossOrigin);
   }
   // We don't error because preconnect needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -56,9 +84,61 @@ export function preconnect(href: string, options?: ?PreconnectOptions) {
 }
 
 export function preload(href: string, options: PreloadOptions) {
+  if (__DEV__) {
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options == null || typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (typeof options.as !== 'string' || !options.as) {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preload(): Expected two arguments, a non-empty `href` string and an `options` object with an `as` property valid for a `<link rel="preload" as="..." />` tag.%s',
+        encountered,
+      );
+    }
+  }
   const dispatcher = Dispatcher.current;
-  if (dispatcher) {
-    dispatcher.preload(href, options);
+  if (
+    dispatcher &&
+    typeof href === 'string' &&
+    // We check existence because we cannot enforce this function is actually called with the stated type
+    typeof options === 'object' &&
+    options !== null &&
+    typeof options.as === 'string'
+  ) {
+    const as = options.as;
+    const crossOrigin = getCrossOrigin(as, options.crossOrigin);
+    dispatcher.preload(href, as, {
+      crossOrigin,
+      integrity:
+        typeof options.integrity === 'string' ? options.integrity : undefined,
+      nonce: typeof options.nonce === 'string' ? options.nonce : undefined,
+      type: typeof options.type === 'string' ? options.type : undefined,
+      fetchPriority:
+        typeof options.fetchPriority === 'string'
+          ? options.fetchPriority
+          : undefined,
+      referrerPolicy:
+        typeof options.referrerPolicy === 'string'
+          ? options.referrerPolicy
+          : undefined,
+      imageSrcSet:
+        typeof options.imageSrcSet === 'string'
+          ? options.imageSrcSet
+          : undefined,
+      imageSizes:
+        typeof options.imageSizes === 'string' ? options.imageSizes : undefined,
+    });
   }
   // We don't error because preload needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -66,9 +146,45 @@ export function preload(href: string, options: PreloadOptions) {
 }
 
 export function preloadModule(href: string, options?: ?PreloadModuleOptions) {
+  if (__DEV__) {
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options !== undefined && typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (options && 'as' in options && typeof options.as !== 'string') {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preloadModule(): Expected two arguments, a non-empty `href` string and, optionally, an `options` object with an `as` property valid for a `<link rel="modulepreload" as="..." />` tag.%s',
+        encountered,
+      );
+    }
+  }
   const dispatcher = Dispatcher.current;
-  if (dispatcher) {
-    dispatcher.preloadModule(href, options);
+  if (dispatcher && typeof href === 'string') {
+    if (options) {
+      const crossOrigin = getCrossOrigin(options.as, options.crossOrigin);
+      dispatcher.preloadModule(href, {
+        as:
+          typeof options.as === 'string' && options.as !== 'script'
+            ? options.as
+            : undefined,
+        crossOrigin,
+        integrity:
+          typeof options.integrity === 'string' ? options.integrity : undefined,
+      });
+    } else {
+      dispatcher.preloadModule(href);
+    }
   }
   // We don't error because preload needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -76,9 +192,57 @@ export function preloadModule(href: string, options?: ?PreloadModuleOptions) {
 }
 
 export function preinit(href: string, options: PreinitOptions) {
+  if (__DEV__) {
+    if (typeof href !== 'string' || !href) {
+      console.error(
+        'ReactDOM.preinit(): Expected the `href` argument (first) to be a non-empty string but encountered %s instead.',
+        getValueDescriptorExpectingObjectForWarning(href),
+      );
+    } else if (options == null || typeof options !== 'object') {
+      console.error(
+        'ReactDOM.preinit(): Expected the `options` argument (second) to be an object with an `as` property describing the type of resource to be preinitialized but encountered %s instead.',
+        getValueDescriptorExpectingEnumForWarning(options),
+      );
+    } else if (options.as !== 'style' && options.as !== 'script') {
+      console.error(
+        'ReactDOM.preinit(): Expected the `as` property in the `options` argument (second) to contain a valid value describing the type of resource to be preinitialized but encountered %s instead. Valid values for `as` are "style" and "script".',
+        getValueDescriptorExpectingEnumForWarning(options.as),
+      );
+    }
+  }
   const dispatcher = Dispatcher.current;
-  if (dispatcher) {
-    dispatcher.preinit(href, options);
+  if (
+    dispatcher &&
+    typeof href === 'string' &&
+    options &&
+    typeof options.as === 'string'
+  ) {
+    const as = options.as;
+    const crossOrigin = getCrossOrigin(as, options.crossOrigin);
+    const integrity =
+      typeof options.integrity === 'string' ? options.integrity : undefined;
+    const fetchPriority =
+      typeof options.fetchPriority === 'string'
+        ? options.fetchPriority
+        : undefined;
+    if (as === 'style') {
+      dispatcher.preinitStyle(
+        href,
+        typeof options.precedence === 'string' ? options.precedence : undefined,
+        {
+          crossOrigin,
+          integrity,
+          fetchPriority,
+        },
+      );
+    } else if (as === 'script') {
+      dispatcher.preinitScript(href, {
+        crossOrigin,
+        integrity,
+        fetchPriority,
+        nonce: typeof options.nonce === 'string' ? options.nonce : undefined,
+      });
+    }
   }
   // We don't error because preinit needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
@@ -86,11 +250,104 @@ export function preinit(href: string, options: PreinitOptions) {
 }
 
 export function preinitModule(href: string, options?: ?PreinitModuleOptions) {
+  if (__DEV__) {
+    let encountered = '';
+    if (typeof href !== 'string' || !href) {
+      encountered += ` The \`href\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        href,
+      )}.`;
+    }
+    if (options !== undefined && typeof options !== 'object') {
+      encountered += ` The \`options\` argument encountered was ${getValueDescriptorExpectingObjectForWarning(
+        options,
+      )}.`;
+    } else if (options && 'as' in options && options.as !== 'script') {
+      encountered += ` The \`as\` option encountered was ${getValueDescriptorExpectingEnumForWarning(
+        options.as,
+      )}.`;
+    }
+    if (encountered) {
+      console.error(
+        'ReactDOM.preinitModule(): Expected up to two arguments, a non-empty `href` string and, optionally, an `options` object with a valid `as` property.%s',
+        encountered,
+      );
+    } else {
+      const as =
+        options && typeof options.as === 'string' ? options.as : 'script';
+      switch (as) {
+        case 'script': {
+          break;
+        }
+
+        // We have an invalid as type and need to warn
+        default: {
+          const typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
+          console.error(
+            'ReactDOM.preinitModule(): Currently the only supported "as" type for this function is "script"' +
+              ' but received "%s" instead. This warning was generated for `href` "%s". In the future other' +
+              ' module types will be supported, aligning with the import-attributes proposal. Learn more here:' +
+              ' (https://github.com/tc39/proposal-import-attributes)',
+            typeOfAs,
+            href,
+          );
+        }
+      }
+    }
+  }
   const dispatcher = Dispatcher.current;
-  if (dispatcher) {
-    dispatcher.preinitModule(href, options);
+  if (dispatcher && typeof href === 'string') {
+    if (
+      options == null ||
+      (typeof options === 'object' &&
+        (options.as == null || options.as === 'script'))
+    ) {
+      const crossOrigin = options
+        ? getCrossOrigin(undefined, options.crossOrigin)
+        : undefined;
+      dispatcher.preinitModuleScript(href, {
+        crossOrigin,
+        integrity:
+          options && typeof options.integrity === 'string'
+            ? options.integrity
+            : undefined,
+      });
+    }
   }
   // We don't error because preinit needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
   // so we favor silent bailout over warning or erroring.
+}
+
+function getCrossOrigin(as: ?string, crossOrigin: ?string): ?CrossOriginEnum {
+  return as === 'font'
+    ? ''
+    : typeof crossOrigin === 'string'
+    ? crossOrigin === 'use-credentials'
+      ? 'use-credentials'
+      : ''
+    : undefined;
+}
+
+function getValueDescriptorExpectingObjectForWarning(thing: any): string {
+  return thing === null
+    ? '`null`'
+    : thing === undefined
+    ? '`undefined`'
+    : thing === ''
+    ? 'an empty string'
+    : `something with type "${typeof thing}"`;
+}
+
+function getValueDescriptorExpectingEnumForWarning(thing: any): string {
+  return thing === null
+    ? '`null`'
+    : thing === undefined
+    ? '`undefined`'
+    : thing === ''
+    ? 'an empty string'
+    : typeof thing === 'string'
+    ? JSON.stringify(thing)
+    : typeof thing === 'number'
+    ? '`' + thing + '`'
+    : `something with type "${typeof thing}"`;
 }
