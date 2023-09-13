@@ -9,6 +9,7 @@
 
 import type {
   Thenable,
+  PendingThenable,
   FulfilledThenable,
   RejectedThenable,
   ReactCustomFormAction,
@@ -489,6 +490,69 @@ export function encodeFormAction(
   };
 }
 
+function isSignatureEqual(
+  this: any => Promise<any>,
+  referenceId: ServerReferenceId,
+  numberOfBoundArgs: number,
+): boolean {
+  const reference = knownServerReferences.get(this);
+  if (!reference) {
+    throw new Error(
+      'Tried to encode a Server Action from a different instance than the encoder is from. ' +
+        'This is a bug in React.',
+    );
+  }
+  if (reference.id !== referenceId) {
+    // These are different functions.
+    return false;
+  }
+  // Now check if the number of bound arguments is the same.
+  const boundPromise = reference.bound;
+  if (boundPromise === null) {
+    // No bound arguments.
+    return numberOfBoundArgs === 0;
+  }
+  // Unwrap the bound arguments array by suspending, if necessary. As with
+  // encodeFormData, this means isSignatureEqual can only be called while React
+  // is rendering.
+  switch (boundPromise.status) {
+    case 'fulfilled': {
+      const boundArgs = boundPromise.value;
+      return boundArgs.length === numberOfBoundArgs;
+    }
+    case 'pending': {
+      throw boundPromise;
+    }
+    case 'rejected': {
+      throw boundPromise.reason;
+    }
+    default: {
+      if (typeof boundPromise.status === 'string') {
+        // Only instrument the thenable if the status if not defined.
+      } else {
+        const pendingThenable: PendingThenable<Array<any>> =
+          (boundPromise: any);
+        pendingThenable.status = 'pending';
+        pendingThenable.then(
+          (boundArgs: Array<any>) => {
+            const fulfilledThenable: FulfilledThenable<Array<any>> =
+              (boundPromise: any);
+            fulfilledThenable.status = 'fulfilled';
+            fulfilledThenable.value = boundArgs;
+          },
+          (error: mixed) => {
+            const rejectedThenable: RejectedThenable<number> =
+              (boundPromise: any);
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = error;
+          },
+        );
+      }
+      throw boundPromise;
+    }
+  }
+}
+
 export function registerServerReference(
   proxy: any,
   reference: {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
@@ -499,6 +563,7 @@ export function registerServerReference(
     // Only expose this in builds that would actually use it. Not needed on the client.
     Object.defineProperties((proxy: any), {
       $$FORM_ACTION: {value: encodeFormAction},
+      $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
       bind: {value: bind},
     });
   }

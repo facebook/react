@@ -313,7 +313,7 @@ export opaque type Request = {
   // rendering - e.g. to the client. This is considered intentional and not an error.
   onPostpone: (reason: string) => void,
   // Form state that was the result of an MPA submission, if it was provided.
-  formState: null | ReactFormState<any>,
+  formState: null | ReactFormState<any, any>,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -352,7 +352,7 @@ export function createRequest(
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
   onPostpone: void | ((reason: string) => void),
-  formState: void | null | ReactFormState<any>,
+  formState: void | null | ReactFormState<any, any>,
 ): Request {
   prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
@@ -3095,7 +3095,9 @@ export function flushResources(request: Request): void {
   enqueueFlush(request);
 }
 
-export function getFormState(request: Request): ReactFormState<any> | null {
+export function getFormState(
+  request: Request,
+): ReactFormState<any, any> | null {
   return request.formState;
 }
 

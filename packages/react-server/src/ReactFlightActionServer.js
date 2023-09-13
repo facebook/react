@@ -53,6 +53,28 @@ function loadServerReference<T>(
   }
 }
 
+function decodeBoundActionMetaData(
+  body: FormData,
+  serverManifest: ServerManifest,
+  formFieldPrefix: string,
+): {id: ServerReferenceId, bound: null | Promise<Array<any>>} {
+  // The data for this reference is encoded in multiple fields under this prefix.
+  const actionResponse = createResponse(serverManifest, formFieldPrefix, body);
+  close(actionResponse);
+  const refPromise = getRoot<{
+    id: ServerReferenceId,
+    bound: null | Promise<Array<any>>,
+  }>(actionResponse);
+  // Force it to initialize
+  // $FlowFixMe
+  refPromise.then(() => {});
+  if (refPromise.status !== 'fulfilled') {
+    // $FlowFixMe
+    throw refPromise.reason;
+  }
+  return refPromise.value;
+}
+
 export function decodeAction<T>(
   body: FormData,
   serverManifest: ServerManifest,
@@ -73,25 +95,11 @@ export function decodeAction<T>(
     // form action.
     if (key.startsWith('$ACTION_REF_')) {
       const formFieldPrefix = '$ACTION_' + key.slice(12) + ':';
-      // The data for this reference is encoded in multiple fields under this prefix.
-      const actionResponse = createResponse(
+      const metaData = decodeBoundActionMetaData(
+        body,
         serverManifest,
         formFieldPrefix,
-        body,
       );
-      close(actionResponse);
-      const refPromise = getRoot<{
-        id: ServerReferenceId,
-        bound: null | Promise<Array<any>>,
-      }>(actionResponse);
-      // Force it to initialize
-      // $FlowFixMe
-      refPromise.then(() => {});
-      if (refPromise.status !== 'fulfilled') {
-        // $FlowFixMe
-        throw refPromise.reason;
-      }
-      const metaData = refPromise.value;
       action = loadServerReference(serverManifest, metaData.id, metaData.bound);
       return;
     }
@@ -109,17 +117,47 @@ export function decodeAction<T>(
   return action.then(fn => fn.bind(null, formData));
 }
 
-// TODO: Should this be an async function to preserve the option in the future
-// to do async stuff in here? Would also make it consistent with decodeAction
 export function decodeFormState<S>(
   actionResult: S,
   body: FormData,
   serverManifest: ServerManifest,
-): ReactFormState<S> | null {
+): Promise<ReactFormState<S, ServerReferenceId> | null> {
   const keyPath = body.get('$ACTION_KEY');
   if (typeof keyPath !== 'string') {
     // This form submission did not include any form state.
-    return null;
+    return Promise.resolve(null);
   }
-  return [actionResult, keyPath];
+  // Search through the form data object to get the reference id and the number
+  // of bound arguments. This repeats some of the work done in decodeAction.
+  let metaData = null;
+  // $FlowFixMe[prop-missing]
+  body.forEach((value: string | File, key: string) => {
+    if (key.startsWith('$ACTION_REF_')) {
+      const formFieldPrefix = '$ACTION_' + key.slice(12) + ':';
+      metaData = decodeBoundActionMetaData(
+        body,
+        serverManifest,
+        formFieldPrefix,
+      );
+    }
+    // We don't check for the simple $ACTION_ID_ case because form state actions
+    // are always bound to the state argument.
+  });
+  if (metaData === null) {
+    // Should be unreachable.
+    return Promise.resolve(null);
+  }
+  const referenceId = metaData.id;
+  return Promise.resolve(metaData.bound).then(bound => {
+    if (bound === null) {
+      // Should be unreachable because form state actions are always bound to the
+      // state argument.
+      return null;
+    }
+    // The form action dispatch method is always bound to the initial state.
+    // But when comparing signatures, we compare to the original unbound action.
+    // Subtract one from the arity to account for this.
+    const boundArity = bound.length - 1;
+    return [actionResult, keyPath, referenceId, boundArity];
+  });
 }

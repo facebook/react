@@ -54,7 +54,7 @@ type Options = {
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
-  experimental_formState?: ReactFormState<any> | null,
+  experimental_formState?: ReactFormState<any, any> | null,
 };
 
 type ResumeOptions = {

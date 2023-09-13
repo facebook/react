@@ -52,7 +52,7 @@ function FiberRootNode(
   hydrate: any,
   identifierPrefix: any,
   onRecoverableError: any,
-  formState: ReactFormState<any> | null,
+  formState: ReactFormState<any, any> | null,
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -145,7 +145,7 @@ export function createFiberRoot(
   identifierPrefix: string,
   onRecoverableError: null | ((error: mixed) => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
-  formState: ReactFormState<any> | null,
+  formState: ReactFormState<any, any> | null,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   const root: FiberRoot = (new FiberRootNode(

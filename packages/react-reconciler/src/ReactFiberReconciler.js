@@ -281,7 +281,7 @@ export function createHydrationContainer(
   identifierPrefix: string,
   onRecoverableError: (error: mixed) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
-  formState: ReactFormState<any> | null,
+  formState: ReactFormState<any, any> | null,
 ): OpaqueRoot {
   const hydrate = true;
   const root = createFiberRoot(
