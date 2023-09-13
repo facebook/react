@@ -398,6 +398,7 @@ export function createRequest(
     request,
     null,
     children,
+    -1,
     null,
     rootSegment,
     abortSet,
@@ -498,6 +499,7 @@ export function resumeRequest(
     request,
     null,
     children,
+    -1,
     null,
     rootSegment,
     abortSet,
@@ -555,6 +557,7 @@ function createTask(
   request: Request,
   thenableState: ThenableState | null,
   node: ReactNodeList,
+  childIndex: number,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
   abortSet: Set<Task>,
@@ -572,6 +575,7 @@ function createTask(
   }
   const task: Task = ({
     node,
+    childIndex,
     ping: () => pingTask(request, task),
     blockedBoundary,
     blockedSegment,
@@ -582,7 +586,6 @@ function createTask(
     context,
     treeContext,
     thenableState,
-    childIndex: -1,
   }: any);
   if (__DEV__) {
     task.componentStack = null;
@@ -856,6 +859,7 @@ function renderSuspenseBoundary(
     request,
     null,
     fallback,
+    -1,
     parentBoundary,
     boundarySegment,
     fallbackAbortSet,
@@ -2027,6 +2031,7 @@ function spawnNewSuspendedTask(
     request,
     thenableState,
     task.node,
+    task.childIndex,
     task.blockedBoundary,
     newSegment,
     task.abortSet,
@@ -2036,7 +2041,6 @@ function spawnNewSuspendedTask(
     task.context,
     task.treeContext,
   );
-  newTask.childIndex = task.childIndex;
 
   if (__DEV__) {
     if (task.componentStack !== null) {
