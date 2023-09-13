@@ -3717,7 +3717,7 @@ export function writeEndSegment(
 }
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
-  completeSegmentFunction + ';$RS("',
+  completeSegmentFunction + '$RS("',
 );
 const completeSegmentScript1Partial = stringToPrecomputedChunk('$RS("');
 const completeSegmentScript2 = stringToPrecomputedChunk('","');
