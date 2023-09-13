@@ -737,6 +737,8 @@ function renderSuspenseBoundary(
   props: Object,
 ): void {
   pushBuiltInComponentStackInDEV(task, 'Suspense');
+
+  const prevKeyPath = task.keyPath;
   const parentBoundary = task.blockedBoundary;
   const parentSegment = task.blockedSegment;
 
@@ -798,6 +800,7 @@ function renderSuspenseBoundary(
       newBoundary.resources,
     );
   }
+  task.keyPath = keyPath;
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
     renderNode(request, task, content, -1);
@@ -851,6 +854,7 @@ function renderSuspenseBoundary(
     }
     task.blockedBoundary = parentBoundary;
     task.blockedSegment = parentSegment;
+    task.keyPath = prevKeyPath;
   }
 
   // We create suspended task for the fallback because we don't want to actually work
