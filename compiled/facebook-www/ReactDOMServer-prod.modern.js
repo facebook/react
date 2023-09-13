@@ -2953,7 +2953,8 @@ function createTask(
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
-    thenableState: thenableState
+    thenableState: thenableState,
+    childIndex: -1
   };
   abortSet.add(task);
   return task;
@@ -4460,4 +4461,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-c2a4cb0f";
+exports.version = "18.3.0-www-modern-94a61ee7";

@@ -9446,7 +9446,8 @@ function createTask(
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
-    thenableState: thenableState
+    thenableState: thenableState,
+    childIndex: -1
   };
 
   {

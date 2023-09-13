@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-7c748307";
+var ReactVersion = "18.3.0-www-modern-6e4c58de";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -9543,7 +9543,8 @@ function createTask(
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
-    thenableState: thenableState
+    thenableState: thenableState,
+    childIndex: -1
   };
 
   {
