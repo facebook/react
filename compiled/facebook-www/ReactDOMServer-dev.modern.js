@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-b00edc72";
+var ReactVersion = "18.3.0-www-modern-5b6fb822";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -8689,6 +8689,8 @@ var objectIs = typeof Object.is === "function" ? Object.is : is; // $FlowFixMe[m
 
 var currentlyRenderingComponent = null;
 var currentlyRenderingTask = null;
+var currentlyRenderingRequest = null;
+var currentlyRenderingKeyPath = null;
 var firstWorkInProgressHook = null;
 var workInProgressHook = null; // Whether the work-in-progress hook is a re-rendered hook
 
@@ -8822,9 +8824,17 @@ function createWorkInProgressHook() {
   return workInProgressHook;
 }
 
-function prepareToUseHooks(task, componentIdentity, prevThenableState) {
+function prepareToUseHooks(
+  request,
+  task,
+  keyPath,
+  componentIdentity,
+  prevThenableState
+) {
   currentlyRenderingComponent = componentIdentity;
   currentlyRenderingTask = task;
+  currentlyRenderingRequest = request;
+  currentlyRenderingKeyPath = keyPath;
 
   {
     isInHookUserCodeInDev = false;
@@ -8895,6 +8905,8 @@ function resetHooksState() {
 
   currentlyRenderingComponent = null;
   currentlyRenderingTask = null;
+  currentlyRenderingRequest = null;
+  currentlyRenderingKeyPath = null;
   didScheduleRenderPhaseUpdate = false;
   firstWorkInProgressHook = null;
   numberOfReRenders = 0;
@@ -9175,15 +9187,42 @@ function useOptimistic(passthrough, reducer) {
 }
 
 function useFormState(action, initialState, permalink) {
-  resolveCurrentlyRenderingComponent(); // Count the number of useFormState hooks per component.
-  // TODO: We should also track which hook matches the form state passed at
-  // the root, if any. Matching is not yet implemented.
+  resolveCurrentlyRenderingComponent(); // Count the number of useFormState hooks per component. We also use this to
+  // track the position of this useFormState hook relative to the other ones in
+  // this component, so we can generate a unique key for each one.
 
-  formStateCounter++; // Bind the initial state to the first argument of the action.
-  // TODO: Use the keypath (or permalink) to check if there's matching state
-  // from the previous page.
+  var formStateHookIndex = formStateCounter++;
+  var request = currentlyRenderingRequest; // Append a node to the key path that represents the form state hook.
 
-  var boundAction = action.bind(null, initialState); // Wrap the action so the return value is void.
+  var componentKey = currentlyRenderingKeyPath;
+  var key = [componentKey, null, formStateHookIndex];
+  var keyJSON = JSON.stringify(key); // Get the form state. If we received form state from a previous page, then
+  // we should reuse that, if the action identity matches. Otherwise we'll use
+  // the initial state argument. We emit a comment marker into the stream
+  // that indicates whether the state was reused.
+
+  var state;
+  var postbackFormState = getFormState(request);
+
+  if (postbackFormState !== null) {
+    var postbackKey = postbackFormState[1]; // TODO: Compare the action identity, too
+    // TODO: If a permalink is used, disregard the key and compare that instead.
+
+    if (keyJSON === postbackKey) {
+      // This was a match.
+      formStateMatchingIndex = formStateHookIndex; // Reuse the state that was submitted by the form.
+
+      state = postbackFormState[0];
+    } else {
+      state = initialState;
+    }
+  } else {
+    // TODO: As an optimization, Fizz should only emit these markers if form
+    // state is passed at the root.
+    state = initialState;
+  } // Bind the state to the first argument of the action.
+
+  var boundAction = action.bind(null, state); // Wrap the action so the return value is void.
 
   var dispatch = function (payload) {
     boundAction(payload);
@@ -9193,7 +9232,12 @@ function useFormState(action, initialState, permalink) {
     // $FlowIgnore[prop-missing]
     dispatch.$$FORM_ACTION = function (prefix) {
       // $FlowIgnore[prop-missing]
-      var metadata = boundAction.$$FORM_ACTION(prefix); // Override the action URL
+      var metadata = boundAction.$$FORM_ACTION(prefix);
+      var formData = metadata.data;
+
+      if (formData) {
+        formData.append("$ACTION_KEY", keyJSON);
+      } // Override the action URL
 
       if (permalink !== undefined) {
         {
@@ -9207,7 +9251,7 @@ function useFormState(action, initialState, permalink) {
     };
   }
 
-  return [initialState, dispatch];
+  return [state, dispatch];
 }
 
 function useId() {
@@ -9413,7 +9457,8 @@ function createRequest(
   onShellReady,
   onShellError,
   onFatalError,
-  onPostpone
+  onPostpone,
+  formState
 ) {
   prepareHostDispatcher();
   var pingedTasks = [];
@@ -9445,7 +9490,8 @@ function createRequest(
     onAllReady: onAllReady === undefined ? noop : onAllReady,
     onShellReady: onShellReady === undefined ? noop : onShellReady,
     onShellError: onShellError === undefined ? noop : onShellError,
-    onFatalError: onFatalError === undefined ? noop : onFatalError
+    onFatalError: onFatalError === undefined ? noop : onFatalError,
+    formState: formState === undefined ? null : formState
   }; // This segment represents the root fallback.
 
   var rootSegment = createPendingSegment(
@@ -9865,13 +9911,20 @@ function shouldConstruct(Component) {
 function renderWithHooks(
   request,
   task,
+  keyPath,
   prevThenableState,
   Component,
   props,
   secondArg
 ) {
   var componentIdentity = {};
-  prepareToUseHooks(task, componentIdentity, prevThenableState);
+  prepareToUseHooks(
+    request,
+    task,
+    keyPath,
+    componentIdentity,
+    prevThenableState
+  );
   var result = Component(props, secondArg);
   return finishHooks(Component, props, result, secondArg);
 }
@@ -9961,6 +10014,7 @@ function renderIndeterminateComponent(
   var value = renderWithHooks(
     request,
     task,
+    keyPath,
     prevThenableState,
     Component,
     props,
@@ -10179,6 +10233,7 @@ function renderForwardRef(
   var children = renderWithHooks(
     request,
     task,
+    keyPath,
     prevThenableState,
     type.render,
     props,
@@ -11764,6 +11819,9 @@ function abort(request, reason) {
 }
 function flushResources(request) {
   enqueueFlush(request);
+}
+function getFormState(request) {
+  return request.formState;
 }
 function getResumableState(request) {
   return request.resumableState;

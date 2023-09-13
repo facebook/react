@@ -9890,7 +9890,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -9924,6 +9925,7 @@ function FiberRootNode(
   this.pooledCache = null;
   this.pooledCacheLanes = 0;
   this.hydrationCallbacks = null;
+  this.formState = formState;
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing)
     for (
@@ -10036,7 +10038,7 @@ var slice = Array.prototype.slice,
         +_this$props.height,
         this._tagRef
       );
-      _this$props = new FiberRootNode(this._surface, 0, !1, "", void 0);
+      _this$props = new FiberRootNode(this._surface, 0, !1, "", void 0, null);
       _this$props.hydrationCallbacks = null;
       enableTransitionTracing && (_this$props.transitionCallbacks = void 0);
       var JSCompiler_inline_result = createFiber(3, null, null, 0);
@@ -10115,10 +10117,10 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-06724970",
+    version: "18.3.0-www-classic-d9972e1c",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1302 = {
+var internals$jscomp$inline_1303 = {
   bundleType: devToolsConfig$jscomp$inline_1130.bundleType,
   version: devToolsConfig$jscomp$inline_1130.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1130.rendererPackageName,
@@ -10146,19 +10148,19 @@ var internals$jscomp$inline_1302 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-06724970"
+  reconcilerVersion: "18.3.0-www-classic-d9972e1c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1303 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1304 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1303.isDisabled &&
-    hook$jscomp$inline_1303.supportsFiber
+    !hook$jscomp$inline_1304.isDisabled &&
+    hook$jscomp$inline_1304.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1303.inject(
-        internals$jscomp$inline_1302
+      (rendererID = hook$jscomp$inline_1304.inject(
+        internals$jscomp$inline_1303
       )),
-        (injectedHook = hook$jscomp$inline_1303);
+        (injectedHook = hook$jscomp$inline_1304);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

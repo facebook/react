@@ -11690,7 +11690,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -11724,6 +11725,7 @@ function FiberRootNode(
   this.pooledCache = null;
   this.pooledCacheLanes = 0;
   this.hydrationCallbacks = null;
+  this.formState = formState;
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing)
     for (
@@ -11745,14 +11747,16 @@ function createFiberRoot(
   concurrentUpdatesByDefaultOverride,
   identifierPrefix,
   onRecoverableError,
-  transitionCallbacks
+  transitionCallbacks,
+  formState
 ) {
   containerInfo = new FiberRootNode(
     containerInfo,
     tag,
     hydrate,
     identifierPrefix,
-    onRecoverableError
+    onRecoverableError,
+    formState
   );
   containerInfo.hydrationCallbacks = hydrationCallbacks;
   enableTransitionTracing &&
@@ -16174,17 +16178,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1737 = {
+var devToolsConfig$jscomp$inline_1738 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-cb1eb6e1",
+  version: "18.3.0-www-modern-dca40e7a",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2099 = {
-  bundleType: devToolsConfig$jscomp$inline_1737.bundleType,
-  version: devToolsConfig$jscomp$inline_1737.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1737.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1737.rendererConfig,
+var internals$jscomp$inline_2100 = {
+  bundleType: devToolsConfig$jscomp$inline_1738.bundleType,
+  version: devToolsConfig$jscomp$inline_1738.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1738.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1738.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16201,26 +16205,26 @@ var internals$jscomp$inline_2099 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1737.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1738.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-cb1eb6e1"
+  reconcilerVersion: "18.3.0-www-modern-dca40e7a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2100 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2101 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2100.isDisabled &&
-    hook$jscomp$inline_2100.supportsFiber
+    !hook$jscomp$inline_2101.isDisabled &&
+    hook$jscomp$inline_2101.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2100.inject(
-        internals$jscomp$inline_2099
+      (rendererID = hook$jscomp$inline_2101.inject(
+        internals$jscomp$inline_2100
       )),
-        (injectedHook = hook$jscomp$inline_2100);
+        (injectedHook = hook$jscomp$inline_2101);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -16258,7 +16262,8 @@ exports.createRoot = function (container, options) {
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    transitionCallbacks
+    transitionCallbacks,
+    null
   );
   container[internalContainerInstanceKey] = options.current;
   Dispatcher$1.current = ReactDOMClientDispatcher;
@@ -16304,7 +16309,8 @@ exports.hydrateRoot = function (container, initialChildren, options) {
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    transitionCallbacks
+    transitionCallbacks,
+    null
   );
   initialChildren.context = emptyContextObject;
   options = initialChildren.current;
@@ -16468,4 +16474,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-cb1eb6e1";
+exports.version = "18.3.0-www-modern-dca40e7a";

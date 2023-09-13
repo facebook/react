@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-bb068684";
+var ReactVersion = "18.3.0-www-classic-4de809d2";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -28256,7 +28256,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -28294,6 +28295,7 @@ function FiberRootNode(
     this.hydrationCallbacks = null;
   }
 
+  this.formState = formState;
   this.incompleteTransitions = new Map();
 
   if (enableTransitionTracing) {
@@ -28345,7 +28347,8 @@ function createFiberRoot(
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix,
   onRecoverableError,
-  transitionCallbacks
+  transitionCallbacks,
+  formState
 ) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   var root = new FiberRootNode(
@@ -28353,7 +28356,8 @@ function createFiberRoot(
     tag,
     hydrate,
     identifierPrefix,
-    onRecoverableError
+    onRecoverableError,
+    formState
   );
 
   {
@@ -28446,7 +28450,8 @@ function createContainer(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    transitionCallbacks
+    transitionCallbacks,
+    null
   );
 }
 function updateContainer(element, container, parentComponent, callback) {

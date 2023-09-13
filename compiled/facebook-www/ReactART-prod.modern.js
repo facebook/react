@@ -9595,7 +9595,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -9629,6 +9630,7 @@ function FiberRootNode(
   this.pooledCache = null;
   this.pooledCacheLanes = 0;
   this.hydrationCallbacks = null;
+  this.formState = formState;
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing)
     for (
@@ -9701,7 +9703,7 @@ var slice = Array.prototype.slice,
         +_this$props.height,
         this._tagRef
       );
-      _this$props = new FiberRootNode(this._surface, 0, !1, "", void 0);
+      _this$props = new FiberRootNode(this._surface, 0, !1, "", void 0, null);
       _this$props.hydrationCallbacks = null;
       enableTransitionTracing && (_this$props.transitionCallbacks = void 0);
       var JSCompiler_inline_result = createFiber(3, null, null, 0);
@@ -9780,10 +9782,10 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-ca0ea9bc",
+    version: "18.3.0-www-modern-06894e4c",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1282 = {
+var internals$jscomp$inline_1283 = {
   bundleType: devToolsConfig$jscomp$inline_1110.bundleType,
   version: devToolsConfig$jscomp$inline_1110.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1110.rendererPackageName,
@@ -9811,19 +9813,19 @@ var internals$jscomp$inline_1282 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-ca0ea9bc"
+  reconcilerVersion: "18.3.0-www-modern-06894e4c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1283 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1284 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1283.isDisabled &&
-    hook$jscomp$inline_1283.supportsFiber
+    !hook$jscomp$inline_1284.isDisabled &&
+    hook$jscomp$inline_1284.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1283.inject(
-        internals$jscomp$inline_1282
+      (rendererID = hook$jscomp$inline_1284.inject(
+        internals$jscomp$inline_1283
       )),
-        (injectedHook = hook$jscomp$inline_1283);
+        (injectedHook = hook$jscomp$inline_1284);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

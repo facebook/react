@@ -33713,7 +33713,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -33751,6 +33752,7 @@ function FiberRootNode(
     this.hydrationCallbacks = null;
   }
 
+  this.formState = formState;
   this.incompleteTransitions = new Map();
 
   if (enableTransitionTracing) {
@@ -33802,7 +33804,8 @@ function createFiberRoot(
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix,
   onRecoverableError,
-  transitionCallbacks
+  transitionCallbacks,
+  formState
 ) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   var root = new FiberRootNode(
@@ -33810,7 +33813,8 @@ function createFiberRoot(
     tag,
     hydrate,
     identifierPrefix,
-    onRecoverableError
+    onRecoverableError,
+    formState
   );
 
   {
@@ -33854,7 +33858,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-aab107b3";
+var ReactVersion = "18.3.0-www-modern-d0f0d3ff";
 
 function createPortal$1(
   children,
@@ -33927,7 +33931,8 @@ function createContainer(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    transitionCallbacks
+    transitionCallbacks,
+    null
   );
 }
 function createHydrationContainer(
@@ -33940,7 +33945,8 @@ function createHydrationContainer(
   concurrentUpdatesByDefaultOverride,
   identifierPrefix,
   onRecoverableError,
-  transitionCallbacks
+  transitionCallbacks,
+  formState
 ) {
   var hydrate = true;
   var root = createFiberRoot(
@@ -33953,7 +33959,8 @@ function createHydrationContainer(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    transitionCallbacks
+    transitionCallbacks,
+    formState
   ); // TODO: Move this to FiberRoot constructor
 
   root.context = getContextForSubtree(null); // Schedule the initial render. In a hydration root, this is different from
@@ -45518,6 +45525,7 @@ function hydrateRoot$1(container, initialChildren, options) {
   var identifierPrefix = "";
   var onRecoverableError = defaultOnRecoverableError;
   var transitionCallbacks = null;
+  var formState = null;
 
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
@@ -45539,6 +45547,12 @@ function hydrateRoot$1(container, initialChildren, options) {
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
+
+    if (enableAsyncActions && enableFormActions) {
+      if (options.experimental_formState !== undefined) {
+        formState = options.experimental_formState;
+      }
+    }
   }
 
   var root = createHydrationContainer(
@@ -45551,7 +45565,8 @@ function hydrateRoot$1(container, initialChildren, options) {
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    transitionCallbacks
+    transitionCallbacks,
+    formState
   );
   markContainerAsRoot(root.current, container);
   Dispatcher$1.current = ReactDOMClientDispatcher; // This can't be a comment node since hydration doesn't work on comment nodes anyway.

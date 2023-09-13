@@ -12158,7 +12158,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -12192,6 +12193,7 @@ function FiberRootNode(
   this.pooledCache = null;
   this.pooledCacheLanes = 0;
   this.hydrationCallbacks = null;
+  this.formState = formState;
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing)
     for (
@@ -12213,14 +12215,16 @@ function createFiberRoot(
   concurrentUpdatesByDefaultOverride,
   identifierPrefix,
   onRecoverableError,
-  transitionCallbacks
+  transitionCallbacks,
+  formState
 ) {
   containerInfo = new FiberRootNode(
     containerInfo,
     tag,
     hydrate,
     identifierPrefix,
-    onRecoverableError
+    onRecoverableError,
+    formState
   );
   containerInfo.hydrationCallbacks = hydrationCallbacks;
   enableTransitionTracing &&
@@ -12304,7 +12308,8 @@ function createHydrationContainer(
   concurrentUpdatesByDefaultOverride,
   identifierPrefix,
   onRecoverableError,
-  transitionCallbacks
+  transitionCallbacks,
+  formState
 ) {
   initialChildren = createFiberRoot(
     containerInfo,
@@ -12316,7 +12321,8 @@ function createHydrationContainer(
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    transitionCallbacks
+    transitionCallbacks,
+    formState
   );
   initialChildren.context = getContextForSubtree(null);
   containerInfo = initialChildren.current;
@@ -16870,6 +16876,7 @@ function legacyCreateRootFromDOMContainer(
       !1,
       "",
       noopOnRecoverableError,
+      null,
       null
     );
     container._reactRootContainer = root$298;
@@ -16898,6 +16905,7 @@ function legacyCreateRootFromDOMContainer(
     !1,
     "",
     noopOnRecoverableError,
+    null,
     null
   );
   container._reactRootContainer = root$300;
@@ -16977,17 +16985,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1807 = {
+var devToolsConfig$jscomp$inline_1808 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-eeba9077",
+  version: "18.3.0-www-classic-8f569ab3",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2169 = {
-  bundleType: devToolsConfig$jscomp$inline_1807.bundleType,
-  version: devToolsConfig$jscomp$inline_1807.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1807.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1807.rendererConfig,
+var internals$jscomp$inline_2170 = {
+  bundleType: devToolsConfig$jscomp$inline_1808.bundleType,
+  version: devToolsConfig$jscomp$inline_1808.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1808.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1808.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17003,26 +17011,26 @@ var internals$jscomp$inline_2169 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1807.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1808.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-eeba9077"
+  reconcilerVersion: "18.3.0-www-classic-8f569ab3"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2170 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2171 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2170.isDisabled &&
-    hook$jscomp$inline_2170.supportsFiber
+    !hook$jscomp$inline_2171.isDisabled &&
+    hook$jscomp$inline_2171.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2170.inject(
-        internals$jscomp$inline_2169
+      (rendererID = hook$jscomp$inline_2171.inject(
+        internals$jscomp$inline_2170
       )),
-        (injectedHook = hook$jscomp$inline_2170);
+        (injectedHook = hook$jscomp$inline_2171);
     } catch (err) {}
 }
 assign(Internals, {
@@ -17076,7 +17084,8 @@ exports.createRoot = function (container, options) {
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    transitionCallbacks
+    transitionCallbacks,
+    null
   );
   container[internalContainerInstanceKey] = options.current;
   Dispatcher$1.current = ReactDOMClientDispatcher;
@@ -17272,7 +17281,8 @@ exports.hydrateRoot = function (container, initialChildren, options) {
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
     onRecoverableError,
-    transitionCallbacks
+    transitionCallbacks,
+    null
   );
   container[internalContainerInstanceKey] = initialChildren.current;
   Dispatcher$1.current = ReactDOMClientDispatcher;
@@ -17493,4 +17503,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-eeba9077";
+exports.version = "18.3.0-www-classic-8f569ab3";

@@ -24237,7 +24237,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -24275,6 +24276,7 @@ function FiberRootNode(
     this.hydrationCallbacks = null;
   }
 
+  this.formState = formState;
   this.incompleteTransitions = new Map();
 
   {
@@ -24308,7 +24310,8 @@ function createFiberRoot(
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix,
   onRecoverableError,
-  transitionCallbacks
+  transitionCallbacks,
+  formState
 ) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   var root = new FiberRootNode(
@@ -24316,7 +24319,8 @@ function createFiberRoot(
     tag,
     hydrate,
     identifierPrefix,
-    onRecoverableError
+    onRecoverableError,
+    formState
   );
 
   {
@@ -24356,7 +24360,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-cd8f2d61";
+var ReactVersion = "18.3.0-www-modern-4234bfd2";
 
 // Might add PROFILE later.
 
@@ -24406,7 +24410,9 @@ function createContainer(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
-    onRecoverableError
+    onRecoverableError,
+    transitionCallbacks,
+    null
   );
 }
 function updateContainer(element, container, parentComponent, callback) {
@@ -25273,7 +25279,8 @@ function create(element, options) {
     isStrictMode,
     concurrentUpdatesByDefault,
     "",
-    onRecoverableError
+    onRecoverableError,
+    null
   );
 
   if (root == null) {

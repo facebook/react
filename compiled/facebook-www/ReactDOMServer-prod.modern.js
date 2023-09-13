@@ -2575,6 +2575,8 @@ function is(x, y) {
 var objectIs = "function" === typeof Object.is ? Object.is : is,
   currentlyRenderingComponent = null,
   currentlyRenderingTask = null,
+  currentlyRenderingRequest = null,
+  currentlyRenderingKeyPath = null,
   firstWorkInProgressHook = null,
   workInProgressHook = null,
   isReRender = !1,
@@ -2625,7 +2627,11 @@ function getThenableStateAfterSuspending() {
   return state;
 }
 function resetHooksState() {
-  currentlyRenderingTask = currentlyRenderingComponent = null;
+  currentlyRenderingKeyPath =
+    currentlyRenderingRequest =
+    currentlyRenderingTask =
+    currentlyRenderingComponent =
+      null;
   didScheduleRenderPhaseUpdate = !1;
   firstWorkInProgressHook = null;
   numberOfReRenders = 0;
@@ -2728,11 +2734,24 @@ function useFormState(action, initialState, permalink) {
     boundAction(payload);
   }
   resolveCurrentlyRenderingComponent();
-  formStateCounter++;
+  var formStateHookIndex = formStateCounter++,
+    request = currentlyRenderingRequest,
+    keyJSON = JSON.stringify([
+      currentlyRenderingKeyPath,
+      null,
+      formStateHookIndex
+    ]);
+  request = request.formState;
+  null !== request &&
+    keyJSON === request[1] &&
+    ((formStateMatchingIndex = formStateHookIndex),
+    (initialState = request[0]));
   var boundAction = action.bind(null, initialState);
   "function" === typeof boundAction.$$FORM_ACTION &&
     (dispatch.$$FORM_ACTION = function (prefix) {
       prefix = boundAction.$$FORM_ACTION(prefix);
+      var formData = prefix.data;
+      formData && formData.append("$ACTION_KEY", keyJSON);
       void 0 !== permalink && (prefix.action = permalink + "");
       return prefix;
     });
@@ -2862,7 +2881,8 @@ function createRequest(
   onShellReady,
   onShellError,
   onFatalError,
-  onPostpone
+  onPostpone,
+  formState
 ) {
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   var pingedTasks = [],
@@ -2892,7 +2912,8 @@ function createRequest(
     onAllReady: void 0 === onAllReady ? noop : onAllReady,
     onShellReady: void 0 === onShellReady ? noop : onShellReady,
     onShellError: void 0 === onShellError ? noop : onShellError,
-    onFatalError: void 0 === onFatalError ? noop : onFatalError
+    onFatalError: void 0 === onFatalError ? noop : onFatalError,
+    formState: void 0 === formState ? null : formState
   };
   renderState = createPendingSegment(
     resumableState,
@@ -3157,6 +3178,8 @@ function renderElement(
     } else
       (currentlyRenderingComponent = {}),
         (currentlyRenderingTask = task),
+        (currentlyRenderingRequest = request),
+        (currentlyRenderingKeyPath = keyPath),
         (formStateCounter = localIdCounter = 0),
         (formStateMatchingIndex = -1),
         (thenableIndexCounter = 0),
@@ -3361,6 +3384,8 @@ function renderElement(
           type = type.render;
           currentlyRenderingComponent = {};
           currentlyRenderingTask = task;
+          currentlyRenderingRequest = request;
+          currentlyRenderingKeyPath = keyPath;
           formStateCounter = localIdCounter = 0;
           formStateMatchingIndex = -1;
           thenableIndexCounter = 0;
@@ -4472,4 +4497,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-3e1a78b1";
+exports.version = "18.3.0-www-modern-49e9de7a";

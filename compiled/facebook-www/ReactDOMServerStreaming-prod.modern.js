@@ -2423,6 +2423,8 @@ function is(x, y) {
 var objectIs = "function" === typeof Object.is ? Object.is : is,
   currentlyRenderingComponent = null,
   currentlyRenderingTask = null,
+  currentlyRenderingRequest = null,
+  currentlyRenderingKeyPath = null,
   firstWorkInProgressHook = null,
   workInProgressHook = null,
   isReRender = !1,
@@ -2476,7 +2478,11 @@ function getThenableStateAfterSuspending() {
   return state;
 }
 function resetHooksState() {
-  currentlyRenderingTask = currentlyRenderingComponent = null;
+  currentlyRenderingKeyPath =
+    currentlyRenderingRequest =
+    currentlyRenderingTask =
+    currentlyRenderingComponent =
+      null;
   didScheduleRenderPhaseUpdate = !1;
   firstWorkInProgressHook = null;
   numberOfReRenders = 0;
@@ -2584,11 +2590,24 @@ function useFormState(action, initialState, permalink) {
     boundAction(payload);
   }
   resolveCurrentlyRenderingComponent();
-  formStateCounter++;
+  var formStateHookIndex = formStateCounter++,
+    request = currentlyRenderingRequest,
+    keyJSON = JSON.stringify([
+      currentlyRenderingKeyPath,
+      null,
+      formStateHookIndex
+    ]);
+  request = request.formState;
+  null !== request &&
+    keyJSON === request[1] &&
+    ((formStateMatchingIndex = formStateHookIndex),
+    (initialState = request[0]));
   var boundAction = action.bind(null, initialState);
   "function" === typeof boundAction.$$FORM_ACTION &&
     (dispatch.$$FORM_ACTION = function (prefix) {
       prefix = boundAction.$$FORM_ACTION(prefix);
+      var formData = prefix.data;
+      formData && formData.append("$ACTION_KEY", keyJSON);
       void 0 !== permalink && (prefix.action = permalink + "");
       return prefix;
     });
@@ -2953,6 +2972,8 @@ function renderElement(
     } else
       (currentlyRenderingComponent = {}),
         (currentlyRenderingTask = task),
+        (currentlyRenderingRequest = request),
+        (currentlyRenderingKeyPath = keyPath),
         (formStateCounter = localIdCounter = 0),
         (formStateMatchingIndex = -1),
         (thenableIndexCounter = 0),
@@ -3156,6 +3177,8 @@ function renderElement(
           type = type.render;
           currentlyRenderingComponent = {};
           currentlyRenderingTask = task;
+          currentlyRenderingRequest = request;
+          currentlyRenderingKeyPath = keyPath;
           formStateCounter = localIdCounter = 0;
           formStateMatchingIndex = -1;
           thenableIndexCounter = 0;
@@ -4432,7 +4455,8 @@ exports.renderToStream = function (children, options) {
     onAllReady: noop,
     onShellReady: noop,
     onShellError: noop,
-    onFatalError: noop
+    onFatalError: noop,
+    formState: null
   };
   bootstrapScripts = createPendingSegment(
     bootstrapScriptContent,
