@@ -168,7 +168,8 @@ export type KeyNode = [
 const REPLAY_NODE = 0;
 const REPLAY_SUSPENSE_BOUNDARY = 1;
 const RESUME_ELEMENT = 2;
-const RESUME_SLOT = 3;
+const RESUME_SUSPENSE_BOUNDARY = 3;
+const RESUME_SLOT = 4;
 
 type ReplaySuspenseBoundary = [
   1, // REPLAY_SUSPENSE_BOUNDARY
@@ -188,6 +189,14 @@ type ReplayNode =
     ]
   | ReplaySuspenseBoundary;
 
+type ResumeSuspenseBoundary = [
+  3, // RESUME_SUSPENSE_BOUNDARY
+  string | null /* name */,
+  string | number /* key */,
+  SuspenseBoundaryID /* id */,
+  number /* rootSegmentID */,
+];
+
 type ResumeElement = [
   2, // RESUME_ELEMENT
   string | null /* name */,
@@ -196,12 +205,16 @@ type ResumeElement = [
 ];
 
 type ResumeSlot = [
-  3, // RESUME_SLOT
+  4, // RESUME_SLOT
   number /* index */,
   number /* segment id */,
 ];
 
-type ResumableNode = ReplayNode | ResumeElement | ResumeSlot;
+type ResumableNode =
+  | ReplayNode
+  | ResumeElement
+  | ResumeSuspenseBoundary
+  | ResumeSlot;
 
 type PostponedHoles = {
   workingMap: Map<KeyNode, ReplayNode>,
@@ -1047,6 +1060,109 @@ function replaySuspenseBoundary(
       );
     }
     task.blockedBoundary = parentBoundary;
+    task.replay = previousReplaySet;
+  }
+  // TODO: Should this be in the finally?
+  popComponentStackInDEV(task);
+}
+
+function resumeSuspenseBoundary(
+  request: Request,
+  task: ReplayTask,
+  props: Object,
+  replayNode: ResumeSuspenseBoundary,
+): void {
+  pushBuiltInComponentStackInDEV(task, 'Suspense');
+
+  const previousReplaySet: ReplaySet = task.replay;
+
+  const parentBoundary = task.blockedBoundary;
+
+  const content: ReactNodeList = props.children;
+
+  const fallbackAbortSet: Set<Task> = new Set();
+  const resumedBoundary = createSuspenseBoundary(
+    request,
+    fallbackAbortSet,
+    task.keyPath,
+  );
+  resumedBoundary.parentFlushed = true;
+  // We restore the same id of this boundary as was used during prerender.
+  resumedBoundary.id = replayNode[3];
+  resumedBoundary.rootSegmentID = replayNode[4];
+
+  const resumedSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    task.formatContext,
+    false,
+    false,
+  );
+  resumedSegment.parentFlushed = true;
+  resumedSegment.id = replayNode[4];
+
+  // We can reuse the current context and task to render the content immediately without
+  // context switching. We just need to temporarily switch which boundary and replay node
+  // we're writing to. If something suspends, it'll spawn new suspended task with that context.
+  task.blockedBoundary = resumedBoundary;
+  if (enableFloat) {
+    // Does this even matter for replaying?
+    setCurrentlyRenderingBoundaryResourcesTarget(
+      request.renderState,
+      resumedBoundary.resources,
+    );
+  }
+  try {
+    // Convert the current ReplayTask to a RenderTask.
+    const renderTask: RenderTask = (task: any);
+    renderTask.replay = null;
+    renderTask.blockedSegment = resumedSegment;
+    // We use the safe form because we don't handle suspending here. Only error handling.
+    renderNode(request, task, content, -1);
+    resumedSegment.status = COMPLETED;
+    queueCompletedSegment(resumedBoundary, resumedSegment);
+    if (
+      resumedBoundary.pendingTasks === 0 &&
+      resumedBoundary.status === PENDING
+    ) {
+      resumedBoundary.status = COMPLETED;
+      request.completedBoundaries.push(resumedBoundary);
+    }
+  } catch (error) {
+    resumedBoundary.status = CLIENT_RENDERED;
+    let errorDigest;
+    if (
+      enablePostpone &&
+      typeof error === 'object' &&
+      error !== null &&
+      error.$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      const postponeInstance: Postpone = (error: any);
+      logPostpone(request, postponeInstance.message);
+      // TODO: Figure out a better signal than a magic digest value.
+      errorDigest = 'POSTPONE';
+    } else {
+      errorDigest = logRecoverableError(request, error);
+    }
+    resumedBoundary.errorDigest = errorDigest;
+    if (__DEV__) {
+      captureBoundaryErrorDetailsDev(resumedBoundary, error);
+    }
+
+    // We don't need to decrement any task numbers because we didn't spawn any new task.
+    // We don't need to schedule any task because we know the parent has written yet.
+    // We do need to fallthrough to create the fallback though.
+  } finally {
+    if (enableFloat) {
+      setCurrentlyRenderingBoundaryResourcesTarget(
+        request.renderState,
+        parentBoundary ? parentBoundary.resources : null,
+      );
+    }
+    task.blockedBoundary = parentBoundary;
+    // Restore to a ReplayTask
+    task.blockedSegment = null;
     task.replay = previousReplaySet;
   }
   // TODO: Should this be in the finally?
@@ -2029,6 +2145,25 @@ function replayElement(
         }
         continue;
       }
+      case RESUME_SUSPENSE_BOUNDARY: {
+        const node: ResumeSuspenseBoundary = candidate;
+        if (keyOrIndex === node[2]) {
+          // Let's double check that the component name matches as a precaution.
+          if (type !== REACT_SUSPENSE_TYPE) {
+            throw new Error(
+              'Expected to see a Suspense boundary in this slot. ' +
+                "The tree doesn't match so React will fallback to client rendering.",
+            );
+          }
+          // Matched a resumable suspense boundary.
+          resumeSuspenseBoundary(request, task, props, node);
+
+          // We finished rendering this node, so now we can consume this
+          // slot. This must happen after in case we rerender this task.
+          replayNodes.splice(i, 1);
+        }
+        continue;
+      }
       // For RESUME_SLOT we ignore them here and assume we've handled them
       // separately already.
     }
@@ -2437,8 +2572,13 @@ function trackPostpone(
   segment: Segment,
 ): void {
   segment.status = POSTPONED;
-  // We know that this will leave a hole so we might as well assign an ID now.
-  segment.id = request.nextSegmentId++;
+
+  const keyPath = task.keyPath;
+  if (keyPath === null) {
+    throw new Error(
+      'It should not be possible to postpone at the root. This is a bug in React.',
+    );
+  }
 
   const boundary = task.blockedBoundary;
   if (boundary !== null && boundary.status === PENDING) {
@@ -2457,29 +2597,52 @@ function trackPostpone(
         'It should not be possible to postpone at the root. This is a bug in React.',
       );
     }
-    const children: Array<ResumableNode> = [];
-    const boundaryNode: ReplaySuspenseBoundary = [
-      REPLAY_SUSPENSE_BOUNDARY,
-      boundaryKeyPath[1],
-      boundaryKeyPath[2],
-      children,
-      boundary.id,
-      boundary.rootSegmentID,
-    ];
-    trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
-    addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
+
+    if (boundaryKeyPath === keyPath && task.childIndex === -1) {
+      // Since we postponed directly in the Suspense boundary we can't have written anything
+      // to its segment. Therefore this will end up becoming the root segment.
+      segment.id = boundary.rootSegmentID;
+      // We postponed directly inside the Suspense boundary so we mark this for resuming.
+      const boundaryNode: ResumeSuspenseBoundary = [
+        RESUME_SUSPENSE_BOUNDARY,
+        boundaryKeyPath[1],
+        boundaryKeyPath[2],
+        boundary.id,
+        boundary.rootSegmentID,
+      ];
+      addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
+      return;
+    } else {
+      const children: Array<ResumableNode> = [];
+      const boundaryNode: ReplaySuspenseBoundary = [
+        REPLAY_SUSPENSE_BOUNDARY,
+        boundaryKeyPath[1],
+        boundaryKeyPath[2],
+        children,
+        boundary.id,
+        boundary.rootSegmentID,
+      ];
+      trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
+      addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
+      // Fall through to add the child node.
+    }
   }
 
-  const keyPath = task.keyPath;
-  if (keyPath === null) {
-    throw new Error(
-      'It should not be possible to postpone at the root. This is a bug in React.',
-    );
+  // We know that this will leave a hole so we might as well assign an ID now.
+  // We might have one already if we had a parent that gave us its ID.
+  if (segment.id === -1) {
+    if (segment.parentFlushed && boundary !== null) {
+      // If this segment's parent was already flushed, it means we really just
+      // skipped the parent and this segment is now the root.
+      segment.id = boundary.rootSegmentID;
+    } else {
+      segment.id = request.nextSegmentId++;
+    }
   }
 
   if (task.childIndex === -1) {
-    // Resume at the position before the first array
-    const resumableElement = [
+    // Resume starting from directly inside the previous parent element.
+    const resumableElement: ResumeElement = [
       RESUME_ELEMENT,
       keyPath[1],
       keyPath[2],
@@ -2919,9 +3082,7 @@ function queueCompletedSegment(
   if (
     segment.chunks.length === 0 &&
     segment.children.length === 1 &&
-    segment.children[0].boundary === null &&
-    // Typically the id would not be assigned yet but if it's a postponed segment it might be.
-    segment.children[0].id === -1
+    segment.children[0].boundary === null
   ) {
     // This is an empty segment. There's nothing to write, so we can instead transfer the ID
     // to the child. That way any existing references point to the child.
