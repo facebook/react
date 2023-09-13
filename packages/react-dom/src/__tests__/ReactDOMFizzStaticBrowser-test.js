@@ -490,26 +490,27 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     await readIntoContainer(resumed);
 
-    // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hello', 'World']}</div>,
+    );
   });
 
   // @gate enablePostpone
-  it('supports postponing in lazy in prerender and resuming later', async () => {
+  it('supports postponing in prerender and resuming with a prefix', async () => {
     let prerendering = true;
-    const Hole = React.lazy(async () => {
-      React.unstable_postpone();
-    });
-
     function Postpone() {
-      return 'Hello';
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'World';
     }
 
     function App() {
       return (
         <div>
           <Suspense fallback="Loading...">
-            Hi
-            {prerendering ? Hole : <Postpone />}
+            Hello
+            <Postpone />
           </Suspense>
         </div>
       );
@@ -531,7 +532,51 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     await readIntoContainer(resumed);
 
-    // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hello', 'World']}</div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in lazy in prerender and resuming later', async () => {
+    let prerendering = true;
+    const Hole = React.lazy(async () => {
+      React.unstable_postpone();
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            Hi
+            {prerendering ? Hole : 'Hello'}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      prerendered.postponed,
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Hi'}
+        {'Hello'}
+      </div>,
+    );
   });
 
   // @gate enablePostpone
