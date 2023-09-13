@@ -97,12 +97,14 @@ class SSABuilder {
 
   definePlace(oldPlace: Place): Place {
     const oldId = oldPlace.identifier;
-    CompilerError.invariant(!this.#unknown.has(oldId), {
-      reason: `EnterSSA: Expected identifier to be defined before being used`,
-      description: `Identifier ${printIdentifier(oldId)} is undefined`,
-      loc: oldPlace.loc,
-      suggestions: null,
-    });
+    if (this.#unknown.has(oldId)) {
+      CompilerError.todo({
+        reason: `EnterSSA: Expected identifier to be defined before being used`,
+        description: `Identifier ${printIdentifier(oldId)} is undefined`,
+        loc: oldPlace.loc,
+        suggestions: null,
+      });
+    }
 
     // Do not redefine context references.
     if (this.#context.has(oldId)) {
@@ -244,6 +246,7 @@ function enterSSAImpl(
       loc: null,
       suggestions: null,
     });
+
     visitedBlocks.add(block);
 
     builder.startBlock(block);

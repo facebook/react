@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier bar$0 is undefined (5:7)
+[ReactForget] Todo: EnterSSA: Expected identifier to be defined before being used. Identifier bar$0 is undefined (5:7)
 ```
           
       

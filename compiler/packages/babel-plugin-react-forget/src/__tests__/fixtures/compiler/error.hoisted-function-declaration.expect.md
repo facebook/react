@@ -17,7 +17,7 @@ function component(a) {
 ## Error
 
 ```
-[ReactForget] Invariant: EnterSSA: Expected identifier to be defined before being used. Identifier x$5 is undefined
+[ReactForget] Todo: EnterSSA: Expected identifier to be defined before being used. Identifier x$5 is undefined
 ```
           
       
