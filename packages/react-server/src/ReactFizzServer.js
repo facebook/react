@@ -725,6 +725,7 @@ function fatalError(request: Request, error: mixed): void {
 function renderSuspenseBoundary(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   props: Object,
 ): void {
   pushBuiltInComponentStackInDEV(task, 'Suspense');
@@ -742,7 +743,7 @@ function renderSuspenseBoundary(
   const newBoundary = createSuspenseBoundary(
     request,
     fallbackAbortSet,
-    task.keyPath,
+    keyPath,
   );
   const insertionIndex = parentSegment.chunks.length;
   // The children of the boundary segment is actually the fallback.
@@ -853,7 +854,8 @@ function renderSuspenseBoundary(
     parentBoundary,
     boundarySegment,
     fallbackAbortSet,
-    task.keyPath,
+    // TODO: Should distinguish key path of fallback and primary tasks
+    keyPath,
     task.formatContext,
     task.legacyContext,
     task.context,
@@ -872,6 +874,7 @@ function renderSuspenseBoundary(
 function renderBackupSuspenseBoundary(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   props: Object,
 ) {
   pushBuiltInComponentStackInDEV(task, 'Suspense');
@@ -880,7 +883,10 @@ function renderBackupSuspenseBoundary(
   const segment = task.blockedSegment;
 
   pushStartCompletedSuspenseBoundary(segment.chunks);
+  const prevKeyPath = task.keyPath;
+  task.keyPath = keyPath;
   renderNode(request, task, content, -1);
+  task.keyPath = prevKeyPath;
   pushEndCompletedSuspenseBoundary(segment.chunks);
 
   popComponentStackInDEV(task);
@@ -889,6 +895,7 @@ function renderBackupSuspenseBoundary(
 function renderHostElement(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   type: string,
   props: Object,
 ): void {
@@ -906,7 +913,9 @@ function renderHostElement(
   );
   segment.lastPushedText = false;
   const prevContext = task.formatContext;
+  const prevKeyPath = task.keyPath;
   task.formatContext = getChildFormatContext(prevContext, type, props);
+  task.keyPath = keyPath;
 
   // We use the non-destructive form because if something suspends, we still
   // need to pop back up and finish this subtree of HTML.
@@ -915,6 +924,7 @@ function renderHostElement(
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
   task.formatContext = prevContext;
+  task.keyPath = prevKeyPath;
   pushEndInstance(
     segment.chunks,
     type,
@@ -947,6 +957,7 @@ function renderWithHooks<Props, SecondArg>(
 function finishClassComponent(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   instance: any,
   Component: any,
   props: any,
@@ -983,12 +994,16 @@ function finishClassComponent(
     }
   }
 
+  const prevKeyPath = task.keyPath;
+  task.keyPath = keyPath;
   renderNodeDestructive(request, task, null, nextChildren, -1);
+  task.keyPath = prevKeyPath;
 }
 
 function renderClassComponent(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   Component: any,
   props: any,
 ): void {
@@ -998,7 +1013,7 @@ function renderClassComponent(
     : undefined;
   const instance = constructClassInstance(Component, props, maskedContext);
   mountClassInstance(instance, Component, props, maskedContext);
-  finishClassComponent(request, task, instance, Component, props);
+  finishClassComponent(request, task, keyPath, instance, Component, props);
   popComponentStackInDEV(task);
 }
 
@@ -1017,6 +1032,7 @@ let hasWarnedAboutUsingContextAsConsumer = false;
 function renderIndeterminateComponent(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   prevThenableState: ThenableState | null,
   Component: any,
   props: any,
@@ -1111,7 +1127,7 @@ function renderIndeterminateComponent(
     }
 
     mountClassInstance(value, Component, props, legacyContext);
-    finishClassComponent(request, task, value, Component, props);
+    finishClassComponent(request, task, keyPath, value, Component, props);
   } else {
     // Proceed under the assumption that this is a function component
     if (__DEV__) {
@@ -1129,6 +1145,7 @@ function renderIndeterminateComponent(
     finishFunctionComponent(
       request,
       task,
+      keyPath,
       value,
       hasId,
       formStateCount,
@@ -1141,6 +1158,7 @@ function renderIndeterminateComponent(
 function finishFunctionComponent(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   children: ReactNodeList,
   hasId: boolean,
   formStateCount: number,
@@ -1168,6 +1186,8 @@ function finishFunctionComponent(
     }
   }
 
+  const prevKeyPath = task.keyPath;
+  task.keyPath = keyPath;
   if (hasId) {
     // This component materialized an id. We treat this as its own level, with
     // a single "child" slot.
@@ -1192,6 +1212,7 @@ function finishFunctionComponent(
     // again, so we can use the destructive recursive form.
     renderNodeDestructive(request, task, null, children, -1);
   }
+  task.keyPath = prevKeyPath;
 }
 
 function validateFunctionComponentInDev(Component: any): void {
@@ -1265,6 +1286,7 @@ function resolveDefaultProps(Component: any, baseProps: Object): Object {
 function renderForwardRef(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   prevThenableState: null | ThenableState,
   type: any,
   props: Object,
@@ -1285,6 +1307,7 @@ function renderForwardRef(
   finishFunctionComponent(
     request,
     task,
+    keyPath,
     children,
     hasId,
     formStateCount,
@@ -1296,6 +1319,7 @@ function renderForwardRef(
 function renderMemo(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   prevThenableState: ThenableState | null,
   type: any,
   props: Object,
@@ -1306,6 +1330,7 @@ function renderMemo(
   renderElement(
     request,
     task,
+    keyPath,
     prevThenableState,
     innerType,
     resolvedProps,
@@ -1316,6 +1341,7 @@ function renderMemo(
 function renderContextConsumer(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   context: ReactContext<any>,
   props: Object,
 ): void {
@@ -1360,12 +1386,16 @@ function renderContextConsumer(
   const newValue = readContext(context);
   const newChildren = render(newValue);
 
+  const prevKeyPath = task.keyPath;
+  task.keyPath = keyPath;
   renderNodeDestructive(request, task, null, newChildren, -1);
+  task.keyPath = prevKeyPath;
 }
 
 function renderContextProvider(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   type: ReactProviderType<any>,
   props: Object,
 ): void {
@@ -1376,9 +1406,12 @@ function renderContextProvider(
   if (__DEV__) {
     prevSnapshot = task.context;
   }
+  const prevKeyPath = task.keyPath;
   task.context = pushProvider(context, value);
+  task.keyPath = keyPath;
   renderNodeDestructive(request, task, null, children, -1);
   task.context = popProvider(context);
+  task.keyPath = prevKeyPath;
   if (__DEV__) {
     if (prevSnapshot !== task.context) {
       console.error(
@@ -1391,6 +1424,7 @@ function renderContextProvider(
 function renderLazyComponent(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   prevThenableState: ThenableState | null,
   lazyComponent: LazyComponentType<any, any>,
   props: Object,
@@ -1404,6 +1438,7 @@ function renderLazyComponent(
   renderElement(
     request,
     task,
+    keyPath,
     prevThenableState,
     Component,
     resolvedProps,
@@ -1412,7 +1447,12 @@ function renderLazyComponent(
   popComponentStackInDEV(task);
 }
 
-function renderOffscreen(request: Request, task: Task, props: Object): void {
+function renderOffscreen(
+  request: Request,
+  task: Task,
+  keyPath: Root | KeyNode,
+  props: Object,
+): void {
   const mode: ?OffscreenMode = (props.mode: any);
   if (mode === 'hidden') {
     // A hidden Offscreen boundary is not server rendered. Prerendering happens
@@ -1420,13 +1460,17 @@ function renderOffscreen(request: Request, task: Task, props: Object): void {
   } else {
     // A visible Offscreen boundary is treated exactly like a fragment: a
     // pure indirection.
+    const prevKeyPath = task.keyPath;
+    task.keyPath = keyPath;
     renderNodeDestructive(request, task, null, props.children, -1);
+    task.keyPath = prevKeyPath;
   }
 }
 
 function renderElement(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   prevThenableState: ThenableState | null,
   type: any,
   props: Object,
@@ -1434,12 +1478,13 @@ function renderElement(
 ): void {
   if (typeof type === 'function') {
     if (shouldConstruct(type)) {
-      renderClassComponent(request, task, type, props);
+      renderClassComponent(request, task, keyPath, type, props);
       return;
     } else {
       renderIndeterminateComponent(
         request,
         task,
+        keyPath,
         prevThenableState,
         type,
         props,
@@ -1448,7 +1493,7 @@ function renderElement(
     }
   }
   if (typeof type === 'string') {
-    renderHostElement(request, task, type, props);
+    renderHostElement(request, task, keyPath, type, props);
     return;
   }
 
@@ -1467,23 +1512,32 @@ function renderElement(
     case REACT_STRICT_MODE_TYPE:
     case REACT_PROFILER_TYPE:
     case REACT_FRAGMENT_TYPE: {
+      const prevKeyPath = task.keyPath;
+      task.keyPath = keyPath;
       renderNodeDestructive(request, task, null, props.children, -1);
+      task.keyPath = prevKeyPath;
       return;
     }
     case REACT_OFFSCREEN_TYPE: {
-      renderOffscreen(request, task, props);
+      renderOffscreen(request, task, keyPath, props);
       return;
     }
     case REACT_SUSPENSE_LIST_TYPE: {
       pushBuiltInComponentStackInDEV(task, 'SuspenseList');
       // TODO: SuspenseList should control the boundaries.
+      const prevKeyPath = task.keyPath;
+      task.keyPath = keyPath;
       renderNodeDestructive(request, task, null, props.children, -1);
+      task.keyPath = prevKeyPath;
       popComponentStackInDEV(task);
       return;
     }
     case REACT_SCOPE_TYPE: {
       if (enableScopeAPI) {
+        const prevKeyPath = task.keyPath;
+        task.keyPath = keyPath;
         renderNodeDestructive(request, task, null, props.children, -1);
+        task.keyPath = prevKeyPath;
         return;
       }
       throw new Error('ReactDOMServer does not yet support scope components.');
@@ -1493,9 +1547,9 @@ function renderElement(
         enableSuspenseAvoidThisFallbackFizz &&
         props.unstable_avoidThisFallback === true
       ) {
-        renderBackupSuspenseBoundary(request, task, props);
+        renderBackupSuspenseBoundary(request, task, keyPath, props);
       } else {
-        renderSuspenseBoundary(request, task, props);
+        renderSuspenseBoundary(request, task, keyPath, props);
       }
       return;
     }
@@ -1504,23 +1558,38 @@ function renderElement(
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
-        renderForwardRef(request, task, prevThenableState, type, props, ref);
+        renderForwardRef(
+          request,
+          task,
+          keyPath,
+          prevThenableState,
+          type,
+          props,
+          ref,
+        );
         return;
       }
       case REACT_MEMO_TYPE: {
-        renderMemo(request, task, prevThenableState, type, props, ref);
+        renderMemo(request, task, keyPath, prevThenableState, type, props, ref);
         return;
       }
       case REACT_PROVIDER_TYPE: {
-        renderContextProvider(request, task, type, props);
+        renderContextProvider(request, task, keyPath, type, props);
         return;
       }
       case REACT_CONTEXT_TYPE: {
-        renderContextConsumer(request, task, type, props);
+        renderContextConsumer(request, task, keyPath, type, props);
         return;
       }
       case REACT_LAZY_TYPE: {
-        renderLazyComponent(request, task, prevThenableState, type, props);
+        renderLazyComponent(
+          request,
+          task,
+          keyPath,
+          prevThenableState,
+          type,
+          props,
+        );
         return;
       }
     }
@@ -1651,14 +1720,20 @@ function renderNodeDestructiveImpl(
         const props = element.props;
         const ref = element.ref;
         const name = getComponentNameFromType(type);
-        const prevKeyPath = task.keyPath;
-        task.keyPath = [
+        const keyPath = [
           task.keyPath,
           name,
           key == null ? (childIndex === -1 ? 0 : childIndex) : key,
         ];
-        renderElement(request, task, prevThenableState, type, props, ref);
-        task.keyPath = prevKeyPath;
+        renderElement(
+          request,
+          task,
+          keyPath,
+          prevThenableState,
+          type,
+          props,
+          ref,
+        );
         return;
       }
       case REACT_PORTAL_TYPE:
