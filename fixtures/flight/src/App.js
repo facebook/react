@@ -15,7 +15,7 @@ import {Client} from './Client.js';
 
 import {Note} from './cjs/Note.js';
 
-import {like, greet} from './actions.js';
+import {like, greet, increment} from './actions.js';
 
 import {getServerState} from './ServerState.js';
 
@@ -32,9 +32,9 @@ export default async function App() {
       <body>
         <Container>
           <h1>{getServerState()}</h1>
-          <Counter />
-          <Counter2 />
-          <Counter3 />
+          <Counter incrementAction={increment} />
+          <Counter2 incrementAction={increment} />
+          <Counter3 incrementAction={increment} />
           <ul>
             {todos.map(todo => (
               <li key={todo.id}>{todo.text}</li>

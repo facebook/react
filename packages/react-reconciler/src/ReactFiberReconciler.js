@@ -21,7 +21,7 @@ import type {
   PublicInstance,
   RendererInspectionConfig,
 } from './ReactFiberConfig';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
@@ -265,6 +265,7 @@ export function createContainer(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    null,
   );
 }
 
@@ -280,6 +281,7 @@ export function createHydrationContainer(
   identifierPrefix: string,
   onRecoverableError: (error: mixed) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
+  formState: ReactFormState<any> | null,
 ): OpaqueRoot {
   const hydrate = true;
   const root = createFiberRoot(
@@ -293,6 +295,7 @@ export function createHydrationContainer(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    formState,
   );
 
   // TODO: Move this to FiberRoot constructor

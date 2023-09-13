@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {Thenable, ReactFormState} from 'shared/ReactTypes';
 
 import type {
   ServerManifest,
@@ -107,4 +107,19 @@ export function decodeAction<T>(
   }
   // Return the action with the remaining FormData bound to the first argument.
   return action.then(fn => fn.bind(null, formData));
+}
+
+// TODO: Should this be an async function to preserve the option in the future
+// to do async stuff in here? Would also make it consistent with decodeAction
+export function decodeFormState<S>(
+  actionResult: S,
+  body: FormData,
+  serverManifest: ServerManifest,
+): ReactFormState<S> | null {
+  const keyPath = body.get('$ACTION_KEY');
+  if (typeof keyPath !== 'string') {
+    // This form submission did not include any form state.
+    return null;
+  }
+  return [actionResult, keyPath];
 }

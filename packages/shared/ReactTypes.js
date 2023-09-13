@@ -174,3 +174,11 @@ export type ReactCustomFormAction = {
   target?: string,
   data?: null | FormData,
 };
+
+// This is an opaque type returned by decodeFormState on the server, but it's
+// defined in this shared file because the same type is used by React on
+// the client.
+export type ReactFormState<S> = [
+  S /* actual state value */,
+  string /* key path */,
+];

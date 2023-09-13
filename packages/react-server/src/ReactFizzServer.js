@@ -19,6 +19,7 @@ import type {
   OffscreenMode,
   Wakeable,
   Thenable,
+  ReactFormState,
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
@@ -158,7 +159,7 @@ const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 // Linked list representing the identity of a component given the component/tag name and key.
 // The name might be minified but we assume that it's going to be the same generated name. Typically
 // because it's just the same compiled output in practice.
-type KeyNode = [
+export type KeyNode = [
   Root | KeyNode /* parent */,
   string | null /* name */,
   string | number /* key */,
@@ -311,6 +312,8 @@ export opaque type Request = {
   // onPostpone is called when postpone() is called anywhere in the tree, which will defer
   // rendering - e.g. to the client. This is considered intentional and not an error.
   onPostpone: (reason: string) => void,
+  // Form state that was the result of an MPA submission, if it was provided.
+  formState: null | ReactFormState<any>,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -349,6 +352,7 @@ export function createRequest(
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
   onPostpone: void | ((reason: string) => void),
+  formState: void | null | ReactFormState<any>,
 ): Request {
   prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
@@ -381,6 +385,7 @@ export function createRequest(
     onShellReady: onShellReady === undefined ? noop : onShellReady,
     onShellError: onShellError === undefined ? noop : onShellError,
     onFatalError: onFatalError === undefined ? noop : onFatalError,
+    formState: formState === undefined ? null : formState,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(
@@ -482,6 +487,7 @@ export function resumeRequest(
     onShellReady: onShellReady === undefined ? noop : onShellReady,
     onShellError: onShellError === undefined ? noop : onShellError,
     onFatalError: onFatalError === undefined ? noop : onFatalError,
+    formState: null,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(
@@ -956,13 +962,20 @@ function shouldConstruct(Component: any) {
 function renderWithHooks<Props, SecondArg>(
   request: Request,
   task: Task,
+  keyPath: Root | KeyNode,
   prevThenableState: ThenableState | null,
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
   secondArg: SecondArg,
 ): any {
   const componentIdentity = {};
-  prepareToUseHooks(task, componentIdentity, prevThenableState);
+  prepareToUseHooks(
+    request,
+    task,
+    keyPath,
+    componentIdentity,
+    prevThenableState,
+  );
   const result = Component(props, secondArg);
   return finishHooks(Component, props, result, secondArg);
 }
@@ -1078,6 +1091,7 @@ function renderIndeterminateComponent(
   const value = renderWithHooks(
     request,
     task,
+    keyPath,
     prevThenableState,
     Component,
     props,
@@ -1309,6 +1323,7 @@ function renderForwardRef(
   const children = renderWithHooks(
     request,
     task,
+    keyPath,
     prevThenableState,
     type.render,
     props,
@@ -3078,6 +3093,10 @@ export function abort(request: Request, reason: mixed): void {
 
 export function flushResources(request: Request): void {
   enqueueFlush(request);
+}
+
+export function getFormState(request: Request): ReactFormState<any> | null {
+  return request.formState;
 }
 
 export function getResumableState(request: Request): ResumableState {
