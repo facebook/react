@@ -2915,6 +2915,7 @@ function createRequest(
     resumableState,
     null,
     children,
+    -1,
     null,
     renderState,
     abortSet,
@@ -2932,6 +2933,7 @@ function createTask(
   request,
   thenableState,
   node,
+  childIndex,
   blockedBoundary,
   blockedSegment,
   abortSet,
@@ -2947,6 +2949,7 @@ function createTask(
     : blockedBoundary.pendingTasks++;
   var task = {
     node: node,
+    childIndex: childIndex,
     ping: function () {
       request.pingedTasks.push(task);
       1 === request.pingedTasks.length &&
@@ -2961,8 +2964,7 @@ function createTask(
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
-    thenableState: thenableState,
-    childIndex: -1
+    thenableState: thenableState
   };
   abortSet.add(task);
   return task;
@@ -3293,12 +3295,13 @@ function renderElement(
         return;
       case REACT_SUSPENSE_TYPE:
         a: {
-          type = task.blockedBoundary;
-          contextKey = task.blockedSegment;
-          prevThenableState = props.fallback;
+          type = task.keyPath;
+          contextKey = task.blockedBoundary;
+          prevThenableState = task.blockedSegment;
+          ref = props.fallback;
           props = props.children;
-          ref = new Set();
-          initialState = {
+          initialState = new Set();
+          contextType = {
             status: 0,
             id: null,
             rootSegmentID: -1,
@@ -3306,22 +3309,22 @@ function renderElement(
             pendingTasks: 0,
             completedSegments: [],
             byteSize: 0,
-            fallbackAbortableTasks: ref,
+            fallbackAbortableTasks: initialState,
             errorDigest: null,
             resources: new Set(),
             keyPath: keyPath
           };
-          contextType = createPendingSegment(
+          oldReplace = createPendingSegment(
             request,
-            contextKey.chunks.length,
-            initialState,
+            prevThenableState.chunks.length,
+            contextType,
             task.formatContext,
             !1,
             !1
           );
-          contextKey.children.push(contextType);
-          contextKey.lastPushedText = !1;
-          oldReplace = createPendingSegment(
+          prevThenableState.children.push(oldReplace);
+          prevThenableState.lastPushedText = !1;
+          partial = createPendingSegment(
             request,
             0,
             null,
@@ -3329,43 +3332,46 @@ function renderElement(
             !1,
             !1
           );
-          oldReplace.parentFlushed = !0;
-          task.blockedBoundary = initialState;
-          task.blockedSegment = oldReplace;
-          request.renderState.boundaryResources = initialState.resources;
+          partial.parentFlushed = !0;
+          task.blockedBoundary = contextType;
+          task.blockedSegment = partial;
+          request.renderState.boundaryResources = contextType.resources;
+          task.keyPath = keyPath;
           try {
             if (
               (renderNode(request, task, props, -1),
               request.renderState.generateStaticMarkup ||
-                (oldReplace.lastPushedText &&
-                  oldReplace.textEmbedded &&
-                  oldReplace.chunks.push("\x3c!-- --\x3e")),
-              (oldReplace.status = 1),
-              queueCompletedSegment(initialState, oldReplace),
-              0 === initialState.pendingTasks && 0 === initialState.status)
+                (partial.lastPushedText &&
+                  partial.textEmbedded &&
+                  partial.chunks.push("\x3c!-- --\x3e")),
+              (partial.status = 1),
+              queueCompletedSegment(contextType, partial),
+              0 === contextType.pendingTasks && 0 === contextType.status)
             ) {
-              initialState.status = 1;
+              contextType.status = 1;
               break a;
             }
           } catch (error) {
-            (oldReplace.status = 4),
-              (initialState.status = 4),
+            (partial.status = 4),
+              (contextType.status = 4),
               (JSCompiler_inline_result = logRecoverableError(request, error)),
-              (initialState.errorDigest = JSCompiler_inline_result);
+              (contextType.errorDigest = JSCompiler_inline_result);
           } finally {
-            (request.renderState.boundaryResources = type
-              ? type.resources
+            (request.renderState.boundaryResources = contextKey
+              ? contextKey.resources
               : null),
-              (task.blockedBoundary = type),
-              (task.blockedSegment = contextKey);
+              (task.blockedBoundary = contextKey),
+              (task.blockedSegment = prevThenableState),
+              (task.keyPath = type);
           }
           task = createTask(
             request,
             null,
-            prevThenableState,
-            type,
-            contextType,
             ref,
+            -1,
+            contextKey,
+            oldReplace,
+            initialState,
             keyPath,
             task.formatContext,
             task.legacyContext,
@@ -3635,6 +3641,7 @@ function renderNode(request, task, node, childIndex) {
           request,
           childIndex,
           task.node,
+          task.childIndex,
           task.blockedBoundary,
           childrenLength,
           task.abortSet,
@@ -3643,9 +3650,7 @@ function renderNode(request, task, node, childIndex) {
           task.legacyContext,
           task.context,
           task.treeContext
-        )),
-        (request.childIndex = task.childIndex),
-        (request = request.ping),
+        ).ping),
         node.then(request, request),
         (task.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
@@ -4042,7 +4047,7 @@ function flushPartiallyCompletedSegment(
       0 === (boundary.instructions & 1)
         ? ((boundary.instructions |= 1),
           destination.push(
-            '$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};;$RS("'
+            '$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};$RS("'
           ))
         : destination.push('$RS("'))
     : destination.push('<template data-rsi="" data-sid="');
@@ -4500,4 +4505,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-249420ad";
+exports.version = "18.3.0-www-classic-019477d4";

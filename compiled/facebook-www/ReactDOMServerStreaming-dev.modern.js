@@ -5208,7 +5208,7 @@ function writeEndSegment(destination, formatContext) {
   }
 }
 var completeSegmentScript1Full = stringToPrecomputedChunk(
-  completeSegment + ';$RS("'
+  completeSegment + '$RS("'
 );
 var completeSegmentScript1Partial = stringToPrecomputedChunk('$RS("');
 var completeSegmentScript2 = stringToPrecomputedChunk('","');
@@ -9368,6 +9368,7 @@ function createRequest(
     request,
     null,
     children,
+    -1,
     null,
     rootSegment,
     abortSet,
@@ -9416,6 +9417,7 @@ function createTask(
   request,
   thenableState,
   node,
+  childIndex,
   blockedBoundary,
   blockedSegment,
   abortSet,
@@ -9435,6 +9437,7 @@ function createTask(
 
   var task = {
     node: node,
+    childIndex: childIndex,
     ping: function () {
       return pingTask(request, task);
     },
@@ -9446,8 +9449,7 @@ function createTask(
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
-    thenableState: thenableState,
-    childIndex: -1
+    thenableState: thenableState
   };
 
   {
@@ -9595,6 +9597,7 @@ function fatalError(request, error) {
 
 function renderSuspenseBoundary(request, task, keyPath, props) {
   pushBuiltInComponentStackInDEV(task, "Suspense");
+  var prevKeyPath = task.keyPath;
   var parentBoundary = task.blockedBoundary;
   var parentSegment = task.blockedSegment; // Each time we enter a suspense boundary, we split out into a new segment for
   // the fallback so that we can later replace that segment with the content.
@@ -9647,6 +9650,8 @@ function renderSuspenseBoundary(request, task, keyPath, props) {
     );
   }
 
+  task.keyPath = keyPath;
+
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
     renderNode(request, task, content, -1);
@@ -9693,6 +9698,7 @@ function renderSuspenseBoundary(request, task, keyPath, props) {
 
     task.blockedBoundary = parentBoundary;
     task.blockedSegment = parentSegment;
+    task.keyPath = prevKeyPath;
   } // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
 
@@ -9700,6 +9706,7 @@ function renderSuspenseBoundary(request, task, keyPath, props) {
     request,
     null,
     fallback,
+    -1,
     parentBoundary,
     boundarySegment,
     fallbackAbortSet, // TODO: Should distinguish key path of fallback and primary tasks
@@ -10692,6 +10699,7 @@ function spawnNewSuspendedTask(request, task, thenableState, x) {
     request,
     thenableState,
     task.node,
+    task.childIndex,
     task.blockedBoundary,
     newSegment,
     task.abortSet,
@@ -10701,7 +10709,6 @@ function spawnNewSuspendedTask(request, task, thenableState, x) {
     task.context,
     task.treeContext
   );
-  newTask.childIndex = task.childIndex;
 
   {
     if (task.componentStack !== null) {

@@ -2718,6 +2718,7 @@ function createTask(
   request,
   thenableState,
   node,
+  childIndex,
   blockedBoundary,
   blockedSegment,
   abortSet,
@@ -2733,6 +2734,7 @@ function createTask(
     : blockedBoundary.pendingTasks++;
   var task = {
     node: node,
+    childIndex: childIndex,
     ping: function () {
       request.pingedTasks.push(task);
       1 === request.pingedTasks.length &&
@@ -2746,8 +2748,7 @@ function createTask(
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
-    thenableState: thenableState,
-    childIndex: -1
+    thenableState: thenableState
   };
   abortSet.add(task);
   return task;
@@ -3057,12 +3058,13 @@ function renderElement(
         return;
       case REACT_SUSPENSE_TYPE:
         a: {
-          type = task.blockedBoundary;
-          prevThenableState = task.blockedSegment;
-          ref = props.fallback;
+          type = task.keyPath;
+          prevThenableState = task.blockedBoundary;
+          ref = task.blockedSegment;
+          contextType = props.fallback;
           props = props.children;
-          contextType = new Set();
-          partial = {
+          partial = new Set();
+          var JSCompiler_inline_result$jscomp$0 = {
             status: 0,
             id: null,
             rootSegmentID: -1,
@@ -3070,21 +3072,21 @@ function renderElement(
             pendingTasks: 0,
             completedSegments: [],
             byteSize: 0,
-            fallbackAbortableTasks: contextType,
+            fallbackAbortableTasks: partial,
             errorDigest: null,
             resources: new Set(),
             keyPath: keyPath
           };
           var boundarySegment = createPendingSegment(
             request,
-            prevThenableState.chunks.length,
-            partial,
+            ref.chunks.length,
+            JSCompiler_inline_result$jscomp$0,
             task.formatContext,
             !1,
             !1
           );
-          prevThenableState.children.push(boundarySegment);
-          prevThenableState.lastPushedText = !1;
+          ref.children.push(boundarySegment);
+          ref.lastPushedText = !1;
           var contentRootSegment = createPendingSegment(
             request,
             0,
@@ -3094,9 +3096,11 @@ function renderElement(
             !1
           );
           contentRootSegment.parentFlushed = !0;
-          task.blockedBoundary = partial;
+          task.blockedBoundary = JSCompiler_inline_result$jscomp$0;
           task.blockedSegment = contentRootSegment;
-          request.renderState.boundaryResources = partial.resources;
+          request.renderState.boundaryResources =
+            JSCompiler_inline_result$jscomp$0.resources;
+          task.keyPath = keyPath;
           try {
             if (
               (renderNode(request, task, props, -1),
@@ -3104,31 +3108,38 @@ function renderElement(
                 contentRootSegment.textEmbedded &&
                 contentRootSegment.chunks.push("\x3c!-- --\x3e"),
               (contentRootSegment.status = 1),
-              queueCompletedSegment(partial, contentRootSegment),
-              0 === partial.pendingTasks && 0 === partial.status)
+              queueCompletedSegment(
+                JSCompiler_inline_result$jscomp$0,
+                contentRootSegment
+              ),
+              0 === JSCompiler_inline_result$jscomp$0.pendingTasks &&
+                0 === JSCompiler_inline_result$jscomp$0.status)
             ) {
-              partial.status = 1;
+              JSCompiler_inline_result$jscomp$0.status = 1;
               break a;
             }
           } catch (error) {
             (contentRootSegment.status = 4),
-              (partial.status = 4),
+              (JSCompiler_inline_result$jscomp$0.status = 4),
               (JSCompiler_inline_result = logRecoverableError(request, error)),
-              (partial.errorDigest = JSCompiler_inline_result);
+              (JSCompiler_inline_result$jscomp$0.errorDigest =
+                JSCompiler_inline_result);
           } finally {
-            (request.renderState.boundaryResources = type
-              ? type.resources
+            (request.renderState.boundaryResources = prevThenableState
+              ? prevThenableState.resources
               : null),
-              (task.blockedBoundary = type),
-              (task.blockedSegment = prevThenableState);
+              (task.blockedBoundary = prevThenableState),
+              (task.blockedSegment = ref),
+              (task.keyPath = type);
           }
           task = createTask(
             request,
             null,
-            ref,
-            type,
-            boundarySegment,
             contextType,
+            -1,
+            prevThenableState,
+            boundarySegment,
+            partial,
             keyPath,
             task.formatContext,
             task.legacyContext,
@@ -3397,6 +3408,7 @@ function renderNode(request, task, node, childIndex) {
           request,
           childIndex,
           task.node,
+          task.childIndex,
           task.blockedBoundary,
           childrenLength,
           task.abortSet,
@@ -3405,9 +3417,7 @@ function renderNode(request, task, node, childIndex) {
           task.legacyContext,
           task.context,
           task.treeContext
-        )),
-        (request.childIndex = task.childIndex),
-        (request = request.ping),
+        ).ping),
         node.then(request, request),
         (task.formatContext = previousFormatContext),
         (task.legacyContext = previousLegacyContext),
@@ -3701,7 +3711,7 @@ function flushPartiallyCompletedSegment(
         ? ((boundary.instructions |= 1),
           writeChunk(
             destination,
-            '$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};;$RS("'
+            '$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};$RS("'
           ))
         : writeChunk(destination, '$RS("'))
     : writeChunk(destination, '<template data-rsi="" data-sid="');
@@ -4437,6 +4447,7 @@ exports.renderToStream = function (children, options) {
     bootstrapScriptContent,
     null,
     children,
+    -1,
     null,
     bootstrapScripts,
     identifierPrefix,
