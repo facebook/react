@@ -169,36 +169,40 @@ const REPLAY_SUSPENSE_BOUNDARY = 1;
 const RESUME_ELEMENT = 2;
 const RESUME_SLOT = 3;
 
-type ResumableParentNode =
+type ReplaySuspenseBoundary = [
+  1, // REPLAY_SUSPENSE_BOUNDARY
+  string | null /* name */,
+  string | number /* key */,
+  Array<ResumableNode> /* children */,
+  SuspenseBoundaryID /* id */,
+];
+
+type ReplayNode =
   | [
       0, // REPLAY_NODE
       string | null /* name */,
       string | number /* key */,
       Array<ResumableNode> /* children */,
     ]
-  | [
-      1, // REPLAY_SUSPENSE_BOUNDARY
-      string | null /* name */,
-      string | number /* key */,
-      Array<ResumableNode> /* children */,
-      SuspenseBoundaryID,
-    ];
-type ResumableNode =
-  | ResumableParentNode
-  | [
-      2, // RESUME_ELEMENT
-      string | null /* name */,
-      string | number /* key */,
-      number /* segment id */,
-    ]
-  | [
-      3, // RESUME_SLOT
-      number /* index */,
-      number /* segment id */,
-    ];
+  | ReplaySuspenseBoundary;
+
+type ResumeElement = [
+  2, // RESUME_ELEMENT
+  string | null /* name */,
+  string | number /* key */,
+  number /* segment id */,
+];
+
+type ResumeSlot = [
+  3, // RESUME_SLOT
+  number /* index */,
+  number /* segment id */,
+];
+
+type ResumableNode = ReplayNode | ResumeElement | ResumeSlot;
 
 type PostponedHoles = {
-  workingMap: Map<KeyNode, ResumableParentNode>,
+  workingMap: Map<KeyNode, ReplayNode>,
   root: Array<ResumableNode>,
 };
 
@@ -1938,7 +1942,7 @@ function trackPostpone(
       );
     }
     const children: Array<ResumableNode> = [];
-    const boundaryNode: ResumableParentNode = [
+    const boundaryNode: ReplaySuspenseBoundary = [
       REPLAY_SUSPENSE_BOUNDARY,
       boundaryKeyPath[1],
       boundaryKeyPath[2],
@@ -1946,7 +1950,7 @@ function trackPostpone(
       boundary.id,
     ];
     trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
-    addToResumableParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
+    addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
   }
 
   const keyPath = task.keyPath;
@@ -1964,11 +1968,11 @@ function trackPostpone(
       keyPath[2],
       segment.id,
     ];
-    addToResumableParent(resumableElement, keyPath[0], trackedPostpones);
+    addToReplayParent(resumableElement, keyPath[0], trackedPostpones);
   } else {
     // Resume at the slot within the array
     const resumableNode = [RESUME_SLOT, task.childIndex, segment.id];
-    addToResumableParent(resumableNode, keyPath, trackedPostpones);
+    addToReplayParent(resumableNode, keyPath, trackedPostpones);
   }
 }
 
@@ -3072,7 +3076,7 @@ export function getResumableState(request: Request): ResumableState {
   return request.resumableState;
 }
 
-function addToResumableParent(
+function addToReplayParent(
   node: ResumableNode,
   parentKeyPath: Root | KeyNode,
   trackedPostpones: PostponedHoles,
@@ -3088,9 +3092,9 @@ function addToResumableParent(
         parentKeyPath[1],
         parentKeyPath[2],
         ([]: Array<ResumableNode>),
-      ]: ResumableParentNode);
+      ]: ReplayNode);
       workingMap.set(parentKeyPath, parentNode);
-      addToResumableParent(parentNode, parentKeyPath[0], trackedPostpones);
+      addToReplayParent(parentNode, parentKeyPath[0], trackedPostpones);
     }
     parentNode[3].push(node);
   }
