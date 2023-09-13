@@ -578,6 +578,7 @@ function createTask(
     context,
     treeContext,
     thenableState,
+    childIndex: -1,
   }: any);
   if (__DEV__) {
     task.componentStack = null;
