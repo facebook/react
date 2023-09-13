@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a6300003667849930958d1bcf4e085a9>>
+ * @generated SignedSource<<6b16278436dd259e22a3d49533f17505>>
  */
 
 
@@ -9873,7 +9873,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -9904,6 +9905,7 @@ function FiberRootNode(
   this.hiddenUpdates = createLaneMap(null);
   this.identifierPrefix = identifierPrefix;
   this.onRecoverableError = onRecoverableError;
+  this.formState = formState;
   this.incompleteTransitions = new Map();
   this.passiveEffectDuration = this.effectDuration = 0;
   this.memoizedUpdaters = new Set();
@@ -10131,7 +10133,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1116 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-1e44ed5a",
+    version: "18.3.0-canary-db5e081b",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10187,7 +10189,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-1e44ed5a"
+  reconcilerVersion: "18.3.0-canary-db5e081b"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
@@ -10253,7 +10255,8 @@ exports.render = function (element, containerTag, callback, concurrentRoot) {
       root,
       !1,
       "",
-      onRecoverableError
+      onRecoverableError,
+      null
     )),
     (root = 1 === root ? 1 : 0),
     isDevToolsPresent && (root |= 2),

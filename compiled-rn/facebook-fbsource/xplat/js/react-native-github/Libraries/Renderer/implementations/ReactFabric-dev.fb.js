@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<588595e62718a973abbe3ee5129ccaa8>>
+ * @generated SignedSource<<01008a8950368c139ee32158a8728c5d>>
  */
 
 'use strict';
@@ -26929,7 +26929,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -26958,6 +26959,7 @@ function FiberRootNode(
   this.identifierPrefix = identifierPrefix;
   this.onRecoverableError = onRecoverableError;
 
+  this.formState = formState;
   this.incompleteTransitions = new Map();
 
   {
@@ -27000,7 +27002,8 @@ function createFiberRoot(
   // single type, like a DynamicHostConfig that is defined by the renderer.
   identifierPrefix,
   onRecoverableError,
-  transitionCallbacks
+  transitionCallbacks,
+  formState
 ) {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   var root = new FiberRootNode(
@@ -27008,7 +27011,8 @@ function createFiberRoot(
     tag,
     hydrate,
     identifierPrefix,
-    onRecoverableError
+    onRecoverableError,
+    formState
   );
   // stateNode is any.
 
@@ -27033,7 +27037,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-8ee3c01f";
+var ReactVersion = "18.3.0-canary-f73f8a34";
 
 function createPortal$1(
   children,
@@ -27177,7 +27181,9 @@ function createContainer(
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
     identifierPrefix,
-    onRecoverableError
+    onRecoverableError,
+    transitionCallbacks,
+    null
   );
 }
 function updateContainer(element, container, parentComponent, callback) {
@@ -28005,7 +28011,8 @@ function render(element, containerTag, callback, concurrentRoot) {
       false,
       null,
       "",
-      onRecoverableError
+      onRecoverableError,
+      null
     );
     roots.set(containerTag, root);
   }

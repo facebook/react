@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fc10d7aa86eca62a04f26382a5f9893e>>
+ * @generated SignedSource<<f4377d8ff1f66b2a641cbdfb6498eb2c>>
  */
 
 "use strict";
@@ -9172,7 +9172,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -9203,6 +9204,7 @@ function FiberRootNode(
   this.hiddenUpdates = createLaneMap(null);
   this.identifierPrefix = identifierPrefix;
   this.onRecoverableError = onRecoverableError;
+  this.formState = formState;
   this.incompleteTransitions = new Map();
 }
 function createPortal$1(children, containerInfo, implementation) {
@@ -9423,7 +9425,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1038 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-f14942e6",
+    version: "18.3.0-canary-af8a5ec1",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9466,7 +9468,7 @@ var internals$jscomp$inline_1280 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-f14942e6"
+  reconcilerVersion: "18.3.0-canary-af8a5ec1"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1281 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9545,7 +9547,8 @@ exports.render = function (element, containerTag, callback, concurrentRoot) {
       root,
       !1,
       "",
-      onRecoverableError
+      onRecoverableError,
+      null
     )),
     (root = createFiber(3, null, null, 1 === root ? 1 : 0)),
     (concurrentRoot.current = root),

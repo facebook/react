@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b76ec47e2228eaf84b8554f0948a2220>>
+ * @generated SignedSource<<7d829b6bea14b03ca3f0800f7f1380e0>>
  */
 
 
@@ -10122,7 +10122,8 @@ function FiberRootNode(
   tag,
   hydrate,
   identifierPrefix,
-  onRecoverableError
+  onRecoverableError,
+  formState
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -10153,6 +10154,7 @@ function FiberRootNode(
   this.hiddenUpdates = createLaneMap(null);
   this.identifierPrefix = identifierPrefix;
   this.onRecoverableError = onRecoverableError;
+  this.formState = formState;
   this.incompleteTransitions = new Map();
   this.passiveEffectDuration = this.effectDuration = 0;
   this.memoizedUpdaters = new Set();
@@ -10387,7 +10389,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1171 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-6edff5a8",
+    version: "18.3.0-canary-8bb18aca",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10443,7 +10445,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-6edff5a8"
+  reconcilerVersion: "18.3.0-canary-8bb18aca"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
@@ -10489,7 +10491,7 @@ exports.getInspectorDataForInstance = getInspectorDataForInstance;
 exports.render = function (element, containerTag, callback) {
   var root = roots.get(containerTag);
   if (!root) {
-    root = new FiberRootNode(containerTag, 0, !1, "", onRecoverableError);
+    root = new FiberRootNode(containerTag, 0, !1, "", onRecoverableError, null);
     var JSCompiler_inline_result = 0;
     isDevToolsPresent && (JSCompiler_inline_result |= 2);
     JSCompiler_inline_result = createFiber(
