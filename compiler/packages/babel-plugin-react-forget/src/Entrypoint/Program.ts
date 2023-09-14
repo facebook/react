@@ -480,8 +480,14 @@ function isReactFunctionLike(
     functionName !== null &&
     (isComponentName(functionName) || isHook(functionName))
   ) {
-    // As an added check we also look for hook invocations or JSX
-    return callsHooksOrCreatesJsx(node);
+    return (
+      // As an added check we also look for hook invocations or JSX
+      callsHooksOrCreatesJsx(node) &&
+      // and avoid helper functions that take more than one argument
+      // helpers are _usually_ named with lowercase, but some code may
+      // violate this rule
+      node.get("params").length <= 1
+    );
   }
   // Otherwise for function or arrow function expressions, check if they
   // appear as the argument to React.forwardRef() or React.memo():
