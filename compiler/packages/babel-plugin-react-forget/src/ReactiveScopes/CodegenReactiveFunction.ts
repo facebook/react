@@ -43,6 +43,9 @@ export type CodegenFunction = {
   generator: boolean;
   async: boolean;
   loc: SourceLocation;
+
+  // Compiler info for logging and heuristics
+  memoSlotsUsed: number;
 };
 
 export function codegenReactiveFunction(
@@ -89,6 +92,7 @@ export function codegenReactiveFunction(
     body,
     generator: fn.generator,
     async: fn.async,
+    memoSlotsUsed: cacheCount,
   });
 }
 

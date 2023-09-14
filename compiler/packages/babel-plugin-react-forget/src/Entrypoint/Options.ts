@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import * as t from "@babel/types";
+import { CompilerErrorDetailOptions } from "../CompilerError";
 import { EnvironmentConfig } from "../HIR/Environment";
 
 export type ExternalFunction = {
@@ -113,8 +115,26 @@ export type CompilationMode =
   // Compile all top-level functions
   | "all";
 
+export type LoggerEvent =
+  | {
+      kind: "CompileError";
+      fnLoc: t.SourceLocation | null;
+      detail: CompilerErrorDetailOptions;
+    }
+  | {
+      kind: "CompileSuccess";
+      fnLoc: t.SourceLocation | null;
+      fnName: string | null;
+      memoSlots: number;
+    }
+  | {
+      kind: "PipelineError";
+      fnLoc: t.SourceLocation | null;
+      data: any;
+    };
+
 export type Logger = {
-  logEvent(name: string, data: any): void;
+  logEvent: (filename: string | null, event: LoggerEvent) => void;
 };
 
 export const defaultOptions: PluginOptions = {

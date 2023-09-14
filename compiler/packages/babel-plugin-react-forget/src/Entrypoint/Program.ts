@@ -50,9 +50,27 @@ function hasAnyUseNoForgetDirectives(directives: t.Directive[]): boolean {
   }
   return false;
 }
-function handleError(pass: CompilerPass, err: unknown): void {
-  if (pass.opts.logger && err) {
-    pass.opts.logger.logEvent("err", err);
+function handleError(
+  pass: CompilerPass,
+  fnLoc: t.SourceLocation | null,
+  err: unknown
+): void {
+  if (pass.opts.logger) {
+    if (err instanceof CompilerError) {
+      for (const detail of err.details) {
+        pass.opts.logger.logEvent(pass.filename, {
+          kind: "CompileError",
+          fnLoc,
+          detail: detail.options,
+        });
+      }
+    } else {
+      pass.opts.logger.logEvent(pass.filename, {
+        kind: "PipelineError",
+        fnLoc,
+        data: err,
+      });
+    }
   }
   /** Always throw if the flag is enabled, otherwise we only throw if the error is critical
    * (eg an invariant is broken, meaning the compiler may be buggy). See
@@ -88,8 +106,14 @@ function compileAndInsertNewFunctionDeclaration(
   let compiledFn: CodegenFunction;
   try {
     compiledFn = compileFn(fnPath, pass.opts.environment);
+    pass.opts.logger?.logEvent(pass.filename, {
+      kind: "CompileSuccess",
+      fnLoc: fnPath.node.loc ?? null,
+      fnName: compiledFn.id?.name ?? null,
+      memoSlots: compiledFn.memoSlotsUsed,
+    });
   } catch (err) {
-    handleError(pass, err);
+    handleError(pass, fnPath.node.loc ?? null, err);
     return false;
   }
 
@@ -266,7 +290,7 @@ export function compileProgram(
         if (!shouldVisitNode(fn, pass)) {
           return;
         } else if (lintError != null) {
-          handleError(pass, lintError);
+          handleError(pass, fn.node.loc ?? null, lintError);
         } else {
           const hasMutated = compileAndInsertNewFunctionDeclaration(fn, pass);
           hasForgetMutatedOriginalSource ||= hasMutated;
@@ -280,7 +304,7 @@ export function compileProgram(
         if (!shouldVisitNode(fn, pass)) {
           return;
         } else if (lintError != null) {
-          handleError(pass, lintError);
+          handleError(pass, fn.node.loc ?? null, lintError);
         } else {
           const hasMutated = compileAndInsertNewFunctionDeclaration(fn, pass);
           hasForgetMutatedOriginalSource ||= hasMutated;
@@ -294,7 +318,7 @@ export function compileProgram(
         if (!shouldVisitNode(fn, pass)) {
           return;
         } else if (lintError != null) {
-          handleError(pass, lintError);
+          handleError(pass, fn.node.loc ?? null, lintError);
         } else {
           const hasMutated = compileAndInsertNewFunctionDeclaration(fn, pass);
           hasForgetMutatedOriginalSource ||= hasMutated;
