@@ -69,8 +69,7 @@ function compileAndInsertNewFunctionDeclaration(
     return false;
   }
 
-  let compiledFn: CodegenFunction | null = null;
-  let hasForgetMutatedOriginalSource = false;
+  let compiledFn: CodegenFunction;
   try {
     compiledFn = compileFn(fnPath, pass.opts.environment);
   } catch (err) {
@@ -92,75 +91,73 @@ function compileAndInsertNewFunctionDeclaration(
         log(err, pass.filename ?? null);
       }
     }
+    return false;
   }
 
+  // Successfully compiled
   if (pass.opts.noEmit === true) {
     return false;
   }
 
-  // Sucessfully compiled
-  if (compiledFn != null) {
-    // We are generating a new FunctionDeclaration node, so we must skip over it or this
-    // traversal will loop infinitely.
-    fnPath.skip();
+  // We are generating a new FunctionDeclaration node, so we must skip over it or this
+  // traversal will loop infinitely.
+  fnPath.skip();
 
-    let transformedFunction:
-      | t.FunctionDeclaration
-      | t.ArrowFunctionExpression
-      | t.FunctionExpression;
-    switch (fnPath.node.type) {
-      case "FunctionDeclaration": {
-        const fn: t.FunctionDeclaration = {
-          type: "FunctionDeclaration",
-          id: compiledFn.id,
-          loc: fnPath.node.loc ?? null,
-          async: compiledFn.async,
-          generator: compiledFn.generator,
-          params: compiledFn.params,
-          body: compiledFn.body,
-        };
-        transformedFunction = fn;
-        break;
-      }
-      case "ArrowFunctionExpression": {
-        const fn: t.ArrowFunctionExpression = {
-          type: "ArrowFunctionExpression",
-          loc: fnPath.node.loc ?? null,
-          async: compiledFn.async,
-          generator: compiledFn.generator,
-          params: compiledFn.params,
-          expression: fnPath.node.expression,
-          body: compiledFn.body,
-        };
-        transformedFunction = fn;
-        break;
-      }
-      case "FunctionExpression": {
-        const fn: t.FunctionExpression = {
-          type: "FunctionExpression",
-          id: compiledFn.id,
-          loc: fnPath.node.loc ?? null,
-          async: compiledFn.async,
-          generator: compiledFn.generator,
-          params: compiledFn.params,
-          body: compiledFn.body,
-        };
-        transformedFunction = fn;
-        break;
-      }
+  let transformedFunction:
+    | t.FunctionDeclaration
+    | t.ArrowFunctionExpression
+    | t.FunctionExpression;
+  switch (fnPath.node.type) {
+    case "FunctionDeclaration": {
+      const fn: t.FunctionDeclaration = {
+        type: "FunctionDeclaration",
+        id: compiledFn.id,
+        loc: fnPath.node.loc ?? null,
+        async: compiledFn.async,
+        generator: compiledFn.generator,
+        params: compiledFn.params,
+        body: compiledFn.body,
+      };
+      transformedFunction = fn;
+      break;
     }
-
-    // Ensure we avoid visiting the original function again (since we move it
-    // within the AST in gating mode)
-    ALREADY_COMPILED.add(fnPath);
-    // And avoid visiting the new version as well
-    ALREADY_COMPILED.add(transformedFunction);
-
-    insertNewFunctionDeclaration(fnPath, transformedFunction, pass);
-    hasForgetMutatedOriginalSource = true;
+    case "ArrowFunctionExpression": {
+      const fn: t.ArrowFunctionExpression = {
+        type: "ArrowFunctionExpression",
+        loc: fnPath.node.loc ?? null,
+        async: compiledFn.async,
+        generator: compiledFn.generator,
+        params: compiledFn.params,
+        expression: fnPath.node.expression,
+        body: compiledFn.body,
+      };
+      transformedFunction = fn;
+      break;
+    }
+    case "FunctionExpression": {
+      const fn: t.FunctionExpression = {
+        type: "FunctionExpression",
+        id: compiledFn.id,
+        loc: fnPath.node.loc ?? null,
+        async: compiledFn.async,
+        generator: compiledFn.generator,
+        params: compiledFn.params,
+        body: compiledFn.body,
+      };
+      transformedFunction = fn;
+      break;
+    }
   }
 
-  return hasForgetMutatedOriginalSource;
+  // Ensure we avoid visiting the original function again (since we move it
+  // within the AST in gating mode)
+  ALREADY_COMPILED.add(fnPath);
+  // And avoid visiting the new version as well
+  ALREADY_COMPILED.add(transformedFunction);
+
+  insertNewFunctionDeclaration(fnPath, transformedFunction, pass);
+
+  return true;
 }
 
 function insertNewFunctionDeclaration(
