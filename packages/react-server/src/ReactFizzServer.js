@@ -1831,6 +1831,91 @@ function renderElement(
   );
 }
 
+function resumeNode(
+  request: Request,
+  task: ReplayTask,
+  segmentId: number,
+  node: ReactNodeList,
+  childIndex: number,
+): void {
+  const prevReplay = task.replay;
+  const blockedBoundary = task.blockedBoundary;
+  const resumedSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    task.formatContext,
+    false,
+    false,
+  );
+  resumedSegment.id = segmentId;
+  resumedSegment.parentFlushed = true;
+  try {
+    // Convert the current ReplayTask to a RenderTask.
+    const renderTask: RenderTask = (task: any);
+    renderTask.replay = null;
+    renderTask.blockedSegment = resumedSegment;
+    renderNode(request, task, node, childIndex);
+    resumedSegment.status = COMPLETED;
+    if (blockedBoundary === null) {
+      request.completedRootSegment = resumedSegment;
+    } else {
+      queueCompletedSegment(blockedBoundary, resumedSegment);
+      if (blockedBoundary.parentFlushed) {
+        request.partialBoundaries.push(blockedBoundary);
+      }
+    }
+  } finally {
+    // Restore to a ReplayTask.
+    task.replay = prevReplay;
+    task.blockedSegment = null;
+  }
+}
+
+function resumeElement(
+  request: Request,
+  task: ReplayTask,
+  keyPath: Root | KeyNode,
+  segmentId: number,
+  prevThenableState: ThenableState | null,
+  type: any,
+  props: Object,
+  ref: any,
+): void {
+  const prevReplay = task.replay;
+  const blockedBoundary = task.blockedBoundary;
+  const resumedSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    task.formatContext,
+    false,
+    false,
+  );
+  resumedSegment.id = segmentId;
+  resumedSegment.parentFlushed = true;
+  try {
+    // Convert the current ReplayTask to a RenderTask.
+    const renderTask: RenderTask = (task: any);
+    renderTask.replay = null;
+    renderTask.blockedSegment = resumedSegment;
+    renderElement(request, task, keyPath, prevThenableState, type, props, ref);
+    resumedSegment.status = COMPLETED;
+    if (blockedBoundary === null) {
+      request.completedRootSegment = resumedSegment;
+    } else {
+      queueCompletedSegment(blockedBoundary, resumedSegment);
+      if (blockedBoundary.parentFlushed) {
+        request.partialBoundaries.push(blockedBoundary);
+      }
+    }
+  } finally {
+    // Restore to a ReplayTask.
+    task.replay = prevReplay;
+    task.blockedSegment = null;
+  }
+}
+
 function replayElement(
   request: Request,
   task: ReplayTask,
@@ -1865,12 +1950,29 @@ function replayElement(
           // Matched a replayable path.
           task.replay = {nodes: node[3], pendingTasks: 1};
           try {
-            renderElement(request, task, prevThenableState, type, props, ref);
+            renderElement(
+              request,
+              task,
+              keyPath,
+              prevThenableState,
+              type,
+              props,
+              ref,
+            );
             // We finished rendering this node, so now we can consume this
             // slot. This must happen after in case we rerender this task.
             replayNodes.splice(i, 1);
           } finally {
             task.replay.pendingTasks--;
+            if (
+              task.replay.pendingTasks === 0 &&
+              task.replay.nodes.length > 0
+            ) {
+              throw new Error(
+                "Couldn't find all resumable slots by key/index during replaying. " +
+                  "The tree doesn't match so React will fallback to client rendering.",
+              );
+            }
             task.replay = replay;
           }
         }
@@ -1910,7 +2012,16 @@ function replayElement(
 
           const segmentId = node[3];
 
-          // TODO: Resume.
+          resumeElement(
+            request,
+            task,
+            keyPath,
+            segmentId,
+            prevThenableState,
+            type,
+            props,
+            ref,
+          );
 
           // We finished rendering this node, so now we can consume this
           // slot. This must happen after in case we rerender this task.
@@ -1918,23 +2029,8 @@ function replayElement(
         }
         continue;
       }
-      case RESUME_SLOT: {
-        const node: ResumeSlot = candidate;
-        if (childIndex === node[1]) {
-          // Matched a resumable slot. We don't know what should be in here
-          // so whatever name/key it has we assume it's the right one.
-
-          const segmentId = node[2];
-
-          // TODO: Resume.
-
-          // We finished rendering this node, so now we can consume this
-          // slot. This must happen after in case we rerender this task.
-          replayNodes.splice(i, 1);
-          return;
-        }
-        continue;
-      }
+      // For RESUME_SLOT we ignore them here and assume we've handled them
+      // separately already.
     }
   }
   // We didn't find any matching nodes. We assume that this element was already
@@ -2044,7 +2140,6 @@ function renderNodeDestructiveImpl(
         const props = element.props;
         const ref = element.ref;
         const name = getComponentNameFromType(type);
-        const prevKeyPath = task.keyPath;
         const keyOrIndex =
           key == null ? (childIndex === -1 ? 0 : childIndex) : key;
         const keyPath = [task.keyPath, name, keyOrIndex];
@@ -2250,6 +2345,38 @@ function renderChildrenArray(
   }
   const prevTreeContext = task.treeContext;
   const totalChildren = children.length;
+
+  if (task.replay !== null) {
+    // Replay
+    // First we need to check if we have any resume slots at this level.
+    // TODO: This could be simpler if we just stored RESUME_SLOT in a separate set.
+    let hadOtherReplayNodes = false;
+    const replayNodes = task.replay.nodes;
+    for (let j = 0; j < replayNodes.length; ) {
+      const replayNode = replayNodes[j];
+      if (replayNode[0] !== RESUME_SLOT) {
+        hadOtherReplayNodes = true;
+        j++; // skip
+        continue;
+      }
+      const resumeSlot: ResumeSlot = (replayNode: any);
+      const i = resumeSlot[1]; // The index of the child to resume.
+      const segmentId = resumeSlot[2];
+      task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
+      resumeNode(request, task, segmentId, children[i], i);
+      // We finished rendering this node, so now we can consume this
+      // slot. This must happen after in case we rerender this task.
+      replayNodes.splice(j, 1);
+    }
+    // If had non-resume slot nodes, we need to also try to match them below.
+    if (!hadOtherReplayNodes) {
+      // If we didn't, we can bail early.
+      task.treeContext = prevTreeContext;
+      task.keyPath = prevKeyPath;
+      return;
+    }
+  }
+
   for (let i = 0; i < totalChildren; i++) {
     const node = children[i];
     task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i);
@@ -2257,6 +2384,7 @@ function renderChildrenArray(
     // up and render the sibling if something suspends.
     renderNode(request, task, node, i);
   }
+
   // Because this context is always set right before rendering every child, we
   // only need to reset it to the previous value at the very end.
   task.treeContext = prevTreeContext;
