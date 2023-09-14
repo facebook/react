@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-62f810e0";
+var ReactVersion = "18.3.0-www-classic-f2b91051";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -11337,7 +11337,8 @@ function queueCompletedSegment(boundary, segment) {
   if (
     segment.chunks.length === 0 &&
     segment.children.length === 1 &&
-    segment.children[0].boundary === null
+    segment.children[0].boundary === null && // Typically the id would not be assigned yet but if it's a postponed segment it might be.
+    segment.children[0].id === -1
   ) {
     // This is an empty segment. There's nothing to write, so we can instead transfer the ID
     // to the child. That way any existing references point to the child.
@@ -11681,19 +11682,20 @@ function flushSegment(request, destination, segment) {
     );
   } else if (boundary.status !== COMPLETED) {
     if (boundary.status === PENDING) {
+      // For pending boundaries we lazily assign an ID to the boundary
+      // and root segment.
       boundary.id = assignSuspenseBoundaryID(
         request.renderState,
         request.resumableState
       );
-    } // This boundary is still loading. Emit a pending suspense boundary wrapper.
-    // Assign an ID to refer to the future content by.
-
-    boundary.rootSegmentID = request.nextSegmentId++;
+      boundary.rootSegmentID = request.nextSegmentId++;
+    }
 
     if (boundary.completedSegments.length > 0) {
       // If this is at least partially complete, we can queue it to be partially emitted early.
       request.partialBoundaries.push(boundary);
-    } /// This is the first time we should have referenced this ID.
+    } // This boundary is still loading. Emit a pending suspense boundary wrapper.
+    /// This is the first time we should have referenced this ID.
 
     var id = boundary.id;
     writeStartPendingSuspenseBoundary(destination, request.renderState, id); // Flush the fallback.
@@ -11861,6 +11863,10 @@ function flushPartiallyCompletedSegment(
       );
     }
 
+    return flushSegmentContainer(request, destination, segment);
+  } else if (segmentID === boundary.rootSegmentID) {
+    // When we emit postponed boundaries, we might have assigned the ID already
+    // but it's still the root segment so we can't inject it into the parent yet.
     return flushSegmentContainer(request, destination, segment);
   } else {
     flushSegmentContainer(request, destination, segment);

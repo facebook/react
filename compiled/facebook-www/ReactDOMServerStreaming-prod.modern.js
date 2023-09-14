@@ -3509,7 +3509,8 @@ function queueCompletedSegment(boundary, segment) {
   if (
     0 === segment.chunks.length &&
     1 === segment.children.length &&
-    null === segment.children[0].boundary
+    null === segment.children[0].boundary &&
+    -1 === segment.children[0].id
   ) {
     var childSegment = segment.children[0];
     childSegment.id = segment.id;
@@ -3610,8 +3611,8 @@ function flushSegment(request, destination, segment) {
       JSCompiler_inline_result =
         JSCompiler_inline_result.boundaryPrefix + generatedID.toString(16);
       boundary.id = JSCompiler_inline_result;
+      boundary.rootSegmentID = request.nextSegmentId++;
     }
-    boundary.rootSegmentID = request.nextSegmentId++;
     0 < boundary.completedSegments.length &&
       request.partialBoundaries.push(boundary);
     writeStartPendingSuspenseBoundary(
@@ -3743,6 +3744,8 @@ function flushPartiallyCompletedSegment(
       );
     return flushSegmentContainer(request, destination, segment);
   }
+  if (segmentID === boundary.rootSegmentID)
+    return flushSegmentContainer(request, destination, segment);
   flushSegmentContainer(request, destination, segment);
   boundary = request.resumableState;
   request = request.renderState;

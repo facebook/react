@@ -3744,7 +3744,8 @@ function queueCompletedSegment(boundary, segment) {
   if (
     0 === segment.chunks.length &&
     1 === segment.children.length &&
-    null === segment.children[0].boundary
+    null === segment.children[0].boundary &&
+    -1 === segment.children[0].id
   ) {
     var childSegment = segment.children[0];
     childSegment.id = segment.id;
@@ -3955,8 +3956,8 @@ function flushSegment(request, destination, segment) {
       JSCompiler_inline_result =
         JSCompiler_inline_result.boundaryPrefix + generatedID.toString(16);
       boundary.id = JSCompiler_inline_result;
+      boundary.rootSegmentID = request.nextSegmentId++;
     }
-    boundary.rootSegmentID = request.nextSegmentId++;
     0 < boundary.completedSegments.length &&
       request.partialBoundaries.push(boundary);
     writeStartPendingSuspenseBoundary(
@@ -4082,6 +4083,8 @@ function flushPartiallyCompletedSegment(
       throw Error(formatProdErrorMessage(392));
     return flushSegmentContainer(request, destination, segment);
   }
+  if (segmentID === boundary.rootSegmentID)
+    return flushSegmentContainer(request, destination, segment);
   flushSegmentContainer(request, destination, segment);
   boundary = request.resumableState;
   request = request.renderState;
@@ -4548,4 +4551,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-aa5cc76a";
+exports.version = "18.3.0-www-classic-f7fe51fc";
