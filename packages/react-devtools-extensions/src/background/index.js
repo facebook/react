@@ -64,8 +64,8 @@ chrome.runtime.onConnect.addListener(port => {
     const tabId = port.sender.tab.id;
 
     if (ports[tabId]?.proxy) {
-      port.disconnect();
-      return;
+      ports[tabId].disconnectPipe?.();
+      ports[tabId].proxy.disconnect();
     }
 
     registerTab(tabId);

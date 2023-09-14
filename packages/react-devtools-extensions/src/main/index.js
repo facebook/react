@@ -22,6 +22,7 @@ import {
   setBrowserSelectionFromReact,
   setReactSelectionFromBrowser,
 } from './elementSelection';
+import {startReactPolling} from './reactPolling';
 import cloneStyleTags from './cloneStyleTags';
 import injectBackendManager from './injectBackendManager';
 import syncSavedPreferences from './syncSavedPreferences';
@@ -29,60 +30,6 @@ import registerEventsLogger from './registerEventsLogger';
 import getProfilingFlags from './getProfilingFlags';
 import debounce from './debounce';
 import './requestAnimationFramePolyfill';
-
-// Try polling for at least 5 seconds, in case if it takes too long to load react
-const REACT_POLLING_TICK_COOLDOWN = 250;
-const REACT_POLLING_ATTEMPTS_THRESHOLD = 20;
-
-let reactPollingTimeoutId = null;
-export function clearReactPollingTimeout() {
-  clearTimeout(reactPollingTimeoutId);
-  reactPollingTimeoutId = null;
-}
-
-export function executeIfReactHasLoaded(callback, attempt = 1) {
-  clearReactPollingTimeout();
-
-  if (attempt > REACT_POLLING_ATTEMPTS_THRESHOLD) {
-    return;
-  }
-
-  chrome.devtools.inspectedWindow.eval(
-    'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
-    (pageHasReact, exceptionInfo) => {
-      if (exceptionInfo) {
-        const {code, description, isError, isException, value} = exceptionInfo;
-
-        if (isException) {
-          console.error(
-            `Received error while checking if react has loaded: ${value}`,
-          );
-          return;
-        }
-
-        if (isError) {
-          console.error(
-            `Received error with code ${code} while checking if react has loaded: ${description}`,
-          );
-          return;
-        }
-      }
-
-      if (pageHasReact) {
-        callback();
-      } else {
-        reactPollingTimeoutId = setTimeout(
-          executeIfReactHasLoaded,
-          REACT_POLLING_TICK_COOLDOWN,
-          callback,
-          attempt + 1,
-        );
-      }
-    },
-  );
-}
-
-let lastSubscribedBridgeListener = null;
 
 function createBridge() {
   bridge = new Bridge({
@@ -370,6 +317,7 @@ function ensureInitialHTMLIsCleared(container) {
 function createComponentsPanel() {
   if (componentsPortalContainer) {
     // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(componentsPortalContainer);
     render('components');
 
     return;
@@ -389,7 +337,7 @@ function createComponentsPanel() {
 
       createdPanel.onShown.addListener(portal => {
         componentsPortalContainer = portal.container;
-        if (componentsPortalContainer != null) {
+        if (componentsPortalContainer != null && render) {
           ensureInitialHTMLIsCleared(componentsPortalContainer);
 
           render('components');
@@ -408,6 +356,7 @@ function createComponentsPanel() {
 function createProfilerPanel() {
   if (profilerPortalContainer) {
     // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(profilerPortalContainer);
     render('profiler');
 
     return;
@@ -427,7 +376,7 @@ function createProfilerPanel() {
 
       createdPanel.onShown.addListener(portal => {
         profilerPortalContainer = portal.container;
-        if (profilerPortalContainer != null) {
+        if (profilerPortalContainer != null && render) {
           ensureInitialHTMLIsCleared(profilerPortalContainer);
 
           render('profiler');
@@ -442,7 +391,7 @@ function createProfilerPanel() {
 
 function performInTabNavigationCleanup() {
   // Potentially, if react hasn't loaded yet and user performs in-tab navigation
-  clearReactPollingTimeout();
+  clearReactPollingInstance();
 
   if (store !== null) {
     // Store profiling data, so it can be used later
@@ -479,7 +428,7 @@ function performInTabNavigationCleanup() {
 
 function performFullCleanup() {
   // Potentially, if react hasn't loaded yet and user closed the browser DevTools
-  clearReactPollingTimeout();
+  clearReactPollingInstance();
 
   if ((componentsPortalContainer || profilerPortalContainer) && root) {
     // This should also emit bridge.shutdown, but only if this root was mounted
@@ -531,6 +480,8 @@ function connectExtensionPort() {
 }
 
 function mountReactDevTools() {
+  reactPollingInstance = null;
+
   registerEventsLogger();
 
   createBridgeAndStore();
@@ -541,18 +492,36 @@ function mountReactDevTools() {
   createProfilerPanel();
 }
 
-// TODO: display some disclaimer if user performs in-tab navigation to non-react application
-// when React DevTools panels are already opened, currently we will display just blank white block
-function mountReactDevToolsWhenReactHasLoaded() {
-  function onReactReady() {
-    clearReactPollingTimeout();
-    mountReactDevTools();
+let reactPollingInstance = null;
+function clearReactPollingInstance() {
+  reactPollingInstance?.abort();
+  reactPollingInstance = null;
+}
+
+function showNoReactDisclaimer() {
+  if (componentsPortalContainer) {
+    componentsPortalContainer.innerHTML =
+      '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
+    delete componentsPortalContainer._hasInitialHTMLBeenCleared;
   }
 
-  executeIfReactHasLoaded(onReactReady, 1);
+  if (profilerPortalContainer) {
+    profilerPortalContainer.innerHTML =
+      '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
+    delete profilerPortalContainer._hasInitialHTMLBeenCleared;
+  }
+}
+
+function mountReactDevToolsWhenReactHasLoaded() {
+  reactPollingInstance = startReactPolling(
+    mountReactDevTools,
+    5, // ~5 seconds
+    showNoReactDisclaimer,
+  );
 }
 
 let bridge = null;
+let lastSubscribedBridgeListener = null;
 let store = null;
 
 let profilingData = null;
