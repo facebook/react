@@ -19,7 +19,6 @@ export function transformFixtureInput(
   let language = parseLanguage(firstLine);
   let gating = null;
   let instrumentForget = null;
-  let panicOnBailout = true;
   let memoizeJsxElements = true;
   let enableAssumeHooksFollowRulesOfReact = false;
   let enableTreatHooksAsFunctions = true;
@@ -56,9 +55,6 @@ export function transformFixtureInput(
       source: "react-forget-runtime",
       importSpecifierName: "useRenderCounter",
     };
-  }
-  if (firstLine.includes("@panicOnBailout false")) {
-    panicOnBailout = false;
   }
   if (firstLine.includes("@memoizeJsxElements false")) {
     memoizeJsxElements = false;
@@ -121,8 +117,7 @@ export function transformFixtureInput(
       logger: null,
       gating,
       instrumentForget,
-      panicOnBailout,
-      isDev: true,
+      panicThreshold: 'ALL_ERRORS',
       noEmit: false,
     },
     includeAst

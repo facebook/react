@@ -25,6 +25,19 @@ export type InstrumentForgetOptions = {
   instrumentFn: ExternalFunction;
 };
 
+export type PanicThresholdOptions =
+  // Any errors will panic the compiler by throwing an exception, which will
+  // bubble up to the nearest exception handler above the Forget transform.
+  // If Forget is invoked through `ReactForgetBabelPlugin`, this will at the least
+  // skip Forget compilation for the rest of current file.
+  | "ALL_ERRORS"
+  // Panic by throwing an exception only on critical or unrecognized errors.
+  // For all other errors, skip the erroring function without inserting
+  // a Forget-compiled version (i.e. same behavior as noEmit).
+  | "CRITICAL_ERRORS"
+  // Never panic by throwing an exception.
+  | "NONE";
+
 export type PluginOptions = {
   environment: EnvironmentConfig | null;
 
@@ -73,9 +86,7 @@ export type PluginOptions = {
    */
   instrumentForget: ExternalFunction | null;
 
-  panicOnBailout: boolean;
-
-  isDev: boolean;
+  panicThreshold: PanicThresholdOptions;
 
   /**
    * When enabled, Forget will continue statically analyzing and linting code, but skip over codegen
@@ -139,11 +150,10 @@ export type Logger = {
 
 export const defaultOptions: PluginOptions = {
   compilationMode: "infer",
-  panicOnBailout: true,
+  panicThreshold: "CRITICAL_ERRORS",
   environment: null,
   logger: null,
   gating: null,
-  isDev: false,
   instrumentForget: null,
   noEmit: false,
 } as const;

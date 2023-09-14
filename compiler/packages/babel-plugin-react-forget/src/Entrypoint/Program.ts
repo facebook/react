@@ -50,6 +50,11 @@ function hasAnyUseNoForgetDirectives(directives: t.Directive[]): boolean {
   }
   return false;
 }
+
+function isCriticalError(err: unknown): boolean {
+  return !(err instanceof CompilerError) || err.isCritical();
+}
+
 function handleError(
   pass: CompilerPass,
   fnLoc: t.SourceLocation | null,
@@ -65,10 +70,17 @@ function handleError(
         });
       }
     } else {
+      let stringifiedError;
+      if (err instanceof Error) {
+        stringifiedError = err.stack ?? err.message;
+      } else {
+        stringifiedError = err?.toString() ?? "[ null ]";
+      }
+
       pass.opts.logger.logEvent(pass.filename, {
         kind: "PipelineError",
         fnLoc,
-        data: err,
+        data: stringifiedError,
       });
     }
   }
@@ -77,135 +89,89 @@ function handleError(
    * {@link CompilerError.isCritical} for mappings.
    * */
   if (
-    pass.opts.panicOnBailout ||
-    !(err instanceof CompilerError) ||
-    (err instanceof CompilerError && err.isCritical())
+    pass.opts.panicThreshold === "ALL_ERRORS" ||
+    (pass.opts.panicThreshold === "CRITICAL_ERRORS" && isCriticalError(err))
   ) {
     throw err;
-  } else {
-    if (pass.opts.isDev) {
-      log(err, pass.filename ?? null);
-    }
   }
 }
 
 /**
- * Runs the Compiler pipeline and mutates the source AST to include the newly compiled function.
- * Returns a boolean denoting if the AST was mutated or not.
+ * Mutates the source AST to include a newly Forget-compiled function.
  */
-function compileAndInsertNewFunctionDeclaration(
-  fnPath: NodePath<
+function insertNewFunctionDeclaration(
+  originalFn: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
+  compiledFn: CodegenFunction,
   pass: CompilerPass
-): boolean {
-  if (ALREADY_COMPILED.has(fnPath.node)) {
-    return false;
-  }
-
-  let compiledFn: CodegenFunction;
-  try {
-    compiledFn = compileFn(fnPath, pass.opts.environment);
-    pass.opts.logger?.logEvent(pass.filename, {
-      kind: "CompileSuccess",
-      fnLoc: fnPath.node.loc ?? null,
-      fnName: compiledFn.id?.name ?? null,
-      memoSlots: compiledFn.memoSlotsUsed,
-    });
-  } catch (err) {
-    handleError(pass, fnPath.node.loc ?? null, err);
-    return false;
-  }
-
-  // Successfully compiled
-  if (pass.opts.noEmit === true) {
-    return false;
-  }
-
-  // We are generating a new FunctionDeclaration node, so we must skip over it or this
-  // traversal will loop infinitely.
-  fnPath.skip();
-
-  let transformedFunction:
+): void {
+  let transformedFn:
     | t.FunctionDeclaration
     | t.ArrowFunctionExpression
     | t.FunctionExpression;
-  switch (fnPath.node.type) {
+  switch (originalFn.node.type) {
     case "FunctionDeclaration": {
       const fn: t.FunctionDeclaration = {
         type: "FunctionDeclaration",
         id: compiledFn.id,
-        loc: fnPath.node.loc ?? null,
+        loc: originalFn.node.loc ?? null,
         async: compiledFn.async,
         generator: compiledFn.generator,
         params: compiledFn.params,
         body: compiledFn.body,
       };
-      transformedFunction = fn;
+      transformedFn = fn;
       break;
     }
     case "ArrowFunctionExpression": {
       const fn: t.ArrowFunctionExpression = {
         type: "ArrowFunctionExpression",
-        loc: fnPath.node.loc ?? null,
+        loc: originalFn.node.loc ?? null,
         async: compiledFn.async,
         generator: compiledFn.generator,
         params: compiledFn.params,
-        expression: fnPath.node.expression,
+        expression: originalFn.node.expression,
         body: compiledFn.body,
       };
-      transformedFunction = fn;
+      transformedFn = fn;
       break;
     }
     case "FunctionExpression": {
       const fn: t.FunctionExpression = {
         type: "FunctionExpression",
         id: compiledFn.id,
-        loc: fnPath.node.loc ?? null,
+        loc: originalFn.node.loc ?? null,
         async: compiledFn.async,
         generator: compiledFn.generator,
         params: compiledFn.params,
         body: compiledFn.body,
       };
-      transformedFunction = fn;
+      transformedFn = fn;
       break;
     }
   }
 
-  // Ensure we avoid visiting the original function again (since we move it
-  // within the AST in gating mode)
-  ALREADY_COMPILED.add(fnPath);
-  // And avoid visiting the new version as well
-  ALREADY_COMPILED.add(transformedFunction);
+  // Avoid visiting the new transformed version
+  ALREADY_COMPILED.add(transformedFn);
 
-  insertNewFunctionDeclaration(fnPath, transformedFunction, pass);
-
-  return true;
-}
-
-function insertNewFunctionDeclaration(
-  fnPath: NodePath<
-    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >,
-  compiledFn:
-    | t.FunctionDeclaration
-    | t.ArrowFunctionExpression
-    | t.FunctionExpression,
-  pass: CompilerPass
-): void {
   if (pass.opts.instrumentForget != null) {
     const instrumentFnName = pass.opts.instrumentForget.importSpecifierName;
-    addInstrumentForget(compiledFn, instrumentFnName);
+    addInstrumentForget(transformedFn, instrumentFnName);
   }
   if (pass.opts)
     if (pass.opts.gating != null) {
       if (pass.opts.instrumentForget != null) {
         const instrumentFnName = pass.opts.instrumentForget.importSpecifierName;
-        addInstrumentForget(fnPath.node, instrumentFnName);
+        addInstrumentForget(originalFn.node, instrumentFnName);
       }
-      insertGatedFunctionDeclaration(fnPath, compiledFn, pass.opts.gating);
+      insertGatedFunctionDeclaration(
+        originalFn,
+        transformedFn,
+        pass.opts.gating
+      );
     } else {
-      fnPath.replaceWith(compiledFn);
+      originalFn.replaceWith(transformedFn);
     }
 }
 
@@ -263,8 +229,61 @@ export function compileProgram(
   pass: CompilerPass
 ): void {
   const options = parsePluginOptions(pass.opts);
+  // Record lint errors and critical errors as depending on Forget's config,
+  // we may still need to run Forget's analysis on every function (even if we
+  // have already encountered errors) for reporting.
   const lintError = findEslintSuppressions(pass.comments);
+  let hasCriticalError = lintError != null;
   let hasForgetMutatedOriginalSource: boolean = false;
+
+  const traverseFunction = (
+    fn:
+      | NodePath<t.FunctionDeclaration>
+      | NodePath<t.FunctionExpression>
+      | NodePath<t.ArrowFunctionExpression>,
+    pass: CompilerPass
+  ): void => {
+    if (!shouldVisitNode(fn, pass) || ALREADY_COMPILED.has(fn.node)) {
+      return;
+    }
+
+    // We may be generating a new FunctionDeclaration node, so we must skip over it or this
+    // traversal will loop infinitely.
+    // Ensure we avoid visiting the original function again.
+    ALREADY_COMPILED.add(fn.node);
+    fn.skip();
+
+    if (lintError != null) {
+      // Report lint suppressions as InvalidReact if we find forget-able
+      // functions within the file
+      handleError(pass, fn.node.loc ?? null, lintError);
+    }
+
+    let compiledFn: CodegenFunction;
+    try {
+      compiledFn = compileFn(fn, pass.opts.environment);
+      pass.opts.logger?.logEvent(pass.filename, {
+        kind: "CompileSuccess",
+        fnLoc: fn.node.loc ?? null,
+        fnName: compiledFn.id?.name ?? null,
+        memoSlots: compiledFn.memoSlotsUsed,
+      });
+    } catch (err) {
+      handleError(pass, fn.node.loc ?? null, err);
+
+      hasCriticalError ||= isCriticalError(err);
+      return;
+    }
+
+    if (pass.opts.noEmit) {
+      return;
+    } else if (!hasCriticalError) {
+      // Only insert Forget-ified functions if we have not encountered a critical
+      // error elsewhere in the file, regardless of bailout mode.
+      insertNewFunctionDeclaration(fn, compiledFn, pass);
+      hasForgetMutatedOriginalSource = true;
+    }
+  };
 
   // Main traversal to compile with Forget
   program.traverse(
@@ -283,47 +302,11 @@ export function compileProgram(
         return;
       },
 
-      FunctionDeclaration(
-        fn: NodePath<t.FunctionDeclaration>,
-        pass: CompilerPass
-      ): void {
-        if (!shouldVisitNode(fn, pass)) {
-          return;
-        } else if (lintError != null) {
-          handleError(pass, fn.node.loc ?? null, lintError);
-        } else {
-          const hasMutated = compileAndInsertNewFunctionDeclaration(fn, pass);
-          hasForgetMutatedOriginalSource ||= hasMutated;
-        }
-      },
+      FunctionDeclaration: traverseFunction,
 
-      FunctionExpression(
-        fn: NodePath<t.FunctionExpression>,
-        pass: CompilerPass
-      ): void {
-        if (!shouldVisitNode(fn, pass)) {
-          return;
-        } else if (lintError != null) {
-          handleError(pass, fn.node.loc ?? null, lintError);
-        } else {
-          const hasMutated = compileAndInsertNewFunctionDeclaration(fn, pass);
-          hasForgetMutatedOriginalSource ||= hasMutated;
-        }
-      },
+      FunctionExpression: traverseFunction,
 
-      ArrowFunctionExpression(
-        fn: NodePath<t.ArrowFunctionExpression>,
-        pass: CompilerPass
-      ): void {
-        if (!shouldVisitNode(fn, pass)) {
-          return;
-        } else if (lintError != null) {
-          handleError(pass, fn.node.loc ?? null, lintError);
-        } else {
-          const hasMutated = compileAndInsertNewFunctionDeclaration(fn, pass);
-          hasForgetMutatedOriginalSource ||= hasMutated;
-        }
-      },
+      ArrowFunctionExpression: traverseFunction,
     },
     {
       ...pass,
@@ -407,18 +390,6 @@ function shouldVisitNode(
       );
     }
   }
-}
-
-function log(error: CompilerError, filename: string | null): void {
-  const filenameStr = filename ? `in ${filename}` : "";
-  console.log(
-    error.details
-      .map(
-        (e) =>
-          `[ReactForget] Skipping compilation of component ${filenameStr}: ${e.printErrorMessage()}`
-      )
-      .join("\n")
-  );
 }
 
 function isHookName(s: string): boolean {
