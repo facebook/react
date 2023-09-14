@@ -2337,11 +2337,50 @@ function renderChildrenArray(
   task: Task,
   children: Array<any>,
   childIndex: number,
-) {
+): void {
   const prevKeyPath = task.keyPath;
   if (childIndex !== -1) {
-    // TODO: Consume Replay nodes.
-    task.keyPath = [task.keyPath, '', childIndex];
+    task.keyPath = [task.keyPath, 'Fragment', childIndex];
+    if (task.replay !== null) {
+      // If we're supposed follow this array, we'd expect to see a ReplayNode matching
+      // this fragment.
+      const replayTask: ReplayTask = task;
+      const replay = task.replay;
+      const replayNodes = replay.nodes;
+      for (let j = 0; j < replayNodes.length; j++) {
+        const replayNode = replayNodes[j];
+        if (replayNode[0] !== REPLAY_NODE) {
+          continue;
+        }
+        const node: ReplayNode = (replayNode: any);
+        if (node[2] !== childIndex) {
+          continue;
+        }
+        // Matched a replayable path.
+        replayTask.replay = {nodes: node[3], pendingTasks: 1};
+        try {
+          renderChildrenArray(request, task, children, -1);
+        } finally {
+          replayTask.replay.pendingTasks--;
+          if (
+            replayTask.replay.pendingTasks === 0 &&
+            replayTask.replay.nodes.length > 0
+          ) {
+            throw new Error(
+              "Couldn't find all resumable slots by key/index during replaying. " +
+                "The tree doesn't match so React will fallback to client rendering.",
+            );
+          }
+          replayTask.replay = replay;
+        }
+        // We finished rendering this node, so now we can consume this
+        // slot. This must happen after in case we rerender this task.
+        replayNodes.splice(j, 1);
+        break;
+      }
+      task.keyPath = prevKeyPath;
+      return;
+    }
   }
   const prevTreeContext = task.treeContext;
   const totalChildren = children.length;

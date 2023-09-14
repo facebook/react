@@ -105,7 +105,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
     const temp = document.createElement('div');
     temp.innerHTML = result;
-    insertNodesAndExecuteScripts(temp, container, null);
+    await insertNodesAndExecuteScripts(temp, container, null);
   }
 
   // @gate experimental
@@ -576,6 +576,51 @@ describe('ReactDOMFizzStaticBrowser', () => {
         {'Hi'}
         {'Hello'}
       </div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in a nested array', async () => {
+    let prerendering = true;
+    const Hole = React.lazy(async () => {
+      React.unstable_postpone();
+    });
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            Hi
+            {[<Postpone key="key" />, prerendering ? Hole : 'World']}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      prerendered.postponed,
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hi', 'Hello', 'World']}</div>,
     );
   });
 
