@@ -586,6 +586,20 @@ function useOptimistic<S, A>(
   return [passthrough, unsupportedSetOptimisticState];
 }
 
+function createPostbackFormStateKey(
+  permalink: string | void,
+  componentKeyPath: KeyNode | null,
+  hookIndex: number,
+): string {
+  if (permalink !== undefined) {
+    return 'p' + permalink;
+  } else {
+    // Append a node to the key path that represents the form state hook.
+    const keyPath: KeyNode = [componentKeyPath, null, hookIndex];
+    return 'k' + JSON.stringify(keyPath);
+  }
+}
+
 function useFormState<S, P>(
   action: (S, P) => Promise<S>,
   initialState: S,
@@ -605,32 +619,42 @@ function useFormState<S, P>(
     // This is a server action. These have additional features to enable
     // MPA-style form submissions with progressive enhancement.
 
+    // TODO: If the same permalink is passed to multiple useFormStates, and
+    // they all have the same action signature, Fizz will pass the postback
+    // state to all of them. We should probably only pass it to the first one,
+    // and/or warn.
+
+    // The key is lazily generated and deduped so the that the keypath doesn't
+    // get JSON.stringify-ed unnecessarily, and at most once.
+    let nextPostbackStateKey = null;
+
     // Determine the current form state. If we received state during an MPA form
     // submission, then we will reuse that, if the action identity matches.
     // Otherwise we'll use the initial state argument. We will emit a comment
     // marker into the stream that indicates whether the state was reused.
     let state = initialState;
-
-    // Append a node to the key path that represents the form state hook.
-    const componentKey: KeyNode | null = (currentlyRenderingKeyPath: any);
-    const key: KeyNode = [componentKey, null, formStateHookIndex];
-    const keyJSON = JSON.stringify(key);
-
+    const componentKeyPath = (currentlyRenderingKeyPath: any);
     const postbackFormState = getFormState(request);
     // $FlowIgnore[prop-missing]
     const isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
     if (postbackFormState !== null && typeof isSignatureEqual === 'function') {
-      const postbackKeyJSON = postbackFormState[1];
+      const postbackKey = postbackFormState[1];
       const postbackReferenceId = postbackFormState[2];
       const postbackBoundArity = postbackFormState[3];
       if (
-        postbackKeyJSON === keyJSON &&
         isSignatureEqual.call(action, postbackReferenceId, postbackBoundArity)
       ) {
-        // This was a match
-        formStateMatchingIndex = formStateHookIndex;
-        // Reuse the state that was submitted by the form.
-        state = postbackFormState[0];
+        nextPostbackStateKey = createPostbackFormStateKey(
+          permalink,
+          componentKeyPath,
+          formStateHookIndex,
+        );
+        if (postbackKey === nextPostbackStateKey) {
+          // This was a match
+          formStateMatchingIndex = formStateHookIndex;
+          // Reuse the state that was submitted by the form.
+          state = postbackFormState[0];
+        }
       }
     }
 
@@ -648,17 +672,26 @@ function useFormState<S, P>(
       dispatch.$$FORM_ACTION = (prefix: string) => {
         const metadata: ReactCustomFormAction =
           boundAction.$$FORM_ACTION(prefix);
-        const formData = metadata.data;
-        if (formData) {
-          formData.append('$ACTION_KEY', keyJSON);
-        }
 
         // Override the action URL
         if (permalink !== undefined) {
           if (__DEV__) {
             checkAttributeStringCoercion(permalink, 'target');
           }
-          metadata.action = permalink + '';
+          permalink += '';
+          metadata.action = permalink;
+        }
+
+        const formData = metadata.data;
+        if (formData) {
+          if (nextPostbackStateKey === null) {
+            nextPostbackStateKey = createPostbackFormStateKey(
+              permalink,
+              componentKeyPath,
+              formStateHookIndex,
+            );
+          }
+          formData.append('$ACTION_KEY', nextPostbackStateKey);
         }
         return metadata;
       };
