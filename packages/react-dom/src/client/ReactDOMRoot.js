@@ -57,7 +57,7 @@ export type HydrateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
-  experimental_formState?: ReactFormState<any> | null,
+  experimental_formState?: ReactFormState<any, any> | null,
   ...
 };
 

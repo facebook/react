@@ -272,7 +272,7 @@ type BaseFiberRootProperties = {
     errorInfo: {digest?: ?string, componentStack?: ?string},
   ) => void,
 
-  formState: ReactFormState<any> | null,
+  formState: ReactFormState<any, any> | null,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.

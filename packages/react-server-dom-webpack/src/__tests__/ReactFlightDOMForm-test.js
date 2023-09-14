@@ -67,7 +67,7 @@ describe('ReactFlightDOMForm', () => {
       webpackServerMap,
     );
     const returnValue = boundAction();
-    const formState = ReactServerDOMServer.decodeFormState(
+    const formState = await ReactServerDOMServer.decodeFormState(
       await returnValue,
       formData,
       webpackServerMap,
@@ -433,6 +433,174 @@ describe('ReactFlightDOMForm', () => {
       });
       expect(container.textContent).toBe('121');
     }
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it(
+    'useFormState preserves state if arity is the same, but different ' +
+      'arguments are bound (i.e. inline closure)',
+    async () => {
+      const serverAction = serverExports(async function action(
+        stepSize,
+        prevState,
+        formData,
+      ) {
+        return prevState + stepSize;
+      });
+
+      function Form({action}) {
+        const [count, dispatch] = useFormState(action, 1);
+        return <form action={dispatch}>{count}</form>;
+      }
+
+      function Client({action}) {
+        return (
+          <div>
+            <Form action={action} />
+            <Form action={action} />
+            <Form action={action} />
+          </div>
+        );
+      }
+
+      const ClientRef = await clientExports(Client);
+
+      const rscStream = ReactServerDOMServer.renderToReadableStream(
+        // Note: `.bind` is the same as an inline closure with 'use server'
+        <ClientRef action={serverAction.bind(null, 1)} />,
+        webpackMap,
+      );
+      const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+      const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+      await readIntoContainer(ssrStream);
+
+      expect(container.textContent).toBe('111');
+
+      // There are three identical forms. We're going to submit the second one.
+      const form = container.getElementsByTagName('form')[1];
+      const {formState} = await submit(form);
+
+      // Simulate an MPA form submission by resetting the container and
+      // rendering again.
+      container.innerHTML = '';
+
+      // On the next page, the same server action is rendered again, but with
+      // a different bound stepSize argument. We should treat this as the same
+      // action signature.
+      const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
+        // Note: `.bind` is the same as an inline closure with 'use server'
+        <ClientRef action={serverAction.bind(null, 5)} />,
+        webpackMap,
+      );
+      const postbackResponse =
+        ReactServerDOMClient.createFromReadableStream(postbackRscStream);
+      const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
+        postbackResponse,
+        {experimental_formState: formState},
+      );
+      await readIntoContainer(postbackSsrStream);
+
+      // The state should have been preserved because the action signatures are
+      // the same. (Note that the amount increased by 1, because that was the
+      // value of stepSize at the time the form was submitted)
+      expect(container.textContent).toBe('121');
+
+      // Now submit the form again. This time, the state should increase by 5
+      // because the stepSize argument has changed.
+      const form2 = container.getElementsByTagName('form')[1];
+      const {formState: formState2} = await submit(form2);
+
+      container.innerHTML = '';
+
+      const postbackRscStream2 = ReactServerDOMServer.renderToReadableStream(
+        // Note: `.bind` is the same as an inline closure with 'use server'
+        <ClientRef action={serverAction.bind(null, 5)} />,
+        webpackMap,
+      );
+      const postbackResponse2 =
+        ReactServerDOMClient.createFromReadableStream(postbackRscStream2);
+      const postbackSsrStream2 = await ReactDOMServer.renderToReadableStream(
+        postbackResponse2,
+        {experimental_formState: formState2},
+      );
+      await readIntoContainer(postbackSsrStream2);
+
+      expect(container.textContent).toBe('171');
+    },
+  );
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('useFormState does not reuse state if action signatures are different', async () => {
+    // This is the same as the previous test, except instead of using bind to
+    // configure the server action (i.e. a closure), it swaps the action.
+    const increaseBy1 = serverExports(async function action(
+      prevState,
+      formData,
+    ) {
+      return prevState + 1;
+    });
+
+    const increaseBy5 = serverExports(async function action(
+      prevState,
+      formData,
+    ) {
+      return prevState + 5;
+    });
+
+    function Form({action}) {
+      const [count, dispatch] = useFormState(action, 1);
+      return <form action={dispatch}>{count}</form>;
+    }
+
+    function Client({action}) {
+      return (
+        <div>
+          <Form action={action} />
+          <Form action={action} />
+          <Form action={action} />
+        </div>
+      );
+    }
+
+    const ClientRef = await clientExports(Client);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={increaseBy1} />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    expect(container.textContent).toBe('111');
+
+    // There are three identical forms. We're going to submit the second one.
+    const form = container.getElementsByTagName('form')[1];
+    const {formState} = await submit(form);
+
+    // Simulate an MPA form submission by resetting the container and
+    // rendering again.
+    container.innerHTML = '';
+
+    // On the next page, a different server action is rendered. It should not
+    // reuse the state from the previous page.
+    const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action={increaseBy5} />,
+      webpackMap,
+    );
+    const postbackResponse =
+      ReactServerDOMClient.createFromReadableStream(postbackRscStream);
+    const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
+      postbackResponse,
+      {experimental_formState: formState},
+    );
+    await readIntoContainer(postbackSsrStream);
+
+    // The state should not have been preserved because the action signatures
+    // are not the same.
+    expect(container.textContent).toBe('111');
   });
 
   // @gate enableFormActions
