@@ -60,6 +60,12 @@ function isNumeric(str: string): boolean {
 
 chrome.runtime.onConnect.addListener(port => {
   if (port.name === 'proxy') {
+    // Might not be present for restricted pages in Firefox
+    if (port.sender?.tab?.id == null) {
+      // Not disconnecting it, so it would not reconnect
+      return;
+    }
+
     // Proxy content script is executed in tab, so it should have it specified.
     const tabId = port.sender.tab.id;
 
