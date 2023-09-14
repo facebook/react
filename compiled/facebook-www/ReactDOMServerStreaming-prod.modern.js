@@ -2590,24 +2590,21 @@ function useFormState(action, initialState, permalink) {
   var formStateHookIndex = formStateCounter++,
     request = currentlyRenderingRequest;
   if ("function" === typeof action.$$FORM_ACTION) {
-    var keyJSON = JSON.stringify([
-      currentlyRenderingKeyPath,
-      null,
-      formStateHookIndex
-    ]);
+    var nextPostbackStateKey = null,
+      componentKeyPath = currentlyRenderingKeyPath;
     request = request.formState;
     var isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
     if (null !== request && "function" === typeof isSignatureEqual) {
-      var postbackReferenceId = request[2],
-        postbackBoundArity = request[3];
-      request[1] === keyJSON &&
-        isSignatureEqual.call(
-          action,
-          postbackReferenceId,
-          postbackBoundArity
-        ) &&
-        ((formStateMatchingIndex = formStateHookIndex),
-        (initialState = request[0]));
+      var postbackKey = request[1];
+      isSignatureEqual.call(action, request[2], request[3]) &&
+        ((nextPostbackStateKey =
+          void 0 !== permalink
+            ? "p" + permalink
+            : "k" +
+              JSON.stringify([componentKeyPath, null, formStateHookIndex])),
+        postbackKey === nextPostbackStateKey &&
+          ((formStateMatchingIndex = formStateHookIndex),
+          (initialState = request[0])));
     }
     var boundAction = action.bind(null, initialState);
     action = function (payload) {
@@ -2616,9 +2613,17 @@ function useFormState(action, initialState, permalink) {
     "function" === typeof boundAction.$$FORM_ACTION &&
       (action.$$FORM_ACTION = function (prefix) {
         prefix = boundAction.$$FORM_ACTION(prefix);
+        void 0 !== permalink &&
+          ((permalink += ""), (prefix.action = permalink));
         var formData = prefix.data;
-        formData && formData.append("$ACTION_KEY", keyJSON);
-        void 0 !== permalink && (prefix.action = permalink + "");
+        formData &&
+          (null === nextPostbackStateKey &&
+            (nextPostbackStateKey =
+              void 0 !== permalink
+                ? "p" + permalink
+                : "k" +
+                  JSON.stringify([componentKeyPath, null, formStateHookIndex])),
+          formData.append("$ACTION_KEY", nextPostbackStateKey));
         return prefix;
       });
     return [initialState, action];

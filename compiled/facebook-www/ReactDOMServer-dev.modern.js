@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-82925a4c";
+var ReactVersion = "18.3.0-www-modern-b814d906";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -9186,6 +9186,16 @@ function useOptimistic(passthrough, reducer) {
   return [passthrough, unsupportedSetOptimisticState];
 }
 
+function createPostbackFormStateKey(permalink, componentKeyPath, hookIndex) {
+  if (permalink !== undefined) {
+    return "p" + permalink;
+  } else {
+    // Append a node to the key path that represents the form state hook.
+    var keyPath = [componentKeyPath, null, hookIndex];
+    return "k" + JSON.stringify(keyPath);
+  }
+}
+
 function useFormState(action, initialState, permalink) {
   resolveCurrentlyRenderingComponent(); // Count the number of useFormState hooks per component. We also use this to
   // track the position of this useFormState hook relative to the other ones in
@@ -9199,32 +9209,43 @@ function useFormState(action, initialState, permalink) {
   if (typeof formAction === "function") {
     // This is a server action. These have additional features to enable
     // MPA-style form submissions with progressive enhancement.
-    // Determine the current form state. If we received state during an MPA form
+    // TODO: If the same permalink is passed to multiple useFormStates, and
+    // they all have the same action signature, Fizz will pass the postback
+    // state to all of them. We should probably only pass it to the first one,
+    // and/or warn.
+    // The key is lazily generated and deduped so the that the keypath doesn't
+    // get JSON.stringify-ed unnecessarily, and at most once.
+    var nextPostbackStateKey = null; // Determine the current form state. If we received state during an MPA form
     // submission, then we will reuse that, if the action identity matches.
     // Otherwise we'll use the initial state argument. We will emit a comment
     // marker into the stream that indicates whether the state was reused.
-    var state = initialState; // Append a node to the key path that represents the form state hook.
 
-    var componentKey = currentlyRenderingKeyPath;
-    var key = [componentKey, null, formStateHookIndex];
-    var keyJSON = JSON.stringify(key);
+    var state = initialState;
+    var componentKeyPath = currentlyRenderingKeyPath;
     var postbackFormState = getFormState(request); // $FlowIgnore[prop-missing]
 
     var isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
 
     if (postbackFormState !== null && typeof isSignatureEqual === "function") {
-      var postbackKeyJSON = postbackFormState[1];
+      var postbackKey = postbackFormState[1];
       var postbackReferenceId = postbackFormState[2];
       var postbackBoundArity = postbackFormState[3];
 
       if (
-        postbackKeyJSON === keyJSON &&
         isSignatureEqual.call(action, postbackReferenceId, postbackBoundArity)
       ) {
-        // This was a match
-        formStateMatchingIndex = formStateHookIndex; // Reuse the state that was submitted by the form.
+        nextPostbackStateKey = createPostbackFormStateKey(
+          permalink,
+          componentKeyPath,
+          formStateHookIndex
+        );
 
-        state = postbackFormState[0];
+        if (postbackKey === nextPostbackStateKey) {
+          // This was a match
+          formStateMatchingIndex = formStateHookIndex; // Reuse the state that was submitted by the form.
+
+          state = postbackFormState[0];
+        }
       }
     } // Bind the state to the first argument of the action.
 
@@ -9237,19 +9258,29 @@ function useFormState(action, initialState, permalink) {
     if (typeof boundAction.$$FORM_ACTION === "function") {
       // $FlowIgnore[prop-missing]
       dispatch.$$FORM_ACTION = function (prefix) {
-        var metadata = boundAction.$$FORM_ACTION(prefix);
-        var formData = metadata.data;
-
-        if (formData) {
-          formData.append("$ACTION_KEY", keyJSON);
-        } // Override the action URL
+        var metadata = boundAction.$$FORM_ACTION(prefix); // Override the action URL
 
         if (permalink !== undefined) {
           {
             checkAttributeStringCoercion(permalink, "target");
           }
 
-          metadata.action = permalink + "";
+          permalink += "";
+          metadata.action = permalink;
+        }
+
+        var formData = metadata.data;
+
+        if (formData) {
+          if (nextPostbackStateKey === null) {
+            nextPostbackStateKey = createPostbackFormStateKey(
+              permalink,
+              componentKeyPath,
+              formStateHookIndex
+            );
+          }
+
+          formData.append("$ACTION_KEY", nextPostbackStateKey);
         }
 
         return metadata;
