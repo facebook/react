@@ -33,13 +33,9 @@ export type CompilerPass = {
   comments: (t.CommentBlock | t.CommentLine)[];
 };
 
-function hasUseForgetDirective(directive: t.Directive): boolean {
-  return directive.value.value === "use forget";
-}
-
 function hasAnyUseForgetDirectives(directives: t.Directive[]): boolean {
   for (const directive of directives) {
-    if (hasUseForgetDirective(directive)) {
+    if (directive.value.value === "use forget") {
       return true;
     }
   }
@@ -53,6 +49,26 @@ function hasAnyUseNoForgetDirectives(directives: t.Directive[]): boolean {
     }
   }
   return false;
+}
+function handleError(pass: CompilerPass, err: unknown): void {
+  if (pass.opts.logger && err) {
+    pass.opts.logger.logEvent("err", err);
+  }
+  /** Always throw if the flag is enabled, otherwise we only throw if the error is critical
+   * (eg an invariant is broken, meaning the compiler may be buggy). See
+   * {@link CompilerError.isCritical} for mappings.
+   * */
+  if (
+    pass.opts.panicOnBailout ||
+    !(err instanceof CompilerError) ||
+    (err instanceof CompilerError && err.isCritical())
+  ) {
+    throw err;
+  } else {
+    if (pass.opts.isDev) {
+      log(err, pass.filename ?? null);
+    }
+  }
 }
 
 /**
@@ -73,24 +89,7 @@ function compileAndInsertNewFunctionDeclaration(
   try {
     compiledFn = compileFn(fnPath, pass.opts.environment);
   } catch (err) {
-    if (pass.opts.logger && err) {
-      pass.opts.logger.logEvent("err", err);
-    }
-    /** Always throw if the flag is enabled, otherwise we only throw if the error is critical
-     * (eg an invariant is broken, meaning the compiler may be buggy). See
-     * {@link CompilerError.isCritical} for mappings.
-     * */
-    if (
-      pass.opts.panicOnBailout ||
-      !(err instanceof CompilerError) ||
-      (err instanceof CompilerError && err.isCritical())
-    ) {
-      throw err;
-    } else {
-      if (pass.opts.isDev) {
-        log(err, pass.filename ?? null);
-      }
-    }
+    handleError(pass, err);
     return false;
   }
 
@@ -186,20 +185,10 @@ function insertNewFunctionDeclaration(
     }
 }
 
-// This is a hack to work around what seems to be a Babel bug. Babel doesn't
-// consistently respect the `skip()` function to avoid revisiting a node within
-// a pass, so we use this set to track nodes that we have compiled.
-const ALREADY_COMPILED: WeakSet<object> | Set<object> = new (WeakSet ?? Set)();
-
-export function compileProgram(
-  program: NodePath<t.Program>,
-  pass: CompilerPass
-): void {
-  const options = parsePluginOptions(pass.opts);
+function findEslintSuppressions(
+  fileComments: Array<t.CommentBlock | t.CommentLine>
+): CompilerError | null {
   const violations = [];
-  const fileComments = pass.comments;
-  let hasForgetMutatedOriginalSource: boolean = false;
-  let fileHasUseForgetDirective = false;
 
   if (Array.isArray(fileComments)) {
     for (const comment of fileComments) {
@@ -214,26 +203,10 @@ export function compileProgram(
   }
 
   if (violations.length > 0) {
-    program.traverse({
-      Directive(directive) {
-        if (hasUseForgetDirective(directive.node)) {
-          fileHasUseForgetDirective = true;
-        }
-      },
-    });
-
     const reason =
       "React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior";
     const error = new CompilerError();
     for (const violation of violations) {
-      if (options.logger != null) {
-        options.logger.logEvent("err", {
-          reason,
-          filename: pass.filename,
-          violation,
-        });
-      }
-
       error.pushErrorDetail(
         new CompilerErrorDetail({
           reason,
@@ -250,19 +223,24 @@ export function compileProgram(
         })
       );
     }
-
-    if (fileHasUseForgetDirective) {
-      if (options.panicOnBailout || error.isCritical()) {
-        throw error;
-      } else {
-        if (options.isDev) {
-          log(error, pass.filename ?? null);
-        }
-      }
-    }
-
-    return;
+    return error;
+  } else {
+    return null;
   }
+}
+
+// This is a hack to work around what seems to be a Babel bug. Babel doesn't
+// consistently respect the `skip()` function to avoid revisiting a node within
+// a pass, so we use this set to track nodes that we have compiled.
+const ALREADY_COMPILED: WeakSet<object> | Set<object> = new (WeakSet ?? Set)();
+
+export function compileProgram(
+  program: NodePath<t.Program>,
+  pass: CompilerPass
+): void {
+  const options = parsePluginOptions(pass.opts);
+  const lintError = findEslintSuppressions(pass.comments);
+  let hasForgetMutatedOriginalSource: boolean = false;
 
   // Main traversal to compile with Forget
   program.traverse(
@@ -287,10 +265,11 @@ export function compileProgram(
       ): void {
         if (!shouldVisitNode(fn, pass)) {
           return;
-        }
-
-        if (compileAndInsertNewFunctionDeclaration(fn, pass) === true) {
-          hasForgetMutatedOriginalSource = true;
+        } else if (lintError != null) {
+          handleError(pass, lintError);
+        } else {
+          const hasMutated = compileAndInsertNewFunctionDeclaration(fn, pass);
+          hasForgetMutatedOriginalSource ||= hasMutated;
         }
       },
 
@@ -300,10 +279,11 @@ export function compileProgram(
       ): void {
         if (!shouldVisitNode(fn, pass)) {
           return;
-        }
-
-        if (compileAndInsertNewFunctionDeclaration(fn, pass) === true) {
-          hasForgetMutatedOriginalSource = true;
+        } else if (lintError != null) {
+          handleError(pass, lintError);
+        } else {
+          const hasMutated = compileAndInsertNewFunctionDeclaration(fn, pass);
+          hasForgetMutatedOriginalSource ||= hasMutated;
         }
       },
 
@@ -313,10 +293,11 @@ export function compileProgram(
       ): void {
         if (!shouldVisitNode(fn, pass)) {
           return;
-        }
-
-        if (compileAndInsertNewFunctionDeclaration(fn, pass) === true) {
-          hasForgetMutatedOriginalSource = true;
+        } else if (lintError != null) {
+          handleError(pass, lintError);
+        } else {
+          const hasMutated = compileAndInsertNewFunctionDeclaration(fn, pass);
+          hasForgetMutatedOriginalSource ||= hasMutated;
         }
       },
     },
