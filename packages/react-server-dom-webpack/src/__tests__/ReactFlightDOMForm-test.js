@@ -605,6 +605,90 @@ describe('ReactFlightDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
+  it('when permalink is provided, useFormState compares that instead of the keypath', async () => {
+    const serverAction = serverExports(async function action(
+      prevState,
+      formData,
+    ) {
+      return prevState + 1;
+    });
+
+    function Form({action, permalink}) {
+      const [count, dispatch] = useFormState(action, 1, permalink);
+      return <form action={dispatch}>{count}</form>;
+    }
+
+    function Page1({action, permalink}) {
+      return <Form action={action} permalink={permalink} />;
+    }
+
+    function Page2({action, permalink}) {
+      return <Form action={action} permalink={permalink} />;
+    }
+
+    const Page1Ref = await clientExports(Page1);
+    const Page2Ref = await clientExports(Page2);
+
+    const rscStream = ReactServerDOMServer.renderToReadableStream(
+      <Page1Ref action={serverAction} permalink="/permalink" />,
+      webpackMap,
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const ssrStream = await ReactDOMServer.renderToReadableStream(response);
+    await readIntoContainer(ssrStream);
+
+    expect(container.textContent).toBe('1');
+
+    // Submit the form
+    const form = container.getElementsByTagName('form')[0];
+    const {formState} = await submit(form);
+
+    // Simulate an MPA form submission by resetting the container and
+    // rendering again.
+    container.innerHTML = '';
+
+    // On the next page, the same server action is rendered again, but in
+    // a different component tree. However, because a permalink option was
+    // passed, the state should be preserved.
+    const postbackRscStream = ReactServerDOMServer.renderToReadableStream(
+      <Page2Ref action={serverAction} permalink="/permalink" />,
+      webpackMap,
+    );
+    const postbackResponse =
+      ReactServerDOMClient.createFromReadableStream(postbackRscStream);
+    const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
+      postbackResponse,
+      {experimental_formState: formState},
+    );
+    await readIntoContainer(postbackSsrStream);
+
+    expect(container.textContent).toBe('2');
+
+    // Now submit the form again. This time, the permalink will be different, so
+    // the state is not preserved.
+    const form2 = container.getElementsByTagName('form')[0];
+    const {formState: formState2} = await submit(form2);
+
+    container.innerHTML = '';
+
+    const postbackRscStream2 = ReactServerDOMServer.renderToReadableStream(
+      <Page1Ref action={serverAction} permalink="/some-other-permalink" />,
+      webpackMap,
+    );
+    const postbackResponse2 =
+      ReactServerDOMClient.createFromReadableStream(postbackRscStream2);
+    const postbackSsrStream2 = await ReactDOMServer.renderToReadableStream(
+      postbackResponse2,
+      {experimental_formState: formState2},
+    );
+    await readIntoContainer(postbackSsrStream2);
+
+    // The state was reset because the permalink didn't match
+    expect(container.textContent).toBe('1');
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
   it('useFormState can change the action URL with the `permalink` argument', async () => {
     const serverAction = serverExports(function action(prevState) {
       return {state: prevState.count + 1};
