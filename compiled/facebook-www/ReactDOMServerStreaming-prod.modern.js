@@ -2849,7 +2849,7 @@ function finishFunctionComponent(
   formStateMatchingIndex
 ) {
   var didEmitFormStateMarkers = !1;
-  if (0 !== formStateCount) {
+  if (0 !== formStateCount && null !== request.formState) {
     var segment = task.blockedSegment;
     if (null !== segment) {
       didEmitFormStateMarkers = !0;

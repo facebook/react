@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-b814d906";
+var ReactVersion = "18.3.0-www-modern-de2d6098";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -10140,11 +10140,10 @@ function finishFunctionComponent(
 ) {
   var didEmitFormStateMarkers = false;
 
-  if (formStateCount !== 0) {
+  if (formStateCount !== 0 && request.formState !== null) {
     // For each useFormState hook, emit a marker that indicates whether we
-    // rendered using the form state passed at the root.
-    // TODO: As an optimization, Fizz should only emit these markers if form
-    // state is passed at the root.
+    // rendered using the form state passed at the root. We only emit these
+    // markers if form state is passed at the root.
     var segment = task.blockedSegment;
 
     if (segment === null);
