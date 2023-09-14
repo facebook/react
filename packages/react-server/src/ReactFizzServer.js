@@ -1193,11 +1193,10 @@ function finishFunctionComponent(
   formStateMatchingIndex: number,
 ) {
   let didEmitFormStateMarkers = false;
-  if (formStateCount !== 0) {
+  if (formStateCount !== 0 && request.formState !== null) {
     // For each useFormState hook, emit a marker that indicates whether we
-    // rendered using the form state passed at the root.
-    // TODO: As an optimization, Fizz should only emit these markers if form
-    // state is passed at the root.
+    // rendered using the form state passed at the root. We only emit these
+    // markers if form state is passed at the root.
     const segment = task.blockedSegment;
     if (segment === null) {
       // Implies we're in reumable mode.

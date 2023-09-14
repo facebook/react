@@ -2015,13 +2015,18 @@ function mountFormState<S, P>(
 ): [S, (P) => void] {
   let initialState = initialStateProp;
   if (getIsHydrating()) {
-    const isMatching = tryToClaimNextHydratableFormMarkerInstance(
-      currentlyRenderingFiber,
-    );
     const root: FiberRoot = (getWorkInProgressRoot(): any);
     const ssrFormState = root.formState;
-    if (ssrFormState !== null && isMatching) {
-      initialState = ssrFormState[0];
+    // If a formState option was passed to the root, there are form state
+    // markers that we need to hydrate. These indicate whether the form state
+    // matches this hook instance.
+    if (ssrFormState !== null) {
+      const isMatching = tryToClaimNextHydratableFormMarkerInstance(
+        currentlyRenderingFiber,
+      );
+      if (isMatching) {
+        initialState = ssrFormState[0];
+      }
     }
   }
   const initialStateThenable: Thenable<S> = {
