@@ -176,6 +176,7 @@ type ReplaySuspenseBoundary = [
   string | number /* key */,
   Array<ResumableNode> /* children */,
   SuspenseBoundaryID /* id */,
+  number /* rootSegmentID */,
 ];
 
 type ReplayNode =
@@ -1957,6 +1958,7 @@ function trackPostpone(
       request.renderState,
       request.resumableState,
     );
+    boundary.rootSegmentID = request.nextSegmentId++;
 
     const boundaryKeyPath = boundary.keyPath;
     if (boundaryKeyPath === null) {
@@ -1971,6 +1973,7 @@ function trackPostpone(
       boundaryKeyPath[2],
       children,
       boundary.id,
+      boundary.rootSegmentID,
     ];
     trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
     addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
@@ -2021,7 +2024,7 @@ function injectPostponedHole(
   segment.children.push(newSegment);
   // Reset lastPushedText for current Segment since the new Segment "consumed" it
   segment.lastPushedText = false;
-  return segment;
+  return newSegment;
 }
 
 function spawnNewSuspendedTask(
@@ -2316,7 +2319,9 @@ function queueCompletedSegment(
   if (
     segment.chunks.length === 0 &&
     segment.children.length === 1 &&
-    segment.children[0].boundary === null
+    segment.children[0].boundary === null &&
+    // Typically the id would not be assigned yet but if it's a postponed segment it might be.
+    segment.children[0].id === -1
   ) {
     // This is an empty segment. There's nothing to write, so we can instead transfer the ID
     // to the child. That way any existing references point to the child.
@@ -2668,19 +2673,21 @@ function flushSegment(
     );
   } else if (boundary.status !== COMPLETED) {
     if (boundary.status === PENDING) {
+      // For pending boundaries we lazily assign an ID to the boundary
+      // and root segment.
       boundary.id = assignSuspenseBoundaryID(
         request.renderState,
         request.resumableState,
       );
+      boundary.rootSegmentID = request.nextSegmentId++;
     }
-    // This boundary is still loading. Emit a pending suspense boundary wrapper.
 
-    // Assign an ID to refer to the future content by.
-    boundary.rootSegmentID = request.nextSegmentId++;
     if (boundary.completedSegments.length > 0) {
       // If this is at least partially complete, we can queue it to be partially emitted early.
       request.partialBoundaries.push(boundary);
     }
+
+    // This boundary is still loading. Emit a pending suspense boundary wrapper.
 
     /// This is the first time we should have referenced this ID.
     const id = boundary.id;
@@ -2868,6 +2875,10 @@ function flushPartiallyCompletedSegment(
       );
     }
 
+    return flushSegmentContainer(request, destination, segment);
+  } else if (segmentID === boundary.rootSegmentID) {
+    // When we emit postponed boundaries, we might have assigned the ID already
+    // but it's still the root segment so we can't inject it into the parent yet.
     return flushSegmentContainer(request, destination, segment);
   } else {
     flushSegmentContainer(request, destination, segment);
