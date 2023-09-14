@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-5b6fb822";
+var ReactVersion = "18.3.0-www-modern-9f6e7af7";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -9192,66 +9192,82 @@ function useFormState(action, initialState, permalink) {
   // this component, so we can generate a unique key for each one.
 
   var formStateHookIndex = formStateCounter++;
-  var request = currentlyRenderingRequest; // Append a node to the key path that represents the form state hook.
+  var request = currentlyRenderingRequest; // $FlowIgnore[prop-missing]
 
-  var componentKey = currentlyRenderingKeyPath;
-  var key = [componentKey, null, formStateHookIndex];
-  var keyJSON = JSON.stringify(key); // Get the form state. If we received form state from a previous page, then
-  // we should reuse that, if the action identity matches. Otherwise we'll use
-  // the initial state argument. We emit a comment marker into the stream
-  // that indicates whether the state was reused.
+  var formAction = action.$$FORM_ACTION;
 
-  var state;
-  var postbackFormState = getFormState(request);
+  if (typeof formAction === "function") {
+    // This is a server action. These have additional features to enable
+    // MPA-style form submissions with progressive enhancement.
+    // Determine the current form state. If we received state during an MPA form
+    // submission, then we will reuse that, if the action identity matches.
+    // Otherwise we'll use the initial state argument. We will emit a comment
+    // marker into the stream that indicates whether the state was reused.
+    var state = initialState; // Append a node to the key path that represents the form state hook.
 
-  if (postbackFormState !== null) {
-    var postbackKey = postbackFormState[1]; // TODO: Compare the action identity, too
-    // TODO: If a permalink is used, disregard the key and compare that instead.
+    var componentKey = currentlyRenderingKeyPath;
+    var key = [componentKey, null, formStateHookIndex];
+    var keyJSON = JSON.stringify(key);
+    var postbackFormState = getFormState(request); // $FlowIgnore[prop-missing]
 
-    if (keyJSON === postbackKey) {
-      // This was a match.
-      formStateMatchingIndex = formStateHookIndex; // Reuse the state that was submitted by the form.
+    var isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
 
-      state = postbackFormState[0];
-    } else {
-      state = initialState;
-    }
-  } else {
-    // TODO: As an optimization, Fizz should only emit these markers if form
-    // state is passed at the root.
-    state = initialState;
-  } // Bind the state to the first argument of the action.
+    if (postbackFormState !== null && typeof isSignatureEqual === "function") {
+      var postbackKeyJSON = postbackFormState[1];
+      var postbackReferenceId = postbackFormState[2];
+      var postbackBoundArity = postbackFormState[3];
 
-  var boundAction = action.bind(null, state); // Wrap the action so the return value is void.
+      if (
+        postbackKeyJSON === keyJSON &&
+        isSignatureEqual.call(action, postbackReferenceId, postbackBoundArity)
+      ) {
+        // This was a match
+        formStateMatchingIndex = formStateHookIndex; // Reuse the state that was submitted by the form.
 
-  var dispatch = function (payload) {
-    boundAction(payload);
-  }; // $FlowIgnore[prop-missing]
+        state = postbackFormState[0];
+      }
+    } // Bind the state to the first argument of the action.
 
-  if (typeof boundAction.$$FORM_ACTION === "function") {
-    // $FlowIgnore[prop-missing]
-    dispatch.$$FORM_ACTION = function (prefix) {
+    var boundAction = action.bind(null, state); // Wrap the action so the return value is void.
+
+    var dispatch = function (payload) {
+      boundAction(payload);
+    }; // $FlowIgnore[prop-missing]
+
+    if (typeof boundAction.$$FORM_ACTION === "function") {
       // $FlowIgnore[prop-missing]
-      var metadata = boundAction.$$FORM_ACTION(prefix);
-      var formData = metadata.data;
+      dispatch.$$FORM_ACTION = function (prefix) {
+        var metadata = boundAction.$$FORM_ACTION(prefix);
+        var formData = metadata.data;
 
-      if (formData) {
-        formData.append("$ACTION_KEY", keyJSON);
-      } // Override the action URL
+        if (formData) {
+          formData.append("$ACTION_KEY", keyJSON);
+        } // Override the action URL
 
-      if (permalink !== undefined) {
-        {
-          checkAttributeStringCoercion(permalink, "target");
+        if (permalink !== undefined) {
+          {
+            checkAttributeStringCoercion(permalink, "target");
+          }
+
+          metadata.action = permalink + "";
         }
 
-        metadata.action = permalink + "";
-      }
+        return metadata;
+      };
+    }
 
-      return metadata;
+    return [state, dispatch];
+  } else {
+    // This is not a server action, so the implementation is much simpler.
+    // Bind the state to the first argument of the action.
+    var _boundAction = action.bind(null, initialState); // Wrap the action so the return value is void.
+
+    var _dispatch2 = function (payload) {
+      _boundAction(payload);
     };
-  }
 
-  return [state, dispatch];
+    return [initialState, _dispatch2];
+  }
 }
 
 function useId() {

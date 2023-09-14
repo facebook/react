@@ -2738,32 +2738,50 @@ function useOptimistic(passthrough) {
   return [passthrough, unsupportedSetOptimisticState];
 }
 function useFormState(action, initialState, permalink) {
-  function dispatch(payload) {
-    boundAction(payload);
-  }
   resolveCurrentlyRenderingComponent();
   var formStateHookIndex = formStateCounter++,
-    request = currentlyRenderingRequest,
-    keyJSON = JSON.stringify([
+    request = currentlyRenderingRequest;
+  if ("function" === typeof action.$$FORM_ACTION) {
+    var keyJSON = JSON.stringify([
       currentlyRenderingKeyPath,
       null,
       formStateHookIndex
     ]);
-  request = request.formState;
-  null !== request &&
-    keyJSON === request[1] &&
-    ((formStateMatchingIndex = formStateHookIndex),
-    (initialState = request[0]));
-  var boundAction = action.bind(null, initialState);
-  "function" === typeof boundAction.$$FORM_ACTION &&
-    (dispatch.$$FORM_ACTION = function (prefix) {
-      prefix = boundAction.$$FORM_ACTION(prefix);
-      var formData = prefix.data;
-      formData && formData.append("$ACTION_KEY", keyJSON);
-      void 0 !== permalink && (prefix.action = permalink + "");
-      return prefix;
-    });
-  return [initialState, dispatch];
+    request = request.formState;
+    var isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
+    if (null !== request && "function" === typeof isSignatureEqual) {
+      var postbackReferenceId = request[2],
+        postbackBoundArity = request[3];
+      request[1] === keyJSON &&
+        isSignatureEqual.call(
+          action,
+          postbackReferenceId,
+          postbackBoundArity
+        ) &&
+        ((formStateMatchingIndex = formStateHookIndex),
+        (initialState = request[0]));
+    }
+    var boundAction = action.bind(null, initialState);
+    action = function (payload) {
+      boundAction(payload);
+    };
+    "function" === typeof boundAction.$$FORM_ACTION &&
+      (action.$$FORM_ACTION = function (prefix) {
+        prefix = boundAction.$$FORM_ACTION(prefix);
+        var formData = prefix.data;
+        formData && formData.append("$ACTION_KEY", keyJSON);
+        void 0 !== permalink && (prefix.action = permalink + "");
+        return prefix;
+      });
+    return [initialState, action];
+  }
+  var boundAction$10 = action.bind(null, initialState);
+  return [
+    initialState,
+    function (payload) {
+      boundAction$10(payload);
+    }
+  ];
 }
 function unwrapThenable(thenable) {
   var index = thenableIndexCounter;
@@ -4351,13 +4369,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$15 = partialBoundaries[i];
+      var boundary$17 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.renderState.boundaryResources =
-          boundary$15.resources;
-        var completedSegments = boundary$15.completedSegments;
+          boundary$17.resources;
+        var completedSegments = boundary$17.completedSegments;
         for (
           resumableState$jscomp$1 = 0;
           resumableState$jscomp$1 < completedSegments.length;
@@ -4367,7 +4385,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$15,
+              boundary$17,
               completedSegments[resumableState$jscomp$1]
             )
           ) {
@@ -4379,7 +4397,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$1);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$15.resources,
+          boundary$17.resources,
           clientRenderedBoundaries.renderState
         );
       }
@@ -4442,8 +4460,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$17) {
-    logRecoverableError(request, error$17), fatalError(request, error$17);
+  } catch (error$19) {
+    logRecoverableError(request, error$19), fatalError(request, error$19);
   }
 }
 function onError() {}
@@ -4530,4 +4548,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-53a2640c";
+exports.version = "18.3.0-www-classic-aa5cc76a";
