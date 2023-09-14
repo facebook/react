@@ -1280,12 +1280,15 @@ function codegenJsxAttribute(
       let value;
       switch (innerValue.type) {
         case "StringLiteral":
-        case "JSXElement":
-        case "JSXFragment": {
+        case "JSXElement": {
           value = innerValue;
           break;
         }
         default: {
+          // NOTE JSXFragment is technically allowed as an attribute value per the spec
+          // but many tools do not support this case. We emit fragments wrapped in an
+          // expression container for compatibility purposes.
+          // spec: https://github.com/facebook/jsx/blob/main/AST.md#jsx-attributes
           value = createJsxExpressionContainer(attribute.place.loc, innerValue);
           break;
         }
