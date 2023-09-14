@@ -576,6 +576,7 @@ function createTask(
 ): Task {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
+    // The new task is rootTask
     request.pendingRootTasks++;
   } else {
     blockedBoundary.pendingTasks++;
@@ -2213,6 +2214,7 @@ function erroredTask(
     errorDigest = logRecoverableError(request, error);
   }
   if (boundary === null) {
+    // This task is rootTask
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
@@ -2261,6 +2263,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   segment.status = ABORTED;
 
   if (boundary === null) {
+    // This task is rootTask
     request.allPendingTasks--;
     // We didn't complete the root so we have nothing to show. We can close
     // the request;
@@ -2342,6 +2345,7 @@ function finishedTask(
   segment: Segment,
 ) {
   if (boundary === null) {
+    // This task is rootTask
     if (segment.parentFlushed) {
       if (request.completedRootSegment !== null) {
         throw new Error(
