@@ -557,6 +557,13 @@ export type ObjectProperty = {
   place: Place;
 };
 
+export type ObjectMethod = {
+  kind: "ObjectMethod";
+  dependencies: Array<Place>;
+  loweredFunc: HIRFunction;
+  loc: SourceLocation;
+};
+
 export enum InstructionKind {
   /**
    * const declaration
