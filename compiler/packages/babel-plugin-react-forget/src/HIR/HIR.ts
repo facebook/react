@@ -557,11 +557,15 @@ export type ObjectProperty = {
   place: Place;
 };
 
+export type LoweredFunction = {
+  dependencies: Array<Place>;
+  func: HIRFunction;
+};
+
 export type ObjectMethod = {
   kind: "ObjectMethod";
-  dependencies: Array<Place>;
-  loweredFunc: HIRFunction;
   loc: SourceLocation;
+  loweredFunc: LoweredFunction;
 };
 
 export enum InstructionKind {
@@ -844,8 +848,7 @@ export type JsxAttribute =
 export type FunctionExpression = {
   kind: "FunctionExpression";
   name: string | null;
-  dependencies: Array<Place>;
-  loweredFunc: HIRFunction;
+  loweredFunc: LoweredFunction;
   expr: t.ArrowFunctionExpression | t.FunctionExpression;
   loc: SourceLocation;
 };

@@ -68,7 +68,7 @@ export function validateFrozenLambdas(fn: HIRFunction): void {
       switch (instr.value.kind) {
         case "FunctionExpression": {
           if (
-            instr.value.dependencies.some(
+            instr.value.loweredFunc.dependencies.some(
               (place) =>
                 place.effect === Effect.Mutate &&
                 !isRefValueType(place.identifier) &&

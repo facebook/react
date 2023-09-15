@@ -99,7 +99,7 @@ export function inlineUseMemo(fn: HIRFunction): void {
               continue;
             }
 
-            if (body.loweredFunc.params.length > 0) {
+            if (body.loweredFunc.func.params.length > 0) {
               CompilerError.invalidReact({
                 reason: "useMemo callbacks may not accept any arguments",
                 description: null,
@@ -108,7 +108,10 @@ export function inlineUseMemo(fn: HIRFunction): void {
               });
             }
 
-            if (body.loweredFunc.async || body.loweredFunc.generator) {
+            if (
+              body.loweredFunc.func.async ||
+              body.loweredFunc.func.generator
+            ) {
               CompilerError.invalidReact({
                 reason:
                   "useMemo callbacks may not be async or generator functions",
@@ -141,7 +144,7 @@ export function inlineUseMemo(fn: HIRFunction): void {
             // as if it were a single labeled statement, and replace all returns with gotos
             // to the label fallthrough.
             const newTerminal: LabelTerminal = {
-              block: body.loweredFunc.body.entry,
+              block: body.loweredFunc.func.body.entry,
               id: makeInstructionId(0),
               kind: "label",
               fallthrough: continuationBlockId,
@@ -160,7 +163,7 @@ export function inlineUseMemo(fn: HIRFunction): void {
 
             // Rewrite blocks from the lambda to replace any `return` with a
             // store to the result and `goto` the continuation block
-            for (const [id, block] of body.loweredFunc.body.blocks) {
+            for (const [id, block] of body.loweredFunc.func.body.blocks) {
               block.preds.clear();
               rewriteBlock(fn.env, block, continuationBlockId, result);
               fn.body.blocks.set(id, block);

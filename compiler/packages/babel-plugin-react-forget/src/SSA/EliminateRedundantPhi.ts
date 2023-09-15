@@ -107,7 +107,7 @@ export function eliminateRedundantPhi(
         }
 
         if (instr.value.kind === "FunctionExpression") {
-          const { context } = instr.value.loweredFunc;
+          const { context } = instr.value.loweredFunc.func;
           for (const place of context) {
             rewritePlace(place, rewrites);
           }
@@ -115,7 +115,7 @@ export function eliminateRedundantPhi(
           // recursive call to:
           // - eliminate phi nodes in child node
           // - propagate rewrites, which may have changed between iterations
-          eliminateRedundantPhi(instr.value.loweredFunc, rewrites);
+          eliminateRedundantPhi(instr.value.loweredFunc.func, rewrites);
         }
       }
 

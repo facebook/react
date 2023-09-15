@@ -107,7 +107,7 @@ function applyConstantPropagation(
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       if (instr.value.kind === "FunctionExpression") {
-        for (const operand of instr.value.dependencies) {
+        for (const operand of instr.value.loweredFunc.dependencies) {
           functionDependencies.add(operand.identifier.id);
         }
       }
@@ -434,7 +434,7 @@ function evaluateInstruction(
       return placeValue;
     }
     case "FunctionExpression": {
-      constantPropagationImpl(value.loweredFunc, constants);
+      constantPropagationImpl(value.loweredFunc.func, constants);
       return null;
     }
     default: {

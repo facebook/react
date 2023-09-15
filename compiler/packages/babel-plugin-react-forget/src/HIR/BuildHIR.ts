@@ -2737,8 +2737,7 @@ function lowerFunctionExpression(
   return {
     kind: "FunctionExpression",
     name,
-    loweredFunc,
-    dependencies: captured.refs,
+    loweredFunc: { func: loweredFunc, dependencies: captured.refs },
     expr: expr.node,
     loc: exprLoc,
   };

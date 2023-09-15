@@ -69,7 +69,7 @@ function apply(func: HIRFunction, unifier: Unifier): void {
       lvalue.identifier.type = unifier.get(lvalue.identifier.type);
 
       if (value.kind === "FunctionExpression") {
-        apply(value.loweredFunc, unifier);
+        apply(value.loweredFunc.func, unifier);
       }
     }
   }
@@ -256,7 +256,7 @@ function* generateInstructionTypes(
     }
 
     case "FunctionExpression": {
-      yield* generate(value.loweredFunc);
+      yield* generate(value.loweredFunc.func);
       break;
     }
 

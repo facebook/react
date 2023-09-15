@@ -71,7 +71,7 @@ export default function analyseFunctions(func: HIRFunction): void {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
         case "FunctionExpression": {
-          lower(instr.value.loweredFunc);
+          lower(instr.value.loweredFunc.func);
           infer(instr.value, state, func.context);
           break;
         }
@@ -118,7 +118,7 @@ function infer(
   context: Place[]
 ): void {
   const mutations = new Map<string, Effect>();
-  for (const operand of value.loweredFunc.context) {
+  for (const operand of value.loweredFunc.func.context) {
     if (
       isMutatedOrReassigned(operand.identifier) &&
       operand.identifier.name !== null
@@ -128,7 +128,7 @@ function infer(
     operand.identifier.mutableRange.end = operand.identifier.mutableRange.start;
   }
 
-  for (const dep of value.dependencies) {
+  for (const dep of value.loweredFunc.dependencies) {
     let name: string | null = null;
 
     if (state.properties.has(dep.identifier)) {
@@ -174,7 +174,7 @@ function infer(
     const effect = mutations.get(place.identifier.name);
     if (effect !== undefined) {
       place.effect = effect === Effect.Unknown ? Effect.Capture : effect;
-      value.dependencies.push(place);
+      value.loweredFunc.dependencies.push(place);
     }
   }
 }

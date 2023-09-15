@@ -170,7 +170,7 @@ export function* eachInstructionValueOperand(
       break;
     }
     case "FunctionExpression": {
-      yield* instrValue.dependencies;
+      yield* instrValue.loweredFunc.dependencies;
       break;
     }
     case "TaggedTemplateExpression": {
@@ -457,7 +457,8 @@ export function mapInstructionOperands(
       break;
     }
     case "FunctionExpression": {
-      instrValue.dependencies = instrValue.dependencies.map((d) => fn(d));
+      instrValue.loweredFunc.dependencies =
+        instrValue.loweredFunc.dependencies.map((d) => fn(d));
       break;
     }
     case "TaggedTemplateExpression": {

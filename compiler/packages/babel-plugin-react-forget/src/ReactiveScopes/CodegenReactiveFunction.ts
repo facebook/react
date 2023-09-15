@@ -1088,7 +1088,7 @@ function codegenInstructionValue(
       break;
     }
     case "FunctionExpression": {
-      const loweredFunc = instrValue.loweredFunc;
+      const loweredFunc = instrValue.loweredFunc.func;
       const reactiveFunction = buildReactiveFunction(loweredFunc);
       pruneUnusedLabels(reactiveFunction);
       pruneUnusedLValues(reactiveFunction);

@@ -463,14 +463,14 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "FunctionExpression": {
-      const fn = printFunction(instrValue.loweredFunc)
+      const fn = printFunction(instrValue.loweredFunc.func)
         .split("\n")
         .map((line) => `      ${line}`)
         .join("\n");
-      const deps = instrValue.dependencies
+      const deps = instrValue.loweredFunc.dependencies
         .map((dep) => printPlace(dep))
         .join(",");
-      const context = instrValue.loweredFunc.context
+      const context = instrValue.loweredFunc.func.context
         .map((dep) => printPlace(dep))
         .join(",");
       value = `Function @deps[${deps}] @context[${context}]:\n${fn}`;
