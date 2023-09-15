@@ -105,7 +105,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
     const temp = document.createElement('div');
     temp.innerHTML = result;
-    insertNodesAndExecuteScripts(temp, container, null);
+    await insertNodesAndExecuteScripts(temp, container, null);
   }
 
   // @gate experimental
@@ -490,26 +490,27 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     await readIntoContainer(resumed);
 
-    // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hello', 'World']}</div>,
+    );
   });
 
   // @gate enablePostpone
-  it('supports postponing in lazy in prerender and resuming later', async () => {
+  it('supports postponing in prerender and resuming with a prefix', async () => {
     let prerendering = true;
-    const Hole = React.lazy(async () => {
-      React.unstable_postpone();
-    });
-
     function Postpone() {
-      return 'Hello';
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'World';
     }
 
     function App() {
       return (
         <div>
           <Suspense fallback="Loading...">
-            Hi
-            {prerendering ? Hole : <Postpone />}
+            Hello
+            <Postpone />
           </Suspense>
         </div>
       );
@@ -531,7 +532,135 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     await readIntoContainer(resumed);
 
-    // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hello', 'World']}</div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in lazy in prerender and resuming later', async () => {
+    let prerendering = true;
+    const Hole = React.lazy(async () => {
+      React.unstable_postpone();
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            Hi
+            {prerendering ? Hole : 'Hello'}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      prerendered.postponed,
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Hi'}
+        {'Hello'}
+      </div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in a nested array', async () => {
+    let prerendering = true;
+    const Hole = React.lazy(async () => {
+      React.unstable_postpone();
+    });
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            Hi
+            {[<Postpone key="key" />, prerendering ? Hole : 'World']}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      prerendered.postponed,
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hi', 'Hello', 'World']}</div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in lazy as a direct child', async () => {
+    let prerendering = true;
+    const Hole = React.lazy(async () => {
+      React.unstable_postpone();
+    });
+    function Postpone() {
+      return prerendering ? Hole : 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Postpone key="key" />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      prerendered.postponed,
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
   // @gate enablePostpone

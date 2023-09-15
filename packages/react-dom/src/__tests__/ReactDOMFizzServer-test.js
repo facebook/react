@@ -6365,6 +6365,6 @@ describe('ReactDOMFizzServer', () => {
       resumed.pipe(writable);
     });
 
-    // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 });

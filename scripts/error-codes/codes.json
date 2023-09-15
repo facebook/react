@@ -471,5 +471,9 @@
   "483": "Hooks are not supported inside an async component. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
   "484": "A Server Component was postponed. The reason is omitted in production builds to avoid leaking sensitive details.",
   "485": "Cannot update form state while rendering.",
-  "486": "It should not be possible to postpone at the root. This is a bug in React."
+  "486": "It should not be possible to postpone at the root. This is a bug in React.",
+  "487": "Did not expect to see a Suspense boundary in this slot. The tree doesn't match so React will fallback to client rendering.",
+  "488": "Couldn't find all resumable slots by key/index during replaying. The tree doesn't match so React will fallback to client rendering.",
+  "489": "Expected to see a component of type \"%s\" in this slot. The tree doesn't match so React will fallback to client rendering.",
+  "490": "Expected to see a Suspense boundary in this slot. The tree doesn't match so React will fallback to client rendering."
 }
