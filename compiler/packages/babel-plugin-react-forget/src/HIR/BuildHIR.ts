@@ -32,6 +32,7 @@ import {
   InstructionKind,
   InstructionValue,
   JsxAttribute,
+  LoweredFunction,
   ObjectPattern,
   ObjectProperty,
   ObjectPropertyKey,
@@ -2708,6 +2709,25 @@ function lowerFunctionExpression(
   if (expr.isFunctionExpression()) {
     name = expr.get("id")?.node?.name ?? null;
   }
+  const loweredFunc = lowerFunction(builder, expr);
+  if (!loweredFunc) {
+    return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+  }
+  return {
+    kind: "FunctionExpression",
+    name,
+    expr: expr.node,
+    loc: exprLoc,
+    loweredFunc,
+  };
+}
+
+function lowerFunction(
+  builder: HIRBuilder,
+  expr: NodePath<
+    t.FunctionExpression | t.ArrowFunctionExpression | t.ObjectMethod
+  >
+): LoweredFunction | null {
   const componentScope: Scope = builder.parentFunction.scope;
   const captured = gatherCapturedDeps(builder, expr, componentScope);
 
@@ -2729,19 +2749,12 @@ function lowerFunctionExpression(
     lowering
       .unwrapErr()
       .details.forEach((detail) => builder.errors.pushErrorDetail(detail));
-    return {
-      kind: "UnsupportedNode",
-      node: exprNode,
-      loc: exprLoc,
-    };
+    return null;
   }
   loweredFunc = lowering.unwrap();
   return {
-    kind: "FunctionExpression",
-    name,
-    loweredFunc: { func: loweredFunc, dependencies: captured.refs },
-    expr: expr.node,
-    loc: exprLoc,
+    func: loweredFunc,
+    dependencies: captured.refs,
   };
 }
 
@@ -3270,7 +3283,9 @@ function captureScopes({ from, to }: { from: Scope; to: Scope }): Set<Scope> {
 
 function gatherCapturedDeps(
   builder: HIRBuilder,
-  fn: NodePath<t.FunctionExpression | t.ArrowFunctionExpression>,
+  fn: NodePath<
+    t.FunctionExpression | t.ArrowFunctionExpression | t.ObjectMethod
+  >,
   componentScope: Scope
 ): { identifiers: t.Identifier[]; refs: Place[] } {
   const capturedIds: Map<t.Identifier, number> = new Map();
