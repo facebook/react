@@ -34,6 +34,7 @@ import {
   JsxAttribute,
   ObjectPattern,
   ObjectProperty,
+  ObjectPropertyKey,
   Place,
   ReturnTerminal,
   SourceLocation,
@@ -1159,7 +1160,7 @@ function lowerStatement(
 function lowerObjectPropertyKey(
   builder: HIRBuilder,
   key: t.PrivateName | t.Expression
-): { name: string; type: "string" | "identifier" } | null {
+): ObjectPropertyKey | null {
   if (key.type === "Identifier") {
     return {
       name: key.name,
@@ -1245,6 +1246,7 @@ function lowerExpression(
           const value = lowerExpressionToTemporary(builder, valuePath);
           properties.push({
             kind: "ObjectProperty",
+            type: "property",
             place: value,
             key: loweredKey,
           });
@@ -3123,6 +3125,7 @@ function lowerAssignment(
             }
             properties.push({
               kind: "ObjectProperty",
+              type: "property",
               place: identifier,
               key: loweredKey,
             });
@@ -3133,6 +3136,7 @@ function lowerAssignment(
             );
             properties.push({
               kind: "ObjectProperty",
+              type: "property",
               place: { ...temp },
               key: loweredKey,
             });

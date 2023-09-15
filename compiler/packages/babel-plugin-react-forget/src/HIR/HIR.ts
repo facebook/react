@@ -554,6 +554,7 @@ export type ObjectPropertyKey = {
 export type ObjectProperty = {
   kind: "ObjectProperty";
   key: ObjectPropertyKey;
+  type: "property" | "method";
   place: Place;
 };
 
