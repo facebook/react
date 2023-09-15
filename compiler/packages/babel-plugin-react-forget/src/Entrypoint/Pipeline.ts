@@ -55,7 +55,11 @@ import {
 } from "../ReactiveScopes";
 import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
-import { logHIRFunction, logReactiveFunction } from "../Utils/logger";
+import {
+  logCodegenFunction,
+  logHIRFunction,
+  logReactiveFunction,
+} from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import {
   validateFrozenLambdas,
@@ -319,6 +323,7 @@ export function compileFn(
 export function log(value: CompilerPipelineValue): CompilerPipelineValue {
   switch (value.kind) {
     case "ast": {
+      logCodegenFunction(value.name, value.value);
       break;
     }
     case "hir": {

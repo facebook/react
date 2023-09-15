@@ -8,6 +8,7 @@
 import {
   IdentifierId,
   makeInstructionId,
+  Place,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveValue,
@@ -33,8 +34,17 @@ import {
  * to be independently memoized
  */
 export function memoizeFbtOperandsInSameScope(fn: ReactiveFunction): void {
-  visitReactiveFunction(fn, new Transform(), undefined);
+  const transform = new Transform();
+  while (true) {
+    let size = transform.fbtValues.size;
+    visitReactiveFunction(fn, transform, undefined);
+    if (size === transform.fbtValues.size) {
+      break;
+    }
+  }
 }
+
+const FBT_TAGS: Set<string> = new Set(["fbt", "fbt:param"]);
 
 class Transform extends ReactiveFunctionVisitor<void> {
   // Values that represent *potential* references of `fbt` as a JSX tag name
@@ -52,19 +62,15 @@ class Transform extends ReactiveFunctionVisitor<void> {
     if (
       value.kind === "Primitive" &&
       typeof value.value === "string" &&
-      value.value === "fbt"
+      FBT_TAGS.has(value.value)
     ) {
       // We don't distinguish between tag names and strings, so record
       // all `fbt` string literals in case they are used as a jsx tag.
       this.fbtValues.add(lvalue.identifier.id);
-    } else if (value.kind === "LoadGlobal" && value.name === "fbt") {
+    } else if (value.kind === "LoadGlobal" && FBT_TAGS.has(value.name)) {
       // Record references to `fbt` as a global
       this.fbtValues.add(lvalue.identifier.id);
-    } else if (
-      isFbtJsxExpression(this.fbtValues, value) ||
-      (value.kind === "CallExpression" &&
-        this.fbtValues.has(value.callee.identifier.id))
-    ) {
+    } else if (isFbtCallExpression(this.fbtValues, value)) {
       const fbtScope = lvalue.identifier.scope;
       if (fbtScope === null) {
         return;
@@ -81,8 +87,41 @@ class Transform extends ReactiveFunctionVisitor<void> {
           Math.min(fbtScope.range.start, operand.identifier.mutableRange.start)
         );
       }
+    } else if (
+      isFbtJsxExpression(this.fbtValues, value) ||
+      isFbtJsxChild(this.fbtValues, lvalue, value)
+    ) {
+      const fbtScope = lvalue.identifier.scope;
+      if (fbtScope === null) {
+        return;
+      }
+
+      // if the JSX element's tag was `fbt`, mark all its operands
+      // to ensure that they end up in the same scope as the jsx element
+      // itself.
+      for (const operand of eachReactiveValueOperand(value)) {
+        operand.identifier.scope = fbtScope;
+
+        // Expand the jsx element's range to account for its operands
+        fbtScope.range.start = makeInstructionId(
+          Math.min(fbtScope.range.start, operand.identifier.mutableRange.start)
+        );
+
+        // NOTE: we add the operands as fbt values so that they are also
+        // grouped with this expression
+        this.fbtValues.add(operand.identifier.id);
+      }
     }
   }
+}
+
+function isFbtCallExpression(
+  fbtValues: Set<IdentifierId>,
+  value: ReactiveValue
+): boolean {
+  return (
+    value.kind === "CallExpression" && fbtValues.has(value.callee.identifier.id)
+  );
 }
 
 function isFbtJsxExpression(
@@ -93,6 +132,18 @@ function isFbtJsxExpression(
     value.kind === "JsxExpression" &&
     ((value.tag.kind === "Identifier" &&
       fbtValues.has(value.tag.identifier.id)) ||
-      (value.tag.kind === "BuiltinTag" && value.tag.name === "fbt"))
+      (value.tag.kind === "BuiltinTag" && FBT_TAGS.has(value.tag.name)))
+  );
+}
+
+function isFbtJsxChild(
+  fbtValues: Set<IdentifierId>,
+  lvalue: Place | null,
+  value: ReactiveValue
+): boolean {
+  return (
+    (value.kind === "JsxExpression" || value.kind === "JsxFragment") &&
+    lvalue !== null &&
+    fbtValues.has(lvalue.identifier.id)
   );
 }

@@ -454,6 +454,7 @@ const skipFilter = new Set([
   "infer-function-expression-React-memo-gating",
   "infer-skip-components-without-hooks-or-jsx",
   "class-component-with-render-helper",
+  "fbtparam-with-jsx-element-content",
 ]);
 
 export default skipFilter;

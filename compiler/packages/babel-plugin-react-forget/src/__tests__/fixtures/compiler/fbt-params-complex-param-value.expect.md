@@ -21,28 +21,21 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
 
 function Component(props) {
-  const $ = useMemoCache(4);
+  const $ = useMemoCache(2);
   const c_0 = $[0] !== props.name;
-  let t1;
+  let t0;
   if (c_0) {
-    const c_2 = $[2] !== props.name;
-    let t0;
-    if (c_2) {
-      t0 = capitalize(props.name);
-      $[2] = props.name;
-      $[3] = t0;
-    } else {
-      t0 = $[3];
-    }
-    t1 = fbt._("Hello {user name}", [fbt._param("user name", t0)], {
-      hk: "2zEDKF",
-    });
+    t0 = fbt._(
+      "Hello {user name}",
+      [fbt._param("user name", capitalize(props.name))],
+      { hk: "2zEDKF" }
+    );
     $[0] = props.name;
-    $[1] = t1;
+    $[1] = t0;
   } else {
-    t1 = $[1];
+    t0 = $[1];
   }
-  return t1;
+  return t0;
 }
 
 ```

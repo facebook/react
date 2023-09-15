@@ -5,10 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import generate from "@babel/generator";
+import * as t from "@babel/types";
 import chalk from "chalk";
+import { format } from "prettier";
 import { HIR, HIRFunction, ReactiveFunction } from "../HIR/HIR";
 import { printFunction, printHIR } from "../HIR/PrintHIR";
-import { printReactiveFunction } from "../ReactiveScopes";
+import { CodegenFunction, printReactiveFunction } from "../ReactiveScopes";
 
 let ENABLED: boolean = false;
 
@@ -21,6 +24,34 @@ export function toggleLogging(enabled: boolean): void {
 export function logHIR(step: string, ir: HIR): void {
   if (ENABLED) {
     const printed = printHIR(ir);
+    if (printed !== lastLogged) {
+      lastLogged = printed;
+      process.stdout.write(`${chalk.green(step)}:\n${printed}\n\n`);
+    } else {
+      process.stdout.write(`${chalk.blue(step)}: (no change)\n\n`);
+    }
+  }
+}
+
+export function logCodegenFunction(step: string, fn: CodegenFunction): void {
+  if (ENABLED) {
+    let printed: string | null = null;
+    try {
+      const node = t.functionDeclaration(
+        fn.id,
+        fn.params,
+        fn.body,
+        fn.generator,
+        fn.async
+      );
+      const ast = generate(node);
+      printed = format(ast.code);
+    } catch (e) {
+      console.log("Error formatting AST: " + e.message);
+    }
+    if (printed === null) {
+      return;
+    }
     if (printed !== lastLogged) {
       lastLogged = printed;
       process.stdout.write(`${chalk.green(step)}:\n${printed}\n\n`);
