@@ -24,7 +24,7 @@ export type Element = {
   children: Array<number>,
   type: ElementType,
   displayName: string | null,
-  key: number | string | null,
+  key: number | bigint | string | null,
 
   hocDisplayNames: null | Array<string>,
 
@@ -51,7 +51,7 @@ export type Element = {
 export type SerializedElement = {
   displayName: string | null,
   id: number,
-  key: number | string | null,
+  key: number | bigint | string | null,
   hocDisplayNames: Array<string> | null,
   type: ElementType,
 };
@@ -100,7 +100,7 @@ export type InspectedElement = {
   hooks: Object | null,
   props: Object | null,
   state: Object | null,
-  key: number | string | null,
+  key: number | bigint | string | null,
   errors: Array<[string, number]>,
   warnings: Array<[string, number]>,
 

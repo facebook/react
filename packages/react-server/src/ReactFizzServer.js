@@ -162,7 +162,7 @@ const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 export type KeyNode = [
   Root | KeyNode /* parent */,
   string | null /* name */,
-  string | number /* key */,
+  string | number | bigint /* key */,
 ];
 
 const REPLAY_NODE = 0;
@@ -173,7 +173,7 @@ const RESUME_SLOT = 3;
 type ReplaySuspenseBoundary = [
   1, // REPLAY_SUSPENSE_BOUNDARY
   string | null /* name */,
-  string | number /* key */,
+  string | number | bigint /* key */,
   Array<ResumableNode> /* children */,
   SuspenseBoundaryID /* id */,
   number /* rootSegmentID */,
@@ -183,7 +183,7 @@ type ReplayNode =
   | [
       0, // REPLAY_NODE
       string | null /* name */,
-      string | number /* key */,
+      string | number | bigint /* key */,
       Array<ResumableNode> /* children */,
     ]
   | ReplaySuspenseBoundary;
@@ -191,7 +191,7 @@ type ReplayNode =
 type ResumeElement = [
   2, // RESUME_ELEMENT
   string | null /* name */,
-  string | number /* key */,
+  string | number | bigint /* key */,
   number /* segment id */,
 ];
 
@@ -1961,8 +1961,9 @@ function trackPostpone(
 
     const boundaryKeyPath = boundary.keyPath;
     if (boundaryKeyPath === null) {
+      // eslint-disable-next-line react-internal/prod-error-codes
       throw new Error(
-        'It should not be possible to postpone at the root. This is a bug in React.',
+        `React.trackPostpone(...): It should not be possible to postpone at the root. This is a bug in React.`,
       );
     }
     const children: Array<ResumableNode> = [];
@@ -1980,8 +1981,9 @@ function trackPostpone(
 
   const keyPath = task.keyPath;
   if (keyPath === null) {
+    // eslint-disable-next-line react-internal/prod-error-codes
     throw new Error(
-      'It should not be possible to postpone at the root. This is a bug in React.',
+      `React.trackPostpone(...): It should not be possible to postpone at the root. This is a bug in React.`,
     );
   }
 

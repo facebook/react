@@ -203,7 +203,7 @@ The frontend stores its information about the tree in a map of id to objects wit
 * children: `Array<number>`
 * type: `number` (constant)
 * displayName: `string | null`
-* key: `number | string | null`
+* key: `number | bigint | string | null`
 * ownerID: `number`
 * depth: `number` <sup>1</sup>
 * weight: `number` <sup>2</sup>

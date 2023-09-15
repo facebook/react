@@ -19,7 +19,7 @@ export type CommitTreeNode = {
   children: Array<number>,
   displayName: string | null,
   hocDisplayNames: Array<string> | null,
-  key: number | string | null,
+  key: number | bigint | string | null,
   parentID: number,
   treeBaseDuration: number,
   type: ElementType,
@@ -35,7 +35,7 @@ export type SnapshotNode = {
   children: Array<number>,
   displayName: string | null,
   hocDisplayNames: Array<string> | null,
-  key: number | string | null,
+  key: number | bigint | string | null,
   type: ElementType,
 };
 
