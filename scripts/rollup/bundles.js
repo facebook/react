@@ -165,6 +165,18 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM Shared Subset *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/src/ReactDOMSharedSubset.js',
+    name: 'react-dom.shared-subset',
+    global: 'ReactDOM',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
