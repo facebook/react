@@ -6355,16 +6355,147 @@ describe('ReactDOMFizzServer', () => {
 
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
-    const b = new Stream.PassThrough();
-    b.setEncoding('utf8');
-    b.on('data', chunk => {
-      writable.write(chunk);
-    });
-
     await act(() => {
       resumed.pipe(writable);
     });
 
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
+
+  // @gate enablePostpone
+  it('client renders a component if it errors during resuming', async () => {
+    let prerendering = true;
+    let ssr = true;
+    function PostponeAndError() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      if (ssr) {
+        throw new Error('server error');
+      }
+      return 'Hello';
+    }
+
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    const lazyPostponeAndError = React.lazy(async () => {
+      return {default: <PostponeAndError />};
+    });
+
+    function ReplayError() {
+      if (prerendering) {
+        return <Postpone />;
+      }
+      if (ssr) {
+        throw new Error('replay error');
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading1">
+            <PostponeAndError />
+          </Suspense>
+          <Suspense fallback="Loading2">
+            <Postpone />
+            <Suspense fallback="Loading3">{lazyPostponeAndError}</Suspense>
+          </Suspense>
+          <Suspense fallback="Loading4">
+            <ReplayError />
+          </Suspense>
+        </div>
+      );
+    }
+
+    let prerenderErrors = [];
+    const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(
+      <App />,
+      {
+        onError(x) {
+          prerenderErrors.push(x.message);
+        },
+      },
+    );
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const ssrErrors = [];
+
+    const resumed = ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      prerendered.postponed,
+      {
+        onError(x) {
+          ssrErrors.push(x.message);
+        },
+      },
+    );
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Loading1'}
+        {'Loading2'}
+        {'Loading4'}
+      </div>,
+    );
+
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    expect(prerenderErrors).toEqual([]);
+
+    expect(ssrErrors).toEqual(['server error', 'server error', 'replay error']);
+
+    // Still loading...
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Loading1'}
+        {'Hello'}
+        {'Loading3'}
+        {'Loading4'}
+      </div>,
+    );
+
+    const recoverableErrors = [];
+
+    ssr = false;
+
+    await clientAct(() => {
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(x) {
+          recoverableErrors.push(x.message);
+        },
+      });
+    });
+
+    expect(recoverableErrors).toEqual(['server error', 'replay error', 'server error']);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Hello'}
+        {'Hello'}
+        {'Hello'}
+        {'Hello'}
+      </div>,
+    );
   });
 });

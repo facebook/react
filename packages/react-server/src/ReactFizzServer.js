@@ -1049,6 +1049,9 @@ function replaySuspenseBoundary(
 
     task.replay.pendingTasks--;
 
+    // The parent already flushed in the prerender so we need to schedule this to be emitted.
+    request.clientRenderedBoundaries.push(resumedBoundary);
+
     // We don't need to decrement any task numbers because we didn't spawn any new task.
     // We don't need to schedule any task because we know the parent has written yet.
     // We do need to fallthrough to create the fallback though.
@@ -1149,6 +1152,9 @@ function resumeSuspenseBoundary(
     if (__DEV__) {
       captureBoundaryErrorDetailsDev(resumedBoundary, error);
     }
+
+    // The parent already flushed in the prerender so we need to schedule this to be emitted.
+    request.clientRenderedBoundaries.push(resumedBoundary);
 
     // We don't need to decrement any task numbers because we didn't spawn any new task.
     // We don't need to schedule any task because we know the parent has written yet.
@@ -3145,8 +3151,11 @@ function finishedTask(
       // We can now cancel any pending task on the fallback since we won't need to show it anymore.
       // This needs to happen after we read the parentFlushed flags because aborting can finish
       // work which can trigger user code, which can start flushing, which can change those flags.
-      boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
-      boundary.fallbackAbortableTasks.clear();
+      // If the boundary was POSTPONED, we still need to finish the fallback first.
+      if (boundary.status === COMPLETED) {
+        boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
+        boundary.fallbackAbortableTasks.clear();
+      }
     } else {
       if (segment !== null && segment.parentFlushed) {
         // Our parent already flushed, so we need to schedule this segment to be emitted.
