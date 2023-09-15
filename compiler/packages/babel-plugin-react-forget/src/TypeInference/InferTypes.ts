@@ -236,7 +236,7 @@ function* generateInstructionTypes(
             yield equation(property.place.identifier.type, {
               kind: "Property",
               object: value.value.identifier.type,
-              propertyName: property.name,
+              propertyName: property.key.name,
             });
           }
         }

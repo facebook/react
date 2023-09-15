@@ -16,7 +16,7 @@ import {
   IdentifierId,
   InstructionKind,
   JsxAttribute,
-  ObjectProperty,
+  ObjectPropertyKey,
   Pattern,
   Place,
   ReactiveBlock,
@@ -937,14 +937,14 @@ function codegenInstructionValue(
       const properties = [];
       for (const property of instrValue.properties) {
         if (property.kind === "ObjectProperty") {
-          const key = codegenObjectPropertyKey(property);
+          const key = codegenObjectPropertyKey(property.key);
           const value = codegenPlace(cx, property.place);
           properties.push(
             t.objectProperty(
               key,
               value,
               false,
-              value.type === "Identifier" && value.name === property.name
+              value.type === "Identifier" && value.name === property.key.name
             )
           );
         } else {
@@ -1356,13 +1356,13 @@ function convertMemberExpressionToJsx(
 }
 
 function codegenObjectPropertyKey(
-  property: ObjectProperty
+  key: ObjectPropertyKey
 ): t.StringLiteral | t.Identifier {
-  switch (property.type) {
+  switch (key.type) {
     case "identifier":
-      return t.identifier(property.name);
+      return t.identifier(key.name);
     case "string":
-      return t.stringLiteral(property.name);
+      return t.stringLiteral(key.name);
   }
 }
 
@@ -1384,13 +1384,13 @@ function codegenLValue(
       return t.objectPattern(
         pattern.properties.map((property) => {
           if (property.kind === "ObjectProperty") {
-            const key = codegenObjectPropertyKey(property);
+            const key = codegenObjectPropertyKey(property.key);
             const value = codegenLValue(property.place);
             return t.objectProperty(
               key,
               value,
               false,
-              value.type === "Identifier" && value.name === property.name
+              value.type === "Identifier" && value.name === property.key.name
             );
           } else {
             return t.restElement(codegenLValue(property.place));

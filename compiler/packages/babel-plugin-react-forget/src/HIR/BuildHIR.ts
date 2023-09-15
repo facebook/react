@@ -1246,7 +1246,7 @@ function lowerExpression(
           properties.push({
             kind: "ObjectProperty",
             place: value,
-            ...loweredKey,
+            key: loweredKey,
           });
         } else if (propertyPath.isSpreadElement()) {
           const place = lowerExpressionToTemporary(
@@ -3125,7 +3125,7 @@ function lowerAssignment(
             properties.push({
               kind: "ObjectProperty",
               place: identifier,
-              ...loweredKey,
+              key: loweredKey,
             });
           } else {
             const temp = buildTemporaryPlace(
@@ -3135,7 +3135,7 @@ function lowerAssignment(
             properties.push({
               kind: "ObjectProperty",
               place: { ...temp },
-              ...loweredKey,
+              key: loweredKey,
             });
             followups.push({ place: temp, path: element as NodePath<t.LVal> }); // TODO remove type cast
           }
