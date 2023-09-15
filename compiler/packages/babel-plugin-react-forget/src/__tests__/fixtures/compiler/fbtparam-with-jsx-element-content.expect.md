@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @debug
 import fbt from "fbt";
 
 function Component({ name, data, icon }) {
@@ -26,7 +25,7 @@ function Component({ name, data, icon }) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @debug
+import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
 
 function Component(t39) {

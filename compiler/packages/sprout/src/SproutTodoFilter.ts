@@ -455,6 +455,7 @@ const skipFilter = new Set([
   "infer-skip-components-without-hooks-or-jsx",
   "class-component-with-render-helper",
   "fbtparam-with-jsx-element-content",
+  "fbtparam-text-must-use-expression-container",
 ]);
 
 export default skipFilter;

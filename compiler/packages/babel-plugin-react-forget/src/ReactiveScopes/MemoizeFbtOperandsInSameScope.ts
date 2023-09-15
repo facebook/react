@@ -44,7 +44,8 @@ export function memoizeFbtOperandsInSameScope(fn: ReactiveFunction): void {
   }
 }
 
-const FBT_TAGS: Set<string> = new Set(["fbt", "fbt:param"]);
+export const FBT_TAGS: Set<string> = new Set(["fbt", "fbt:param"]);
+export const SINGLE_CHILD_FBT_TAGS: Set<string> = new Set(["fbt:param"]);
 
 class Transform extends ReactiveFunctionVisitor<void> {
   // Values that represent *potential* references of `fbt` as a JSX tag name

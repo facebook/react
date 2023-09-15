@@ -1,4 +1,3 @@
-// @debug
 import fbt from "fbt";
 
 function Component({ name, data, icon }) {

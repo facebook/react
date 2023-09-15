@@ -34,6 +34,7 @@ import { eachPatternOperand } from "../HIR/visitors";
 import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
+import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtOperandsInSameScope";
 
 export type CodegenFunction = {
   type: "CodegenFunction";
@@ -990,10 +991,34 @@ function codegenInstructionValue(
           tag = createJsxIdentifier(instrValue.loc, tagValue.value);
         }
       }
-      const children =
-        instrValue.children !== null
-          ? instrValue.children.map((child) => codegenJsxElement(cx, child))
-          : [];
+      let children;
+      if (
+        tagValue.type === "StringLiteral" &&
+        SINGLE_CHILD_FBT_TAGS.has(tagValue.value)
+      ) {
+        CompilerError.invariant(
+          instrValue.children != null &&
+            (instrValue.children.length === 3 ||
+              instrValue.children.length === 1),
+          {
+            loc: instrValue.loc,
+            reason:
+              "Expected fbt element to have 3 children (whitespace, content, whitespace) or 1 (content)",
+            suggestions: null,
+            description: null,
+          }
+        );
+        if (instrValue.children.length === 3) {
+          children = [codegenJsxFbtChildElement(cx, instrValue.children[1]!)];
+        } else {
+          children = [codegenJsxFbtChildElement(cx, instrValue.children[0]!)];
+        }
+      } else {
+        children =
+          instrValue.children !== null
+            ? instrValue.children.map((child) => codegenJsxElement(cx, child))
+            : [];
+      }
       value = createJsxElement(
         instrValue.loc,
         t.jsxOpeningElement(tag, attributes, instrValue.children === null),
@@ -1319,6 +1344,30 @@ function codegenJsxElement(
   switch (value.type) {
     case "StringLiteral": {
       return createJsxText(place.loc, value.value);
+    }
+    case "JSXElement":
+    case "JSXFragment": {
+      return value;
+    }
+    default: {
+      return createJsxExpressionContainer(place.loc, value);
+    }
+  }
+}
+
+function codegenJsxFbtChildElement(
+  cx: Context,
+  place: Place
+):
+  | t.JSXText
+  | t.JSXExpressionContainer
+  | t.JSXSpreadChild
+  | t.JSXElement
+  | t.JSXFragment {
+  const value = codegenPlace(cx, place);
+  switch (value.type) {
+    case "StringLiteral": {
+      return createJsxExpressionContainer(place.loc, value);
     }
     case "JSXElement":
     case "JSXFragment": {
