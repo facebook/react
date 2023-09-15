@@ -138,6 +138,12 @@ export type FunctionSignature = {
   returnValueKind: ValueKind;
   calleeEffect: Effect;
   hookKind: HookKind | null;
+  /**
+   * Whether any of the parameters may be aliased by each other or the return
+   * value. Defaults to false (parameters may alias). When true, the compiler
+   * may choose not to memoize arguments if they do not otherwise escape.
+   */
+  noAlias?: boolean;
 };
 
 /**
@@ -217,6 +223,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       // the array object itself is not modified
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
+      noAlias: true,
     }),
   ],
   [
@@ -230,6 +237,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       // the array object itself is not modified
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
+      noAlias: true,
     }),
   ],
   [

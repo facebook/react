@@ -110,6 +110,15 @@ export type EnvironmentConfig = Partial<{
   enableFunctionCallSignatureOptimizations: boolean;
 
   /**
+   * Enable optimizations based on the `noAlias` flag of method signatures. When enabled,
+   * function signatures can declare that they do not alias their arguments, allowing
+   * Forget to (in some cases) avoid memoizing arguments if they do not otherwise escape.
+   *
+   * Defaults to false
+   */
+  enableNoAliasOptimizations: boolean;
+
+  /**
    * When enabled, the compiler assumes that hooks follow the Rules of React:
    * - Hooks may memoize computation based on any of their parameters, thus
    *   any arguments to a hook are assumed frozen after calling the hook.
@@ -182,6 +191,7 @@ export class Environment {
   enableFunctionCallSignatureOptimizations: boolean;
   enableAssumeHooksFollowRulesOfReact: boolean;
   enableTreatHooksAsFunctions: boolean;
+  enableNoAliasOptimizations: boolean;
   disableAllMemoization: boolean;
   enableEmitFreeze: ExternalFunction | null;
   assertValidMutableRanges: boolean;
@@ -225,6 +235,8 @@ export class Environment {
     this.validateFrozenLambdas = config?.validateFrozenLambdas ?? false;
     this.enableFunctionCallSignatureOptimizations =
       config?.enableFunctionCallSignatureOptimizations ?? false;
+    this.enableNoAliasOptimizations =
+      config?.enableNoAliasOptimizations ?? false;
     this.enableAssumeHooksFollowRulesOfReact =
       config?.enableAssumeHooksFollowRulesOfReact ?? false;
     this.enableTreatHooksAsFunctions =

@@ -28,6 +28,7 @@ export function transformFixtureInput(
   let enableEmitFreeze = null;
   let compilationMode: CompilationMode = "all";
   let enableForest = false;
+  let enableNoAliasOptimizations = false;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -83,6 +84,9 @@ export function transformFixtureInput(
   if (firstLine.includes("@enableForest true")) {
     enableForest = true;
   }
+  if (firstLine.includes("@enableNoAliasOptimizations")) {
+    enableNoAliasOptimizations = true;
+  }
 
   return pluginFn(
     input,
@@ -101,6 +105,7 @@ export function transformFixtureInput(
         ]),
         enableAssumeHooksFollowRulesOfReact,
         enableFunctionCallSignatureOptimizations: true,
+        enableNoAliasOptimizations,
         disableAllMemoization,
         enableTreatHooksAsFunctions,
         inlineUseMemo: true,
@@ -117,7 +122,7 @@ export function transformFixtureInput(
       logger: null,
       gating,
       instrumentForget,
-      panicThreshold: 'ALL_ERRORS',
+      panicThreshold: "ALL_ERRORS",
       noEmit: false,
     },
     includeAst

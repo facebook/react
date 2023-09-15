@@ -24,6 +24,7 @@ import {
   getHookKind,
   isMutableEffect,
 } from "../HIR";
+import { getFunctionCallSignature } from "../Inference/InferReferenceEffects";
 import { log } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
@@ -119,7 +120,11 @@ export function pruneNonEscapingScopes(
   for (const param of fn.params) {
     state.declare(param.identifier.id);
   }
-  visitReactiveFunction(fn, new CollectDependenciesVisitor(options), state);
+  visitReactiveFunction(
+    fn,
+    new CollectDependenciesVisitor(fn.env, options),
+    state
+  );
 
   log(() => prettyFormat(state));
 
@@ -343,6 +348,7 @@ type LValueMemoization = {
  * - level: the level of memoization to apply to this value
  */
 function computeMemoizationInputs(
+  env: Environment,
   value: ReactiveValue,
   lvalue: Place | null,
   options: MemoizationOptions
@@ -361,8 +367,10 @@ function computeMemoizationInputs(
             : [],
         rvalues: [
           // Conditionals do not alias their test value.
-          ...computeMemoizationInputs(value.consequent, null, options).rvalues,
-          ...computeMemoizationInputs(value.alternate, null, options).rvalues,
+          ...computeMemoizationInputs(env, value.consequent, null, options)
+            .rvalues,
+          ...computeMemoizationInputs(env, value.alternate, null, options)
+            .rvalues,
         ],
       };
     }
@@ -374,8 +382,8 @@ function computeMemoizationInputs(
             ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
             : [],
         rvalues: [
-          ...computeMemoizationInputs(value.left, null, options).rvalues,
-          ...computeMemoizationInputs(value.right, null, options).rvalues,
+          ...computeMemoizationInputs(env, value.left, null, options).rvalues,
+          ...computeMemoizationInputs(env, value.right, null, options).rvalues,
         ],
       };
     }
@@ -389,7 +397,8 @@ function computeMemoizationInputs(
         // Only the final value of the sequence is a true rvalue:
         // values from the sequence's instructions are evaluated
         // as separate nodes
-        rvalues: computeMemoizationInputs(value.value, null, options).rvalues,
+        rvalues: computeMemoizationInputs(env, value.value, null, options)
+          .rvalues,
       };
     }
     case "JsxExpression": {
@@ -595,18 +604,42 @@ function computeMemoizationInputs(
       return {
         lvalues: lvalues,
         rvalues: [
-          ...computeMemoizationInputs(value.value, null, options).rvalues,
+          ...computeMemoizationInputs(env, value.value, null, options).rvalues,
         ],
+      };
+    }
+    case "MethodCall": {
+      const signature = env.enableNoAliasOptimizations
+        ? getFunctionCallSignature(env, value.property.identifier.type)
+        : null;
+      const operands = [...eachReactiveValueOperand(value)];
+      let lvalues = [];
+      if (lvalue !== null) {
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
+      }
+      if (signature?.noAlias === true) {
+        return {
+          lvalues,
+          rvalues: [],
+        };
+      }
+      lvalues.push(
+        ...operands
+          .filter((operand) => isMutableEffect(operand.effect, operand.loc))
+          .map((place) => ({ place, level: MemoizationLevel.Memoized }))
+      );
+      return {
+        lvalues,
+        rvalues: operands,
       };
     }
     case "RegExpLiteral":
     case "FunctionExpression":
     case "TaggedTemplateExpression":
-    case "CallExpression":
     case "ArrayExpression":
     case "NewExpression":
     case "ObjectExpression":
-    case "MethodCall":
+    case "CallExpression":
     case "PropertyStore": {
       // All of these instructions may produce new values which must be memoized if
       // reachable from a return value. Any mutable rvalue may alias any other rvalue
@@ -680,10 +713,12 @@ function computePatternLValues(pattern: Pattern): Array<LValueMemoization> {
  * identifier's and scope's dependencies.
  */
 class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
+  env: Environment;
   options: MemoizationOptions;
 
-  constructor(options: MemoizationOptions) {
+  constructor(env: Environment, options: MemoizationOptions) {
     super();
+    this.env = env;
     this.options = options;
   }
 
@@ -695,6 +730,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
 
     // Determe the level of memoization for this value and the lvalues/rvalues
     const aliasing = computeMemoizationInputs(
+      this.env,
       instruction.value,
       instruction.lvalue,
       this.options
