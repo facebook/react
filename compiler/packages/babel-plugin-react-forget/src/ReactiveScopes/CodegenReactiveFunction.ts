@@ -1366,11 +1366,8 @@ function codegenJsxFbtChildElement(
   | t.JSXFragment {
   const value = codegenPlace(cx, place);
   switch (value.type) {
-    case "StringLiteral": {
-      return createJsxExpressionContainer(place.loc, value);
-    }
-    case "JSXElement":
-    case "JSXFragment": {
+    // fbt:param only allows JSX element or expression container as children
+    case "JSXElement": {
       return value;
     }
     default: {
