@@ -15,7 +15,7 @@ import {
   ErrorSeverity,
 } from "../CompilerError";
 import { Err, Ok, Result } from "../Utils/Result";
-import { assertExhaustive } from "../Utils/utils";
+import { assertExhaustive, hasNode } from "../Utils/utils";
 import { Environment } from "./Environment";
 import {
   ArrayExpression,
@@ -78,14 +78,14 @@ export function lower(
     });
   }
 
-  // Internal babel is on an older version that does not have hasNode (v7.17)
-  // See https://github.com/babel/babel/pull/13940/files for impl
-  // TODO: write helper function for NodePath.node != null
   let id: string | null = null;
-  if (func.isFunctionDeclaration() && func.get("id").node != null) {
-    id = (func.get("id") as NodePath<t.Identifier>).node.name;
-  } else if (func.isFunctionExpression() && func.get("id").node != null) {
-    id = (func.get("id") as NodePath<t.Identifier>).node.name;
+  if (func.isFunctionDeclaration() || func.isFunctionExpression()) {
+    const idNode = (
+      func as NodePath<t.FunctionDeclaration | t.FunctionExpression>
+    ).get("id");
+    if (hasNode(idNode)) {
+      id = idNode.node.name;
+    }
   }
   const params: Array<Place> = [];
   func.get("params").forEach((param) => {
@@ -266,9 +266,9 @@ function lowerStatement(
       //  Block for the alternate (if the test is not truthy)
       let alternateBlock: BlockId;
       const alternate = stmt.get("alternate");
-      if (alternate.node != null) {
+      if (hasNode(alternate)) {
         alternateBlock = builder.enter("block", (_blockId) => {
-          lowerStatement(builder, alternate as NodePath<t.Statement>);
+          lowerStatement(builder, alternate);
           return {
             kind: "goto",
             block: continuationBlock.id,
@@ -364,9 +364,9 @@ function lowerStatement(
 
       let updateBlock: BlockId | null = null;
       const update = stmt.get("update");
-      if (update.node != null) {
+      if (hasNode(update)) {
         updateBlock = builder.enter("loop", (_blockId) => {
-          lowerExpressionToTemporary(builder, update as NodePath<t.Expression>);
+          lowerExpressionToTemporary(builder, update);
           return {
             kind: "goto",
             block: testBlock.id,
@@ -590,11 +590,8 @@ function lowerStatement(
           });
         });
         let test: Place | null = null;
-        if (testExpr.node != null) {
-          test = lowerReorderableExpression(
-            builder,
-            testExpr as NodePath<t.Expression>
-          );
+        if (hasNode(testExpr)) {
+          test = lowerReorderableExpression(builder, testExpr);
         }
         cases.push({
           test,
@@ -649,11 +646,8 @@ function lowerStatement(
       for (const declaration of stmt.get("declarations")) {
         const id = declaration.get("id");
         const init = declaration.get("init");
-        if (init.node != null) {
-          const value = lowerExpressionToTemporary(
-            builder,
-            init as NodePath<t.Expression>
-          );
+        if (hasNode(init)) {
+          const value = lowerExpressionToTemporary(builder, init);
           lowerAssignment(
             builder,
             stmt.node.loc ?? GeneratedSource,
@@ -1015,8 +1009,7 @@ function lowerStatement(
       const continuationBlock = builder.reserve("block");
 
       const handlerPath = stmt.get("handler");
-      // NOTE: null check is for older babel versions, the hasNode() check is for TS to refine the type
-      if (handlerPath.node == null || !handlerPath.hasNode()) {
+      if (!hasNode(handlerPath)) {
         builder.errors.push({
           reason: `(BuildHIR::lowerStatement) Handle TryStatement without a catch clause`,
           severity: ErrorSeverity.Todo,
@@ -1025,7 +1018,7 @@ function lowerStatement(
         });
         return;
       }
-      if (stmt.get("finalizer").node != null) {
+      if (hasNode(stmt.get("finalizer"))) {
         builder.errors.push({
           reason: `(BuildHIR::lowerStatement) Handle TryStatement with a finalizer ('finally') clause`,
           severity: ErrorSeverity.Todo,
@@ -1039,7 +1032,7 @@ function lowerStatement(
         place: Place;
         path: NodePath<t.Identifier | t.ArrayPattern | t.ObjectPattern>;
       } | null = null;
-      if (handlerBindingPath.node != null && handlerBindingPath.hasNode()) {
+      if (hasNode(handlerBindingPath)) {
         const place: Place = {
           kind: "Identifier",
           identifier: builder.makeTemporary(),

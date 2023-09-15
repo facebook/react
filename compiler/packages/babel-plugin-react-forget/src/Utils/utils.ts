@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { NodePath } from "@babel/traverse";
+
 /**
  * Trigger an exhaustivess check in TypeScript and throw at runtime.
  *
@@ -66,4 +68,13 @@ export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
     }
   }
   return union;
+}
+
+export function hasNode<T>(
+  input: NodePath<T | null | undefined>
+): input is NodePath<NonNullable<T>> {
+  // Internal babel is on an older version that does not have hasNode (v7.17)
+  // See https://github.com/babel/babel/pull/13940/files for impl
+  // https://github.com/babel/babel/blob/5ebab544af2f1c6fc6abdaae6f4e5426975c9a16/packages/babel-traverse/src/path/index.ts#L128-L130
+  return input.node != null;
 }
