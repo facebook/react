@@ -1279,8 +1279,7 @@ function codegenJsxAttribute(
       const innerValue = codegenPlace(cx, attribute.place);
       let value;
       switch (innerValue.type) {
-        case "StringLiteral":
-        case "JSXElement": {
+        case "StringLiteral": {
           value = innerValue;
           break;
         }
