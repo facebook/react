@@ -816,10 +816,18 @@ function renderSuspenseBoundary(
   props: Object,
 ): void {
   if (someTask.replay !== null) {
-    throw new Error(
-      'Did not expect to see a Suspense boundary in this slot. ' +
-        "The tree doesn't match so React will fallback to client rendering.",
-    );
+    // If we're replaying through this pass, it means we're replaying through
+    // an already completed Suspense boundary. It's too late to do anything about it
+    // so we can just render through it.
+    const prevKeyPath = someTask.keyPath;
+    someTask.keyPath = keyPath;
+    const content: ReactNodeList = props.children;
+    try {
+      renderNode(request, someTask, content, -1);
+    } finally {
+      someTask.keyPath = prevKeyPath;
+    }
+    return;
   }
   // $FlowFixMe: Refined.
   const task: RenderTask = someTask;
@@ -975,11 +983,13 @@ function renderSuspenseBoundary(
 function replaySuspenseBoundary(
   request: Request,
   task: ReplayTask,
+  keyPath: Root | KeyNode,
   props: Object,
   replayNode: ReplaySuspenseBoundary,
 ): void {
   pushBuiltInComponentStackInDEV(task, 'Suspense');
 
+  const prevKeyPath = task.keyPath;
   const previousReplaySet: ReplaySet = task.replay;
 
   const parentBoundary = task.blockedBoundary;
@@ -1003,7 +1013,6 @@ function replaySuspenseBoundary(
   task.blockedBoundary = resumedBoundary;
   task.replay = {nodes: replayNode[3], pendingTasks: 1};
   if (enableFloat) {
-    // Does this even matter for replaying?
     setCurrentlyRenderingBoundaryResourcesTarget(
       request.renderState,
       resumedBoundary.resources,
@@ -1064,6 +1073,7 @@ function replaySuspenseBoundary(
     }
     task.blockedBoundary = parentBoundary;
     task.replay = previousReplaySet;
+    task.keyPath = prevKeyPath;
   }
   // TODO: Should this be in the finally?
   popComponentStackInDEV(task);
@@ -1072,11 +1082,13 @@ function replaySuspenseBoundary(
 function resumeSuspenseBoundary(
   request: Request,
   task: ReplayTask,
+  keyPath: Root | KeyNode,
   props: Object,
   replayNode: ResumeSuspenseBoundary,
 ): void {
   pushBuiltInComponentStackInDEV(task, 'Suspense');
 
+  const prevKeyPath = task.keyPath;
   const previousReplaySet: ReplaySet = task.replay;
 
   const parentBoundary = task.blockedBoundary;
@@ -1116,6 +1128,7 @@ function resumeSuspenseBoundary(
       resumedBoundary.resources,
     );
   }
+  task.keyPath = keyPath;
   try {
     // Convert the current ReplayTask to a RenderTask.
     const renderTask: RenderTask = (task: any);
@@ -1170,6 +1183,7 @@ function resumeSuspenseBoundary(
     // Restore to a ReplayTask
     task.blockedSegment = null;
     task.replay = previousReplaySet;
+    task.keyPath = prevKeyPath;
   }
   // TODO: Should this be in the finally?
   popComponentStackInDEV(task);
@@ -2083,7 +2097,6 @@ function replayElement(
             // We finished rendering this node, so now we can consume this
             // slot. This must happen after in case we rerender this task.
             replayNodes.splice(i, 1);
-          } finally {
             task.replay.pendingTasks--;
             if (
               task.replay.pendingTasks === 0 &&
@@ -2094,6 +2107,7 @@ function replayElement(
                   "The tree doesn't match so React will fallback to client rendering.",
               );
             }
+          } finally {
             task.replay = replay;
           }
         }
@@ -2110,7 +2124,7 @@ function replayElement(
             );
           }
           // Matched a replayable path.
-          replaySuspenseBoundary(request, task, props, node);
+          replaySuspenseBoundary(request, task, keyPath, props, node);
           // We finished rendering this node, so now we can consume this
           // slot. This must happen after in case we rerender this task.
           replayNodes.splice(i, 1);
@@ -2161,7 +2175,7 @@ function replayElement(
             );
           }
           // Matched a resumable suspense boundary.
-          resumeSuspenseBoundary(request, task, props, node);
+          resumeSuspenseBoundary(request, task, keyPath, props, node);
 
           // We finished rendering this node, so now we can consume this
           // slot. This must happen after in case we rerender this task.
@@ -2500,7 +2514,6 @@ function renderChildrenArray(
         replayTask.replay = {nodes: node[3], pendingTasks: 1};
         try {
           renderChildrenArray(request, task, children, -1);
-        } finally {
           replayTask.replay.pendingTasks--;
           if (
             replayTask.replay.pendingTasks === 0 &&
@@ -2511,6 +2524,7 @@ function renderChildrenArray(
                 "The tree doesn't match so React will fallback to client rendering.",
             );
           }
+        } finally {
           replayTask.replay = replay;
         }
         // We finished rendering this node, so now we can consume this
