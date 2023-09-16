@@ -2958,6 +2958,7 @@ function erroredTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
   error: mixed,
+  replay: null | ReplaySet,
 ) {
   // Report the error to a global handler.
   let errorDigest;
@@ -2975,10 +2976,14 @@ function erroredTask(
     errorDigest = logRecoverableError(request, error);
   }
   if (boundary === null) {
-    // TODO: If the shell errors during a replay, that's not a fatal error. Instead
-    // we should be able to recover by client rendering all the root boundaries in
-    // the ReplaySet and any already matched.
-    fatalError(request, error);
+    if (replay === null) {
+      fatalError(request, error);
+    } else {
+      // If the shell errors during a replay, that's not a fatal error. Instead
+      // we should be able to recover by client rendering all the root boundaries in
+      // the ReplaySet and any already matched.
+      abortRemainingResumableNodes(request, replay.nodes, error);
+    }
   } else {
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
@@ -3020,10 +3025,74 @@ function abortTaskSoft(this: Request, task: Task): void {
   }
 }
 
+function abortRemainingSuspenseBoundary(
+  request: Request,
+  id: SuspenseBoundaryID,
+  rootSegmentID: number,
+  error: mixed,
+): void {
+  const resumedBoundary = createSuspenseBoundary(
+    request,
+    new Set(),
+    null, // The keyPath doesn't matter at this point so we don't bother rebuilding it.
+  );
+  resumedBoundary.parentFlushed = true;
+  // We restore the same id of this boundary as was used during prerender.
+  resumedBoundary.id = id;
+  resumedBoundary.rootSegmentID = rootSegmentID;
+
+  resumedBoundary.status = CLIENT_RENDERED;
+  resumedBoundary.errorDigest = request.onError(error);
+  if (__DEV__) {
+    const errorPrefix = 'The server did not finish this Suspense boundary: ';
+    let errorMessage;
+    if (error && typeof error.message === 'string') {
+      errorMessage = errorPrefix + error.message;
+    } else {
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      errorMessage = errorPrefix + String(error);
+    }
+    const previousTaskInDev = currentTaskInDEV;
+    currentTaskInDEV = null;
+    try {
+      captureBoundaryErrorDetailsDev(resumedBoundary, errorMessage);
+    } finally {
+      currentTaskInDEV = previousTaskInDev;
+    }
+  }
+  if (resumedBoundary.parentFlushed) {
+    request.clientRenderedBoundaries.push(resumedBoundary);
+  }
+}
+
 function abortRemainingResumableNodes(
+  request: Request,
   nodes: Array<ResumableNode>,
   error: mixed,
 ): void {
+  for (let i = 0; i < nodes.length; i++) {
+    const node: any = nodes[i];
+    switch (node[0]) {
+      case REPLAY_NODE: {
+        abortRemainingResumableNodes(request, node[3], error);
+        continue;
+      }
+      case REPLAY_SUSPENSE_BOUNDARY: {
+        const boundaryNode: ReplaySuspenseBoundary = node;
+        const id = boundaryNode[4];
+        const rootSegmentID = boundaryNode[5];
+        abortRemainingSuspenseBoundary(request, id, rootSegmentID, error);
+        continue;
+      }
+      case RESUME_SUSPENSE_BOUNDARY: {
+        const boundaryNode: ResumeSuspenseBoundary = node;
+        const id = boundaryNode[3];
+        const rootSegmentID = boundaryNode[4];
+        abortRemainingSuspenseBoundary(request, id, rootSegmentID, error);
+        continue;
+      }
+    }
+  }
   // TODO: Abort any undiscovered Suspense boundaries in the ReplaySet.
 }
 
@@ -3032,24 +3101,28 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   // client rendered mode.
   const boundary = task.blockedBoundary;
   const segment = task.blockedSegment;
-  if (segment === null) {
-    // $FlowFixMe: Refined.
-    const replay: ReplaySet = task.replay;
-    replay.pendingTasks--;
-    if (replay.pendingTasks === 0) {
-      abortRemainingResumableNodes(replay.nodes, error);
-    }
-  } else {
+  if (segment !== null) {
     segment.status = ABORTED;
   }
 
   if (boundary === null) {
     request.allPendingTasks--;
-    // We didn't complete the root so we have nothing to show. We can close
-    // the request;
     if (request.status !== CLOSING && request.status !== CLOSED) {
-      logRecoverableError(request, error);
-      fatalError(request, error);
+      const replay: null | ReplaySet = task.replay;
+      if (replay === null) {
+        // We didn't complete the root so we have nothing to show. We can close
+        // the request;
+        logRecoverableError(request, error);
+        fatalError(request, error);
+      } else {
+        // If the shell aborts during a replay, that's not a fatal error. Instead
+        // we should be able to recover by client rendering all the root boundaries in
+        // the ReplaySet.
+        replay.pendingTasks--;
+        if (replay.pendingTasks === 0) {
+          abortRemainingResumableNodes(request, replay.nodes, error);
+        }
+      }
     }
   } else {
     boundary.pendingTasks--;
@@ -3318,7 +3391,7 @@ function retryRenderTask(
     }
     task.abortSet.delete(task);
     segment.status = ERRORED;
-    erroredTask(request, task.blockedBoundary, x);
+    erroredTask(request, task.blockedBoundary, x, null);
     return;
   } finally {
     if (enableFloat) {
@@ -3393,7 +3466,7 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     }
     task.replay.pendingTasks--;
     task.abortSet.delete(task);
-    erroredTask(request, task.blockedBoundary, x);
+    erroredTask(request, task.blockedBoundary, x, task.replay);
     return;
   } finally {
     if (enableFloat) {

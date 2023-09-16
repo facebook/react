@@ -6414,7 +6414,7 @@ describe('ReactDOMFizzServer', () => {
       );
     }
 
-    let prerenderErrors = [];
+    const prerenderErrors = [];
     const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(
       <App />,
       {
@@ -6488,7 +6488,11 @@ describe('ReactDOMFizzServer', () => {
       });
     });
 
-    expect(recoverableErrors).toEqual(['server error', 'replay error', 'server error']);
+    expect(recoverableErrors).toEqual([
+      'server error',
+      'replay error',
+      'server error',
+    ]);
     expect(getVisibleChildren(container)).toEqual(
       <div>
         {'Hello'}
@@ -6497,5 +6501,150 @@ describe('ReactDOMFizzServer', () => {
         {'Hello'}
       </div>,
     );
+  });
+
+  // @gate enablePostpone
+  it('client renders a component if we abort before resuming', async () => {
+    let prerendering = true;
+    let ssr = true;
+    const promise = new Promise(() => {});
+    function PostponeAndSuspend() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      if (ssr) {
+        React.use(promise);
+      }
+      return 'Hello';
+    }
+
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function DelayedBoundary() {
+      if (!prerendering && ssr) {
+        // We delay discovery of the boundary so we can abort before finding it.
+        React.use(promise);
+      }
+      return (
+        <Suspense fallback="Loading3">
+          <Postpone />
+        </Suspense>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading1">
+            <PostponeAndSuspend />
+          </Suspense>
+          <Suspense fallback="Loading2">
+            <Postpone />
+          </Suspense>
+          <Suspense fallback="Not used">
+            <DelayedBoundary />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerenderErrors = [];
+    const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(
+      <App />,
+      {
+        onError(x) {
+          prerenderErrors.push(x.message);
+        },
+      },
+    );
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const ssrErrors = [];
+
+    const resumed = ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      prerendered.postponed,
+      {
+        onError(x) {
+          ssrErrors.push(x.message);
+        },
+      },
+    );
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Loading1'}
+        {'Loading2'}
+        {'Loading3'}
+      </div>,
+    );
+
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    const recoverableErrors = [];
+
+    ssr = false;
+
+    await clientAct(() => {
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(x) {
+          recoverableErrors.push(x.message);
+        },
+      });
+    });
+
+    expect(recoverableErrors).toEqual([]);
+    expect(prerenderErrors).toEqual([]);
+    expect(ssrErrors).toEqual([]);
+
+    // Still loading...
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Loading1'}
+        {'Hello'}
+        {'Loading3'}
+      </div>,
+    );
+
+    await clientAct(async () => {
+      await act(() => {
+        resumed.abort(new Error('aborted'));
+      });
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Hello'}
+        {'Hello'}
+        {'Hello'}
+      </div>,
+    );
+
+    expect(prerenderErrors).toEqual([]);
+    expect(ssrErrors).toEqual(['aborted', 'aborted']);
+    expect(recoverableErrors).toEqual([
+      'The server did not finish this Suspense boundary: aborted',
+      'The server did not finish this Suspense boundary: aborted',
+    ]);
   });
 });
