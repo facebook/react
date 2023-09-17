@@ -3778,9 +3778,6 @@ function flushCompletedQueues(
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
       }
-    } else if (request.pendingRootTasks > 0) {
-      // We have not yet flushed the root segment so we early return
-      return;
     }
 
     if (enableFloat) {
