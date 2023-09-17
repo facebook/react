@@ -6647,4 +6647,148 @@ describe('ReactDOMFizzServer', () => {
       'The server did not finish this Suspense boundary: aborted',
     ]);
   });
+
+  // @gate enablePostpone
+  it('client renders remaining boundaries below the error in shell', async () => {
+    let prerendering = true;
+    let ssr = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function ReplayError({children}) {
+      if (!prerendering && ssr) {
+        throw new Error('replay error');
+      }
+      return children;
+    }
+
+    function App() {
+      return (
+        <div>
+          <div>
+            <Suspense fallback="Loading1">
+              <Postpone />
+            </Suspense>
+            <ReplayError>
+              <Suspense fallback="Loading2">
+                <Postpone />
+              </Suspense>
+            </ReplayError>
+            <Suspense fallback="Loading3">
+              <Postpone />
+            </Suspense>
+          </div>
+          <Suspense fallback="Loading4">
+            <Postpone />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerenderErrors = [];
+    const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(
+      <App />,
+      {
+        onError(x) {
+          prerenderErrors.push(x.message);
+        },
+      },
+    );
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const ssrErrors = [];
+
+    const resumed = ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      prerendered.postponed,
+      {
+        onError(x) {
+          ssrErrors.push(x.message);
+        },
+      },
+    );
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>
+          {'Loading1'}
+          {'Loading2'}
+          {'Loading3'}
+        </div>
+        {'Loading4'}
+      </div>,
+    );
+
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>
+          {'Hello' /* This was matched and completed before the error */}
+          {
+            'Loading2' /* This will be client rendered because its parent errored during replay */
+          }
+          {
+            'Loading3' /* Collateral damage because we don't know if the error should've match it */
+          }
+        </div>
+        {
+          'Loading4' /* This should be able to resume because it's in a different parent.
+        Because task.replay resets in try/finally this doesn't happen in this case because
+        we abort the replay at the root of the task instead of the root of the error. */
+        }
+      </div>,
+    );
+
+    const recoverableErrors = [];
+
+    ssr = false;
+
+    await clientAct(() => {
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(x) {
+          recoverableErrors.push(x.message);
+        },
+      });
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <div>
+          {'Hello'}
+          {'Hello'}
+          {'Hello'}
+        </div>
+        {'Hello'}
+      </div>,
+    );
+
+    // We should've logged once for each boundary that this affected.
+    expect(prerenderErrors).toEqual([]);
+    expect(ssrErrors).toEqual(['replay error', 'replay error', 'replay error']);
+    expect(recoverableErrors).toEqual([
+      'The server did not finish this Suspense boundary: replay error',
+      'The server did not finish this Suspense boundary: replay error',
+      'The server did not finish this Suspense boundary: replay error',
+    ]);
+  });
 });

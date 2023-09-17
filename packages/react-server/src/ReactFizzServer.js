@@ -2961,30 +2961,49 @@ function erroredTask(
   replay: null | ReplaySet,
 ) {
   // Report the error to a global handler.
-  let errorDigest;
-  if (
-    enablePostpone &&
-    typeof error === 'object' &&
-    error !== null &&
-    error.$$typeof === REACT_POSTPONE_TYPE
-  ) {
-    const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message);
-    // TODO: Figure out a better signal than a magic digest value.
-    errorDigest = 'POSTPONE';
-  } else {
-    errorDigest = logRecoverableError(request, error);
-  }
   if (boundary === null) {
     if (replay === null) {
+      let errorDigest;
+      if (
+        enablePostpone &&
+        typeof error === 'object' &&
+        error !== null &&
+        error.$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (error: any);
+        logPostpone(request, postponeInstance.message);
+        // TODO: Figure out a better signal than a magic digest value.
+        errorDigest = 'POSTPONE';
+      } else {
+        errorDigest = logRecoverableError(request, error);
+      }
       fatalError(request, error);
     } else {
       // If the shell errors during a replay, that's not a fatal error. Instead
       // we should be able to recover by client rendering all the root boundaries in
       // the ReplaySet and any already matched.
+      //
+      // We don't invoke logRecoverableError at the root but at each boundary
+      // we find that this affects. This might be a bit strange that the error
+      // gets thrown at a child of where the error happened but it's helps line
+      // up the errors with how they'll get thrown on the client.
       abortRemainingResumableNodes(request, replay.nodes, error);
     }
   } else {
+    let errorDigest;
+    if (
+      enablePostpone &&
+      typeof error === 'object' &&
+      error !== null &&
+      error.$$typeof === REACT_POSTPONE_TYPE
+    ) {
+      const postponeInstance: Postpone = (error: any);
+      logPostpone(request, postponeInstance.message);
+      // TODO: Figure out a better signal than a magic digest value.
+      errorDigest = 'POSTPONE';
+    } else {
+      errorDigest = logRecoverableError(request, error);
+    }
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
