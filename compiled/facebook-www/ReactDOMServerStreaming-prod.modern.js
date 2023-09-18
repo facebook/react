@@ -3180,11 +3180,16 @@ function renderElement(
         task.keyPath = type;
         return;
       case REACT_SUSPENSE_TYPE:
-        a: {
-          if (null !== task.replay)
-            throw Error(
-              "Did not expect to see a Suspense boundary in this slot. The tree doesn't match so React will fallback to client rendering."
-            );
+        a: if (null !== task.replay) {
+          type = task.keyPath;
+          task.keyPath = keyPath;
+          keyPath = props.children;
+          try {
+            renderNode(request, task, keyPath, -1);
+          } finally {
+            task.keyPath = type;
+          }
+        } else {
           type = task.keyPath;
           prevThenableState = task.blockedBoundary;
           ref = task.blockedSegment;
@@ -3394,32 +3399,43 @@ function renderNodeDestructiveImpl(
                         name +
                         "\" in this slot. The tree doesn't match so React will fallback to client rendering."
                     );
-                  task$jscomp$0.replay = {
-                    nodes: candidate[3],
-                    pendingTasks: 1
-                  };
+                  candidate = candidate[3];
+                  task$jscomp$0.replay = { nodes: candidate, pendingTasks: 1 };
                   try {
-                    renderElement(
-                      request$jscomp$0,
-                      task$jscomp$0,
-                      key,
-                      prevThenableState,
-                      type,
-                      props,
-                      node
-                    ),
-                      replayNodes.splice(i, 1);
-                  } finally {
-                    task$jscomp$0.replay.pendingTasks--;
                     if (
-                      0 === task$jscomp$0.replay.pendingTasks &&
-                      0 < task$jscomp$0.replay.nodes.length
+                      (renderElement(
+                        request$jscomp$0,
+                        task$jscomp$0,
+                        key,
+                        prevThenableState,
+                        type,
+                        props,
+                        node
+                      ),
+                      1 === task$jscomp$0.replay.pendingTasks &&
+                        0 < task$jscomp$0.replay.nodes.length)
                     )
                       throw Error(
                         "Couldn't find all resumable slots by key/index during replaying. The tree doesn't match so React will fallback to client rendering."
                       );
-                    task$jscomp$0.replay = replay;
+                  } catch (x) {
+                    if (
+                      "object" === typeof x &&
+                      null !== x &&
+                      (x === SuspenseException || "function" === typeof x.then)
+                    )
+                      throw x;
+                    erroredReplay(
+                      request$jscomp$0,
+                      task$jscomp$0.blockedBoundary,
+                      x,
+                      candidate
+                    );
+                  } finally {
+                    task$jscomp$0.replay.pendingTasks--,
+                      (task$jscomp$0.replay = replay);
                   }
+                  replayNodes.splice(i, 1);
                 }
                 continue;
               case 1:
@@ -3431,6 +3447,7 @@ function renderNodeDestructiveImpl(
                   var errorDigest = void 0,
                     request = request$jscomp$0,
                     task = task$jscomp$0,
+                    prevKeyPath = task.keyPath,
                     previousReplaySet = task.replay,
                     parentBoundary = task.blockedBoundary,
                     content = props.children,
@@ -3465,13 +3482,15 @@ function renderNodeDestructiveImpl(
                     (fallbackAbortSet.status = 4),
                       (errorDigest = logRecoverableError(request, error)),
                       (fallbackAbortSet.errorDigest = errorDigest),
-                      task.replay.pendingTasks--;
+                      task.replay.pendingTasks--,
+                      request.clientRenderedBoundaries.push(fallbackAbortSet);
                   } finally {
                     (request.renderState.boundaryResources = parentBoundary
                       ? parentBoundary.resources
                       : null),
                       (task.blockedBoundary = parentBoundary),
-                      (task.replay = previousReplaySet);
+                      (task.replay = previousReplaySet),
+                      (task.keyPath = prevKeyPath);
                   }
                   replayNodes.splice(i, 1);
                 }
@@ -3489,9 +3508,9 @@ function renderNodeDestructiveImpl(
                   errorDigest = task$jscomp$0;
                   request = request[3];
                   task = prevThenableState;
-                  previousReplaySet = errorDigest.replay;
-                  parentBoundary = errorDigest.blockedBoundary;
-                  content = createPendingSegment(
+                  prevKeyPath = errorDigest.replay;
+                  previousReplaySet = errorDigest.blockedBoundary;
+                  parentBoundary = createPendingSegment(
                     candidate,
                     0,
                     null,
@@ -3499,11 +3518,11 @@ function renderNodeDestructiveImpl(
                     !1,
                     !1
                   );
-                  content.id = request;
-                  content.parentFlushed = !0;
+                  parentBoundary.id = request;
+                  parentBoundary.parentFlushed = !0;
                   try {
                     (errorDigest.replay = null),
-                      (errorDigest.blockedSegment = content),
+                      (errorDigest.blockedSegment = parentBoundary),
                       renderElement(
                         candidate,
                         errorDigest,
@@ -3513,14 +3532,19 @@ function renderNodeDestructiveImpl(
                         props,
                         node
                       ),
-                      (content.status = 1),
-                      null === parentBoundary
-                        ? (candidate.completedRootSegment = content)
-                        : (queueCompletedSegment(parentBoundary, content),
-                          parentBoundary.parentFlushed &&
-                            candidate.partialBoundaries.push(parentBoundary));
+                      (parentBoundary.status = 1),
+                      null === previousReplaySet
+                        ? (candidate.completedRootSegment = parentBoundary)
+                        : (queueCompletedSegment(
+                            previousReplaySet,
+                            parentBoundary
+                          ),
+                          previousReplaySet.parentFlushed &&
+                            candidate.partialBoundaries.push(
+                              previousReplaySet
+                            ));
                   } finally {
-                    (errorDigest.replay = previousReplaySet),
+                    (errorDigest.replay = prevKeyPath),
                       (errorDigest.blockedSegment = null);
                   }
                   replayNodes.splice(i, 1);
@@ -3535,6 +3559,7 @@ function renderNodeDestructiveImpl(
                   errorDigest = void 0;
                   request = request$jscomp$0;
                   task = task$jscomp$0;
+                  prevKeyPath = task.keyPath;
                   previousReplaySet = task.replay;
                   parentBoundary = task.blockedBoundary;
                   content = props.children;
@@ -3560,6 +3585,7 @@ function renderNodeDestructiveImpl(
                   task.blockedBoundary = fallbackAbortSet;
                   request.renderState.boundaryResources =
                     fallbackAbortSet.resources;
+                  task.keyPath = key;
                   try {
                     (task.replay = null),
                       (task.blockedSegment = resumedSegment),
@@ -3573,14 +3599,16 @@ function renderNodeDestructiveImpl(
                   } catch (error) {
                     (fallbackAbortSet.status = 4),
                       (errorDigest = logRecoverableError(request, error)),
-                      (fallbackAbortSet.errorDigest = errorDigest);
+                      (fallbackAbortSet.errorDigest = errorDigest),
+                      request.clientRenderedBoundaries.push(fallbackAbortSet);
                   } finally {
                     (request.renderState.boundaryResources = parentBoundary
                       ? parentBoundary.resources
                       : null),
                       (task.blockedBoundary = parentBoundary),
                       (task.blockedSegment = null),
-                      (task.replay = previousReplaySet);
+                      (task.replay = previousReplaySet),
+                      (task.keyPath = prevKeyPath);
                   }
                   replayNodes.splice(i, 1);
                 }
@@ -3698,19 +3726,27 @@ function renderChildrenArray(request, task$jscomp$0, children, childIndex) {
     ) {
       var replayNode = replayNodes[j];
       if (0 === replayNode[0] && replayNode[2] === childIndex) {
-        task$jscomp$0.replay = { nodes: replayNode[3], pendingTasks: 1 };
+        childIndex = replayNode[3];
+        task$jscomp$0.replay = { nodes: childIndex, pendingTasks: 1 };
         try {
-          renderChildrenArray(request, task$jscomp$0, children, -1);
-        } finally {
-          task$jscomp$0.replay.pendingTasks--;
           if (
-            0 === task$jscomp$0.replay.pendingTasks &&
-            0 < task$jscomp$0.replay.nodes.length
+            (renderChildrenArray(request, task$jscomp$0, children, -1),
+            1 === task$jscomp$0.replay.pendingTasks &&
+              0 < task$jscomp$0.replay.nodes.length)
           )
             throw Error(
               "Couldn't find all resumable slots by key/index during replaying. The tree doesn't match so React will fallback to client rendering."
             );
-          task$jscomp$0.replay = replay;
+        } catch (x) {
+          if (
+            "object" === typeof x &&
+            null !== x &&
+            (x === SuspenseException || "function" === typeof x.then)
+          )
+            throw x;
+          erroredReplay(request, task$jscomp$0.blockedBoundary, x, childIndex);
+        } finally {
+          task$jscomp$0.replay.pendingTasks--, (task$jscomp$0.replay = replay);
         }
         replayNodes.splice(j, 1);
         break;
@@ -3719,26 +3755,26 @@ function renderChildrenArray(request, task$jscomp$0, children, childIndex) {
     task$jscomp$0.keyPath = prevKeyPath;
     return;
   }
-  childIndex = task$jscomp$0.treeContext;
-  replay = children.length;
+  replay = task$jscomp$0.treeContext;
+  replayNodes = children.length;
   if (null !== task$jscomp$0.replay) {
-    replayNodes = !1;
-    j = task$jscomp$0.replay.nodes;
-    for (replayNode = 0; replayNode < j.length; ) {
-      var replayNode$23 = j[replayNode];
-      if (4 !== replayNode$23[0]) (replayNodes = !0), replayNode++;
+    j = !1;
+    childIndex = task$jscomp$0.replay.nodes;
+    for (replayNode = 0; replayNode < childIndex.length; ) {
+      var replayNode$jscomp$0 = childIndex[replayNode];
+      if (4 !== replayNode$jscomp$0[0]) (j = !0), replayNode++;
       else {
-        var resumeSlot = replayNode$23;
-        replayNode$23 = resumeSlot[1];
+        var resumeSlot = replayNode$jscomp$0;
+        replayNode$jscomp$0 = resumeSlot[1];
         var segmentId = resumeSlot[2];
         task$jscomp$0.treeContext = pushTreeContext(
-          childIndex,
           replay,
-          replayNode$23
+          replayNodes,
+          replayNode$jscomp$0
         );
         resumeSlot = request;
         var task = task$jscomp$0,
-          node = children[replayNode$23],
+          node = children[replayNode$jscomp$0],
           prevReplay = task.replay,
           blockedBoundary = task.blockedBoundary,
           resumedSegment = createPendingSegment(
@@ -3755,7 +3791,7 @@ function renderChildrenArray(request, task$jscomp$0, children, childIndex) {
           (segmentId = task),
             (segmentId.replay = null),
             (segmentId.blockedSegment = resumedSegment),
-            renderNode(resumeSlot, task, node, replayNode$23),
+            renderNode(resumeSlot, task, node, replayNode$jscomp$0),
             (resumedSegment.status = 1),
             null === blockedBoundary
               ? (resumeSlot.completedRootSegment = resumedSegment)
@@ -3765,24 +3801,20 @@ function renderChildrenArray(request, task$jscomp$0, children, childIndex) {
         } finally {
           (task.replay = prevReplay), (task.blockedSegment = null);
         }
-        j.splice(replayNode, 1);
+        childIndex.splice(replayNode, 1);
       }
     }
-    if (!replayNodes) {
-      task$jscomp$0.treeContext = childIndex;
+    if (!j) {
+      task$jscomp$0.treeContext = replay;
       task$jscomp$0.keyPath = prevKeyPath;
       return;
     }
   }
-  for (replayNodes = 0; replayNodes < replay; replayNodes++)
-    (j = children[replayNodes]),
-      (task$jscomp$0.treeContext = pushTreeContext(
-        childIndex,
-        replay,
-        replayNodes
-      )),
-      renderNode(request, task$jscomp$0, j, replayNodes);
-  task$jscomp$0.treeContext = childIndex;
+  for (j = 0; j < replayNodes; j++)
+    (childIndex = children[j]),
+      (task$jscomp$0.treeContext = pushTreeContext(replay, replayNodes, j)),
+      renderNode(request, task$jscomp$0, childIndex, j);
+  task$jscomp$0.treeContext = replay;
   task$jscomp$0.keyPath = prevKeyPath;
 }
 function renderNode(request, task, node, childIndex) {
@@ -3836,15 +3868,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructiveImpl(request, task, null, node, childIndex);
-    } catch (thrownValue$29) {
+    } catch (thrownValue$27) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$29 === SuspenseException
+          thrownValue$27 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$29),
+            : thrownValue$27),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -3894,37 +3926,114 @@ function renderNode(request, task, node, childIndex) {
   switchContext(previousContext);
   throw node;
 }
-function erroredTask(request, boundary, error) {
+function erroredReplay(request, boundary, error, replayNodes) {
   var errorDigest = logRecoverableError(request, error);
-  null === boundary
-    ? fatalError(request, error)
-    : (boundary.pendingTasks--,
-      4 !== boundary.status &&
-        ((boundary.status = 4),
-        (boundary.errorDigest = errorDigest),
-        boundary.parentFlushed &&
-          request.clientRenderedBoundaries.push(boundary)));
-  request.allPendingTasks--;
-  0 === request.allPendingTasks && ((request = request.onAllReady), request());
+  abortRemainingResumableNodes(
+    request,
+    boundary,
+    replayNodes,
+    error,
+    errorDigest
+  );
 }
 function abortTaskSoft(task) {
   var boundary = task.blockedBoundary;
   task = task.blockedSegment;
   null !== task && ((task.status = 3), finishedTask(this, boundary, task));
 }
+function abortRemainingSuspenseBoundary(
+  request,
+  id,
+  rootSegmentID,
+  error,
+  errorDigest
+) {
+  error = createSuspenseBoundary(request, new Set(), null);
+  error.parentFlushed = !0;
+  error.id = id;
+  error.rootSegmentID = rootSegmentID;
+  error.status = 4;
+  error.errorDigest = errorDigest;
+  error.parentFlushed && request.clientRenderedBoundaries.push(error);
+}
+function abortRemainingResumableNodes(
+  request,
+  boundary,
+  nodes,
+  error,
+  errorDigest
+) {
+  for (var i = 0; i < nodes.length; i++) {
+    var node = nodes[i];
+    switch (node[0]) {
+      case 0:
+        abortRemainingResumableNodes(
+          request,
+          boundary,
+          node[3],
+          error,
+          errorDigest
+        );
+        continue;
+      case 1:
+        abortRemainingSuspenseBoundary(
+          request,
+          node[4],
+          node[5],
+          error,
+          errorDigest
+        );
+        continue;
+      case 3:
+        abortRemainingSuspenseBoundary(
+          request,
+          node[3],
+          node[4],
+          error,
+          errorDigest
+        );
+        continue;
+      case 2:
+      case 4:
+        if (null === boundary)
+          throw Error(
+            "We should not have any resumable nodes in the shell. This is a bug in React."
+          );
+        4 !== boundary.status &&
+          ((boundary.status = 4),
+          (boundary.errorDigest = errorDigest),
+          boundary.parentFlushed &&
+            request.clientRenderedBoundaries.push(boundary));
+    }
+  }
+  nodes.length = 0;
+}
 function abortTask(task, request, error) {
   var boundary = task.blockedBoundary,
     segment = task.blockedSegment;
-  null === segment ? task.replay.pendingTasks-- : (segment.status = 3);
+  null !== segment && (segment.status = 3);
   null === boundary
     ? (request.allPendingTasks--,
       1 !== request.status &&
         2 !== request.status &&
-        (logRecoverableError(request, error), fatalError(request, error)))
+        ((task = task.replay),
+        null === task
+          ? (logRecoverableError(request, error), fatalError(request, error))
+          : (task.pendingTasks--,
+            0 === task.pendingTasks &&
+              0 < task.nodes.length &&
+              ((boundary = logRecoverableError(request, error)),
+              abortRemainingResumableNodes(
+                request,
+                null,
+                task.nodes,
+                error,
+                boundary
+              )))))
     : (boundary.pendingTasks--,
       4 !== boundary.status &&
         ((boundary.status = 4),
-        (boundary.errorDigest = request.onError(error)),
+        (boundary.errorDigest = logRecoverableError(request, error)),
         boundary.parentFlushed &&
           request.clientRenderedBoundaries.push(boundary)),
       boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
@@ -3971,8 +4080,9 @@ function finishedTask(request, boundary, segment) {
               queueCompletedSegment(boundary, segment),
             boundary.parentFlushed &&
               request.completedBoundaries.push(boundary),
-            boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request),
-            boundary.fallbackAbortableTasks.clear())
+            1 === boundary.status &&
+              (boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request),
+              boundary.fallbackAbortableTasks.clear()))
           : null !== segment &&
             segment.parentFlushed &&
             1 === segment.status &&
@@ -4465,13 +4575,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$31 = partialBoundaries[i];
+      var boundary$32 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.renderState.boundaryResources =
-          boundary$31.resources;
-        var completedSegments = boundary$31.completedSegments;
+          boundary$32.resources;
+        var completedSegments = boundary$32.completedSegments;
         for (
           resumableState$jscomp$1 = 0;
           resumableState$jscomp$1 < completedSegments.length;
@@ -4481,7 +4591,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$31,
+              boundary$32,
               completedSegments[resumableState$jscomp$1]
             )
           ) {
@@ -4493,7 +4603,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$1);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$31.resources,
+          boundary$32.resources,
           clientRenderedBoundaries.renderState
         );
       }
@@ -4553,8 +4663,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$33) {
-    logRecoverableError(request, error$33), fatalError(request, error$33);
+  } catch (error$34) {
+    logRecoverableError(request, error$34), fatalError(request, error$34);
   }
 }
 exports.abortStream = function (stream) {
@@ -4635,39 +4745,51 @@ exports.renderNextChunk = function (stream) {
                 var ping = task$jscomp$0.ping;
                 x.then(ping, ping);
                 task$jscomp$0.thenableState = getThenableStateAfterSuspending();
-              } else
-                task$jscomp$0.replay.pendingTasks--,
-                  task$jscomp$0.abortSet.delete(task$jscomp$0),
-                  erroredTask(request, task$jscomp$0.blockedBoundary, x);
+              } else if (
+                (task$jscomp$0.replay.pendingTasks--,
+                task$jscomp$0.abortSet.delete(task$jscomp$0),
+                erroredReplay(
+                  request,
+                  task$jscomp$0.blockedBoundary,
+                  x,
+                  task$jscomp$0.replay.nodes
+                ),
+                request.allPendingTasks--,
+                0 === request.allPendingTasks)
+              ) {
+                var onAllReady = request.onAllReady;
+                onAllReady();
+              }
             } finally {
               request.renderState.boundaryResources = null;
             }
           }
         } else {
-          task$jscomp$0 = task;
-          var segment$jscomp$0 = segment;
+          task$jscomp$0 = void 0;
+          var task$jscomp$1 = task,
+            segment$jscomp$0 = segment;
           if (0 === segment$jscomp$0.status) {
-            switchContext(task$jscomp$0.context);
+            switchContext(task$jscomp$1.context);
             var childrenLength = segment$jscomp$0.children.length,
               chunkLength = segment$jscomp$0.chunks.length;
             try {
-              var prevThenableState$jscomp$0 = task$jscomp$0.thenableState;
-              task$jscomp$0.thenableState = null;
+              var prevThenableState$jscomp$0 = task$jscomp$1.thenableState;
+              task$jscomp$1.thenableState = null;
               renderNodeDestructiveImpl(
                 request,
-                task$jscomp$0,
+                task$jscomp$1,
                 prevThenableState$jscomp$0,
-                task$jscomp$0.node,
-                task$jscomp$0.childIndex
+                task$jscomp$1.node,
+                task$jscomp$1.childIndex
               );
               segment$jscomp$0.lastPushedText &&
                 segment$jscomp$0.textEmbedded &&
                 segment$jscomp$0.chunks.push("\x3c!-- --\x3e");
-              task$jscomp$0.abortSet.delete(task$jscomp$0);
+              task$jscomp$1.abortSet.delete(task$jscomp$1);
               segment$jscomp$0.status = 1;
               finishedTask(
                 request,
-                task$jscomp$0.blockedBoundary,
+                task$jscomp$1.blockedBoundary,
                 segment$jscomp$0
               );
             } catch (thrownValue) {
@@ -4683,17 +4805,28 @@ exports.renderNextChunk = function (stream) {
                 null !== x$jscomp$0 &&
                 "function" === typeof x$jscomp$0.then
               ) {
-                var ping$jscomp$0 = task$jscomp$0.ping;
+                var ping$jscomp$0 = task$jscomp$1.ping;
                 x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
-                task$jscomp$0.thenableState = getThenableStateAfterSuspending();
-              } else
-                task$jscomp$0.abortSet.delete(task$jscomp$0),
-                  (segment$jscomp$0.status = 4),
-                  erroredTask(
-                    request,
-                    task$jscomp$0.blockedBoundary,
-                    x$jscomp$0
-                  );
+                task$jscomp$1.thenableState = getThenableStateAfterSuspending();
+              } else {
+                task$jscomp$1.abortSet.delete(task$jscomp$1);
+                segment$jscomp$0.status = 4;
+                var boundary = task$jscomp$1.blockedBoundary;
+                task$jscomp$0 = logRecoverableError(request, x$jscomp$0);
+                null === boundary
+                  ? fatalError(request, x$jscomp$0)
+                  : (boundary.pendingTasks--,
+                    4 !== boundary.status &&
+                      ((boundary.status = 4),
+                      (boundary.errorDigest = task$jscomp$0),
+                      boundary.parentFlushed &&
+                        request.clientRenderedBoundaries.push(boundary)));
+                request.allPendingTasks--;
+                if (0 === request.allPendingTasks) {
+                  var onAllReady$jscomp$0 = request.onAllReady;
+                  onAllReady$jscomp$0();
+                }
+              }
             } finally {
               request.renderState.boundaryResources = null;
             }
