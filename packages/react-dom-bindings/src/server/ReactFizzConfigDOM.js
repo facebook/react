@@ -186,10 +186,10 @@ export type ResumableState = {
   hasHtml: boolean,
 
   // Resources - Request local cache
-  preloadsMap: Map<string, PreloadResource>,
-  preconnectsMap: Map<string, PreconnectResource>,
-  stylesMap: Map<string, StyleResource>,
-  scriptsMap: Map<string, ScriptResource>,
+  preloadsMap: {[key: string]: null},
+  preconnectsMap: {[key: string]: null},
+  stylesMap: {[key: string]: null},
+  scriptsMap: {[key: string]: null},
 };
 
 const dataElementQuotedEnd = stringToPrecomputedChunk('"></template>');
@@ -491,10 +491,10 @@ export function createResumableState(
     // @TODO add bootstrap script to implicit preloads
 
     // persistent
-    preloadsMap: new Map(),
-    preconnectsMap: new Map(),
-    stylesMap: new Map(),
-    scriptsMap: new Map(),
+    preloadsMap: {},
+    preconnectsMap: {},
+    stylesMap: {},
+    scriptsMap: {},
   };
 }
 
@@ -2131,10 +2131,9 @@ function pushLink(
         return pushLinkImpl(target, props);
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
-        let resource = resumableState.stylesMap.get(key);
-        if (!resource) {
+        if (!resumableState.stylesMap.hasOwnProperty(key)) {
           const resourceProps = stylesheetPropsFromRawProps(props);
-          const preloadResource = resumableState.preloadsMap.get(key);
+          const preloadResource = (undefined: void | PreloadResource); // resumableState.preloadsMap.get(key); // TODO
           let state = NoState;
           if (preloadResource) {
             // If we already had a preload we don't want that resource to flush directly.
@@ -2148,13 +2147,13 @@ function pushLink(
               state = PreloadFlushed;
             }
           }
-          resource = {
+          const resource = {
             type: 'stylesheet',
             chunks: ([]: Array<Chunk | PrecomputedChunk>),
             state,
             props: resourceProps,
           };
-          resumableState.stylesMap.set(key, resource);
+          resumableState.stylesMap[key] = null;
           let precedenceSet = renderState.precedences.get(precedence);
           if (!precedenceSet) {
             precedenceSet = new Set();
@@ -2182,7 +2181,7 @@ function pushLink(
           precedenceSet.add(resource);
         }
         if (renderState.boundaryResources) {
-          renderState.boundaryResources.add(resource);
+          // renderState.boundaryResources.add(resource); // TODO
         }
         if (textEmbedded) {
           // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -2313,9 +2312,8 @@ function pushStyle(
     }
 
     const key = getResourceKey('style', href);
-    let resource = resumableState.stylesMap.get(key);
-    if (!resource) {
-      resource = renderState.stylePrecedences.get(precedence);
+    if (!resumableState.stylesMap.hasOwnProperty(key)) {
+      let resource = renderState.stylePrecedences.get(precedence);
       if (!resource) {
         resource = {
           type: 'style',
@@ -2341,11 +2339,11 @@ function pushStyle(
       } else {
         resource.props.hrefs.push(href);
       }
-      resumableState.stylesMap.set(key, resource);
-      if (renderState.boundaryResources) {
-        renderState.boundaryResources.add(resource);
-      }
+      resumableState.stylesMap[key] = null;
       pushStyleContents(resource.chunks, props);
+    }
+    if (renderState.boundaryResources) {
+      // renderState.boundaryResources.add(resource); // TODO
     }
 
     if (textEmbedded) {
@@ -2499,9 +2497,8 @@ function pushImg(
     // resumableState.
     const {sizes} = props;
     const key = getImagePreloadKey(src, srcSet, sizes);
-    let resource = resumableState.preloadsMap.get(key);
-    if (!resource) {
-      resource = {
+    if (!resumableState.preloadsMap.hasOwnProperty(key)) {
+      const resource: PreloadResource = {
         type: 'preload',
         chunks: [],
         state: NoState,
@@ -2522,16 +2519,16 @@ function pushImg(
           referrerPolicy: props.referrerPolicy,
         },
       };
-      resumableState.preloadsMap.set(key, resource);
+      resumableState.preloadsMap[key] = null;
       pushLinkImpl(resource.chunks, resource.props);
-    }
-    if (
-      props.fetchPriority === 'high' ||
-      renderState.highImagePreloads.size < 10
-    ) {
-      renderState.highImagePreloads.add(resource);
-    } else {
-      renderState.bulkPreloads.add(resource);
+      if (
+        props.fetchPriority === 'high' ||
+        renderState.highImagePreloads.size < 10
+      ) {
+        renderState.highImagePreloads.add(resource);
+      } else {
+        renderState.bulkPreloads.add(resource);
+      }
     }
   }
   return pushSelfClosing(target, props, 'img');
@@ -2867,20 +2864,19 @@ function pushScript(
     const src = props.src;
     const key = getResourceKey('script', src);
     // We can make this <script> into a ScriptResource
-    let resource = resumableState.scriptsMap.get(key);
-    if (!resource) {
-      resource = {
+    if (!resumableState.scriptsMap.hasOwnProperty(key)) {
+      const resource: ScriptResource = {
         type: 'script',
         chunks: [],
         state: NoState,
         props: null,
       };
-      resumableState.scriptsMap.set(key, resource);
+      resumableState.scriptsMap[key] = null;
       // Add to the script flushing queue
       renderState.scripts.add(resource);
 
       let scriptProps = props;
-      const preloadResource = resumableState.preloadsMap.get(key);
+      const preloadResource = (undefined: void | PreloadResource); // resumableState.preloadsMap.get(key); // TODO
       if (preloadResource) {
         // If we already had a preload we don't want that resource to flush directly.
         // We let the newly created resource govern flushing.
@@ -5011,21 +5007,20 @@ function prefetchDNS(href: string) {
 
   if (typeof href === 'string' && href) {
     const key = getResourceKey('prefetchDNS', href);
-    let resource = resumableState.preconnectsMap.get(key);
-    if (!resource) {
-      resource = {
+    if (!resumableState.preconnectsMap.hasOwnProperty(key)) {
+      const resource: PreconnectResource = {
         type: 'preconnect',
         chunks: [],
         state: NoState,
         props: null,
       };
-      resumableState.preconnectsMap.set(key, resource);
+      resumableState.preconnectsMap[key] = null;
       pushLinkImpl(
         resource.chunks,
         ({href, rel: 'dns-prefetch'}: PreconnectProps),
       );
+      renderState.preconnects.add(resource);
     }
-    renderState.preconnects.add(resource);
     flushResources(request);
   }
 }
@@ -5050,21 +5045,20 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
     const key = `[preconnect][${
       typeof crossOrigin === 'string' ? crossOrigin : 'null'
     }]${href}`;
-    let resource = resumableState.preconnectsMap.get(key);
-    if (!resource) {
-      resource = {
+    if (!resumableState.preconnectsMap.hasOwnProperty(key)) {
+      const resource: PreconnectResource = {
         type: 'preconnect',
         chunks: [],
         state: NoState,
         props: null,
       };
-      resumableState.preconnectsMap.set(key, resource);
+      resumableState.preconnectsMap[key] = null;
       pushLinkImpl(
         resource.chunks,
         ({rel: 'preconnect', href, crossOrigin}: PreconnectProps),
       );
+      renderState.preconnects.add(resource);
     }
-    renderState.preconnects.add(resource);
     flushResources(request);
   }
 }
@@ -5095,8 +5089,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
     } else {
       key = getResourceKey(as, href);
     }
-    let resource = resumableState.preloadsMap.get(key);
-    if (!resource) {
+    if (!resumableState.preloadsMap.hasOwnProperty(key)) {
       const props = Object.assign(
         ({
           rel: 'preload',
@@ -5105,21 +5098,21 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         }: PreloadProps),
         options,
       );
-      resource = {
+      const resource: PreloadResource = {
         type: 'preload',
         chunks: [],
         state: NoState,
         props,
       };
-      resumableState.preloadsMap.set(key, resource);
+      resumableState.preloadsMap[key] = null;
       pushLinkImpl(resource.chunks, resource.props);
-    }
-    if (as === 'font') {
-      renderState.fontPreloads.add(resource);
-    } else if (as === 'image' && resource.props.fetchPriority === 'high') {
-      renderState.highImagePreloads.add(resource);
-    } else {
-      renderState.bulkPreloads.add(resource);
+      if (as === 'font') {
+        renderState.fontPreloads.add(resource);
+      } else if (as === 'image' && resource.props.fetchPriority === 'high') {
+        renderState.highImagePreloads.add(resource);
+      } else {
+        renderState.bulkPreloads.add(resource);
+      }
     }
     flushResources(request);
   }
@@ -5147,25 +5140,24 @@ function preloadModule(
     const as =
       options && typeof options.as === 'string' ? options.as : 'script';
     const key = getResourceKey(as, href);
-    let resource = resumableState.preloadsMap.get(key);
-    const props: PreloadModuleProps = Object.assign(
-      ({
-        rel: 'modulepreload',
-        href,
-      }: PreloadModuleProps),
-      options,
-    );
-    if (!resource) {
-      resource = {
+    if (!resumableState.preloadsMap.hasOwnProperty(key)) {
+      const props: PreloadModuleProps = Object.assign(
+        ({
+          rel: 'modulepreload',
+          href,
+        }: PreloadModuleProps),
+        options,
+      );
+      const resource: PreloadResource = {
         type: 'preload',
         chunks: [],
         state: NoState,
         props,
       };
-      resumableState.preloadsMap.set(key, resource);
+      resumableState.preloadsMap[key] = null;
       pushLinkImpl(resource.chunks, resource.props);
+      renderState.bulkPreloads.add(resource);
     }
-    renderState.bulkPreloads.add(resource);
     flushResources(request);
   }
 }
@@ -5192,11 +5184,10 @@ function preinitStyle(
   if (href) {
     const as = 'style';
     const key = getResourceKey(as, href);
-    let resource = resumableState.stylesMap.get(key);
-    if (!resource) {
+    if (!resumableState.stylesMap.hasOwnProperty(key)) {
       precedence = precedence || 'default';
       let state = NoState;
-      const preloadResource = resumableState.preloadsMap.get(key);
+      const preloadResource = (undefined: void | PreloadResource); // resumableState.preloadsMap.get(key); // TODO
       if (preloadResource && preloadResource.state & Flushed) {
         state = PreloadFlushed;
       }
@@ -5208,13 +5199,13 @@ function preinitStyle(
         }: StylesheetProps),
         options,
       );
-      resource = {
+      const resource = {
         type: 'stylesheet',
         chunks: ([]: Array<Chunk | PrecomputedChunk>),
         state,
         props,
       };
-      resumableState.stylesMap.set(key, resource);
+      resumableState.stylesMap[key] = null;
       let precedenceSet = renderState.precedences.get(precedence);
       if (!precedenceSet) {
         precedenceSet = new Set();
@@ -5263,15 +5254,14 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions): void {
   const renderState = getRenderState(request);
   if (src) {
     const key = getResourceKey('script', src);
-    let resource = resumableState.scriptsMap.get(key);
-    if (!resource) {
-      resource = {
+    if (!resumableState.scriptsMap.hasOwnProperty(key)) {
+      const resource: ScriptResource = {
         type: 'script',
         chunks: [],
         state: NoState,
         props: null,
       };
-      resumableState.scriptsMap.set(key, resource);
+      resumableState.scriptsMap[key] = null;
       const props: ScriptProps = Object.assign(
         ({
           src,
@@ -5307,15 +5297,14 @@ function preinitModuleScript(
   const renderState = getRenderState(request);
   if (src) {
     const key = getResourceKey('script', src);
-    let resource = resumableState.scriptsMap.get(key);
-    if (!resource) {
-      resource = {
+    if (!resumableState.scriptsMap.hasOwnProperty(key)) {
+      const resource: ScriptResource = {
         type: 'script',
         chunks: [],
         state: NoState,
         props: null,
       };
-      resumableState.scriptsMap.set(key, resource);
+      resumableState.scriptsMap[key] = null;
       const props = Object.assign(
         ({
           src,
@@ -5346,7 +5335,7 @@ function preloadBootstrapScript(
 ): void {
   const key = getResourceKey('script', src);
   if (__DEV__) {
-    if (resumableState.preloadsMap.has(key)) {
+    if (resumableState.preloadsMap.hasOwnProperty(key)) {
       // This is coded as a React error because it should be impossible for a userspace preload to preempt this call
       // If a userspace preload can preempt it then this assumption is broken and we need to reconsider this strategy
       // rather than instruct the user to not preload their bootstrap scripts themselves
@@ -5371,7 +5360,7 @@ function preloadBootstrapScript(
     state: NoState,
     props,
   };
-  resumableState.preloadsMap.set(key, resource);
+  resumableState.preloadsMap[key] = null;
   renderState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
 }
@@ -5390,7 +5379,7 @@ function preloadBootstrapModule(
 ): void {
   const key = getResourceKey('script', src);
   if (__DEV__) {
-    if (resumableState.preloadsMap.has(key)) {
+    if (resumableState.preloadsMap.hasOwnProperty(key)) {
       // This is coded as a React error because it should be impossible for a userspace preload to preempt this call
       // If a userspace preload can preempt it then this assumption is broken and we need to reconsider this strategy
       // rather than instruct the user to not preload their bootstrap scripts themselves
@@ -5414,7 +5403,7 @@ function preloadBootstrapModule(
     state: NoState,
     props,
   };
-  resumableState.preloadsMap.set(key, resource);
+  resumableState.preloadsMap[key] = null;
   renderState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
   return;
@@ -5427,15 +5416,14 @@ function internalPreinitScript(
   chunks: Array<Chunk | PrecomputedChunk>,
 ): void {
   const key = getResourceKey('script', src);
-  let resource = resumableState.scriptsMap.get(key);
-  if (!resource) {
-    resource = {
+  if (!resumableState.scriptsMap.hasOwnProperty(key)) {
+    const resource: ScriptResource = {
       type: 'script',
       chunks,
       state: NoState,
       props: null,
     };
-    resumableState.scriptsMap.set(key, resource);
+    resumableState.scriptsMap[key] = null;
     renderState.scripts.add(resource);
   }
   return;
