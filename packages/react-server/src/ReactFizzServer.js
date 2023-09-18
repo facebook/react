@@ -2083,7 +2083,8 @@ function replayElement(
             );
           }
           // Matched a replayable path.
-          task.replay = {nodes: node[3], pendingTasks: 1};
+          const childNodes = node[3];
+          task.replay = {nodes: childNodes, pendingTasks: 1};
           try {
             renderElement(
               request,
@@ -2094,12 +2095,8 @@ function replayElement(
               props,
               ref,
             );
-            // We finished rendering this node, so now we can consume this
-            // slot. This must happen after in case we rerender this task.
-            replayNodes.splice(i, 1);
-            task.replay.pendingTasks--;
             if (
-              task.replay.pendingTasks === 0 &&
+              task.replay.pendingTasks === 1 &&
               task.replay.nodes.length > 0
             ) {
               throw new Error(
@@ -2107,9 +2104,28 @@ function replayElement(
                   "The tree doesn't match so React will fallback to client rendering.",
               );
             }
+          } catch (x) {
+            if (
+              typeof x === 'object' &&
+              x !== null &&
+              (x === SuspenseException || typeof x.then === 'function')
+            ) {
+              // Suspend
+              throw x;
+            }
+            // Unlike regular render, we don't terminate the siblings if we error
+            // during a replay. That's because this component didn't actually error
+            // in the original prerender. What's unable to complete is the child
+            // replay nodes which might be Suspense boundaries which are able to
+            // absorb the error and we can still continue with siblings.
+            erroredReplay(request, task.blockedBoundary, x, childNodes);
           } finally {
+            task.replay.pendingTasks--;
             task.replay = replay;
           }
+          // We finished rendering this node, so now we can consume this
+          // slot. This must happen after in case we rerender this task.
+          replayNodes.splice(i, 1);
         }
         continue;
       }
@@ -2486,6 +2502,62 @@ function renderNodeDestructiveImpl(
   }
 }
 
+function replayFragment(
+  request: Request,
+  task: ReplayTask,
+  children: Array<any>,
+  childIndex: number,
+): void {
+  // If we're supposed follow this array, we'd expect to see a ReplayNode matching
+  // this fragment.
+  const replay = task.replay;
+  const replayNodes = replay.nodes;
+  for (let j = 0; j < replayNodes.length; j++) {
+    const replayNode = replayNodes[j];
+    if (replayNode[0] !== REPLAY_NODE) {
+      continue;
+    }
+    const node: ReplayNode = (replayNode: any);
+    if (node[2] !== childIndex) {
+      continue;
+    }
+    // Matched a replayable path.
+    const childNodes = node[3];
+    task.replay = {nodes: childNodes, pendingTasks: 1};
+    try {
+      renderChildrenArray(request, task, children, -1);
+      if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
+        throw new Error(
+          "Couldn't find all resumable slots by key/index during replaying. " +
+            "The tree doesn't match so React will fallback to client rendering.",
+        );
+      }
+    } catch (x) {
+      if (
+        typeof x === 'object' &&
+        x !== null &&
+        (x === SuspenseException || typeof x.then === 'function')
+      ) {
+        // Suspend
+        throw x;
+      }
+      // Unlike regular render, we don't terminate the siblings if we error
+      // during a replay. That's because this component didn't actually error
+      // in the original prerender. What's unable to complete is the child
+      // replay nodes which might be Suspense boundaries which are able to
+      // absorb the error and we can still continue with siblings.
+      erroredReplay(request, task.blockedBoundary, x, childNodes);
+    } finally {
+      task.replay.pendingTasks--;
+      task.replay = replay;
+    }
+    // We finished rendering this node, so now we can consume this
+    // slot. This must happen after in case we rerender this task.
+    replayNodes.splice(j, 1);
+    break;
+  }
+}
+
 function renderChildrenArray(
   request: Request,
   task: Task,
@@ -2496,42 +2568,13 @@ function renderChildrenArray(
   if (childIndex !== -1) {
     task.keyPath = [task.keyPath, 'Fragment', childIndex];
     if (task.replay !== null) {
-      // If we're supposed follow this array, we'd expect to see a ReplayNode matching
-      // this fragment.
-      const replayTask: ReplayTask = task;
-      const replay = task.replay;
-      const replayNodes = replay.nodes;
-      for (let j = 0; j < replayNodes.length; j++) {
-        const replayNode = replayNodes[j];
-        if (replayNode[0] !== REPLAY_NODE) {
-          continue;
-        }
-        const node: ReplayNode = (replayNode: any);
-        if (node[2] !== childIndex) {
-          continue;
-        }
-        // Matched a replayable path.
-        replayTask.replay = {nodes: node[3], pendingTasks: 1};
-        try {
-          renderChildrenArray(request, task, children, -1);
-          replayTask.replay.pendingTasks--;
-          if (
-            replayTask.replay.pendingTasks === 0 &&
-            replayTask.replay.nodes.length > 0
-          ) {
-            throw new Error(
-              "Couldn't find all resumable slots by key/index during replaying. " +
-                "The tree doesn't match so React will fallback to client rendering.",
-            );
-          }
-        } finally {
-          replayTask.replay = replay;
-        }
-        // We finished rendering this node, so now we can consume this
-        // slot. This must happen after in case we rerender this task.
-        replayNodes.splice(j, 1);
-        break;
-      }
+      replayFragment(
+        request,
+        // $FlowFixMe: Refined.
+        task,
+        children,
+        childIndex,
+      );
       task.keyPath = prevKeyPath;
       return;
     }
@@ -2954,56 +2997,65 @@ function renderNode(
   throw x;
 }
 
+function erroredReplay(
+  request: Request,
+  boundary: Root | SuspenseBoundary,
+  error: mixed,
+  replayNodes: ResumableNode[],
+): void {
+  // Erroring during a replay doesn't actually cause an error by itself because
+  // that component has already rendered. What causes the error is the resumable
+  // points that we did not yet finish which will be below the point of the reset.
+  // For example, if we're replaying a path to a Suspense boundary that is not done
+  // that doesn't error the parent Suspense boundary.
+  // This might be a bit strange that the error in a parent gets thrown at a child.
+  // We log it only once and reuse the digest.
+  let errorDigest;
+  if (
+    enablePostpone &&
+    typeof error === 'object' &&
+    error !== null &&
+    error.$$typeof === REACT_POSTPONE_TYPE
+  ) {
+    const postponeInstance: Postpone = (error: any);
+    logPostpone(request, postponeInstance.message);
+    // TODO: Figure out a better signal than a magic digest value.
+    errorDigest = 'POSTPONE';
+  } else {
+    errorDigest = logRecoverableError(request, error);
+  }
+  abortRemainingResumableNodes(
+    request,
+    boundary,
+    replayNodes,
+    error,
+    errorDigest,
+  );
+}
+
 function erroredTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
   error: mixed,
-  replay: null | ReplaySet,
 ) {
   // Report the error to a global handler.
-  if (boundary === null) {
-    if (replay === null) {
-      let errorDigest;
-      if (
-        enablePostpone &&
-        typeof error === 'object' &&
-        error !== null &&
-        error.$$typeof === REACT_POSTPONE_TYPE
-      ) {
-        const postponeInstance: Postpone = (error: any);
-        logPostpone(request, postponeInstance.message);
-        // TODO: Figure out a better signal than a magic digest value.
-        errorDigest = 'POSTPONE';
-      } else {
-        errorDigest = logRecoverableError(request, error);
-      }
-      fatalError(request, error);
-    } else {
-      // If the shell errors during a replay, that's not a fatal error. Instead
-      // we should be able to recover by client rendering all the root boundaries in
-      // the ReplaySet and any already matched.
-      //
-      // We don't invoke logRecoverableError at the root but at each boundary
-      // we find that this affects. This might be a bit strange that the error
-      // gets thrown at a child of where the error happened but it's helps line
-      // up the errors with how they'll get thrown on the client.
-      abortRemainingResumableNodes(request, replay.nodes, error);
-    }
+  let errorDigest;
+  if (
+    enablePostpone &&
+    typeof error === 'object' &&
+    error !== null &&
+    error.$$typeof === REACT_POSTPONE_TYPE
+  ) {
+    const postponeInstance: Postpone = (error: any);
+    logPostpone(request, postponeInstance.message);
+    // TODO: Figure out a better signal than a magic digest value.
+    errorDigest = 'POSTPONE';
   } else {
-    let errorDigest;
-    if (
-      enablePostpone &&
-      typeof error === 'object' &&
-      error !== null &&
-      error.$$typeof === REACT_POSTPONE_TYPE
-    ) {
-      const postponeInstance: Postpone = (error: any);
-      logPostpone(request, postponeInstance.message);
-      // TODO: Figure out a better signal than a magic digest value.
-      errorDigest = 'POSTPONE';
-    } else {
-      errorDigest = logRecoverableError(request, error);
-    }
+    errorDigest = logRecoverableError(request, error);
+  }
+  if (boundary === null) {
+    fatalError(request, error);
+  } else {
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
@@ -3049,6 +3101,7 @@ function abortRemainingSuspenseBoundary(
   id: SuspenseBoundaryID,
   rootSegmentID: number,
   error: mixed,
+  errorDigest: ?string,
 ): void {
   const resumedBoundary = createSuspenseBoundary(
     request,
@@ -3061,7 +3114,7 @@ function abortRemainingSuspenseBoundary(
   resumedBoundary.rootSegmentID = rootSegmentID;
 
   resumedBoundary.status = CLIENT_RENDERED;
-  resumedBoundary.errorDigest = request.onError(error);
+  resumedBoundary.errorDigest = errorDigest;
   if (__DEV__) {
     const errorPrefix = 'The server did not finish this Suspense boundary: ';
     let errorMessage;
@@ -3086,33 +3139,75 @@ function abortRemainingSuspenseBoundary(
 
 function abortRemainingResumableNodes(
   request: Request,
+  boundary: Root | SuspenseBoundary,
   nodes: Array<ResumableNode>,
   error: mixed,
+  errorDigest: ?string,
 ): void {
   for (let i = 0; i < nodes.length; i++) {
     const node: any = nodes[i];
     switch (node[0]) {
       case REPLAY_NODE: {
-        abortRemainingResumableNodes(request, node[3], error);
+        abortRemainingResumableNodes(
+          request,
+          boundary,
+          node[3],
+          error,
+          errorDigest,
+        );
         continue;
       }
       case REPLAY_SUSPENSE_BOUNDARY: {
         const boundaryNode: ReplaySuspenseBoundary = node;
         const id = boundaryNode[4];
         const rootSegmentID = boundaryNode[5];
-        abortRemainingSuspenseBoundary(request, id, rootSegmentID, error);
+        abortRemainingSuspenseBoundary(
+          request,
+          id,
+          rootSegmentID,
+          error,
+          errorDigest,
+        );
         continue;
       }
       case RESUME_SUSPENSE_BOUNDARY: {
         const boundaryNode: ResumeSuspenseBoundary = node;
         const id = boundaryNode[3];
         const rootSegmentID = boundaryNode[4];
-        abortRemainingSuspenseBoundary(request, id, rootSegmentID, error);
+        abortRemainingSuspenseBoundary(
+          request,
+          id,
+          rootSegmentID,
+          error,
+          errorDigest,
+        );
+        continue;
+      }
+      case RESUME_ELEMENT:
+      case RESUME_SLOT: {
+        // We had something still to resume in the parent boundary. We must trigger
+        // the error on the parent boundary since it's not able to complete.
+        if (boundary === null) {
+          throw new Error(
+            'We should not have any resumable nodes in the shell. ' +
+              'This is a bug in React.',
+          );
+        } else if (boundary.status !== CLIENT_RENDERED) {
+          boundary.status = CLIENT_RENDERED;
+          boundary.errorDigest = errorDigest;
+          if (__DEV__) {
+            captureBoundaryErrorDetailsDev(boundary, error);
+          }
+          if (boundary.parentFlushed) {
+            request.clientRenderedBoundaries.push(boundary);
+          }
+        }
         continue;
       }
     }
   }
-  // TODO: Abort any undiscovered Suspense boundaries in the ReplaySet.
+  // Empty the set, since we've cleared it now.
+  nodes.length = 0;
 }
 
 function abortTask(task: Task, request: Request, error: mixed): void {
@@ -3138,8 +3233,15 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         // we should be able to recover by client rendering all the root boundaries in
         // the ReplaySet.
         replay.pendingTasks--;
-        if (replay.pendingTasks === 0) {
-          abortRemainingResumableNodes(request, replay.nodes, error);
+        if (replay.pendingTasks === 0 && replay.nodes.length > 0) {
+          const errorDigest = logRecoverableError(request, error);
+          abortRemainingResumableNodes(
+            request,
+            null,
+            replay.nodes,
+            error,
+            errorDigest,
+          );
         }
       }
     }
@@ -3147,7 +3249,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
-      boundary.errorDigest = request.onError(error);
+      boundary.errorDigest = logRecoverableError(request, error);
       if (__DEV__) {
         const errorPrefix =
           'The server did not finish this Suspense boundary: ';
@@ -3410,7 +3512,7 @@ function retryRenderTask(
     }
     task.abortSet.delete(task);
     segment.status = ERRORED;
-    erroredTask(request, task.blockedBoundary, x, null);
+    erroredTask(request, task.blockedBoundary, x);
     return;
   } finally {
     if (enableFloat) {
@@ -3485,7 +3587,12 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     }
     task.replay.pendingTasks--;
     task.abortSet.delete(task);
-    erroredTask(request, task.blockedBoundary, x, task.replay);
+    erroredReplay(request, task.blockedBoundary, x, task.replay.nodes);
+    request.allPendingTasks--;
+    if (request.allPendingTasks === 0) {
+      const onAllReady = request.onAllReady;
+      onAllReady();
+    }
     return;
   } finally {
     if (enableFloat) {

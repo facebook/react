@@ -6682,8 +6682,20 @@ describe('ReactDOMFizzServer', () => {
               <Postpone />
             </Suspense>
           </div>
-          <Suspense fallback="Loading4">
+          <Suspense fallback="Not used">
+            <div>
+              <Suspense fallback="Loading4">
+                <Postpone />
+              </Suspense>
+            </div>
+          </Suspense>
+          <Suspense fallback="Loading5">
             <Postpone />
+            <ReplayError>
+              <Suspense fallback="Loading6">
+                <Postpone />
+              </Suspense>
+            </ReplayError>
           </Suspense>
         </div>
       );
@@ -6732,7 +6744,8 @@ describe('ReactDOMFizzServer', () => {
           {'Loading2'}
           {'Loading3'}
         </div>
-        {'Loading4'}
+        <div>{'Loading4'}</div>
+        {'Loading5'}
       </div>,
     );
 
@@ -6748,14 +6761,16 @@ describe('ReactDOMFizzServer', () => {
             'Loading2' /* This will be client rendered because its parent errored during replay */
           }
           {
-            'Loading3' /* Collateral damage because we don't know if the error should've match it */
+            'Hello' /* This should be renderable since we matched which previous sibling errored */
           }
         </div>
-        {
-          'Loading4' /* This should be able to resume because it's in a different parent.
-        Because task.replay resets in try/finally this doesn't happen in this case because
-        we abort the replay at the root of the task instead of the root of the error. */
-        }
+        <div>
+          {
+            'Hello' /* This should be able to resume because it's in a different parent. */
+          }
+        </div>
+        {'Hello'}
+        {'Loading6' /* The parent could resolve even if the child didn't */}
       </div>,
     );
 
@@ -6778,15 +6793,21 @@ describe('ReactDOMFizzServer', () => {
           {'Hello'}
           {'Hello'}
         </div>
+        <div>{'Hello'}</div>
+        {'Hello'}
         {'Hello'}
       </div>,
     );
 
     // We should've logged once for each boundary that this affected.
     expect(prerenderErrors).toEqual([]);
-    expect(ssrErrors).toEqual(['replay error', 'replay error', 'replay error']);
+    expect(ssrErrors).toEqual([
+      // This error triggered in two replay components.
+      'replay error',
+      'replay error',
+    ]);
     expect(recoverableErrors).toEqual([
-      'The server did not finish this Suspense boundary: replay error',
+      // It surfaced in two different suspense boundaries.
       'The server did not finish this Suspense boundary: replay error',
       'The server did not finish this Suspense boundary: replay error',
     ]);
