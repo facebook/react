@@ -357,6 +357,9 @@ function shouldVisitNode(
   >,
   pass: CompilerPass
 ): boolean {
+  if (hasUseMemoCacheCall(fn)) {
+    return false;
+  }
   if (fn.node.body.type === "BlockStatement") {
     // Opt-outs disable compilation regardless of mode
     if (hasAnyUseNoForgetDirectives(fn.node.body.directives)) {
@@ -390,6 +393,25 @@ function shouldVisitNode(
       );
     }
   }
+}
+
+function hasUseMemoCacheCall(
+  fn: NodePath<
+    t.FunctionDeclaration | t.FunctionExpression | t.ArrowFunctionExpression
+  >
+): boolean {
+  let hasUseMemoCache = false;
+  fn.traverse({
+    Identifier(path) {
+      if (
+        path.node.name === "useMemoCache" ||
+        path.node.name === "unstable_useMemoCache"
+      ) {
+        hasUseMemoCache = true;
+      }
+    },
+  });
+  return hasUseMemoCache;
 }
 
 function isHookName(s: string): boolean {
