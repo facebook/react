@@ -6488,11 +6488,15 @@ describe('ReactDOMFizzServer', () => {
       });
     });
 
-    expect(recoverableErrors).toEqual([
-      'server error',
-      'replay error',
-      'server error',
-    ]);
+    expect(recoverableErrors).toEqual(
+      __DEV__
+        ? ['server error', 'replay error', 'server error']
+        : [
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          ],
+    );
     expect(getVisibleChildren(container)).toEqual(
       <div>
         {'Hello'}
@@ -6642,10 +6646,17 @@ describe('ReactDOMFizzServer', () => {
 
     expect(prerenderErrors).toEqual([]);
     expect(ssrErrors).toEqual(['aborted', 'aborted']);
-    expect(recoverableErrors).toEqual([
-      'The server did not finish this Suspense boundary: aborted',
-      'The server did not finish this Suspense boundary: aborted',
-    ]);
+    expect(recoverableErrors).toEqual(
+      __DEV__
+        ? [
+            'The server did not finish this Suspense boundary: aborted',
+            'The server did not finish this Suspense boundary: aborted',
+          ]
+        : [
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          ],
+    );
   });
 
   // @gate enablePostpone
@@ -6806,10 +6817,17 @@ describe('ReactDOMFizzServer', () => {
       'replay error',
       'replay error',
     ]);
-    expect(recoverableErrors).toEqual([
+    expect(recoverableErrors).toEqual(
       // It surfaced in two different suspense boundaries.
-      'The server did not finish this Suspense boundary: replay error',
-      'The server did not finish this Suspense boundary: replay error',
-    ]);
+      __DEV__
+        ? [
+            'The server did not finish this Suspense boundary: replay error',
+            'The server did not finish this Suspense boundary: replay error',
+          ]
+        : [
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          ],
+    );
   });
 });
