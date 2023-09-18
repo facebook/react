@@ -100,6 +100,17 @@ export function transformFixtureInput(
             {
               valueKind: "frozen" as ValueKind,
               effectKind: "freeze" as Effect,
+              transitiveMixedData: false,
+              noAlias: false,
+            },
+          ],
+          [
+            "useFragment",
+            {
+              valueKind: "frozen" as ValueKind,
+              effectKind: "freeze" as Effect,
+              transitiveMixedData: true,
+              noAlias: true,
             },
           ],
           [
@@ -107,6 +118,7 @@ export function transformFixtureInput(
             {
               valueKind: "mutable" as ValueKind,
               effectKind: "read" as Effect,
+              transitiveMixedData: false,
               noAlias: true,
             },
           ],

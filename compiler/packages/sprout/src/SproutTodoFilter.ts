@@ -413,6 +413,8 @@ const skipFilter = new Set([
   "fbt-template-string-same-scope",
   "component-declaration-basic.flow",
   "nested-function-with-param-as-captured-dep",
+  "readonly-object-method-calls",
+  "readonly-object-method-calls-mutable-lambda",
 
   // TODO: 🌲
   "forest-basic",

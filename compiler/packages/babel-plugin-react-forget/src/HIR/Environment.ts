@@ -28,6 +28,7 @@ import {
   makeIdentifierId,
 } from "./HIR";
 import {
+  BuiltInMixedReadonlyId,
   DefaultMutatingHook,
   DefaultNonmutatingHook,
   FunctionSignature,
@@ -55,6 +56,25 @@ export type Hook = {
    * compiler to avoid memoizing arguments.
    */
   noAlias?: boolean;
+
+  /**
+   * Specifies whether the hook returns data that is composed of:
+   * - undefined
+   * - null
+   * - boolean
+   * - number
+   * - string
+   * - arrays whose items are also transitiveMixed
+   * - objects whose values are also transitiveMixed
+   *
+   * Many state management and data-fetching APIs return data that meets
+   * this criteria since this is JSON + undefined. Forget can compile
+   * hooks that return transitively mixed data more optimally because it
+   * can make inferences about some method calls (especially array methods
+   * like `data.items.map(...)` since these builtin types have few built-in
+   * methods.
+   */
+  transitiveMixedData?: boolean;
 };
 
 // TODO(mofeiZ): User defined global types (with corresponding shapes).
@@ -236,7 +256,9 @@ export class Environment {
           addHook(this.#shapes, [], {
             positionalParams: [],
             restParam: hook.effectKind,
-            returnType: { kind: "Poly" },
+            returnType: hook.transitiveMixedData
+              ? { kind: "Object", shapeId: BuiltInMixedReadonlyId }
+              : { kind: "Poly" },
             returnValueKind: hook.valueKind,
             calleeEffect: Effect.Read,
             hookKind: "Custom",
@@ -312,7 +334,9 @@ export class Environment {
         loc: null,
         suggestions: null,
       });
-      return shape.properties.get(property) ?? null;
+      return (
+        shape.properties.get(property) ?? shape.properties.get("*") ?? null
+      );
     } else {
       return null;
     }

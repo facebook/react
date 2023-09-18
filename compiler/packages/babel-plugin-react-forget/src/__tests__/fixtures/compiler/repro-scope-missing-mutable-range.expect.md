@@ -20,20 +20,27 @@ function HomeDiscoStoreItemTileRating(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function HomeDiscoStoreItemTileRating(props) {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(3);
   const item = useFragment();
+  const c_0 = $[0] !== item;
   let count;
-  count = 0;
-  const aggregates = item?.aggregates || [];
-  aggregates.forEach((aggregate) => {
-    count = count + (aggregate.count || 0);
-  });
-  let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Text>{count}</Text>;
-    $[0] = t0;
+  if (c_0) {
+    count = 0;
+    const aggregates = item?.aggregates || [];
+    aggregates.forEach((aggregate) => {
+      count = count + (aggregate.count || 0);
+    });
+    $[0] = item;
+    $[1] = count;
   } else {
-    t0 = $[0];
+    count = $[1];
+  }
+  let t0;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = <Text>{count}</Text>;
+    $[2] = t0;
+  } else {
+    t0 = $[2];
   }
   return t0;
 }

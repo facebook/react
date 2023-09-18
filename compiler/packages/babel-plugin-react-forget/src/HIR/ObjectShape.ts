@@ -170,6 +170,7 @@ export const BuiltInUseStateId = "BuiltInUseState";
 export const BuiltInSetStateId = "BuiltInSetState";
 export const BuiltInUseRefId = "BuiltInUseRefId";
 export const BuiltInRefValueId = "BuiltInRefValue";
+export const BuiltInMixedReadonlyId = "BuiltInMixedReadonly";
 
 /**
  * ShapeRegistry with default definitions for built-ins.
@@ -293,6 +294,42 @@ addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, []);
+
+addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
+  [
+    "toString",
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: PRIMITIVE_TYPE,
+      calleeEffect: Effect.Read,
+      returnValueKind: ValueKind.Immutable,
+    }),
+  ],
+  [
+    "map",
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: { kind: "Object", shapeId: BuiltInArrayId },
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+    }),
+  ],
+  [
+    "filter",
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Read,
+      returnType: { kind: "Object", shapeId: BuiltInArrayId },
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+    }),
+  ],
+  ["*", { kind: "Object", shapeId: BuiltInMixedReadonlyId }],
+]);
 
 export const DefaultMutatingHook = addHook(BUILTIN_SHAPES, [], {
   positionalParams: [],

@@ -30,53 +30,60 @@ function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(8);
-  const post = useFragment(graphql`...`, props.post);
-  const c_0 = $[0] !== post;
+  const $ = useMemoCache(9);
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = graphql`...`;
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  const post = useFragment(t0, props.post);
+  const c_1 = $[1] !== post;
   let media;
   let onClick;
-  if (c_0) {
+  if (c_1) {
     const allUrls = [];
 
     const { media: t83, comments, urls } = post;
     media = t83;
-    const c_3 = $[3] !== comments.length;
-    let t0;
-    if (c_3) {
-      t0 = (e) => {
+    const c_4 = $[4] !== comments.length;
+    let t1;
+    if (c_4) {
+      t1 = (e) => {
         if (!comments.length) {
           return;
         }
 
         console.log(comments.length);
       };
-      $[3] = comments.length;
-      $[4] = t0;
+      $[4] = comments.length;
+      $[5] = t1;
     } else {
-      t0 = $[4];
+      t1 = $[5];
     }
-    onClick = t0;
+    onClick = t1;
 
     allUrls.push(...urls);
-    $[0] = post;
-    $[1] = media;
-    $[2] = onClick;
+    $[1] = post;
+    $[2] = media;
+    $[3] = onClick;
   } else {
-    media = $[1];
-    onClick = $[2];
+    media = $[2];
+    onClick = $[3];
   }
-  const c_5 = $[5] !== media;
-  const c_6 = $[6] !== onClick;
-  let t1;
-  if (c_5 || c_6) {
-    t1 = <Media media={media} onClick={onClick} />;
-    $[5] = media;
-    $[6] = onClick;
-    $[7] = t1;
+  const c_6 = $[6] !== media;
+  const c_7 = $[7] !== onClick;
+  let t2;
+  if (c_6 || c_7) {
+    t2 = <Media media={media} onClick={onClick} />;
+    $[6] = media;
+    $[7] = onClick;
+    $[8] = t2;
   } else {
-    t1 = $[7];
+    t2 = $[8];
   }
-  return t1;
+  return t2;
 }
 
 ```
