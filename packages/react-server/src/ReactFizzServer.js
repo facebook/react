@@ -23,7 +23,6 @@ import type {
 } from 'shared/ReactTypes';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
-  SuspenseBoundaryID,
   RenderState,
   ResumableState,
   FormatContext,
@@ -64,8 +63,6 @@ import {
   pushStartCompletedSuspenseBoundary,
   pushEndCompletedSuspenseBoundary,
   pushSegmentFinale,
-  UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
-  assignSuspenseBoundaryID,
   getChildFormatContext,
   writeResourcesForBoundary,
   writePreamble,
@@ -176,7 +173,6 @@ type ReplaySuspenseBoundary = [
   string | null /* name */,
   string | number /* key */,
   Array<ResumableNode> /* children */,
-  SuspenseBoundaryID /* id */,
   number /* rootSegmentID */,
 ];
 
@@ -193,7 +189,6 @@ type ResumeSuspenseBoundary = [
   3, // RESUME_SUSPENSE_BOUNDARY
   string | null /* name */,
   string | number /* key */,
-  SuspenseBoundaryID /* id */,
   number /* rootSegmentID */,
 ];
 
@@ -229,7 +224,6 @@ const CLIENT_RENDERED = 4; // if it errors or infinitely suspends
 
 type SuspenseBoundary = {
   status: 0 | 1 | 4 | 5,
-  id: SuspenseBoundaryID,
   rootSegmentID: number,
   errorDigest: ?string, // the error hash if it errors
   errorMessage?: string, // the error string if it errors
@@ -575,7 +569,6 @@ function createSuspenseBoundary(
 ): SuspenseBoundary {
   return {
     status: PENDING,
-    id: UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
@@ -1004,8 +997,7 @@ function replaySuspenseBoundary(
   );
   resumedBoundary.parentFlushed = true;
   // We restore the same id of this boundary as was used during prerender.
-  resumedBoundary.id = replayNode[4];
-  resumedBoundary.rootSegmentID = replayNode[5];
+  resumedBoundary.rootSegmentID = replayNode[4];
 
   // We can reuse the current context and task to render the content immediately without
   // context switching. We just need to temporarily switch which boundary and replay node
@@ -1102,9 +1094,9 @@ function resumeSuspenseBoundary(
     task.keyPath,
   );
   resumedBoundary.parentFlushed = true;
+  const id = replayNode[3];
   // We restore the same id of this boundary as was used during prerender.
-  resumedBoundary.id = replayNode[3];
-  resumedBoundary.rootSegmentID = replayNode[4];
+  resumedBoundary.rootSegmentID = id;
 
   const resumedSegment = createPendingSegment(
     request,
@@ -1115,7 +1107,7 @@ function resumeSuspenseBoundary(
     false,
   );
   resumedSegment.parentFlushed = true;
-  resumedSegment.id = replayNode[4];
+  resumedSegment.id = id;
 
   // We can reuse the current context and task to render the content immediately without
   // context switching. We just need to temporarily switch which boundary and replay node
@@ -2647,10 +2639,6 @@ function trackPostpone(
     boundary.status = POSTPONED;
     // We need to eagerly assign it an ID because we'll need to refer to
     // it before flushing and we know that we can't inline it.
-    boundary.id = assignSuspenseBoundaryID(
-      request.renderState,
-      request.resumableState,
-    );
     boundary.rootSegmentID = request.nextSegmentId++;
 
     const boundaryKeyPath = boundary.keyPath;
@@ -2669,7 +2657,6 @@ function trackPostpone(
         RESUME_SUSPENSE_BOUNDARY,
         boundaryKeyPath[1],
         boundaryKeyPath[2],
-        boundary.id,
         boundary.rootSegmentID,
       ];
       addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
@@ -2681,7 +2668,6 @@ function trackPostpone(
         boundaryKeyPath[1],
         boundaryKeyPath[2],
         children,
-        boundary.id,
         boundary.rootSegmentID,
       ];
       trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
@@ -3098,7 +3084,6 @@ function abortTaskSoft(this: Request, task: Task): void {
 
 function abortRemainingSuspenseBoundary(
   request: Request,
-  id: SuspenseBoundaryID,
   rootSegmentID: number,
   error: mixed,
   errorDigest: ?string,
@@ -3110,7 +3095,6 @@ function abortRemainingSuspenseBoundary(
   );
   resumedBoundary.parentFlushed = true;
   // We restore the same id of this boundary as was used during prerender.
-  resumedBoundary.id = id;
   resumedBoundary.rootSegmentID = rootSegmentID;
 
   resumedBoundary.status = CLIENT_RENDERED;
@@ -3159,11 +3143,9 @@ function abortRemainingResumableNodes(
       }
       case REPLAY_SUSPENSE_BOUNDARY: {
         const boundaryNode: ReplaySuspenseBoundary = node;
-        const id = boundaryNode[4];
-        const rootSegmentID = boundaryNode[5];
+        const rootSegmentID = boundaryNode[4];
         abortRemainingSuspenseBoundary(
           request,
-          id,
           rootSegmentID,
           error,
           errorDigest,
@@ -3172,11 +3154,9 @@ function abortRemainingResumableNodes(
       }
       case RESUME_SUSPENSE_BOUNDARY: {
         const boundaryNode: ResumeSuspenseBoundary = node;
-        const id = boundaryNode[3];
-        const rootSegmentID = boundaryNode[4];
+        const rootSegmentID = boundaryNode[3];
         abortRemainingSuspenseBoundary(
           request,
-          id,
           rootSegmentID,
           error,
           errorDigest,
@@ -3753,10 +3733,6 @@ function flushSegment(
     if (boundary.status === PENDING) {
       // For pending boundaries we lazily assign an ID to the boundary
       // and root segment.
-      boundary.id = assignSuspenseBoundaryID(
-        request.renderState,
-        request.resumableState,
-      );
       boundary.rootSegmentID = request.nextSegmentId++;
     }
 
@@ -3767,9 +3743,7 @@ function flushSegment(
 
     // This boundary is still loading. Emit a pending suspense boundary wrapper.
 
-    /// This is the first time we should have referenced this ID.
-    const id = boundary.id;
-
+    const id = boundary.rootSegmentID;
     writeStartPendingSuspenseBoundary(destination, request.renderState, id);
 
     // Flush the fallback.
@@ -3791,7 +3765,7 @@ function flushSegment(
     writeStartPendingSuspenseBoundary(
       destination,
       request.renderState,
-      boundary.id,
+      boundary.rootSegmentID,
     );
 
     // Flush the fallback.
@@ -3829,7 +3803,7 @@ function flushClientRenderedBoundary(
     destination,
     request.resumableState,
     request.renderState,
-    boundary.id,
+    boundary.rootSegmentID,
     boundary.errorDigest,
     boundary.errorMessage,
     boundary.errorComponentStack,
@@ -3882,7 +3856,6 @@ function flushCompletedBoundary(
     destination,
     request.resumableState,
     request.renderState,
-    boundary.id,
     boundary.rootSegmentID,
     boundary.resources,
   );

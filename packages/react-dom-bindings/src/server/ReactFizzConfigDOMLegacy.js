@@ -35,7 +35,7 @@ export type RenderState = {
   // Keep this in sync with ReactFizzConfigDOM
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
-  boundaryPrefix: string,
+  boundaryPrefix: PrecomputedChunk,
   startInlineScript: PrecomputedChunk,
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
@@ -89,13 +89,10 @@ export type {
   ResumableState,
   BoundaryResources,
   FormatContext,
-  SuspenseBoundaryID,
 } from './ReactFizzConfigDOM';
 
 export {
   getChildFormatContext,
-  UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
-  assignSuspenseBoundaryID,
   makeId,
   pushStartInstance,
   pushEndInstance,

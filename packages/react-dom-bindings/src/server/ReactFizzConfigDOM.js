@@ -123,7 +123,7 @@ export type RenderState = {
   // These can be recreated from resumable state.
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
-  boundaryPrefix: string,
+  boundaryPrefix: PrecomputedChunk,
 
   // inline script streaming format, unused if using external runtime / data
   startInlineScript: PrecomputedChunk,
@@ -162,7 +162,7 @@ export type ResumableState = {
   externalRuntimeScript: null | ExternalRuntimeScript, // TODO: Move to a serializable format
   bootstrapChunks: Array<Chunk | PrecomputedChunk>, // TODO: Move to a serializable format.
   idPrefix: string,
-  nextSuspenseID: number,
+  nextFormID: number,
   streamingFormat: StreamingFormat,
 
   // state for script streaming format, unused if using external runtime / data
@@ -272,7 +272,7 @@ export function createRenderState(
   return {
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + 'S:'),
-    boundaryPrefix: idPrefix + 'B:',
+    boundaryPrefix: stringToPrecomputedChunk(idPrefix + 'B:'),
     startInlineScript: inlineScriptWithNonce,
     htmlChunks: null,
     headChunks: null,
@@ -353,7 +353,7 @@ export function createResumableState(
     externalRuntimeScript: externalRuntimeScript,
     bootstrapChunks: bootstrapChunks,
     idPrefix: idPrefix,
-    nextSuspenseID: 0,
+    nextFormID: 0,
     streamingFormat,
     instructions: NothingSent,
     hasBody: false,
@@ -605,20 +605,6 @@ export function getChildFormatContext(
   return parentContext;
 }
 
-export type SuspenseBoundaryID = null | PrecomputedChunk;
-
-export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID: SuspenseBoundaryID = null;
-
-export function assignSuspenseBoundaryID(
-  renderState: RenderState,
-  resumableState: ResumableState,
-): SuspenseBoundaryID {
-  const generatedID = resumableState.nextSuspenseID++;
-  return stringToPrecomputedChunk(
-    renderState.boundaryPrefix + generatedID.toString(16),
-  );
-}
-
 export function makeId(
   resumableState: ResumableState,
   treeId: string,
@@ -806,9 +792,7 @@ function pushStringAttribute(
 }
 
 function makeFormFieldPrefix(resumableState: ResumableState): string {
-  // I'm just reusing this counter. It's not really the same namespace as "name".
-  // It could just be its own counter.
-  const id = resumableState.nextSuspenseID++;
+  const id = resumableState.nextFormID++;
   return resumableState.idPrefix + id;
 }
 
@@ -3503,7 +3487,7 @@ export function writeStartCompletedSuspenseBoundary(
 export function writeStartPendingSuspenseBoundary(
   destination: Destination,
   renderState: RenderState,
-  id: SuspenseBoundaryID,
+  id: number,
 ): boolean {
   writeChunk(destination, startPendingSuspenseBoundary1);
 
@@ -3513,7 +3497,8 @@ export function writeStartPendingSuspenseBoundary(
     );
   }
 
-  writeChunk(destination, id);
+  writeChunk(destination, renderState.boundaryPrefix);
+  writeChunk(destination, stringToChunk(id.toString(16)));
   return writeChunkAndReturn(destination, startPendingSuspenseBoundary2);
 }
 export function writeStartClientRenderedSuspenseBoundary(
@@ -3807,8 +3792,7 @@ export function writeCompletedBoundaryInstruction(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  boundaryID: SuspenseBoundaryID,
-  contentSegmentID: number,
+  id: number,
   boundaryResources: BoundaryResources,
 ): boolean {
   let requiresStyleInsertion;
@@ -3864,22 +3848,19 @@ export function writeCompletedBoundaryInstruction(
     }
   }
 
-  if (boundaryID === null) {
-    throw new Error(
-      'An ID must have been assigned before we can complete the boundary.',
-    );
-  }
+  const idChunk = stringToChunk(id.toString(16));
+
+  writeChunk(destination, renderState.boundaryPrefix);
+  writeChunk(destination, idChunk);
 
   // Write function arguments, which are string and array literals
-  const formattedContentID = stringToChunk(contentSegmentID.toString(16));
-  writeChunk(destination, boundaryID);
   if (scriptFormat) {
     writeChunk(destination, completeBoundaryScript2);
   } else {
     writeChunk(destination, completeBoundaryData2);
   }
   writeChunk(destination, renderState.segmentPrefix);
-  writeChunk(destination, formattedContentID);
+  writeChunk(destination, idChunk);
   if (enableFloat && requiresStyleInsertion) {
     // Script and data writers must format this differently:
     //  - script writer emits an array literal, whose string elements are
@@ -3928,7 +3909,7 @@ export function writeClientRenderBoundaryInstruction(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  boundaryID: SuspenseBoundaryID,
+  id: number,
   errorDigest: ?string,
   errorMessage?: string,
   errorComponentStack?: string,
@@ -3954,13 +3935,8 @@ export function writeClientRenderBoundaryInstruction(
     writeChunk(destination, clientRenderData1);
   }
 
-  if (boundaryID === null) {
-    throw new Error(
-      'An ID must have been assigned before we can complete the boundary.',
-    );
-  }
-
-  writeChunk(destination, boundaryID);
+  writeChunk(destination, renderState.boundaryPrefix);
+  writeChunk(destination, stringToChunk(id.toString(16)));
   if (scriptFormat) {
     // " needs to be inserted for scripts, since ArgInterstitual does not contain
     // leading or trailing quotes

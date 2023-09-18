@@ -32,7 +32,6 @@ export opaque type RenderState = mixed;
 export opaque type ResumableState = mixed;
 export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
-export opaque type SuspenseBoundaryID = mixed;
 export type {TransitionStatus};
 
 export const isPrimaryRenderer = false;
@@ -41,9 +40,6 @@ export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request> = (null: any);
 
 export const getChildFormatContext = $$$config.getChildFormatContext;
-export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID =
-  $$$config.UNINITIALIZED_SUSPENSE_BOUNDARY_ID;
-export const assignSuspenseBoundaryID = $$$config.assignSuspenseBoundaryID;
 export const makeId = $$$config.makeId;
 export const pushTextInstance = $$$config.pushTextInstance;
 export const pushStartInstance = $$$config.pushStartInstance;
