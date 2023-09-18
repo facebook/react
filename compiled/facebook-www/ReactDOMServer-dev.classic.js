@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-0e5abf05";
+var ReactVersion = "18.3.0-www-classic-aa8d23ac";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -12734,9 +12734,6 @@ function flushCompletedQueues(request, destination) {
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
       }
-    } else if (request.pendingRootTasks > 0) {
-      // We have not yet flushed the root segment so we early return
-      return;
     }
 
     if (enableFloat) {

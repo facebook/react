@@ -4334,7 +4334,6 @@ function flushCompletedQueues(request, destination) {
         request.completedRootSegment = null;
         writeBootstrap(destination, request.resumableState);
       } else return;
-    else if (0 < request.pendingRootTasks) return;
     var resumableState$jscomp$0 = request.resumableState,
       renderState$jscomp$0 = request.renderState;
     completedRootSegment = 0;
