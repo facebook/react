@@ -483,7 +483,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -525,7 +525,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -564,7 +564,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -612,7 +612,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -653,7 +653,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -694,7 +694,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const content = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     const html = await readContent(concat(prerendered.prelude, content));
@@ -786,7 +786,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     prerendering = false;
     const content = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(content);
