@@ -25,6 +25,7 @@ import {
 import {
   createResumableState,
   createRenderState,
+  resumeRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -96,10 +97,6 @@ function renderToReadableStream(
     }
     const resumableState = createResumableState(
       options ? options.identifierPrefix : undefined,
-      options ? options.nonce : undefined,
-      options ? options.bootstrapScriptContent : undefined,
-      options ? options.bootstrapScripts : undefined,
-      options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     );
     const request = createRequest(
@@ -108,6 +105,10 @@ function renderToReadableStream(
       createRenderState(
         resumableState,
         options ? options.nonce : undefined,
+        options ? options.bootstrapScriptContent : undefined,
+        options ? options.bootstrapScripts : undefined,
+        options ? options.bootstrapModules : undefined,
+        options ? options.unstable_externalRuntimeSrc : undefined,
         options ? options.importMap : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
@@ -177,10 +178,9 @@ function resume(
     const request = resumeRequest(
       children,
       postponedState,
-      createRenderState(
+      resumeRenderState(
         postponedState.resumableState,
         options ? options.nonce : undefined,
-        undefined, // importMap
       ),
       options ? options.onError : undefined,
       onAllReady,

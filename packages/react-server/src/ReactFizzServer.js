@@ -3962,13 +3962,15 @@ function flushCompletedQueues(
             destination,
             request.resumableState,
             request.renderState,
-            request.allPendingTasks === 0,
+            request.allPendingTasks === 0 &&
+              (request.trackedPostpones === null ||
+                request.trackedPostpones.workingMap.size === 0),
           );
         }
 
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
-        writeCompletedRoot(destination, request.resumableState);
+        writeCompletedRoot(destination, request.renderState);
       } else {
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
@@ -4164,6 +4166,10 @@ export function getFormState(
 
 export function getResumableState(request: Request): ResumableState {
   return request.resumableState;
+}
+
+export function getRenderState(request: Request): RenderState {
+  return request.renderState;
 }
 
 function addToReplayParent(
