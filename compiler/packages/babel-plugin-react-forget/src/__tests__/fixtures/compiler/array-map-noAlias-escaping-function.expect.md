@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableNoAliasOptimizations
 function Component(props) {
   const f = (item) => item;
   const x = [...props.items].map(f); // `f` doesn't escape here...
@@ -19,7 +20,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { unstable_useMemoCache as useMemoCache } from "react"; // @enableNoAliasOptimizations
 function Component(props) {
   const $ = useMemoCache(5);
   let t0;

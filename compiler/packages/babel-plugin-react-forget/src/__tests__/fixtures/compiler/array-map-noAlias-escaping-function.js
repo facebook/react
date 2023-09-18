@@ -1,3 +1,4 @@
+// @enableNoAliasOptimizations
 function Component(props) {
   const f = (item) => item;
   const x = [...props.items].map(f); // `f` doesn't escape here...
