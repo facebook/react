@@ -81,6 +81,11 @@ export function throwInput(x: Object): never {
   throw x;
 }
 
+const noAliasObject = Object.freeze({});
+export function useNoAlias(...args: Array<any>): object {
+  return noAliasObject;
+}
+
 /**
  * React Components
  */

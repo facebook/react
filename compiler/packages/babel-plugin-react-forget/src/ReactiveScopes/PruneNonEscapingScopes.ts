@@ -28,7 +28,6 @@ import { getFunctionCallSignature } from "../Inference/InferReferenceEffects";
 import { log } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
-import { printReactiveFunction } from "./PrintReactiveFunction";
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
@@ -133,8 +132,7 @@ export function pruneNonEscapingScopes(
   const memoized = computeMemoizedIdentifiers(state);
 
   log(() => prettyFormat(memoized));
-
-  log(() => printReactiveFunction(fn));
+  // log(() => printReactiveFunction(fn));
 
   // Prune scopes that do not declare/reassign any escaping values
   visitReactiveFunction(fn, new PruneScopesTransform(), memoized);
@@ -608,6 +606,31 @@ function computeMemoizationInputs(
         ],
       };
     }
+    case "CallExpression": {
+      const signature = env.enableNoAliasOptimizations
+        ? getFunctionCallSignature(env, value.callee.identifier.type)
+        : null;
+      const operands = [...eachReactiveValueOperand(value)];
+      let lvalues = [];
+      if (lvalue !== null) {
+        lvalues.push({ place: lvalue, level: MemoizationLevel.Memoized });
+      }
+      if (signature?.noAlias === true) {
+        return {
+          lvalues,
+          rvalues: [],
+        };
+      }
+      lvalues.push(
+        ...operands
+          .filter((operand) => isMutableEffect(operand.effect, operand.loc))
+          .map((place) => ({ place, level: MemoizationLevel.Memoized }))
+      );
+      return {
+        lvalues,
+        rvalues: operands,
+      };
+    }
     case "MethodCall": {
       const signature = env.enableNoAliasOptimizations
         ? getFunctionCallSignature(env, value.property.identifier.type)
@@ -639,7 +662,6 @@ function computeMemoizationInputs(
     case "ArrayExpression":
     case "NewExpression":
     case "ObjectExpression":
-    case "CallExpression":
     case "PropertyStore": {
       // All of these instructions may produce new values which must be memoized if
       // reachable from a return value. Any mutable rvalue may alias any other rvalue
@@ -780,7 +802,20 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
       );
     } else if (instruction.value.kind === "CallExpression") {
       const callee = instruction.value.callee;
-      if (getHookKind(state.env, callee.identifier)) {
+      if (getHookKind(state.env, callee.identifier) != null) {
+        const signature = this.env.enableNoAliasOptimizations
+          ? getFunctionCallSignature(
+              this.env,
+              instruction.value.callee.identifier.type
+            )
+          : null;
+        // Hook values are assumed to escape by default since they can be inputs
+        // to reactive scopes in the hook. However if the hook is annotated as
+        // noAlias we know that the arguments cannot escape and don't need to
+        // be memoized.
+        if (signature && signature.noAlias === true) {
+          return;
+        }
         for (const operand of instruction.value.args) {
           const place = operand.kind === "Spread" ? operand.place : operand;
           state.escapingValues.add(place.identifier.id);

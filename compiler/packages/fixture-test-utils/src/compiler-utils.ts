@@ -102,6 +102,14 @@ export function transformFixtureInput(
               effectKind: "freeze" as Effect,
             },
           ],
+          [
+            "useNoAlias",
+            {
+              valueKind: "mutable" as ValueKind,
+              effectKind: "read" as Effect,
+              noAlias: true,
+            },
+          ],
         ]),
         enableAssumeHooksFollowRulesOfReact,
         enableFunctionCallSignatureOptimizations: true,

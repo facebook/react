@@ -36,8 +36,25 @@ import {
 } from "./ObjectShape";
 
 export type Hook = {
+  /**
+   * The effect of arguments to this hook. Describes whether the hook may or may
+   * not mutate arguments, etc.
+   */
   effectKind: Effect;
+
+  /**
+   * The kind of value returned by the hook. Allows indicating that a hook returns
+   * a primitive or already-frozen value, which can allow more precise memoization
+   * of callers.
+   */
   valueKind: ValueKind;
+
+  /**
+   * Specifies whether hook arguments may be aliased by other arguments or by the
+   * return value of the function. Defaults to false. When enabled, this allows the
+   * compiler to avoid memoizing arguments.
+   */
+  noAlias?: boolean;
 };
 
 // TODO(mofeiZ): User defined global types (with corresponding shapes).
@@ -223,6 +240,7 @@ export class Environment {
             returnValueKind: hook.valueKind,
             calleeEffect: Effect.Read,
             hookKind: "Custom",
+            noAlias: hook.noAlias ?? false,
           })
         );
       }
