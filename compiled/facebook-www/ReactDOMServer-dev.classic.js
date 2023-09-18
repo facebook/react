@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-fcac226e";
+var ReactVersion = "18.3.0-www-classic-3e4fe4e2";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -1955,7 +1955,7 @@ function createRenderState$1(resumableState, nonce, importMap) {
   return {
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + "P:"),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + "S:"),
-    boundaryPrefix: idPrefix + "B:",
+    boundaryPrefix: stringToPrecomputedChunk(idPrefix + "B:"),
     startInlineScript: inlineScriptWithNonce,
     htmlChunks: null,
     headChunks: null,
@@ -2033,7 +2033,7 @@ function createResumableState(
     externalRuntimeScript: externalRuntimeScript,
     bootstrapChunks: bootstrapChunks,
     idPrefix: idPrefix,
-    nextSuspenseID: 0,
+    nextFormID: 0,
     streamingFormat: streamingFormat,
     instructions: NothingSent,
     hasBody: false,
@@ -2288,13 +2288,6 @@ function getChildFormatContext(parentContext, type, props) {
   }
 
   return parentContext;
-}
-var UNINITIALIZED_SUSPENSE_BOUNDARY_ID = null;
-function assignSuspenseBoundaryID(renderState, resumableState) {
-  var generatedID = resumableState.nextSuspenseID++;
-  return stringToPrecomputedChunk(
-    renderState.boundaryPrefix + generatedID.toString(16)
-  );
 }
 function makeId(resumableState, treeId, localId) {
   var idPrefix = resumableState.idPrefix;
@@ -5018,7 +5011,8 @@ function writeStartPendingSuspenseBoundary(destination, renderState, id) {
     );
   }
 
-  writeChunk(destination, id);
+  writeChunk(destination, renderState.boundaryPrefix);
+  writeChunk(destination, stringToChunk(id.toString(16)));
   return writeChunkAndReturn(destination, startPendingSuspenseBoundary2);
 }
 function writeStartClientRenderedSuspenseBoundary$1(
@@ -5298,8 +5292,7 @@ function writeCompletedBoundaryInstruction(
   destination,
   resumableState,
   renderState,
-  boundaryID,
-  contentSegmentID,
+  id,
   boundaryResources
 ) {
   var requiresStyleInsertion;
@@ -5357,14 +5350,9 @@ function writeCompletedBoundaryInstruction(
     }
   }
 
-  if (boundaryID === null) {
-    throw new Error(
-      "An ID must have been assigned before we can complete the boundary."
-    );
-  } // Write function arguments, which are string and array literals
-
-  var formattedContentID = stringToChunk(contentSegmentID.toString(16));
-  writeChunk(destination, boundaryID);
+  var idChunk = stringToChunk(id.toString(16));
+  writeChunk(destination, renderState.boundaryPrefix);
+  writeChunk(destination, idChunk); // Write function arguments, which are string and array literals
 
   if (scriptFormat) {
     writeChunk(destination, completeBoundaryScript2);
@@ -5373,7 +5361,7 @@ function writeCompletedBoundaryInstruction(
   }
 
   writeChunk(destination, renderState.segmentPrefix);
-  writeChunk(destination, formattedContentID);
+  writeChunk(destination, idChunk);
 
   if (requiresStyleInsertion) {
     // Script and data writers must format this differently:
@@ -5423,7 +5411,7 @@ function writeClientRenderBoundaryInstruction(
   destination,
   resumableState,
   renderState,
-  boundaryID,
+  id,
   errorDigest,
   errorMessage,
   errorComponentStack
@@ -5449,13 +5437,8 @@ function writeClientRenderBoundaryInstruction(
     writeChunk(destination, clientRenderData1);
   }
 
-  if (boundaryID === null) {
-    throw new Error(
-      "An ID must have been assigned before we can complete the boundary."
-    );
-  }
-
-  writeChunk(destination, boundaryID);
+  writeChunk(destination, renderState.boundaryPrefix);
+  writeChunk(destination, stringToChunk(id.toString(16)));
 
   if (scriptFormat) {
     // " needs to be inserted for scripts, since ArgInterstitual does not contain
@@ -9839,7 +9822,6 @@ function pingTask(request, task) {
 function createSuspenseBoundary(request, fallbackAbortableTasks, keyPath) {
   return {
     status: PENDING,
-    id: UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
     rootSegmentID: -1,
     parentFlushed: false,
     pendingTasks: 0,
@@ -10247,8 +10229,7 @@ function replaySuspenseBoundary(request, task, keyPath, props, replayNode) {
   );
   resumedBoundary.parentFlushed = true; // We restore the same id of this boundary as was used during prerender.
 
-  resumedBoundary.id = replayNode[4];
-  resumedBoundary.rootSegmentID = replayNode[5]; // We can reuse the current context and task to render the content immediately without
+  resumedBoundary.rootSegmentID = replayNode[4]; // We can reuse the current context and task to render the content immediately without
   // context switching. We just need to temporarily switch which boundary and replay node
   // we're writing to. If something suspends, it'll spawn new suspended task with that context.
 
@@ -10332,10 +10313,10 @@ function resumeSuspenseBoundary(request, task, keyPath, props, replayNode) {
     fallbackAbortSet,
     task.keyPath
   );
-  resumedBoundary.parentFlushed = true; // We restore the same id of this boundary as was used during prerender.
+  resumedBoundary.parentFlushed = true;
+  var id = replayNode[3]; // We restore the same id of this boundary as was used during prerender.
 
-  resumedBoundary.id = replayNode[3];
-  resumedBoundary.rootSegmentID = replayNode[4];
+  resumedBoundary.rootSegmentID = id;
   var resumedSegment = createPendingSegment(
     request,
     0,
@@ -10345,7 +10326,7 @@ function resumeSuspenseBoundary(request, task, keyPath, props, replayNode) {
     false
   );
   resumedSegment.parentFlushed = true;
-  resumedSegment.id = replayNode[4]; // We can reuse the current context and task to render the content immediately without
+  resumedSegment.id = id; // We can reuse the current context and task to render the content immediately without
   // context switching. We just need to temporarily switch which boundary and replay node
   // we're writing to. If something suspends, it'll spawn new suspended task with that context.
 
@@ -12080,7 +12061,6 @@ function abortTaskSoft(task) {
 
 function abortRemainingSuspenseBoundary(
   request,
-  id,
   rootSegmentID,
   error,
   errorDigest
@@ -12092,7 +12072,6 @@ function abortRemainingSuspenseBoundary(
   );
   resumedBoundary.parentFlushed = true; // We restore the same id of this boundary as was used during prerender.
 
-  resumedBoundary.id = id;
   resumedBoundary.rootSegmentID = rootSegmentID;
   resumedBoundary.status = CLIENT_RENDERED;
   resumedBoundary.errorDigest = errorDigest;
@@ -12147,11 +12126,9 @@ function abortRemainingResumableNodes(
 
       case REPLAY_SUSPENSE_BOUNDARY: {
         var boundaryNode = node;
-        var id = boundaryNode[4];
-        var rootSegmentID = boundaryNode[5];
+        var rootSegmentID = boundaryNode[4];
         abortRemainingSuspenseBoundary(
           request,
-          id,
           rootSegmentID,
           error,
           errorDigest
@@ -12161,11 +12138,9 @@ function abortRemainingResumableNodes(
 
       case RESUME_SUSPENSE_BOUNDARY: {
         var _boundaryNode2 = node;
-        var _id = _boundaryNode2[3];
-        var _rootSegmentID = _boundaryNode2[4];
+        var _rootSegmentID = _boundaryNode2[3];
         abortRemainingSuspenseBoundary(
           request,
-          _id,
           _rootSegmentID,
           error,
           errorDigest
@@ -12737,10 +12712,6 @@ function flushSegment(request, destination, segment) {
     if (boundary.status === PENDING) {
       // For pending boundaries we lazily assign an ID to the boundary
       // and root segment.
-      boundary.id = assignSuspenseBoundaryID(
-        request.renderState,
-        request.resumableState
-      );
       boundary.rootSegmentID = request.nextSegmentId++;
     }
 
@@ -12748,9 +12719,8 @@ function flushSegment(request, destination, segment) {
       // If this is at least partially complete, we can queue it to be partially emitted early.
       request.partialBoundaries.push(boundary);
     } // This boundary is still loading. Emit a pending suspense boundary wrapper.
-    /// This is the first time we should have referenced this ID.
 
-    var id = boundary.id;
+    var id = boundary.rootSegmentID;
     writeStartPendingSuspenseBoundary(destination, request.renderState, id); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
@@ -12768,7 +12738,7 @@ function flushSegment(request, destination, segment) {
     writeStartPendingSuspenseBoundary(
       destination,
       request.renderState,
-      boundary.id
+      boundary.rootSegmentID
     ); // Flush the fallback.
 
     flushSubtree(request, destination, segment);
@@ -12798,7 +12768,7 @@ function flushClientRenderedBoundary(request, destination, boundary) {
     destination,
     request.resumableState,
     request.renderState,
-    boundary.id,
+    boundary.rootSegmentID,
     boundary.errorDigest,
     boundary.errorMessage,
     boundary.errorComponentStack
@@ -12846,7 +12816,6 @@ function flushCompletedBoundary(request, destination, boundary) {
     destination,
     request.resumableState,
     request.renderState,
-    boundary.id,
     boundary.rootSegmentID,
     boundary.resources
   );

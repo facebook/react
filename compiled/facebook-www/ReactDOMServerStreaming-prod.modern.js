@@ -1523,7 +1523,9 @@ function writeStartPendingSuspenseBoundary(destination, renderState, id) {
     throw Error(
       "An ID must have been assigned before we can complete the boundary."
     );
-  destination.buffer += id;
+  destination.buffer += renderState.boundaryPrefix;
+  renderState = id.toString(16);
+  destination.buffer += renderState;
   return writeChunkAndReturn(destination, '"></template>');
 }
 function writeStartSegment(destination, renderState, formatContext, id) {
@@ -2764,7 +2766,6 @@ function pingTask(request, task) {
 function createSuspenseBoundary(request, fallbackAbortableTasks, keyPath) {
   return {
     status: 0,
-    id: null,
     rootSegmentID: -1,
     parentFlushed: !1,
     pendingTasks: 0,
@@ -3458,8 +3459,7 @@ function renderNodeDestructiveImpl(
                     task.keyPath
                   );
                   fallbackAbortSet.parentFlushed = !0;
-                  fallbackAbortSet.id = candidate[4];
-                  fallbackAbortSet.rootSegmentID = candidate[5];
+                  fallbackAbortSet.rootSegmentID = candidate[4];
                   task.blockedBoundary = fallbackAbortSet;
                   task.replay = { nodes: candidate[3], pendingTasks: 1 };
                   request.renderState.boundaryResources =
@@ -3551,64 +3551,65 @@ function renderNodeDestructiveImpl(
                 }
                 continue;
               case 3:
-                if (childIndex === candidate[2]) {
+                if (
+                  ((fallbackAbortSet = candidate),
+                  childIndex === fallbackAbortSet[2])
+                ) {
                   if (type !== REACT_SUSPENSE_TYPE)
                     throw Error(
                       "Expected to see a Suspense boundary in this slot. The tree doesn't match so React will fallback to client rendering."
                     );
-                  errorDigest = void 0;
-                  request = request$jscomp$0;
-                  task = task$jscomp$0;
-                  prevKeyPath = task.keyPath;
-                  previousReplaySet = task.replay;
-                  parentBoundary = task.blockedBoundary;
-                  content = props.children;
-                  fallbackAbortSet = new Set();
-                  fallbackAbortSet = createSuspenseBoundary(
-                    request,
-                    fallbackAbortSet,
-                    task.keyPath
+                  candidate = void 0;
+                  errorDigest = request$jscomp$0;
+                  request = task$jscomp$0;
+                  task = request.keyPath;
+                  prevKeyPath = request.replay;
+                  previousReplaySet = request.blockedBoundary;
+                  parentBoundary = props.children;
+                  content = new Set();
+                  content = createSuspenseBoundary(
+                    errorDigest,
+                    content,
+                    request.keyPath
                   );
-                  fallbackAbortSet.parentFlushed = !0;
-                  fallbackAbortSet.id = candidate[3];
-                  fallbackAbortSet.rootSegmentID = candidate[4];
+                  content.parentFlushed = !0;
+                  fallbackAbortSet = fallbackAbortSet[3];
+                  content.rootSegmentID = fallbackAbortSet;
                   var resumedSegment = createPendingSegment(
-                    request,
+                    errorDigest,
                     0,
                     null,
-                    task.formatContext,
+                    request.formatContext,
                     !1,
                     !1
                   );
                   resumedSegment.parentFlushed = !0;
-                  resumedSegment.id = candidate[4];
-                  task.blockedBoundary = fallbackAbortSet;
-                  request.renderState.boundaryResources =
-                    fallbackAbortSet.resources;
-                  task.keyPath = key;
+                  resumedSegment.id = fallbackAbortSet;
+                  request.blockedBoundary = content;
+                  errorDigest.renderState.boundaryResources = content.resources;
+                  request.keyPath = key;
                   try {
-                    (task.replay = null),
-                      (task.blockedSegment = resumedSegment),
-                      renderNode(request, task, content, -1),
+                    (request.replay = null),
+                      (request.blockedSegment = resumedSegment),
+                      renderNode(errorDigest, request, parentBoundary, -1),
                       (resumedSegment.status = 1),
-                      queueCompletedSegment(fallbackAbortSet, resumedSegment),
-                      0 === fallbackAbortSet.pendingTasks &&
-                        0 === fallbackAbortSet.status &&
-                        ((fallbackAbortSet.status = 1),
-                        request.completedBoundaries.push(fallbackAbortSet));
+                      queueCompletedSegment(content, resumedSegment),
+                      0 === content.pendingTasks &&
+                        0 === content.status &&
+                        ((content.status = 1),
+                        errorDigest.completedBoundaries.push(content));
                   } catch (error) {
-                    (fallbackAbortSet.status = 4),
-                      (errorDigest = logRecoverableError(request, error)),
-                      (fallbackAbortSet.errorDigest = errorDigest),
-                      request.clientRenderedBoundaries.push(fallbackAbortSet);
+                    (content.status = 4),
+                      (candidate = logRecoverableError(errorDigest, error)),
+                      (content.errorDigest = candidate),
+                      errorDigest.clientRenderedBoundaries.push(content);
                   } finally {
-                    (request.renderState.boundaryResources = parentBoundary
-                      ? parentBoundary.resources
-                      : null),
-                      (task.blockedBoundary = parentBoundary),
-                      (task.blockedSegment = null),
-                      (task.replay = previousReplaySet),
-                      (task.keyPath = prevKeyPath);
+                    (errorDigest.renderState.boundaryResources =
+                      previousReplaySet ? previousReplaySet.resources : null),
+                      (request.blockedBoundary = previousReplaySet),
+                      (request.blockedSegment = null),
+                      (request.replay = prevKeyPath),
+                      (request.keyPath = task);
                   }
                   replayNodes.splice(i, 1);
                 }
@@ -3943,14 +3944,12 @@ function abortTaskSoft(task) {
 }
 function abortRemainingSuspenseBoundary(
   request,
-  id,
   rootSegmentID,
   error,
   errorDigest
 ) {
   error = createSuspenseBoundary(request, new Set(), null);
   error.parentFlushed = !0;
-  error.id = id;
   error.rootSegmentID = rootSegmentID;
   error.status = 4;
   error.errorDigest = errorDigest;
@@ -3976,22 +3975,10 @@ function abortRemainingResumableNodes(
         );
         continue;
       case 1:
-        abortRemainingSuspenseBoundary(
-          request,
-          node[4],
-          node[5],
-          error,
-          errorDigest
-        );
+        abortRemainingSuspenseBoundary(request, node[4], error, errorDigest);
         continue;
       case 3:
-        abortRemainingSuspenseBoundary(
-          request,
-          node[3],
-          node[4],
-          error,
-          errorDigest
-        );
+        abortRemainingSuspenseBoundary(request, node[3], error, errorDigest);
         continue;
       case 2:
       case 4:
@@ -4144,30 +4131,23 @@ function flushSegment(request, destination, segment) {
         writeChunk(destination, '"')),
       writeChunkAndReturn(destination, "></template>"),
       flushSubtree(request, destination, segment);
-  else if (1 !== boundary.status) {
-    if (0 === boundary.status) {
-      var JSCompiler_inline_result = request.renderState;
-      var generatedID = request.resumableState.nextSuspenseID++;
-      JSCompiler_inline_result =
-        JSCompiler_inline_result.boundaryPrefix + generatedID.toString(16);
-      boundary.id = JSCompiler_inline_result;
-      boundary.rootSegmentID = request.nextSegmentId++;
-    }
-    0 < boundary.completedSegments.length &&
-      request.partialBoundaries.push(boundary);
-    writeStartPendingSuspenseBoundary(
-      destination,
-      request.renderState,
-      boundary.id
-    );
-    flushSubtree(request, destination, segment);
-  } else if (boundary.byteSize > request.progressiveChunkSize)
+  else if (1 !== boundary.status)
+    0 === boundary.status && (boundary.rootSegmentID = request.nextSegmentId++),
+      0 < boundary.completedSegments.length &&
+        request.partialBoundaries.push(boundary),
+      writeStartPendingSuspenseBoundary(
+        destination,
+        request.renderState,
+        boundary.rootSegmentID
+      ),
+      flushSubtree(request, destination, segment);
+  else if (boundary.byteSize > request.progressiveChunkSize)
     (boundary.rootSegmentID = request.nextSegmentId++),
       request.completedBoundaries.push(boundary),
       writeStartPendingSuspenseBoundary(
         destination,
         request.renderState,
-        boundary.id
+        boundary.rootSegmentID
       ),
       flushSubtree(request, destination, segment);
   else {
@@ -4214,8 +4194,7 @@ function flushCompletedBoundary(request, destination, boundary) {
   );
   completedSegments = request.resumableState;
   request = request.renderState;
-  i = boundary.id;
-  var contentSegmentID = boundary.rootSegmentID;
+  i = boundary.rootSegmentID;
   boundary = boundary.resources;
   var requiresStyleInsertion = request.stylesToHoist;
   request.stylesToHoist = !1;
@@ -4246,17 +4225,14 @@ function flushCompletedBoundary(request, destination, boundary) {
     : requiresStyleInsertion
     ? writeChunk(destination, '<template data-rri="" data-bid="')
     : writeChunk(destination, '<template data-rci="" data-bid="');
-  if (null === i)
-    throw Error(
-      "An ID must have been assigned before we can complete the boundary."
-    );
-  contentSegmentID = contentSegmentID.toString(16);
+  i = i.toString(16);
+  writeChunk(destination, request.boundaryPrefix);
   writeChunk(destination, i);
   scriptFormat
     ? writeChunk(destination, '","')
     : writeChunk(destination, '" data-sid="');
   writeChunk(destination, request.segmentPrefix);
-  writeChunk(destination, contentSegmentID);
+  writeChunk(destination, i);
   requiresStyleInsertion
     ? scriptFormat
       ? (writeChunk(destination, '",'),
@@ -4496,14 +4472,15 @@ function flushCompletedQueues(request, destination) {
       var boundary = clientRenderedBoundaries[i];
       resumableState$jscomp$0 = destination;
       var resumableState$jscomp$1 = request.resumableState,
-        boundaryID = boundary.id,
+        renderState$jscomp$1 = request.renderState,
+        id = boundary.rootSegmentID,
         errorDigest = boundary.errorDigest,
         errorMessage = boundary.errorMessage,
         errorComponentStack = boundary.errorComponentStack,
         scriptFormat = 0 === resumableState$jscomp$1.streamingFormat;
       scriptFormat
         ? ((resumableState$jscomp$0.buffer +=
-            request.renderState.startInlineScript),
+            renderState$jscomp$1.startInlineScript),
           0 === (resumableState$jscomp$1.instructions & 4)
             ? ((resumableState$jscomp$1.instructions |= 4),
               (resumableState$jscomp$0.buffer +=
@@ -4511,44 +4488,44 @@ function flushCompletedQueues(request, destination) {
             : (resumableState$jscomp$0.buffer += '$RX("'))
         : (resumableState$jscomp$0.buffer +=
             '<template data-rxi="" data-bid="');
-      if (null === boundaryID)
-        throw Error(
-          "An ID must have been assigned before we can complete the boundary."
-        );
-      resumableState$jscomp$0.buffer += boundaryID;
+      resumableState$jscomp$0.buffer += renderState$jscomp$1.boundaryPrefix;
+      var chunk = id.toString(16);
+      resumableState$jscomp$0.buffer += chunk;
       scriptFormat && (resumableState$jscomp$0.buffer += '"');
       if (errorDigest || errorMessage || errorComponentStack)
         if (scriptFormat) {
           resumableState$jscomp$0.buffer += ",";
-          var chunk = escapeJSStringsForInstructionScripts(errorDigest || "");
-          resumableState$jscomp$0.buffer += chunk;
+          var chunk$jscomp$0 = escapeJSStringsForInstructionScripts(
+            errorDigest || ""
+          );
+          resumableState$jscomp$0.buffer += chunk$jscomp$0;
         } else {
           resumableState$jscomp$0.buffer += '" data-dgst="';
-          var chunk$jscomp$0 = escapeTextForBrowser(errorDigest || "");
-          resumableState$jscomp$0.buffer += chunk$jscomp$0;
+          var chunk$jscomp$1 = escapeTextForBrowser(errorDigest || "");
+          resumableState$jscomp$0.buffer += chunk$jscomp$1;
         }
       if (errorMessage || errorComponentStack)
         if (scriptFormat) {
           resumableState$jscomp$0.buffer += ",";
-          var chunk$jscomp$1 = escapeJSStringsForInstructionScripts(
+          var chunk$jscomp$2 = escapeJSStringsForInstructionScripts(
             errorMessage || ""
           );
-          resumableState$jscomp$0.buffer += chunk$jscomp$1;
+          resumableState$jscomp$0.buffer += chunk$jscomp$2;
         } else {
           resumableState$jscomp$0.buffer += '" data-msg="';
-          var chunk$jscomp$2 = escapeTextForBrowser(errorMessage || "");
-          resumableState$jscomp$0.buffer += chunk$jscomp$2;
+          var chunk$jscomp$3 = escapeTextForBrowser(errorMessage || "");
+          resumableState$jscomp$0.buffer += chunk$jscomp$3;
         }
       if (errorComponentStack)
         if (scriptFormat) {
           resumableState$jscomp$0.buffer += ",";
-          var chunk$jscomp$3 =
+          var chunk$jscomp$4 =
             escapeJSStringsForInstructionScripts(errorComponentStack);
-          resumableState$jscomp$0.buffer += chunk$jscomp$3;
+          resumableState$jscomp$0.buffer += chunk$jscomp$4;
         } else {
           resumableState$jscomp$0.buffer += '" data-stck="';
-          var chunk$jscomp$4 = escapeTextForBrowser(errorComponentStack);
-          resumableState$jscomp$0.buffer += chunk$jscomp$4;
+          var chunk$jscomp$5 = escapeTextForBrowser(errorComponentStack);
+          resumableState$jscomp$0.buffer += chunk$jscomp$5;
         }
       if (
         scriptFormat
@@ -4575,13 +4552,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$32 = partialBoundaries[i];
+      var boundary$31 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.renderState.boundaryResources =
-          boundary$32.resources;
-        var completedSegments = boundary$32.completedSegments;
+          boundary$31.resources;
+        var completedSegments = boundary$31.completedSegments;
         for (
           resumableState$jscomp$1 = 0;
           resumableState$jscomp$1 < completedSegments.length;
@@ -4591,7 +4568,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$32,
+              boundary$31,
               completedSegments[resumableState$jscomp$1]
             )
           ) {
@@ -4603,7 +4580,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$1);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$32.resources,
+          boundary$31.resources,
           clientRenderedBoundaries.renderState
         );
       }
@@ -4663,8 +4640,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$34) {
-    logRecoverableError(request, error$34), fatalError(request, error$34);
+  } catch (error$33) {
+    logRecoverableError(request, error$33), fatalError(request, error$33);
   }
 }
 exports.abortStream = function (stream) {
@@ -4908,7 +4885,7 @@ exports.renderToStream = function (children, options) {
     externalRuntimeScript: externalRuntimeScript,
     bootstrapChunks: identifierPrefix,
     idPrefix: idPrefix,
-    nextSuspenseID: 0,
+    nextFormID: 0,
     streamingFormat: streamingFormat,
     instructions: 0,
     hasBody: !1,
