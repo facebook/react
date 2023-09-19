@@ -189,7 +189,7 @@ export type ResumableState = {
   hasHtml: boolean,
 
   // Resources - Request local cache
-  preloadsMap: {[key: string]: null},
+  preloadsMap: {[key: string]: PreloadProps},
   preconnectsMap: {[key: string]: null},
   stylesMap: {[key: string]: null},
   scriptsMap: {[key: string]: null},
@@ -2139,23 +2139,23 @@ function pushLink(
         let stylesInPrecedence = renderState.precedences.get(precedence);
         if (!resumableState.stylesMap.hasOwnProperty(key)) {
           const resourceProps = stylesheetPropsFromRawProps(props);
-          const preloadResource = renderState.preloadsMap.get(key);
           let state = NoState;
-          if (preloadResource) {
-            // If we already had a preload we don't want that resource to flush directly.
-            // We let the newly created resource govern flushing.
-            preloadResource.state |= Blocked;
-            adoptPreloadPropsForStylesheetProps(
-              resourceProps,
-              preloadResource.props,
-            );
-            if (preloadResource.state & Flushed) {
+          if (resumableState.preloadsMap.hasOwnProperty(key)) {
+            const preloadProps: PreloadProps = resumableState.preloadsMap[key];
+            adoptPreloadPropsForStylesheetProps(resourceProps, preloadProps);
+            const preloadResource = renderState.preloadsMap.get(key);
+            if (preloadResource) {
+              // If we already had a preload we don't want that resource to flush directly.
+              // We let the newly created resource govern flushing.
+              preloadResource.state |= Blocked;
+              if (preloadResource.state & Flushed) {
+                state = PreloadFlushed;
+              }
+            } else {
+              // If we resumed then we assume that this was already flushed
+              // by the shell.
               state = PreloadFlushed;
             }
-          } else if (resumableState.preloadsMap.hasOwnProperty(key)) {
-            // If we resumed then we assume that this was already flushed
-            // by the shell.
-            state = PreloadFlushed;
           }
           const resource = {
             type: 'stylesheet',
@@ -2551,7 +2551,7 @@ function pushImg(
         state: NoState,
         props: preloadProps,
       };
-      resumableState.preloadsMap[key] = null;
+      resumableState.preloadsMap[key] = preloadProps;
       renderState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, preloadProps);
     } else {
@@ -2913,13 +2913,16 @@ function pushScript(
       renderState.scripts.add(resource);
 
       let scriptProps = props;
-      const preloadResource = renderState.preloadsMap.get(key);
-      if (preloadResource) {
-        // If we already had a preload we don't want that resource to flush directly.
-        // We let the newly created resource govern flushing.
-        preloadResource.state |= Blocked;
+      if (resumableState.preloadsMap.hasOwnProperty(key)) {
+        const preloadProps: PreloadProps = resumableState.preloadsMap[key];
         scriptProps = {...props};
-        adoptPreloadPropsForScriptProps(scriptProps, preloadResource.props);
+        adoptPreloadPropsForScriptProps(scriptProps, preloadProps);
+        const preloadResource = renderState.preloadsMap.get(key);
+        if (preloadResource) {
+          // If we already had a preload we don't want that resource to flush directly.
+          // We let the newly created resource govern flushing.
+          preloadResource.state |= Blocked;
+        }
       }
       // encode the tag as Chunks
       pushScriptImpl(resource.chunks, scriptProps);
@@ -4964,12 +4967,12 @@ type PreloadAsProps = {
   rel: 'preload',
   as: string,
   href: ?string,
-  [string]: mixed,
+  [string]: ?string,
 };
 type PreloadModuleProps = {
   rel: 'modulepreload',
   href: ?string,
-  [string]: mixed,
+  [string]: ?string,
 };
 type PreloadProps = PreloadAsProps | PreloadModuleProps;
 type PreloadResource = TResource<'preload', PreloadProps>;
@@ -5141,9 +5144,9 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         state: NoState,
         props,
       };
-      resumableState.preloadsMap[key] = null;
+      resumableState.preloadsMap[key] = props;
       renderState.preloadsMap.set(key, resource);
-      pushLinkImpl(resource.chunks, resource.props);
+      pushLinkImpl(resource.chunks, props);
       if (as === 'font') {
         renderState.fontPreloads.add(resource);
       } else if (as === 'image' && resource.props.fetchPriority === 'high') {
@@ -5192,7 +5195,7 @@ function preloadModule(
         state: NoState,
         props,
       };
-      resumableState.preloadsMap[key] = null;
+      resumableState.preloadsMap[key] = props;
       renderState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
       renderState.bulkPreloads.add(resource);
@@ -5403,7 +5406,7 @@ function preloadBootstrapScript(
     state: NoState,
     props,
   };
-  resumableState.preloadsMap[key] = null;
+  resumableState.preloadsMap[key] = props;
   renderState.preloadsMap.set(key, resource);
   renderState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
@@ -5447,7 +5450,7 @@ function preloadBootstrapModule(
     state: NoState,
     props,
   };
-  resumableState.preloadsMap[key] = null;
+  resumableState.preloadsMap[key] = props;
   renderState.preloadsMap.set(key, resource);
   renderState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
