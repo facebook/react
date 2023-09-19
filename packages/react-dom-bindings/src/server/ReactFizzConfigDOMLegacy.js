@@ -55,6 +55,7 @@ export type RenderState = {
   bootstrapScripts: Set<any>,
   scripts: Set<any>,
   bulkPreloads: Set<any>,
+  preloadsMap: Map<string, any>,
   boundaryResources: ?BoundaryResources,
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
@@ -98,6 +99,7 @@ export function createRenderState(
     bootstrapScripts: renderState.bootstrapScripts,
     scripts: renderState.scripts,
     bulkPreloads: renderState.bulkPreloads,
+    preloadsMap: renderState.preloadsMap,
     boundaryResources: renderState.boundaryResources,
     stylesToHoist: renderState.stylesToHoist,
 

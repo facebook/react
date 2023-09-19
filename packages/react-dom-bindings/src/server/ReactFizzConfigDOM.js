@@ -158,6 +158,9 @@ export type RenderState = {
   scripts: Set<ScriptResource>,
   bulkPreloads: Set<PreloadResource>,
 
+  // Temporarily keeps track of key to preload resources before shell flushes.
+  preloadsMap: Map<string, PreloadResource>,
+
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
 
@@ -344,6 +347,8 @@ export function createRenderState(
     bootstrapScripts: new Set(),
     scripts: new Set(),
     bulkPreloads: new Set(),
+
+    preloadsMap: new Map(),
 
     nonce,
     // like a module global for currently rendering boundary
@@ -2134,7 +2139,7 @@ function pushLink(
         let stylesInPrecedence = renderState.precedences.get(precedence);
         if (!resumableState.stylesMap.hasOwnProperty(key)) {
           const resourceProps = stylesheetPropsFromRawProps(props);
-          const preloadResource = (undefined: void | PreloadResource); // resumableState.preloadsMap.get(key); // TODO
+          const preloadResource = renderState.preloadsMap.get(key);
           let state = NoState;
           if (preloadResource) {
             // If we already had a preload we don't want that resource to flush directly.
@@ -2147,6 +2152,10 @@ function pushLink(
             if (preloadResource.state & Flushed) {
               state = PreloadFlushed;
             }
+          } else if (resumableState.preloadsMap.hasOwnProperty(key)) {
+            // If we resumed then we assume that this was already flushed
+            // by the shell.
+            state = PreloadFlushed;
           }
           const resource = {
             type: 'stylesheet',
@@ -2518,30 +2527,37 @@ function pushImg(
     // resumableState.
     const {sizes} = props;
     const key = getImagePreloadKey(src, srcSet, sizes);
+    let resource: void | PreloadResource;
     if (!resumableState.preloadsMap.hasOwnProperty(key)) {
-      const resource: PreloadResource = {
+      const preloadProps: PreloadProps = {
+        rel: 'preload',
+        as: 'image',
+        // There is a bug in Safari where imageSrcSet is not respected on preload links
+        // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+        // This harms older browers that do not support imageSrcSet by making their preloads not work
+        // but this population is shrinking fast and is already small so we accept this tradeoff.
+        href: srcSet ? undefined : src,
+        imageSrcSet: srcSet,
+        imageSizes: sizes,
+        crossOrigin: props.crossOrigin,
+        integrity: props.integrity,
+        type: props.type,
+        fetchPriority: props.fetchPriority,
+        referrerPolicy: props.referrerPolicy,
+      };
+      resource = {
         type: 'preload',
         chunks: [],
         state: NoState,
-        props: {
-          rel: 'preload',
-          as: 'image',
-          // There is a bug in Safari where imageSrcSet is not respected on preload links
-          // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-          // This harms older browers that do not support imageSrcSet by making their preloads not work
-          // but this population is shrinking fast and is already small so we accept this tradeoff.
-          href: srcSet ? undefined : src,
-          imageSrcSet: srcSet,
-          imageSizes: sizes,
-          crossOrigin: props.crossOrigin,
-          integrity: props.integrity,
-          type: props.type,
-          fetchPriority: props.fetchPriority,
-          referrerPolicy: props.referrerPolicy,
-        },
+        props: preloadProps,
       };
       resumableState.preloadsMap[key] = null;
-      pushLinkImpl(resource.chunks, resource.props);
+      renderState.preloadsMap.set(key, resource);
+      pushLinkImpl(resource.chunks, preloadProps);
+    } else {
+      resource = renderState.preloadsMap.get(key);
+    }
+    if (resource) {
       if (
         props.fetchPriority === 'high' ||
         renderState.highImagePreloads.size < 10
@@ -2897,7 +2913,7 @@ function pushScript(
       renderState.scripts.add(resource);
 
       let scriptProps = props;
-      const preloadResource = (undefined: void | PreloadResource); // resumableState.preloadsMap.get(key); // TODO
+      const preloadResource = renderState.preloadsMap.get(key);
       if (preloadResource) {
         // If we already had a preload we don't want that resource to flush directly.
         // We let the newly created resource govern flushing.
@@ -5126,6 +5142,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         props,
       };
       resumableState.preloadsMap[key] = null;
+      renderState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
       if (as === 'font') {
         renderState.fontPreloads.add(resource);
@@ -5176,6 +5193,7 @@ function preloadModule(
         props,
       };
       resumableState.preloadsMap[key] = null;
+      renderState.preloadsMap.set(key, resource);
       pushLinkImpl(resource.chunks, resource.props);
       renderState.bulkPreloads.add(resource);
     }
@@ -5208,8 +5226,12 @@ function preinitStyle(
     if (!resumableState.stylesMap.hasOwnProperty(key)) {
       precedence = precedence || 'default';
       let state = NoState;
-      const preloadResource = (undefined: void | PreloadResource); // resumableState.preloadsMap.get(key); // TODO
+      const preloadResource = renderState.preloadsMap.get(key);
       if (preloadResource && preloadResource.state & Flushed) {
+        state = PreloadFlushed;
+      } else if (resumableState.preloadsMap.hasOwnProperty(key)) {
+        // If we resumed then we assume that this was already flushed
+        // by the shell.
         state = PreloadFlushed;
       }
       const props: StylesheetProps = Object.assign(
@@ -5382,6 +5404,7 @@ function preloadBootstrapScript(
     props,
   };
   resumableState.preloadsMap[key] = null;
+  renderState.preloadsMap.set(key, resource);
   renderState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
 }
@@ -5425,6 +5448,7 @@ function preloadBootstrapModule(
     props,
   };
   resumableState.preloadsMap[key] = null;
+  renderState.preloadsMap.set(key, resource);
   renderState.bootstrapScripts.add(resource);
   pushLinkImpl(resource.chunks, props);
   return;
