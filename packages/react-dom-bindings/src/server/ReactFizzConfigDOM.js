@@ -152,7 +152,7 @@ export type RenderState = {
   fontPreloads: Set<PreloadResource>,
   highImagePreloads: Set<PreloadResource>,
   // usedImagePreloads: Set<PreloadResource>,
-  precedences: Map<string, Set<StyleResource>>,
+  precedences: Map<string, Map<string, StyleResource>>,
   stylePrecedences: Map<string, StyleTagResource>,
   bootstrapScripts: Set<PreloadResource>,
   scripts: Set<ScriptResource>,
@@ -2131,6 +2131,7 @@ function pushLink(
         return pushLinkImpl(target, props);
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
+        let stylesInPrecedence = renderState.precedences.get(precedence);
         if (!resumableState.stylesMap.hasOwnProperty(key)) {
           const resourceProps = stylesheetPropsFromRawProps(props);
           const preloadResource = (undefined: void | PreloadResource); // resumableState.preloadsMap.get(key); // TODO
@@ -2154,10 +2155,9 @@ function pushLink(
             props: resourceProps,
           };
           resumableState.stylesMap[key] = null;
-          let precedenceSet = renderState.precedences.get(precedence);
-          if (!precedenceSet) {
-            precedenceSet = new Set();
-            renderState.precedences.set(precedence, precedenceSet);
+          if (!stylesInPrecedence) {
+            stylesInPrecedence = new Map();
+            renderState.precedences.set(precedence, stylesInPrecedence);
             const emptyStyleResource = {
               type: 'style',
               chunks: ([]: Array<Chunk | PrecomputedChunk>),
@@ -2167,7 +2167,7 @@ function pushLink(
                 hrefs: ([]: Array<string>),
               },
             };
-            precedenceSet.add(emptyStyleResource);
+            stylesInPrecedence.set('', emptyStyleResource);
             if (__DEV__) {
               if (renderState.stylePrecedences.has(precedence)) {
                 console.error(
@@ -2178,10 +2178,24 @@ function pushLink(
             }
             renderState.stylePrecedences.set(precedence, emptyStyleResource);
           }
-          precedenceSet.add(resource);
-        }
-        if (renderState.boundaryResources) {
-          // renderState.boundaryResources.add(resource); // TODO
+          stylesInPrecedence.set(key, resource);
+          if (renderState.boundaryResources) {
+            renderState.boundaryResources.add(resource);
+          }
+        } else {
+          // We need to track whether this boundary should wait on this resource or not.
+          // Typically this resource should always exist since we either had it or just created
+          // it. However, it's possible when you resume that the style has already been emitted
+          // and then it wouldn't be recreated in the RenderState and there's no need to track
+          // it again since we should've hoisted it to the shell already.
+          if (stylesInPrecedence) {
+            const resource = stylesInPrecedence.get(key);
+            if (resource) {
+              if (renderState.boundaryResources) {
+                renderState.boundaryResources.add(resource);
+              }
+            }
+          }
         }
         if (textEmbedded) {
           // This link follows text but we aren't writing a tag. while not as efficient as possible we need
@@ -2312,8 +2326,8 @@ function pushStyle(
     }
 
     const key = getResourceKey('style', href);
+    let resource = renderState.stylePrecedences.get(precedence);
     if (!resumableState.stylesMap.hasOwnProperty(key)) {
-      let resource = renderState.stylePrecedences.get(precedence);
       if (!resource) {
         resource = {
           type: 'style',
@@ -2325,8 +2339,8 @@ function pushStyle(
           },
         };
         renderState.stylePrecedences.set(precedence, resource);
-        const precedenceSet: Set<StyleResource> = new Set();
-        precedenceSet.add(resource);
+        const stylesInPrecedence: Map<string, StyleResource> = new Map();
+        stylesInPrecedence.set(key, resource);
         if (__DEV__) {
           if (renderState.precedences.has(precedence)) {
             console.error(
@@ -2335,15 +2349,22 @@ function pushStyle(
             );
           }
         }
-        renderState.precedences.set(precedence, precedenceSet);
+        renderState.precedences.set(precedence, stylesInPrecedence);
       } else {
         resource.props.hrefs.push(href);
       }
       resumableState.stylesMap[key] = null;
       pushStyleContents(resource.chunks, props);
     }
-    if (renderState.boundaryResources) {
-      // renderState.boundaryResources.add(resource); // TODO
+    if (resource) {
+      // We need to track whether this boundary should wait on this resource or not.
+      // Typically this resource should always exist since we either had it or just created
+      // it. However, it's possible when you resume that the style has already been emitted
+      // and then it wouldn't be recreated in the RenderState and there's no need to track
+      // it again since we should've hoisted it to the shell already.
+      if (renderState.boundaryResources) {
+        renderState.boundaryResources.add(resource);
+      }
     }
 
     if (textEmbedded) {
@@ -4186,15 +4207,15 @@ let didFlushPrecedence = false;
 function flushStyleInPreamble(
   this: Destination,
   resource: StyleResource,
-  key: mixed,
-  set: Set<StyleResource>,
+  key: string,
+  map: Map<string, StyleResource>,
 ) {
   const chunks = resource.chunks;
   if (resource.state & Flushed) {
     // In theory this should never happen because we clear from the
     // Set on flush but to ensure correct semantics we don't emit
     // anything if we are in this state.
-    set.delete(resource);
+    map.delete(key);
   } else {
     // We can emit this style or stylesheet as is.
     if (resource.type === 'style') {
@@ -4226,12 +4247,12 @@ const styleTagResourceClose = stringToPrecomputedChunk('</style>');
 
 function flushAllStylesInPreamble(
   this: Destination,
-  set: Set<StyleResource>,
+  map: Map<string, StyleResource>,
   precedence: string,
 ) {
   didFlushPrecedence = false;
-  set.forEach(flushStyleInPreamble, this);
-  set.clear();
+  map.forEach(flushStyleInPreamble, this);
+  map.clear();
 
   const chunks = precedenceStyleTagResource.chunks;
   const hrefs = precedenceStyleTagResource.props.hrefs;
@@ -4287,11 +4308,11 @@ function preloadLateStyle(this: Destination, resource: StyleResource) {
 
 function preloadLateStyles(
   this: Destination,
-  set: Set<StyleResource>,
+  map: Map<string, StyleResource>,
   precedence: string,
 ) {
-  set.forEach(preloadLateStyle, this);
-  set.clear();
+  map.forEach(preloadLateStyle, this);
+  map.clear();
 }
 
 // We don't bother reporting backpressure at the moment because we expect to
@@ -5206,10 +5227,10 @@ function preinitStyle(
         props,
       };
       resumableState.stylesMap[key] = null;
-      let precedenceSet = renderState.precedences.get(precedence);
-      if (!precedenceSet) {
-        precedenceSet = new Set();
-        renderState.precedences.set(precedence, precedenceSet);
+      let stylesInPrecedence = renderState.precedences.get(precedence);
+      if (!stylesInPrecedence) {
+        stylesInPrecedence = new Map();
+        renderState.precedences.set(precedence, stylesInPrecedence);
         const emptyStyleResource = {
           type: 'style',
           chunks: ([]: Array<Chunk | PrecomputedChunk>),
@@ -5219,7 +5240,7 @@ function preinitStyle(
             hrefs: ([]: Array<string>),
           },
         };
-        precedenceSet.add(emptyStyleResource);
+        stylesInPrecedence.set('', emptyStyleResource);
         if (__DEV__) {
           if (renderState.stylePrecedences.has(precedence)) {
             console.error(
@@ -5230,7 +5251,7 @@ function preinitStyle(
         }
         renderState.stylePrecedences.set(precedence, emptyStyleResource);
       }
-      precedenceSet.add(resource);
+      stylesInPrecedence.set(key, resource);
       flushResources(request);
     }
     return;

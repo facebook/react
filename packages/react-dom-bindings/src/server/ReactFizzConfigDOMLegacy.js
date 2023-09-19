@@ -50,7 +50,7 @@ export type RenderState = {
   fontPreloads: Set<any>,
   highImagePreloads: Set<any>,
   // usedImagePreloads: Set<any>,
-  precedences: Map<string, Set<any>>,
+  precedences: Map<string, Map<any, any>>,
   stylePrecedences: Map<string, any>,
   bootstrapScripts: Set<any>,
   scripts: Set<any>,
