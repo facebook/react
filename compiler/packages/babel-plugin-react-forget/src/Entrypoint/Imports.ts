@@ -109,7 +109,12 @@ export function updateExistingReactImportDeclaration(
   let didInsertUseMemoCache = false;
   program.traverse({
     ImportDeclaration(importDeclPath) {
-      if (isNonNamespacedImportOfReact(importDeclPath)) {
+      if (
+        !didInsertUseMemoCache &&
+        importDeclPath.node.importKind !== "type" &&
+        importDeclPath.node.importKind !== "typeof" &&
+        isNonNamespacedImportOfReact(importDeclPath)
+      ) {
         importDeclPath.pushContainer(
           "specifiers",
           t.importSpecifier(
