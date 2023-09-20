@@ -62,6 +62,8 @@ module.exports = {
 
     // act
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
+
+    Bun: 'readonly',
   },
   parserOptions: {
     ecmaVersion: 2015,
