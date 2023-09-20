@@ -6339,7 +6339,7 @@ describe('ReactDOMFizzServer', () => {
 
     const resumed = ReactDOMFizzServer.resumeToPipeableStream(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     // Create a separate stream so it doesn't close the writable. I.e. simple concat.
@@ -6431,7 +6431,7 @@ describe('ReactDOMFizzServer', () => {
 
     const resumed = ReactDOMFizzServer.resumeToPipeableStream(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
       {
         onError(x) {
           ssrErrors.push(x.message);
@@ -6574,7 +6574,7 @@ describe('ReactDOMFizzServer', () => {
 
     const resumed = ReactDOMFizzServer.resumeToPipeableStream(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
       {
         onError(x) {
           ssrErrors.push(x.message);
@@ -6729,7 +6729,7 @@ describe('ReactDOMFizzServer', () => {
 
     const resumed = ReactDOMFizzServer.resumeToPipeableStream(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
       {
         onError(x) {
           ssrErrors.push(x.message);

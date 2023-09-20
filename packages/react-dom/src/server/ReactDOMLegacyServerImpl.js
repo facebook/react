@@ -63,15 +63,11 @@ function renderToStringImpl(
   const resumableState = createResumableState(
     options ? options.identifierPrefix : undefined,
     undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
   );
   const request = createRequest(
     children,
     resumableState,
-    createRenderState(resumableState, undefined, generateStaticMarkup),
+    createRenderState(resumableState, generateStaticMarkup),
     createRootFormatContext(),
     Infinity,
     onError,

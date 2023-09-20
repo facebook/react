@@ -74,15 +74,11 @@ function renderToNodeStreamImpl(
   const resumableState = createResumableState(
     options ? options.identifierPrefix : undefined,
     undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
   );
   const request = createRequest(
     children,
     resumableState,
-    createRenderState(resumableState, undefined, false),
+    createRenderState(resumableState, false),
     createRootFormatContext(),
     Infinity,
     onError,

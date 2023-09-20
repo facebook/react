@@ -20,6 +20,7 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
+let ReactDOM;
 let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
@@ -29,6 +30,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static.browser');
@@ -481,7 +483,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -523,7 +525,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -562,7 +564,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -610,7 +612,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -651,7 +653,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -692,7 +694,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const content = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     const html = await readContent(concat(prerendered.prelude, content));
@@ -700,5 +702,142 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const bodyEndTags = /<\/body\s*>/gi;
     expect(Array.from(html.matchAll(htmlEndTags)).length).toBe(1);
     expect(Array.from(html.matchAll(bodyEndTags)).length).toBe(1);
+  });
+
+  // @gate enablePostpone
+  it('can prerender various hoistables and deduped resources', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return (
+        <>
+          <link rel="stylesheet" href="my-style2" precedence="low" />
+          <link rel="stylesheet" href="my-style1" precedence="high" />
+          <style precedence="high" href="my-style3">
+            style
+          </style>
+          <img src="my-img" />
+        </>
+      );
+    }
+
+    function App() {
+      ReactDOM.preconnect('example.com');
+      ReactDOM.preload('my-font', {as: 'font', type: 'font/woff2'});
+      ReactDOM.preload('my-style0', {as: 'style'});
+      // This should transfer the props in to the style that loads later.
+      ReactDOM.preload('my-style2', {
+        as: 'style',
+        crossOrigin: 'use-credentials',
+      });
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <link rel="stylesheet" href="my-style1" precedence="high" />
+            <img src="my-img" />
+            <Postpone />
+          </Suspense>
+          <title>Hello World</title>
+        </div>
+      );
+    }
+
+    let calledInit = false;
+    jest.mock(
+      'init.js',
+      () => {
+        calledInit = true;
+      },
+      {virtual: true},
+    );
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />, {
+      bootstrapScripts: ['init.js'],
+    });
+    expect(prerendered.postponed).not.toBe(null);
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual([
+      <link href="example.com" rel="preconnect" />,
+      <link
+        as="font"
+        crossorigin=""
+        href="my-font"
+        rel="preload"
+        type="font/woff2"
+      />,
+      <link as="image" href="my-img" rel="preload" />,
+      <link data-precedence="high" href="my-style1" rel="stylesheet" />,
+      <link as="script" fetchpriority="low" href="init.js" rel="preload" />,
+      <link as="style" href="my-style0" rel="preload" />,
+      <link
+        as="style"
+        crossorigin="use-credentials"
+        href="my-style2"
+        rel="preload"
+      />,
+      <title>Hello World</title>,
+      <div>Loading...</div>,
+    ]);
+
+    prerendering = false;
+    const content = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(content);
+
+    expect(calledInit).toBe(true);
+
+    // Dispatch load event to injected stylesheet
+    const link = document.querySelector(
+      'link[rel="stylesheet"][href="my-style2"]',
+    );
+    const event = document.createEvent('Events');
+    event.initEvent('load', true, true);
+    link.dispatchEvent(event);
+
+    // Wait for the instruction microtasks to flush.
+    await 0;
+    await 0;
+
+    expect(getVisibleChildren(container)).toEqual([
+      <link href="example.com" rel="preconnect" />,
+      <link
+        as="font"
+        crossorigin=""
+        href="my-font"
+        rel="preload"
+        type="font/woff2"
+      />,
+      <link as="image" href="my-img" rel="preload" />,
+      <link data-precedence="high" href="my-style1" rel="stylesheet" />,
+      <style data-href="my-style3" data-precedence="high">
+        style
+      </style>,
+      <link
+        crossorigin="use-credentials"
+        data-precedence="low"
+        href="my-style2"
+        rel="stylesheet"
+      />,
+      <link as="script" fetchpriority="low" href="init.js" rel="preload" />,
+      <link as="style" href="my-style0" rel="preload" />,
+      <link
+        as="style"
+        crossorigin="use-credentials"
+        href="my-style2"
+        rel="preload"
+      />,
+      <title>Hello World</title>,
+      <div>
+        <img src="my-img" />
+        <img src="my-img" />
+      </div>,
+    ]);
   });
 });

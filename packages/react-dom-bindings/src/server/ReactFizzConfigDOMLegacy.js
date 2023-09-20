@@ -39,11 +39,23 @@ export type RenderState = {
   startInlineScript: PrecomputedChunk,
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
+  externalRuntimeScript: null | any,
+  bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   charsetChunks: Array<Chunk | PrecomputedChunk>,
   preconnectChunks: Array<Chunk | PrecomputedChunk>,
   importMapChunks: Array<Chunk | PrecomputedChunk>,
   preloadChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
+  preconnects: Set<any>,
+  fontPreloads: Set<any>,
+  highImagePreloads: Set<any>,
+  // usedImagePreloads: Set<any>,
+  precedences: Map<string, Map<any, any>>,
+  stylePrecedences: Map<string, any>,
+  bootstrapScripts: Set<any>,
+  scripts: Set<any>,
+  bulkPreloads: Set<any>,
+  preloadsMap: Map<string, any>,
   boundaryResources: ?BoundaryResources,
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
@@ -52,10 +64,17 @@ export type RenderState = {
 
 export function createRenderState(
   resumableState: ResumableState,
-  nonce: string | void,
   generateStaticMarkup: boolean,
 ): RenderState {
-  const renderState = createRenderStateImpl(resumableState, nonce);
+  const renderState = createRenderStateImpl(
+    resumableState,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+  );
   return {
     // Keep this in sync with ReactFizzConfigDOM
     placeholderPrefix: renderState.placeholderPrefix,
@@ -64,11 +83,23 @@ export function createRenderState(
     startInlineScript: renderState.startInlineScript,
     htmlChunks: renderState.htmlChunks,
     headChunks: renderState.headChunks,
+    externalRuntimeScript: renderState.externalRuntimeScript,
+    bootstrapChunks: renderState.bootstrapChunks,
     charsetChunks: renderState.charsetChunks,
     preconnectChunks: renderState.preconnectChunks,
     importMapChunks: renderState.importMapChunks,
     preloadChunks: renderState.preloadChunks,
     hoistableChunks: renderState.hoistableChunks,
+    preconnects: renderState.preconnects,
+    fontPreloads: renderState.fontPreloads,
+    highImagePreloads: renderState.highImagePreloads,
+    // usedImagePreloads: renderState.usedImagePreloads,
+    precedences: renderState.precedences,
+    stylePrecedences: renderState.stylePrecedences,
+    bootstrapScripts: renderState.bootstrapScripts,
+    scripts: renderState.scripts,
+    bulkPreloads: renderState.bulkPreloads,
+    preloadsMap: renderState.preloadsMap,
     boundaryResources: renderState.boundaryResources,
     stylesToHoist: renderState.stylesToHoist,
 

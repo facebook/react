@@ -27,6 +27,7 @@ import {
 import {
   createResumableState,
   createRenderState,
+  resumeRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -76,10 +77,6 @@ type PipeableStream = {
 function createRequestImpl(children: ReactNodeList, options: void | Options) {
   const resumableState = createResumableState(
     options ? options.identifierPrefix : undefined,
-    options ? options.nonce : undefined,
-    options ? options.bootstrapScriptContent : undefined,
-    options ? options.bootstrapScripts : undefined,
-    options ? options.bootstrapModules : undefined,
     options ? options.unstable_externalRuntimeSrc : undefined,
   );
   return createRequest(
@@ -88,6 +85,10 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     createRenderState(
       resumableState,
       options ? options.nonce : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
       options ? options.importMap : undefined,
     ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
@@ -146,10 +147,9 @@ function resumeRequestImpl(
   return resumeRequest(
     children,
     postponedState,
-    createRenderState(
+    resumeRenderState(
       postponedState.resumableState,
       options ? options.nonce : undefined,
-      undefined, // importMap
     ),
     options ? options.onError : undefined,
     options ? options.onAllReady : undefined,
