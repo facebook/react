@@ -2460,14 +2460,6 @@ function trackPostpone(
   segment.status = POSTPONED;
 
   const keyPath = task.keyPath;
-  if (keyPath === null) {
-    // TODO: This is not really true now because if you postpone in the root component
-    // or has a lazy root then that's the root.
-    throw new Error(
-      'It should not be possible to postpone at the root. This is a bug in React.',
-    );
-  }
-
   const boundary = task.blockedBoundary;
   if (boundary !== null && boundary.status === PENDING) {
     boundary.status = POSTPONED;
@@ -2525,36 +2517,52 @@ function trackPostpone(
 
   if (task.childIndex === -1) {
     // Resume starting from directly inside the previous parent element.
-    const resumableElement: ReplayNode = [
-      keyPath[1],
-      keyPath[2],
-      ([]: Array<ReplayNode>),
-      segment.id,
-    ];
-    addToReplayParent(resumableElement, keyPath[0], trackedPostpones);
-  } else {
-    const workingMap = trackedPostpones.workingMap;
-    let resumableNode = workingMap.get(keyPath);
-    let slots;
-    if (resumableNode === undefined) {
-      slots = ({}: {[index: number]: number});
-      resumableNode = ([
+    if (keyPath === null) {
+      trackedPostpones.rootSlots = segment.id;
+    } else {
+      const resumableElement: ReplayNode = [
         keyPath[1],
         keyPath[2],
         ([]: Array<ReplayNode>),
-        slots,
-      ]: ReplayNode);
-      workingMap.set(keyPath, resumableNode);
-      addToReplayParent(resumableNode, keyPath[0], trackedPostpones);
-    } else {
-      slots = resumableNode[3];
+        segment.id,
+      ];
+      addToReplayParent(resumableElement, keyPath[0], trackedPostpones);
+    }
+  } else {
+    let slots;
+    if (keyPath === null) {
+      slots = trackedPostpones.rootSlots;
       if (slots === null) {
-        slots = resumableNode[3] = ({}: {[index: number]: number});
+        slots = trackedPostpones.rootSlots = ({}: {[index: number]: number});
       } else if (typeof slots === 'number') {
         throw new Error(
           'It should not be possible to postpone both at the root of an element ' +
             'as well as a slot below. This is a bug in React.',
         );
+      }
+    } else {
+      const workingMap = trackedPostpones.workingMap;
+      let resumableNode = workingMap.get(keyPath);
+      if (resumableNode === undefined) {
+        slots = ({}: {[index: number]: number});
+        resumableNode = ([
+          keyPath[1],
+          keyPath[2],
+          ([]: Array<ReplayNode>),
+          slots,
+        ]: ReplayNode);
+        workingMap.set(keyPath, resumableNode);
+        addToReplayParent(resumableNode, keyPath[0], trackedPostpones);
+      } else {
+        slots = resumableNode[3];
+        if (slots === null) {
+          slots = resumableNode[3] = ({}: {[index: number]: number});
+        } else if (typeof slots === 'number') {
+          throw new Error(
+            'It should not be possible to postpone both at the root of an element ' +
+              'as well as a slot below. This is a bug in React.',
+          );
+        }
       }
     }
     slots[task.childIndex] = segment.id;
