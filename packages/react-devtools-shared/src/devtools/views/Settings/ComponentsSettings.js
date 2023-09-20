@@ -218,6 +218,10 @@ export default function ComponentsSettings(_: {}): React.Node {
     });
   }, []);
 
+  const removeAllFilter = () => {
+    setComponentFilters([]);
+  };
+
   const toggleFilterIsEnabled = useCallback(
     (componentFilter: ComponentFilter, isEnabled: boolean) => {
       setComponentFilters(prevComponentFilters => {
@@ -434,11 +438,16 @@ export default function ComponentsSettings(_: {}): React.Node {
           ))}
         </tbody>
       </table>
-
-      <Button onClick={addFilter}>
+      <Button onClick={addFilter} title="Add filter">
         <ButtonIcon className={styles.ButtonIcon} type="add" />
         Add filter
       </Button>
+      {componentFilters.length > 0 && (
+        <Button onClick={removeAllFilter} title="Delete all filters">
+          <ButtonIcon className={styles.ButtonIcon} type="delete" />
+          Delete all filters
+        </Button>
+      )}
     </div>
   );
 }
