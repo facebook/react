@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {ResumableState, BoundaryResources} from './ReactFizzConfigDOM';
+import type {
+  ResumableState,
+  BoundaryResources,
+  Precedence,
+} from './ReactFizzConfigDOM';
 
 import {
   createRenderState as createRenderStateImpl,
@@ -50,8 +54,7 @@ export type RenderState = {
   fontPreloads: Set<any>,
   highImagePreloads: Set<any>,
   // usedImagePreloads: Set<any>,
-  precedences: Map<string, Map<any, any>>,
-  stylePrecedences: Map<string, any>,
+  precedences: Map<string, Precedence>,
   bootstrapScripts: Set<any>,
   scripts: Set<any>,
   bulkPreloads: Set<any>,
@@ -95,7 +98,6 @@ export function createRenderState(
     highImagePreloads: renderState.highImagePreloads,
     // usedImagePreloads: renderState.usedImagePreloads,
     precedences: renderState.precedences,
-    stylePrecedences: renderState.stylePrecedences,
     bootstrapScripts: renderState.bootstrapScripts,
     scripts: renderState.scripts,
     bulkPreloads: renderState.bulkPreloads,
