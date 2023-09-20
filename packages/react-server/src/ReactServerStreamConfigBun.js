@@ -96,3 +96,7 @@ export function closeWithError(destination: Destination, error: mixed): void {
     destination.close();
   }
 }
+
+export function createFastHash(input: string): string | number {
+  return input;
+}

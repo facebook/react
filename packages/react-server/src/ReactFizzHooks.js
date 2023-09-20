@@ -27,6 +27,7 @@ import {getTreeId} from './ReactFizzTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
 
 import {makeId, NotPendingTransition} from './ReactFizzConfig';
+import {createFastHash} from './ReactServerStreamConfig';
 
 import {
   enableCache,
@@ -592,11 +593,16 @@ function createPostbackFormStateKey(
   hookIndex: number,
 ): string {
   if (permalink !== undefined) {
+    // Don't bother to hash a permalink-based key since it's already short.
     return 'p' + permalink;
   } else {
     // Append a node to the key path that represents the form state hook.
     const keyPath: KeyNode = [componentKeyPath, null, hookIndex];
-    return 'k' + JSON.stringify(keyPath);
+    // Key paths are hashed to reduce the size. It does not need to be secure,
+    // and it's more important that it's fast than that it's completely
+    // collision-free.
+    const keyPathHash = createFastHash(JSON.stringify(keyPath));
+    return 'k' + keyPathHash;
   }
 }
 
