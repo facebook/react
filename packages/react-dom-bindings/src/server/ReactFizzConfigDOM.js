@@ -2349,7 +2349,7 @@ function pushStyle(
         };
         renderState.stylePrecedences.set(precedence, resource);
         const stylesInPrecedence: Map<string, StyleResource> = new Map();
-        stylesInPrecedence.set(key, resource);
+        stylesInPrecedence.set('', resource);
         if (__DEV__) {
           if (renderState.precedences.has(precedence)) {
             console.error(
