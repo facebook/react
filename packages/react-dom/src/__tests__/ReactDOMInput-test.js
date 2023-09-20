@@ -1232,7 +1232,7 @@ describe('ReactDOMInput', () => {
     expect(isCheckedDirty(aNode)).toBe(true);
     expect(isCheckedDirty(bNode)).toBe(true);
     expect(isCheckedDirty(cNode)).toBe(true);
-    // assertInputTrackingIsClean(container);
+    assertInputTrackingIsClean(container);
   });
 
   it('should check the correct radio when the selected name moves', () => {

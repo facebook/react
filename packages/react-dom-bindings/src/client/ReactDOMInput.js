@@ -407,6 +407,9 @@ export function restoreControlledInputState(element: Element, props: Object) {
       );
     }
   }
+  // Calling updateInput on the other radio buttons may have caused our event
+  // target's checkedness to change back
+  updateValueIfChanged(rootNode);
 }
 
 // In Chrome, assigning defaultValue to certain input types triggers input validation.
