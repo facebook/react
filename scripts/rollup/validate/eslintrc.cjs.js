@@ -65,6 +65,8 @@ module.exports = {
 
     // Native Scheduler
     nativeRuntimeScheduler: 'readonly',
+
+    Bun: 'readonly',
   },
   parserOptions: {
     ecmaVersion: 2020,

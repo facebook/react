@@ -7,6 +7,8 @@
  * @flow
  */
 
+/* global Bun */
+
 type BunReadableStreamController = ReadableStreamController & {
   end(): mixed,
   write(data: Chunk | BinaryChunk): void,
@@ -98,5 +100,5 @@ export function closeWithError(destination: Destination, error: mixed): void {
 }
 
 export function createFastHash(input: string): string | number {
-  return input;
+  return Bun.hash(input);
 }

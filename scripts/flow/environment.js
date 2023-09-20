@@ -281,3 +281,9 @@ declare module 'node:worker_threads' {
     port2: MessagePort;
   }
 }
+
+declare var Bun: {
+  hash(
+    input: string | $TypedArray | DataView | ArrayBuffer | SharedArrayBuffer,
+  ): number,
+};
