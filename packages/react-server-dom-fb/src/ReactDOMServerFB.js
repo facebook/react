@@ -81,8 +81,8 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
   };
 }
 
-function abortStream(stream: Stream): void {
-  abort(stream.request);
+function abortStream(stream: Stream, reason: mixed): void {
+  abort(stream.request, reason);
 }
 
 function renderNextChunk(stream: Stream): string {
