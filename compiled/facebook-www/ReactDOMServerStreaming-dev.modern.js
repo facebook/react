@@ -105,6 +105,9 @@ function closeWithError(destination, error) {
   destination.fatal = true;
   destination.error = error;
 }
+function createFastHash(input) {
+  return input;
+}
 
 var assign = Object.assign;
 
@@ -9122,11 +9125,16 @@ function useOptimistic(passthrough, reducer) {
 
 function createPostbackFormStateKey(permalink, componentKeyPath, hookIndex) {
   if (permalink !== undefined) {
+    // Don't bother to hash a permalink-based key since it's already short.
     return "p" + permalink;
   } else {
     // Append a node to the key path that represents the form state hook.
-    var keyPath = [componentKeyPath, null, hookIndex];
-    return "k" + JSON.stringify(keyPath);
+    var keyPath = [componentKeyPath, null, hookIndex]; // Key paths are hashed to reduce the size. It does not need to be secure,
+    // and it's more important that it's fast than that it's completely
+    // collision-free.
+
+    var keyPathHash = createFastHash(JSON.stringify(keyPath));
+    return "k" + keyPathHash;
   }
 }
 

@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-016e469a";
+var ReactVersion = "18.3.0-www-modern-1505778a";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -107,6 +107,9 @@ function clonePrecomputedChunk(chunk) {
 function closeWithError(destination, error) {
   // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
   destination.destroy(error);
+}
+function createFastHash(input) {
+  return input;
 }
 
 var assign = Object.assign;
@@ -9236,11 +9239,16 @@ function useOptimistic(passthrough, reducer) {
 
 function createPostbackFormStateKey(permalink, componentKeyPath, hookIndex) {
   if (permalink !== undefined) {
+    // Don't bother to hash a permalink-based key since it's already short.
     return "p" + permalink;
   } else {
     // Append a node to the key path that represents the form state hook.
-    var keyPath = [componentKeyPath, null, hookIndex];
-    return "k" + JSON.stringify(keyPath);
+    var keyPath = [componentKeyPath, null, hookIndex]; // Key paths are hashed to reduce the size. It does not need to be secure,
+    // and it's more important that it's fast than that it's completely
+    // collision-free.
+
+    var keyPathHash = createFastHash(JSON.stringify(keyPath));
+    return "k" + keyPathHash;
   }
 }
 
