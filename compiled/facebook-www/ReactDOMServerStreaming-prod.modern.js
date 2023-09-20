@@ -4633,8 +4633,8 @@ function abort(request, reason) {
     logRecoverableError(request, error$34), fatalError(request, error$34);
   }
 }
-exports.abortStream = function (stream) {
-  abort(stream.request);
+exports.abortStream = function (stream, reason) {
+  abort(stream.request, reason);
 };
 exports.debug = function (stream) {
   stream = stream.request;

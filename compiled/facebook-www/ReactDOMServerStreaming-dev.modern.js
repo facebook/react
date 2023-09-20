@@ -12848,8 +12848,8 @@ function renderToStream(children, options) {
   };
 }
 
-function abortStream(stream) {
-  abort(stream.request);
+function abortStream(stream, reason) {
+  abort(stream.request, reason);
 }
 
 function renderNextChunk(stream) {
