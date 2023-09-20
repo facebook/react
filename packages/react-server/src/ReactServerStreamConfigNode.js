@@ -10,6 +10,7 @@
 import type {Writable} from 'stream';
 
 import {TextEncoder} from 'util';
+import {createHash} from 'crypto';
 
 interface MightBeFlushable {
   flush?: () => void;
@@ -245,5 +246,7 @@ export function closeWithError(destination: Destination, error: mixed): void {
 }
 
 export function createFastHash(input: string): string | number {
-  return input;
+  const hash = createHash('md5');
+  hash.update(input);
+  return hash.digest('hex');
 }
