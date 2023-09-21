@@ -77,6 +77,4 @@ export function closeWithError(destination: Destination, error: mixed): void {
   destination.destroy(error);
 }
 
-export function createFastHash(input: string): string | number {
-  return input;
-}
+export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';
