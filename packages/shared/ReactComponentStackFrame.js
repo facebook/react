@@ -185,11 +185,11 @@ export function describeNativeComponentFrame(
   );
   // Before ES6, the `name` property was not configurable.
   if (namePropDescriptor && namePropDescriptor.configurable) {
-    // Configurable properties can be updated even if its writable
-    // descriptor is set to `false`. V8 utilizes a function's `name`
-    // property when generating a stack trace.
+    // V8 utilizes a function's `name` property when generating a stack trace.
     Object.defineProperty(
       RunInRootFrame.DetermineComponentFrameRoot,
+      // Configurable properties can be updated even if its writable descriptor
+      // is set to `false`.
       // $FlowFixMe[cannot-write]
       'name',
       {value: 'DetermineComponentFrameRoot'},
@@ -204,13 +204,18 @@ export function describeNativeComponentFrame(
       // Skipping one frame that we assume is the frame that calls the two.
       const sampleLines = sampleStack.split('\n');
       const controlLines = controlStack.split('\n');
-      let s = sampleLines.findIndex(line =>
-        line.includes('DetermineComponentFrameRoot'),
-      );
-      let c = controlLines.findIndex(line =>
-        line.includes('DetermineComponentFrameRoot'),
-      );
-      if (s === -1 || c === -1) {
+      let s = 0;
+      let c = 0;
+      while (s < sampleLines.length && !sampleLines[s].includes('DetermineComponentFrameRoot')) {
+        s++;
+      }
+      while (c < controlLines.length && !controlLines[c].includes('DetermineComponentFrameRoot')) {
+        c++;
+      }
+      // We couldn't find our intentionally injected common root frame, attempt
+      // to find another common root frame by search from the bottom of the
+      // control stack...
+      if (s === sampleLines.length || c === controlLines.length) {
         s = sampleLines.length - 1;
         c = controlLines.length - 1;
         while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
