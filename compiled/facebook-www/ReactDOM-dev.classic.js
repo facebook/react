@@ -4104,10 +4104,7 @@ function restoreControlledInputState(element, props) {
           "ReactDOMInput: Mixing React and non-React radio inputs with the " +
             "same `name` is not supported."
         );
-      } // We need update the tracked value on the named cousin since the value
-      // was changed but the input saw no event or value set
-
-      updateValueIfChanged(otherNode); // If this is a controlled radio button group, forcing the input that
+      } // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
 
@@ -4121,6 +4118,17 @@ function restoreControlledInputState(element, props) {
         otherProps.type,
         otherProps.name
       );
+    } // If any updateInput() call set .checked to true, an input in this group
+    // (often, `rootNode` itself) may have become unchecked
+
+    for (var _i = 0; _i < group.length; _i++) {
+      var _otherNode = group[_i];
+
+      if (_otherNode.form !== rootNode.form) {
+        continue;
+      }
+
+      updateValueIfChanged(_otherNode);
     }
   }
 } // In Chrome, assigning defaultValue to certain input types triggers input validation.
@@ -34013,7 +34021,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-bb6c815e";
+var ReactVersion = "18.3.0-www-classic-bfae45bc";
 
 function createPortal$1(
   children,
