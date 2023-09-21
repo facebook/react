@@ -61,7 +61,7 @@ describe('ReactDOMInput', () => {
     ];
   }
 
-  function assertInputTrackingIsClean(parent) {
+  function assertInputTrackingIsCurrent(parent) {
     parent.querySelectorAll('input, textarea, select').forEach(input => {
       const [trackedValue, currentValue] =
         getTrackedAndCurrentInputValue(input);
@@ -1205,7 +1205,7 @@ describe('ReactDOMInput', () => {
     expect(isCheckedDirty(aNode)).toBe(true);
     expect(isCheckedDirty(bNode)).toBe(true);
     expect(isCheckedDirty(cNode)).toBe(true);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
 
     setUntrackedChecked.call(bNode, true);
     expect(aNode.checked).toBe(false);
@@ -1232,7 +1232,7 @@ describe('ReactDOMInput', () => {
     expect(isCheckedDirty(aNode)).toBe(true);
     expect(isCheckedDirty(bNode)).toBe(true);
     expect(isCheckedDirty(cNode)).toBe(true);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
   });
 
   it('should check the correct radio when the selected name moves', () => {
@@ -1271,13 +1271,13 @@ describe('ReactDOMInput', () => {
     const firstRadioNode = ReactDOM.findDOMNode(stub).childNodes[1];
     expect(isCheckedDirty(firstRadioNode)).toBe(true);
     expect(firstRadioNode.checked).toBe(false);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
     dispatchEventOnNode(buttonNode, 'click');
     expect(firstRadioNode.checked).toBe(true);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
     dispatchEventOnNode(buttonNode, 'click');
     expect(firstRadioNode.checked).toBe(false);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
   });
 
   it("shouldn't get tricked by changing radio names, part 2", () => {
@@ -1306,7 +1306,7 @@ describe('ReactDOMInput', () => {
     expect(two.checked).toBe(false);
     expect(isCheckedDirty(one)).toBe(true);
     expect(isCheckedDirty(two)).toBe(true);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
 
     ReactDOM.render(
       <div>
@@ -1331,7 +1331,7 @@ describe('ReactDOMInput', () => {
     expect(two.checked).toBe(true);
     expect(isCheckedDirty(one)).toBe(true);
     expect(isCheckedDirty(two)).toBe(true);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
   });
 
   it('should control radio buttons if the tree updates during render', () => {
@@ -1395,7 +1395,7 @@ describe('ReactDOMInput', () => {
     expect(bNode.checked).toBe(true);
     expect(isCheckedDirty(aNode)).toBe(true);
     expect(isCheckedDirty(bNode)).toBe(true);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
 
     setUntrackedChecked.call(aNode, true);
     // This next line isn't necessary in a proper browser environment, but
@@ -1411,7 +1411,7 @@ describe('ReactDOMInput', () => {
     expect(bNode.checked).toBe(true);
     expect(isCheckedDirty(aNode)).toBe(true);
     expect(isCheckedDirty(bNode)).toBe(true);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
   });
 
   it('should warn with value and no onChange handler and readOnly specified', () => {
@@ -1807,7 +1807,7 @@ describe('ReactDOMInput', () => {
       container,
     );
     expect(isCheckedDirty(input)).toBe(true);
-    assertInputTrackingIsClean(container);
+    assertInputTrackingIsCurrent(container);
   });
 
   it('should warn if radio checked false changes to become uncontrolled', () => {
