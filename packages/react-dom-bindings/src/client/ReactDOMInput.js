@@ -388,10 +388,6 @@ export function restoreControlledInputState(element: Element, props: Object) {
         );
       }
 
-      // We need update the tracked value on the named cousin since the value
-      // was changed but the input saw no event or value set
-      updateValueIfChanged(otherNode);
-
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
@@ -405,6 +401,16 @@ export function restoreControlledInputState(element: Element, props: Object) {
         otherProps.type,
         otherProps.name,
       );
+    }
+
+    // If any updateInput() call set .checked to true, an input in this group
+    // (often, `rootNode` itself) may have become unchecked
+    for (let i = 0; i < group.length; i++) {
+      const otherNode = ((group[i]: any): HTMLInputElement);
+      if (otherNode.form !== rootNode.form) {
+        continue;
+      }
+      updateValueIfChanged(otherNode);
     }
   }
 }
