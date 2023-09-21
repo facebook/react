@@ -235,6 +235,7 @@ export class Environment {
   enableForest: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
+  #hoistedIdentifiers: Set<t.Identifier>;
 
   constructor(
     config: EnvironmentConfig | null,
@@ -289,6 +290,7 @@ export class Environment {
     this.enableForest = config?.enableForest ?? false;
 
     this.#contextIdentifiers = contextIdentifiers;
+    this.#hoistedIdentifiers = new Set();
   }
 
   get nextIdentifierId(): IdentifierId {
@@ -298,8 +300,13 @@ export class Environment {
   get nextBlockId(): BlockId {
     return makeBlockId(this.#nextBlock++);
   }
+
   isContextIdentifier(node: t.Identifier): boolean {
     return this.#contextIdentifiers.has(node);
+  }
+
+  isHoistedIdentifier(node: t.Identifier): boolean {
+    return this.#hoistedIdentifiers.has(node);
   }
 
   getGlobalDeclaration(name: string): Global | null {
@@ -355,6 +362,11 @@ export class Environment {
       return shape.functionType;
     }
     return null;
+  }
+
+  addHoistedIdentifier(node: t.Identifier): void {
+    this.#contextIdentifiers.add(node);
+    this.#hoistedIdentifiers.add(node);
   }
 }
 

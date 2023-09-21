@@ -586,6 +586,11 @@ export enum InstructionKind {
    * catch clause binding
    */
   Catch = "Catch",
+
+  /**
+   * hoisted const declarations
+   */
+  HoistedConst = "HoistedConst",
 }
 
 function _staticInvariantInstructionValueHasLocation(
@@ -641,6 +646,7 @@ export type CallExpression = {
  *
  * Operands are therefore always a Place.
  */
+
 export type InstructionValue =
   | {
       kind: "LoadLocal";
@@ -660,7 +666,7 @@ export type InstructionValue =
   | {
       kind: "DeclareContext";
       lvalue: {
-        kind: InstructionKind.Let;
+        kind: InstructionKind.Let | InstructionKind.HoistedConst;
         place: Place;
       };
       loc: SourceLocation;

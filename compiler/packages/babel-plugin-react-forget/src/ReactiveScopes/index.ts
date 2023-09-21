@@ -22,6 +22,7 @@ export { printReactiveFunction } from "./PrintReactiveFunction";
 export { promoteUsedTemporaries } from "./PromoteUsedTemporaries";
 export { propagateScopeDependencies } from "./PropagateScopeDependencies";
 export { pruneAllReactiveScopes } from "./PruneAllReactiveScopes";
+export { pruneHoistedContexts } from "./PruneHoistedContexts";
 export { pruneNonEscapingScopes } from "./PruneNonEscapingScopes";
 export { pruneNonReactiveDependencies } from "./PruneNonReactiveDependencies";
 export { pruneTemporaryLValues as pruneUnusedLValues } from "./PruneTemporaryLValues";

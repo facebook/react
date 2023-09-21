@@ -2,7 +2,7 @@ function hoisting() {
   const foo = () => {
     return bar + baz;
   };
-  let bar = 3;
+  const bar = 3;
   const baz = 2;
   return foo(); // OK: called outside of TDZ for bar/baz
 }

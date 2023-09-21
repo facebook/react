@@ -46,6 +46,7 @@ import {
   promoteUsedTemporaries,
   propagateScopeDependencies,
   pruneAllReactiveScopes,
+  pruneHoistedContexts,
   pruneNonEscapingScopes,
   pruneNonReactiveDependencies,
   pruneUnusedLValues,
@@ -296,6 +297,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "RenameVariables",
+    value: reactiveFunction,
+  });
+
+  pruneHoistedContexts(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneHoistedContexts",
     value: reactiveFunction,
   });
 

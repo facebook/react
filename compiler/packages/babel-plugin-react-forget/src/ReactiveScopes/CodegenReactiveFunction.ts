@@ -467,6 +467,13 @@ function codegenTerminal(
             loc: iterableItem.loc,
             suggestions: null,
           });
+        case InstructionKind.HoistedConst:
+          CompilerError.invariant(false, {
+            reason: "Unexpected HoistedConst variable in for-of collection",
+            description: null,
+            loc: iterableItem.loc,
+            suggestions: null,
+          });
         default:
           assertExhaustive(
             iterableItem.value.lvalue.kind,
@@ -670,6 +677,15 @@ function codegenInstructionNullable(
       }
       case InstructionKind.Catch: {
         return t.emptyStatement();
+      }
+      case InstructionKind.HoistedConst: {
+        CompilerError.invariant(false, {
+          reason:
+            "Expected HoistedConsts to have been pruned in PruneHoistedContexts",
+          description: null,
+          loc: instr.loc,
+          suggestions: null,
+        });
       }
       default: {
         assertExhaustive(kind, `Unexpected instruction kind '${kind}'`);

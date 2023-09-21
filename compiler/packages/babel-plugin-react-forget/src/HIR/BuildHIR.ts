@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { NodePath, Scope } from "@babel/traverse";
+import { Binding, NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
 import { Expression } from "@babel/types";
 import invariant from "invariant";
@@ -298,7 +298,108 @@ function lowerStatement(
     }
     case "BlockStatement": {
       const stmt = stmtPath as NodePath<t.BlockStatement>;
-      stmt.get("body").forEach((s) => lowerStatement(builder, s));
+      const statements = stmt.get("body");
+      const hoistableBindings: Set<Binding> = new Set();
+
+      const recordDeclaration = (lval: NodePath<t.LVal>): void => {
+        // TODO: support other kinds of declarations that might need to be hoisted
+        switch (lval.type) {
+          case "Identifier": {
+            const lv = lval as NodePath<t.Identifier>;
+            const binding = stmt.scope.getBinding(lv.node.name);
+            if (binding != null) {
+              hoistableBindings.delete(binding);
+            }
+            break;
+          }
+        }
+      };
+
+      for (const [, binding] of Object.entries(stmt.scope.bindings)) {
+        // TODO: support other kinds of bindings
+        if (binding.kind === "const") {
+          if (
+            binding.path.isVariableDeclarator() &&
+            binding.path.get("id").isIdentifier()
+          ) {
+            hoistableBindings.add(binding);
+          }
+        }
+      }
+
+      for (const s of statements) {
+        const hoistableIdentifiers = new Set<NodePath<t.Identifier>>();
+        // After visiting the declaration, hoisting is no longer required
+        // TODO: support other kinds of declarations
+        if (s.isVariableDeclaration()) {
+          for (const decl of s.get("declarations")) {
+            recordDeclaration(decl.get("id"));
+          }
+        }
+
+        // If we see a hoistable identifier before its declaration, it should be hoisted just
+        // before the statement that references it
+        s.traverse({
+          Identifier(id: NodePath<t.Identifier>) {
+            const binding = stmt.scope.getBinding(id.node.name);
+            if (binding != null && hoistableBindings.has(binding)) {
+              if (
+                id.parentPath.isVariableDeclarator() ||
+                // don't hoist MemberExpr `property`s, only their `object`
+                (id.parentPath.isMemberExpression() &&
+                  id.parentPath.get("property") === id &&
+                  id.parentPath.node.computed === false)
+              ) {
+                return;
+              }
+              hoistableIdentifiers.add(id);
+            }
+          },
+        });
+
+        // Hoist declarations that need it to the earliest point where they are needed
+        for (const id of hoistableIdentifiers) {
+          const binding = stmt.scope.getBinding(id.node.name);
+          CompilerError.invariant(binding != null, {
+            reason: "Expected to find binding for hoisted identifier",
+            description: `Could not find a binding for ${id.node.name}`,
+            suggestions: null,
+            loc: id.node.loc ?? GeneratedSource,
+          });
+          if (builder.environment.isHoistedIdentifier(binding.identifier)) {
+            // Already hoisted
+            continue;
+          }
+          if (!binding.path.isVariableDeclarator()) {
+            builder.errors.push({
+              severity: ErrorSeverity.Todo,
+              reason: "Unsupported declaration type for hoisting",
+              description: `${id.parentPath.type}`,
+              suggestions: null,
+              loc: id.parentPath.node.loc ?? GeneratedSource,
+            });
+            continue;
+          }
+          const identifier = builder.resolveIdentifier(id)!;
+          const place: Place = {
+            effect: Effect.Unknown,
+            identifier,
+            kind: "Identifier",
+            loc: id.node.loc ?? GeneratedSource,
+          };
+          lowerValueToTemporary(builder, {
+            kind: "DeclareContext",
+            lvalue: {
+              kind: InstructionKind.HoistedConst,
+              place,
+            },
+            loc: id.node.loc ?? GeneratedSource,
+          });
+          builder.environment.addHoistedIdentifier(binding.identifier);
+        }
+        lowerStatement(builder, s);
+      }
+
       return;
     }
     case "BreakStatement": {
@@ -2894,13 +2995,16 @@ function lowerAssignment(
           node: lvalue.node,
         };
       }
+      const isHoistedIdentifier = builder.environment.isHoistedIdentifier(
+        lvalue.node
+      );
 
       let temporary;
       if (builder.isContextIdentifier(lvalue)) {
-        if (kind !== InstructionKind.Reassign) {
+        if (kind !== InstructionKind.Reassign && !isHoistedIdentifier) {
           if (kind === InstructionKind.Const) {
             builder.errors.push({
-              reason: `Invalid declaration kind (const), this variable is reassigned later`,
+              reason: `[lowerAssignment] Invalid declaration kind (const), this variable is reassigned later`,
               severity: ErrorSeverity.InvalidJS,
               loc: lvalue.node.loc ?? null,
               suggestions: null,
