@@ -10,6 +10,30 @@
  * @preserve-invariant-messages
  */
 
+/*
+
+
+ JS Implementation of MurmurHash3 (r136) (as of May 20, 2011)
+
+ Copyright (c) 2011 Gary Court
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+*/
 "use strict";
 var React = require("react"),
   ReactDOM = require("react-dom");
@@ -28,6 +52,59 @@ function formatProdErrorMessage(code) {
     url +
     " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
   );
+}
+function murmurhash3_32_gc(key, seed) {
+  var remainder = key.length & 3;
+  var bytes = key.length - remainder;
+  var h1 = seed;
+  for (seed = 0; seed < bytes; ) {
+    var k1 =
+      (key.charCodeAt(seed) & 255) |
+      ((key.charCodeAt(++seed) & 255) << 8) |
+      ((key.charCodeAt(++seed) & 255) << 16) |
+      ((key.charCodeAt(++seed) & 255) << 24);
+    ++seed;
+    k1 =
+      (3432918353 * (k1 & 65535) +
+        (((3432918353 * (k1 >>> 16)) & 65535) << 16)) &
+      4294967295;
+    k1 = (k1 << 15) | (k1 >>> 17);
+    k1 =
+      (461845907 * (k1 & 65535) + (((461845907 * (k1 >>> 16)) & 65535) << 16)) &
+      4294967295;
+    h1 ^= k1;
+    h1 = (h1 << 13) | (h1 >>> 19);
+    h1 = (5 * (h1 & 65535) + (((5 * (h1 >>> 16)) & 65535) << 16)) & 4294967295;
+    h1 = (h1 & 65535) + 27492 + ((((h1 >>> 16) + 58964) & 65535) << 16);
+  }
+  k1 = 0;
+  switch (remainder) {
+    case 3:
+      k1 ^= (key.charCodeAt(seed + 2) & 255) << 16;
+    case 2:
+      k1 ^= (key.charCodeAt(seed + 1) & 255) << 8;
+    case 1:
+      (k1 ^= key.charCodeAt(seed) & 255),
+        (k1 =
+          (3432918353 * (k1 & 65535) +
+            (((3432918353 * (k1 >>> 16)) & 65535) << 16)) &
+          4294967295),
+        (k1 = (k1 << 15) | (k1 >>> 17)),
+        (h1 ^=
+          (461845907 * (k1 & 65535) +
+            (((461845907 * (k1 >>> 16)) & 65535) << 16)) &
+          4294967295);
+  }
+  h1 ^= key.length;
+  h1 ^= h1 >>> 16;
+  h1 =
+    (2246822507 * (h1 & 65535) + (((2246822507 * (h1 >>> 16)) & 65535) << 16)) &
+    4294967295;
+  h1 ^= h1 >>> 13;
+  h1 =
+    (3266489909 * (h1 & 65535) + (((3266489909 * (h1 >>> 16)) & 65535) << 16)) &
+    4294967295;
+  return (h1 ^ (h1 >>> 16)) >>> 0;
 }
 var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
@@ -2604,7 +2681,10 @@ function useFormState(action, initialState, permalink) {
           void 0 !== permalink
             ? "p" + permalink
             : "k" +
-              JSON.stringify([componentKeyPath, null, formStateHookIndex])),
+              murmurhash3_32_gc(
+                JSON.stringify([componentKeyPath, null, formStateHookIndex]),
+                0
+              )),
         postbackKey === nextPostbackStateKey &&
           ((formStateMatchingIndex = formStateHookIndex),
           (initialState = request[0])));
@@ -2625,7 +2705,14 @@ function useFormState(action, initialState, permalink) {
               void 0 !== permalink
                 ? "p" + permalink
                 : "k" +
-                  JSON.stringify([componentKeyPath, null, formStateHookIndex])),
+                  murmurhash3_32_gc(
+                    JSON.stringify([
+                      componentKeyPath,
+                      null,
+                      formStateHookIndex
+                    ]),
+                    0
+                  )),
           formData.append("$ACTION_KEY", nextPostbackStateKey));
         return prefix;
       });
@@ -4838,4 +4925,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-6634fa64";
+exports.version = "18.3.0-www-modern-ebb93345";
