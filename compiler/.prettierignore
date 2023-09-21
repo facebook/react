@@ -1,4 +1,4 @@
-fixtures/
+.fixtures/
 bench/
 **/dist
 **/__tests__/fixtures/**/*.expect.md
