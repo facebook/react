@@ -4119,6 +4119,43 @@ body {
     );
   });
 
+  it('should warn if you preload a stylesheet and then render a style tag with the same href', async () => {
+    const style = 'body { color: red; }';
+    function App() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <html>
+          <body>
+            hello
+            <style precedence="default" href="foo">
+              {style}
+            </style>
+          </body>
+        </html>
+      );
+    }
+
+    await expect(async () => {
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+    }).toErrorDev([
+      'React encountered a hoistable style tag for the same href as a preload: "foo". When using a style tag to inline styles you should not also preload it as a stylsheet.',
+    ]);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <style data-precedence="default" data-href="foo">
+            {style}
+          </style>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
   it('should preload only once even if you discover a stylesheet, script, or moduleScript late', async () => {
     function App() {
       // We start with preinitializing some resources first
