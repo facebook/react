@@ -94,6 +94,8 @@ const ReactNoopServer = ReactFizzServer({
     return null;
   },
 
+  resetResumableState(): void {},
+
   pushTextInstance(
     target: Array<Uint8Array>,
     text: string,

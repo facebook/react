@@ -76,6 +76,7 @@ import {
   requestStorage,
   pushFormStateMarkerIsMatching,
   pushFormStateMarkerIsNotMatching,
+  resetResumableState,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -505,6 +506,39 @@ export function resumeRequest(
     onFatalError: onFatalError === undefined ? noop : onFatalError,
     formState: null,
   };
+  if (typeof postponedState.replaySlots === 'number') {
+    const resumedId = postponedState.replaySlots;
+    // We have a resume slot at the very root. This is effectively just a full rerender.
+    const rootSegment = createPendingSegment(
+      request,
+      0,
+      null,
+      postponedState.rootFormatContext,
+      // Root segments are never embedded in Text on either edge
+      false,
+      false,
+    );
+    rootSegment.id = resumedId;
+    // There is no parent so conceptually, we're unblocked to flush this segment.
+    rootSegment.parentFlushed = true;
+    const rootTask = createRenderTask(
+      request,
+      null,
+      children,
+      -1,
+      null,
+      rootSegment,
+      abortSet,
+      null,
+      postponedState.rootFormatContext,
+      emptyContextObject,
+      rootContextSnapshot,
+      emptyTreeContext,
+    );
+    pingedTasks.push(rootTask);
+    return request;
+  }
+
   const replay: ReplaySet = {
     nodes: postponedState.replayNodes,
     slots: postponedState.replaySlots,
@@ -2477,6 +2511,17 @@ function trackPostpone(
 
   const keyPath = task.keyPath;
   const boundary = task.blockedBoundary;
+
+  if (boundary === null) {
+    segment.id = request.nextSegmentId++;
+    trackedPostpones.rootSlots = segment.id;
+    if (request.completedRootSegment !== null) {
+      // Postpone the root if this was a deeper segment.
+      request.completedRootSegment.status = POSTPONED;
+    }
+    return;
+  }
+
   if (boundary !== null && boundary.status === PENDING) {
     boundary.status = POSTPONED;
     // We need to eagerly assign it an ID because we'll need to refer to
@@ -2835,7 +2880,7 @@ function renderNode(
           enablePostpone &&
           request.trackedPostpones !== null &&
           x.$$typeof === REACT_POSTPONE_TYPE &&
-          task.blockedBoundary !== null // TODO: Support holes in the shell
+          task.blockedBoundary !== null // bubble if we're postponing in the shell
         ) {
           // If we're tracking postpones, we inject a hole here and continue rendering
           // sibling. Similar to suspending. If we're not tracking, we treat it more like
@@ -3376,8 +3421,7 @@ function retryRenderTask(
       } else if (
         enablePostpone &&
         request.trackedPostpones !== null &&
-        x.$$typeof === REACT_POSTPONE_TYPE &&
-        task.blockedBoundary !== null // TODO: Support holes in the shell
+        x.$$typeof === REACT_POSTPONE_TYPE
       ) {
         // If we're tracking postpones, we mark this segment as postponed and finish
         // the task without filling it in. If we're not tracking, we treat it more like
@@ -3870,7 +3914,10 @@ function flushCompletedQueues(
     let i;
     const completedRootSegment = request.completedRootSegment;
     if (completedRootSegment !== null) {
-      if (request.pendingRootTasks === 0) {
+      if (completedRootSegment.status === POSTPONED) {
+        // We postponed the root, so we write nothing.
+        return;
+      } else if (request.pendingRootTasks === 0) {
         if (enableFloat) {
           writePreamble(
             destination,
@@ -4137,6 +4184,13 @@ export function getPostponedState(request: Request): null | PostponedState {
     // Reset. Let the flushing behave as if we completed the whole document.
     request.trackedPostpones = null;
     return null;
+  }
+  if (
+    request.completedRootSegment !== null &&
+    request.completedRootSegment.status === POSTPONED
+  ) {
+    // We postponed the root so we didn't flush anything.
+    resetResumableState(request.resumableState, request.renderState);
   }
   return {
     nextSegmentId: request.nextSegmentId,
