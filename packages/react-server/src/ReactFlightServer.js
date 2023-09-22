@@ -359,6 +359,7 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
     },
     reason => {
       newTask.status = ERRORED;
+      request.abortableTasks.delete(newTask);
       // TODO: We should ideally do this inside performWork so it's scheduled
       const digest = logRecoverableError(request, reason);
       emitErrorChunk(request, newTask.id, digest, reason);
