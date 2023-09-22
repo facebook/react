@@ -1385,6 +1385,14 @@ function lowerExpression(
           elements.push({
             kind: "Hole",
           });
+          if (builder.environment.bailoutOnHoleyArrays) {
+            builder.errors.push({
+              reason: `(BuildHIR::lower) Fix babel holey array backward compatibility.`,
+              severity: ErrorSeverity.Todo,
+              loc: expr.node.loc ?? null,
+              suggestions: null,
+            });
+          }
           continue;
         } else if (element.isExpression()) {
           elements.push(lowerExpressionToTemporary(builder, element));

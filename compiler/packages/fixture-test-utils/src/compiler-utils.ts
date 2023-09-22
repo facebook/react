@@ -29,6 +29,7 @@ export function transformFixtureInput(
   let compilationMode: CompilationMode = "all";
   let enableForest = false;
   let enableNoAliasOptimizations = false;
+  let bailoutOnHoleyArrays = false;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -88,6 +89,11 @@ export function transformFixtureInput(
     enableNoAliasOptimizations = true;
   }
 
+  if (firstLine.includes("@bailoutOnHoleyArrays")) {
+    bailoutOnHoleyArrays = true;
+  }
+
+
   return pluginFn(
     input,
     basename,
@@ -136,6 +142,7 @@ export function transformFixtureInput(
         validateNoSetStateInRender,
         enableEmitFreeze,
         assertValidMutableRanges: true,
+        bailoutOnHoleyArrays,
         enableForest,
       },
       compilationMode,

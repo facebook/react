@@ -214,6 +214,28 @@ export type EnvironmentConfig = Partial<{
    * Defaults to false
    */
   assertValidMutableRanges: boolean;
+
+  /**
+   * Instead of handling holey arrays, bail out with a TODO error.
+   * 
+   * Older versions of babel seem to have inconsistent handling of holey arrays,
+   * at least when paired with HermesParser. When using these versions, we should
+   * bail out instead of throwing a Babel validation error.
+
+   * The babel ast definition for array elements changed from Array<PatternLike>
+   * to Array<PatternLike | null>. Older versions does not expect null in the
+   * ArrayPattern ast and will throw a validation error.
+   * 
+   * - HermesParser will parse [, b] into [NodePath<null>, NodePath<Identifier>]
+   * - Forget will try to preserve this holey array when we codegen back to js
+   *   (e.g. we call a babel builder function arrayPattern([null, identifier]))
+   * - Babel will fail with `TypeError: Property elements[0] of ArrayPattern 
+   *   expected node to be of a type ["PatternLike"] but instead got null`
+   * 
+   * PR that changed the AST definition
+   * https://github.com/babel/babel/pull/10917/files#diff-19b555d2f3904c206af406540d9df200b1e16befedb83ff39ebfcbd876f7fa8aL52-R56
+   */
+  bailoutOnHoleyArrays: boolean;
 }>;
 
 export class Environment {
@@ -232,6 +254,7 @@ export class Environment {
   disableAllMemoization: boolean;
   enableEmitFreeze: ExternalFunction | null;
   assertValidMutableRanges: boolean;
+  bailoutOnHoleyArrays: boolean;
   enableForest: boolean;
 
   #contextIdentifiers: Set<t.Identifier>;
@@ -287,6 +310,7 @@ export class Environment {
     this.assertValidMutableRanges = config?.assertValidMutableRanges ?? false;
     this.validateNoSetStateInRender =
       config?.validateNoSetStateInRender ?? false;
+    this.bailoutOnHoleyArrays = config?.bailoutOnHoleyArrays ?? false;
     this.enableForest = config?.enableForest ?? false;
 
     this.#contextIdentifiers = contextIdentifiers;
