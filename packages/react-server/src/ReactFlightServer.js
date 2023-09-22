@@ -359,6 +359,7 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
     },
     reason => {
       newTask.status = ERRORED;
+      request.abortableTasks.delete(newTask);
       // TODO: We should ideally do this inside performWork so it's scheduled
       const digest = logRecoverableError(request, reason);
       emitErrorChunk(request, newTask.id, digest, reason);
@@ -1568,6 +1569,10 @@ export function startFlowing(request: Request, destination: Destination): void {
     logRecoverableError(request, error);
     fatalError(request, error);
   }
+}
+
+export function stopFlowing(request: Request): void {
+  request.destination = null;
 }
 
 // This is called to early terminate a request. It creates an error at all pending tasks.

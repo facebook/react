@@ -16,6 +16,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -78,7 +79,10 @@ function renderToReadableStream(
       pull: (controller): ?Promise<void> => {
         startFlowing(request, controller);
       },
-      cancel: (reason): ?Promise<void> => {},
+      cancel: (reason): ?Promise<void> => {
+        stopFlowing(request);
+        abort(request, reason);
+      },
     },
     // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
     {highWaterMark: 0},

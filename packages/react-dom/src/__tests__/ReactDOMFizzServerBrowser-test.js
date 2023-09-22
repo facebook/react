@@ -342,7 +342,8 @@ describe('ReactDOMFizzServerBrowser', () => {
     expect(isComplete).toBe(false);
 
     const reader = stream.getReader();
-    reader.cancel();
+    await reader.read();
+    await reader.cancel();
 
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
@@ -355,6 +356,10 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     expect(rendered).toBe(false);
     expect(isComplete).toBe(true);
+
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
   });
 
   it('should stream large contents that might overlow individual buffers', async () => {
