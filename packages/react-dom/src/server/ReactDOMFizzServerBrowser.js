@@ -19,6 +19,7 @@ import {
   resumeRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
 
@@ -78,6 +79,7 @@ function renderToReadableStream(
             startFlowing(request, controller);
           },
           cancel: (reason): ?Promise<void> => {
+            stopFlowing(request);
             abort(request);
           },
         },
@@ -158,6 +160,7 @@ function resume(
             startFlowing(request, controller);
           },
           cancel: (reason): ?Promise<void> => {
+            stopFlowing(request);
             abort(request);
           },
         },

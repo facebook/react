@@ -21,6 +21,7 @@ import {
   resumeRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
 
@@ -35,9 +36,12 @@ function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }
 
-function createAbortHandler(request: Request, reason: string) {
-  // eslint-disable-next-line react-internal/prod-error-codes
-  return () => abort(request, new Error(reason));
+function createCancelHandler(request: Request, reason: string) {
+  return () => {
+    stopFlowing(request);
+    // eslint-disable-next-line react-internal/prod-error-codes
+    abort(request, new Error(reason));
+  };
 }
 
 type Options = {
@@ -122,14 +126,14 @@ function renderToPipeableStream(
       destination.on('drain', createDrainHandler(destination, request));
       destination.on(
         'error',
-        createAbortHandler(
+        createCancelHandler(
           request,
           'The destination stream errored while writing data.',
         ),
       );
       destination.on(
         'close',
-        createAbortHandler(request, 'The destination stream closed early.'),
+        createCancelHandler(request, 'The destination stream closed early.'),
       );
       return destination;
     },
@@ -180,14 +184,14 @@ function resumeToPipeableStream(
       destination.on('drain', createDrainHandler(destination, request));
       destination.on(
         'error',
-        createAbortHandler(
+        createCancelHandler(
           request,
           'The destination stream errored while writing data.',
         ),
       );
       destination.on(
         'close',
-        createAbortHandler(request, 'The destination stream closed early.'),
+        createCancelHandler(request, 'The destination stream closed early.'),
       );
       return destination;
     },

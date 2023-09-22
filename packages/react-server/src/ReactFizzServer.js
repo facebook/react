@@ -3998,6 +3998,10 @@ export function startFlowing(request: Request, destination: Destination): void {
   }
 }
 
+export function stopFlowing(request: Request): void {
+  request.destination = null;
+}
+
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 export function abort(request: Request, reason: mixed): void {
   try {

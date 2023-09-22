@@ -1570,6 +1570,10 @@ export function startFlowing(request: Request, destination: Destination): void {
   }
 }
 
+export function stopFlowing(request: Request): void {
+  request.destination = null;
+}
+
 // This is called to early terminate a request. It creates an error at all pending tasks.
 export function abort(request: Request, reason: mixed): void {
   try {

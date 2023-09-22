@@ -22,6 +22,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -90,6 +91,7 @@ function renderToPipeableStream(
       return destination;
     },
     abort(reason: mixed) {
+      stopFlowing(request);
       abort(request, reason);
     },
   };

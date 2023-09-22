@@ -18,6 +18,7 @@ import {
   createPrerenderRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
   getPostponedState,
 } from 'react-server/src/ReactFizzServer';
@@ -60,6 +61,10 @@ function prerender(
           type: 'bytes',
           pull: (controller): ?Promise<void> => {
             startFlowing(request, controller);
+          },
+          cancel: (reason): ?Promise<void> => {
+            stopFlowing(request);
+            abort(request);
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
