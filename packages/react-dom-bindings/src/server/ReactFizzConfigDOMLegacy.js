@@ -11,6 +11,7 @@ import type {
   ResumableState,
   BoundaryResources,
   PrecedenceQueue,
+  Resource,
 } from './ReactFizzConfigDOM';
 
 import {
@@ -50,15 +51,20 @@ export type RenderState = {
   importMapChunks: Array<Chunk | PrecomputedChunk>,
   preloadChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
-  preconnects: Set<any>,
-  fontPreloads: Set<any>,
-  highImagePreloads: Set<any>,
-  // usedImagePreloads: Set<any>,
+  preconnects: Set<Resource>,
+  fontPreloads: Set<Resource>,
+  highImagePreloads: Set<Resource>,
+  // usedImagePreloads: Set<Resource>,
   precedences: Map<string, PrecedenceQueue>,
-  bootstrapScripts: Set<any>,
-  scripts: Set<any>,
-  bulkPreloads: Set<any>,
-  preloadsMap: Map<string, any>,
+  bootstrapScripts: Set<Resource>,
+  scripts: Set<Resource>,
+  bulkPreloads: Set<Resource>,
+  preloads: {
+    images: Map<string, Resource>,
+    stylesheets: Map<string, Resource>,
+    scripts: Map<string, Resource>,
+    moduleScripts: Map<string, Resource>,
+  },
   boundaryResources: ?BoundaryResources,
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
@@ -101,7 +107,7 @@ export function createRenderState(
     bootstrapScripts: renderState.bootstrapScripts,
     scripts: renderState.scripts,
     bulkPreloads: renderState.bulkPreloads,
-    preloadsMap: renderState.preloadsMap,
+    preloads: renderState.preloads,
     boundaryResources: renderState.boundaryResources,
     stylesToHoist: renderState.stylesToHoist,
 

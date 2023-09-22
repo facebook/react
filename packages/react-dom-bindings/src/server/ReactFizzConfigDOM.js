@@ -158,7 +158,12 @@ export type RenderState = {
   bulkPreloads: Set<Resource>,
 
   // Temporarily keeps track of key to preload resources before shell flushes.
-  preloadsMap: Map<string, Resource>,
+  preloads: {
+    images: Map<string, Resource>,
+    stylesheets: Map<string, Resource>,
+    scripts: Map<string, Resource>,
+    moduleScripts: Map<string, Resource>,
+  },
 
   // Module-global-like reference for current boundary resources
   boundaryResources: ?BoundaryResources,
@@ -392,7 +397,12 @@ export function createRenderState(
     scripts: new Set(),
     bulkPreloads: new Set(),
 
-    preloadsMap: new Map(),
+    preloads: {
+      images: new Map(),
+      stylesheets: new Map(),
+      scripts: new Map(),
+      moduleScripts: new Map(),
+    },
 
     nonce,
     // like a module global for currently rendering boundary
@@ -2230,7 +2240,7 @@ function pushLink(
               adoptPreloadCredentials(resource.props, preloadState);
             }
 
-            const preloadResource = renderState.preloadsMap.get(key);
+            const preloadResource = renderState.preloads.stylesheets.get(key);
             if (preloadResource && preloadResource.length > 0) {
               // The Preload for this resource was created in this render pass and has not flushed yet so
               // we need to clear it to avoid it flushing.
@@ -2578,16 +2588,13 @@ function pushImg(
     // resumableState.
     const sizes = typeof props.sizes === 'string' ? props.sizes : undefined;
     const key = getImageResourceKey(src, srcSet, sizes);
-    const hasAsType = resumableState.unknownResources.hasOwnProperty('image');
-    let hasKey = false;
-    if (!hasAsType) {
-      resumableState.unknownResources.image = {};
-    } else {
-      hasKey = resumableState.unknownResources.image.hasOwnProperty(key);
-    }
+    const resources: ResumableState['unknownResources']['asType'] =
+      resumableState.unknownResources.hasOwnProperty('image')
+        ? resumableState.unknownResources.image
+        : (resumableState.unknownResources.image = {});
 
     let resource: void | Resource;
-    if (!hasKey) {
+    if (!resources.hasOwnProperty(key)) {
       const preloadProps: PreloadProps = {
         rel: 'preload',
         as: 'image',
@@ -2605,10 +2612,10 @@ function pushImg(
         referrerPolicy: props.referrerPolicy,
       };
       resource = [];
-      resumableState.unknownResources.image[key] = PRELOAD_SIGIL;
+      resources[key] = PRELOAD_SIGIL;
       pushLinkImpl(resource, preloadProps);
     } else {
-      resource = renderState.preloadsMap.get(key);
+      resource = renderState.preloads.images.get(key);
     }
     if (resource) {
       if (
@@ -2955,10 +2962,14 @@ function pushScript(
     const key = getResourceKey(src);
     // We can make this <script> into a ScriptResource
 
-    const resources =
-      props.type === 'module'
-        ? resumableState.moduleScriptResources
-        : resumableState.scriptResources;
+    let resources, preloads;
+    if (props.type === 'module') {
+      resources = resumableState.moduleScriptResources;
+      preloads = renderState.preloads.moduleScripts;
+    } else {
+      resources = resumableState.scriptResources;
+      preloads = renderState.preloads.scripts;
+    }
 
     const hasKey = resources.hasOwnProperty(key);
     const resourceState = hasKey ? resources[key] : undefined;
@@ -2976,7 +2987,7 @@ function pushScript(
           adoptPreloadCredentials(scriptProps, preloadState);
         }
 
-        const preloadResource = renderState.preloadsMap.get(key);
+        const preloadResource = preloads.get(key);
         if (preloadResource) {
           // the preload resource exists was created in this render. Now that we have
           // a script resource which will emit earlier than a preload would if it
@@ -5001,7 +5012,7 @@ type ModuleScriptProps = {
   [string]: mixed,
 };
 
-type Resource = Array<Chunk | PrecomputedChunk>;
+export type Resource = Array<Chunk | PrecomputedChunk>;
 
 type StylesheetProps = {
   rel: 'stylesheet',
@@ -5148,76 +5159,92 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
       key = getResourceKey(href);
     }
 
-    let resources;
     switch (as) {
       case 'style': {
-        resources = resumableState.styleResources;
+        if (resumableState.styleResources.hasOwnProperty(key)) {
+          // we can return if we already have this resource
+          return;
+        }
+        const resource = ([]: Resource);
+        pushLinkImpl(
+          resource,
+          Object.assign(({rel: 'preload', href, as}: PreloadAsProps), options),
+        );
+        resumableState.styleResources[key] =
+          typeof options.crossOrigin === 'string' ||
+          typeof options.integrity === 'string'
+            ? [options.crossOrigin, options.integrity]
+            : PRELOAD_SIGIL;
+        renderState.preloads.stylesheets.set(key, resource);
+        renderState.bulkPreloads.add(resource);
         break;
       }
       case 'script': {
-        resources = resumableState.scriptResources;
+        if (resumableState.scriptResources.hasOwnProperty(key)) {
+          // we can return if we already have this resource
+          return;
+        }
+        const resource = ([]: Resource);
+        renderState.preloads.scripts.set(key, resource);
+        renderState.bulkPreloads.add(resource);
+        pushLinkImpl(
+          resource,
+          Object.assign(({rel: 'preload', href, as}: PreloadAsProps), options),
+        );
+        resumableState.scriptResources[key] =
+          typeof options.crossOrigin === 'string' ||
+          typeof options.integrity === 'string'
+            ? [options.crossOrigin, options.integrity]
+            : PRELOAD_SIGIL;
         break;
       }
       default: {
         const hasAsType = resumableState.unknownResources.hasOwnProperty(as);
+        let resources;
         if (hasAsType) {
           resources = resumableState.unknownResources[as];
+          if (resources.hasOwnProperty(key)) {
+            // we can return if we already have this resource
+            return;
+          }
         } else {
           resources = ({}: ResumableState['unknownResources']['asType']);
           resumableState.unknownResources[as] = resources;
         }
+        const resource = ([]: Resource);
+        const props = Object.assign(
+          ({
+            rel: 'preload',
+            href,
+            as,
+          }: PreloadAsProps),
+          options,
+        );
+        switch (as) {
+          case 'font':
+            renderState.fontPreloads.add(resource);
+            break;
+          case 'image':
+            renderState.preloads.images.set(key, resource);
+            if (options.imageSrcSet) {
+              // There is a bug in Safari where imageSrcSet is not respected on preload links
+              // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+              // This harms older browers that do not support imageSrcSet by making their preloads not work
+              // but this population is shrinking fast and is already small so we accept this tradeoff.
+              props.href = null;
+            }
+            if (options.fetchPriority === 'high') {
+              renderState.highImagePreloads.add(resource);
+            }
+          // intentional fall through
+          default:
+            renderState.bulkPreloads.add(resource);
+        }
+        pushLinkImpl(resource, props);
+        resources[key] = PRELOAD_SIGIL;
       }
     }
-
-    if (!resources.hasOwnProperty(key)) {
-      const props = Object.assign(
-        ({
-          rel: 'preload',
-          href: as === 'image' && options.imageSrcSet ? undefined : href,
-          as,
-        }: PreloadProps),
-        options,
-      );
-      const resource: Resource = [];
-      pushLinkImpl(resource, props);
-
-      // We are going to preload this resource. We need to determine if preload credentials are necessary
-      if (as === 'style' || as === 'script') {
-        // Helping flow out here a little bit
-        const styleOrScriptResources:
-          | ResumableState['styleResources']
-          | ResumableState['scriptResources'] = (resources: any);
-        if (
-          typeof options.crossOrigin === 'string' ||
-          typeof options.integrity === 'string'
-        ) {
-          styleOrScriptResources[key] = [
-            options.crossOrigin,
-            options.integrity,
-          ];
-        } else {
-          styleOrScriptResources[key] = PRELOAD_SIGIL;
-        }
-        renderState.bulkPreloads.add(resource);
-        // We only need to track preloads in the renderState for styles, scripts and images
-        renderState.preloadsMap.set(key, resource);
-      } else if (as === 'font') {
-        resources[key] = PRELOAD_SIGIL;
-        renderState.fontPreloads.add(resource);
-      } else if (as === 'image') {
-        resources[key] = PRELOAD_SIGIL;
-        if (props.fetchPriority === 'high') {
-          renderState.highImagePreloads.add(resource);
-        } else {
-          renderState.bulkPreloads.add(resource);
-        }
-        // We only need to track preloads in the renderState for styles, scripts and images
-        renderState.preloadsMap.set(key, resource);
-      } else {
-        resources[key] = PRELOAD_SIGIL;
-        renderState.bulkPreloads.add(resource);
-      }
-    }
+    // If we got this far we created a new resource
     flushResources(request);
   }
 }
@@ -5245,52 +5272,54 @@ function preloadModule(
     const as =
       options && typeof options.as === 'string' ? options.as : 'script';
 
-    let resources;
+    let resource;
     switch (as) {
       case 'script': {
-        resources = resumableState.moduleScriptResources;
+        if (resumableState.moduleScriptResources.hasOwnProperty(key)) {
+          // we can return if we already have this resource
+          return;
+        }
+        resource = ([]: Resource);
+        resumableState.moduleScriptResources[key] =
+          options &&
+          (typeof options.crossOrigin === 'string' ||
+            typeof options.integrity === 'string')
+            ? [options.crossOrigin, options.integrity]
+            : PRELOAD_SIGIL;
+        renderState.preloads.moduleScripts.set(key, resource);
         break;
       }
       default: {
-        const hasAsType = resumableState.unknownResources.hasOwnProperty(as);
+        const hasAsType =
+          resumableState.moduleUnknownResources.hasOwnProperty(as);
+        let resources;
         if (hasAsType) {
           resources = resumableState.unknownResources[as];
+          if (resources.hasOwnProperty(key)) {
+            // we can return if we already have this resource
+            return;
+          }
         } else {
-          resources = ({}: ResumableState['unknownResources']['asType']);
-          resumableState.unknownResources[as] = resources;
+          resources = ({}: ResumableState['moduleUnknownResources']['asType']);
+          resumableState.moduleUnknownResources[as] = resources;
         }
+        resource = ([]: Resource);
+        resources[key] = PRELOAD_SIGIL;
       }
     }
-    if (!resources.hasOwnProperty(key)) {
-      const props: PreloadModuleProps = Object.assign(
+
+    pushLinkImpl(
+      resource,
+      Object.assign(
         ({
           rel: 'modulepreload',
           href,
         }: PreloadModuleProps),
         options,
-      );
-      const resource: Resource = [];
-      pushLinkImpl(resource, props);
-      renderState.bulkPreloads.add(resource);
-
-      if (as === 'script') {
-        const moduleScriptResources: ResumableState['moduleScriptResources'] =
-          (resources: any);
-        if (
-          options &&
-          (typeof options.crossOrigin === 'string' ||
-            typeof options.integrity === 'string')
-        ) {
-          moduleScriptResources[key] = [options.crossOrigin, options.integrity];
-        } else {
-          moduleScriptResources[key] = PRELOAD_SIGIL;
-        }
-        // for scripts we need to track the preload so we can associate
-        renderState.preloadsMap.set(key, resource);
-      } else {
-        resources[key] = PRELOAD_SIGIL;
-      }
-    }
+      ),
+    );
+    renderState.bulkPreloads.add(resource);
+    // If we got this far we created a new resource
     flushResources(request);
   }
 }
@@ -5359,7 +5388,7 @@ function preinitStyle(
           adoptPreloadCredentials(resource.props, preloadState);
         }
 
-        const preloadResource = renderState.preloadsMap.get(key);
+        const preloadResource = renderState.preloads.stylesheets.get(key);
         if (preloadResource && preloadResource.length > 0) {
           // The Preload for this resource was created in this render pass and has not flushed yet so
           // we need to clear it to avoid it flushing.
@@ -5427,7 +5456,7 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions): void {
           adoptPreloadCredentials(props, preloadState);
         }
 
-        const preloadResource = renderState.preloadsMap.get(key);
+        const preloadResource = renderState.preloads.scripts.get(key);
         if (preloadResource) {
           // the preload resource exists was created in this render. Now that we have
           // a script resource which will emit earlier than a preload would if it
@@ -5492,7 +5521,7 @@ function preinitModuleScript(
           adoptPreloadCredentials(props, preloadState);
         }
 
-        const preloadResource = renderState.preloadsMap.get(key);
+        const preloadResource = renderState.preloads.moduleScripts.get(key);
         if (preloadResource) {
           // the preload resource exists was created in this render. Now that we have
           // a script resource which will emit earlier than a preload would if it
