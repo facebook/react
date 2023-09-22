@@ -56,19 +56,29 @@ function handleMessageFromDevtools(message) {
 }
 
 function handleMessageFromPage(event) {
-  if (event.source === window && event.data) {
+  if (event.source !== window || !event.data) {
+    return;
+  }
+
+  switch (event.data.source) {
     // This is a message from a bridge (initialized by a devtools backend)
-    if (event.data.source === 'react-devtools-bridge') {
+    case 'react-devtools-bridge': {
       backendInitialized = true;
 
       port.postMessage(event.data.payload);
+      break;
     }
 
-    // This is a message from the backend manager
-    if (event.data.source === 'react-devtools-backend-manager') {
+    // This is a message from the backend manager, which runs in ExecutionWorld.MAIN
+    // and can't use `chrome.runtime.sendMessage`
+    case 'react-devtools-backend-manager': {
+      const {source, payload} = event.data;
+
       chrome.runtime.sendMessage({
-        payload: event.data.payload,
+        source,
+        payload,
       });
+      break;
     }
   }
 }

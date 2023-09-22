@@ -2,11 +2,15 @@
 
 'use strict';
 
-import {IS_FIREFOX, EXTENSION_CONTAINED_VERSIONS} from '../utils';
-
 import './dynamicallyInjectContentScripts';
 import './tabsManager';
-import setExtensionIconAndPopup from './setExtensionIconAndPopup';
+
+import {
+  handleDevToolsPageMessage,
+  handleBackendManagerMessage,
+  handleReactDevToolsHookMessage,
+  handleFetchResourceContentScriptMessage,
+} from './messageHandlers';
 
 /*
   {
@@ -173,67 +177,21 @@ function connectExtensionAndProxyPorts(extensionPort, proxyPort, tabId) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender) => {
-  const tab = sender.tab;
-  // sender.tab.id from content script points to the tab that injected the content script
-  if (tab) {
-    const id = tab.id;
-    // This is sent from the hook content script.
-    // It tells us a renderer has attached.
-    if (message.hasDetectedReact) {
-      setExtensionIconAndPopup(message.reactBuildType, id);
-    } else {
-      const extensionPort = ports[id]?.extension;
-
-      switch (message.payload?.type) {
-        case 'fetch-file-with-cache-complete':
-        case 'fetch-file-with-cache-error':
-          // Forward the result of fetch-in-page requests back to the extension.
-          extensionPort?.postMessage(message);
-          break;
-        // This is sent from the backend manager running on a page
-        case 'react-devtools-required-backends':
-          const backendsToDownload = [];
-          message.payload.versions.forEach(version => {
-            if (EXTENSION_CONTAINED_VERSIONS.includes(version)) {
-              if (!IS_FIREFOX) {
-                // equivalent logic for Firefox is in prepareInjection.js
-                chrome.scripting.executeScript({
-                  target: {tabId: id},
-                  files: [`/build/react_devtools_backend_${version}.js`],
-                  world: chrome.scripting.ExecutionWorld.MAIN,
-                });
-              }
-            } else {
-              backendsToDownload.push(version);
-            }
-          });
-
-          // Request the necessary backends in the extension DevTools UI
-          // TODO: handle this message in index.js to build the UI
-          extensionPort?.postMessage({
-            payload: {
-              type: 'react-devtools-additional-backends',
-              versions: backendsToDownload,
-            },
-          });
-          break;
-      }
+  switch (message?.source) {
+    case 'devtools-page': {
+      handleDevToolsPageMessage(message);
+      break;
     }
-  }
-
-  // This is sent from the devtools page when it is ready for injecting the backend
-  if (message?.payload?.type === 'react-devtools-inject-backend-manager') {
-    // sender.tab.id from devtools page may not exist, or point to the undocked devtools window
-    // so we use the payload to get the tab id
-    const tabId = message.payload.tabId;
-
-    if (tabId && !IS_FIREFOX) {
-      // equivalent logic for Firefox is in prepareInjection.js
-      chrome.scripting.executeScript({
-        target: {tabId},
-        files: ['/build/backendManager.js'],
-        world: chrome.scripting.ExecutionWorld.MAIN,
-      });
+    case 'react-devtools-fetch-resource-content-script': {
+      handleFetchResourceContentScriptMessage(message);
+      break;
+    }
+    case 'react-devtools-backend-manager': {
+      handleBackendManagerMessage(message, sender);
+      break;
+    }
+    case 'react-devtools-hook': {
+      handleReactDevToolsHookMessage(message, sender);
     }
   }
 });
