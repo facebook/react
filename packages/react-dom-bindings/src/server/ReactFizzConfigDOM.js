@@ -152,7 +152,7 @@ export type RenderState = {
   fontPreloads: Set<Resource>,
   highImagePreloads: Set<Resource>,
   // usedImagePreloads: Set<PreloadResource>,
-  precedences: Map<string, Precedence>,
+  precedences: Map<string, PrecedenceQueue>,
   bootstrapScripts: Set<Resource>,
   scripts: Set<Resource>,
   bulkPreloads: Set<Resource>,
@@ -2196,7 +2196,7 @@ function pushLink(
         return pushLinkImpl(target, props);
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
-        let stylesInPrecedence = renderState.precedences.get(precedence);
+        let precedenceQueue = renderState.precedences.get(precedence);
         const hasKey = resumableState.styleResources.hasOwnProperty(key);
         const resourceState = hasKey
           ? resumableState.styleResources[key]
@@ -2207,14 +2207,14 @@ function pushLink(
 
           // If this is the first time we've encountered this precedence we need
           // to create a PrecedenceQueue
-          if (!stylesInPrecedence) {
-            stylesInPrecedence = {
+          if (!precedenceQueue) {
+            precedenceQueue = {
               precedence: stringToChunk(escapeTextForBrowser(precedence)),
               rules: ([]: Array<Chunk | PrecomputedChunk>),
               hrefs: ([]: Array<Chunk | PrecomputedChunk>),
               sheets: (new Map(): Map<string, StylesheetResource>),
             };
-            renderState.precedences.set(precedence, stylesInPrecedence);
+            renderState.precedences.set(precedence, precedenceQueue);
           }
 
           const resource: StylesheetResource = {
@@ -2249,7 +2249,7 @@ function pushLink(
 
           // We add the newly created resource to our PrecedenceQueue and if necessary
           // track the resource with the currently rendering boundary
-          stylesInPrecedence.sheets.set(key, resource);
+          precedenceQueue.sheets.set(key, resource);
           if (renderState.boundaryResources) {
             renderState.boundaryResources.sheets.add(resource);
           }
@@ -2259,8 +2259,8 @@ function pushLink(
           // it. However, it's possible when you resume that the style has already been emitted
           // and then it wouldn't be recreated in the RenderState and there's no need to track
           // it again since we should've hoisted it to the shell already.
-          if (stylesInPrecedence) {
-            const resource = stylesInPrecedence.sheets.get(key);
+          if (precedenceQueue) {
+            const resource = precedenceQueue.sheets.get(key);
             if (resource) {
               if (renderState.boundaryResources) {
                 renderState.boundaryResources.sheets.add(resource);
@@ -2397,7 +2397,7 @@ function pushStyle(
     }
 
     const key = getResourceKey(href);
-    let stylesInPrecedence = renderState.precedences.get(precedence);
+    let precedenceQueue = renderState.precedences.get(precedence);
     const hasKey = resumableState.styleResources.hasOwnProperty(key);
     const resourceState = hasKey
       ? resumableState.styleResources[key]
@@ -2415,32 +2415,30 @@ function pushStyle(
         }
       }
 
-      if (!stylesInPrecedence) {
+      if (!precedenceQueue) {
         // This is the first time we've encountered this precedence we need
         // to create a PrecedenceQueue.
-        stylesInPrecedence = {
+        precedenceQueue = {
           precedence: stringToChunk(escapeTextForBrowser(precedence)),
           rules: ([]: Array<Chunk | PrecomputedChunk>),
           hrefs: [stringToChunk(escapeTextForBrowser(href))],
           sheets: (new Map(): Map<string, StylesheetResource>),
         };
-        renderState.precedences.set(precedence, stylesInPrecedence);
+        renderState.precedences.set(precedence, precedenceQueue);
       } else {
         // We have seen this precedence before and need to track this href
-        stylesInPrecedence.hrefs.push(
-          stringToChunk(escapeTextForBrowser(href)),
-        );
+        precedenceQueue.hrefs.push(stringToChunk(escapeTextForBrowser(href)));
       }
-      pushStyleContents(stylesInPrecedence.rules, props);
+      pushStyleContents(precedenceQueue.rules, props);
     }
-    if (stylesInPrecedence) {
+    if (precedenceQueue) {
       // We need to track whether this boundary should wait on this resource or not.
       // Typically this resource should always exist since we either had it or just created
       // it. However, it's possible when you resume that the style has already been emitted
       // and then it wouldn't be recreated in the RenderState and there's no need to track
       // it again since we should've hoisted it to the shell already.
       if (renderState.boundaryResources) {
-        renderState.boundaryResources.precedences.add(stylesInPrecedence);
+        renderState.boundaryResources.precedences.add(precedenceQueue);
       }
     }
 
@@ -4196,10 +4194,10 @@ let destinationHasCapacity = true;
 
 function flushStyleTagsLateForBoundary(
   this: Destination,
-  stylesInPrecedence: Precedence,
+  precedenceQueue: PrecedenceQueue,
 ) {
-  const rules = stylesInPrecedence.rules;
-  const hrefs = stylesInPrecedence.hrefs;
+  const rules = precedenceQueue.rules;
+  const hrefs = precedenceQueue.hrefs;
   if (__DEV__) {
     if (rules.length > 0 && hrefs.length === 0) {
       console.error(
@@ -4210,7 +4208,7 @@ function flushStyleTagsLateForBoundary(
   let i = 0;
   if (hrefs.length) {
     writeChunk(this, lateStyleTagResourceOpen1);
-    writeChunk(this, stylesInPrecedence.precedence);
+    writeChunk(this, precedenceQueue.precedence);
     writeChunk(this, lateStyleTagResourceOpen2);
     for (; i < hrefs.length - 1; i++) {
       writeChunk(this, hrefs[i]);
@@ -4310,21 +4308,21 @@ const styleTagResourceClose = stringToPrecomputedChunk('</style>');
 
 function flushPrecedenceInPreamble(
   this: Destination,
-  stylesInPrecedence: Precedence,
+  precedenceQueue: PrecedenceQueue,
   precedence: string,
 ) {
-  const hasStylesheets = stylesInPrecedence.sheets.size > 0;
-  stylesInPrecedence.sheets.forEach(flushStyleInPreamble, this);
-  stylesInPrecedence.sheets.clear();
+  const hasStylesheets = precedenceQueue.sheets.size > 0;
+  precedenceQueue.sheets.forEach(flushStyleInPreamble, this);
+  precedenceQueue.sheets.clear();
 
-  const rules = stylesInPrecedence.rules;
-  const hrefs = stylesInPrecedence.hrefs;
+  const rules = precedenceQueue.rules;
+  const hrefs = precedenceQueue.hrefs;
   // If we don't emit any stylesheets at this precedence we still need to maintain the precedence
   // order so even if there are no rules for style tags at this precedence we emit an empty style
   // tag with the data-precedence attribute
   if (!hasStylesheets || hrefs.length) {
     writeChunk(this, styleTagResourceOpen1);
-    writeChunk(this, stylesInPrecedence.precedence);
+    writeChunk(this, precedenceQueue.precedence);
     let i = 0;
     if (hrefs.length) {
       writeChunk(this, styleTagResourceOpen2);
@@ -4365,11 +4363,10 @@ function preloadLateStyle(this: Destination, stylesheet: StylesheetResource) {
 
 function preloadLateStyles(
   this: Destination,
-  stylesInPrecedence: Precedence,
-  precedence: string,
+  precedenceQueue: PrecedenceQueue,
 ) {
-  stylesInPrecedence.sheets.forEach(preloadLateStyle, this);
-  stylesInPrecedence.sheets.clear();
+  precedenceQueue.sheets.forEach(preloadLateStyle, this);
+  precedenceQueue.sheets.clear();
 }
 
 // We don't bother reporting backpressure at the moment because we expect to
@@ -5018,11 +5015,11 @@ type StylesheetResource = {
 };
 
 export type BoundaryResources = {
-  precedences: Set<Precedence>,
+  precedences: Set<PrecedenceQueue>,
   sheets: Set<StylesheetResource>,
 };
 
-export type Precedence = {
+export type PrecedenceQueue = {
   precedence: Chunk | PrecomputedChunk,
   rules: Array<Chunk | PrecomputedChunk>,
   hrefs: Array<Chunk | PrecomputedChunk>,
@@ -5321,7 +5318,7 @@ function preinitStyle(
     precedence = precedence || 'default';
     const key = getResourceKey(href);
 
-    let stylesInPrecedence = renderState.precedences.get(precedence);
+    let precedenceQueue = renderState.precedences.get(precedence);
     const hasKey = resumableState.styleResources.hasOwnProperty(key);
     const resourceState = hasKey
       ? resumableState.styleResources[key]
@@ -5332,14 +5329,14 @@ function preinitStyle(
 
       // If this is the first time we've encountered this precedence we need
       // to create a PrecedenceQueue
-      if (!stylesInPrecedence) {
-        stylesInPrecedence = {
+      if (!precedenceQueue) {
+        precedenceQueue = {
           precedence: stringToChunk(escapeTextForBrowser(precedence)),
           rules: ([]: Array<Chunk | PrecomputedChunk>),
           hrefs: ([]: Array<Chunk | PrecomputedChunk>),
           sheets: (new Map(): Map<string, StylesheetResource>),
         };
-        renderState.precedences.set(precedence, stylesInPrecedence);
+        renderState.precedences.set(precedence, precedenceQueue);
       }
 
       const resource = {
@@ -5381,7 +5378,7 @@ function preinitStyle(
 
       // We add the newly created resource to our PrecedenceQueue and if necessary
       // track the resource with the currently rendering boundary
-      stylesInPrecedence.sheets.set(key, resource);
+      precedenceQueue.sheets.set(key, resource);
 
       // Notify the request that there are resources to flush even if no work is currently happening
       flushResources(request);
@@ -5604,18 +5601,18 @@ function adoptPreloadCredentials(
   if (target.integrity == null) target.integrity = preloadState[1];
 }
 
-function hoistPrecedenceDependency(
+function hoistPrecedenceQueueDependency(
   this: BoundaryResources,
-  stylesInPrecedence: Precedence,
+  precedenceQueue: PrecedenceQueue,
 ) {
-  this.precedences.add(stylesInPrecedence);
+  this.precedences.add(precedenceQueue);
 }
 
 function hoistStylesheetDependency(
   this: BoundaryResources,
-  resource: StylesheetResource,
+  stylesheet: StylesheetResource,
 ) {
-  this.sheets.add(resource);
+  this.sheets.add(stylesheet);
 }
 
 export function hoistResources(
@@ -5625,7 +5622,7 @@ export function hoistResources(
   const currentBoundaryResources = renderState.boundaryResources;
   if (currentBoundaryResources) {
     source.precedences.forEach(
-      hoistPrecedenceDependency,
+      hoistPrecedenceQueueDependency,
       currentBoundaryResources,
     );
     source.sheets.forEach(hoistStylesheetDependency, currentBoundaryResources);

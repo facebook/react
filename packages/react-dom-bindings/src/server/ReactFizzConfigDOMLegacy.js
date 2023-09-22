@@ -10,7 +10,7 @@
 import type {
   ResumableState,
   BoundaryResources,
-  Precedence,
+  PrecedenceQueue,
 } from './ReactFizzConfigDOM';
 
 import {
@@ -54,7 +54,7 @@ export type RenderState = {
   fontPreloads: Set<any>,
   highImagePreloads: Set<any>,
   // usedImagePreloads: Set<any>,
-  precedences: Map<string, Precedence>,
+  precedences: Map<string, PrecedenceQueue>,
   bootstrapScripts: Set<any>,
   scripts: Set<any>,
   bulkPreloads: Set<any>,
