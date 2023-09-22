@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-0d8cdce2";
+var ReactVersion = "18.3.0-www-modern-4ddb3d62";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -12868,7 +12868,7 @@ function startFlowing(request, destination) {
     logRecoverableError(request, error);
     fatalError(request, error);
   }
-} // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
+}
 
 function abort(request, reason) {
   try {
