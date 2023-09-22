@@ -86,6 +86,13 @@ export function useNoAlias(...args: Array<any>): object {
   return noAliasObject;
 }
 
+export function invoke<T extends Array<any>, ReturnType>(
+  fn: (...input: T) => ReturnType,
+  ...params: T
+) {
+  return fn(...params);
+}
+
 /**
  * React Components
  */
@@ -102,6 +109,17 @@ export function StaticText1(props: { children?: Array<React.ReactNode> }) {
 
 export function StaticText2(props: { children?: Array<React.ReactNode> }) {
   return React.createElement("div", null, "StaticText2", props.children);
+}
+
+export function RenderPropAsChild(props: {
+  items: Array<() => React.ReactNode>;
+}) {
+  return React.createElement(
+    "div",
+    null,
+    "HigherOrderComponent",
+    props.items.map((item) => item())
+  );
 }
 
 export function Stringify(props: any) {
