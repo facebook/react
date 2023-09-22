@@ -15,7 +15,8 @@ const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
-  .toString();
+  .toString()
+  .replaceAll('\r\n', '\n');
 
 // stores all forks discovered during config generation
 const allForks = new Set();
