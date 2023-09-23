@@ -471,5 +471,6 @@
   "483": "Hooks are not supported inside an async component. This error is often caused by accidentally adding `'use client'` to a module that was originally written for the server.",
   "484": "A Server Component was postponed. The reason is omitted in production builds to avoid leaking sensitive details.",
   "485": "Cannot update form state while rendering.",
-  "486": "It should not be possible to postpone at the root. This is a bug in React."
+  "486": "It should not be possible to postpone at the root. This is a bug in React.",
+  "487": "Promises and async components are not valid as a React child in React %s. If you meant to render an async component, install React 18.3 or use a compatible meta framework or library."
 }
