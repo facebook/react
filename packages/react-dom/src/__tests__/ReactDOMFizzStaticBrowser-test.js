@@ -840,4 +840,51 @@ describe('ReactDOMFizzStaticBrowser', () => {
       </div>,
     ]);
   });
+
+  // @gate enablePostpone
+  it('can postpone a boundary after it has already been added', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Suspense fallback="Loading...">
+              <Postpone />
+            </Suspense>
+            <Postpone />
+            <Postpone />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    console.log(JSON.stringify(prerendered.postponed, null, 2));
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hello', 'Hello', 'Hello']}</div>,
+    );
+  });
 });
