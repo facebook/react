@@ -228,6 +228,9 @@ export type ResumableState = {
     anonymous: {[key: string]: Exists},
     credentials: {[key: string]: Exists},
   },
+  imageResources: {
+    [key: string]: Preloaded,
+  },
   styleResources: {
     [key: string]: Exists | Preloaded | PreloadedWithCredentials,
   },
@@ -566,6 +569,7 @@ export function createResumableState(
       anonymous: {},
       credentials: {},
     },
+    imageResources: {},
     styleResources: {},
     scriptResources: {},
     moduleUnknownResources: {},
@@ -2588,36 +2592,48 @@ function pushImg(
     // resumableState.
     const sizes = typeof props.sizes === 'string' ? props.sizes : undefined;
     const key = getImageResourceKey(src, srcSet, sizes);
-    const resources: ResumableState['unknownResources']['asType'] =
-      resumableState.unknownResources.hasOwnProperty('image')
-        ? resumableState.unknownResources.image
-        : (resumableState.unknownResources.image = {});
 
-    let resource: void | Resource;
-    if (!resources.hasOwnProperty(key)) {
-      const preloadProps: PreloadProps = {
-        rel: 'preload',
-        as: 'image',
-        // There is a bug in Safari where imageSrcSet is not respected on preload links
-        // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-        // This harms older browers that do not support imageSrcSet by making their preloads not work
-        // but this population is shrinking fast and is already small so we accept this tradeoff.
-        href: srcSet ? undefined : src,
-        imageSrcSet: srcSet,
-        imageSizes: sizes,
-        crossOrigin: props.crossOrigin,
-        integrity: props.integrity,
-        type: props.type,
-        fetchPriority: props.fetchPriority,
-        referrerPolicy: props.referrerPolicy,
-      };
-      resource = [];
-      resources[key] = PRELOAD_SIGIL;
-      pushLinkImpl(resource, preloadProps);
-    } else {
-      resource = renderState.preloads.images.get(key);
-    }
+    const promotablePreloads = renderState.preloads.images;
+
+    let resource = promotablePreloads.get(key);
     if (resource) {
+      // We consider whether this preload can be promoted to higher priority flushing queue.
+      // The only time a resource will exist here is if it was created during this render
+      // and was not already in the high priority queue.
+      if (
+        props.fetchPriority === 'high' ||
+        renderState.highImagePreloads.size < 10
+      ) {
+        // Delete the resource from the map since we are promoting it and don't want to
+        // reenter this branch in a second pass for duplicate img hrefs.
+        promotablePreloads.delete(key);
+
+        // $FlowFixMe - Flow should understand that this is a Resource if the condition was true
+        renderState.highImagePreloads.add(resource);
+      }
+    } else if (!resumableState.imageResources.hasOwnProperty(key)) {
+      // We must construct a new preload resource
+      resumableState.imageResources[key] = PRELOAD_SIGIL;
+      resource = [];
+      pushLinkImpl(
+        resource,
+        ({
+          rel: 'preload',
+          as: 'image',
+          // There is a bug in Safari where imageSrcSet is not respected on preload links
+          // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+          // This harms older browers that do not support imageSrcSet by making their preloads not work
+          // but this population is shrinking fast and is already small so we accept this tradeoff.
+          href: srcSet ? undefined : src,
+          imageSrcSet: srcSet,
+          imageSizes: sizes,
+          crossOrigin: props.crossOrigin,
+          integrity: props.integrity,
+          type: props.type,
+          fetchPriority: props.fetchPriority,
+          referrerPolicy: props.referrerPolicy,
+        }: PreloadProps),
+      );
       if (
         props.fetchPriority === 'high' ||
         renderState.highImagePreloads.size < 10
@@ -2625,6 +2641,9 @@ function pushImg(
         renderState.highImagePreloads.add(resource);
       } else {
         renderState.bulkPreloads.add(resource);
+        // We can bump the priority up if the same img is rendered later
+        // with fetchPriority="high"
+        promotablePreloads.set(key, resource);
       }
     }
   }
@@ -5057,8 +5076,8 @@ function getResourceKey(href: string): string {
 
 function getImageResourceKey(
   href: string,
-  imageSrcSet: ?string,
-  imageSizes: ?string,
+  imageSrcSet?: ?string,
+  imageSizes?: ?string,
 ): string {
   if (imageSrcSet) {
     return imageSrcSet + '\n' + (imageSizes || '');
@@ -5147,20 +5166,48 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
   const resumableState = getResumableState(request);
   const renderState = getRenderState(request);
   if (as && href) {
-    options = options || {};
-    let key: string;
-
-    if (as === 'image') {
-      // For image preloads the key contains either the imageSrcSet + imageSizes or the href but not
-      // both. This is to prevent identical calls with the same srcSet and sizes to be duplicated
-      // by varying the href. this is an edge case but it is the most correct behavior.
-      key = getImageResourceKey(href, options.imageSrcSet, options.imageSizes);
-    } else {
-      key = getResourceKey(href);
-    }
-
     switch (as) {
+      case 'image': {
+        let imageSrcSet, imageSizes, fetchPriority;
+        if (options) {
+          imageSrcSet = options.imageSrcSet;
+          imageSizes = options.imageSizes;
+          fetchPriority = options.fetchPriority;
+        }
+        const key = getImageResourceKey(href, imageSrcSet, imageSizes);
+        if (resumableState.imageResources.hasOwnProperty(key)) {
+          // we can return if we already have this resource
+          return;
+        }
+        resumableState.imageResources[key] = PRELOAD_SIGIL;
+        const resource = ([]: Resource);
+        pushLinkImpl(
+          resource,
+          Object.assign(
+            ({
+              rel: 'preload',
+              // There is a bug in Safari where imageSrcSet is not respected on preload links
+              // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+              // This harms older browers that do not support imageSrcSet by making their preloads not work
+              // but this population is shrinking fast and is already small so we accept this tradeoff.
+              href: imageSrcSet ? undefined : href,
+              as,
+            }: PreloadAsProps),
+            options,
+          ),
+        );
+        if (fetchPriority === 'high') {
+          renderState.highImagePreloads.add(resource);
+        } else {
+          renderState.bulkPreloads.add(resource);
+          // Stash the resource in case we need to promote it to higher priority
+          // when an img tag is rendered
+          renderState.preloads.images.set(key, resource);
+        }
+        break;
+      }
       case 'style': {
+        const key = getResourceKey(href);
         if (resumableState.styleResources.hasOwnProperty(key)) {
           // we can return if we already have this resource
           return;
@@ -5171,8 +5218,9 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           Object.assign(({rel: 'preload', href, as}: PreloadAsProps), options),
         );
         resumableState.styleResources[key] =
-          typeof options.crossOrigin === 'string' ||
-          typeof options.integrity === 'string'
+          options &&
+          (typeof options.crossOrigin === 'string' ||
+            typeof options.integrity === 'string')
             ? [options.crossOrigin, options.integrity]
             : PRELOAD_SIGIL;
         renderState.preloads.stylesheets.set(key, resource);
@@ -5180,6 +5228,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         break;
       }
       case 'script': {
+        const key = getResourceKey(href);
         if (resumableState.scriptResources.hasOwnProperty(key)) {
           // we can return if we already have this resource
           return;
@@ -5192,13 +5241,15 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           Object.assign(({rel: 'preload', href, as}: PreloadAsProps), options),
         );
         resumableState.scriptResources[key] =
-          typeof options.crossOrigin === 'string' ||
-          typeof options.integrity === 'string'
+          options &&
+          (typeof options.crossOrigin === 'string' ||
+            typeof options.integrity === 'string')
             ? [options.crossOrigin, options.integrity]
             : PRELOAD_SIGIL;
         break;
       }
       default: {
+        const key = getResourceKey(href);
         const hasAsType = resumableState.unknownResources.hasOwnProperty(as);
         let resources;
         if (hasAsType) {
@@ -5224,18 +5275,6 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           case 'font':
             renderState.fontPreloads.add(resource);
             break;
-          case 'image':
-            renderState.preloads.images.set(key, resource);
-            if (options.imageSrcSet) {
-              // There is a bug in Safari where imageSrcSet is not respected on preload links
-              // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-              // This harms older browers that do not support imageSrcSet by making their preloads not work
-              // but this population is shrinking fast and is already small so we accept this tradeoff.
-              props.href = null;
-            }
-            if (options.fetchPriority === 'high') {
-              renderState.highImagePreloads.add(resource);
-            }
           // intentional fall through
           default:
             renderState.bulkPreloads.add(resource);

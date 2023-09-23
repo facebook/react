@@ -4014,6 +4014,87 @@ body {
     );
   });
 
+  it('can promote images to high priority when at least one instance specifies a high fetchPriority', async () => {
+    function App() {
+      // If a ends up in a higher priority queue than b it will flush first
+      ReactDOM.preload('a', {as: 'image'});
+      ReactDOM.preload('b', {as: 'image'});
+      return (
+        <html>
+          <body>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            <img src="1" />
+            <img src="2" />
+            <img src="3" />
+            <img src="4" />
+            <img src="5" />
+            <img src="6" />
+            <img src="7" />
+            <img src="8" />
+            <img src="9" />
+            <img src="10" />
+            <img src="11" />
+            <img src="12" />
+            <img src="a" fetchPriority="low" />
+            <img src="a" />
+            <img src="a" fetchPriority="high" />
+            <img src="a" />
+            <img src="a" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          {/* The First 10 high priority images were just the first 10 rendered images */}
+          <link rel="preload" as="image" href="1" />
+          <link rel="preload" as="image" href="2" />
+          <link rel="preload" as="image" href="3" />
+          <link rel="preload" as="image" href="4" />
+          <link rel="preload" as="image" href="5" />
+          <link rel="preload" as="image" href="6" />
+          <link rel="preload" as="image" href="7" />
+          <link rel="preload" as="image" href="8" />
+          <link rel="preload" as="image" href="9" />
+          <link rel="preload" as="image" href="10" />
+          {/* The "a" image was rendered a few times but since at least one of those was with
+          fetchPriorty="high" it ends up in the high priority queue */}
+          <link rel="preload" as="image" href="a" />
+          {/* Stylesheets come in between high priority images and regular preloads */}
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          {/* The remainig images that preloaded at regular priority */}
+          <link rel="preload" as="image" href="b" />
+          <link rel="preload" as="image" href="11" />
+          <link rel="preload" as="image" href="12" />
+        </head>
+        <body>
+          <img src="1" />
+          <img src="2" />
+          <img src="3" />
+          <img src="4" />
+          <img src="5" />
+          <img src="6" />
+          <img src="7" />
+          <img src="8" />
+          <img src="9" />
+          <img src="10" />
+          <img src="11" />
+          <img src="12" />
+          <img src="a" fetchpriority="low" />
+          <img src="a" />
+          <img src="a" fetchpriority="high" />
+          <img src="a" />
+          <img src="a" />
+        </body>
+      </html>,
+    );
+  });
+
   it('preloads from rendered images properly use srcSet and sizes', async () => {
     function App() {
       ReactDOM.preload('1', {as: 'image', imageSrcSet: 'ss1'});
