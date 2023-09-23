@@ -71,7 +71,6 @@ var ReactSharedInternals =
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-  diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
@@ -644,8 +643,7 @@ function shim$1() {
   throw Error(formatProdErrorMessage(357));
 }
 var pooledTransform = new Transform(),
-  NO_CONTEXT = {},
-  UPDATE_SIGNAL = {};
+  NO_CONTEXT = {};
 function createEventHandler(instance) {
   return function (event) {
     var listener = instance._listeners[event.type];
@@ -5572,9 +5570,6 @@ function getChildContextValues(context) {
     collectNearestChildContextValues(currentFiber, context, childContextValues);
   return childContextValues;
 }
-function markUpdate(workInProgress) {
-  workInProgress.flags |= 4;
-}
 function scheduleRetryEffect(workInProgress, retryQueue) {
   null !== retryQueue
     ? (workInProgress.flags |= 4)
@@ -5692,11 +5687,7 @@ function completeWork(current, workInProgress, renderLanes) {
       popHostContext(workInProgress);
       renderLanes = workInProgress.type;
       if (null !== current && null != workInProgress.stateNode)
-        current.memoizedProps !== newProps &&
-          (diffInCommitPhase
-            ? markUpdate(workInProgress)
-            : (workInProgress.updateQueue = UPDATE_SIGNAL) &&
-              markUpdate(workInProgress)),
+        current.memoizedProps !== newProps && (workInProgress.flags |= 4),
           current.ref !== workInProgress.ref &&
             (workInProgress.flags |= 2097664);
       else {
@@ -5763,7 +5754,7 @@ function completeWork(current, workInProgress, renderLanes) {
       return null;
     case 6:
       if (current && null != workInProgress.stateNode)
-        current.memoizedProps !== newProps && markUpdate(workInProgress);
+        current.memoizedProps !== newProps && (workInProgress.flags |= 4);
       else {
         if ("string" !== typeof newProps && null === workInProgress.stateNode)
           throw Error(formatProdErrorMessage(166));
@@ -5933,8 +5924,8 @@ function completeWork(current, workInProgress, renderLanes) {
             }),
             shim$1(),
             null !== workInProgress.ref &&
-              ((workInProgress.flags |= 2097664), markUpdate(workInProgress)))
-          : (null !== workInProgress.ref && markUpdate(workInProgress),
+              ((workInProgress.flags |= 2097664), (workInProgress.flags |= 4)))
+          : (null !== workInProgress.ref && (workInProgress.flags |= 4),
             current.ref !== workInProgress.ref &&
               (workInProgress.flags |= 2097664)),
         bubbleProperties(workInProgress),
@@ -6997,18 +6988,12 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
       if (flags & 4 && ((flags = finishedWork.stateNode), null != flags)) {
         var newProps = finishedWork.memoizedProps;
         current = null !== current ? current.memoizedProps : newProps;
-        var updatePayload = finishedWork.updateQueue;
         finishedWork.updateQueue = null;
-        if (null !== updatePayload || diffInCommitPhase)
-          try {
-            flags._applyProps(flags, newProps, current);
-          } catch (error$108) {
-            captureCommitPhaseError(
-              finishedWork,
-              finishedWork.return,
-              error$108
-            );
-          }
+        try {
+          flags._applyProps(flags, newProps, current);
+        } catch (error$108) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$108);
+        }
       }
       break;
     case 6:
@@ -7093,13 +7078,13 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
             if (null === current) {
               current = root;
               try {
-                (newProps = root.stateNode),
-                  suspenseCallback
-                    ? newProps.hide()
-                    : ((updatePayload = root.memoizedProps),
-                      (null == updatePayload.visible ||
-                        updatePayload.visible) &&
-                        root.stateNode.show());
+                if (((newProps = root.stateNode), suspenseCallback))
+                  newProps.hide();
+                else {
+                  var props = root.memoizedProps;
+                  (null == props.visible || props.visible) &&
+                    root.stateNode.show();
+                }
               } catch (error) {
                 captureCommitPhaseError(
                   finishedWork,
@@ -10112,19 +10097,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1130 = {
+  devToolsConfig$jscomp$inline_1128 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-c5b7407c",
+    version: "18.3.0-www-classic-f0c12329",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1303 = {
-  bundleType: devToolsConfig$jscomp$inline_1130.bundleType,
-  version: devToolsConfig$jscomp$inline_1130.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1130.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1130.rendererConfig,
+var internals$jscomp$inline_1301 = {
+  bundleType: devToolsConfig$jscomp$inline_1128.bundleType,
+  version: devToolsConfig$jscomp$inline_1128.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1128.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1128.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10141,26 +10126,26 @@ var internals$jscomp$inline_1303 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1130.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1128.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-c5b7407c"
+  reconcilerVersion: "18.3.0-www-classic-f0c12329"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1304 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1302 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1304.isDisabled &&
-    hook$jscomp$inline_1304.supportsFiber
+    !hook$jscomp$inline_1302.isDisabled &&
+    hook$jscomp$inline_1302.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1304.inject(
-        internals$jscomp$inline_1303
+      (rendererID = hook$jscomp$inline_1302.inject(
+        internals$jscomp$inline_1301
       )),
-        (injectedHook = hook$jscomp$inline_1304);
+        (injectedHook = hook$jscomp$inline_1302);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

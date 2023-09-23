@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-d6fa9db4";
+var ReactVersion = "18.3.0-www-modern-a4447545";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -175,7 +175,6 @@ var replayFailedUnitOfWorkWithInvokeGuardedCallback =
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-  diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
@@ -2531,11 +2530,9 @@ var suspendResource = shim;
 
 var pooledTransform = new Transform();
 var NO_CONTEXT = {};
-var UPDATE_SIGNAL = {};
 
 {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 /** Helper Methods */
 
@@ -2815,9 +2812,6 @@ function getPublicInstance(instance) {
 function prepareForCommit() {
   // Noop
   return null;
-}
-function prepareUpdate(domElement, type, oldProps, newProps) {
-  return UPDATE_SIGNAL;
 }
 function resetTextContent(domElement) {
   // Noop
@@ -17907,22 +17901,7 @@ function updateHostComponent(
       return;
     }
 
-    if (diffInCommitPhase) {
-      markUpdate(workInProgress);
-    } else {
-      // component is hitting the resume path. Figure out why. Possibly
-      // related to `hidden`.
-
-      getHostContext();
-      var updatePayload = prepareUpdate(); // TODO: Type this specific to this type of component.
-
-      workInProgress.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
-      // is a new ref we mark this as an update. All the work is done in commitWork.
-
-      if (updatePayload) {
-        markUpdate(workInProgress);
-      }
-    }
+    markUpdate(workInProgress);
   }
 } // This function must be called at the very end of the complete phase, because
 // it might throw to suspend, and if the resource immediately loads, the work
@@ -18400,11 +18379,7 @@ function completeWork(current, workInProgress, renderLanes) {
         if (_wasHydrated2) {
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
-          if (prepareToHydrateHostInstance()) {
-            // If changes to the hydrated node need to be applied at the
-            // commit-phase we mark this as such.
-            markUpdate(workInProgress);
-          }
+          prepareToHydrateHostInstance();
         } else {
           getRootHostContainer();
 
@@ -21521,23 +21496,17 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var _updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (_updatePayload !== null || diffInCommitPhase) {
-              try {
-                commitUpdate(
-                  _instance2,
-                  _updatePayload,
-                  type,
-                  oldProps,
-                  newProps,
-                  finishedWork
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error
-                );
-              }
+            try {
+              commitUpdate(
+                _instance2,
+                _updatePayload,
+                type,
+                oldProps,
+                newProps,
+                finishedWork
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }

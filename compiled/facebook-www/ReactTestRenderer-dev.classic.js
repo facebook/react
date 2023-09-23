@@ -140,7 +140,6 @@ var enableProfilerNestedUpdatePhase = true;
 var createRootStrictEffectsByDefault = false;
 var enableLazyContextPropagation = false;
 var enableLegacyHidden = false;
-var diffInCommitPhase = true;
 var enableAsyncActions = false;
 var alwaysThrottleRetries = true; // Flow magic to verify the exports of this file match the original version.
 
@@ -15518,9 +15517,7 @@ function updateHostComponent(
       return;
     }
 
-    {
-      markUpdate(workInProgress);
-    }
+    markUpdate(workInProgress);
   }
 } // This function must be called at the very end of the complete phase, because
 // it might throw to suspend, and if the resource immediately loads, the work
@@ -15970,7 +15967,7 @@ function completeWork(current, workInProgress, renderLanes) {
           return null;
         }
 
-        var _currentHostContext2 = getHostContext(); // TODO: Move createInstance to beginWork and keep it on a context
+        var _currentHostContext = getHostContext(); // TODO: Move createInstance to beginWork and keep it on a context
         // "stack" as the parent. Then append children as we go in beginWork
         // or completeWork depending on whether we want to add them top->down or
         // bottom->up. Top->down is faster in IE11.
@@ -15980,11 +15977,7 @@ function completeWork(current, workInProgress, renderLanes) {
         if (_wasHydrated2) {
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
-          if (prepareToHydrateHostInstance()) {
-            // If changes to the hydrated node need to be applied at the
-            // commit-phase we mark this as such.
-            markUpdate(workInProgress);
-          }
+          prepareToHydrateHostInstance();
         } else {
           var _rootContainerInstance = getRootHostContainer();
 
@@ -15992,7 +15985,7 @@ function completeWork(current, workInProgress, renderLanes) {
             _type2,
             newProps,
             _rootContainerInstance,
-            _currentHostContext2,
+            _currentHostContext,
             workInProgress
           );
 
@@ -18683,23 +18676,17 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var _updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (_updatePayload !== null || diffInCommitPhase) {
-              try {
-                commitUpdate(
-                  _instance2,
-                  _updatePayload,
-                  type,
-                  oldProps,
-                  newProps,
-                  finishedWork
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error
-                );
-              }
+            try {
+              commitUpdate(
+                _instance2,
+                _updatePayload,
+                type,
+                oldProps,
+                newProps,
+                finishedWork
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }
@@ -24360,7 +24347,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-c7ac40c0";
+var ReactVersion = "18.3.0-www-classic-29934d02";
 
 // Might add PROFILE later.
 

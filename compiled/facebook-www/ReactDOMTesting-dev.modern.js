@@ -117,7 +117,6 @@ var disableInputAttributeSyncing =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-  diffInCommitPhase = dynamicFeatureFlags.diffInCommitPhase,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
@@ -5580,7 +5579,7 @@ function setValueForStyles(node, styles, prevStyles) {
 
   var style = node.style;
 
-  if (diffInCommitPhase && prevStyles != null) {
+  if (prevStyles != null) {
     {
       validateShorthandPropertyCollisionInDev(prevStyles, styles);
     }
@@ -8457,25 +8456,14 @@ function tryToClaimNextHydratableSuspenseInstance(fiber) {
 function prepareToHydrateHostInstance(fiber, hostContext) {
   var instance = fiber.stateNode;
   var shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  var updatePayload = hydrateInstance(
+  hydrateInstance(
     instance,
     fiber.type,
     fiber.memoizedProps,
     hostContext,
     fiber,
     shouldWarnIfMismatchDev
-  ); // TODO: Type this specific to this type of component.
-
-  if (!diffInCommitPhase) {
-    fiber.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
-    // is a new ref we mark this as an update.
-
-    if (updatePayload !== null) {
-      return true;
-    }
-  }
-
-  return false;
+  );
 }
 
 function prepareToHydrateHostTextInstance(fiber) {
@@ -23103,27 +23091,7 @@ function updateHostComponent(
       return;
     }
 
-    if (diffInCommitPhase) {
-      markUpdate(workInProgress);
-    } else {
-      // If we get updated because one of our children updated, we don't
-      // have newProps so we'll have to reuse them.
-      // TODO: Split the update API as separate for the props vs. children.
-      // Even better would be if children weren't special cased at all tho.
-      var instance = workInProgress.stateNode; // TODO: Experiencing an error where oldProps is null. Suggests a host
-      // component is hitting the resume path. Figure out why. Possibly
-      // related to `hidden`.
-
-      getHostContext();
-      var updatePayload = prepareUpdate(instance, type, oldProps, newProps); // TODO: Type this specific to this type of component.
-
-      workInProgress.updateQueue = updatePayload; // If the update payload indicates that there is a change or if there
-      // is a new ref we mark this as an update. All the work is done in commitWork.
-
-      if (updatePayload) {
-        markUpdate(workInProgress);
-      }
-    }
+    markUpdate(workInProgress);
   }
 } // This function must be called at the very end of the complete phase, because
 // it might throw to suspend, and if the resource immediately loads, the work
@@ -23622,10 +23590,6 @@ function completeWork(current, workInProgress, renderLanes) {
 
     case HostHoistable: {
       {
-        // The branching here is more complicated than you might expect because
-        // a HostHoistable sometimes corresponds to a Resource and sometimes
-        // corresponds to an Instance. It can also switch during an update.
-        var type = workInProgress.type;
         var nextResource = workInProgress.memoizedState;
 
         if (current === null) {
@@ -23680,16 +23644,12 @@ function completeWork(current, workInProgress, renderLanes) {
           } else {
             // This is a Hoistable Instance
             // We may have props to update on the Hoistable instance.
-            if (diffInCommitPhase && supportsMutation) {
+            {
               var oldProps = current.memoizedProps;
 
               if (oldProps !== newProps) {
                 markUpdate(workInProgress);
               }
-            } else {
-              // We use the updateHostComponent path becuase it produces
-              // the update queue we need for Hoistables.
-              updateHostComponent(current, workInProgress, type, newProps);
             } // This must come at the very end of the complete phase.
 
             bubbleProperties(workInProgress);
@@ -23707,14 +23667,12 @@ function completeWork(current, workInProgress, renderLanes) {
         var _type = workInProgress.type;
 
         if (current !== null && workInProgress.stateNode != null) {
-          if (diffInCommitPhase && supportsMutation) {
+          {
             var _oldProps2 = current.memoizedProps;
 
             if (_oldProps2 !== newProps) {
               markUpdate(workInProgress);
             }
-          } else {
-            updateHostComponent(current, workInProgress, _type, newProps);
           }
 
           if (current.ref !== workInProgress.ref) {
@@ -23791,7 +23749,7 @@ function completeWork(current, workInProgress, renderLanes) {
           return null;
         }
 
-        var _currentHostContext2 = getHostContext(); // TODO: Move createInstance to beginWork and keep it on a context
+        var _currentHostContext = getHostContext(); // TODO: Move createInstance to beginWork and keep it on a context
         // "stack" as the parent. Then append children as we go in beginWork
         // or completeWork depending on whether we want to add them top->down or
         // bottom->up. Top->down is faster in IE11.
@@ -23801,13 +23759,7 @@ function completeWork(current, workInProgress, renderLanes) {
         if (_wasHydrated2) {
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
-          if (
-            prepareToHydrateHostInstance(workInProgress, _currentHostContext2)
-          ) {
-            // If changes to the hydrated node need to be applied at the
-            // commit-phase we mark this as such.
-            markUpdate(workInProgress);
-          }
+          prepareToHydrateHostInstance(workInProgress, _currentHostContext);
         } else {
           var _rootContainerInstance = getRootHostContainer();
 
@@ -23815,7 +23767,7 @@ function completeWork(current, workInProgress, renderLanes) {
             _type2,
             newProps,
             _rootContainerInstance,
-            _currentHostContext2,
+            _currentHostContext,
             workInProgress
           );
 
@@ -23864,7 +23816,7 @@ function completeWork(current, workInProgress, renderLanes) {
 
         var _rootContainerInstance2 = getRootHostContainer();
 
-        var _currentHostContext3 = getHostContext();
+        var _currentHostContext2 = getHostContext();
 
         var _wasHydrated3 = popHydrationState(workInProgress);
 
@@ -23876,7 +23828,7 @@ function completeWork(current, workInProgress, renderLanes) {
           workInProgress.stateNode = createTextInstance(
             newText,
             _rootContainerInstance2,
-            _currentHostContext3,
+            _currentHostContext2,
             workInProgress
           );
         }
@@ -27178,23 +27130,17 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (updatePayload !== null || diffInCommitPhase) {
-              try {
-                commitUpdate(
-                  finishedWork.stateNode,
-                  updatePayload,
-                  finishedWork.type,
-                  current.memoizedProps,
-                  finishedWork.memoizedProps,
-                  finishedWork
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error
-                );
-              }
+            try {
+              commitUpdate(
+                finishedWork.stateNode,
+                updatePayload,
+                finishedWork.type,
+                current.memoizedProps,
+                finishedWork.memoizedProps,
+                finishedWork
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }
@@ -27266,23 +27212,17 @@ function commitMutationEffectsOnFiber(finishedWork, root, lanes) {
             var _updatePayload = finishedWork.updateQueue;
             finishedWork.updateQueue = null;
 
-            if (_updatePayload !== null || diffInCommitPhase) {
-              try {
-                commitUpdate(
-                  _instance2,
-                  _updatePayload,
-                  type,
-                  oldProps,
-                  newProps,
-                  finishedWork
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error
-                );
-              }
+            try {
+              commitUpdate(
+                _instance2,
+                _updatePayload,
+                type,
+                oldProps,
+                newProps,
+                finishedWork
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }
@@ -34483,7 +34423,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-a19b7375";
+var ReactVersion = "18.3.0-www-modern-ee02aecb";
 
 function createPortal$1(
   children,
@@ -40748,128 +40688,6 @@ function setInitialProperties(domElement, tag, props) {
 
     setProp(domElement, tag, _propKey6, _propValue6, props, null);
   }
-} // Calculate the diff between the two objects.
-
-function diffProperties(domElement, tag, lastProps, nextProps) {
-  {
-    validatePropertiesInDevelopment(tag, nextProps);
-  }
-
-  var updatePayload = null;
-  var propKey;
-  var styleName;
-  var styleUpdates = null;
-
-  for (propKey in lastProps) {
-    if (
-      nextProps.hasOwnProperty(propKey) ||
-      !lastProps.hasOwnProperty(propKey) ||
-      lastProps[propKey] == null
-    ) {
-      continue;
-    }
-
-    switch (propKey) {
-      case "style": {
-        var lastStyle = lastProps[propKey];
-
-        for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
-            if (!styleUpdates) {
-              styleUpdates = {};
-            }
-
-            styleUpdates[styleName] = "";
-          }
-        }
-
-        break;
-      }
-
-      default: {
-        // For all other deleted properties we add it to the queue. We use
-        // the allowed property list in the commit phase instead.
-        (updatePayload = updatePayload || []).push(propKey, null);
-      }
-    }
-  }
-
-  for (propKey in nextProps) {
-    var nextProp = nextProps[propKey];
-    var lastProp = lastProps != null ? lastProps[propKey] : undefined;
-
-    if (
-      nextProps.hasOwnProperty(propKey) &&
-      nextProp !== lastProp &&
-      (nextProp != null || lastProp != null)
-    ) {
-      switch (propKey) {
-        case "style": {
-          if (lastProp) {
-            // Unset styles on `lastProp` but not on `nextProp`.
-            for (styleName in lastProp) {
-              if (
-                lastProp.hasOwnProperty(styleName) &&
-                (!nextProp || !nextProp.hasOwnProperty(styleName))
-              ) {
-                if (!styleUpdates) {
-                  styleUpdates = {};
-                }
-
-                styleUpdates[styleName] = "";
-              }
-            } // Update styles that changed since `lastProp`.
-
-            for (styleName in nextProp) {
-              if (
-                nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]
-              ) {
-                if (!styleUpdates) {
-                  styleUpdates = {};
-                }
-
-                styleUpdates[styleName] = nextProp[styleName];
-              }
-            }
-          } else {
-            // Relies on `updateStylesByID` not mutating `styleUpdates`.
-            if (!styleUpdates) {
-              if (!updatePayload) {
-                updatePayload = [];
-              }
-
-              updatePayload.push(propKey, styleUpdates);
-            }
-
-            styleUpdates = nextProp;
-          }
-
-          break;
-        }
-
-        case "is": {
-          error('Cannot update the "is" prop after it has been initialized.');
-        }
-
-        // Fall through
-
-        default: {
-          (updatePayload = updatePayload || []).push(propKey, nextProp);
-        }
-      }
-    }
-  }
-
-  if (styleUpdates) {
-    {
-      validateShorthandPropertyCollisionInDev(lastProps.style, nextProps.style);
-    }
-
-    (updatePayload = updatePayload || []).push("style", styleUpdates);
-  }
-
-  return updatePayload;
 }
 function updateProperties(domElement, tag, lastProps, nextProps) {
   {
@@ -41417,348 +41235,6 @@ function updateProperties(domElement, tag, lastProps, nextProps) {
     ) {
       setProp(domElement, tag, _propKey19, _nextProp6, nextProps, _lastProp13);
     }
-  }
-} // Apply the diff.
-
-function updatePropertiesWithDiff(
-  domElement,
-  updatePayload,
-  tag,
-  lastProps,
-  nextProps
-) {
-  switch (tag) {
-    case "div":
-    case "span":
-    case "svg":
-    case "path":
-    case "a":
-    case "g":
-    case "p":
-    case "li": {
-      // Fast track the most common tag types
-      break;
-    }
-
-    case "input": {
-      var name = nextProps.name;
-      var type = nextProps.type;
-      var value = nextProps.value;
-      var defaultValue = nextProps.defaultValue;
-      var lastDefaultValue = lastProps.defaultValue;
-      var checked = nextProps.checked;
-      var defaultChecked = nextProps.defaultChecked;
-
-      for (var i = 0; i < updatePayload.length; i += 2) {
-        var propKey = updatePayload[i];
-        var propValue = updatePayload[i + 1];
-
-        switch (propKey) {
-          case "type": {
-            break;
-          }
-
-          case "name": {
-            break;
-          }
-
-          case "checked": {
-            break;
-          }
-
-          case "defaultChecked": {
-            break;
-          }
-
-          case "value": {
-            break;
-          }
-
-          case "defaultValue": {
-            break;
-          }
-
-          case "children":
-          case "dangerouslySetInnerHTML": {
-            if (propValue != null) {
-              throw new Error(
-                tag +
-                  " is a void element tag and must neither have `children` nor " +
-                  "use `dangerouslySetInnerHTML`."
-              );
-            }
-
-            break;
-          }
-
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey]
-            );
-          }
-        }
-      }
-
-      {
-        var wasControlled =
-          lastProps.type === "checkbox" || lastProps.type === "radio"
-            ? lastProps.checked != null
-            : lastProps.value != null;
-        var isControlled =
-          nextProps.type === "checkbox" || nextProps.type === "radio"
-            ? nextProps.checked != null
-            : nextProps.value != null;
-
-        if (
-          !wasControlled &&
-          isControlled &&
-          !didWarnUncontrolledToControlled
-        ) {
-          error(
-            "A component is changing an uncontrolled input to be controlled. " +
-              "This is likely caused by the value changing from undefined to " +
-              "a defined value, which should not happen. " +
-              "Decide between using a controlled or uncontrolled input " +
-              "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
-          );
-
-          didWarnUncontrolledToControlled = true;
-        }
-
-        if (
-          wasControlled &&
-          !isControlled &&
-          !didWarnControlledToUncontrolled
-        ) {
-          error(
-            "A component is changing a controlled input to be uncontrolled. " +
-              "This is likely caused by the value changing from a defined to " +
-              "undefined, which should not happen. " +
-              "Decide between using a controlled or uncontrolled input " +
-              "element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components"
-          );
-
-          didWarnControlledToUncontrolled = true;
-        }
-      } // Update the wrapper around inputs *after* updating props. This has to
-      // happen after updating the rest of props. Otherwise HTML5 input validations
-      // raise warnings and prevent the new value from being assigned.
-
-      updateInput(
-        domElement,
-        value,
-        defaultValue,
-        lastDefaultValue,
-        checked,
-        defaultChecked,
-        type,
-        name
-      );
-      return;
-    }
-
-    case "select": {
-      var _value5 = nextProps.value;
-      var _defaultValue5 = nextProps.defaultValue;
-      var multiple = nextProps.multiple;
-      var wasMultiple = lastProps.multiple;
-
-      for (var _i = 0; _i < updatePayload.length; _i += 2) {
-        var _propKey20 = updatePayload[_i];
-        var _propValue7 = updatePayload[_i + 1];
-
-        switch (_propKey20) {
-          case "value": {
-            // This is handled by updateWrapper below.
-            break;
-          }
-          // defaultValue are ignored by setProp
-
-          default: {
-            setProp(
-              domElement,
-              tag,
-              _propKey20,
-              _propValue7,
-              nextProps,
-              lastProps[_propKey20]
-            );
-          }
-        }
-      } // <select> value update needs to occur after <option> children
-      // reconciliation
-
-      updateSelect(domElement, _value5, _defaultValue5, multiple, wasMultiple);
-      return;
-    }
-
-    case "textarea": {
-      var _value6 = nextProps.value;
-      var _defaultValue6 = nextProps.defaultValue;
-
-      for (var _i2 = 0; _i2 < updatePayload.length; _i2 += 2) {
-        var _propKey21 = updatePayload[_i2];
-        var _propValue8 = updatePayload[_i2 + 1];
-
-        switch (_propKey21) {
-          case "value": {
-            // This is handled by updateWrapper below.
-            break;
-          }
-
-          case "children": {
-            // TODO: This doesn't actually do anything if it updates.
-            break;
-          }
-
-          case "dangerouslySetInnerHTML": {
-            if (_propValue8 != null) {
-              // TODO: Do we really need a special error message for this. It's also pretty blunt.
-              throw new Error(
-                "`dangerouslySetInnerHTML` does not make sense on <textarea>."
-              );
-            }
-
-            break;
-          }
-          // defaultValue is ignored by setProp
-
-          default: {
-            setProp(
-              domElement,
-              tag,
-              _propKey21,
-              _propValue8,
-              nextProps,
-              lastProps[_propKey21]
-            );
-          }
-        }
-      }
-
-      updateTextarea(domElement, _value6, _defaultValue6);
-      return;
-    }
-
-    case "option": {
-      for (var _i3 = 0; _i3 < updatePayload.length; _i3 += 2) {
-        var _propKey22 = updatePayload[_i3];
-        var _propValue9 = updatePayload[_i3 + 1];
-
-        switch (_propKey22) {
-          case "selected": {
-            // TODO: Remove support for selected on option.
-            domElement.selected =
-              _propValue9 &&
-              typeof _propValue9 !== "function" &&
-              typeof _propValue9 !== "symbol";
-            break;
-          }
-
-          default: {
-            setProp(
-              domElement,
-              tag,
-              _propKey22,
-              _propValue9,
-              nextProps,
-              lastProps[_propKey22]
-            );
-          }
-        }
-      }
-
-      return;
-    }
-
-    case "img":
-    case "link":
-    case "area":
-    case "base":
-    case "br":
-    case "col":
-    case "embed":
-    case "hr":
-    case "keygen":
-    case "meta":
-    case "param":
-    case "source":
-    case "track":
-    case "wbr":
-    case "menuitem": {
-      // Void elements
-      for (var _i4 = 0; _i4 < updatePayload.length; _i4 += 2) {
-        var _propKey23 = updatePayload[_i4];
-        var _propValue10 = updatePayload[_i4 + 1];
-
-        switch (_propKey23) {
-          case "children":
-          case "dangerouslySetInnerHTML": {
-            if (_propValue10 != null) {
-              // TODO: Can we make this a DEV warning to avoid this deny list?
-              throw new Error(
-                tag +
-                  " is a void element tag and must neither have `children` nor " +
-                  "use `dangerouslySetInnerHTML`."
-              );
-            }
-
-            break;
-          }
-          // defaultChecked and defaultValue are ignored by setProp
-
-          default: {
-            setProp(
-              domElement,
-              tag,
-              _propKey23,
-              _propValue10,
-              nextProps,
-              lastProps[_propKey23]
-            );
-          }
-        }
-      }
-
-      return;
-    }
-
-    default: {
-      if (isCustomElement(tag)) {
-        for (var _i5 = 0; _i5 < updatePayload.length; _i5 += 2) {
-          var _propKey24 = updatePayload[_i5];
-          var _propValue11 = updatePayload[_i5 + 1];
-          setPropOnCustomElement(
-            domElement,
-            tag,
-            _propKey24,
-            _propValue11,
-            nextProps,
-            lastProps[_propKey24]
-          );
-        }
-
-        return;
-      }
-    }
-  } // Apply the diff.
-
-  for (var _i6 = 0; _i6 < updatePayload.length; _i6 += 2) {
-    var _propKey25 = updatePayload[_i6];
-    var _propValue12 = updatePayload[_i6 + 1];
-    setProp(
-      domElement,
-      tag,
-      _propKey25,
-      _propValue12,
-      nextProps,
-      lastProps[_propKey25]
-    );
   }
 }
 
@@ -42795,7 +42271,6 @@ function diffHydratedProperties(
       break;
   }
 
-  var updatePayload = null;
   var children = props.children; // For text content children we compare against textContent. This
   // might match additional HTML that is hidden when we read it using
   // textContent. E.g. "foo" will match "f<span>oo</span>" but that still
@@ -42818,17 +42293,13 @@ function diffHydratedProperties(
       }
 
       if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
-        if (diffInCommitPhase) {
-          // We really should be patching this in the commit phase but since
-          // this only affects legacy mode hydration which is deprecated anyway
-          // we can get away with it.
-          // Host singletons get their children appended and don't use the text
-          // content mechanism.
-          if (tag !== "body") {
-            domElement.textContent = children;
-          }
-        } else {
-          updatePayload = ["children", children];
+        // We really should be patching this in the commit phase but since
+        // this only affects legacy mode hydration which is deprecated anyway
+        // we can get away with it.
+        // Host singletons get their children appended and don't use the text
+        // content mechanism.
+        if (tag !== "body") {
+          domElement.textContent = children;
         }
       }
     }
@@ -42847,8 +42318,8 @@ function diffHydratedProperties(
     var extraAttributes = new Set();
     var attributes = domElement.attributes;
 
-    for (var _i7 = 0; _i7 < attributes.length; _i7++) {
-      var name = attributes[_i7].name.toLowerCase();
+    for (var _i = 0; _i < attributes.length; _i++) {
+      var name = attributes[_i].name.toLowerCase();
 
       switch (name) {
         // Controlled attributes are not validated
@@ -42865,7 +42336,7 @@ function diffHydratedProperties(
         default:
           // Intentionally use the original name.
           // See discussion in https://github.com/facebook/react/pull/10676.
-          extraAttributes.add(attributes[_i7].name);
+          extraAttributes.add(attributes[_i].name);
       }
     }
 
@@ -42891,8 +42362,6 @@ function diffHydratedProperties(
       warnForExtraAttributes(extraAttributes);
     }
   }
-
-  return updatePayload;
 }
 function diffHydratedText(textNode, text, isConcurrentMode) {
   var isDifferent = textNode.nodeValue !== text;
@@ -43401,14 +42870,6 @@ function finalizeInitialChildren(domElement, type, props, hostContext) {
       return false;
   }
 }
-function prepareUpdate(domElement, type, oldProps, newProps, hostContext) {
-  if (diffInCommitPhase) {
-    // TODO: Figure out how to validateDOMNesting when children turn into a string.
-    return null;
-  }
-
-  return diffProperties(domElement, type, oldProps, newProps);
-}
 function shouldSetTextContent(type, props) {
   return (
     type === "textarea" ||
@@ -43498,10 +42959,6 @@ function handleErrorInNextTick(error) {
     throw error;
   });
 } // -------------------
-//     Mutation
-// -------------------
-
-var supportsMutation = true;
 function commitMount(domElement, type, newProps, internalInstanceHandle) {
   // Despite the naming that might imply otherwise, this method only
   // fires if there is an `Update` effect scheduled during mounting.
@@ -43537,19 +42994,8 @@ function commitUpdate(
   newProps,
   internalInstanceHandle
 ) {
-  if (diffInCommitPhase) {
-    // Diff and update the properties.
-    updateProperties(domElement, type, oldProps, newProps);
-  } else {
-    // Apply the diff to the DOM node.
-    updatePropertiesWithDiff(
-      domElement,
-      updatePayload,
-      type,
-      oldProps,
-      newProps
-    );
-  } // Update the props handle so that we know which props are the ones with
+  // Diff and update the properties.
+  updateProperties(domElement, type, oldProps, newProps); // Update the props handle so that we know which props are the ones with
   // with current event handlers.
 
   updateFiberProps(domElement, newProps);
@@ -44060,7 +43506,7 @@ function hydrateInstance(
 
   var isConcurrentMode =
     (internalInstanceHandle.mode & ConcurrentMode) !== NoMode;
-  return diffHydratedProperties(
+  diffHydratedProperties(
     instance,
     type,
     props,
