@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<01008a8950368c139ee32158a8728c5d>>
+ * @generated SignedSource<<bfbfdcdd5acb2e3049107f9e3d279ba1>>
  */
 
 'use strict';
@@ -4997,7 +4997,6 @@ var cancelTimeout = clearTimeout;
 var noTimeout = -1; // -------------------
 function cloneInstance(
   instance,
-  updatePayload,
   type,
   oldProps,
   newProps,
@@ -5005,15 +5004,12 @@ function cloneInstance(
   keepChildren,
   recyclableInstance
 ) {
-  {
-    var viewConfig = instance.canonical.viewConfig;
-    updatePayload = diff(oldProps, newProps, viewConfig.validAttributes); // TODO: If the event handlers have changed, we need to update the current props
-    // in the commit phase but there is no host config hook to do it yet.
-    // So instead we hack it by updating it in the render phase.
+  var viewConfig = instance.canonical.viewConfig;
+  var updatePayload = diff(oldProps, newProps, viewConfig.validAttributes); // TODO: If the event handlers have changed, we need to update the current props
+  // in the commit phase but there is no host config hook to do it yet.
+  // So instead we hack it by updating it in the render phase.
 
-    instance.canonical.currentProps = newProps;
-  }
-
+  instance.canonical.currentProps = newProps;
   var node = instance.node;
   var clone;
 
@@ -5021,10 +5017,8 @@ function cloneInstance(
     if (updatePayload !== null) {
       clone = cloneNodeWithNewProps(node, updatePayload);
     } else {
-      {
-        // No changes
-        return instance;
-      }
+      // No changes
+      return instance;
     }
   } else {
     if (updatePayload !== null) {
@@ -18880,14 +18874,9 @@ function updateHostComponent(
       workInProgress.stateNode = currentInstance;
       return;
     }
-
     getHostContext();
-
-    var _updatePayload = null;
-
     var newInstance = cloneInstance(
       currentInstance,
-      _updatePayload,
       type,
       _oldProps,
       newProps,
@@ -19359,7 +19348,7 @@ function completeWork(current, workInProgress, renderLanes) {
           return null;
         }
 
-        var _currentHostContext2 = getHostContext(); // TODO: Move createInstance to beginWork and keep it on a context
+        var _currentHostContext = getHostContext(); // TODO: Move createInstance to beginWork and keep it on a context
         // "stack" as the parent. Then append children as we go in beginWork
         // or completeWork depending on whether we want to add them top->down or
         // bottom->up. Top->down is faster in IE11.
@@ -19369,11 +19358,7 @@ function completeWork(current, workInProgress, renderLanes) {
         if (_wasHydrated2) {
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
-          if (prepareToHydrateHostInstance()) {
-            // If changes to the hydrated node need to be applied at the
-            // commit-phase we mark this as such.
-            markUpdate(workInProgress);
-          }
+          prepareToHydrateHostInstance();
         } else {
           var _rootContainerInstance = getRootHostContainer();
 
@@ -19381,7 +19366,7 @@ function completeWork(current, workInProgress, renderLanes) {
             _type2,
             newProps,
             _rootContainerInstance,
-            _currentHostContext2,
+            _currentHostContext,
             workInProgress
           );
 
@@ -19424,7 +19409,7 @@ function completeWork(current, workInProgress, renderLanes) {
 
         var _rootContainerInstance2 = getRootHostContainer();
 
-        var _currentHostContext3 = getHostContext();
+        var _currentHostContext2 = getHostContext();
 
         var _wasHydrated3 = popHydrationState();
 
@@ -19436,7 +19421,7 @@ function completeWork(current, workInProgress, renderLanes) {
           workInProgress.stateNode = createTextInstance(
             newText,
             _rootContainerInstance2,
-            _currentHostContext3,
+            _currentHostContext2,
             workInProgress
           );
         }
@@ -27037,7 +27022,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-f73f8a34";
+var ReactVersion = "18.3.0-canary-b65b3ea2";
 
 function createPortal$1(
   children,
