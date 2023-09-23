@@ -55,7 +55,6 @@ import setTextContent from './setTextContent';
 import {
   createDangerousStringForStyles,
   setValueForStyles,
-  validateShorthandPropertyCollisionInDev,
 } from './CSSPropertyOperations';
 import {SVG_NAMESPACE, MATH_NAMESPACE} from './DOMNamespaces';
 import isCustomElement from '../shared/isCustomElement';
@@ -74,7 +73,6 @@ import {
   disableIEWorkarounds,
   enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
-  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 import {
   mediaEventTypes,
@@ -1341,119 +1339,6 @@ export function setInitialProperties(
   }
 }
 
-// Calculate the diff between the two objects.
-export function diffProperties(
-  domElement: Element,
-  tag: string,
-  lastProps: Object,
-  nextProps: Object,
-): null | Array<mixed> {
-  if (__DEV__) {
-    validatePropertiesInDevelopment(tag, nextProps);
-  }
-
-  let updatePayload: null | Array<any> = null;
-
-  let propKey;
-  let styleName;
-  let styleUpdates = null;
-  for (propKey in lastProps) {
-    if (
-      nextProps.hasOwnProperty(propKey) ||
-      !lastProps.hasOwnProperty(propKey) ||
-      lastProps[propKey] == null
-    ) {
-      continue;
-    }
-    switch (propKey) {
-      case 'style': {
-        const lastStyle = lastProps[propKey];
-        for (styleName in lastStyle) {
-          if (lastStyle.hasOwnProperty(styleName)) {
-            if (!styleUpdates) {
-              styleUpdates = ({}: {[string]: $FlowFixMe});
-            }
-            styleUpdates[styleName] = '';
-          }
-        }
-        break;
-      }
-      default: {
-        // For all other deleted properties we add it to the queue. We use
-        // the allowed property list in the commit phase instead.
-        (updatePayload = updatePayload || []).push(propKey, null);
-      }
-    }
-  }
-  for (propKey in nextProps) {
-    const nextProp = nextProps[propKey];
-    const lastProp = lastProps != null ? lastProps[propKey] : undefined;
-    if (
-      nextProps.hasOwnProperty(propKey) &&
-      nextProp !== lastProp &&
-      (nextProp != null || lastProp != null)
-    ) {
-      switch (propKey) {
-        case 'style': {
-          if (lastProp) {
-            // Unset styles on `lastProp` but not on `nextProp`.
-            for (styleName in lastProp) {
-              if (
-                lastProp.hasOwnProperty(styleName) &&
-                (!nextProp || !nextProp.hasOwnProperty(styleName))
-              ) {
-                if (!styleUpdates) {
-                  styleUpdates = ({}: {[string]: string});
-                }
-                styleUpdates[styleName] = '';
-              }
-            }
-            // Update styles that changed since `lastProp`.
-            for (styleName in nextProp) {
-              if (
-                nextProp.hasOwnProperty(styleName) &&
-                lastProp[styleName] !== nextProp[styleName]
-              ) {
-                if (!styleUpdates) {
-                  styleUpdates = ({}: {[string]: $FlowFixMe});
-                }
-                styleUpdates[styleName] = nextProp[styleName];
-              }
-            }
-          } else {
-            // Relies on `updateStylesByID` not mutating `styleUpdates`.
-            if (!styleUpdates) {
-              if (!updatePayload) {
-                updatePayload = [];
-              }
-              updatePayload.push(propKey, styleUpdates);
-            }
-            styleUpdates = nextProp;
-          }
-          break;
-        }
-        case 'is':
-          if (__DEV__) {
-            console.error(
-              'Cannot update the "is" prop after it has been initialized.',
-            );
-          }
-        // Fall through
-        default: {
-          (updatePayload = updatePayload || []).push(propKey, nextProp);
-        }
-      }
-    }
-  }
-  if (styleUpdates) {
-    if (__DEV__) {
-      validateShorthandPropertyCollisionInDev(lastProps.style, nextProps.style);
-    }
-    (updatePayload = updatePayload || []).push('style', styleUpdates);
-  }
-  return updatePayload;
-}
-
 export function updateProperties(
   domElement: Element,
   tag: string,
@@ -1921,305 +1806,6 @@ export function updateProperties(
     ) {
       setProp(domElement, tag, propKey, nextProp, nextProps, lastProp);
     }
-  }
-}
-
-// Apply the diff.
-export function updatePropertiesWithDiff(
-  domElement: Element,
-  updatePayload: Array<any>,
-  tag: string,
-  lastProps: Object,
-  nextProps: Object,
-): void {
-  switch (tag) {
-    case 'div':
-    case 'span':
-    case 'svg':
-    case 'path':
-    case 'a':
-    case 'g':
-    case 'p':
-    case 'li': {
-      // Fast track the most common tag types
-      break;
-    }
-    case 'input': {
-      const name = nextProps.name;
-      const type = nextProps.type;
-      const value = nextProps.value;
-      const defaultValue = nextProps.defaultValue;
-      const lastDefaultValue = lastProps.defaultValue;
-      const checked = nextProps.checked;
-      const defaultChecked = nextProps.defaultChecked;
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'type': {
-            break;
-          }
-          case 'name': {
-            break;
-          }
-          case 'checked': {
-            break;
-          }
-          case 'defaultChecked': {
-            break;
-          }
-          case 'value': {
-            break;
-          }
-          case 'defaultValue': {
-            break;
-          }
-          case 'children':
-          case 'dangerouslySetInnerHTML': {
-            if (propValue != null) {
-              throw new Error(
-                `${tag} is a void element tag and must neither have \`children\` nor ` +
-                  'use `dangerouslySetInnerHTML`.',
-              );
-            }
-            break;
-          }
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-
-      if (__DEV__) {
-        const wasControlled =
-          lastProps.type === 'checkbox' || lastProps.type === 'radio'
-            ? lastProps.checked != null
-            : lastProps.value != null;
-        const isControlled =
-          nextProps.type === 'checkbox' || nextProps.type === 'radio'
-            ? nextProps.checked != null
-            : nextProps.value != null;
-
-        if (
-          !wasControlled &&
-          isControlled &&
-          !didWarnUncontrolledToControlled
-        ) {
-          console.error(
-            'A component is changing an uncontrolled input to be controlled. ' +
-              'This is likely caused by the value changing from undefined to ' +
-              'a defined value, which should not happen. ' +
-              'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
-          );
-          didWarnUncontrolledToControlled = true;
-        }
-        if (
-          wasControlled &&
-          !isControlled &&
-          !didWarnControlledToUncontrolled
-        ) {
-          console.error(
-            'A component is changing a controlled input to be uncontrolled. ' +
-              'This is likely caused by the value changing from a defined to ' +
-              'undefined, which should not happen. ' +
-              'Decide between using a controlled or uncontrolled input ' +
-              'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
-          );
-          didWarnControlledToUncontrolled = true;
-        }
-      }
-
-      // Update the wrapper around inputs *after* updating props. This has to
-      // happen after updating the rest of props. Otherwise HTML5 input validations
-      // raise warnings and prevent the new value from being assigned.
-      updateInput(
-        domElement,
-        value,
-        defaultValue,
-        lastDefaultValue,
-        checked,
-        defaultChecked,
-        type,
-        name,
-      );
-      return;
-    }
-    case 'select': {
-      const value = nextProps.value;
-      const defaultValue = nextProps.defaultValue;
-      const multiple = nextProps.multiple;
-      const wasMultiple = lastProps.multiple;
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'value': {
-            // This is handled by updateWrapper below.
-            break;
-          }
-          // defaultValue are ignored by setProp
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-      // <select> value update needs to occur after <option> children
-      // reconciliation
-      updateSelect(domElement, value, defaultValue, multiple, wasMultiple);
-      return;
-    }
-    case 'textarea': {
-      const value = nextProps.value;
-      const defaultValue = nextProps.defaultValue;
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'value': {
-            // This is handled by updateWrapper below.
-            break;
-          }
-          case 'children': {
-            // TODO: This doesn't actually do anything if it updates.
-            break;
-          }
-          case 'dangerouslySetInnerHTML': {
-            if (propValue != null) {
-              // TODO: Do we really need a special error message for this. It's also pretty blunt.
-              throw new Error(
-                '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
-              );
-            }
-            break;
-          }
-          // defaultValue is ignored by setProp
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-      updateTextarea(domElement, value, defaultValue);
-      return;
-    }
-    case 'option': {
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'selected': {
-            // TODO: Remove support for selected on option.
-            (domElement: any).selected =
-              propValue &&
-              typeof propValue !== 'function' &&
-              typeof propValue !== 'symbol';
-            break;
-          }
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-      return;
-    }
-    case 'img':
-    case 'link':
-    case 'area':
-    case 'base':
-    case 'br':
-    case 'col':
-    case 'embed':
-    case 'hr':
-    case 'keygen':
-    case 'meta':
-    case 'param':
-    case 'source':
-    case 'track':
-    case 'wbr':
-    case 'menuitem': {
-      // Void elements
-      for (let i = 0; i < updatePayload.length; i += 2) {
-        const propKey = updatePayload[i];
-        const propValue = updatePayload[i + 1];
-        switch (propKey) {
-          case 'children':
-          case 'dangerouslySetInnerHTML': {
-            if (propValue != null) {
-              // TODO: Can we make this a DEV warning to avoid this deny list?
-              throw new Error(
-                `${tag} is a void element tag and must neither have \`children\` nor ` +
-                  'use `dangerouslySetInnerHTML`.',
-              );
-            }
-            break;
-          }
-          // defaultChecked and defaultValue are ignored by setProp
-          default: {
-            setProp(
-              domElement,
-              tag,
-              propKey,
-              propValue,
-              nextProps,
-              lastProps[propKey],
-            );
-          }
-        }
-      }
-      return;
-    }
-    default: {
-      if (isCustomElement(tag, nextProps)) {
-        for (let i = 0; i < updatePayload.length; i += 2) {
-          const propKey = updatePayload[i];
-          const propValue = updatePayload[i + 1];
-          setPropOnCustomElement(
-            domElement,
-            tag,
-            propKey,
-            propValue,
-            nextProps,
-            lastProps[propKey],
-          );
-        }
-        return;
-      }
-    }
-  }
-
-  // Apply the diff.
-  for (let i = 0; i < updatePayload.length; i += 2) {
-    const propKey = updatePayload[i];
-    const propValue = updatePayload[i + 1];
-    setProp(domElement, tag, propKey, propValue, nextProps, lastProps[propKey]);
   }
 }
 
@@ -3094,7 +2680,7 @@ export function diffHydratedProperties(
   isConcurrentMode: boolean,
   shouldWarnDev: boolean,
   hostContext: HostContext,
-): null | Array<mixed> {
+): void {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, props);
   }
@@ -3192,8 +2778,6 @@ export function diffHydratedProperties(
       break;
   }
 
-  let updatePayload = null;
-
   const children = props.children;
   // For text content children we compare against textContent. This
   // might match additional HTML that is hidden when we read it using
@@ -3215,17 +2799,13 @@ export function diffHydratedProperties(
         );
       }
       if (!isConcurrentMode || !enableClientRenderFallbackOnTextMismatch) {
-        if (diffInCommitPhase) {
-          // We really should be patching this in the commit phase but since
-          // this only affects legacy mode hydration which is deprecated anyway
-          // we can get away with it.
-          // Host singletons get their children appended and don't use the text
-          // content mechanism.
-          if (!enableHostSingletons || tag !== 'body') {
-            domElement.textContent = (children: any);
-          }
-        } else {
-          updatePayload = ['children', children];
+        // We really should be patching this in the commit phase but since
+        // this only affects legacy mode hydration which is deprecated anyway
+        // we can get away with it.
+        // Host singletons get their children appended and don't use the text
+        // content mechanism.
+        if (!enableHostSingletons || tag !== 'body') {
+          domElement.textContent = (children: any);
         }
       }
     }
@@ -3281,8 +2861,6 @@ export function diffHydratedProperties(
       warnForExtraAttributes(extraAttributes);
     }
   }
-
-  return updatePayload;
 }
 
 export function diffHydratedText(

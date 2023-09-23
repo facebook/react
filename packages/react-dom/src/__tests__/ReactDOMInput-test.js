@@ -36,6 +36,43 @@ describe('ReactDOMInput', () => {
     return copy.value === node.value;
   }
 
+  function isCheckedDirty(node) {
+    // Return the "dirty checked flag" as defined in the HTML spec.
+    if (node.checked !== node.defaultChecked) {
+      return true;
+    }
+    const copy = node.cloneNode();
+    copy.type = 'checkbox';
+    copy.defaultChecked = !copy.defaultChecked;
+    return copy.checked === node.checked;
+  }
+
+  function getTrackedAndCurrentInputValue(elem: HTMLElement): [mixed, mixed] {
+    const tracker = elem._valueTracker;
+    if (!tracker) {
+      throw new Error('No input tracker');
+    }
+    return [
+      tracker.getValue(),
+      elem.nodeName === 'INPUT' &&
+      (elem.type === 'checkbox' || elem.type === 'radio')
+        ? String(elem.checked)
+        : elem.value,
+    ];
+  }
+
+  function assertInputTrackingIsCurrent(parent) {
+    parent.querySelectorAll('input, textarea, select').forEach(input => {
+      const [trackedValue, currentValue] =
+        getTrackedAndCurrentInputValue(input);
+      if (trackedValue !== currentValue) {
+        throw new Error(
+          `Input ${input.outerHTML} is currently ${currentValue} but tracker thinks it's ${trackedValue}`,
+        );
+      }
+    });
+  }
+
   beforeEach(() => {
     jest.resetModules();
 
@@ -1119,6 +1156,7 @@ describe('ReactDOMInput', () => {
               name="fruit"
               checked={true}
               onChange={emptyFunction}
+              data-which="a"
             />
             A
             <input
@@ -1126,6 +1164,7 @@ describe('ReactDOMInput', () => {
               type="radio"
               name="fruit"
               onChange={emptyFunction}
+              data-which="b"
             />
             B
             <form>
@@ -1135,6 +1174,7 @@ describe('ReactDOMInput', () => {
                 name="fruit"
                 defaultChecked={true}
                 onChange={emptyFunction}
+                data-which="c"
               />
             </form>
           </div>
@@ -1162,6 +1202,11 @@ describe('ReactDOMInput', () => {
       expect(cNode.hasAttribute('checked')).toBe(true);
     }
 
+    expect(isCheckedDirty(aNode)).toBe(true);
+    expect(isCheckedDirty(bNode)).toBe(true);
+    expect(isCheckedDirty(cNode)).toBe(true);
+    assertInputTrackingIsCurrent(container);
+
     setUntrackedChecked.call(bNode, true);
     expect(aNode.checked).toBe(false);
     expect(cNode.checked).toBe(true);
@@ -1183,6 +1228,11 @@ describe('ReactDOMInput', () => {
     // The original state should have been restored
     expect(aNode.checked).toBe(true);
     expect(cNode.checked).toBe(true);
+
+    expect(isCheckedDirty(aNode)).toBe(true);
+    expect(isCheckedDirty(bNode)).toBe(true);
+    expect(isCheckedDirty(cNode)).toBe(true);
+    assertInputTrackingIsCurrent(container);
   });
 
   it('should check the correct radio when the selected name moves', () => {
@@ -1219,11 +1269,15 @@ describe('ReactDOMInput', () => {
     const stub = ReactDOM.render(<App />, container);
     const buttonNode = ReactDOM.findDOMNode(stub).childNodes[0];
     const firstRadioNode = ReactDOM.findDOMNode(stub).childNodes[1];
+    expect(isCheckedDirty(firstRadioNode)).toBe(true);
     expect(firstRadioNode.checked).toBe(false);
+    assertInputTrackingIsCurrent(container);
     dispatchEventOnNode(buttonNode, 'click');
     expect(firstRadioNode.checked).toBe(true);
+    assertInputTrackingIsCurrent(container);
     dispatchEventOnNode(buttonNode, 'click');
     expect(firstRadioNode.checked).toBe(false);
+    assertInputTrackingIsCurrent(container);
   });
 
   it("shouldn't get tricked by changing radio names, part 2", () => {
@@ -1246,12 +1300,13 @@ describe('ReactDOMInput', () => {
       </div>,
       container,
     );
-    expect(container.querySelector('input[name="a"][value="1"]').checked).toBe(
-      true,
-    );
-    expect(container.querySelector('input[name="a"][value="2"]').checked).toBe(
-      false,
-    );
+    const one = container.querySelector('input[name="a"][value="1"]');
+    const two = container.querySelector('input[name="a"][value="2"]');
+    expect(one.checked).toBe(true);
+    expect(two.checked).toBe(false);
+    expect(isCheckedDirty(one)).toBe(true);
+    expect(isCheckedDirty(two)).toBe(true);
+    assertInputTrackingIsCurrent(container);
 
     ReactDOM.render(
       <div>
@@ -1272,12 +1327,11 @@ describe('ReactDOMInput', () => {
       </div>,
       container,
     );
-    expect(container.querySelector('input[name="a"][value="1"]').checked).toBe(
-      true,
-    );
-    expect(container.querySelector('input[name="b"][value="2"]').checked).toBe(
-      true,
-    );
+    expect(one.checked).toBe(true);
+    expect(two.checked).toBe(true);
+    expect(isCheckedDirty(one)).toBe(true);
+    expect(isCheckedDirty(two)).toBe(true);
+    assertInputTrackingIsCurrent(container);
   });
 
   it('should control radio buttons if the tree updates during render', () => {
@@ -1339,6 +1393,9 @@ describe('ReactDOMInput', () => {
 
     expect(aNode.checked).toBe(false);
     expect(bNode.checked).toBe(true);
+    expect(isCheckedDirty(aNode)).toBe(true);
+    expect(isCheckedDirty(bNode)).toBe(true);
+    assertInputTrackingIsCurrent(container);
 
     setUntrackedChecked.call(aNode, true);
     // This next line isn't necessary in a proper browser environment, but
@@ -1352,6 +1409,9 @@ describe('ReactDOMInput', () => {
     // The original state should have been restored
     expect(aNode.checked).toBe(false);
     expect(bNode.checked).toBe(true);
+    expect(isCheckedDirty(aNode)).toBe(true);
+    expect(isCheckedDirty(bNode)).toBe(true);
+    assertInputTrackingIsCurrent(container);
   });
 
   it('should warn with value and no onChange handler and readOnly specified', () => {
@@ -1734,6 +1794,8 @@ describe('ReactDOMInput', () => {
       <input type="radio" checked={false} onChange={() => null} />,
       container,
     );
+    const input = container.querySelector('input');
+    expect(isCheckedDirty(input)).toBe(true);
     ReactDOM.render(
       <input
         type="radio"
@@ -1744,6 +1806,8 @@ describe('ReactDOMInput', () => {
       />,
       container,
     );
+    expect(isCheckedDirty(input)).toBe(true);
+    assertInputTrackingIsCurrent(container);
   });
 
   it('should warn if radio checked false changes to become uncontrolled', () => {

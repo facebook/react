@@ -25,7 +25,6 @@ export const enableUnifiedSyncLane = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
 export const enableCustomElementPropertySupport = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
-export const diffInCommitPhase = __VARIANT__;
 export const enableAsyncActions = __VARIANT__;
 export const alwaysThrottleRetries = __VARIANT__;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;

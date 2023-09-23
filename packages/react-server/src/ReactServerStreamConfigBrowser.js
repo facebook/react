@@ -182,3 +182,5 @@ export function closeWithError(destination: Destination, error: mixed): void {
     destination.close();
   }
 }
+
+export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';

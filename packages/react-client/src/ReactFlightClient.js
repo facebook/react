@@ -17,7 +17,10 @@ import type {
   StringDecoder,
 } from './ReactFlightClientConfig';
 
-import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
+import type {
+  HintCode,
+  HintModel,
+} from 'react-server/src/ReactFlightServerConfig';
 
 import type {CallServerCallback} from './ReactFlightReplyClient';
 
@@ -915,12 +918,12 @@ function resolvePostponeDev(
   }
 }
 
-function resolveHint(
+function resolveHint<Code: HintCode>(
   response: Response,
-  code: string,
+  code: Code,
   model: UninitializedModel,
 ): void {
-  const hintModel: HintModel = parseModel(response, model);
+  const hintModel: HintModel<Code> = parseModel(response, model);
   dispatchHint(code, hintModel);
 }
 
@@ -1044,7 +1047,7 @@ function processFullRow(
       return;
     }
     case 72 /* "H" */: {
-      const code = row[0];
+      const code: HintCode = (row[0]: any);
       resolveHint(response, code, row.slice(1));
       return;
     }

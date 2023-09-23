@@ -118,9 +118,6 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = true;
 
-// Performance related test
-export const diffInCommitPhase = __EXPERIMENTAL__;
-
 export const enableAsyncActions = __EXPERIMENTAL__;
 
 export const alwaysThrottleRetries = true;

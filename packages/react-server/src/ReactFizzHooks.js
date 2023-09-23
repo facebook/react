@@ -18,7 +18,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import type {ResumableState} from './ReactFizzConfig';
-import type {Task} from './ReactFizzServer';
+import type {Request, Task, KeyNode} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
 import type {TransitionStatus} from './ReactFizzConfig';
 
@@ -27,6 +27,7 @@ import {getTreeId} from './ReactFizzTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
 
 import {makeId, NotPendingTransition} from './ReactFizzConfig';
+import {createFastHash} from './ReactServerStreamConfig';
 
 import {
   enableCache,
@@ -42,6 +43,7 @@ import {
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
 import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {getFormState} from './ReactFizzServer';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -64,6 +66,8 @@ type Hook = {
 
 let currentlyRenderingComponent: Object | null = null;
 let currentlyRenderingTask: Task | null = null;
+let currentlyRenderingRequest: Request | null = null;
+let currentlyRenderingKeyPath: KeyNode | null = null;
 let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
 // Whether the work-in-progress hook is a re-rendered hook
@@ -197,12 +201,16 @@ function createWorkInProgressHook(): Hook {
 }
 
 export function prepareToUseHooks(
+  request: Request,
   task: Task,
+  keyPath: KeyNode | null,
   componentIdentity: Object,
   prevThenableState: ThenableState | null,
 ): void {
   currentlyRenderingComponent = componentIdentity;
   currentlyRenderingTask = task;
+  currentlyRenderingRequest = request;
+  currentlyRenderingKeyPath = keyPath;
   if (__DEV__) {
     isInHookUserCodeInDev = false;
   }
@@ -287,6 +295,8 @@ export function resetHooksState(): void {
 
   currentlyRenderingComponent = null;
   currentlyRenderingTask = null;
+  currentlyRenderingRequest = null;
+  currentlyRenderingKeyPath = null;
   didScheduleRenderPhaseUpdate = false;
   firstWorkInProgressHook = null;
   numberOfReRenders = 0;
@@ -577,6 +587,25 @@ function useOptimistic<S, A>(
   return [passthrough, unsupportedSetOptimisticState];
 }
 
+function createPostbackFormStateKey(
+  permalink: string | void,
+  componentKeyPath: KeyNode | null,
+  hookIndex: number,
+): string {
+  if (permalink !== undefined) {
+    // Don't bother to hash a permalink-based key since it's already short.
+    return 'p' + permalink;
+  } else {
+    // Append a node to the key path that represents the form state hook.
+    const keyPath: KeyNode = [componentKeyPath, null, hookIndex];
+    // Key paths are hashed to reduce the size. It does not need to be secure,
+    // and it's more important that it's fast than that it's completely
+    // collision-free.
+    const keyPathHash = createFastHash(JSON.stringify(keyPath));
+    return 'k' + keyPathHash;
+  }
+}
+
 function useFormState<S, P>(
   action: (S, P) => Promise<S>,
   initialState: S,
@@ -584,42 +613,108 @@ function useFormState<S, P>(
 ): [S, (P) => void] {
   resolveCurrentlyRenderingComponent();
 
-  // Count the number of useFormState hooks per component.
-  // TODO: We should also track which hook matches the form state passed at
-  // the root, if any. Matching is not yet implemented.
-  formStateCounter++;
-
-  // Bind the initial state to the first argument of the action.
-  // TODO: Use the keypath (or permalink) to check if there's matching state
-  // from the previous page.
-  const boundAction = action.bind(null, initialState);
-
-  // Wrap the action so the return value is void.
-  const dispatch = (payload: P): void => {
-    boundAction(payload);
-  };
+  // Count the number of useFormState hooks per component. We also use this to
+  // track the position of this useFormState hook relative to the other ones in
+  // this component, so we can generate a unique key for each one.
+  const formStateHookIndex = formStateCounter++;
+  const request: Request = (currentlyRenderingRequest: any);
 
   // $FlowIgnore[prop-missing]
-  if (typeof boundAction.$$FORM_ACTION === 'function') {
-    // $FlowIgnore[prop-missing]
-    dispatch.$$FORM_ACTION = (prefix: string) => {
-      // $FlowIgnore[prop-missing]
-      const metadata: ReactCustomFormAction = boundAction.$$FORM_ACTION(prefix);
-      // Override the action URL
-      if (permalink !== undefined) {
-        if (__DEV__) {
-          checkAttributeStringCoercion(permalink, 'target');
-        }
-        metadata.action = permalink + '';
-      }
-      return metadata;
-    };
-  } else {
-    // This is not a server action, so the permalink argument has
-    // no effect. The form will have to be hydrated before it's submitted.
-  }
+  const formAction = action.$$FORM_ACTION;
+  if (typeof formAction === 'function') {
+    // This is a server action. These have additional features to enable
+    // MPA-style form submissions with progressive enhancement.
 
-  return [initialState, dispatch];
+    // TODO: If the same permalink is passed to multiple useFormStates, and
+    // they all have the same action signature, Fizz will pass the postback
+    // state to all of them. We should probably only pass it to the first one,
+    // and/or warn.
+
+    // The key is lazily generated and deduped so the that the keypath doesn't
+    // get JSON.stringify-ed unnecessarily, and at most once.
+    let nextPostbackStateKey = null;
+
+    // Determine the current form state. If we received state during an MPA form
+    // submission, then we will reuse that, if the action identity matches.
+    // Otherwise we'll use the initial state argument. We will emit a comment
+    // marker into the stream that indicates whether the state was reused.
+    let state = initialState;
+    const componentKeyPath = (currentlyRenderingKeyPath: any);
+    const postbackFormState = getFormState(request);
+    // $FlowIgnore[prop-missing]
+    const isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
+    if (postbackFormState !== null && typeof isSignatureEqual === 'function') {
+      const postbackKey = postbackFormState[1];
+      const postbackReferenceId = postbackFormState[2];
+      const postbackBoundArity = postbackFormState[3];
+      if (
+        isSignatureEqual.call(action, postbackReferenceId, postbackBoundArity)
+      ) {
+        nextPostbackStateKey = createPostbackFormStateKey(
+          permalink,
+          componentKeyPath,
+          formStateHookIndex,
+        );
+        if (postbackKey === nextPostbackStateKey) {
+          // This was a match
+          formStateMatchingIndex = formStateHookIndex;
+          // Reuse the state that was submitted by the form.
+          state = postbackFormState[0];
+        }
+      }
+    }
+
+    // Bind the state to the first argument of the action.
+    const boundAction = action.bind(null, state);
+
+    // Wrap the action so the return value is void.
+    const dispatch = (payload: P): void => {
+      boundAction(payload);
+    };
+
+    // $FlowIgnore[prop-missing]
+    if (typeof boundAction.$$FORM_ACTION === 'function') {
+      // $FlowIgnore[prop-missing]
+      dispatch.$$FORM_ACTION = (prefix: string) => {
+        const metadata: ReactCustomFormAction =
+          boundAction.$$FORM_ACTION(prefix);
+
+        // Override the action URL
+        if (permalink !== undefined) {
+          if (__DEV__) {
+            checkAttributeStringCoercion(permalink, 'target');
+          }
+          permalink += '';
+          metadata.action = permalink;
+        }
+
+        const formData = metadata.data;
+        if (formData) {
+          if (nextPostbackStateKey === null) {
+            nextPostbackStateKey = createPostbackFormStateKey(
+              permalink,
+              componentKeyPath,
+              formStateHookIndex,
+            );
+          }
+          formData.append('$ACTION_KEY', nextPostbackStateKey);
+        }
+        return metadata;
+      };
+    }
+
+    return [state, dispatch];
+  } else {
+    // This is not a server action, so the implementation is much simpler.
+
+    // Bind the state to the first argument of the action.
+    const boundAction = action.bind(null, initialState);
+    // Wrap the action so the return value is void.
+    const dispatch = (payload: P): void => {
+      boundAction(payload);
+    };
+    return [initialState, dispatch];
+  }
 }
 
 function useId(): string {

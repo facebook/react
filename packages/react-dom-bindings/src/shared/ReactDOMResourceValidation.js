@@ -62,46 +62,6 @@ function propNamesListJoin(
   }
 }
 
-export function validatePreinitArguments(href: mixed, options: mixed) {
-  if (__DEV__) {
-    if (!href || typeof href !== 'string') {
-      const typeOfArg = getValueDescriptorExpectingObjectForWarning(href);
-      console.error(
-        'ReactDOM.preinit() expected the first argument to be a string representing an href but found %s instead.',
-        typeOfArg,
-      );
-    } else if (typeof options !== 'object' || options === null) {
-      const typeOfArg = getValueDescriptorExpectingObjectForWarning(options);
-      console.error(
-        'ReactDOM.preinit() expected the second argument to be an options argument containing at least an "as" property' +
-          ' specifying the Resource type. It found %s instead. The href for the preload call where this warning originated is "%s".',
-        typeOfArg,
-        href,
-      );
-    } else {
-      const as = options.as;
-      switch (as) {
-        case 'style':
-        case 'script': {
-          break;
-        }
-
-        // We have an invalid as type and need to warn
-        default: {
-          const typeOfAs = getValueDescriptorExpectingEnumForWarning(as);
-          console.error(
-            'ReactDOM.preinit() expected the second argument to be an options argument containing at least an "as" property' +
-              ' specifying the Resource type. It found %s instead. Currently, valid resource types for for preinit are "style"' +
-              ' and "script". The href for the preinit call where this warning originated is "%s".',
-            typeOfAs,
-            href,
-          );
-        }
-      }
-    }
-  }
-}
-
 export function getValueDescriptorExpectingObjectForWarning(
   thing: any,
 ): string {

@@ -85,7 +85,6 @@ export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 
-export const diffInCommitPhase = true;
 export const enableAsyncActions = false;
 
 // Flow magic to verify the exports of this file match the original version.

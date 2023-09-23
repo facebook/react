@@ -195,4 +195,22 @@ describe('ReactDOMServerFB', () => {
       'The render was aborted by the server without a reason.',
     ]);
   });
+
+  it('should allow setting an abort reason', () => {
+    const errors = [];
+    const stream = ReactDOMServer.renderToStream(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <InfiniteSuspend />
+        </Suspense>
+      </div>,
+      {
+        onError(error) {
+          errors.push(error);
+        },
+      },
+    );
+    ReactDOMServer.abortStream(stream, theError);
+    expect(errors).toEqual([theError]);
+  });
 });

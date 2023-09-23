@@ -165,6 +165,18 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* React DOM Shared Subset *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/src/ReactDOMSharedSubset.js',
+    name: 'react-dom.shared-subset',
+    global: 'ReactDOM',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react'],
+  },
+
   /******* Test Utils *******/
   {
     moduleType: RENDERER_UTILS,
@@ -248,7 +260,7 @@ const bundles = [
     global: 'ReactDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
   },
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
@@ -327,7 +339,7 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -336,7 +348,7 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -345,7 +357,7 @@ const bundles = [
     global: 'ReactServerDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
   },
 
   /******* React Server DOM Webpack Client *******/
@@ -365,7 +377,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', 'util'],
+    externals: ['react', 'react-dom', 'util', 'crypto'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -374,7 +386,7 @@ const bundles = [
     global: 'ReactServerDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', 'util'],
+    externals: ['react', 'react-dom', 'util', 'crypto'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -427,7 +439,7 @@ const bundles = [
     entry: 'react-server-dom-esm/server.node',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'util', 'async_hooks', 'react-dom'],
+    externals: ['react', 'util', 'crypto', 'async_hooks', 'react-dom'],
   },
 
   /******* React Server DOM ESM Client *******/
@@ -445,7 +457,7 @@ const bundles = [
     entry: 'react-server-dom-esm/client.node',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
-    externals: ['react', 'react-dom', 'util'],
+    externals: ['react', 'react-dom', 'util', 'crypto'],
   },
 
   /******* React Server DOM ESM Node.js Loader *******/

@@ -24,21 +24,33 @@ async function callServer(id, args) {
   return returnValue;
 }
 
-let data = createFromFetch(
-  fetch('/', {
-    headers: {
-      Accept: 'text/x-component',
-    },
-  }),
-  {
-    callServer,
-  }
-);
-
 function Shell({data}) {
-  const [root, setRoot] = useState(use(data));
+  const [root, setRoot] = useState(data);
   updateRoot = setRoot;
   return root;
 }
 
-ReactDOM.hydrateRoot(document, <Shell data={data} />);
+async function hydrateApp() {
+  const {root, returnValue, formState} = await createFromFetch(
+    fetch('/', {
+      headers: {
+        Accept: 'text/x-component',
+      },
+    }),
+    {
+      callServer,
+    }
+  );
+
+  ReactDOM.hydrateRoot(document, <Shell data={root} />, {
+    // TODO: This part doesn't actually work because the server only returns
+    // form state during the request that submitted the form. Which means it
+    // the state needs to be transported as part of the HTML stream. We intend
+    // to add a feature to Fizz for this, but for now it's up to the
+    // metaframework to implement correctly.
+    experimental_formState: formState,
+  });
+}
+
+// Remove this line to simulate MPA behavior
+hydrateApp();

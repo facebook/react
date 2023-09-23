@@ -49,7 +49,7 @@ describe('react-dom-server-rendering-stub', () => {
     }
     const html = ReactDOMFizzServer.renderToString(<App />);
     expect(html).toEqual(
-      '<link rel="stylesheet" href="bar" data-precedence="default"/><script src="barmodule" type="module" async=""></script><link rel="preload" as="style" href="foo"/><link rel="modulepreload" href="foomodule"/><div>foo</div>',
+      '<link rel="stylesheet" href="bar" data-precedence="default"/><script src="barmodule" type="module" async=""></script><link rel="preload" href="foo" as="style"/><link rel="modulepreload" href="foomodule"/><div>foo</div>',
     );
   });
 

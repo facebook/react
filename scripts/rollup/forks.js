@@ -84,7 +84,11 @@ const forks = Object.freeze({
     entry,
     dependencies
   ) => {
-    if (entry === 'react-dom' || entry === 'react-dom/server-rendering-stub') {
+    if (
+      entry === 'react-dom' ||
+      entry === 'react-dom/server-rendering-stub' ||
+      entry === 'react-dom/src/ReactDOMSharedSubset.js'
+    ) {
       return './packages/react-dom/src/ReactDOMSharedInternals.js';
     }
     if (

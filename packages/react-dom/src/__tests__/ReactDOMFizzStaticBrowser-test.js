@@ -20,6 +20,7 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
+let ReactDOM;
 let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
@@ -29,6 +30,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static.browser');
@@ -105,7 +107,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
     const temp = document.createElement('div');
     temp.innerHTML = result;
-    insertNodesAndExecuteScripts(temp, container, null);
+    await insertNodesAndExecuteScripts(temp, container, null);
   }
 
   // @gate experimental
@@ -461,7 +463,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
       if (prerendering) {
         React.unstable_postpone();
       }
-      return 'Hello';
+      return ['Hello', 'World'];
     }
 
     function App() {
@@ -481,7 +483,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     await readIntoContainer(prerendered.prelude);
@@ -490,7 +492,177 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     await readIntoContainer(resumed);
 
-    // TODO: expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hello', 'World']}</div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in prerender and resuming with a prefix', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'World';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            Hello
+            <Postpone />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hello', 'World']}</div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in lazy in prerender and resuming later', async () => {
+    let prerendering = true;
+    const Hole = React.lazy(async () => {
+      React.unstable_postpone();
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            Hi
+            {prerendering ? Hole : 'Hello'}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Hi'}
+        {'Hello'}
+      </div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in a nested array', async () => {
+    let prerendering = true;
+    const Hole = React.lazy(async () => {
+      React.unstable_postpone();
+    });
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            Hi
+            {[<Postpone key="key" />, prerendering ? Hole : 'World']}
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hi', 'Hello', 'World']}</div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('supports postponing in lazy as a direct child', async () => {
+    let prerendering = true;
+    const Hole = React.lazy(async () => {
+      React.unstable_postpone();
+    });
+    function Postpone() {
+      return prerendering ? Hole : 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Postpone key="key" />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 
   // @gate enablePostpone
@@ -522,7 +694,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     const content = await ReactDOMFizzServer.resume(
       <App />,
-      prerendered.postponed,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
     );
 
     const html = await readContent(concat(prerendered.prelude, content));
@@ -530,5 +702,189 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const bodyEndTags = /<\/body\s*>/gi;
     expect(Array.from(html.matchAll(htmlEndTags)).length).toBe(1);
     expect(Array.from(html.matchAll(bodyEndTags)).length).toBe(1);
+  });
+
+  // @gate enablePostpone
+  it('can prerender various hoistables and deduped resources', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return (
+        <>
+          <link rel="stylesheet" href="my-style2" precedence="low" />
+          <link rel="stylesheet" href="my-style1" precedence="high" />
+          <style precedence="high" href="my-style3">
+            style
+          </style>
+          <img src="my-img" />
+        </>
+      );
+    }
+
+    function App() {
+      ReactDOM.preconnect('example.com');
+      ReactDOM.preload('my-font', {as: 'font', type: 'font/woff2'});
+      ReactDOM.preload('my-style0', {as: 'style'});
+      // This should transfer the props in to the style that loads later.
+      ReactDOM.preload('my-style2', {
+        as: 'style',
+        crossOrigin: 'use-credentials',
+      });
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <link rel="stylesheet" href="my-style1" precedence="high" />
+            <img src="my-img" />
+            <Postpone />
+          </Suspense>
+          <title>Hello World</title>
+        </div>
+      );
+    }
+
+    let calledInit = false;
+    jest.mock(
+      'init.js',
+      () => {
+        calledInit = true;
+      },
+      {virtual: true},
+    );
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />, {
+      bootstrapScripts: ['init.js'],
+    });
+    expect(prerendered.postponed).not.toBe(null);
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual([
+      <link href="example.com" rel="preconnect" />,
+      <link
+        as="font"
+        crossorigin=""
+        href="my-font"
+        rel="preload"
+        type="font/woff2"
+      />,
+      <link as="image" href="my-img" rel="preload" />,
+      <link data-precedence="high" href="my-style1" rel="stylesheet" />,
+      <link as="script" fetchpriority="low" href="init.js" rel="preload" />,
+      <link as="style" href="my-style0" rel="preload" />,
+      <link
+        as="style"
+        crossorigin="use-credentials"
+        href="my-style2"
+        rel="preload"
+      />,
+      <title>Hello World</title>,
+      <div>Loading...</div>,
+    ]);
+
+    prerendering = false;
+    const content = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(content);
+
+    expect(calledInit).toBe(true);
+
+    // Dispatch load event to injected stylesheet
+    const link = document.querySelector(
+      'link[rel="stylesheet"][href="my-style2"]',
+    );
+    const event = document.createEvent('Events');
+    event.initEvent('load', true, true);
+    link.dispatchEvent(event);
+
+    // Wait for the instruction microtasks to flush.
+    await 0;
+    await 0;
+
+    expect(getVisibleChildren(container)).toEqual([
+      <link href="example.com" rel="preconnect" />,
+      <link
+        as="font"
+        crossorigin=""
+        href="my-font"
+        rel="preload"
+        type="font/woff2"
+      />,
+      <link as="image" href="my-img" rel="preload" />,
+      <link data-precedence="high" href="my-style1" rel="stylesheet" />,
+      <style data-href="my-style3" data-precedence="high">
+        style
+      </style>,
+      <link
+        crossorigin="use-credentials"
+        data-precedence="low"
+        href="my-style2"
+        rel="stylesheet"
+      />,
+      <link as="script" fetchpriority="low" href="init.js" rel="preload" />,
+      <link as="style" href="my-style0" rel="preload" />,
+      <link
+        as="style"
+        crossorigin="use-credentials"
+        href="my-style2"
+        rel="preload"
+      />,
+      <title>Hello World</title>,
+      <div>
+        <img src="my-img" />
+        <img src="my-img" />
+      </div>,
+    ]);
+  });
+
+  // @gate enablePostpone
+  it('can postpone a boundary after it has already been added', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Suspense fallback="Loading...">
+              <Postpone />
+            </Suspense>
+            <Postpone />
+            <Postpone />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    console.log(JSON.stringify(prerendered.postponed, null, 2));
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>{['Hello', 'Hello', 'Hello']}</div>,
+    );
   });
 });
