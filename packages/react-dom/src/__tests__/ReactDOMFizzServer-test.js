@@ -6261,6 +6261,59 @@ describe('ReactDOMFizzServer', () => {
     expect(fatalErrors).toEqual(['testing postpone']);
   });
 
+  // @gate enablePostpone
+  it('can postpone in a fallback', async () => {
+    function Postponed({isClient}) {
+      if (!isClient) {
+        React.unstable_postpone('testing postpone');
+      }
+      return 'loading...';
+    }
+
+    const lazyText = React.lazy(async () => {
+      await 0; // causes the fallback to start work
+      return {default: 'Hello'};
+    });
+
+    function App({isClient}) {
+      return (
+        <div>
+          <Suspense fallback="Outer">
+            <Suspense fallback={<Postponed isClient={isClient} />}>
+              {lazyText}
+            </Suspense>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+
+    await act(() => {
+      const {pipe} = renderToPipeableStream(<App isClient={false} />, {
+        onError(error) {
+          errors.push(error.message);
+        },
+      });
+      pipe(writable);
+    });
+
+    // TODO: This should actually be fully resolved because the value could eventually
+    // resolve on the server even though the fallback couldn't so we should have been
+    // able to render it.
+    expect(getVisibleChildren(container)).toEqual(<div>Outer</div>);
+
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error) {
+        errors.push(error.message);
+      },
+    });
+    await waitForAll([]);
+    // Postponing should not be logged as a recoverable error since it's intentional.
+    expect(errors).toEqual([]);
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
+
   it(
     'a transition that flows into a dehydrated boundary should not suspend ' +
       'if the boundary is showing a fallback',
@@ -6828,6 +6881,96 @@ describe('ReactDOMFizzServer', () => {
             'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
             'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
           ],
+    );
+  });
+
+  // @gate enablePostpone
+  it('can postpone in fallback', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    function PostponeAndDelay() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return React.use(promise);
+    }
+
+    const Lazy = React.lazy(async () => {
+      await 0;
+      return {default: Postpone};
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Outer">
+            <Suspense fallback={<Postpone />}>
+              <PostponeAndDelay /> World
+            </Suspense>
+            <Suspense fallback={<Postpone />}>
+              <Lazy />
+            </Suspense>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    const resumed = await ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    expect(getVisibleChildren(container)).toEqual(<div>Outer</div>);
+
+    // Read what we've completed so far
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    // Should have now resolved the postponed loading state, but not the promise
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Hello'}
+        {'Hello'}
+      </div>,
+    );
+
+    // Resolve the final promise
+    await act(() => {
+      resolve('Hi');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Hi'}
+        {' World'}
+        {'Hello'}
+      </div>,
     );
   });
 });

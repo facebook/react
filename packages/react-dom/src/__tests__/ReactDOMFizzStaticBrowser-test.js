@@ -870,8 +870,6 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     prerendering = false;
 
-    console.log(JSON.stringify(prerendered.postponed, null, 2));
-
     const resumed = await ReactDOMFizzServer.resume(
       <App />,
       JSON.parse(JSON.stringify(prerendered.postponed)),
@@ -886,5 +884,101 @@ describe('ReactDOMFizzStaticBrowser', () => {
     expect(getVisibleChildren(container)).toEqual(
       <div>{['Hello', 'Hello', 'Hello']}</div>,
     );
+  });
+
+  // @gate enablePostpone
+  it('can postpone in fallback', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    const Lazy = React.lazy(async () => {
+      await 0;
+      return {default: Postpone};
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Outer">
+            <Suspense fallback={<Postpone />}>
+              <Postpone /> World
+            </Suspense>
+            <Suspense fallback={<Postpone />}>
+              <Lazy />
+            </Suspense>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Outer</div>);
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Hello'}
+        {' World'}
+        {'Hello'}
+      </div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('can postpone in fallback without postponing the tree', async () => {
+    function Postpone() {
+      React.unstable_postpone();
+    }
+
+    const lazyText = React.lazy(async () => {
+      await 0; // causes the fallback to start work
+      return {default: 'Hello'};
+    });
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Outer">
+            <Suspense fallback={<Postpone />}>{lazyText}</Suspense>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    // TODO: This should actually be null because we should've been able to fully
+    // resolve the render on the server eventually, even though the fallback postponed.
+    // So we should not need to resume.
+    expect(prerendered.postponed).not.toBe(null);
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Outer</div>);
+
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await readIntoContainer(resumed);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
 });
