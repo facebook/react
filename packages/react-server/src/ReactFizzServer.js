@@ -2490,15 +2490,23 @@ function trackPostpone(
       addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
       return;
     } else {
-      const boundaryNode: ReplaySuspenseBoundary = [
-        boundaryKeyPath[1],
-        boundaryKeyPath[2],
-        children,
-        null,
-        boundary.rootSegmentID,
-      ];
-      trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
-      addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
+      let boundaryNode: void | ReplayNode =
+        trackedPostpones.workingMap.get(boundaryKeyPath);
+      if (boundaryNode === undefined) {
+        boundaryNode = [
+          boundaryKeyPath[1],
+          boundaryKeyPath[2],
+          children,
+          null,
+          boundary.rootSegmentID,
+        ];
+        trackedPostpones.workingMap.set(boundaryKeyPath, boundaryNode);
+        addToReplayParent(boundaryNode, boundaryKeyPath[0], trackedPostpones);
+      } else {
+        // Upgrade to ReplaySuspenseBoundary.
+        ((boundaryNode: any): ReplaySuspenseBoundary)[4] =
+          boundary.rootSegmentID;
+      }
       // Fall through to add the child node.
     }
   }
