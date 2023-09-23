@@ -54,9 +54,7 @@ export {detachDeletedInstance};
 import {hasRole} from './DOMAccessibilityRoles';
 import {
   setInitialProperties,
-  diffProperties,
   updateProperties,
-  updatePropertiesWithDiff,
   diffHydratedProperties,
   diffHydratedText,
   trapClickOnNonInteractiveElement,
@@ -96,7 +94,6 @@ import {
   enableFloat,
   enableHostSingletons,
   enableTrustedTypesIntegration,
-  diffInCommitPhase,
   enableFormActions,
   enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
@@ -546,20 +543,6 @@ export function finalizeInitialChildren(
   }
 }
 
-export function prepareUpdate(
-  domElement: Instance,
-  type: string,
-  oldProps: Props,
-  newProps: Props,
-  hostContext: HostContext,
-): null | Array<mixed> {
-  if (diffInCommitPhase) {
-    // TODO: Figure out how to validateDOMNesting when children turn into a string.
-    return null;
-  }
-  return diffProperties(domElement, type, oldProps, newProps);
-}
-
 export function shouldSetTextContent(type: string, props: Props): boolean {
   return (
     type === 'textarea' ||
@@ -712,19 +695,8 @@ export function commitUpdate(
   newProps: Props,
   internalInstanceHandle: Object,
 ): void {
-  if (diffInCommitPhase) {
-    // Diff and update the properties.
-    updateProperties(domElement, type, oldProps, newProps);
-  } else {
-    // Apply the diff to the DOM node.
-    updatePropertiesWithDiff(
-      domElement,
-      updatePayload,
-      type,
-      oldProps,
-      newProps,
-    );
-  }
+  // Diff and update the properties.
+  updateProperties(domElement, type, oldProps, newProps);
 
   // Update the props handle so that we know which props are the ones with
   // with current event handlers.
@@ -1384,7 +1356,7 @@ export function hydrateInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
   shouldWarnDev: boolean,
-): null | Array<mixed> {
+): void {
   precacheFiberNode(internalInstanceHandle, instance);
   // TODO: Possibly defer this until the commit phase where all the events
   // get attached.
@@ -1395,7 +1367,7 @@ export function hydrateInstance(
   const isConcurrentMode =
     ((internalInstanceHandle: Fiber).mode & ConcurrentMode) !== NoMode;
 
-  return diffHydratedProperties(
+  diffHydratedProperties(
     instance,
     type,
     props,

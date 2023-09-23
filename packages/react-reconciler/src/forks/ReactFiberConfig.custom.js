@@ -49,7 +49,6 @@ export const resetAfterCommit = $$$config.resetAfterCommit;
 export const createInstance = $$$config.createInstance;
 export const appendInitialChild = $$$config.appendInitialChild;
 export const finalizeInitialChildren = $$$config.finalizeInitialChildren;
-export const prepareUpdate = $$$config.prepareUpdate;
 export const shouldSetTextContent = $$$config.shouldSetTextContent;
 export const createTextInstance = $$$config.createTextInstance;
 export const scheduleTimeout = $$$config.scheduleTimeout;
