@@ -38,7 +38,6 @@ import {
 import {
   enableHostSingletons,
   enableClientRenderFallbackOnTextMismatch,
-  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -628,7 +627,7 @@ export function tryToClaimNextHydratableFormMarkerInstance(
 function prepareToHydrateHostInstance(
   fiber: Fiber,
   hostContext: HostContext,
-): boolean {
+): void {
   if (!supportsHydration) {
     throw new Error(
       'Expected prepareToHydrateHostInstance() to never be called. ' +
@@ -638,7 +637,7 @@ function prepareToHydrateHostInstance(
 
   const instance: Instance = fiber.stateNode;
   const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  const updatePayload = hydrateInstance(
+  hydrateInstance(
     instance,
     fiber.type,
     fiber.memoizedProps,
@@ -646,17 +645,6 @@ function prepareToHydrateHostInstance(
     fiber,
     shouldWarnIfMismatchDev,
   );
-
-  // TODO: Type this specific to this type of component.
-  if (!diffInCommitPhase) {
-    fiber.updateQueue = (updatePayload: any);
-    // If the update payload indicates that there is a change or if there
-    // is a new ref we mark this as an update.
-    if (updatePayload !== null) {
-      return true;
-    }
-  }
-  return false;
 }
 
 function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {

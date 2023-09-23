@@ -27,7 +27,6 @@ export const {
   enableTransitionTracing,
   enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
-  diffInCommitPhase,
   enableAsyncActions,
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
