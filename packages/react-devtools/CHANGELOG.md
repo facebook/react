@@ -4,6 +4,23 @@
 
 ---
 
+### 4.28.4
+September 25, 2023
+
+#### Features
+* feat:-Added a delete all filters action and added title to the add filter a… ([Biki-das](https://github.com/Biki-das) in [#27332](https://github.com/facebook/react/pull/27332))
+* feat[devtools/extension]: add dark theme for popup ([rakleed](https://github.com/rakleed) in [#27330](https://github.com/facebook/react/pull/27330))
+
+#### Bugfixes
+* refactor[devtools/extension]: refactored messaging logic across different parts of the extension ([hoxyq](https://github.com/hoxyq) in [#27417](https://github.com/facebook/react/pull/27417))
+* fix[devtools/extension]: added a workaround for proxy content script injection in firefox ([hoxyq](https://github.com/hoxyq) in [#27375](https://github.com/facebook/react/pull/27375))
+* fix[devtools/useTransition]: don't check for dispatch property when determining if hook is stateful ([hoxyq](https://github.com/hoxyq) in [#27365](https://github.com/facebook/react/pull/27365))
+* feat[devtools/extension]: show disclaimer when page doesnt run react and refactor react polling logic ([hoxyq](https://github.com/hoxyq) in [#27373](https://github.com/facebook/react/pull/27373))
+* fix[devtools/extension]: unregister dynamically injected content scripts instead of filtering ([hoxyq](https://github.com/hoxyq) in [#27369](https://github.com/facebook/react/pull/27369))
+* refactor[devtools/extension]: more stable element updates polling to avoid timed out errors ([hoxyq](https://github.com/hoxyq) in [#27357](https://github.com/facebook/react/pull/27357))
+
+---
+
 ### 4.28.3
 September 5, 2023
 
