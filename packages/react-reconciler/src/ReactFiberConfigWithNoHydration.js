@@ -29,6 +29,7 @@ export const registerSuspenseInstanceRetry = shim;
 export const canHydrateFormStateMarker = shim;
 export const isFormStateMarkerMatching = shim;
 export const getNextHydratableSibling = shim;
+export const getNextHydratableInSingleton = shim;
 export const getFirstHydratableChild = shim;
 export const getFirstHydratableChildWithinContainer = shim;
 export const getFirstHydratableChildWithinSuspenseInstance = shim;

@@ -3617,6 +3617,94 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('supports Suspense boudnaries before html and head and after body and html tags', async () => {
+    function Reveal({children}) {
+      readText('reveal');
+      return children;
+    }
+    function App() {
+      return (
+        <>
+          <Suspense>
+            <Reveal>
+              <meta content="before html" />
+            </Reveal>
+          </Suspense>
+          <html>
+            <Suspense>
+              <Reveal>
+                <meta content="before head" />
+              </Reveal>
+            </Suspense>
+            <head>
+              <meta itemProp="head" />
+            </head>
+            <body>body</body>
+            <Suspense>
+              <Reveal>
+                <meta content="after body" />
+              </Reveal>
+            </Suspense>
+          </html>
+          <Suspense>
+            <Reveal>
+              <meta content="after html" />
+            </Reveal>
+          </Suspense>
+        </>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta itemprop="head" />
+        </head>
+        <body>body</body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('reveal');
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta itemprop="head" />
+        </head>
+        <body>
+          body
+          <meta content="before html" />
+          <meta content="before head" />
+          <meta content="after body" />
+          <meta content="after html" />
+        </body>
+      </html>,
+    );
+
+    ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta itemprop="head" />
+        </head>
+        <body>
+          body
+          <meta content="before html" />
+          <meta content="before head" />
+          <meta content="after body" />
+          <meta content="after html" />
+        </body>
+      </html>,
+    );
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};

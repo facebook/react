@@ -927,6 +927,7 @@ export function clearContainer(container: Container): void {
         case 'HEAD':
         case 'HTML':
         case 'BODY':
+        case 'FRAMESET':
           clearContainerSparingly(container);
           return;
         default: {
@@ -961,7 +962,8 @@ function clearContainerSparingly(container: Node) {
     switch (node.nodeName) {
       case 'HTML':
       case 'HEAD':
-      case 'BODY': {
+      case 'BODY':
+      case 'FRAMESET': {
         const element: Element = (node: any);
         clearContainerSparingly(element);
         // If these singleton instances had previously been rendered with React they
@@ -1337,10 +1339,50 @@ export function getFirstHydratableChild(
   return getNextHydratable(parentInstance.firstChild);
 }
 
+export function getNextHydratableInSingleton(
+  singletonInstance: HydratableInstance,
+  nextRootOrSingletonHydratable: null | HydratableInstance,
+): null | HydratableInstance {
+  if (enableHostSingletons) {
+    if (
+      singletonInstance.tagName === 'BODY' ||
+      singletonInstance.tagName === 'FRAMESET'
+    ) {
+      // We transition from head hydration to body hydration when we encounter
+      // the body singleton. From this point on we expect hydration to coninue in the
+      // body scope even after leaving the <html> element.
+      return getNextHydratable(singletonInstance.firstChild);
+    }
+
+    // We are either in head mode or body mode but either way we want to continue hydration
+    // from the wherever we last left off in this mode.
+    return nextRootOrSingletonHydratable;
+  } else {
+    return null;
+  }
+}
+
 export function getFirstHydratableChildWithinContainer(
   parentContainer: Container,
 ): null | HydratableInstance {
-  return getNextHydratable(parentContainer.firstChild);
+  if (enableFloat && enableHostSingletons) {
+    const nodeType = parentContainer.nodeType;
+    if (nodeType === DOCUMENT_NODE) {
+      // When hydraing the Document we start in head mode.
+      return getNextHydratable((parentContainer: any).head.firstChild);
+    } else if (parentContainer.nodeName === 'HTML') {
+      // When hydrating <html> we start in head mode.
+      return getNextHydratable(
+        (parentContainer.ownerDocument.head: any).firstChild,
+      );
+    } else {
+      // If we aren't hydrating Document or html assume whatever mode we are
+      // currently in.
+      return getNextHydratable(parentContainer.firstChild);
+    }
+  } else {
+    return getNextHydratable(parentContainer.firstChild);
+  }
 }
 
 export function getFirstHydratableChildWithinSuspenseInstance(
@@ -1843,7 +1885,9 @@ export function requestPostPaintCallback(callback: (time: number) => void) {
 export const supportsSingletons = true;
 
 export function isHostSingletonType(type: string): boolean {
-  return type === 'html' || type === 'head' || type === 'body';
+  return (
+    type === 'html' || type === 'head' || type === 'body' || type === 'frameset'
+  );
 }
 
 export function resolveSingletonInstance(
@@ -1885,11 +1929,12 @@ export function resolveSingletonInstance(
       }
       return head;
     }
+    case 'frameset':
     case 'body': {
       const body = ownerDocument.body;
       if (!body) {
         throw new Error(
-          'React expected a <body> element (document.body) to exist in the Document but one was' +
+          `React expected a <${type}> element (document.body) to exist in the Document but one was` +
             ' not found. React never removes the body for any Document it renders into so' +
             ' the cause is likely in some other script running on this page.',
         );
@@ -1927,7 +1972,8 @@ export function acquireSingletonInstance(
     switch (type) {
       case 'html':
       case 'head':
-      case 'body': {
+      case 'body':
+      case 'frameset': {
         break;
       }
       default: {
@@ -1966,6 +2012,7 @@ export function clearSingleton(instance: Instance): void {
       isMarkedHoistable(node) ||
       nodeName === 'HEAD' ||
       nodeName === 'BODY' ||
+      nodeName === 'FRAMESET' ||
       nodeName === 'SCRIPT' ||
       nodeName === 'STYLE' ||
       (nodeName === 'LINK' &&

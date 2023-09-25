@@ -225,3 +225,5 @@ export const clearSingleton = $$$config.clearSingleton;
 export const acquireSingletonInstance = $$$config.acquireSingletonInstance;
 export const releaseSingletonInstance = $$$config.releaseSingletonInstance;
 export const isHostSingletonType = $$$config.isHostSingletonType;
+export const getNextHydratableInSingleton =
+  $$$config.getNextHydratableInSingleton;
