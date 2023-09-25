@@ -170,7 +170,7 @@ function updateRequiredBackends() {
     {
       source: 'react-devtools-backend-manager',
       payload: {
-        type: 'react-devtools-required-backends',
+        type: 'require-backends',
         versions: Array.from(requiredBackends),
       },
     },

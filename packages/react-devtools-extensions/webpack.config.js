@@ -57,6 +57,7 @@ module.exports = {
   entry: {
     background: './src/background/index.js',
     backendManager: './src/contentScripts/backendManager.js',
+    fileFetcher: './src/contentScripts/fileFetcher.js',
     main: './src/main/index.js',
     panel: './src/panel.js',
     proxy: './src/contentScripts/proxy.js',

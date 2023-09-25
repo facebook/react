@@ -13,11 +13,26 @@ const contentScriptsToInject = IS_FIREFOX
         persistAcrossSessions: true,
         runAt: 'document_end',
       },
+      {
+        id: '@react-devtools/file-fetcher',
+        js: ['build/fileFetcher.js'],
+        matches: ['<all_urls>'],
+        persistAcrossSessions: true,
+        runAt: 'document_end',
+      },
     ]
   : [
       {
         id: '@react-devtools/proxy',
         js: ['build/proxy.js'],
+        matches: ['<all_urls>'],
+        persistAcrossSessions: true,
+        runAt: 'document_end',
+        world: chrome.scripting.ExecutionWorld.ISOLATED,
+      },
+      {
+        id: '@react-devtools/file-fetcher',
+        js: ['build/fileFetcher.js'],
         matches: ['<all_urls>'],
         persistAcrossSessions: true,
         runAt: 'document_end',
