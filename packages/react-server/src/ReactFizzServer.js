@@ -789,7 +789,7 @@ function fatalError(request: Request, error: mixed): void {
 function renderSuspenseBoundary(
   request: Request,
   someTask: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   props: Object,
 ): void {
   if (someTask.replay !== null) {
@@ -960,7 +960,7 @@ function renderSuspenseBoundary(
 function replaySuspenseBoundary(
   request: Request,
   task: ReplayTask,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   props: Object,
   id: number,
   childNodes: Array<ReplayNode>,
@@ -1064,7 +1064,7 @@ function replaySuspenseBoundary(
 function renderBackupSuspenseBoundary(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   props: Object,
 ) {
   pushBuiltInComponentStackInDEV(task, 'Suspense');
@@ -1090,7 +1090,7 @@ function renderBackupSuspenseBoundary(
 function renderHostElement(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   type: string,
   props: Object,
 ): void {
@@ -1156,7 +1156,7 @@ function shouldConstruct(Component: any) {
 function renderWithHooks<Props, SecondArg>(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   prevThenableState: ThenableState | null,
   Component: (p: Props, arg: SecondArg) => any,
   props: Props,
@@ -1177,7 +1177,7 @@ function renderWithHooks<Props, SecondArg>(
 function finishClassComponent(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   instance: any,
   Component: any,
   props: any,
@@ -1223,7 +1223,7 @@ function finishClassComponent(
 function renderClassComponent(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   Component: any,
   props: any,
 ): void {
@@ -1252,7 +1252,7 @@ let hasWarnedAboutUsingContextAsConsumer = false;
 function renderIndeterminateComponent(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   prevThenableState: ThenableState | null,
   Component: any,
   props: any,
@@ -1379,7 +1379,7 @@ function renderIndeterminateComponent(
 function finishFunctionComponent(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   children: ReactNodeList,
   hasId: boolean,
   formStateCount: number,
@@ -1506,7 +1506,7 @@ function resolveDefaultProps(Component: any, baseProps: Object): Object {
 function renderForwardRef(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   prevThenableState: null | ThenableState,
   type: any,
   props: Object,
@@ -1540,7 +1540,7 @@ function renderForwardRef(
 function renderMemo(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   prevThenableState: ThenableState | null,
   type: any,
   props: Object,
@@ -1562,7 +1562,7 @@ function renderMemo(
 function renderContextConsumer(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   context: ReactContext<any>,
   props: Object,
 ): void {
@@ -1616,7 +1616,7 @@ function renderContextConsumer(
 function renderContextProvider(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   type: ReactProviderType<any>,
   props: Object,
 ): void {
@@ -1645,7 +1645,7 @@ function renderContextProvider(
 function renderLazyComponent(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   prevThenableState: ThenableState | null,
   lazyComponent: LazyComponentType<any, any>,
   props: Object,
@@ -1671,7 +1671,7 @@ function renderLazyComponent(
 function renderOffscreen(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   props: Object,
 ): void {
   const mode: ?OffscreenMode = (props.mode: any);
@@ -1691,7 +1691,7 @@ function renderOffscreen(
 function renderElement(
   request: Request,
   task: Task,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   prevThenableState: ThenableState | null,
   type: any,
   props: Object,
@@ -1882,7 +1882,7 @@ function resumeNode(
 function resumeElement(
   request: Request,
   task: ReplayTask,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   segmentId: number,
   prevThenableState: ThenableState | null,
   type: any,
@@ -1926,7 +1926,7 @@ function resumeElement(
 function replayElement(
   request: Request,
   task: ReplayTask,
-  keyPath: Root | KeyNode,
+  keyPath: KeyNode,
   prevThenableState: ThenableState | null,
   name: null | string,
   keyOrIndex: number | string,
