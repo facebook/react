@@ -9636,7 +9636,7 @@ function pingTask(request, task) {
   }
 }
 
-function createSuspenseBoundary(request, fallbackAbortableTasks, keyPath) {
+function createSuspenseBoundary(request, fallbackAbortableTasks) {
   return {
     status: PENDING,
     rootSegmentID: -1,
@@ -9647,7 +9647,8 @@ function createSuspenseBoundary(request, fallbackAbortableTasks, keyPath) {
     fallbackAbortableTasks: fallbackAbortableTasks,
     errorDigest: null,
     resources: createBoundaryResources(),
-    keyPath: keyPath
+    trackedContentKeyPath: null,
+    trackedFallbackNode: null
   };
 }
 
@@ -9913,7 +9914,12 @@ function renderSuspenseBoundary(request, someTask, keyPath, props) {
   var fallback = props.fallback;
   var content = props.children;
   var fallbackAbortSet = new Set();
-  var newBoundary = createSuspenseBoundary(request, fallbackAbortSet, keyPath);
+  var newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
+
+  if (request.trackedPostpones !== null) {
+    newBoundary.trackedContentKeyPath = keyPath;
+  }
+
   var insertionIndex = parentSegment.chunks.length; // The children of the boundary segment is actually the fallback.
 
   var boundarySegment = createPendingSegment(
@@ -10005,6 +10011,25 @@ function renderSuspenseBoundary(request, someTask, keyPath, props) {
     task.blockedBoundary = parentBoundary;
     task.blockedSegment = parentSegment;
     task.keyPath = prevKeyPath;
+  }
+
+  var fallbackKeyPath = [keyPath[0], "Suspense Fallback", keyPath[2]];
+  var trackedPostpones = request.trackedPostpones;
+
+  if (trackedPostpones !== null) {
+    // We create a detached replay node to track any postpones inside the fallback.
+    var fallbackReplayNode = [fallbackKeyPath[1], fallbackKeyPath[2], [], null];
+    trackedPostpones.workingMap.set(fallbackKeyPath, fallbackReplayNode);
+
+    if (newBoundary.status === POSTPONED) {
+      // This must exist now.
+      var boundaryReplayNode = trackedPostpones.workingMap.get(keyPath);
+      boundaryReplayNode[4] = fallbackReplayNode;
+    } else {
+      // We might not inject it into the postponed tree, unless the content actually
+      // postpones too. We need to keep track of it until that happpens.
+      newBoundary.trackedFallbackNode = fallbackReplayNode;
+    }
   } // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
 
@@ -10015,8 +10040,8 @@ function renderSuspenseBoundary(request, someTask, keyPath, props) {
     -1,
     parentBoundary,
     boundarySegment,
-    fallbackAbortSet, // TODO: Should distinguish key path of fallback and primary tasks
-    keyPath,
+    fallbackAbortSet,
+    fallbackKeyPath,
     task.formatContext,
     task.legacyContext,
     task.context,
@@ -10039,19 +10064,18 @@ function replaySuspenseBoundary(
   props,
   id,
   childNodes,
-  childSlots
+  childSlots,
+  fallbackNodes,
+  fallbackSlots
 ) {
   pushBuiltInComponentStackInDEV(task, "Suspense");
   var prevKeyPath = task.keyPath;
   var previousReplaySet = task.replay;
   var parentBoundary = task.blockedBoundary;
   var content = props.children;
+  var fallback = props.fallback;
   var fallbackAbortSet = new Set();
-  var resumedBoundary = createSuspenseBoundary(
-    request,
-    fallbackAbortSet,
-    task.keyPath
-  );
+  var resumedBoundary = createSuspenseBoundary(request, fallbackAbortSet);
   resumedBoundary.parentFlushed = true; // We restore the same id of this boundary as was used during prerender.
 
   resumedBoundary.rootSegmentID = id; // We can reuse the current context and task to render the content immediately without
@@ -10080,14 +10104,6 @@ function replaySuspenseBoundary(
       renderNode(request, task, content, -1);
     }
 
-    if (
-      resumedBoundary.pendingTasks === 0 &&
-      resumedBoundary.status === PENDING
-    ) {
-      resumedBoundary.status = COMPLETED;
-      request.completedBoundaries.push(resumedBoundary);
-    }
-
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
       throw new Error(
         "Couldn't find all resumable slots by key/index during replaying. " +
@@ -10096,6 +10112,19 @@ function replaySuspenseBoundary(
     }
 
     task.replay.pendingTasks--;
+
+    if (
+      resumedBoundary.pendingTasks === 0 &&
+      resumedBoundary.status === PENDING
+    ) {
+      resumedBoundary.status = COMPLETED;
+      request.completedBoundaries.push(resumedBoundary); // This must have been the last segment we were waiting on. This boundary is now complete.
+      // Therefore we won't need the fallback. We early return so that we don't have to create
+      // the fallback.
+
+      popComponentStackInDEV(task);
+      return;
+    }
   } catch (error) {
     resumedBoundary.status = CLIENT_RENDERED;
     var errorDigest;
@@ -10126,7 +10155,66 @@ function replaySuspenseBoundary(
     task.blockedBoundary = parentBoundary;
     task.replay = previousReplaySet;
     task.keyPath = prevKeyPath;
-  } // TODO: Should this be in the finally?
+  }
+
+  var fallbackKeyPath = [keyPath[0], "Suspense Fallback", keyPath[2]];
+  var suspendedFallbackTask; // We create suspended task for the fallback because we don't want to actually work
+  // on it yet in case we finish the main content, so we queue for later.
+
+  if (typeof fallbackSlots === "number") {
+    // Resuming directly in the fallback.
+    var resumedSegment = createPendingSegment(
+      request,
+      0,
+      null,
+      task.formatContext,
+      false,
+      false
+    );
+    resumedSegment.id = fallbackSlots;
+    resumedSegment.parentFlushed = true;
+    suspendedFallbackTask = createRenderTask(
+      request,
+      null,
+      fallback,
+      -1,
+      parentBoundary,
+      resumedSegment,
+      fallbackAbortSet,
+      fallbackKeyPath,
+      task.formatContext,
+      task.legacyContext,
+      task.context,
+      task.treeContext
+    );
+  } else {
+    var fallbackReplay = {
+      nodes: fallbackNodes,
+      slots: fallbackSlots,
+      pendingTasks: 0
+    };
+    suspendedFallbackTask = createReplayTask(
+      request,
+      null,
+      fallbackReplay,
+      fallback,
+      -1,
+      parentBoundary,
+      fallbackAbortSet,
+      fallbackKeyPath,
+      task.formatContext,
+      task.legacyContext,
+      task.context,
+      task.treeContext
+    );
+  }
+
+  {
+    suspendedFallbackTask.componentStack = task.componentStack;
+  } // TODO: This should be queued at a separate lower priority queue so that we only work
+  // on preparing fallbacks if we don't have any more main content to task on.
+
+  request.pingedTasks.push(suspendedFallbackTask); // TODO: Should this be in the finally?
 
   popComponentStackInDEV(task);
 }
@@ -11023,9 +11111,11 @@ function replayElement(
         task,
         keyPath,
         props,
-        node[4],
+        node[5],
         node[2],
-        node[3]
+        node[3],
+        node[4] === null ? [] : node[4][2],
+        node[4] === null ? null : node[4][3]
       );
     } // We finished rendering this node, so now we can consume this
     // slot. This must happen after in case we rerender this task.
@@ -11735,11 +11825,7 @@ function abortRemainingSuspenseBoundary(
   error,
   errorDigest
 ) {
-  var resumedBoundary = createSuspenseBoundary(
-    request,
-    new Set(),
-    null // The keyPath doesn't matter at this point so we don't bother rebuilding it.
-  );
+  var resumedBoundary = createSuspenseBoundary(request, new Set());
   resumedBoundary.parentFlushed = true; // We restore the same id of this boundary as was used during prerender.
 
   resumedBoundary.rootSegmentID = rootSegmentID;
@@ -11794,7 +11880,7 @@ function abortRemainingReplayNodes(
       );
     } else {
       var boundaryNode = node;
-      var rootSegmentID = boundaryNode[4];
+      var rootSegmentID = boundaryNode[5];
       abortRemainingSuspenseBoundary(
         request,
         rootSegmentID,
@@ -12578,9 +12664,7 @@ function flushCompletedQueues(request, destination) {
             destination,
             request.resumableState,
             request.renderState,
-            request.allPendingTasks === 0 &&
-              (request.trackedPostpones === null ||
-                request.trackedPostpones.workingMap.size === 0)
+            request.allPendingTasks === 0 && request.trackedPostpones === null
           );
         }
 
