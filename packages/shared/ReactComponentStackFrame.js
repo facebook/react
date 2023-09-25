@@ -206,10 +206,16 @@ export function describeNativeComponentFrame(
       const controlLines = controlStack.split('\n');
       let s = 0;
       let c = 0;
-      while (s < sampleLines.length && !sampleLines[s].includes('DetermineComponentFrameRoot')) {
+      while (
+        s < sampleLines.length &&
+        !sampleLines[s].includes('DetermineComponentFrameRoot')
+      ) {
         s++;
       }
-      while (c < controlLines.length && !controlLines[c].includes('DetermineComponentFrameRoot')) {
+      while (
+        c < controlLines.length &&
+        !controlLines[c].includes('DetermineComponentFrameRoot')
+      ) {
         c++;
       }
       // We couldn't find our intentionally injected common root frame, attempt
