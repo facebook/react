@@ -86,6 +86,8 @@ export const enableFormActions = __EXPERIMENTAL__;
 
 export const enableBinaryFlight = __EXPERIMENTAL__;
 
+export const enablePostpone = __EXPERIMENTAL__;
+
 export const enableTransitionTracing = false;
 
 // No known bugs, but needs performance testing
@@ -115,9 +117,6 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = true;
-
-// Performance related test
-export const diffInCommitPhase = __EXPERIMENTAL__;
 
 export const enableAsyncActions = __EXPERIMENTAL__;
 

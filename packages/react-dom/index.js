@@ -24,9 +24,12 @@ export {
   unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
   useFormStatus as experimental_useFormStatus,
+  useFormState as experimental_useFormState,
   prefetchDNS,
   preconnect,
   preload,
+  preloadModule,
   preinit,
+  preinitModule,
   version,
 } from './src/client/ReactDOM';

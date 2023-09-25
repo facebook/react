@@ -2,6 +2,7 @@
 
 const {resolve} = require('path');
 const Webpack = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -35,6 +36,10 @@ const DEVTOOLS_VERSION = getVersionString(process.env.DEVTOOLS_VERSION);
 const EDITOR_URL = process.env.EDITOR_URL || null;
 const LOGGING_URL = process.env.LOGGING_URL || null;
 
+const IS_CHROME = process.env.IS_CHROME === 'true';
+const IS_FIREFOX = process.env.IS_FIREFOX === 'true';
+const IS_EDGE = process.env.IS_EDGE === 'true';
+
 const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 const babelOptions = {
@@ -50,9 +55,10 @@ module.exports = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: __DEV__ ? 'cheap-module-source-map' : false,
   entry: {
-    background: './src/background.js',
-    backendManager: './src/backendManager.js',
-    main: './src/main.js',
+    background: './src/background/index.js',
+    backendManager: './src/contentScripts/backendManager.js',
+    fileFetcher: './src/contentScripts/fileFetcher.js',
+    main: './src/main/index.js',
     panel: './src/panel.js',
     proxy: './src/contentScripts/proxy.js',
     prepareInjection: './src/contentScripts/prepareInjection.js',
@@ -80,7 +86,21 @@ module.exports = {
     },
   },
   optimization: {
-    minimize: false,
+    minimize: !__DEV__,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: false,
+          mangle: {
+            keep_fnames: true,
+          },
+          format: {
+            comments: false,
+          },
+        },
+        extractComments: false,
+      }),
+    ],
   },
   plugins: [
     new Webpack.ProvidePlugin({
@@ -105,6 +125,9 @@ module.exports = {
       'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
+      'process.env.IS_CHROME': IS_CHROME,
+      'process.env.IS_FIREFOX': IS_FIREFOX,
+      'process.env.IS_EDGE': IS_EDGE,
     }),
   ],
   module: {

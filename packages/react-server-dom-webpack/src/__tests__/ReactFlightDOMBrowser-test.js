@@ -1107,7 +1107,7 @@ describe('ReactFlightDOMBrowser', () => {
       root.render(<App />);
     });
     expect(document.head.innerHTML).toBe(
-      '<link rel="preload" as="style" href="before">',
+      '<link rel="preload" href="before" as="style">',
     );
     expect(container.innerHTML).toBe('<p>hello world</p>');
   });
@@ -1177,5 +1177,98 @@ describe('ReactFlightDOMBrowser', () => {
       '<!DOCTYPE html><html><head>' +
         '</head><body><p>hello world</p></body></html>',
     );
+  });
+
+  // @gate enablePostpone
+  it('supports postpone in Server Components', async () => {
+    function Server() {
+      React.unstable_postpone('testing postpone');
+      return 'Not shown';
+    }
+
+    let postponed = null;
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Suspense fallback="Loading...">
+        <Server />
+      </Suspense>,
+      null,
+      {
+        onPostpone(reason) {
+          postponed = reason;
+        },
+      },
+    );
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+
+    function Client() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <div>
+          Shell: <Client />
+        </div>,
+      );
+    });
+    // We should have reserved the shell already. Which means that the Server
+    // Component should've been a lazy component.
+    expect(container.innerHTML).toContain('Shell:');
+    expect(container.innerHTML).toContain('Loading...');
+    expect(container.innerHTML).not.toContain('Not shown');
+
+    expect(postponed).toBe('testing postpone');
+  });
+
+  it('should not continue rendering after the reader cancels', async () => {
+    let hasLoaded = false;
+    let resolve;
+    let rendered = false;
+    const promise = new Promise(r => (resolve = r));
+    function Wait() {
+      if (!hasLoaded) {
+        throw promise;
+      }
+      rendered = true;
+      return 'Done';
+    }
+    const errors = [];
+    const stream = await ReactServerDOMServer.renderToReadableStream(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <Wait />
+        </Suspense>
+      </div>,
+      null,
+      {
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
+    );
+
+    expect(rendered).toBe(false);
+
+    const reader = stream.getReader();
+    await reader.read();
+    await reader.cancel();
+
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
+
+    hasLoaded = true;
+    resolve();
+
+    await jest.runAllTimers();
+
+    expect(rendered).toBe(false);
+
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
   });
 });

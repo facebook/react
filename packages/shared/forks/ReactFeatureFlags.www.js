@@ -27,7 +27,6 @@ export const {
   enableTransitionTracing,
   enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
-  diffInCommitPhase,
   enableAsyncActions,
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -76,6 +75,8 @@ export const enableFetchInstrumentation = false;
 export const enableFormActions = false;
 
 export const enableBinaryFlight = true;
+
+export const enablePostpone = false;
 
 export const disableJavaScriptURLs = true;
 

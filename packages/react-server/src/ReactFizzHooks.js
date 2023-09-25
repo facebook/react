@@ -14,10 +14,11 @@ import type {
   StartTransitionOptions,
   Thenable,
   Usable,
+  ReactCustomFormAction,
 } from 'shared/ReactTypes';
 
-import type {ResponseState} from './ReactFizzConfig';
-import type {Task} from './ReactFizzServer';
+import type {ResumableState} from './ReactFizzConfig';
+import type {Request, Task, KeyNode} from './ReactFizzServer';
 import type {ThenableState} from './ReactFizzThenable';
 import type {TransitionStatus} from './ReactFizzConfig';
 
@@ -26,6 +27,7 @@ import {getTreeId} from './ReactFizzTreeContext';
 import {createThenableState, trackUsedThenable} from './ReactFizzThenable';
 
 import {makeId, NotPendingTransition} from './ReactFizzConfig';
+import {createFastHash} from './ReactServerStreamConfig';
 
 import {
   enableCache,
@@ -40,6 +42,8 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_MEMO_CACHE_SENTINEL,
 } from 'shared/ReactSymbols';
+import {checkAttributeStringCoercion} from 'shared/CheckStringCoercion';
+import {getFormState} from './ReactFizzServer';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
@@ -62,6 +66,8 @@ type Hook = {
 
 let currentlyRenderingComponent: Object | null = null;
 let currentlyRenderingTask: Task | null = null;
+let currentlyRenderingRequest: Request | null = null;
+let currentlyRenderingKeyPath: KeyNode | null = null;
 let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
 // Whether the work-in-progress hook is a re-rendered hook
@@ -70,6 +76,13 @@ let isReRender: boolean = false;
 let didScheduleRenderPhaseUpdate: boolean = false;
 // Counts the number of useId hooks in this component
 let localIdCounter: number = 0;
+// Chunks that should be pushed to the stream once the component
+// finishes rendering.
+// Counts the number of useFormState calls in this component
+let formStateCounter: number = 0;
+// The index of the useFormState hook that matches the one passed in at the
+// root during an MPA navigation, if any.
+let formStateMatchingIndex: number = -1;
 // Counts the number of use(thenable) calls in this component
 let thenableIndexCounter: number = 0;
 let thenableState: ThenableState | null = null;
@@ -188,12 +201,16 @@ function createWorkInProgressHook(): Hook {
 }
 
 export function prepareToUseHooks(
+  request: Request,
   task: Task,
+  keyPath: KeyNode | null,
   componentIdentity: Object,
   prevThenableState: ThenableState | null,
 ): void {
   currentlyRenderingComponent = componentIdentity;
   currentlyRenderingTask = task;
+  currentlyRenderingRequest = request;
+  currentlyRenderingKeyPath = keyPath;
   if (__DEV__) {
     isInHookUserCodeInDev = false;
   }
@@ -206,6 +223,8 @@ export function prepareToUseHooks(
   // workInProgressHook = null;
 
   localIdCounter = 0;
+  formStateCounter = 0;
+  formStateMatchingIndex = -1;
   thenableIndexCounter = 0;
   thenableState = prevThenableState;
 }
@@ -226,6 +245,8 @@ export function finishHooks(
     // restarting until no more updates are scheduled.
     didScheduleRenderPhaseUpdate = false;
     localIdCounter = 0;
+    formStateCounter = 0;
+    formStateMatchingIndex = -1;
     thenableIndexCounter = 0;
     numberOfReRenders += 1;
 
@@ -234,6 +255,7 @@ export function finishHooks(
 
     children = Component(props, refOrContext);
   }
+
   resetHooksState();
   return children;
 }
@@ -252,6 +274,19 @@ export function checkDidRenderIdHook(): boolean {
   return didRenderIdHook;
 }
 
+export function getFormStateCount(): number {
+  // This should be called immediately after every finishHooks call.
+  // Conceptually, it's part of the return value of finishHooks; it's only a
+  // separate function to avoid using an array tuple.
+  return formStateCounter;
+}
+export function getFormStateMatchingIndex(): number {
+  // This should be called immediately after every finishHooks call.
+  // Conceptually, it's part of the return value of finishHooks; it's only a
+  // separate function to avoid using an array tuple.
+  return formStateMatchingIndex;
+}
+
 // Reset the internal hooks state if an error occurs while rendering a component
 export function resetHooksState(): void {
   if (__DEV__) {
@@ -260,6 +295,8 @@ export function resetHooksState(): void {
 
   currentlyRenderingComponent = null;
   currentlyRenderingTask = null;
+  currentlyRenderingRequest = null;
+  currentlyRenderingKeyPath = null;
   didScheduleRenderPhaseUpdate = false;
   firstWorkInProgressHook = null;
   numberOfReRenders = 0;
@@ -550,19 +587,149 @@ function useOptimistic<S, A>(
   return [passthrough, unsupportedSetOptimisticState];
 }
 
+function createPostbackFormStateKey(
+  permalink: string | void,
+  componentKeyPath: KeyNode | null,
+  hookIndex: number,
+): string {
+  if (permalink !== undefined) {
+    // Don't bother to hash a permalink-based key since it's already short.
+    return 'p' + permalink;
+  } else {
+    // Append a node to the key path that represents the form state hook.
+    const keyPath: KeyNode = [componentKeyPath, null, hookIndex];
+    // Key paths are hashed to reduce the size. It does not need to be secure,
+    // and it's more important that it's fast than that it's completely
+    // collision-free.
+    const keyPathHash = createFastHash(JSON.stringify(keyPath));
+    return 'k' + keyPathHash;
+  }
+}
+
+function useFormState<S, P>(
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  permalink?: string,
+): [S, (P) => void] {
+  resolveCurrentlyRenderingComponent();
+
+  // Count the number of useFormState hooks per component. We also use this to
+  // track the position of this useFormState hook relative to the other ones in
+  // this component, so we can generate a unique key for each one.
+  const formStateHookIndex = formStateCounter++;
+  const request: Request = (currentlyRenderingRequest: any);
+
+  // $FlowIgnore[prop-missing]
+  const formAction = action.$$FORM_ACTION;
+  if (typeof formAction === 'function') {
+    // This is a server action. These have additional features to enable
+    // MPA-style form submissions with progressive enhancement.
+
+    // TODO: If the same permalink is passed to multiple useFormStates, and
+    // they all have the same action signature, Fizz will pass the postback
+    // state to all of them. We should probably only pass it to the first one,
+    // and/or warn.
+
+    // The key is lazily generated and deduped so the that the keypath doesn't
+    // get JSON.stringify-ed unnecessarily, and at most once.
+    let nextPostbackStateKey = null;
+
+    // Determine the current form state. If we received state during an MPA form
+    // submission, then we will reuse that, if the action identity matches.
+    // Otherwise we'll use the initial state argument. We will emit a comment
+    // marker into the stream that indicates whether the state was reused.
+    let state = initialState;
+    const componentKeyPath = (currentlyRenderingKeyPath: any);
+    const postbackFormState = getFormState(request);
+    // $FlowIgnore[prop-missing]
+    const isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
+    if (postbackFormState !== null && typeof isSignatureEqual === 'function') {
+      const postbackKey = postbackFormState[1];
+      const postbackReferenceId = postbackFormState[2];
+      const postbackBoundArity = postbackFormState[3];
+      if (
+        isSignatureEqual.call(action, postbackReferenceId, postbackBoundArity)
+      ) {
+        nextPostbackStateKey = createPostbackFormStateKey(
+          permalink,
+          componentKeyPath,
+          formStateHookIndex,
+        );
+        if (postbackKey === nextPostbackStateKey) {
+          // This was a match
+          formStateMatchingIndex = formStateHookIndex;
+          // Reuse the state that was submitted by the form.
+          state = postbackFormState[0];
+        }
+      }
+    }
+
+    // Bind the state to the first argument of the action.
+    const boundAction = action.bind(null, state);
+
+    // Wrap the action so the return value is void.
+    const dispatch = (payload: P): void => {
+      boundAction(payload);
+    };
+
+    // $FlowIgnore[prop-missing]
+    if (typeof boundAction.$$FORM_ACTION === 'function') {
+      // $FlowIgnore[prop-missing]
+      dispatch.$$FORM_ACTION = (prefix: string) => {
+        const metadata: ReactCustomFormAction =
+          boundAction.$$FORM_ACTION(prefix);
+
+        // Override the action URL
+        if (permalink !== undefined) {
+          if (__DEV__) {
+            checkAttributeStringCoercion(permalink, 'target');
+          }
+          permalink += '';
+          metadata.action = permalink;
+        }
+
+        const formData = metadata.data;
+        if (formData) {
+          if (nextPostbackStateKey === null) {
+            nextPostbackStateKey = createPostbackFormStateKey(
+              permalink,
+              componentKeyPath,
+              formStateHookIndex,
+            );
+          }
+          formData.append('$ACTION_KEY', nextPostbackStateKey);
+        }
+        return metadata;
+      };
+    }
+
+    return [state, dispatch];
+  } else {
+    // This is not a server action, so the implementation is much simpler.
+
+    // Bind the state to the first argument of the action.
+    const boundAction = action.bind(null, initialState);
+    // Wrap the action so the return value is void.
+    const dispatch = (payload: P): void => {
+      boundAction(payload);
+    };
+    return [initialState, dispatch];
+  }
+}
+
 function useId(): string {
   const task: Task = (currentlyRenderingTask: any);
   const treeId = getTreeId(task.treeContext);
 
-  const responseState = currentResponseState;
-  if (responseState === null) {
+  const resumableState = currentResumableState;
+  if (resumableState === null) {
     throw new Error(
       'Invalid hook call. Hooks can only be called inside of the body of a function component.',
     );
   }
 
   const localId = localIdCounter++;
-  return makeId(responseState, treeId, localId);
+  return makeId(resumableState, treeId, localId);
 }
 
 function use<T>(usable: Usable<T>): T {
@@ -650,11 +817,12 @@ if (enableFormActions && enableAsyncActions) {
 }
 if (enableAsyncActions) {
   HooksDispatcher.useOptimistic = useOptimistic;
+  HooksDispatcher.useFormState = useFormState;
 }
 
-export let currentResponseState: null | ResponseState = (null: any);
-export function setCurrentResponseState(
-  responseState: null | ResponseState,
+export let currentResumableState: null | ResumableState = (null: any);
+export function setCurrentResumableState(
+  resumableState: null | ResumableState,
 ): void {
-  currentResponseState = responseState;
+  currentResumableState = resumableState;
 }

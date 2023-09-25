@@ -25,6 +25,7 @@ export const enableCacheElement = __EXPERIMENTAL__;
 export const enableFetchInstrumentation = true;
 export const enableFormActions = true; // Doesn't affect Test Renderer
 export const enableBinaryFlight = true;
+export const enablePostpone = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
@@ -72,7 +73,6 @@ export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 
-export const diffInCommitPhase = true;
 export const enableAsyncActions = false;
 
 export const alwaysThrottleRetries = true;

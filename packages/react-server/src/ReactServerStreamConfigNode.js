@@ -10,6 +10,7 @@
 import type {Writable} from 'stream';
 
 import {TextEncoder} from 'util';
+import {createHash} from 'crypto';
 
 interface MightBeFlushable {
   flush?: () => void;
@@ -242,4 +243,10 @@ export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
 export function closeWithError(destination: Destination, error: mixed): void {
   // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
   destination.destroy(error);
+}
+
+export function createFastHash(input: string): string | number {
+  const hash = createHash('md5');
+  hash.update(input);
+  return hash.digest('hex');
 }

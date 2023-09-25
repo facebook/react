@@ -7,4 +7,5 @@
  * @flow
  */
 
-export * from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
+export * from './ReactDOMFizzServerEdge.js';
+export {prerender} from './ReactDOMFizzStaticEdge.js';

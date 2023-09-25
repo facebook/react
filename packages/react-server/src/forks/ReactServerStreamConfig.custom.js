@@ -44,3 +44,4 @@ export const typedArrayToBinaryChunk = $$$config.typedArrayToBinaryChunk;
 export const clonePrecomputedChunk = $$$config.clonePrecomputedChunk;
 export const byteLengthOfChunk = $$$config.byteLengthOfChunk;
 export const byteLengthOfBinaryChunk = $$$config.byteLengthOfBinaryChunk;
+export const createFastHash = $$$config.createFastHash;

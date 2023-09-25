@@ -37,7 +37,14 @@ export function renderToStaticNodeStream() {
 }
 
 export function renderToReadableStream() {
-  return require('./src/server/ReactDOMFizzServerBrowser').renderToReadableStream.apply(
+  return require('./src/server/react-dom-server.browser').renderToReadableStream.apply(
+    this,
+    arguments,
+  );
+}
+
+export function resume() {
+  return require('./src/server/react-dom-server.browser').resume.apply(
     this,
     arguments,
   );

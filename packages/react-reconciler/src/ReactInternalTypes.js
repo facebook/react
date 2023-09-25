@@ -14,6 +14,7 @@ import type {
   StartTransitionOptions,
   Wakeable,
   Usable,
+  ReactFormState,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -53,7 +54,8 @@ export type HookType =
   | 'useSyncExternalStore'
   | 'useId'
   | 'useCacheRefresh'
-  | 'useOptimistic';
+  | 'useOptimistic'
+  | 'useFormState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -269,6 +271,8 @@ type BaseFiberRootProperties = {
     error: mixed,
     errorInfo: {digest?: ?string, componentStack?: ?string},
   ) => void,
+
+  formState: ReactFormState<any, any> | null,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
@@ -413,6 +417,11 @@ export type Dispatcher = {
     passthrough: S,
     reducer: ?(S, A) => S,
   ) => [S, (A) => void],
+  useFormState?: <S, P>(
+    action: (S, P) => Promise<S>,
+    initialState: S,
+    permalink?: string,
+  ) => [S, (P) => void],
 };
 
 export type CacheDispatcher = {
