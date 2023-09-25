@@ -3931,9 +3931,7 @@ function flushCompletedQueues(
             destination,
             request.resumableState,
             request.renderState,
-            request.allPendingTasks === 0 &&
-              (request.trackedPostpones === null ||
-                request.trackedPostpones.workingMap.size === 0), // TODO
+            request.allPendingTasks === 0 && request.trackedPostpones === null,
           );
         }
 
@@ -4028,13 +4026,7 @@ function flushCompletedQueues(
       if (enableFloat) {
         // We write the trailing tags but only if don't have any data to resume.
         // If we need to resume we'll write the postamble in the resume instead.
-        if (
-          !enablePostpone ||
-          request.trackedPostpones === null ||
-          // We check the working map instead of the root because the root could've
-          // been mutated at this point if it was passed straight through to resume().
-          request.trackedPostpones.workingMap.size === 0 // TODO
-        ) {
+        if (!enablePostpone || request.trackedPostpones === null) {
           writePostamble(destination, request.resumableState);
         }
       }
@@ -4186,6 +4178,8 @@ export function getPostponedState(request: Request): null | PostponedState {
     (trackedPostpones.rootNodes.length === 0 &&
       trackedPostpones.rootSlots === null)
   ) {
+    // Reset. Let the flushing behave as if we completed the whole document.
+    request.trackedPostpones = null;
     return null;
   }
   return {
