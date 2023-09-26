@@ -24,6 +24,7 @@ export type PreloadModuleOptions = {
   as?: string,
   crossOrigin?: string,
   integrity?: string,
+  nonce?: string,
 };
 export type PreinitOptions = {
   as: string,
@@ -37,6 +38,7 @@ export type PreinitModuleOptions = {
   as?: string,
   crossOrigin?: string,
   integrity?: string,
+  nonce?: string,
 };
 
 export type CrossOriginEnum = '' | 'use-credentials';
@@ -56,6 +58,7 @@ export type PreloadModuleImplOptions = {
   as?: ?string,
   crossOrigin?: ?CrossOriginEnum,
   integrity?: ?string,
+  nonce?: ?string,
 };
 export type PreinitStyleOptions = {
   crossOrigin?: ?string,
@@ -70,7 +73,8 @@ export type PreinitScriptOptions = {
 };
 export type PreinitModuleScriptOptions = {
   crossOrigin?: ?CrossOriginEnum,
-  integrity?: string,
+  integrity?: ?string,
+  nonce?: ?string,
 };
 
 export type HostDispatcher = {

@@ -4014,6 +4014,87 @@ body {
     );
   });
 
+  it('can promote images to high priority when at least one instance specifies a high fetchPriority', async () => {
+    function App() {
+      // If a ends up in a higher priority queue than b it will flush first
+      ReactDOM.preload('a', {as: 'image'});
+      ReactDOM.preload('b', {as: 'image'});
+      return (
+        <html>
+          <body>
+            <link rel="stylesheet" href="foo" precedence="default" />
+            <img src="1" />
+            <img src="2" />
+            <img src="3" />
+            <img src="4" />
+            <img src="5" />
+            <img src="6" />
+            <img src="7" />
+            <img src="8" />
+            <img src="9" />
+            <img src="10" />
+            <img src="11" />
+            <img src="12" />
+            <img src="a" fetchPriority="low" />
+            <img src="a" />
+            <img src="a" fetchPriority="high" />
+            <img src="a" />
+            <img src="a" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          {/* The First 10 high priority images were just the first 10 rendered images */}
+          <link rel="preload" as="image" href="1" />
+          <link rel="preload" as="image" href="2" />
+          <link rel="preload" as="image" href="3" />
+          <link rel="preload" as="image" href="4" />
+          <link rel="preload" as="image" href="5" />
+          <link rel="preload" as="image" href="6" />
+          <link rel="preload" as="image" href="7" />
+          <link rel="preload" as="image" href="8" />
+          <link rel="preload" as="image" href="9" />
+          <link rel="preload" as="image" href="10" />
+          {/* The "a" image was rendered a few times but since at least one of those was with
+          fetchPriorty="high" it ends up in the high priority queue */}
+          <link rel="preload" as="image" href="a" />
+          {/* Stylesheets come in between high priority images and regular preloads */}
+          <link rel="stylesheet" href="foo" data-precedence="default" />
+          {/* The remainig images that preloaded at regular priority */}
+          <link rel="preload" as="image" href="b" />
+          <link rel="preload" as="image" href="11" />
+          <link rel="preload" as="image" href="12" />
+        </head>
+        <body>
+          <img src="1" />
+          <img src="2" />
+          <img src="3" />
+          <img src="4" />
+          <img src="5" />
+          <img src="6" />
+          <img src="7" />
+          <img src="8" />
+          <img src="9" />
+          <img src="10" />
+          <img src="11" />
+          <img src="12" />
+          <img src="a" fetchpriority="low" />
+          <img src="a" />
+          <img src="a" fetchpriority="high" />
+          <img src="a" />
+          <img src="a" />
+        </body>
+      </html>,
+    );
+  });
+
   it('preloads from rendered images properly use srcSet and sizes', async () => {
     function App() {
       ReactDOM.preload('1', {as: 'image', imageSrcSet: 'ss1'});
@@ -4114,6 +4195,501 @@ body {
             <source type="image/webp" srcset="webpsrc" />
             <img src="jpg fallback" />
           </picture>
+        </body>
+      </html>,
+    );
+  });
+
+  it('should warn if you preload a stylesheet and then render a style tag with the same href', async () => {
+    const style = 'body { color: red; }';
+    function App() {
+      ReactDOM.preload('foo', {as: 'style'});
+      return (
+        <html>
+          <body>
+            hello
+            <style precedence="default" href="foo">
+              {style}
+            </style>
+          </body>
+        </html>
+      );
+    }
+
+    await expect(async () => {
+      await act(() => {
+        renderToPipeableStream(<App />).pipe(writable);
+      });
+    }).toErrorDev([
+      'React encountered a hoistable style tag for the same href as a preload: "foo". When using a style tag to inline styles you should not also preload it as a stylsheet.',
+    ]);
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <style data-precedence="default" data-href="foo">
+            {style}
+          </style>
+          <link rel="preload" as="style" href="foo" />
+        </head>
+        <body>hello</body>
+      </html>,
+    );
+  });
+
+  it('should preload only once even if you discover a stylesheet, script, or moduleScript late', async () => {
+    function App() {
+      // We start with preinitializing some resources first
+      ReactDOM.preinit('shell preinit/shell', {as: 'style'});
+      ReactDOM.preinit('shell preinit/shell', {as: 'script'});
+      ReactDOM.preinitModule('shell preinit/shell', {as: 'script'});
+
+      // We initiate all the shell preloads
+      ReactDOM.preload('shell preinit/shell', {as: 'style'});
+      ReactDOM.preload('shell preinit/shell', {as: 'script'});
+      ReactDOM.preloadModule('shell preinit/shell', {as: 'script'});
+
+      ReactDOM.preload('shell/shell preinit', {as: 'style'});
+      ReactDOM.preload('shell/shell preinit', {as: 'script'});
+      ReactDOM.preloadModule('shell/shell preinit', {as: 'script'});
+
+      ReactDOM.preload('shell/shell render', {as: 'style'});
+      ReactDOM.preload('shell/shell render', {as: 'script'});
+      ReactDOM.preloadModule('shell/shell render');
+
+      ReactDOM.preload('shell/late preinit', {as: 'style'});
+      ReactDOM.preload('shell/late preinit', {as: 'script'});
+      ReactDOM.preloadModule('shell/late preinit');
+
+      ReactDOM.preload('shell/late render', {as: 'style'});
+      ReactDOM.preload('shell/late render', {as: 'script'});
+      ReactDOM.preloadModule('shell/late render');
+
+      // we preinit later ones that should be created by
+      ReactDOM.preinit('shell/shell preinit', {as: 'style'});
+      ReactDOM.preinit('shell/shell preinit', {as: 'script'});
+      ReactDOM.preinitModule('shell/shell preinit');
+
+      ReactDOM.preinit('late/shell preinit', {as: 'style'});
+      ReactDOM.preinit('late/shell preinit', {as: 'script'});
+      ReactDOM.preinitModule('late/shell preinit');
+      return (
+        <html>
+          <body>
+            <link
+              rel="stylesheet"
+              precedence="default"
+              href="shell/shell render"
+            />
+            <script async={true} src="shell/shell render" />
+            <script type="module" async={true} src="shell/shell render" />
+            <link
+              rel="stylesheet"
+              precedence="default"
+              href="late/shell render"
+            />
+            <script async={true} src="late/shell render" />
+            <script type="module" async={true} src="late/shell render" />
+            <Suspense fallback="late...">
+              <BlockedOn value="late">
+                <Late />
+              </BlockedOn>
+            </Suspense>
+            <Suspense fallback="later...">
+              <BlockedOn value="later">
+                <Later />
+              </BlockedOn>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    function Late() {
+      ReactDOM.preload('late/later preinit', {as: 'style'});
+      ReactDOM.preload('late/later preinit', {as: 'script'});
+      ReactDOM.preloadModule('late/later preinit');
+
+      ReactDOM.preload('late/later render', {as: 'style'});
+      ReactDOM.preload('late/later render', {as: 'script'});
+      ReactDOM.preloadModule('late/later render');
+
+      ReactDOM.preload('late/shell preinit', {as: 'style'});
+      ReactDOM.preload('late/shell preinit', {as: 'script'});
+      ReactDOM.preloadModule('late/shell preinit');
+
+      ReactDOM.preload('late/shell render', {as: 'style'});
+      ReactDOM.preload('late/shell render', {as: 'script'});
+      ReactDOM.preloadModule('late/shell render');
+
+      // late preinits don't actually flush so we won't see this in the DOM as a stylesehet but we should see
+      // the preload for this resource
+      ReactDOM.preinit('shell/late preinit', {as: 'style'});
+      ReactDOM.preinit('shell/late preinit', {as: 'script'});
+      ReactDOM.preinitModule('shell/late preinit');
+      return (
+        <>
+          Late
+          <link
+            rel="stylesheet"
+            precedence="default"
+            href="shell/late render"
+          />
+          <script async={true} src="shell/late render" />
+          <script type="module" async={true} src="shell/late render" />
+        </>
+      );
+    }
+
+    function Later() {
+      // late preinits don't actually flush so we won't see this in the DOM as a stylesehet but we should see
+      // the preload for this resource
+      ReactDOM.preinit('late/later preinit', {as: 'style'});
+      ReactDOM.preinit('late/later preinit', {as: 'script'});
+      ReactDOM.preinitModule('late/later preinit');
+      return (
+        <>
+          Later
+          <link
+            rel="stylesheet"
+            precedence="default"
+            href="late/later render"
+          />
+          <script async={true} src="late/later render" />
+          <script type="module" async={true} src="late/later render" />
+        </>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell preinit/shell"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell render"
+          />
+          <script async="" src="shell preinit/shell" />
+          <script async="" src="shell preinit/shell" type="module" />
+          <script async="" src="shell/shell preinit" />
+          <script async="" src="shell/shell preinit" type="module" />
+          <script async="" src="late/shell preinit" />
+          <script async="" src="late/shell preinit" type="module" />
+          <script async="" src="shell/shell render" />
+          <script async="" src="shell/shell render" type="module" />
+          <script async="" src="late/shell render" />
+          <script async="" src="late/shell render" type="module" />
+          <link rel="preload" as="style" href="shell/late preinit" />
+          <link rel="preload" as="script" href="shell/late preinit" />
+          <link rel="modulepreload" href="shell/late preinit" />
+          <link rel="preload" as="style" href="shell/late render" />
+          <link rel="preload" as="script" href="shell/late render" />
+          <link rel="modulepreload" href="shell/late render" />
+        </head>
+        <body>
+          {'late...'}
+          {'later...'}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('late');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell preinit/shell"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell render"
+          />
+          {/* FROM HERE */}
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/late render"
+          />
+          {/** TO HERE:
+           * This was hoisted by boundary complete instruction. The preload was already emitted in the
+           * shell but we see it below because this was inserted clientside by precedence.
+           * We don't observe the "shell/late preinit" because these do not flush unless they are flushing
+           * with the shell
+           * */}
+          <script async="" src="shell preinit/shell" />
+          <script async="" src="shell preinit/shell" type="module" />
+          <script async="" src="shell/shell preinit" />
+          <script async="" src="shell/shell preinit" type="module" />
+          <script async="" src="late/shell preinit" />
+          <script async="" src="late/shell preinit" type="module" />
+          <script async="" src="shell/shell render" />
+          <script async="" src="shell/shell render" type="module" />
+          <script async="" src="late/shell render" />
+          <script async="" src="late/shell render" type="module" />
+          <link rel="preload" as="style" href="shell/late preinit" />
+          <link rel="preload" as="script" href="shell/late preinit" />
+          <link rel="modulepreload" href="shell/late preinit" />
+          <link rel="preload" as="style" href="shell/late render" />
+          <link rel="preload" as="script" href="shell/late render" />
+          <link rel="modulepreload" href="shell/late render" />
+        </head>
+        <body>
+          {'late...'}
+          {'later...'}
+          {/* FROM HERE */}
+          <script async="" src="shell/late preinit" />
+          <script async="" src="shell/late preinit" type="module" />
+          <script async="" src="shell/late render" />
+          <script async="" src="shell/late render" type="module" />
+          <link rel="preload" as="style" href="late/later preinit" />
+          <link rel="preload" as="script" href="late/later preinit" />
+          <link rel="modulepreload" href="late/later preinit" />
+          <link rel="preload" as="style" href="late/later render" />
+          <link rel="preload" as="script" href="late/later render" />
+          <link rel="modulepreload" href="late/later render" />
+          {/** TO HERE:
+           * These resources streamed into the body during the boundary flush. Scripts go first then
+           * preloads according to our streaming queue priorities. Note also that late/shell resources
+           * where the resource already emitted in the shell and the preload is invoked later do not
+           * end up with a preload in the document at all.
+           * */}
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('later');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell preinit/shell"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/late render"
+          />
+          {/* FROM HERE */}
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/later render"
+          />
+          {/** TO HERE:
+           * This was hoisted by boundary complete instruction. The preload was already emitted in the
+           * shell but we see it below because this was inserted clientside by precedence
+           * We don't observe the "late/later preinit" because these do not flush unless they are flushing
+           * with the shell
+           * */}
+          <script async="" src="shell preinit/shell" />
+          <script async="" src="shell preinit/shell" type="module" />
+          <script async="" src="shell/shell preinit" />
+          <script async="" src="shell/shell preinit" type="module" />
+          <script async="" src="late/shell preinit" />
+          <script async="" src="late/shell preinit" type="module" />
+          <script async="" src="shell/shell render" />
+          <script async="" src="shell/shell render" type="module" />
+          <script async="" src="late/shell render" />
+          <script async="" src="late/shell render" type="module" />
+          <link rel="preload" as="style" href="shell/late preinit" />
+          <link rel="preload" as="script" href="shell/late preinit" />
+          <link rel="modulepreload" href="shell/late preinit" />
+          <link rel="preload" as="style" href="shell/late render" />
+          <link rel="preload" as="script" href="shell/late render" />
+          <link rel="modulepreload" href="shell/late render" />
+        </head>
+        <body>
+          {'late...'}
+          {'later...'}
+          <script async="" src="shell/late preinit" />
+          <script async="" src="shell/late preinit" type="module" />
+          <script async="" src="shell/late render" />
+          <script async="" src="shell/late render" type="module" />
+          <link rel="preload" as="style" href="late/later preinit" />
+          <link rel="preload" as="script" href="late/later preinit" />
+          <link rel="modulepreload" href="late/later preinit" />
+          <link rel="preload" as="style" href="late/later render" />
+          <link rel="preload" as="script" href="late/later render" />
+          <link rel="modulepreload" href="late/later render" />
+          {/* FROM HERE */}
+          <script async="" src="late/later preinit" />
+          <script async="" src="late/later preinit" type="module" />
+          <script async="" src="late/later render" />
+          <script async="" src="late/later render" type="module" />
+          {/** TO HERE:
+           * These resources streamed into the body during the boundary flush. Scripts go first then
+           * preloads according to our streaming queue priorities
+           * */}
+        </body>
+      </html>,
+    );
+    loadStylesheets();
+    assertLog([
+      'load stylesheet: shell preinit/shell',
+      'load stylesheet: shell/shell preinit',
+      'load stylesheet: late/shell preinit',
+      'load stylesheet: shell/shell render',
+      'load stylesheet: late/shell render',
+      'load stylesheet: shell/late render',
+      'load stylesheet: late/later render',
+    ]);
+
+    ReactDOMClient.hydrateRoot(document, <App />);
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell preinit/shell"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/shell render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/late render"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/later render"
+          />
+          {/* FROM HERE */}
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="shell/late preinit"
+          />
+          <link
+            rel="stylesheet"
+            data-precedence="default"
+            href="late/later preinit"
+          />
+          {/** TO HERE:
+           * The client render patches in the two missing preinit stylesheets when hydration happens
+           * Note that this is only because we repeated the calls to preinit on the client
+           * */}
+          <script async="" src="shell preinit/shell" />
+          <script async="" src="shell preinit/shell" type="module" />
+          <script async="" src="shell/shell preinit" />
+          <script async="" src="shell/shell preinit" type="module" />
+          <script async="" src="late/shell preinit" />
+          <script async="" src="late/shell preinit" type="module" />
+          <script async="" src="shell/shell render" />
+          <script async="" src="shell/shell render" type="module" />
+          <script async="" src="late/shell render" />
+          <script async="" src="late/shell render" type="module" />
+          <link rel="preload" as="style" href="shell/late preinit" />
+          <link rel="preload" as="script" href="shell/late preinit" />
+          <link rel="modulepreload" href="shell/late preinit" />
+          <link rel="preload" as="style" href="shell/late render" />
+          <link rel="preload" as="script" href="shell/late render" />
+          <link rel="modulepreload" href="shell/late render" />
+        </head>
+        <body>
+          {'Late'}
+          {'Later'}
+          <script async="" src="shell/late preinit" />
+          <script async="" src="shell/late preinit" type="module" />
+          <script async="" src="shell/late render" />
+          <script async="" src="shell/late render" type="module" />
+          <link rel="preload" as="style" href="late/later preinit" />
+          <link rel="preload" as="script" href="late/later preinit" />
+          <link rel="modulepreload" href="late/later preinit" />
+          <link rel="preload" as="style" href="late/later render" />
+          <link rel="preload" as="script" href="late/later render" />
+          <link rel="modulepreload" href="late/later render" />
+          <script async="" src="late/later preinit" />
+          <script async="" src="late/later preinit" type="module" />
+          <script async="" src="late/later render" />
+          <script async="" src="late/later render" type="module" />
         </body>
       </html>,
     );

@@ -7,7 +7,12 @@
  * @flow
  */
 
-import type {ResumableState, BoundaryResources} from './ReactFizzConfigDOM';
+import type {
+  ResumableState,
+  BoundaryResources,
+  StyleQueue,
+  Resource,
+} from './ReactFizzConfigDOM';
 
 import {
   createRenderState as createRenderStateImpl,
@@ -46,16 +51,20 @@ export type RenderState = {
   importMapChunks: Array<Chunk | PrecomputedChunk>,
   preloadChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
-  preconnects: Set<any>,
-  fontPreloads: Set<any>,
-  highImagePreloads: Set<any>,
-  // usedImagePreloads: Set<any>,
-  precedences: Map<string, Map<any, any>>,
-  stylePrecedences: Map<string, any>,
-  bootstrapScripts: Set<any>,
-  scripts: Set<any>,
-  bulkPreloads: Set<any>,
-  preloadsMap: Map<string, any>,
+  preconnects: Set<Resource>,
+  fontPreloads: Set<Resource>,
+  highImagePreloads: Set<Resource>,
+  // usedImagePreloads: Set<Resource>,
+  styles: Map<string, StyleQueue>,
+  bootstrapScripts: Set<Resource>,
+  scripts: Set<Resource>,
+  bulkPreloads: Set<Resource>,
+  preloads: {
+    images: Map<string, Resource>,
+    stylesheets: Map<string, Resource>,
+    scripts: Map<string, Resource>,
+    moduleScripts: Map<string, Resource>,
+  },
   boundaryResources: ?BoundaryResources,
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
@@ -94,12 +103,11 @@ export function createRenderState(
     fontPreloads: renderState.fontPreloads,
     highImagePreloads: renderState.highImagePreloads,
     // usedImagePreloads: renderState.usedImagePreloads,
-    precedences: renderState.precedences,
-    stylePrecedences: renderState.stylePrecedences,
+    styles: renderState.styles,
     bootstrapScripts: renderState.bootstrapScripts,
     scripts: renderState.scripts,
     bulkPreloads: renderState.bulkPreloads,
-    preloadsMap: renderState.preloadsMap,
+    preloads: renderState.preloads,
     boundaryResources: renderState.boundaryResources,
     stylesToHoist: renderState.stylesToHoist,
 
