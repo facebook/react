@@ -263,6 +263,7 @@ var isArrayImpl = Array.isArray,
     preinitScript: preinitScript,
     preinitModuleScript: preinitModuleScript
   },
+  PRELOAD_NO_CREDS = [],
   scriptRegex = /(<\/|<)(s)(cript)/gi;
 function scriptReplacer(match, prefix, s, suffix) {
   return "" + prefix + ("s" === s ? "\\u0073" : "\\u0053") + suffix;
@@ -612,7 +613,6 @@ function pushLink(
   )
     return pushLinkImpl(target, props), null;
   if ("stylesheet" === props.rel) {
-    insertionMode = "[style]" + href;
     if (
       "string" !== typeof precedence ||
       null != props.disabled ||
@@ -620,40 +620,41 @@ function pushLink(
       props.onError
     )
       return pushLinkImpl(target, props);
-    noscriptTagInScope = renderState.precedences.get(precedence);
-    resumableState.stylesMap.hasOwnProperty(insertionMode)
-      ? noscriptTagInScope &&
-        (precedence = noscriptTagInScope.get(insertionMode)) &&
-        renderState.boundaryResources &&
-        renderState.boundaryResources.add(precedence)
-      : ((props = assign({}, props, {
-          "data-precedence": props.precedence,
-          precedence: null
-        })),
-        (rel = 0),
-        resumableState.preloadsMap.hasOwnProperty(insertionMode) &&
-          ((href = resumableState.preloadsMap[insertionMode]),
-          null == props.crossOrigin && (props.crossOrigin = href.crossOrigin),
-          null == props.integrity && (props.integrity = href.integrity),
-          (href = renderState.preloadsMap.get(insertionMode))
-            ? ((href.state |= 4), href.state & 3 && (rel = 8))
-            : (rel = 8)),
-        (props = { type: "stylesheet", chunks: [], state: rel, props: props }),
-        (resumableState.stylesMap[insertionMode] = null),
-        noscriptTagInScope ||
-          ((noscriptTagInScope = new Map()),
-          renderState.precedences.set(precedence, noscriptTagInScope),
-          (resumableState = {
-            type: "style",
-            chunks: [],
-            state: 0,
-            props: { precedence: precedence, hrefs: [] }
+    insertionMode = renderState.styles.get(precedence);
+    noscriptTagInScope = resumableState.styleResources.hasOwnProperty(href)
+      ? resumableState.styleResources[href]
+      : void 0;
+    null !== noscriptTagInScope
+      ? ((resumableState.styleResources[href] = null),
+        insertionMode ||
+          ((insertionMode = {
+            precedence: escapeTextForBrowser(precedence),
+            rules: [],
+            hrefs: [],
+            sheets: new Map()
           }),
-          noscriptTagInScope.set("", resumableState),
-          renderState.stylePrecedences.set(precedence, resumableState)),
-        noscriptTagInScope.set(insertionMode, props),
+          renderState.styles.set(precedence, insertionMode)),
+        (props = {
+          state: 0,
+          props: assign({}, props, {
+            "data-precedence": props.precedence,
+            precedence: null
+          })
+        }),
+        noscriptTagInScope &&
+          (2 === noscriptTagInScope.length &&
+            adoptPreloadCredentials(props.props, noscriptTagInScope),
+          (resumableState = renderState.preloads.stylesheets.get(href)) &&
+          0 < resumableState.length
+            ? (resumableState.length = 0)
+            : (props.state = 1)),
+        insertionMode.sheets.set(href, props),
         renderState.boundaryResources &&
-          renderState.boundaryResources.add(props));
+          renderState.boundaryResources.stylesheets.add(props))
+      : insertionMode &&
+        (href = insertionMode.sheets.get(href)) &&
+        renderState.boundaryResources &&
+        renderState.boundaryResources.stylesheets.add(href);
     textEmbedded && target.push("\x3c!-- --\x3e");
     return null;
   }
@@ -687,14 +688,6 @@ function pushLinkImpl(target, props) {
     }
   target.push("/>");
   return null;
-}
-function getImagePreloadKey(href, imageSrcSet, imageSizes) {
-  var uniquePart = "";
-  "string" === typeof imageSrcSet && "" !== imageSrcSet
-    ? ((uniquePart += "[" + imageSrcSet + "]"),
-      "string" === typeof imageSizes && (uniquePart += "[" + imageSizes + "]"))
-    : (uniquePart += "[][]" + href);
-  return "[image]" + uniquePart;
 }
 function pushSelfClosing(target, props, tag) {
   target.push(startChunkForTag(tag));
@@ -1222,23 +1215,29 @@ function pushStartInstance(
           props
         );
       else {
-        var key = "[script]" + props.src;
-        if (!resumableState.scriptsMap.hasOwnProperty(key)) {
-          var resource = { type: "script", chunks: [], state: 0, props: null };
-          resumableState.scriptsMap[key] = null;
-          renderState.scripts.add(resource);
+        var key = props.src;
+        if ("module" === props.type) {
+          var resources = resumableState.moduleScriptResources;
+          var preloads = renderState.preloads.moduleScripts;
+        } else
+          (resources = resumableState.scriptResources),
+            (preloads = renderState.preloads.scripts);
+        var resourceState = resources.hasOwnProperty(key)
+          ? resources[key]
+          : void 0;
+        if (null !== resourceState) {
+          resources[key] = null;
           var scriptProps = props;
-          if (resumableState.preloadsMap.hasOwnProperty(key)) {
-            var preloadProps = resumableState.preloadsMap[key],
-              resourceProps = (scriptProps = assign({}, props));
-            null == resourceProps.crossOrigin &&
-              (resourceProps.crossOrigin = preloadProps.crossOrigin);
-            null == resourceProps.integrity &&
-              (resourceProps.integrity = preloadProps.integrity);
-            var preloadResource = renderState.preloadsMap.get(key);
-            preloadResource && (preloadResource.state |= 4);
+          if (resourceState) {
+            2 === resourceState.length &&
+              ((scriptProps = assign({}, props)),
+              adoptPreloadCredentials(scriptProps, resourceState));
+            var preloadResource = preloads.get(key);
+            preloadResource && (preloadResource.length = 0);
           }
-          pushScriptImpl(resource.chunks, scriptProps);
+          var resource = [];
+          renderState.scripts.add(resource);
+          pushScriptImpl(resource, scriptProps);
         }
         textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
         JSCompiler_inline_result$jscomp$2 = null;
@@ -1293,24 +1292,24 @@ function pushStartInstance(
         target$jscomp$0.push("</", "style", ">");
         var JSCompiler_inline_result$jscomp$3 = null;
       } else {
-        var key$jscomp$0 = "[style]" + href,
-          resource$jscomp$0 = renderState.stylePrecedences.get(precedence);
-        if (!resumableState.stylesMap.hasOwnProperty(key$jscomp$0)) {
-          if (resource$jscomp$0) resource$jscomp$0.props.hrefs.push(href);
-          else {
-            resource$jscomp$0 = {
-              type: "style",
-              chunks: [],
-              state: 0,
-              props: { precedence: precedence, hrefs: [href] }
-            };
-            renderState.stylePrecedences.set(precedence, resource$jscomp$0);
-            var stylesInPrecedence = new Map();
-            stylesInPrecedence.set("", resource$jscomp$0);
-            renderState.precedences.set(precedence, stylesInPrecedence);
-          }
-          resumableState.stylesMap[key$jscomp$0] = null;
-          var target = resource$jscomp$0.chunks,
+        var styleQueue = renderState.styles.get(precedence);
+        if (
+          null !==
+          (resumableState.styleResources.hasOwnProperty(href)
+            ? resumableState.styleResources[href]
+            : void 0)
+        ) {
+          resumableState.styleResources[href] = null;
+          styleQueue
+            ? styleQueue.hrefs.push(escapeTextForBrowser(href))
+            : ((styleQueue = {
+                precedence: escapeTextForBrowser(precedence),
+                rules: [],
+                hrefs: [escapeTextForBrowser(href)],
+                sheets: new Map()
+              }),
+              renderState.styles.set(precedence, styleQueue));
+          var target = styleQueue.rules,
             children$jscomp$5 = null,
             innerHTML$jscomp$4 = null,
             propKey$jscomp$7;
@@ -1338,9 +1337,9 @@ function pushStartInstance(
             target.push(escapeTextForBrowser("" + child$jscomp$0));
           pushInnerHTML(target, innerHTML$jscomp$4, children$jscomp$5);
         }
-        resource$jscomp$0 &&
+        styleQueue &&
           renderState.boundaryResources &&
-          renderState.boundaryResources.add(resource$jscomp$0);
+          renderState.boundaryResources.styles.add(styleQueue);
         textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
         JSCompiler_inline_result$jscomp$3 = void 0;
       }
@@ -1418,8 +1417,12 @@ function pushStartInstance(
       var src = props.src,
         srcSet = props.srcSet;
       if (
-        "lazy" !== props.loading &&
-        ("string" === typeof src || "string" === typeof srcSet) &&
+        !(
+          "lazy" === props.loading ||
+          (!src && !srcSet) ||
+          ("string" !== typeof src && null != src) ||
+          ("string" !== typeof srcSet && null != srcSet)
+        ) &&
         "low" !== props.fetchPriority &&
         !1 === !!(formatContext.tagScope & 2) &&
         ("string" !== typeof src ||
@@ -1435,38 +1438,38 @@ function pushStartInstance(
           ("t" !== srcSet[2] && "T" !== srcSet[2]) ||
           ("a" !== srcSet[3] && "A" !== srcSet[3]))
       ) {
-        var sizes = props.sizes,
-          key$jscomp$1 = getImagePreloadKey(src, srcSet, sizes);
-        if (resumableState.preloadsMap.hasOwnProperty(key$jscomp$1))
-          var resource$jscomp$1 = renderState.preloadsMap.get(key$jscomp$1);
-        else {
-          var preloadProps$jscomp$0 = {
-            rel: "preload",
-            as: "image",
-            href: srcSet ? void 0 : src,
-            imageSrcSet: srcSet,
-            imageSizes: sizes,
-            crossOrigin: props.crossOrigin,
-            integrity: props.integrity,
-            type: props.type,
-            fetchPriority: props.fetchPriority,
-            referrerPolicy: props.referrerPolicy
-          };
-          resource$jscomp$1 = {
-            type: "preload",
-            chunks: [],
-            state: 0,
-            props: preloadProps$jscomp$0
-          };
-          resumableState.preloadsMap[key$jscomp$1] = preloadProps$jscomp$0;
-          renderState.preloadsMap.set(key$jscomp$1, resource$jscomp$1);
-          pushLinkImpl(resource$jscomp$1.chunks, preloadProps$jscomp$0);
-        }
-        resource$jscomp$1 &&
-          ("high" === props.fetchPriority ||
-          10 > renderState.highImagePreloads.size
-            ? renderState.highImagePreloads.add(resource$jscomp$1)
-            : renderState.bulkPreloads.add(resource$jscomp$1));
+        var sizes = "string" === typeof props.sizes ? props.sizes : void 0,
+          key$jscomp$0 = srcSet ? srcSet + "\n" + (sizes || "") : src,
+          promotablePreloads = renderState.preloads.images,
+          resource$jscomp$0 = promotablePreloads.get(key$jscomp$0);
+        if (resource$jscomp$0) {
+          if (
+            "high" === props.fetchPriority ||
+            10 > renderState.highImagePreloads.size
+          )
+            promotablePreloads.delete(key$jscomp$0),
+              renderState.highImagePreloads.add(resource$jscomp$0);
+        } else
+          resumableState.imageResources.hasOwnProperty(key$jscomp$0) ||
+            ((resumableState.imageResources[key$jscomp$0] = PRELOAD_NO_CREDS),
+            (resource$jscomp$0 = []),
+            pushLinkImpl(resource$jscomp$0, {
+              rel: "preload",
+              as: "image",
+              href: srcSet ? void 0 : src,
+              imageSrcSet: srcSet,
+              imageSizes: sizes,
+              crossOrigin: props.crossOrigin,
+              integrity: props.integrity,
+              type: props.type,
+              fetchPriority: props.fetchPriority,
+              referrerPolicy: props.referrerPolicy
+            }),
+            "high" === props.fetchPriority ||
+            10 > renderState.highImagePreloads.size
+              ? renderState.highImagePreloads.add(resource$jscomp$0)
+              : (renderState.bulkPreloads.add(resource$jscomp$0),
+                promotablePreloads.set(key$jscomp$0, resource$jscomp$0)));
       }
       return pushSelfClosing(target$jscomp$0, props, "img");
     case "base":
@@ -1738,33 +1741,28 @@ function escapeJSObjectForInstructionScripts(input) {
 }
 var currentlyRenderingBoundaryHasStylesToHoist = !1,
   destinationHasCapacity = !0;
-function flushStyleTagsLateForBoundary(resource) {
-  if ("stylesheet" === resource.type && 0 === (resource.state & 1))
+function flushStyleTagsLateForBoundary(styleQueue) {
+  var rules = styleQueue.rules,
+    hrefs = styleQueue.hrefs,
+    i = 0;
+  if (hrefs.length) {
+    this.buffer += '<style media="not all" data-precedence="';
+    this.buffer += styleQueue.precedence;
+    for (this.buffer += '" data-href="'; i < hrefs.length - 1; i++)
+      (this.buffer += hrefs[i]), (this.buffer += " ");
+    this.buffer += hrefs[i];
+    this.buffer += '">';
+    for (i = 0; i < rules.length; i++) this.buffer += rules[i];
+    destinationHasCapacity = writeChunkAndReturn(this, "</style>");
     currentlyRenderingBoundaryHasStylesToHoist = !0;
-  else if ("style" === resource.type) {
-    var chunks = resource.chunks,
-      hrefs = resource.props.hrefs,
-      i = 0;
-    if (chunks.length) {
-      this.buffer += '<style media="not all" data-precedence="';
-      resource = escapeTextForBrowser(resource.props.precedence);
-      this.buffer += resource;
-      if (hrefs.length) {
-        for (this.buffer += '" data-href="'; i < hrefs.length - 1; i++)
-          (resource = escapeTextForBrowser(hrefs[i])),
-            (this.buffer += resource),
-            (this.buffer += " ");
-        i = escapeTextForBrowser(hrefs[i]);
-        this.buffer += i;
-      }
-      this.buffer += '">';
-      for (i = 0; i < chunks.length; i++) this.buffer += chunks[i];
-      destinationHasCapacity = writeChunkAndReturn(this, "</style>");
-      currentlyRenderingBoundaryHasStylesToHoist = !0;
-      chunks.length = 0;
-      hrefs.length = 0;
-    }
+    rules.length = 0;
+    hrefs.length = 0;
   }
+}
+function hasStylesToHoist(stylesheet) {
+  return 2 !== stylesheet.state
+    ? (currentlyRenderingBoundaryHasStylesToHoist = !0)
+    : !1;
 }
 function writeResourcesForBoundary(
   destination,
@@ -1773,78 +1771,59 @@ function writeResourcesForBoundary(
 ) {
   currentlyRenderingBoundaryHasStylesToHoist = !1;
   destinationHasCapacity = !0;
-  boundaryResources.forEach(flushStyleTagsLateForBoundary, destination);
+  boundaryResources.styles.forEach(flushStyleTagsLateForBoundary, destination);
+  boundaryResources.stylesheets.forEach(hasStylesToHoist);
   currentlyRenderingBoundaryHasStylesToHoist &&
     (renderState.stylesToHoist = !0);
   return destinationHasCapacity;
 }
-function flushResourceInPreamble(resource) {
-  if (0 === (resource.state & 7)) {
-    for (var chunks = resource.chunks, i = 0; i < chunks.length; i++)
-      this.buffer += chunks[i];
-    resource.state |= 1;
-  }
+function flushResource(resource) {
+  for (var i = 0; i < resource.length; i++) this.buffer += resource[i];
+  resource.length = 0;
 }
-function flushResourceLate(resource) {
-  if (0 === (resource.state & 7)) {
-    for (var chunks = resource.chunks, i = 0; i < chunks.length; i++)
-      this.buffer += chunks[i];
-    resource.state |= 2;
-  }
+var stylesheetFlushingQueue = [];
+function flushStyleInPreamble(stylesheet) {
+  pushLinkImpl(stylesheetFlushingQueue, stylesheet.props);
+  for (var i = 0; i < stylesheetFlushingQueue.length; i++)
+    this.buffer += stylesheetFlushingQueue[i];
+  stylesheetFlushingQueue.length = 0;
+  stylesheet.state = 2;
 }
-var precedenceStyleTagResource = null,
-  didFlushPrecedence = !1;
-function flushStyleInPreamble(resource, key, map) {
-  var chunks = resource.chunks;
-  if (resource.state & 3) map.delete(key);
-  else if ("style" === resource.type) precedenceStyleTagResource = resource;
-  else {
-    pushLinkImpl(chunks, resource.props);
-    for (key = 0; key < chunks.length; key++) this.buffer += chunks[key];
-    resource.state |= 1;
-    didFlushPrecedence = !0;
-  }
-}
-function flushAllStylesInPreamble(map, precedence) {
-  didFlushPrecedence = !1;
-  map.forEach(flushStyleInPreamble, this);
-  map.clear();
-  map = precedenceStyleTagResource.chunks;
-  var hrefs = precedenceStyleTagResource.props.hrefs;
-  if (!1 === didFlushPrecedence || map.length) {
+function flushStylesInPreamble(styleQueue) {
+  var hasStylesheets = 0 < styleQueue.sheets.size;
+  styleQueue.sheets.forEach(flushStyleInPreamble, this);
+  styleQueue.sheets.clear();
+  var rules = styleQueue.rules,
+    hrefs = styleQueue.hrefs;
+  if (!hasStylesheets || hrefs.length) {
     this.buffer += '<style data-precedence="';
-    precedence = escapeTextForBrowser(precedence);
-    this.buffer += precedence;
-    precedence = 0;
+    this.buffer += styleQueue.precedence;
+    styleQueue = 0;
     if (hrefs.length) {
       for (
         this.buffer += '" data-href="';
-        precedence < hrefs.length - 1;
-        precedence++
-      ) {
-        var chunk = escapeTextForBrowser(hrefs[precedence]);
-        this.buffer += chunk;
-        this.buffer += " ";
-      }
-      precedence = escapeTextForBrowser(hrefs[precedence]);
-      this.buffer += precedence;
+        styleQueue < hrefs.length - 1;
+        styleQueue++
+      )
+        (this.buffer += hrefs[styleQueue]), (this.buffer += " ");
+      this.buffer += hrefs[styleQueue];
     }
     this.buffer += '">';
-    for (precedence = 0; precedence < map.length; precedence++)
-      this.buffer += map[precedence];
+    for (styleQueue = 0; styleQueue < rules.length; styleQueue++)
+      this.buffer += rules[styleQueue];
     this.buffer += "</style>";
-    map.length = 0;
+    rules.length = 0;
     hrefs.length = 0;
   }
 }
-function preloadLateStyle(resource) {
-  if (!(resource.state & 8) && "style" !== resource.type) {
-    var chunks = resource.chunks,
-      props = resource.props;
-    pushLinkImpl(chunks, {
+function preloadLateStyle(stylesheet) {
+  if (0 === stylesheet.state) {
+    stylesheet.state = 1;
+    var props = stylesheet.props;
+    pushLinkImpl(stylesheetFlushingQueue, {
       rel: "preload",
       as: "style",
-      href: resource.props.href,
+      href: stylesheet.props.href,
       crossOrigin: props.crossOrigin,
       fetchPriority: props.fetchPriority,
       integrity: props.integrity,
@@ -1852,22 +1831,25 @@ function preloadLateStyle(resource) {
       hrefLang: props.hrefLang,
       referrerPolicy: props.referrerPolicy
     });
-    for (props = 0; props < chunks.length; props++)
-      this.buffer += chunks[props];
-    resource.state |= 8;
-    chunks.length = 0;
+    for (
+      stylesheet = 0;
+      stylesheet < stylesheetFlushingQueue.length;
+      stylesheet++
+    )
+      this.buffer += stylesheetFlushingQueue[stylesheet];
+    stylesheetFlushingQueue.length = 0;
   }
 }
-function preloadLateStyles(map) {
-  map.forEach(preloadLateStyle, this);
-  map.clear();
+function preloadLateStyles(styleQueue) {
+  styleQueue.sheets.forEach(preloadLateStyle, this);
+  styleQueue.sheets.clear();
 }
 function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
   destination.buffer += "[";
   var nextArrayOpenBrackChunk = "[";
-  boundaryResources.forEach(function (resource) {
-    if ("style" !== resource.type && !(resource.state & 1))
-      if (resource.state & 3)
+  boundaryResources.stylesheets.forEach(function (resource) {
+    if (2 !== resource.state)
+      if (3 === resource.state)
         (destination.buffer += nextArrayOpenBrackChunk),
           writeChunk(
             destination,
@@ -1875,7 +1857,7 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
           ),
           (destination.buffer += "]"),
           (nextArrayOpenBrackChunk = ",[");
-      else if ("stylesheet" === resource.type) {
+      else {
         destination.buffer += nextArrayOpenBrackChunk;
         var precedence = resource.props["data-precedence"],
           props = resource.props,
@@ -1915,7 +1897,7 @@ function writeStyleResourceDependenciesInJS(destination, boundaryResources) {
             }
         destination.buffer += "]";
         nextArrayOpenBrackChunk = ",[";
-        resource.state |= 2;
+        resource.state = 3;
       }
   });
   destination.buffer += "]";
@@ -1967,9 +1949,9 @@ function writeStyleResourceAttributeInJS(destination, name, value) {
 function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
   destination.buffer += "[";
   var nextArrayOpenBrackChunk = "[";
-  boundaryResources.forEach(function (resource) {
-    if ("style" !== resource.type && !(resource.state & 1))
-      if (resource.state & 3)
+  boundaryResources.stylesheets.forEach(function (resource) {
+    if (2 !== resource.state)
+      if (3 === resource.state)
         (destination.buffer += nextArrayOpenBrackChunk),
           writeChunk(
             destination,
@@ -1977,7 +1959,7 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
           ),
           (destination.buffer += "]"),
           (nextArrayOpenBrackChunk = ",[");
-      else if ("stylesheet" === resource.type) {
+      else {
         destination.buffer += nextArrayOpenBrackChunk;
         var precedence = resource.props["data-precedence"],
           props = resource.props,
@@ -2017,7 +1999,7 @@ function writeStyleResourceDependenciesInAttr(destination, boundaryResources) {
             }
         destination.buffer += "]";
         nextArrayOpenBrackChunk = ",[";
-        resource.state |= 2;
+        resource.state = 3;
       }
   });
   destination.buffer += "]";
@@ -2072,16 +2054,10 @@ function prefetchDNS(href) {
     var resumableState = request.resumableState,
       renderState = request.renderState;
     if ("string" === typeof href && href) {
-      var key = "[prefetchDNS]" + href;
-      if (!resumableState.preconnectsMap.hasOwnProperty(key)) {
-        var resource = {
-          type: "preconnect",
-          chunks: [],
-          state: 0,
-          props: null
-        };
-        resumableState.preconnectsMap[key] = null;
-        pushLinkImpl(resource.chunks, { href: href, rel: "dns-prefetch" });
+      if (!resumableState.dnsResources.hasOwnProperty(href)) {
+        var resource = [];
+        resumableState.dnsResources[href] = null;
+        pushLinkImpl(resource, { href: href, rel: "dns-prefetch" });
         renderState.preconnects.add(resource);
       }
       enqueueFlush(request);
@@ -2094,20 +2070,16 @@ function preconnect(href, crossOrigin) {
     var resumableState = request.resumableState,
       renderState = request.renderState;
     if ("string" === typeof href && href) {
-      var key =
-        "[preconnect][" +
-        ("string" === typeof crossOrigin ? crossOrigin : "null") +
-        "]" +
-        href;
-      if (!resumableState.preconnectsMap.hasOwnProperty(key)) {
-        var resource = {
-          type: "preconnect",
-          chunks: [],
-          state: 0,
-          props: null
-        };
-        resumableState.preconnectsMap[key] = null;
-        pushLinkImpl(resource.chunks, {
+      resumableState =
+        "use-credentials" === crossOrigin
+          ? resumableState.connectResources.credentials
+          : "string" === typeof crossOrigin
+          ? resumableState.connectResources.anonymous
+          : resumableState.connectResources.default;
+      if (!resumableState.hasOwnProperty(href)) {
+        var resource = [];
+        resumableState[href] = null;
+        pushLinkImpl(resource, {
           rel: "preconnect",
           href: href,
           crossOrigin: crossOrigin
@@ -2124,29 +2096,85 @@ function preload(href, as, options) {
     var resumableState = request.resumableState,
       renderState = request.renderState;
     if (as && href) {
-      options = options || {};
-      var key =
-        "image" === as
-          ? getImagePreloadKey(href, options.imageSrcSet, options.imageSizes)
-          : "[" + as + "]" + href;
-      resumableState.preloadsMap.hasOwnProperty(key) ||
-        ((href = assign(
-          {
-            rel: "preload",
-            href: "image" === as && options.imageSrcSet ? void 0 : href,
-            as: as
-          },
-          options
-        )),
-        (options = { type: "preload", chunks: [], state: 0, props: href }),
-        (resumableState.preloadsMap[key] = href),
-        renderState.preloadsMap.set(key, options),
-        pushLinkImpl(options.chunks, href),
-        "font" === as
-          ? renderState.fontPreloads.add(options)
-          : "image" === as && "high" === options.props.fetchPriority
-          ? renderState.highImagePreloads.add(options)
-          : renderState.bulkPreloads.add(options));
+      switch (as) {
+        case "image":
+          if (options) {
+            var imageSrcSet = options.imageSrcSet;
+            var imageSizes = options.imageSizes;
+            var fetchPriority = options.fetchPriority;
+          }
+          imageSizes = imageSrcSet
+            ? imageSrcSet + "\n" + (imageSizes || "")
+            : href;
+          if (resumableState.imageResources.hasOwnProperty(imageSizes)) return;
+          resumableState.imageResources[imageSizes] = PRELOAD_NO_CREDS;
+          resumableState = [];
+          pushLinkImpl(
+            resumableState,
+            assign(
+              { rel: "preload", href: imageSrcSet ? void 0 : href, as: as },
+              options
+            )
+          );
+          "high" === fetchPriority
+            ? renderState.highImagePreloads.add(resumableState)
+            : (renderState.bulkPreloads.add(resumableState),
+              renderState.preloads.images.set(imageSizes, resumableState));
+          break;
+        case "style":
+          if (resumableState.styleResources.hasOwnProperty(href)) return;
+          imageSrcSet = [];
+          pushLinkImpl(
+            imageSrcSet,
+            assign({ rel: "preload", href: href, as: as }, options)
+          );
+          resumableState.styleResources[href] =
+            !options ||
+            ("string" !== typeof options.crossOrigin &&
+              "string" !== typeof options.integrity)
+              ? PRELOAD_NO_CREDS
+              : [options.crossOrigin, options.integrity];
+          renderState.preloads.stylesheets.set(href, imageSrcSet);
+          renderState.bulkPreloads.add(imageSrcSet);
+          break;
+        case "script":
+          if (resumableState.scriptResources.hasOwnProperty(href)) return;
+          imageSrcSet = [];
+          renderState.preloads.scripts.set(href, imageSrcSet);
+          renderState.bulkPreloads.add(imageSrcSet);
+          pushLinkImpl(
+            imageSrcSet,
+            assign({ rel: "preload", href: href, as: as }, options)
+          );
+          resumableState.scriptResources[href] =
+            !options ||
+            ("string" !== typeof options.crossOrigin &&
+              "string" !== typeof options.integrity)
+              ? PRELOAD_NO_CREDS
+              : [options.crossOrigin, options.integrity];
+          break;
+        default:
+          if (resumableState.unknownResources.hasOwnProperty(as)) {
+            if (
+              ((imageSrcSet = resumableState.unknownResources[as]),
+              imageSrcSet.hasOwnProperty(href))
+            )
+              return;
+          } else
+            (imageSrcSet = {}),
+              (resumableState.unknownResources[as] = imageSrcSet);
+          resumableState = [];
+          options = assign({ rel: "preload", href: href, as: as }, options);
+          switch (as) {
+            case "font":
+              renderState.fontPreloads.add(resumableState);
+              break;
+            default:
+              renderState.bulkPreloads.add(resumableState);
+          }
+          pushLinkImpl(resumableState, options);
+          imageSrcSet[href] = PRELOAD_NO_CREDS;
+      }
       enqueueFlush(request);
     }
   }
@@ -2157,18 +2185,32 @@ function preloadModule(href, options) {
     var resumableState = request.resumableState,
       renderState = request.renderState;
     if (href) {
-      var key =
-        "[" +
-        (options && "string" === typeof options.as ? options.as : "script") +
-        "]" +
-        href;
-      resumableState.preloadsMap.hasOwnProperty(key) ||
-        ((href = assign({ rel: "modulepreload", href: href }, options)),
-        (options = { type: "preload", chunks: [], state: 0, props: href }),
-        (resumableState.preloadsMap[key] = href),
-        renderState.preloadsMap.set(key, options),
-        pushLinkImpl(options.chunks, options.props),
-        renderState.bulkPreloads.add(options));
+      var as =
+        options && "string" === typeof options.as ? options.as : "script";
+      switch (as) {
+        case "script":
+          if (resumableState.moduleScriptResources.hasOwnProperty(href)) return;
+          as = [];
+          resumableState.moduleScriptResources[href] =
+            !options ||
+            ("string" !== typeof options.crossOrigin &&
+              "string" !== typeof options.integrity)
+              ? PRELOAD_NO_CREDS
+              : [options.crossOrigin, options.integrity];
+          renderState.preloads.moduleScripts.set(href, as);
+          break;
+        default:
+          if (resumableState.moduleUnknownResources.hasOwnProperty(as)) {
+            var resources = resumableState.unknownResources[as];
+            if (resources.hasOwnProperty(href)) return;
+          } else
+            (resources = {}),
+              (resumableState.moduleUnknownResources[as] = resources);
+          as = [];
+          resources[href] = PRELOAD_NO_CREDS;
+      }
+      pushLinkImpl(as, assign({ rel: "modulepreload", href: href }, options));
+      renderState.bulkPreloads.add(as);
       enqueueFlush(request);
     }
   }
@@ -2179,35 +2221,37 @@ function preinitStyle(href, precedence, options) {
     var resumableState = request.resumableState,
       renderState = request.renderState;
     if (href) {
-      var key = "[style]" + href;
-      if (!resumableState.stylesMap.hasOwnProperty(key)) {
-        precedence = precedence || "default";
-        var state = 0,
-          preloadResource = renderState.preloadsMap.get(key);
-        preloadResource && preloadResource.state & 3
-          ? (state = 8)
-          : resumableState.preloadsMap.hasOwnProperty(key) && (state = 8);
-        href = assign(
-          { rel: "stylesheet", href: href, "data-precedence": precedence },
-          options
-        );
-        state = { type: "stylesheet", chunks: [], state: state, props: href };
-        resumableState.stylesMap[key] = null;
-        resumableState = renderState.precedences.get(precedence);
-        resumableState ||
-          ((resumableState = new Map()),
-          renderState.precedences.set(precedence, resumableState),
-          (href = {
-            type: "style",
-            chunks: [],
-            state: 0,
-            props: { precedence: precedence, hrefs: [] }
+      precedence = precedence || "default";
+      var styleQueue = renderState.styles.get(precedence),
+        resourceState = resumableState.styleResources.hasOwnProperty(href)
+          ? resumableState.styleResources[href]
+          : void 0;
+      null !== resourceState &&
+        ((resumableState.styleResources[href] = null),
+        styleQueue ||
+          ((styleQueue = {
+            precedence: escapeTextForBrowser(precedence),
+            rules: [],
+            hrefs: [],
+            sheets: new Map()
           }),
-          resumableState.set("", href),
-          renderState.stylePrecedences.set(precedence, href));
-        resumableState.set(key, state);
-        enqueueFlush(request);
-      }
+          renderState.styles.set(precedence, styleQueue)),
+        (precedence = {
+          state: 0,
+          props: assign(
+            { rel: "stylesheet", href: href, "data-precedence": precedence },
+            options
+          )
+        }),
+        resourceState &&
+          (2 === resourceState.length &&
+            adoptPreloadCredentials(precedence.props, resourceState),
+          (renderState = renderState.preloads.stylesheets.get(href)) &&
+          0 < renderState.length
+            ? (renderState.length = 0)
+            : (precedence.state = 1)),
+        styleQueue.sheets.set(href, precedence),
+        enqueueFlush(request));
     }
   }
 }
@@ -2217,15 +2261,21 @@ function preinitScript(src, options) {
     var resumableState = request.resumableState,
       renderState = request.renderState;
     if (src) {
-      var key = "[script]" + src;
-      if (!resumableState.scriptsMap.hasOwnProperty(key)) {
-        var resource = { type: "script", chunks: [], state: 0, props: null };
-        resumableState.scriptsMap[key] = null;
-        src = assign({ src: src, async: !0 }, options);
-        renderState.scripts.add(resource);
-        pushScriptImpl(resource.chunks, src);
-        enqueueFlush(request);
-      }
+      var resourceState = resumableState.scriptResources.hasOwnProperty(src)
+        ? resumableState.scriptResources[src]
+        : void 0;
+      null !== resourceState &&
+        ((resumableState.scriptResources[src] = null),
+        (options = assign({ src: src, async: !0 }, options)),
+        resourceState &&
+          (2 === resourceState.length &&
+            adoptPreloadCredentials(options, resourceState),
+          (src = renderState.preloads.scripts.get(src))) &&
+          (src.length = 0),
+        (src = []),
+        renderState.scripts.add(src),
+        pushScriptImpl(src, options),
+        enqueueFlush(request));
     }
   }
 }
@@ -2235,20 +2285,35 @@ function preinitModuleScript(src, options) {
     var resumableState = request.resumableState,
       renderState = request.renderState;
     if (src) {
-      var key = "[script]" + src;
-      if (!resumableState.scriptsMap.hasOwnProperty(key)) {
-        var resource = { type: "script", chunks: [], state: 0, props: null };
-        resumableState.scriptsMap[key] = null;
-        src = assign({ src: src, type: "module", async: !0 }, options);
-        renderState.scripts.add(resource);
-        pushScriptImpl(resource.chunks, src);
-        enqueueFlush(request);
-      }
+      var resourceState = resumableState.moduleScriptResources.hasOwnProperty(
+        src
+      )
+        ? resumableState.moduleScriptResources[src]
+        : void 0;
+      null !== resourceState &&
+        ((resumableState.moduleScriptResources[src] = null),
+        (options = assign({ src: src, type: "module", async: !0 }, options)),
+        resourceState &&
+          (2 === resourceState.length &&
+            adoptPreloadCredentials(options, resourceState),
+          (src = renderState.preloads.moduleScripts.get(src))) &&
+          (src.length = 0),
+        (src = []),
+        renderState.scripts.add(src),
+        pushScriptImpl(src, options),
+        enqueueFlush(request));
     }
   }
 }
-function hoistStyleResource(resource) {
-  this.add(resource);
+function adoptPreloadCredentials(target, preloadState) {
+  null == target.crossOrigin && (target.crossOrigin = preloadState[0]);
+  null == target.integrity && (target.integrity = preloadState[1]);
+}
+function hoistStyleQueueDependency(styleQueue) {
+  this.styles.add(styleQueue);
+}
+function hoistStylesheetDependency(stylesheet) {
+  this.stylesheets.add(stylesheet);
 }
 var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -2725,11 +2790,11 @@ function useFormState(action, initialState, permalink) {
       });
     return [initialState, action];
   }
-  var boundAction$11 = action.bind(null, initialState);
+  var boundAction$18 = action.bind(null, initialState);
   return [
     initialState,
     function (payload) {
-      boundAction$11(payload);
+      boundAction$18(payload);
     }
   ];
 }
@@ -2868,7 +2933,7 @@ function createSuspenseBoundary(request, fallbackAbortableTasks) {
     byteSize: 0,
     fallbackAbortableTasks: fallbackAbortableTasks,
     errorDigest: null,
-    resources: new Set(),
+    resources: { styles: new Set(), stylesheets: new Set() },
     trackedContentKeyPath: null,
     trackedFallbackNode: null
   };
@@ -3937,15 +4002,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructiveImpl(request, task, null, node, childIndex);
-    } catch (thrownValue$26) {
+    } catch (thrownValue$33) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$26 === SuspenseException
+          thrownValue$33 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$26),
+            : thrownValue$33),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -4203,15 +4268,24 @@ function flushSegment(request, destination, segment) {
       ),
       flushSubtree(request, destination, segment);
   else {
-    (segment = request.renderState.boundaryResources) &&
-      boundary.resources.forEach(hoistStyleResource, segment);
+    segment = boundary.resources;
+    var currentBoundaryResources = request.renderState.boundaryResources;
+    currentBoundaryResources &&
+      (segment.styles.forEach(
+        hoistStyleQueueDependency,
+        currentBoundaryResources
+      ),
+      segment.stylesheets.forEach(
+        hoistStylesheetDependency,
+        currentBoundaryResources
+      ));
     writeChunkAndReturn(destination, "\x3c!--$--\x3e");
-    segment = boundary.completedSegments;
-    if (1 !== segment.length)
+    boundary = boundary.completedSegments;
+    if (1 !== boundary.length)
       throw Error(
         "A previously unvisited boundary must have exactly one root segment. This is a bug in React."
       );
-    flushSegment(request, destination, segment[0]);
+    flushSegment(request, destination, boundary[0]);
   }
   return writeChunkAndReturn(destination, "\x3c!--/$--\x3e");
 }
@@ -4354,102 +4428,90 @@ function flushCompletedQueues(request, destination) {
         ) {
           var _renderState$external = renderState.externalRuntimeScript,
             resumableState = request.resumableState,
-            chunks = _renderState$external.chunks,
-            key = "[script]" + _renderState$external.src;
-          resumableState.scriptsMap.hasOwnProperty(key) ||
-            ((_renderState$external = {
-              type: "script",
-              chunks: chunks,
-              state: 0,
-              props: null
-            }),
-            (resumableState.scriptsMap[key] = null),
-            renderState.scripts.add(_renderState$external));
+            src = _renderState$external.src,
+            chunks = _renderState$external.chunks;
+          resumableState.scriptResources.hasOwnProperty(src) ||
+            ((resumableState.scriptResources[src] = null),
+            renderState.scripts.add(chunks));
         }
         var htmlChunks = renderState.htmlChunks,
           headChunks = renderState.headChunks;
-        resumableState = 0;
+        _renderState$external = 0;
         if (htmlChunks) {
           for (
-            resumableState = 0;
-            resumableState < htmlChunks.length;
-            resumableState++
+            _renderState$external = 0;
+            _renderState$external < htmlChunks.length;
+            _renderState$external++
           )
-            writeChunk(destination, htmlChunks[resumableState]);
+            writeChunk(destination, htmlChunks[_renderState$external]);
           if (headChunks)
             for (
-              resumableState = 0;
-              resumableState < headChunks.length;
-              resumableState++
+              _renderState$external = 0;
+              _renderState$external < headChunks.length;
+              _renderState$external++
             )
-              writeChunk(destination, headChunks[resumableState]);
+              writeChunk(destination, headChunks[_renderState$external]);
           else
             writeChunk(destination, startChunkForTag("head")),
               writeChunk(destination, ">");
         } else if (headChunks)
           for (
-            resumableState = 0;
-            resumableState < headChunks.length;
-            resumableState++
+            _renderState$external = 0;
+            _renderState$external < headChunks.length;
+            _renderState$external++
           )
-            writeChunk(destination, headChunks[resumableState]);
+            writeChunk(destination, headChunks[_renderState$external]);
         var charsetChunks = renderState.charsetChunks;
         for (
-          resumableState = 0;
-          resumableState < charsetChunks.length;
-          resumableState++
+          _renderState$external = 0;
+          _renderState$external < charsetChunks.length;
+          _renderState$external++
         )
-          writeChunk(destination, charsetChunks[resumableState]);
+          writeChunk(destination, charsetChunks[_renderState$external]);
         charsetChunks.length = 0;
-        renderState.preconnects.forEach(flushResourceInPreamble, destination);
+        renderState.preconnects.forEach(flushResource, destination);
         renderState.preconnects.clear();
         var preconnectChunks = renderState.preconnectChunks;
         for (
-          resumableState = 0;
-          resumableState < preconnectChunks.length;
-          resumableState++
+          _renderState$external = 0;
+          _renderState$external < preconnectChunks.length;
+          _renderState$external++
         )
-          writeChunk(destination, preconnectChunks[resumableState]);
+          writeChunk(destination, preconnectChunks[_renderState$external]);
         preconnectChunks.length = 0;
-        renderState.fontPreloads.forEach(flushResourceInPreamble, destination);
+        renderState.fontPreloads.forEach(flushResource, destination);
         renderState.fontPreloads.clear();
-        renderState.highImagePreloads.forEach(
-          flushResourceInPreamble,
-          destination
-        );
+        renderState.highImagePreloads.forEach(flushResource, destination);
         renderState.highImagePreloads.clear();
-        renderState.precedences.forEach(flushAllStylesInPreamble, destination);
+        renderState.styles.forEach(flushStylesInPreamble, destination);
         var importMapChunks = renderState.importMapChunks;
         for (
-          resumableState = 0;
-          resumableState < importMapChunks.length;
-          resumableState++
+          _renderState$external = 0;
+          _renderState$external < importMapChunks.length;
+          _renderState$external++
         )
-          writeChunk(destination, importMapChunks[resumableState]);
+          writeChunk(destination, importMapChunks[_renderState$external]);
         importMapChunks.length = 0;
-        renderState.bootstrapScripts.forEach(
-          flushResourceInPreamble,
-          destination
-        );
-        renderState.scripts.forEach(flushResourceInPreamble, destination);
+        renderState.bootstrapScripts.forEach(flushResource, destination);
+        renderState.scripts.forEach(flushResource, destination);
         renderState.scripts.clear();
-        renderState.bulkPreloads.forEach(flushResourceInPreamble, destination);
+        renderState.bulkPreloads.forEach(flushResource, destination);
         renderState.bulkPreloads.clear();
         var preloadChunks = renderState.preloadChunks;
         for (
-          resumableState = 0;
-          resumableState < preloadChunks.length;
-          resumableState++
+          _renderState$external = 0;
+          _renderState$external < preloadChunks.length;
+          _renderState$external++
         )
-          writeChunk(destination, preloadChunks[resumableState]);
+          writeChunk(destination, preloadChunks[_renderState$external]);
         preloadChunks.length = 0;
         var hoistableChunks = renderState.hoistableChunks;
         for (
-          resumableState = 0;
-          resumableState < hoistableChunks.length;
-          resumableState++
+          _renderState$external = 0;
+          _renderState$external < hoistableChunks.length;
+          _renderState$external++
         )
-          writeChunk(destination, hoistableChunks[resumableState]);
+          writeChunk(destination, hoistableChunks[_renderState$external]);
         hoistableChunks.length = 0;
         htmlChunks &&
           null === headChunks &&
@@ -4462,7 +4524,7 @@ function flushCompletedQueues(request, destination) {
       } else return;
     var renderState$jscomp$0 = request.renderState;
     completedRootSegment = 0;
-    renderState$jscomp$0.preconnects.forEach(flushResourceLate, destination);
+    renderState$jscomp$0.preconnects.forEach(flushResource, destination);
     renderState$jscomp$0.preconnects.clear();
     var preconnectChunks$jscomp$0 = renderState$jscomp$0.preconnectChunks;
     for (
@@ -4472,17 +4534,14 @@ function flushCompletedQueues(request, destination) {
     )
       writeChunk(destination, preconnectChunks$jscomp$0[completedRootSegment]);
     preconnectChunks$jscomp$0.length = 0;
-    renderState$jscomp$0.fontPreloads.forEach(flushResourceLate, destination);
+    renderState$jscomp$0.fontPreloads.forEach(flushResource, destination);
     renderState$jscomp$0.fontPreloads.clear();
-    renderState$jscomp$0.highImagePreloads.forEach(
-      flushResourceInPreamble,
-      destination
-    );
+    renderState$jscomp$0.highImagePreloads.forEach(flushResource, destination);
     renderState$jscomp$0.highImagePreloads.clear();
-    renderState$jscomp$0.precedences.forEach(preloadLateStyles, destination);
-    renderState$jscomp$0.scripts.forEach(flushResourceLate, destination);
+    renderState$jscomp$0.styles.forEach(preloadLateStyles, destination);
+    renderState$jscomp$0.scripts.forEach(flushResource, destination);
     renderState$jscomp$0.scripts.clear();
-    renderState$jscomp$0.bulkPreloads.forEach(flushResourceLate, destination);
+    renderState$jscomp$0.bulkPreloads.forEach(flushResource, destination);
     renderState$jscomp$0.bulkPreloads.clear();
     var preloadChunks$jscomp$0 = renderState$jscomp$0.preloadChunks;
     for (
@@ -4584,13 +4643,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$28 = partialBoundaries[i];
+      var boundary$35 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.renderState.boundaryResources =
-          boundary$28.resources;
-        var completedSegments = boundary$28.completedSegments;
+          boundary$35.resources;
+        var completedSegments = boundary$35.completedSegments;
         for (
           resumableState$jscomp$0 = 0;
           resumableState$jscomp$0 < completedSegments.length;
@@ -4600,7 +4659,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$28,
+              boundary$35,
               completedSegments[resumableState$jscomp$0]
             )
           ) {
@@ -4612,7 +4671,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$0);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$28.resources,
+          boundary$35.resources,
           clientRenderedBoundaries.renderState
         );
       }
@@ -4672,8 +4731,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$30) {
-    logRecoverableError(request, error$30), fatalError(request, error$30);
+  } catch (error$37) {
+    logRecoverableError(request, error$37), fatalError(request, error$37);
   }
 }
 exports.abortStream = function (stream, reason) {
@@ -4897,10 +4956,14 @@ exports.renderToStream = function (children, options) {
     instructions: 0,
     hasBody: !1,
     hasHtml: !1,
-    preloadsMap: {},
-    preconnectsMap: {},
-    stylesMap: {},
-    scriptsMap: {}
+    unknownResources: {},
+    dnsResources: {},
+    connectResources: { default: {}, anonymous: {}, credentials: {} },
+    imageResources: {},
+    styleResources: {},
+    scriptResources: {},
+    moduleUnknownResources: {},
+    moduleScriptResources: {}
   };
   streamingFormat = options ? options.bootstrapScriptContent : void 0;
   var bootstrapScripts = options ? options.bootstrapScripts : void 0,
@@ -4953,12 +5016,16 @@ exports.renderToStream = function (children, options) {
     preconnects: new Set(),
     fontPreloads: new Set(),
     highImagePreloads: new Set(),
-    precedences: new Map(),
-    stylePrecedences: new Map(),
+    styles: new Map(),
     bootstrapScripts: new Set(),
     scripts: new Set(),
     bulkPreloads: new Set(),
-    preloadsMap: new Map(),
+    preloads: {
+      images: new Map(),
+      stylesheets: new Map(),
+      scripts: new Map(),
+      moduleScripts: new Map()
+    },
     nonce: void 0,
     boundaryResources: null,
     stylesToHoist: !1
@@ -4969,42 +5036,41 @@ exports.renderToStream = function (children, options) {
       externalRuntimeConfig < bootstrapScripts.length;
       externalRuntimeConfig++
     ) {
-      var scriptConfig = bootstrapScripts[externalRuntimeConfig];
-      idPrefix =
-        "string" === typeof scriptConfig ? scriptConfig : scriptConfig.src;
-      externalRuntimeScript =
-        "string" === typeof scriptConfig ? void 0 : scriptConfig.integrity;
-      scriptConfig =
-        "string" === typeof scriptConfig || null == scriptConfig.crossOrigin
-          ? void 0
-          : "use-credentials" === scriptConfig.crossOrigin
-          ? "use-credentials"
-          : "";
-      var key = "[script]" + idPrefix,
+      var scriptConfig = bootstrapScripts[externalRuntimeConfig],
+        integrity = (externalRuntimeScript = void 0),
         props = {
           rel: "preload",
-          href: idPrefix,
           as: "script",
           fetchPriority: "low",
-          nonce: void 0,
-          integrity: externalRuntimeScript,
-          crossOrigin: scriptConfig
-        },
-        resource = { type: "preload", chunks: [], state: 0, props: props };
-      JSCompiler_inline_result.preloadsMap[key] = props;
-      streamingFormat.preloadsMap.set(key, resource);
-      streamingFormat.bootstrapScripts.add(resource);
-      pushLinkImpl(resource.chunks, props);
+          nonce: void 0
+        };
+      "string" === typeof scriptConfig
+        ? (props.href = idPrefix = scriptConfig)
+        : ((props.href = idPrefix = scriptConfig.src),
+          (props.integrity = integrity =
+            "string" === typeof scriptConfig.integrity
+              ? scriptConfig.integrity
+              : void 0),
+          (props.crossOrigin = externalRuntimeScript =
+            "string" === typeof scriptConfig || null == scriptConfig.crossOrigin
+              ? void 0
+              : "use-credentials" === scriptConfig.crossOrigin
+              ? "use-credentials"
+              : ""));
+      scriptConfig = JSCompiler_inline_result;
+      var href = idPrefix;
+      scriptConfig.scriptResources[href] = null;
+      scriptConfig.moduleScriptResources[href] = null;
+      scriptConfig = [];
+      pushLinkImpl(scriptConfig, props);
+      streamingFormat.bootstrapScripts.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(idPrefix));
-      externalRuntimeScript &&
-        bootstrapChunks.push(
-          '" integrity="',
-          escapeTextForBrowser(externalRuntimeScript)
-        );
-      "string" === typeof scriptConfig &&
+      "string" === typeof integrity &&
+        bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
+      "string" === typeof externalRuntimeScript &&
         bootstrapChunks.push(
           '" crossorigin="',
-          escapeTextForBrowser(scriptConfig)
+          escapeTextForBrowser(externalRuntimeScript)
         );
       bootstrapChunks.push('" async="">\x3c/script>');
     }
@@ -5014,46 +5080,44 @@ exports.renderToStream = function (children, options) {
       bootstrapScripts < bootstrapModules.length;
       bootstrapScripts++
     )
-      (externalRuntimeScript = bootstrapModules[bootstrapScripts]),
-        (externalRuntimeConfig =
-          "string" === typeof externalRuntimeScript
-            ? externalRuntimeScript
-            : externalRuntimeScript.src),
-        (idPrefix =
-          "string" === typeof externalRuntimeScript
-            ? void 0
-            : externalRuntimeScript.integrity),
-        (externalRuntimeScript =
-          "string" === typeof externalRuntimeScript ||
-          null == externalRuntimeScript.crossOrigin
-            ? void 0
-            : "use-credentials" === externalRuntimeScript.crossOrigin
-            ? "use-credentials"
-            : ""),
-        (scriptConfig = "[script]" + externalRuntimeConfig),
-        (key = {
+      (props = bootstrapModules[bootstrapScripts]),
+        (externalRuntimeScript = idPrefix = void 0),
+        (integrity = {
           rel: "modulepreload",
-          href: externalRuntimeConfig,
           fetchPriority: "low",
-          nonce: void 0,
-          integrity: idPrefix,
-          crossOrigin: externalRuntimeScript
+          nonce: void 0
         }),
-        (props = { type: "preload", chunks: [], state: 0, props: key }),
-        (JSCompiler_inline_result.preloadsMap[scriptConfig] = key),
-        streamingFormat.preloadsMap.set(scriptConfig, props),
+        "string" === typeof props
+          ? (integrity.href = externalRuntimeConfig = props)
+          : ((integrity.href = externalRuntimeConfig = props.src),
+            (integrity.integrity = externalRuntimeScript =
+              "string" === typeof props.integrity ? props.integrity : void 0),
+            (integrity.crossOrigin = idPrefix =
+              "string" === typeof props || null == props.crossOrigin
+                ? void 0
+                : "use-credentials" === props.crossOrigin
+                ? "use-credentials"
+                : "")),
+        (props = JSCompiler_inline_result),
+        (scriptConfig = externalRuntimeConfig),
+        (props.scriptResources[scriptConfig] = null),
+        (props.moduleScriptResources[scriptConfig] = null),
+        (props = []),
+        pushLinkImpl(props, integrity),
         streamingFormat.bootstrapScripts.add(props),
-        pushLinkImpl(props.chunks, key),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(externalRuntimeConfig)
         ),
-        idPrefix &&
-          bootstrapChunks.push('" integrity="', escapeTextForBrowser(idPrefix)),
         "string" === typeof externalRuntimeScript &&
           bootstrapChunks.push(
-            '" crossorigin="',
+            '" integrity="',
             escapeTextForBrowser(externalRuntimeScript)
+          ),
+        "string" === typeof idPrefix &&
+          bootstrapChunks.push(
+            '" crossorigin="',
+            escapeTextForBrowser(idPrefix)
           ),
         bootstrapChunks.push('" async="">\x3c/script>');
   bootstrapModules = createFormatContext(0, null, 0);
