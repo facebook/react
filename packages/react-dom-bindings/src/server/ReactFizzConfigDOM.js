@@ -152,7 +152,7 @@ export type RenderState = {
   fontPreloads: Set<Resource>,
   highImagePreloads: Set<Resource>,
   // usedImagePreloads: Set<PreloadResource>,
-  precedences: Map<string, PrecedenceQueue>,
+  styles: Map<string, StyleQueue>,
   bootstrapScripts: Set<Resource>,
   scripts: Set<Resource>,
   bulkPreloads: Set<Resource>,
@@ -197,9 +197,9 @@ const EXISTS: Exists = null;
 // to convey. It should never be checked by identity and we should not
 // assume Preload values in ResumableState equal this value because they
 // will have come from some parsed input.
-const PRELOAD_SIGIL: Preloaded = [];
+const PRELOAD_NO_CREDS: Preloaded = [];
 if (__DEV__) {
-  Object.freeze(PRELOAD_SIGIL);
+  Object.freeze(PRELOAD_NO_CREDS);
 }
 
 // Per response, global state that is not contextual to the rendering subtree.
@@ -394,8 +394,7 @@ export function createRenderState(
     fontPreloads: new Set(),
     highImagePreloads: new Set(),
     // usedImagePreloads: new Set(),
-    precedences: new Map(),
-    stylePrecedences: new Map(),
+    styles: new Map(),
     bootstrapScripts: new Set(),
     scripts: new Set(),
     bulkPreloads: new Set(),
@@ -2210,7 +2209,7 @@ function pushLink(
         return pushLinkImpl(target, props);
       } else {
         // This stylesheet refers to a Resource and we create a new one if necessary
-        let precedenceQueue = renderState.precedences.get(precedence);
+        let styleQueue = renderState.styles.get(precedence);
         const hasKey = resumableState.styleResources.hasOwnProperty(key);
         const resourceState = hasKey
           ? resumableState.styleResources[key]
@@ -2220,15 +2219,15 @@ function pushLink(
           resumableState.styleResources[key] = EXISTS;
 
           // If this is the first time we've encountered this precedence we need
-          // to create a PrecedenceQueue
-          if (!precedenceQueue) {
-            precedenceQueue = {
+          // to create a StyleQueue
+          if (!styleQueue) {
+            styleQueue = {
               precedence: stringToChunk(escapeTextForBrowser(precedence)),
               rules: ([]: Array<Chunk | PrecomputedChunk>),
               hrefs: ([]: Array<Chunk | PrecomputedChunk>),
               sheets: (new Map(): Map<string, StylesheetResource>),
             };
-            renderState.precedences.set(precedence, precedenceQueue);
+            renderState.styles.set(precedence, styleQueue);
           }
 
           const resource: StylesheetResource = {
@@ -2261,11 +2260,11 @@ function pushLink(
             // have hit the primary if condition above.
           }
 
-          // We add the newly created resource to our PrecedenceQueue and if necessary
+          // We add the newly created resource to our StyleQueue and if necessary
           // track the resource with the currently rendering boundary
-          precedenceQueue.sheets.set(key, resource);
+          styleQueue.sheets.set(key, resource);
           if (renderState.boundaryResources) {
-            renderState.boundaryResources.sheets.add(resource);
+            renderState.boundaryResources.stylesheets.add(resource);
           }
         } else {
           // We need to track whether this boundary should wait on this resource or not.
@@ -2273,11 +2272,11 @@ function pushLink(
           // it. However, it's possible when you resume that the style has already been emitted
           // and then it wouldn't be recreated in the RenderState and there's no need to track
           // it again since we should've hoisted it to the shell already.
-          if (precedenceQueue) {
-            const resource = precedenceQueue.sheets.get(key);
+          if (styleQueue) {
+            const resource = styleQueue.sheets.get(key);
             if (resource) {
               if (renderState.boundaryResources) {
-                renderState.boundaryResources.sheets.add(resource);
+                renderState.boundaryResources.stylesheets.add(resource);
               }
             }
           }
@@ -2411,7 +2410,7 @@ function pushStyle(
     }
 
     const key = getResourceKey(href);
-    let precedenceQueue = renderState.precedences.get(precedence);
+    let styleQueue = renderState.styles.get(precedence);
     const hasKey = resumableState.styleResources.hasOwnProperty(key);
     const resourceState = hasKey
       ? resumableState.styleResources[key]
@@ -2429,30 +2428,30 @@ function pushStyle(
         }
       }
 
-      if (!precedenceQueue) {
+      if (!styleQueue) {
         // This is the first time we've encountered this precedence we need
-        // to create a PrecedenceQueue.
-        precedenceQueue = {
+        // to create a StyleQueue.
+        styleQueue = {
           precedence: stringToChunk(escapeTextForBrowser(precedence)),
           rules: ([]: Array<Chunk | PrecomputedChunk>),
           hrefs: [stringToChunk(escapeTextForBrowser(href))],
           sheets: (new Map(): Map<string, StylesheetResource>),
         };
-        renderState.precedences.set(precedence, precedenceQueue);
+        renderState.styles.set(precedence, styleQueue);
       } else {
         // We have seen this precedence before and need to track this href
-        precedenceQueue.hrefs.push(stringToChunk(escapeTextForBrowser(href)));
+        styleQueue.hrefs.push(stringToChunk(escapeTextForBrowser(href)));
       }
-      pushStyleContents(precedenceQueue.rules, props);
+      pushStyleContents(styleQueue.rules, props);
     }
-    if (precedenceQueue) {
+    if (styleQueue) {
       // We need to track whether this boundary should wait on this resource or not.
       // Typically this resource should always exist since we either had it or just created
       // it. However, it's possible when you resume that the style has already been emitted
       // and then it wouldn't be recreated in the RenderState and there's no need to track
       // it again since we should've hoisted it to the shell already.
       if (renderState.boundaryResources) {
-        renderState.boundaryResources.precedences.add(precedenceQueue);
+        renderState.boundaryResources.styles.add(styleQueue);
       }
     }
 
@@ -2613,7 +2612,7 @@ function pushImg(
       }
     } else if (!resumableState.imageResources.hasOwnProperty(key)) {
       // We must construct a new preload resource
-      resumableState.imageResources[key] = PRELOAD_SIGIL;
+      resumableState.imageResources[key] = PRELOAD_NO_CREDS;
       resource = [];
       pushLinkImpl(
         resource,
@@ -4224,10 +4223,10 @@ let destinationHasCapacity = true;
 
 function flushStyleTagsLateForBoundary(
   this: Destination,
-  precedenceQueue: PrecedenceQueue,
+  styleQueue: StyleQueue,
 ) {
-  const rules = precedenceQueue.rules;
-  const hrefs = precedenceQueue.hrefs;
+  const rules = styleQueue.rules;
+  const hrefs = styleQueue.hrefs;
   if (__DEV__) {
     if (rules.length > 0 && hrefs.length === 0) {
       console.error(
@@ -4238,7 +4237,7 @@ function flushStyleTagsLateForBoundary(
   let i = 0;
   if (hrefs.length) {
     writeChunk(this, lateStyleTagResourceOpen1);
-    writeChunk(this, precedenceQueue.precedence);
+    writeChunk(this, styleQueue.precedence);
     writeChunk(this, lateStyleTagResourceOpen2);
     for (; i < hrefs.length - 1; i++) {
       writeChunk(this, hrefs[i]);
@@ -4286,13 +4285,10 @@ export function writeResourcesForBoundary(
   destinationHasCapacity = true;
 
   // Flush style tags for each precedence this boundary depends on
-  boundaryResources.precedences.forEach(
-    flushStyleTagsLateForBoundary,
-    destination,
-  );
+  boundaryResources.styles.forEach(flushStyleTagsLateForBoundary, destination);
 
   // Determine if this boundary has stylesheets that need to be awaited upon completion
-  boundaryResources.sheets.forEach(hasStylesToHoist);
+  boundaryResources.stylesheets.forEach(hasStylesToHoist);
 
   if (currentlyRenderingBoundaryHasStylesToHoist) {
     renderState.stylesToHoist = true;
@@ -4336,23 +4332,23 @@ const styleTagResourceOpen3 = stringToPrecomputedChunk('">');
 
 const styleTagResourceClose = stringToPrecomputedChunk('</style>');
 
-function flushPrecedenceInPreamble(
+function flushStylesInPreamble(
   this: Destination,
-  precedenceQueue: PrecedenceQueue,
+  styleQueue: StyleQueue,
   precedence: string,
 ) {
-  const hasStylesheets = precedenceQueue.sheets.size > 0;
-  precedenceQueue.sheets.forEach(flushStyleInPreamble, this);
-  precedenceQueue.sheets.clear();
+  const hasStylesheets = styleQueue.sheets.size > 0;
+  styleQueue.sheets.forEach(flushStyleInPreamble, this);
+  styleQueue.sheets.clear();
 
-  const rules = precedenceQueue.rules;
-  const hrefs = precedenceQueue.hrefs;
+  const rules = styleQueue.rules;
+  const hrefs = styleQueue.hrefs;
   // If we don't emit any stylesheets at this precedence we still need to maintain the precedence
   // order so even if there are no rules for style tags at this precedence we emit an empty style
   // tag with the data-precedence attribute
   if (!hasStylesheets || hrefs.length) {
     writeChunk(this, styleTagResourceOpen1);
-    writeChunk(this, precedenceQueue.precedence);
+    writeChunk(this, styleQueue.precedence);
     let i = 0;
     if (hrefs.length) {
       writeChunk(this, styleTagResourceOpen2);
@@ -4391,12 +4387,9 @@ function preloadLateStyle(this: Destination, stylesheet: StylesheetResource) {
   }
 }
 
-function preloadLateStyles(
-  this: Destination,
-  precedenceQueue: PrecedenceQueue,
-) {
-  precedenceQueue.sheets.forEach(preloadLateStyle, this);
-  precedenceQueue.sheets.clear();
+function preloadLateStyles(this: Destination, styleQueue: StyleQueue) {
+  styleQueue.sheets.forEach(preloadLateStyle, this);
+  styleQueue.sheets.clear();
 }
 
 // We don't bother reporting backpressure at the moment because we expect to
@@ -4475,7 +4468,7 @@ export function writePreamble(
   renderState.highImagePreloads.clear();
 
   // Flush unblocked stylesheets by precedence
-  renderState.precedences.forEach(flushPrecedenceInPreamble, destination);
+  renderState.styles.forEach(flushStylesInPreamble, destination);
 
   const importMapChunks = renderState.importMapChunks;
   for (i = 0; i < importMapChunks.length; i++) {
@@ -4551,7 +4544,7 @@ export function writeHoistables(
 
   // Preload any stylesheets. these will emit in a render instruction that follows this
   // but we want to kick off preloading as soon as possible
-  renderState.precedences.forEach(preloadLateStyles, destination);
+  renderState.styles.forEach(preloadLateStyles, destination);
 
   // We only hoist importmaps that are configured through createResponse and that will
   // always flush in the preamble. Generally we don't expect people to render them as
@@ -4613,7 +4606,7 @@ function writeStyleResourceDependenciesInJS(
   writeChunk(destination, arrayFirstOpenBracket);
 
   let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-  boundaryResources.sheets.forEach(resource => {
+  boundaryResources.stylesheets.forEach(resource => {
     if (resource.state === PREAMBLE) {
       // We can elide this dependency because it was flushed in the shell and
       // should be ready before content is shown on the client
@@ -4806,7 +4799,7 @@ function writeStyleResourceDependenciesInAttr(
   writeChunk(destination, arrayFirstOpenBracket);
 
   let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-  boundaryResources.sheets.forEach(resource => {
+  boundaryResources.stylesheets.forEach(resource => {
     if (resource.state === PREAMBLE) {
       // We can elide this dependency because it was flushed in the shell and
       // should be ready before content is shown on the client
@@ -5045,11 +5038,11 @@ type StylesheetResource = {
 };
 
 export type BoundaryResources = {
-  precedences: Set<PrecedenceQueue>,
-  sheets: Set<StylesheetResource>,
+  styles: Set<StyleQueue>,
+  stylesheets: Set<StylesheetResource>,
 };
 
-export type PrecedenceQueue = {
+export type StyleQueue = {
   precedence: Chunk | PrecomputedChunk,
   rules: Array<Chunk | PrecomputedChunk>,
   hrefs: Array<Chunk | PrecomputedChunk>,
@@ -5058,8 +5051,8 @@ export type PrecedenceQueue = {
 
 export function createBoundaryResources(): BoundaryResources {
   return {
-    precedences: new Set(),
-    sheets: new Set(),
+    styles: new Set(),
+    stylesheets: new Set(),
   };
 }
 
@@ -5179,7 +5172,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           // we can return if we already have this resource
           return;
         }
-        resumableState.imageResources[key] = PRELOAD_SIGIL;
+        resumableState.imageResources[key] = PRELOAD_NO_CREDS;
         const resource = ([]: Resource);
         pushLinkImpl(
           resource,
@@ -5222,7 +5215,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           (typeof options.crossOrigin === 'string' ||
             typeof options.integrity === 'string')
             ? [options.crossOrigin, options.integrity]
-            : PRELOAD_SIGIL;
+            : PRELOAD_NO_CREDS;
         renderState.preloads.stylesheets.set(key, resource);
         renderState.bulkPreloads.add(resource);
         break;
@@ -5245,7 +5238,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
           (typeof options.crossOrigin === 'string' ||
             typeof options.integrity === 'string')
             ? [options.crossOrigin, options.integrity]
-            : PRELOAD_SIGIL;
+            : PRELOAD_NO_CREDS;
         break;
       }
       default: {
@@ -5280,7 +5273,7 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
             renderState.bulkPreloads.add(resource);
         }
         pushLinkImpl(resource, props);
-        resources[key] = PRELOAD_SIGIL;
+        resources[key] = PRELOAD_NO_CREDS;
       }
     }
     // If we got this far we created a new resource
@@ -5324,7 +5317,7 @@ function preloadModule(
           (typeof options.crossOrigin === 'string' ||
             typeof options.integrity === 'string')
             ? [options.crossOrigin, options.integrity]
-            : PRELOAD_SIGIL;
+            : PRELOAD_NO_CREDS;
         renderState.preloads.moduleScripts.set(key, resource);
         break;
       }
@@ -5343,7 +5336,7 @@ function preloadModule(
           resumableState.moduleUnknownResources[as] = resources;
         }
         resource = ([]: Resource);
-        resources[key] = PRELOAD_SIGIL;
+        resources[key] = PRELOAD_NO_CREDS;
       }
     }
 
@@ -5386,7 +5379,7 @@ function preinitStyle(
     precedence = precedence || 'default';
     const key = getResourceKey(href);
 
-    let precedenceQueue = renderState.precedences.get(precedence);
+    let styleQueue = renderState.styles.get(precedence);
     const hasKey = resumableState.styleResources.hasOwnProperty(key);
     const resourceState = hasKey
       ? resumableState.styleResources[key]
@@ -5396,15 +5389,15 @@ function preinitStyle(
       resumableState.styleResources[key] = EXISTS;
 
       // If this is the first time we've encountered this precedence we need
-      // to create a PrecedenceQueue
-      if (!precedenceQueue) {
-        precedenceQueue = {
+      // to create a StyleQueue
+      if (!styleQueue) {
+        styleQueue = {
           precedence: stringToChunk(escapeTextForBrowser(precedence)),
           rules: ([]: Array<Chunk | PrecomputedChunk>),
           hrefs: ([]: Array<Chunk | PrecomputedChunk>),
           sheets: (new Map(): Map<string, StylesheetResource>),
         };
-        renderState.precedences.set(precedence, precedenceQueue);
+        renderState.styles.set(precedence, styleQueue);
       }
 
       const resource = {
@@ -5444,9 +5437,9 @@ function preinitStyle(
         // have hit the primary if condition above.
       }
 
-      // We add the newly created resource to our PrecedenceQueue and if necessary
+      // We add the newly created resource to our StyleQueue and if necessary
       // track the resource with the currently rendering boundary
-      precedenceQueue.sheets.set(key, resource);
+      styleQueue.sheets.set(key, resource);
 
       // Notify the request that there are resources to flush even if no work is currently happening
       flushResources(request);
@@ -5669,18 +5662,18 @@ function adoptPreloadCredentials(
   if (target.integrity == null) target.integrity = preloadState[1];
 }
 
-function hoistPrecedenceQueueDependency(
+function hoistStyleQueueDependency(
   this: BoundaryResources,
-  precedenceQueue: PrecedenceQueue,
+  styleQueue: StyleQueue,
 ) {
-  this.precedences.add(precedenceQueue);
+  this.styles.add(styleQueue);
 }
 
 function hoistStylesheetDependency(
   this: BoundaryResources,
   stylesheet: StylesheetResource,
 ) {
-  this.sheets.add(stylesheet);
+  this.stylesheets.add(stylesheet);
 }
 
 export function hoistResources(
@@ -5689,11 +5682,11 @@ export function hoistResources(
 ): void {
   const currentBoundaryResources = renderState.boundaryResources;
   if (currentBoundaryResources) {
-    source.precedences.forEach(
-      hoistPrecedenceQueueDependency,
+    source.styles.forEach(hoistStyleQueueDependency, currentBoundaryResources);
+    source.stylesheets.forEach(
+      hoistStylesheetDependency,
       currentBoundaryResources,
     );
-    source.sheets.forEach(hoistStylesheetDependency, currentBoundaryResources);
   }
 }
 
