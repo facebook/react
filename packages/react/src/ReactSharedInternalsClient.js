@@ -11,8 +11,9 @@ import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 import ReactCurrentActQueue from './ReactCurrentActQueue';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
-import {enableServerContext} from 'shared/ReactFeatureFlags';
+import {enableServerContext, enableTaint} from 'shared/ReactFeatureFlags';
 import {ContextRegistry} from './ReactServerContextRegistry';
+import {TaintRegistry} from './ReactTaintRegistry';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
@@ -28,6 +29,10 @@ if (__DEV__) {
 
 if (enableServerContext) {
   ReactSharedInternals.ContextRegistry = ContextRegistry;
+}
+
+if (enableTaint) {
+  ReactSharedInternals.TaintRegistry = TaintRegistry;
 }
 
 export default ReactSharedInternals;
