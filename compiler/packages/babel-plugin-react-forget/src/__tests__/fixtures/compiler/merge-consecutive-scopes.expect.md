@@ -27,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component() {
-  const $ = useMemoCache(9);
+  const $ = useMemoCache(8);
   const [state, setState] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -47,39 +47,35 @@ function Component() {
   }
   const c_3 = $[3] !== state;
   let t2;
-  let t3;
   if (c_3) {
-    t2 = () => setState(state + 1);
-    t3 = (
-      <button data-testid="button" onClick={t2}>
+    t2 = (
+      <button data-testid="button" onClick={() => setState(state + 1)}>
         increment
       </button>
     );
     $[3] = state;
     $[4] = t2;
-    $[5] = t3;
   } else {
     t2 = $[4];
-    t3 = $[5];
   }
-  const c_6 = $[6] !== t1;
-  const c_7 = $[7] !== t3;
-  let t4;
-  if (c_6 || c_7) {
-    t4 = (
+  const c_5 = $[5] !== t1;
+  const c_6 = $[6] !== t2;
+  let t3;
+  if (c_5 || c_6) {
+    t3 = (
       <div>
         {t0}
         {t1}
-        {t3}
+        {t2}
       </div>
     );
-    $[6] = t1;
+    $[5] = t1;
+    $[6] = t2;
     $[7] = t3;
-    $[8] = t4;
   } else {
-    t4 = $[8];
+    t3 = $[7];
   }
-  return t4;
+  return t3;
 }
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,

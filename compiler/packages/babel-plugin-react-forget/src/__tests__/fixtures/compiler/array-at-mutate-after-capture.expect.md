@@ -21,19 +21,15 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react"; // x's mutable range should extend to `mutate(y)`
 
 function Component(props) {
-  const $ = useMemoCache(2);
+  const $ = useMemoCache(1);
   let t0;
-  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = {};
-    t1 = [42, t0];
+    t0 = [42, {}];
     $[0] = t0;
-    $[1] = t1;
   } else {
     t0 = $[0];
-    t1 = $[1];
   }
-  const x = t1;
+  const x = t0;
   const idx = foo(props.b);
   const y = x.at(idx);
   mutate(y);

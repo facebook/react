@@ -14,24 +14,16 @@ function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(3);
-  let T0;
-  let t1;
-  let t2;
+  const $ = useMemoCache(1);
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const maybeMutable = new MaybeMutable();
-    T0 = Foo.Bar;
-    t1 = maybeMutate(maybeMutable);
-    t2 = <T0>{t1}</T0>;
-    $[0] = T0;
-    $[1] = t1;
-    $[2] = t2;
+    t0 = <Foo.Bar>{maybeMutate(maybeMutable)}</Foo.Bar>;
+    $[0] = t0;
   } else {
-    T0 = $[0];
-    t1 = $[1];
-    t2 = $[2];
+    t0 = $[0];
   }
-  return t2;
+  return t0;
 }
 
 ```

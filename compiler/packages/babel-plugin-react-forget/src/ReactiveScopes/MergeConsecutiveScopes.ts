@@ -169,6 +169,9 @@ class Transform extends ReactiveFunctionTransform<void> {
           areLValuesLastUsedByScope(instr.scope, lvalues, this.lastUsage)
         ) {
           const intermediateInstructions = block.slice(currentScope.to, i);
+          currentScope.scope.scope.range.end = makeInstructionId(
+            Math.max(currentScope.scope.scope.range.end, instr.scope.range.end)
+          );
           currentScope.scope.instructions.push(...intermediateInstructions);
           currentScope.scope.instructions.push(...instr.instructions);
           for (const [key, value] of instr.scope.declarations) {
@@ -193,8 +196,30 @@ class Transform extends ReactiveFunctionTransform<void> {
     }
 
     if (nextInstructions !== null) {
+      for (const instr of nextInstructions) {
+        if (instr.kind === "scope") {
+          updateScopeDeclarations(instr.scope, this.lastUsage);
+        }
+      }
+
       block.length = 0;
       block.push(...nextInstructions);
+    }
+  }
+}
+
+/**
+ * Updates @param scope's declarations to remove any declarations that are not
+ * used after the scope, based on the scope's updated range post-merging.
+ */
+function updateScopeDeclarations(
+  scope: ReactiveScope,
+  lastUsage: Map<IdentifierId, InstructionId>
+): void {
+  for (const [key] of scope.declarations) {
+    const lastUsedAt = lastUsage.get(key)!;
+    if (lastUsedAt < scope.range.end) {
+      scope.declarations.delete(key);
     }
   }
 }

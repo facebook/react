@@ -22,42 +22,38 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // arrayInstance.
 //  - read on receiver
 //  - mutate on lvalue
 function ArrayAtTest(props) {
-  const $ = useMemoCache(8);
+  const $ = useMemoCache(7);
   const c_0 = $[0] !== props.x;
   let t0;
-  let t1;
   if (c_0) {
-    t0 = foo(props.x);
-    t1 = [t0];
+    t0 = [foo(props.x)];
     $[0] = props.x;
     $[1] = t0;
-    $[2] = t1;
   } else {
     t0 = $[1];
-    t1 = $[2];
   }
-  const arr = t1;
-  const c_3 = $[3] !== props.y;
-  const c_4 = $[4] !== arr;
-  let t3;
-  if (c_3 || c_4) {
-    const c_6 = $[6] !== props.y;
-    let t2;
-    if (c_6) {
-      t2 = bar(props.y);
-      $[6] = props.y;
-      $[7] = t2;
+  const arr = t0;
+  const c_2 = $[2] !== props.y;
+  const c_3 = $[3] !== arr;
+  let t2;
+  if (c_2 || c_3) {
+    const c_5 = $[5] !== props.y;
+    let t1;
+    if (c_5) {
+      t1 = bar(props.y);
+      $[5] = props.y;
+      $[6] = t1;
     } else {
-      t2 = $[7];
+      t1 = $[6];
     }
-    t3 = arr.at(t2);
-    $[3] = props.y;
-    $[4] = arr;
-    $[5] = t3;
+    t2 = arr.at(t1);
+    $[2] = props.y;
+    $[3] = arr;
+    $[4] = t2;
   } else {
-    t3 = $[5];
+    t2 = $[4];
   }
-  const result = t3;
+  const result = t2;
   return result;
 }
 

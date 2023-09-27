@@ -21,7 +21,7 @@ function component() {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component() {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = makeSomePrimitive();
@@ -30,17 +30,13 @@ function component() {
     t0 = $[0];
   }
   let t1;
-  let t2;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = makeSomePrimitive();
-    t2 = { u: t0, v: t1 };
+    t1 = { u: t0, v: makeSomePrimitive() };
     $[1] = t1;
-    $[2] = t2;
   } else {
     t1 = $[1];
-    t2 = $[2];
   }
-  const x = t2;
+  const x = t1;
   const u = x.u;
   const v = x.v;
   if (u > v) {

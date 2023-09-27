@@ -23,13 +23,12 @@ import { makeReadOnly } from "react-forget-runtime";
 import { unstable_useMemoCache as useMemoCache } from "react"; // @enableEmitFreeze true
 
 function MyComponentName(props) {
-  const $ = useMemoCache(4);
+  const $ = useMemoCache(3);
   const c_0 = $[0] !== props.a;
   const c_1 = $[1] !== props.b;
-  let x;
   let y;
   if (c_0 || c_1) {
-    x = {};
+    const x = {};
     foo(x, props.a);
     foo(x, props.b);
 
@@ -37,11 +36,9 @@ function MyComponentName(props) {
     y.push(x);
     $[0] = props.a;
     $[1] = props.b;
-    $[2] = __DEV__ ? makeReadOnly(x, "MyComponentName") : x;
-    $[3] = __DEV__ ? makeReadOnly(y, "MyComponentName") : y;
+    $[2] = __DEV__ ? makeReadOnly(y, "MyComponentName") : y;
   } else {
-    x = $[2];
-    y = $[3];
+    y = $[2];
   }
   return y;
 }

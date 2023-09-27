@@ -26,34 +26,35 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Foo(props) {
-  const $ = useMemoCache(4);
+  const $ = useMemoCache(3);
   let t0;
-  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <>Text</>;
-    t1 = <div>{t0}</div>;
+    t0 = (
+      <div>
+        <>Text</>
+      </div>
+    );
     $[0] = t0;
-    $[1] = t1;
   } else {
     t0 = $[0];
-    t1 = $[1];
   }
-  const c_2 = $[2] !== props.greeting;
-  let t2;
-  if (c_2) {
-    t2 = (
+  const c_1 = $[1] !== props.greeting;
+  let t1;
+  if (c_1) {
+    t1 = (
       <>
         Hello {props.greeting}
-        {t1}
+        {t0}
       </>
     );
-    $[2] = props.greeting;
-    $[3] = t2;
+    $[1] = props.greeting;
+    $[2] = t1;
   } else {
-    t2 = $[3];
+    t1 = $[2];
   }
-  return t2;
+  return t1;
 }
+
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
   params: ["TodoAdd"],
