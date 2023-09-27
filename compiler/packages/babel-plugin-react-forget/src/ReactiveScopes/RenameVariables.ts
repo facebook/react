@@ -34,7 +34,11 @@ export function renameVariables(fn: ReactiveFunction): void {
   const scopes = new Scopes();
   scopes.enter(() => {
     for (const param of fn.params) {
-      scopes.visit(param.identifier);
+      if (param.kind === "Identifier") {
+        scopes.visit(param.identifier);
+      } else {
+        scopes.visit(param.place.identifier);
+      }
     }
     visitReactiveFunction(fn, new Visitor(), scopes);
   });

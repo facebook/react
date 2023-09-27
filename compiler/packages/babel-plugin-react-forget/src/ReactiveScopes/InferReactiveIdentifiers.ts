@@ -188,7 +188,11 @@ export function inferReactiveIdentifiers(
   const visitor = new Visitor();
   const state = new State(fn.env);
   for (const param of fn.params) {
-    state.reactivityMap.set(param.identifier.id, true);
+    if (param.kind === "Identifier") {
+      state.reactivityMap.set(param.identifier.id, true);
+    } else {
+      state.reactivityMap.set(param.place.identifier.id, true);
+    }
   }
   visitReactiveFunction(fn, visitor, state);
 

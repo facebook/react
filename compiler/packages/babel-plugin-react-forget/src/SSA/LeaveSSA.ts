@@ -100,13 +100,14 @@ export function leaveSSA(fn: HIRFunction): void {
   > = new Map();
 
   for (const param of fn.params) {
-    if (param.identifier.name !== null) {
-      declarations.set(param.identifier.name, {
+    let place: Place = param.kind === "Identifier" ? param : param.place;
+    if (place.identifier.name !== null) {
+      declarations.set(place.identifier.name, {
         lvalue: {
           kind: InstructionKind.Let,
-          place: param,
+          place,
         },
-        place: param,
+        place,
       });
     }
   }

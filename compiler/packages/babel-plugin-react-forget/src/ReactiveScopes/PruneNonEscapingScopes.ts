@@ -117,7 +117,11 @@ export function pruneNonEscapingScopes(
   // and which values are returned.
   const state = new State(fn.env);
   for (const param of fn.params) {
-    state.declare(param.identifier.id);
+    if (param.kind === "Identifier") {
+      state.declare(param.identifier.id);
+    } else {
+      state.declare(param.place.identifier.id);
+    }
   }
   visitReactiveFunction(
     fn,

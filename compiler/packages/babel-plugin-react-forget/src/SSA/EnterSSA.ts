@@ -259,7 +259,16 @@ function enterSSAImpl(
         loc: func.loc,
         suggestions: null,
       });
-      func.params = func.params.map((p) => builder.definePlace(p));
+      func.params = func.params.map((param) => {
+        if (param.kind === "Identifier") {
+          return builder.definePlace(param);
+        } else {
+          return {
+            kind: "Spread",
+            place: builder.definePlace(param.place),
+          };
+        }
+      });
     }
 
     for (const instr of block.instructions) {
@@ -282,9 +291,16 @@ function enterSSAImpl(
           loweredFunc.context = loweredFunc.context.map((p) =>
             builder.getPlace(p)
           );
-          loweredFunc.params = loweredFunc.params.map((p) =>
-            builder.definePlace(p)
-          );
+          loweredFunc.params = loweredFunc.params.map((param) => {
+            if (param.kind === "Identifier") {
+              return builder.definePlace(param);
+            } else {
+              return {
+                kind: "Spread",
+                place: builder.definePlace(param.place),
+              };
+            }
+          });
           enterSSAImpl(loweredFunc, builder, rootEntry);
         });
         entry.preds.clear();

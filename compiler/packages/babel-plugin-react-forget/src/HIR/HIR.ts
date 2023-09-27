@@ -48,7 +48,7 @@ export type SourceLocation = t.SourceLocation | typeof GeneratedSource;
 export type ReactiveFunction = {
   loc: SourceLocation;
   id: string | null;
-  params: Array<Place>;
+  params: Array<Place | SpreadPattern>;
   generator: boolean;
   async: boolean;
   body: ReactiveBlock;
@@ -232,7 +232,7 @@ export type HIRFunction = {
   loc: SourceLocation;
   id: string | null;
   env: Environment;
-  params: Array<Place>;
+  params: Array<Place | SpreadPattern>;
   context: Array<Place>;
   body: HIR;
   generator: boolean;

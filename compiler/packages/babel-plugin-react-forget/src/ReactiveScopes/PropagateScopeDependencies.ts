@@ -50,10 +50,17 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
 
   const context = new Context(escapingTemporaries.usedOutsideDeclaringScope);
   for (const param of fn.params) {
-    context.declare(param.identifier, {
-      id: makeInstructionId(0),
-      scope: empty(),
-    });
+    if (param.kind === "Identifier") {
+      context.declare(param.identifier, {
+        id: makeInstructionId(0),
+        scope: empty(),
+      });
+    } else {
+      context.declare(param.place.identifier, {
+        id: makeInstructionId(0),
+        scope: empty(),
+      });
+    }
   }
   visitReactiveFunction(fn, new PropagationVisitor(), context);
 }

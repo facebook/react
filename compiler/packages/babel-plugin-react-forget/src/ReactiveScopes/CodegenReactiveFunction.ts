@@ -54,10 +54,14 @@ export function codegenReactiveFunction(
 ): Result<CodegenFunction, CompilerError> {
   const cx = new Context(fn.env, fn.id ?? "[[ anonymous ]]");
   for (const param of fn.params) {
-    cx.temp.set(param.identifier.id, null);
+    if (param.kind === "Identifier") {
+      cx.temp.set(param.identifier.id, null);
+    } else {
+      cx.temp.set(param.place.identifier.id, null);
+    }
   }
 
-  const params = fn.params.map((param) => convertIdentifier(param.identifier));
+  const params = fn.params.map((param) => convertParameter(param));
   const body = codegenBlock(cx, fn.body);
   const statements = body.body;
   if (statements.length !== 0) {
@@ -95,6 +99,16 @@ export function codegenReactiveFunction(
     async: fn.async,
     memoSlotsUsed: cacheCount,
   });
+}
+
+function convertParameter(
+  param: Place | SpreadPattern
+): t.Identifier | t.RestElement {
+  if (param.kind === "Identifier") {
+    return convertIdentifier(param.identifier);
+  } else {
+    return t.restElement(convertIdentifier(param.place.identifier));
+  }
 }
 
 class Context {

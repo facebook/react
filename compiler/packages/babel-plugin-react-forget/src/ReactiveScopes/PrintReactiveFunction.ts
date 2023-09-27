@@ -27,7 +27,11 @@ export function printReactiveFunction(fn: ReactiveFunction): string {
   writer.writeLine(`function ${fn.id !== null ? fn.id : "<unknown>"}(`);
   writer.indented(() => {
     for (const param of fn.params) {
-      writer.writeLine(`${printPlace(param)},`);
+      if (param.kind === "Identifier") {
+        writer.writeLine(`${printPlace(param)},`);
+      } else {
+        writer.writeLine(`...${printPlace(param.place)},`);
+      }
     }
   });
   writer.writeLine(") {");

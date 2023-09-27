@@ -110,13 +110,25 @@ export default function inferReferenceEffects(
     ? ValueKind.Mutable
     : ValueKind.Frozen;
   for (const param of fn.params) {
-    const value: InstructionValue = {
-      kind: "Primitive",
-      loc: param.loc,
-      value: undefined,
-    };
+    let value: InstructionValue;
+    let place: Place;
+    if (param.kind === "Identifier") {
+      place = param;
+      value = {
+        kind: "Primitive",
+        loc: param.loc,
+        value: undefined,
+      };
+    } else {
+      place = param.place;
+      value = {
+        kind: "Primitive",
+        loc: param.place.loc,
+        value: undefined,
+      };
+    }
     initialState.initialize(value, paramKind);
-    initialState.define(param, value);
+    initialState.define(place, value);
   }
 
   // Map of blocks to the last (merged) incoming state that was processed
