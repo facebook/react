@@ -89,7 +89,7 @@ export function lower(
       id = idNode.node.name;
     }
   }
-  const params: Array<Place> = [];
+  const params: Array<Place | SpreadPattern> = [];
   func.get("params").forEach((param) => {
     if (param.isIdentifier()) {
       const identifier = builder.resolveIdentifier(param);
@@ -126,6 +126,24 @@ export function lower(
         param.node.loc ?? GeneratedSource,
         InstructionKind.Let,
         param,
+        place
+      );
+    } else if (param.isRestElement()) {
+      const place: Place = {
+        kind: "Identifier",
+        identifier: builder.makeTemporary(),
+        effect: Effect.Unknown,
+        loc: param.node.loc ?? GeneratedSource,
+      };
+      params.push({
+        kind: "Spread",
+        place,
+      });
+      lowerAssignment(
+        builder,
+        param.node.loc ?? GeneratedSource,
+        InstructionKind.Let,
+        param.get("argument"),
         place
       );
     } else {

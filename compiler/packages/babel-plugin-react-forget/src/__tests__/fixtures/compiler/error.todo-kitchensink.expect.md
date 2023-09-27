@@ -79,15 +79,11 @@ let moduleLocal = false;
 ## Error
 
 ```
-[ReactForget] Todo: (BuildHIR::lower) Handle RestElement params (1:1)
-
 [ReactForget] Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)
 
 [ReactForget] Todo: (BuildHIR::lowerStatement) Handle ClassDeclaration statements (5:10)
 
 [ReactForget] Todo: (BuildHIR::lowerExpression) Handle ObjectMethod properties in ObjectExpression (12:12)
-
-[ReactForget] Todo: (BuildHIR::lower) Handle RestElement params (18:18)
 
 [ReactForget] Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (20:22)
 
