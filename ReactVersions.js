@@ -35,7 +35,6 @@ const stablePackages = {
   'react-art': ReactVersion,
   'react-dom': ReactVersion,
   'react-server-dom-webpack': ReactVersion,
-  'react-server-dom-turbopack': ReactVersion,
   'react-is': ReactVersion,
   'react-reconciler': '0.30.0',
   'react-refresh': '0.15.0',
