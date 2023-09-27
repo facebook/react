@@ -11,6 +11,7 @@ import {
   Place,
   ReactiveBlock,
   ReactiveFunction,
+  ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeBlock,
   ReactiveScopeDependency,
@@ -161,7 +162,7 @@ class Transform extends ReactiveFunctionTransform<void> {
       } else {
         if (
           currentScope !== null &&
-          canMergeScopes(currentScope.scope.scope, instr.scope) &&
+          canMergeScopes(currentScope.scope, instr) &&
           // If there are intermediate instructions, we can only merge the scopes
           // if those intermediate instructions are all used by the second scope.
           // if not, merging them would make those values unavailable to subsequent
@@ -243,24 +244,33 @@ function areLValuesLastUsedByScope(
   return true;
 }
 
-function canMergeScopes(a: ReactiveScope, b: ReactiveScope): boolean {
+function canMergeScopes(a: ReactiveScopeBlock, b: ReactiveScopeBlock): boolean {
   // Don't merge scopes with reassignments
-  if (a.reassignments.size !== 0 || b.reassignments.size !== 0) {
+  if (a.scope.reassignments.size !== 0 || b.scope.reassignments.size !== 0) {
     return false;
   }
-  if (areEqualDependencies(a.dependencies, b.dependencies)) {
+  // Merge scopes whose dependencies are identical
+  if (areEqualDependencies(a.scope.dependencies, b.scope.dependencies)) {
     return true;
   }
+  // Merge scopes where the outputs of the previous scope are the inputs
+  // of the subsequent scope. Note that the output of a scope is not
+  // guaranteed to change when its inputs change, for example `foo(x)`
+  // may not change when `x` changes, for example `foo(x) { return x < 10}`
+  // will not change as x changes from 0 -> 1.
+  // Therefore we check that the outputs of the previous scope are of a type
+  // that is guaranteed to invalidate with its inputs, and only merge in this case.
   if (
     areEqualDependencies(
       new Set(
-        [...a.declarations.values()].map((declaration) => ({
+        [...a.scope.declarations.values()].map((declaration) => ({
           identifier: declaration.identifier,
           path: [],
         }))
       ),
-      b.dependencies
-    )
+      b.scope.dependencies
+    ) &&
+    scopeAlwaysInvalidatesOnDependencyChanges(a)
   ) {
     return true;
   }
@@ -294,4 +304,50 @@ function areEqualDependencies(
 
 function areEqualPaths(a: Array<string>, b: Array<string>): boolean {
   return a.length === b.length && a.every((item, ix) => item === b[ix]);
+}
+
+function scopeAlwaysInvalidatesOnDependencyChanges(
+  scope: ReactiveScopeBlock
+): boolean {
+  const visitor = new DeclarationTypeVisitor(scope.scope);
+  visitor.visitScope(scope, undefined);
+  return visitor.alwaysInvalidatesOnInputChange;
+}
+
+class DeclarationTypeVisitor extends ReactiveFunctionVisitor<void> {
+  scope: ReactiveScope;
+  alwaysInvalidatesOnInputChange: boolean = false;
+
+  constructor(scope: ReactiveScope) {
+    super();
+    this.scope = scope;
+  }
+
+  override visitInstruction(
+    instruction: ReactiveInstruction,
+    state: void
+  ): void {
+    this.traverseInstruction(instruction, state);
+    if (
+      instruction.lvalue === null ||
+      !this.scope.declarations.has(instruction.lvalue.identifier.id)
+    ) {
+      // no lvalue or this instruction isn't directly constructing a
+      // scope output value, skip
+      return;
+    }
+    switch (instruction.value.kind) {
+      case "FunctionExpression":
+      case "ArrayExpression":
+      case "JsxExpression":
+      case "JsxFragment":
+      case "ObjectExpression": {
+        // These instruction types *always* allocate. If they execute
+        // they will produce a new value, triggering downstream reactive
+        // updates
+        this.alwaysInvalidatesOnInputChange = true;
+        break;
+      }
+    }
+  }
 }

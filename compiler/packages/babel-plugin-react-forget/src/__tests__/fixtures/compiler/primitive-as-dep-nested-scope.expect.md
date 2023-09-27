@@ -26,31 +26,44 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // props.b + 1 is
 // Correctness:
 //   y depends on either props.b or props.b + 1
 function PrimitiveAsDepNested(props) {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(9);
   const c_0 = $[0] !== props.b;
   const c_1 = $[1] !== props.a;
-  let t2;
+  let x;
+  let y;
   if (c_0 || c_1) {
-    const x = {};
+    x = {};
     mutate(x);
     const t0 = props.b + 1;
-    const c_3 = $[3] !== t0;
+    const c_4 = $[4] !== t0;
     let t1;
-    if (c_3) {
+    if (c_4) {
       t1 = foo(t0);
-      $[3] = t0;
-      $[4] = t1;
+      $[4] = t0;
+      $[5] = t1;
     } else {
-      t1 = $[4];
+      t1 = $[5];
     }
-    const y = t1;
+    y = t1;
     mutate(x, props.a);
-    t2 = [x, y];
     $[0] = props.b;
     $[1] = props.a;
-    $[2] = t2;
+    $[2] = x;
+    $[3] = y;
   } else {
-    t2 = $[2];
+    x = $[2];
+    y = $[3];
+  }
+  const c_6 = $[6] !== x;
+  const c_7 = $[7] !== y;
+  let t2;
+  if (c_6 || c_7) {
+    t2 = [x, y];
+    $[6] = x;
+    $[7] = y;
+    $[8] = t2;
+  } else {
+    t2 = $[8];
   }
   return t2;
 }
