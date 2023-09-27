@@ -28,22 +28,19 @@ function Component(props) {
   const $ = useMemoCache(3);
   let T0;
   let t1;
+  let t2;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const maybeMutable = new MaybeMutable();
 
     T0 = View;
     t1 = maybeMutate(maybeMutable);
+    t2 = <T0>{t1}</T0>;
     $[0] = T0;
     $[1] = t1;
+    $[2] = t2;
   } else {
     T0 = $[0];
     t1 = $[1];
-  }
-  let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t2 = <T0>{t1}</T0>;
-    $[2] = t2;
-  } else {
     t2 = $[2];
   }
   return t2;

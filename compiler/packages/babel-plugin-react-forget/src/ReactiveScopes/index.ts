@@ -17,6 +17,7 @@ export { flattenReactiveLoops } from "./FlattenReactiveLoops";
 export { flattenScopesWithHooks } from "./FlattenScopesWithHooks";
 export { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 export { memoizeFbtOperandsInSameScope } from "./MemoizeFbtOperandsInSameScope";
+export { mergeConsecutiveScopes } from "./MergeConsecutiveScopes";
 export { mergeOverlappingReactiveScopes } from "./MergeOverlappingReactiveScopes";
 export { printReactiveFunction } from "./PrintReactiveFunction";
 export { promoteUsedTemporaries } from "./PromoteUsedTemporaries";

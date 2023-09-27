@@ -30,17 +30,14 @@ function component() {
     t0 = $[0];
   }
   let t1;
+  let t2;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = makeSomePrimitive();
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = { u: t0, v: t1 };
+    $[1] = t1;
     $[2] = t2;
   } else {
+    t1 = $[1];
     t2 = $[2];
   }
   const x = t2;

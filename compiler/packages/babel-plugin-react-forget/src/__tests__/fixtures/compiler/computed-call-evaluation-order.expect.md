@@ -42,21 +42,18 @@ function Component() {
   }
   const changeF = t0;
   let t1;
+  let x;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => console.log("original");
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  let x;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     x = { f: t1 };
 
     (console.log("A"), x)[(console.log("B"), "f")](
       (changeF(x), console.log("arg"), 1)
     );
+    $[1] = t1;
     $[2] = x;
   } else {
+    t1 = $[1];
     x = $[2];
   }
   return x;

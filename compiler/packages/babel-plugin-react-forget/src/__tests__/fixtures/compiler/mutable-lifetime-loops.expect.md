@@ -81,6 +81,7 @@ function testFunction(props) {
   let b;
   let c;
   let d;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     a = {};
     b = {};
@@ -107,21 +108,17 @@ function testFunction(props) {
     }
 
     mutate(d, null);
+    t0 = { a, b, c, d };
     $[0] = a;
     $[1] = b;
     $[2] = c;
     $[3] = d;
+    $[4] = t0;
   } else {
     a = $[0];
     b = $[1];
     c = $[2];
     d = $[3];
-  }
-  let t0;
-  if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = { a, b, c, d };
-    $[4] = t0;
-  } else {
     t0 = $[4];
   }
   return t0;

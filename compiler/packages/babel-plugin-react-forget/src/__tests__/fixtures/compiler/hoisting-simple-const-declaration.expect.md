@@ -26,20 +26,17 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function hoisting() {
   const $ = useMemoCache(2);
   let foo;
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     foo = () => bar + baz;
 
     const bar = 3;
     const baz = 2;
-    $[0] = foo;
-  } else {
-    foo = $[0];
-  }
-  let t0;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = foo();
+    $[0] = foo;
     $[1] = t0;
   } else {
+    foo = $[0];
     t0 = $[1];
   }
   return t0;

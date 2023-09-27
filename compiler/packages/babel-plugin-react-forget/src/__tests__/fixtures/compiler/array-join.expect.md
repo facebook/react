@@ -18,17 +18,14 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(8);
   let t0;
+  let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = {};
-    $[0] = t0;
-  } else {
-    t0 = $[0];
-  }
-  let t1;
-  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = [];
+    $[0] = t0;
     $[1] = t1;
   } else {
+    t0 = $[0];
     t1 = $[1];
   }
   const c_2 = $[2] !== props.value;

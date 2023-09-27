@@ -42,6 +42,7 @@ import {
   flattenScopesWithHooks,
   inferReactiveScopeVariables,
   memoizeFbtOperandsInSameScope,
+  mergeConsecutiveScopes,
   mergeOverlappingReactiveScopes,
   promoteUsedTemporaries,
   propagateScopeDependencies,
@@ -258,6 +259,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "PruneUnusedScopes",
+    value: reactiveFunction,
+  });
+
+  mergeConsecutiveScopes(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "MergeConsecutiveScopes",
     value: reactiveFunction,
   });
 

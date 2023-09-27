@@ -34,19 +34,16 @@ function component() {
   }
   const z = t0;
   let y;
+  let x;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     y = {};
     y.z = z;
-    $[1] = y;
-  } else {
-    y = $[1];
-  }
-  let x;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     x = {};
     x.y = y;
+    $[1] = y;
     $[2] = x;
   } else {
+    y = $[1];
     x = $[2];
   }
   return x;

@@ -52,42 +52,35 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // This tests an 
 //  }
 
 function TestJoinCondDepsInUncondScopes(props) {
-  const $ = useMemoCache(8);
+  const $ = useMemoCache(6);
   const c_0 = $[0] !== props.a.b;
   let x;
   let y;
+  let t0;
   if (c_0) {
     y = {};
-    const c_3 = $[3] !== props;
-    if (c_3) {
+    const c_4 = $[4] !== props;
+    if (c_4) {
       x = {};
       if (foo) {
         mutate1(x, props.a.b);
       }
-      $[3] = props;
-      $[4] = x;
+      $[4] = props;
+      $[5] = x;
     } else {
-      x = $[4];
+      x = $[5];
     }
 
     mutate2(y, props.a.b);
+    t0 = [x, y];
     $[0] = props.a.b;
     $[1] = x;
     $[2] = y;
+    $[3] = t0;
   } else {
     x = $[1];
     y = $[2];
-  }
-  const c_5 = $[5] !== x;
-  const c_6 = $[6] !== y;
-  let t0;
-  if (c_5 || c_6) {
-    t0 = [x, y];
-    $[5] = x;
-    $[6] = y;
-    $[7] = t0;
-  } else {
-    t0 = $[7];
+    t0 = $[3];
   }
   return t0;
 }

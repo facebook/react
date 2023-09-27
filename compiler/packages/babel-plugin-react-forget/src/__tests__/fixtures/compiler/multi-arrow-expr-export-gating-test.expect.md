@@ -46,22 +46,19 @@ export const Renderer = isForgetEnabled_Fixtures()
         t0 = $[0];
       }
       let t1;
+      let t2;
       if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
         t1 = <ErrorView />;
-        $[1] = t1;
-      } else {
-        t1 = $[1];
-      }
-      let t2;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
         t2 = (
           <Foo>
             {t0}
             {t1}
           </Foo>
         );
+        $[1] = t1;
         $[2] = t2;
       } else {
+        t1 = $[1];
         t2 = $[2];
       }
       return t2;

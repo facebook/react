@@ -30,18 +30,16 @@ function Component() {
   }
   const a = t0;
   let x;
+  let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     x = [];
     x.push(a);
-    $[1] = x;
-  } else {
-    x = $[1];
-  }
-  let t1;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+
     t1 = [x, a];
+    $[1] = x;
     $[2] = t1;
   } else {
+    x = $[1];
     t1 = $[2];
   }
   return t1;

@@ -72,24 +72,18 @@ function Component() {
   }
   const buttonLabel = t0;
   let t1;
+  let t2;
+  let t3;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = buttonLabel();
-    $[1] = t1;
-  } else {
-    t1 = $[1];
-  }
-  let t2;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t2 = <Button text={t1} />;
-    $[2] = t2;
-  } else {
-    t2 = $[2];
-  }
-  let t3;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t3 = <View>{t2}</View>;
+    $[1] = t1;
+    $[2] = t2;
     $[3] = t3;
   } else {
+    t1 = $[1];
+    t2 = $[2];
     t3 = $[3];
   }
   return t3;
