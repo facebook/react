@@ -74,7 +74,9 @@ declare module 'EventListener' {
 }
 
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
-declare function __webpack_require__(id: string): any;
+declare var __webpack_require__: ((id: string) => any) & {
+  u: string => string,
+};
 
 declare module 'fs/promises' {
   declare var access: (path: string, mode?: number) => Promise<void>;

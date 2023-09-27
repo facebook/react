@@ -11,7 +11,15 @@ import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 
-import type {SSRManifest} from './ReactFlightClientConfigWebpackBundler';
+import type {
+  SSRModuleMap,
+  ModuleLoading,
+} from 'react-client/src/ReactFlightClientConfig';
+
+type SSRManifest = {
+  moduleMap: SSRModuleMap,
+  moduleLoading: ModuleLoading,
+};
 
 import {
   createResponse,
@@ -39,13 +47,16 @@ export function createServerReference<A: Iterable<any>, T>(
 }
 
 export type Options = {
-  moduleMap?: $NonMaybeType<SSRManifest>,
+  ssrManifest: SSRManifest,
+  nonce?: string,
 };
 
-function createResponseFromOptions(options: void | Options) {
+function createResponseFromOptions(options: Options) {
   return createResponse(
-    options && options.moduleMap ? options.moduleMap : null,
+    options.ssrManifest.moduleMap,
+    options.ssrManifest.moduleLoading,
     noServerCall,
+    typeof options.nonce === 'string' ? options.nonce : undefined,
   );
 }
 
@@ -78,7 +89,7 @@ function startReadingFromStream(
 
 function createFromReadableStream<T>(
   stream: ReadableStream,
-  options?: Options,
+  options: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
   startReadingFromStream(response, stream);
@@ -87,7 +98,7 @@ function createFromReadableStream<T>(
 
 function createFromFetch<T>(
   promiseForResponse: Promise<Response>,
-  options?: Options,
+  options: Options,
 ): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
   promiseForResponse.then(

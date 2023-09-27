@@ -140,7 +140,12 @@ describe('ReactFlightDOMForm', () => {
       );
     }
     const rscStream = ReactServerDOMServer.renderToReadableStream(<App />);
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
@@ -203,7 +208,12 @@ describe('ReactFlightDOMForm', () => {
       );
     }
     const rscStream = ReactServerDOMServer.renderToReadableStream(<App />);
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
@@ -239,7 +249,12 @@ describe('ReactFlightDOMForm', () => {
       );
     }
     const rscStream = ReactServerDOMServer.renderToReadableStream(<App />);
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
@@ -307,7 +322,12 @@ describe('ReactFlightDOMForm', () => {
       <ClientRef action={serverAction} />,
       webpackMap,
     );
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
@@ -349,7 +369,12 @@ describe('ReactFlightDOMForm', () => {
       <ClientRef action={serverAction} />,
       webpackMap,
     );
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
@@ -392,7 +417,12 @@ describe('ReactFlightDOMForm', () => {
       <ClientRef action={serverAction} />,
       webpackMap,
     );
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
@@ -410,8 +440,15 @@ describe('ReactFlightDOMForm', () => {
       <ClientRef action={serverAction} />,
       webpackMap,
     );
-    const postbackResponse =
-      ReactServerDOMClient.createFromReadableStream(postbackRscStream);
+    const postbackResponse = ReactServerDOMClient.createFromReadableStream(
+      postbackRscStream,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
     const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
       postbackResponse,
       {experimental_formState: formState},
@@ -471,7 +508,15 @@ describe('ReactFlightDOMForm', () => {
         <ClientRef action={serverAction.bind(null, 1)} />,
         webpackMap,
       );
-      const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+      const response = ReactServerDOMClient.createFromReadableStream(
+        rscStream,
+        {
+          ssrManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+      );
       const ssrStream = await ReactDOMServer.renderToReadableStream(response);
       await readIntoContainer(ssrStream);
 
@@ -493,8 +538,15 @@ describe('ReactFlightDOMForm', () => {
         <ClientRef action={serverAction.bind(null, 5)} />,
         webpackMap,
       );
-      const postbackResponse =
-        ReactServerDOMClient.createFromReadableStream(postbackRscStream);
+      const postbackResponse = ReactServerDOMClient.createFromReadableStream(
+        postbackRscStream,
+        {
+          ssrManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+      );
       const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
         postbackResponse,
         {experimental_formState: formState},
@@ -518,8 +570,15 @@ describe('ReactFlightDOMForm', () => {
         <ClientRef action={serverAction.bind(null, 5)} />,
         webpackMap,
       );
-      const postbackResponse2 =
-        ReactServerDOMClient.createFromReadableStream(postbackRscStream2);
+      const postbackResponse2 = ReactServerDOMClient.createFromReadableStream(
+        postbackRscStream2,
+        {
+          ssrManifest: {
+            moduleMap: null,
+            moduleLoading: null,
+          },
+        },
+      );
       const postbackSsrStream2 = await ReactDOMServer.renderToReadableStream(
         postbackResponse2,
         {experimental_formState: formState2},
@@ -570,7 +629,12 @@ describe('ReactFlightDOMForm', () => {
       <ClientRef action={increaseBy1} />,
       webpackMap,
     );
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
@@ -590,8 +654,15 @@ describe('ReactFlightDOMForm', () => {
       <ClientRef action={increaseBy5} />,
       webpackMap,
     );
-    const postbackResponse =
-      ReactServerDOMClient.createFromReadableStream(postbackRscStream);
+    const postbackResponse = ReactServerDOMClient.createFromReadableStream(
+      postbackRscStream,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
     const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
       postbackResponse,
       {experimental_formState: formState},
@@ -633,7 +704,12 @@ describe('ReactFlightDOMForm', () => {
       <Page1Ref action={serverAction} permalink="/permalink" />,
       webpackMap,
     );
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
@@ -654,8 +730,15 @@ describe('ReactFlightDOMForm', () => {
       <Page2Ref action={serverAction} permalink="/permalink" />,
       webpackMap,
     );
-    const postbackResponse =
-      ReactServerDOMClient.createFromReadableStream(postbackRscStream);
+    const postbackResponse = ReactServerDOMClient.createFromReadableStream(
+      postbackRscStream,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
     const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
       postbackResponse,
       {experimental_formState: formState},
@@ -675,8 +758,15 @@ describe('ReactFlightDOMForm', () => {
       <Page1Ref action={serverAction} permalink="/some-other-permalink" />,
       webpackMap,
     );
-    const postbackResponse2 =
-      ReactServerDOMClient.createFromReadableStream(postbackRscStream2);
+    const postbackResponse2 = ReactServerDOMClient.createFromReadableStream(
+      postbackRscStream2,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
     const postbackSsrStream2 = await ReactDOMServer.renderToReadableStream(
       postbackResponse2,
       {experimental_formState: formState2},
@@ -713,7 +803,12 @@ describe('ReactFlightDOMForm', () => {
       <ClientRef action={serverAction} />,
       webpackMap,
     );
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 
@@ -754,7 +849,12 @@ describe('ReactFlightDOMForm', () => {
       <ClientRef action={serverAction} />,
       webpackMap,
     );
-    const response = ReactServerDOMClient.createFromReadableStream(rscStream);
+    const response = ReactServerDOMClient.createFromReadableStream(rscStream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
     const ssrStream = await ReactDOMServer.renderToReadableStream(response);
     await readIntoContainer(ssrStream);
 

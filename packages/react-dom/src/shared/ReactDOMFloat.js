@@ -7,7 +7,6 @@
  * @flow
  */
 import type {
-  CrossOriginEnum,
   PreconnectOptions,
   PreloadOptions,
   PreloadModuleOptions,
@@ -17,6 +16,11 @@ import type {
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const Dispatcher = ReactDOMSharedInternals.Dispatcher;
+
+import {
+  getCrossOriginString,
+  getCrossOriginStringAs,
+} from 'react-dom-bindings/src/shared/crossOriginStrings';
 
 export function prefetchDNS(href: string) {
   if (__DEV__) {
@@ -74,7 +78,7 @@ export function preconnect(href: string, options?: ?PreconnectOptions) {
   const dispatcher = Dispatcher.current;
   if (dispatcher && typeof href === 'string') {
     const crossOrigin = options
-      ? getCrossOrigin('preconnect', options.crossOrigin)
+      ? getCrossOriginString(options.crossOrigin)
       : null;
     dispatcher.preconnect(href, crossOrigin);
   }
@@ -117,7 +121,7 @@ export function preload(href: string, options: PreloadOptions) {
     typeof options.as === 'string'
   ) {
     const as = options.as;
-    const crossOrigin = getCrossOrigin(as, options.crossOrigin);
+    const crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
     dispatcher.preload(href, as, {
       crossOrigin,
       integrity:
@@ -172,7 +176,10 @@ export function preloadModule(href: string, options?: ?PreloadModuleOptions) {
   const dispatcher = Dispatcher.current;
   if (dispatcher && typeof href === 'string') {
     if (options) {
-      const crossOrigin = getCrossOrigin(options.as, options.crossOrigin);
+      const crossOrigin = getCrossOriginStringAs(
+        options.as,
+        options.crossOrigin,
+      );
       dispatcher.preloadModule(href, {
         as:
           typeof options.as === 'string' && options.as !== 'script'
@@ -218,7 +225,7 @@ export function preinit(href: string, options: PreinitOptions) {
     typeof options.as === 'string'
   ) {
     const as = options.as;
-    const crossOrigin = getCrossOrigin(as, options.crossOrigin);
+    const crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
     const integrity =
       typeof options.integrity === 'string' ? options.integrity : undefined;
     const fetchPriority =
@@ -296,36 +303,28 @@ export function preinitModule(href: string, options?: ?PreinitModuleOptions) {
   }
   const dispatcher = Dispatcher.current;
   if (dispatcher && typeof href === 'string') {
-    if (
-      options == null ||
-      (typeof options === 'object' &&
-        (options.as == null || options.as === 'script'))
-    ) {
-      const crossOrigin = options
-        ? getCrossOrigin(undefined, options.crossOrigin)
-        : undefined;
-      dispatcher.preinitModuleScript(href, {
-        crossOrigin,
-        integrity:
-          options && typeof options.integrity === 'string'
-            ? options.integrity
-            : undefined,
-      });
+    if (typeof options === 'object' && options !== null) {
+      if (options.as == null || options.as === 'script') {
+        const crossOrigin = getCrossOriginStringAs(
+          options.as,
+          options.crossOrigin,
+        );
+        dispatcher.preinitModuleScript(href, {
+          crossOrigin,
+          integrity:
+            typeof options.integrity === 'string'
+              ? options.integrity
+              : undefined,
+          nonce: typeof options.nonce === 'string' ? options.nonce : undefined,
+        });
+      }
+    } else if (options == null) {
+      dispatcher.preinitModuleScript(href);
     }
   }
   // We don't error because preinit needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
   // so we favor silent bailout over warning or erroring.
-}
-
-function getCrossOrigin(as: ?string, crossOrigin: ?string): ?CrossOriginEnum {
-  return as === 'font'
-    ? ''
-    : typeof crossOrigin === 'string'
-    ? crossOrigin === 'use-credentials'
-      ? 'use-credentials'
-      : ''
-    : undefined;
 }
 
 function getValueDescriptorExpectingObjectForWarning(thing: any): string {

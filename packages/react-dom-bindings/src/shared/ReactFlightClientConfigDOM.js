@@ -15,6 +15,8 @@ import type {HintCode, HintModel} from '../server/ReactFlightServerConfigDOM';
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
+import {getCrossOriginString} from './crossOriginStrings';
+
 export function dispatchHint<Code: HintCode>(
   code: Code,
   model: HintModel<Code>,
@@ -109,4 +111,32 @@ export function dispatchHint<Code: HintCode>(
 // This should be compiled out in the production build.
 function refineModel<T>(code: T, model: HintModel<any>): HintModel<T> {
   return model;
+}
+
+export function preinitModuleForSSR(
+  href: string,
+  nonce: ?string,
+  crossOrigin: ?string,
+) {
+  const dispatcher = ReactDOMCurrentDispatcher.current;
+  if (dispatcher) {
+    dispatcher.preinitModuleScript(href, {
+      crossOrigin: getCrossOriginString(crossOrigin),
+      nonce,
+    });
+  }
+}
+
+export function preinitScriptForSSR(
+  href: string,
+  nonce: ?string,
+  crossOrigin: ?string,
+) {
+  const dispatcher = ReactDOMCurrentDispatcher.current;
+  if (dispatcher) {
+    dispatcher.preinitScript(href, {
+      crossOrigin: getCrossOriginString(crossOrigin),
+      nonce,
+    });
+  }
 }

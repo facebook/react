@@ -13,8 +13,9 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   ClientReference,
   ClientReferenceMetadata,
-  SSRManifest,
+  SSRModuleMap,
   StringDecoder,
+  ModuleLoading,
 } from './ReactFlightClientConfig';
 
 import type {
@@ -36,6 +37,7 @@ import {
   readPartialStringChunk,
   readFinalStringChunk,
   createStringDecoder,
+  prepareDestinationForModule,
 } from './ReactFlightClientConfig';
 
 import {registerServerReference} from './ReactFlightReplyClient';
@@ -178,8 +180,10 @@ Chunk.prototype.then = function <T>(
 };
 
 export type Response = {
-  _bundlerConfig: SSRManifest,
+  _bundlerConfig: SSRModuleMap,
+  _moduleLoading: ModuleLoading,
   _callServer: CallServerCallback,
+  _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
   _stringDecoder: StringDecoder,
@@ -706,13 +710,17 @@ function missingCall() {
 }
 
 export function createResponse(
-  bundlerConfig: SSRManifest,
+  bundlerConfig: SSRModuleMap,
+  moduleLoading: ModuleLoading,
   callServer: void | CallServerCallback,
+  nonce: void | string,
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
     _bundlerConfig: bundlerConfig,
+    _moduleLoading: moduleLoading,
     _callServer: callServer !== undefined ? callServer : missingCall,
+    _nonce: nonce,
     _chunks: chunks,
     _stringDecoder: createStringDecoder(),
     _fromJSON: (null: any),
@@ -771,6 +779,12 @@ function resolveModule(
   );
   const clientReference = resolveClientReference<$FlowFixMe>(
     response._bundlerConfig,
+    clientReferenceMetadata,
+  );
+
+  prepareDestinationForModule(
+    response._moduleLoading,
+    response._nonce,
     clientReferenceMetadata,
   );
 
