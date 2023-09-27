@@ -326,6 +326,7 @@ module.exports = {
         'packages/react-refresh/**/*.js',
         'packages/react-server-dom-esm/**/*.js',
         'packages/react-server-dom-webpack/**/*.js',
+        'packages/react-server-dom-turbopack/**/*.js',
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',
         'packages/react-devtools-extensions/**/*.js',
@@ -425,6 +426,13 @@ module.exports = {
       globals: {
         __webpack_chunk_load__: 'readonly',
         __webpack_require__: 'readonly',
+      },
+    },
+    {
+      files: ['packages/react-server-dom-turbopack/**/*.js'],
+      globals: {
+        __turbopack_load__: 'readonly',
+        __turbopack_require__: 'readonly',
       },
     },
     {
