@@ -12501,14 +12501,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$342;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1508 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1508) {
-      var element$jscomp$inline_1509 = document.createElement("div");
-      element$jscomp$inline_1509.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1508 =
-        "function" === typeof element$jscomp$inline_1509.oninput;
+    var isSupported$jscomp$inline_1509 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1509) {
+      var element$jscomp$inline_1510 = document.createElement("div");
+      element$jscomp$inline_1510.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1509 =
+        "function" === typeof element$jscomp$inline_1510.oninput;
     }
-    JSCompiler_inline_result$jscomp$342 = isSupported$jscomp$inline_1508;
+    JSCompiler_inline_result$jscomp$342 = isSupported$jscomp$inline_1509;
   } else JSCompiler_inline_result$jscomp$342 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$342 &&
@@ -12820,20 +12820,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1549 = 0;
-  i$jscomp$inline_1549 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1549++
+  var i$jscomp$inline_1550 = 0;
+  i$jscomp$inline_1550 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1550++
 ) {
-  var eventName$jscomp$inline_1550 =
-      simpleEventPluginEvents[i$jscomp$inline_1549],
-    domEventName$jscomp$inline_1551 =
-      eventName$jscomp$inline_1550.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1552 =
-      eventName$jscomp$inline_1550[0].toUpperCase() +
-      eventName$jscomp$inline_1550.slice(1);
+  var eventName$jscomp$inline_1551 =
+      simpleEventPluginEvents[i$jscomp$inline_1550],
+    domEventName$jscomp$inline_1552 =
+      eventName$jscomp$inline_1551.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1553 =
+      eventName$jscomp$inline_1551[0].toUpperCase() +
+      eventName$jscomp$inline_1551.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1551,
-    "on" + capitalizedEvent$jscomp$inline_1552
+    domEventName$jscomp$inline_1552,
+    "on" + capitalizedEvent$jscomp$inline_1553
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16348,16 +16348,12 @@ function registerReactDOMEvent(target, domEventName, isCapturePhaseListener) {
         listenerSet.add(listenerSetKey));
     } else throw Error(formatProdErrorMessage(369));
 }
-var Dispatcher = Internals.Dispatcher;
-function getCrossOrigin(as, crossOrigin) {
-  return "font" === as
-    ? ""
-    : "string" === typeof crossOrigin
-    ? "use-credentials" === crossOrigin
-      ? "use-credentials"
-      : ""
-    : void 0;
+function getCrossOriginStringAs(as, input) {
+  if ("font" === as) return "";
+  if ("string" === typeof input)
+    return "use-credentials" === input ? input : "";
 }
+var Dispatcher = Internals.Dispatcher;
 Internals.Events = [
   getInstanceFromNode,
   getNodeFromInstance,
@@ -16366,17 +16362,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1773 = {
+var devToolsConfig$jscomp$inline_1776 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-1672493b",
+  version: "18.3.0-www-classic-2ccd08d0",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2117 = {
-  bundleType: devToolsConfig$jscomp$inline_1773.bundleType,
-  version: devToolsConfig$jscomp$inline_1773.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1773.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1773.rendererConfig,
+var internals$jscomp$inline_2120 = {
+  bundleType: devToolsConfig$jscomp$inline_1776.bundleType,
+  version: devToolsConfig$jscomp$inline_1776.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1776.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1776.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16392,26 +16388,26 @@ var internals$jscomp$inline_2117 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1773.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1776.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-1672493b"
+  reconcilerVersion: "18.3.0-www-classic-2ccd08d0"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2118 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2121 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2118.isDisabled &&
-    hook$jscomp$inline_2118.supportsFiber
+    !hook$jscomp$inline_2121.isDisabled &&
+    hook$jscomp$inline_2121.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2118.inject(
-        internals$jscomp$inline_2117
+      (rendererID = hook$jscomp$inline_2121.inject(
+        internals$jscomp$inline_2120
       )),
-        (injectedHook = hook$jscomp$inline_2118);
+        (injectedHook = hook$jscomp$inline_2121);
     } catch (err) {}
 }
 assign(Internals, {
@@ -16541,9 +16537,15 @@ exports.preconnect = function (href, options) {
   var dispatcher = Dispatcher.current;
   dispatcher &&
     "string" === typeof href &&
-    ((options = options
-      ? getCrossOrigin("preconnect", options.crossOrigin)
-      : null),
+    (options
+      ? ((options = options.crossOrigin),
+        (options =
+          "string" === typeof options
+            ? "use-credentials" === options
+              ? options
+              : ""
+            : void 0))
+      : (options = null),
     dispatcher.preconnect(href, options));
 };
 exports.prefetchDNS = function (href) {
@@ -16559,7 +16561,7 @@ exports.preinit = function (href, options) {
     "string" === typeof options.as
   ) {
     var as = options.as,
-      crossOrigin = getCrossOrigin(as, options.crossOrigin),
+      crossOrigin = getCrossOriginStringAs(as, options.crossOrigin),
       integrity =
         "string" === typeof options.integrity ? options.integrity : void 0,
       fetchPriority =
@@ -16587,24 +16589,21 @@ exports.preinit = function (href, options) {
 };
 exports.preinitModule = function (href, options) {
   var dispatcher = Dispatcher.current;
-  if (
-    dispatcher &&
-    "string" === typeof href &&
-    (null == options ||
-      ("object" === typeof options &&
-        (null == options.as || "script" === options.as)))
-  ) {
-    var crossOrigin = options
-      ? getCrossOrigin(void 0, options.crossOrigin)
-      : void 0;
-    dispatcher.preinitModuleScript(href, {
-      crossOrigin: crossOrigin,
-      integrity:
-        options && "string" === typeof options.integrity
-          ? options.integrity
-          : void 0
-    });
-  }
+  if (dispatcher && "string" === typeof href)
+    if ("object" === typeof options && null !== options) {
+      if (null == options.as || "script" === options.as) {
+        var crossOrigin = getCrossOriginStringAs(
+          options.as,
+          options.crossOrigin
+        );
+        dispatcher.preinitModuleScript(href, {
+          crossOrigin: crossOrigin,
+          integrity:
+            "string" === typeof options.integrity ? options.integrity : void 0,
+          nonce: "string" === typeof options.nonce ? options.nonce : void 0
+        });
+      }
+    } else null == options && dispatcher.preinitModuleScript(href);
 };
 exports.preload = function (href, options) {
   var dispatcher = Dispatcher.current;
@@ -16616,7 +16615,7 @@ exports.preload = function (href, options) {
     "string" === typeof options.as
   ) {
     var as = options.as,
-      crossOrigin = getCrossOrigin(as, options.crossOrigin);
+      crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
     dispatcher.preload(href, as, {
       crossOrigin: crossOrigin,
       integrity:
@@ -16642,7 +16641,7 @@ exports.preloadModule = function (href, options) {
   var dispatcher = Dispatcher.current;
   if (dispatcher && "string" === typeof href)
     if (options) {
-      var crossOrigin = getCrossOrigin(options.as, options.crossOrigin);
+      var crossOrigin = getCrossOriginStringAs(options.as, options.crossOrigin);
       dispatcher.preloadModule(href, {
         as:
           "string" === typeof options.as && "script" !== options.as
@@ -16733,4 +16732,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-1672493b";
+exports.version = "18.3.0-www-classic-2ccd08d0";

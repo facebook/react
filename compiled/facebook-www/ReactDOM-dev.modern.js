@@ -33806,7 +33806,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-fe718cda";
+var ReactVersion = "18.3.0-www-modern-dc7c521a";
 
 function createPortal$1(
   children,
@@ -45160,6 +45160,25 @@ function createEventHandle(type, options) {
   }
 }
 
+function getCrossOriginString(input) {
+  if (typeof input === "string") {
+    return input === "use-credentials" ? input : "";
+  }
+
+  return undefined;
+}
+function getCrossOriginStringAs(as, input) {
+  if (as === "font") {
+    return "";
+  }
+
+  if (typeof input === "string") {
+    return input === "use-credentials" ? input : "";
+  }
+
+  return undefined;
+}
+
 var Dispatcher = Internals.Dispatcher;
 function prefetchDNS(href) {
   {
@@ -45220,7 +45239,7 @@ function preconnect(href, options) {
 
   if (dispatcher && typeof href === "string") {
     var crossOrigin = options
-      ? getCrossOrigin("preconnect", options.crossOrigin)
+      ? getCrossOriginString(options.crossOrigin)
       : null;
     dispatcher.preconnect(href, crossOrigin);
   } // We don't error because preconnect needs to be resilient to being called in a variety of scopes
@@ -45268,7 +45287,7 @@ function preload(href, options) {
     typeof options.as === "string"
   ) {
     var as = options.as;
-    var crossOrigin = getCrossOrigin(as, options.crossOrigin);
+    var crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
     dispatcher.preload(href, as, {
       crossOrigin: crossOrigin,
       integrity:
@@ -45329,7 +45348,7 @@ function preloadModule(href, options) {
 
   if (dispatcher && typeof href === "string") {
     if (options) {
-      var crossOrigin = getCrossOrigin(options.as, options.crossOrigin);
+      var crossOrigin = getCrossOriginStringAs(options.as, options.crossOrigin);
       dispatcher.preloadModule(href, {
         as:
           typeof options.as === "string" && options.as !== "script"
@@ -45375,7 +45394,7 @@ function preinit(href, options) {
     typeof options.as === "string"
   ) {
     var as = options.as;
-    var crossOrigin = getCrossOrigin(as, options.crossOrigin);
+    var crossOrigin = getCrossOriginStringAs(as, options.crossOrigin);
     var integrity =
       typeof options.integrity === "string" ? options.integrity : undefined;
     var fetchPriority =
@@ -45462,35 +45481,27 @@ function preinitModule(href, options) {
   var dispatcher = Dispatcher.current;
 
   if (dispatcher && typeof href === "string") {
-    if (
-      options == null ||
-      (typeof options === "object" &&
-        (options.as == null || options.as === "script"))
-    ) {
-      var crossOrigin = options
-        ? getCrossOrigin(undefined, options.crossOrigin)
-        : undefined;
-      dispatcher.preinitModuleScript(href, {
-        crossOrigin: crossOrigin,
-        integrity:
-          options && typeof options.integrity === "string"
-            ? options.integrity
-            : undefined
-      });
+    if (typeof options === "object" && options !== null) {
+      if (options.as == null || options.as === "script") {
+        var crossOrigin = getCrossOriginStringAs(
+          options.as,
+          options.crossOrigin
+        );
+        dispatcher.preinitModuleScript(href, {
+          crossOrigin: crossOrigin,
+          integrity:
+            typeof options.integrity === "string"
+              ? options.integrity
+              : undefined,
+          nonce: typeof options.nonce === "string" ? options.nonce : undefined
+        });
+      }
+    } else if (options == null) {
+      dispatcher.preinitModuleScript(href);
     }
   } // We don't error because preinit needs to be resilient to being called in a variety of scopes
   // and the runtime may not be capable of responding. The function is optimistic and not critical
   // so we favor silent bailout over warning or erroring.
-}
-
-function getCrossOrigin(as, crossOrigin) {
-  return as === "font"
-    ? ""
-    : typeof crossOrigin === "string"
-    ? crossOrigin === "use-credentials"
-      ? "use-credentials"
-      : ""
-    : undefined;
 }
 
 function getValueDescriptorExpectingObjectForWarning(thing) {
