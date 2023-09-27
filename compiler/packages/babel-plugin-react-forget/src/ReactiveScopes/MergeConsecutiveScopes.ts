@@ -14,8 +14,8 @@ import {
   ReactiveScope,
   ReactiveScopeBlock,
   ReactiveScopeDependency,
+  makeInstructionId,
 } from "../HIR";
-import { assertExhaustive } from "../Utils/utils";
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
@@ -52,10 +52,36 @@ import {
  *
  */
 export function mergeConsecutiveScopes(fn: ReactiveFunction): void {
-  visitReactiveFunction(fn, new Transform(), undefined);
+  const lastUsageVisitor = new FindLastUsageVisitor();
+  visitReactiveFunction(fn, lastUsageVisitor, undefined);
+  visitReactiveFunction(
+    fn,
+    new Transform(lastUsageVisitor.lastUsage),
+    undefined
+  );
+}
+
+class FindLastUsageVisitor extends ReactiveFunctionVisitor<void> {
+  lastUsage: Map<IdentifierId, InstructionId> = new Map();
+
+  override visitPlace(id: InstructionId, place: Place, _state: void): void {
+    const previousUsage = this.lastUsage.get(place.identifier.id);
+    const lastUsage =
+      previousUsage !== undefined
+        ? makeInstructionId(Math.max(previousUsage, id))
+        : id;
+    this.lastUsage.set(place.identifier.id, lastUsage);
+  }
 }
 
 class Transform extends ReactiveFunctionTransform<void> {
+  lastUsage: Map<IdentifierId, InstructionId>;
+
+  constructor(lastUsage: Map<IdentifierId, InstructionId>) {
+    super();
+    this.lastUsage = lastUsage;
+  }
+
   override visitBlock(block: ReactiveBlock, state: void): void {
     this.traverseBlock(block, state);
 
@@ -140,7 +166,7 @@ class Transform extends ReactiveFunctionTransform<void> {
           // if those intermediate instructions are all used by the second scope.
           // if not, merging them would make those values unavailable to subsequent
           // code by moving them inside a different block scope in the output.
-          usesAllLvalues(instr.instructions, lvalues)
+          areLValuesLastUsedByScope(instr.scope, lvalues, this.lastUsage)
         ) {
           const intermediateInstructions = block.slice(currentScope.to, i);
           currentScope.scope.instructions.push(...intermediateInstructions);
@@ -173,54 +199,23 @@ class Transform extends ReactiveFunctionTransform<void> {
   }
 }
 
-function usesAllLvalues(
-  block: ReactiveBlock,
-  lvalues: Set<IdentifierId>
+/**
+ * Returns whether the given @param scope is the last usage of all
+ * the given @param lvalues. Returns false if any of the lvalues
+ * are used again after the scope.
+ */
+function areLValuesLastUsedByScope(
+  scope: ReactiveScope,
+  lvalues: Set<IdentifierId>,
+  lastUsage: Map<IdentifierId, InstructionId>
 ): boolean {
-  if (lvalues.size === 0) {
-    return true;
-  }
-  const visitor = new OperandVisitor();
-  visitor.traverseBlock(block, lvalues);
-  return lvalues.size === 0;
-}
-
-class OperandVisitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
-  override visitPlace(
-    _id: InstructionId,
-    place: Place,
-    state: Set<IdentifierId>
-  ): void {
-    state.delete(place.identifier.id);
-  }
-
-  override traverseBlock(block: ReactiveBlock, state: Set<IdentifierId>): void {
-    for (const instr of block) {
-      if (state.size === 0) {
-        return;
-      }
-      switch (instr.kind) {
-        case "instruction": {
-          this.visitInstruction(instr.instruction, state);
-          break;
-        }
-        case "scope": {
-          this.visitScope(instr, state);
-          break;
-        }
-        case "terminal": {
-          this.visitTerminal(instr, state);
-          break;
-        }
-        default: {
-          assertExhaustive(
-            instr,
-            `Unexpected instruction kind '${(instr as any).kind}'`
-          );
-        }
-      }
+  for (const lvalue of lvalues) {
+    const lastUsedAt = lastUsage.get(lvalue)!;
+    if (lastUsedAt >= scope.range.end) {
+      return false;
     }
   }
+  return true;
 }
 
 function canMergeScopes(a: ReactiveScope, b: ReactiveScope): boolean {
