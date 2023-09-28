@@ -8,17 +8,40 @@
  */
 
 import {enableTaint} from 'shared/ReactFeatureFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const TaintRegistry = ReactSharedInternals.TaintRegistry;
+import binaryToComparableString from 'shared/binaryToComparableString';
+
+import ReactServerSharedInternals from './ReactServerSharedInternals';
+const {TaintRegistryObjects, TaintRegistryValues} = ReactServerSharedInternals;
 
 interface Reference {}
 
-const TypedArrayConstructor = Object.getPrototypeOf(Uint8Array.prototype);
+// This is the shared constructor of all typed arrays.
+const TypedArrayConstructor = Object.getPrototypeOf(
+  Uint32Array.prototype,
+).constructor;
 
 const defaultMessage =
   'A tainted value was attempted to be serialized to a Client Component or Action closure. ' +
   'This would leak it to the client.';
+
+function cleanup(entryValue: string | bigint): void {
+  const entry = TaintRegistryValues.get(entryValue);
+  if (entry !== undefined) {
+    if (entry.count === 1) {
+      TaintRegistryValues.delete(entryValue);
+    } else {
+      entry.count--;
+    }
+  }
+}
+
+// If FinalizationRegistry doesn't exist, we assume that objects life forever.
+// E.g. the whole VM is just the lifetime of a request.
+const finalizationRegistry =
+  typeof FinalizationRegistry === 'function'
+    ? new FinalizationRegistry(cleanup)
+    : null;
 
 export function taintValue(
   message: ?string,
@@ -39,30 +62,45 @@ export function taintValue(
         'the value.',
     );
   }
-  if (typeof value === 'string') {
-    return;
-  }
-  if (typeof value === 'bigint') {
-    return;
-  }
-  if (value instanceof TypedArrayConstructor) {
-    return;
-  }
-  if (value instanceof DataView) {
-    return;
-  }
-  const kind = value === null ? 'null' : typeof value;
-  if (kind === 'object' || kind === 'function') {
+  let entryValue: string | bigint;
+  if (typeof value === 'string' || typeof value === 'bigint') {
+    // Use as is.
+    entryValue = value;
+  } else if (
+    value instanceof TypedArrayConstructor ||
+    value instanceof DataView
+  ) {
+    // For now, we just convert binary data to a string so that we can just use the native
+    // hashing in the Map implementation. It doesn't really matter what form the string
+    // take as long as it's the same when we look it up.
+    // We're not too worried about collisions since this should be a high entropy value.
+    entryValue = binaryToComparableString(value);
+  } else {
+    const kind = value === null ? 'null' : typeof value;
+    if (kind === 'object' || kind === 'function') {
+      throw new Error(
+        'taintValue cannot taint objects or functions. Try taintShallowObject instead.',
+      );
+    }
     throw new Error(
-      'taintValue cannot taint objects or functions. Try taintShallowObject instead.',
+      'Cannot taint a ' +
+        kind +
+        ' because the value is too general and cannot be ' +
+        'a secret by',
     );
   }
-  throw new Error(
-    'Cannot taint a ' +
-      kind +
-      ' because the value is too general and cannot be ' +
-      'a secret by',
-  );
+  const existingEntry = TaintRegistryValues.get(entryValue);
+  if (existingEntry === undefined) {
+    TaintRegistryValues.set(entryValue, {
+      message,
+      count: 1,
+    });
+  } else {
+    existingEntry.count++;
+  }
+  if (finalizationRegistry !== null) {
+    finalizationRegistry.register(lifetime, entryValue);
+  }
 }
 
 export function taintShallowObject(message: ?string, object: Reference): void {
@@ -84,5 +122,5 @@ export function taintShallowObject(message: ?string, object: Reference): void {
       'Only objects or functions can be passed to taintShallowObject.',
     );
   }
-  // TODO
+  TaintRegistryObjects.set(object, message);
 }

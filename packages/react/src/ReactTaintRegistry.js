@@ -7,4 +7,12 @@
  * @flow
  */
 
-export const TaintRegistry: {} = {};
+interface Reference {}
+
+type TaintEntry = {
+  message: string,
+  count: number,
+};
+
+export const TaintRegistryObjects: WeakMap<Reference, string> = new WeakMap();
+export const TaintRegistryValues: Map<string | bigint, TaintEntry> = new Map();
