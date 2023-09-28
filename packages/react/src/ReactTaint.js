@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {enableTaint} from 'shared/ReactFeatureFlags';
+import {enableTaint, enableBinaryFlight} from 'shared/ReactFeatureFlags';
 
 import binaryToComparableString from 'shared/binaryToComparableString';
 
@@ -67,8 +67,8 @@ export function taintValue(
     // Use as is.
     entryValue = value;
   } else if (
-    value instanceof TypedArrayConstructor ||
-    value instanceof DataView
+    enableBinaryFlight &&
+    (value instanceof TypedArrayConstructor || value instanceof DataView)
   ) {
     // For now, we just convert binary data to a string so that we can just use the native
     // hashing in the Map implementation. It doesn't really matter what form the string

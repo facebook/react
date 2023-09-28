@@ -11,7 +11,11 @@ import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
 
 import type {Postpone} from 'react/src/ReactPostpone';
 
-import {enableBinaryFlight, enablePostpone} from 'shared/ReactFeatureFlags';
+import {
+  enableBinaryFlight,
+  enablePostpone,
+  enableTaint,
+} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
@@ -106,6 +110,8 @@ import {
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactServerSharedInternals from './ReactServerSharedInternals';
 import isArray from 'shared/isArray';
+import binaryToComparableString from 'shared/binaryToComparableString';
+
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
 type JSONValue =
@@ -197,9 +203,17 @@ export type Request = {
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
 };
 
-const ReactCurrentDispatcher =
-  ReactServerSharedInternals.ReactCurrentDispatcher;
-const ReactCurrentCache = ReactServerSharedInternals.ReactCurrentCache;
+const {
+  TaintRegistryObjects,
+  TaintRegistryValues,
+  ReactCurrentDispatcher,
+  ReactCurrentCache,
+} = ReactServerSharedInternals;
+
+function throwTaintViolation(message: string) {
+  // eslint-disable-next-line react-internal/prod-error-codes
+  throw new Error(message);
+}
 
 function defaultErrorHandler(error: mixed) {
   console['error'](error);
@@ -781,6 +795,17 @@ function serializeTypedArray(
   tag: string,
   typedArray: $ArrayBufferView,
 ): string {
+  if (enableTaint) {
+    // TODO: This is way too slow for the common case. We should first check if
+    // there even could be a match such as if there are any tainted arrays of
+    // equal size.
+    const tainted = TaintRegistryValues.get(
+      binaryToComparableString(typedArray),
+    );
+    if (tainted !== undefined) {
+      throwTaintViolation(tainted.message);
+    }
+  }
   request.pendingChunks += 2;
   const bufferId = request.nextChunkId++;
   // TODO: Convert to little endian if that's not the server default.
@@ -959,6 +984,12 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'object') {
+    if (enableTaint) {
+      const tainted = TaintRegistryObjects.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted);
+      }
+    }
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
       // $FlowFixMe[method-unbinding]
@@ -1091,6 +1122,12 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'string') {
+    if (enableTaint) {
+      const tainted = TaintRegistryValues.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
     // TODO: Maybe too clever. If we support URL there's no similar trick.
     if (value[value.length - 1] === 'Z') {
       // Possibly a Date, whose toJSON automatically calls toISOString
@@ -1122,6 +1159,12 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'function') {
+    if (enableTaint) {
+      const tainted = TaintRegistryObjects.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted);
+      }
+    }
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
     }
@@ -1171,6 +1214,12 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'bigint') {
+    if (enableTaint) {
+      const tainted = TaintRegistryValues.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
     return serializeBigInt(value);
   }
 
