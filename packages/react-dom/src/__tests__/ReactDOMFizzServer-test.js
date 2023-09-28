@@ -3326,7 +3326,7 @@ describe('ReactDOMFizzServer', () => {
         }).toErrorDev(
           'Server Context is deprecated and will soon be removed. ' +
             'It was never documented and we have found it not to be useful ' +
-            'enough to warrant the downside it emposes on all apps.',
+            'enough to warrant the downside it imposes on all apps.',
         );
       }
       return ServerContext;
@@ -5617,7 +5617,7 @@ describe('ReactDOMFizzServer', () => {
     }).toErrorDev(
       'Server Context is deprecated and will soon be removed. ' +
         'It was never documented and we have found it not to be useful ' +
-        'enough to warrant the downside it emposes on all apps.',
+        'enough to warrant the downside it imposes on all apps.',
       {withoutStack: true},
     );
     function Client() {
