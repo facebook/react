@@ -8239,7 +8239,7 @@ describe('react-hooks', () => {
   new ESLintTester({
     parser: require.resolve('@typescript-eslint/parser-v5'),
     parserOptions,
-  }).run('parser: @typescript-eslint/parser@^5.0.0-0', ReactHooksESLintRule, {
+  }).run('parser: @typescript-eslint/parser@^5.0.0', ReactHooksESLintRule, {
     valid: [
       ...testsTypescriptEslintParserV4.valid,
       ...testsTypescriptEslintParser.valid,

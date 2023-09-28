@@ -11,14 +11,6 @@ const ESLintTester = require('eslint').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
 const ReactHooksESLintRule = ReactHooksESLintPlugin.rules['rules-of-hooks'];
 
-ESLintTester.setDefaultConfig({
-  parser: require.resolve('babel-eslint'),
-  parserOptions: {
-    ecmaVersion: 6,
-    sourceType: 'module',
-  },
-});
-
 /**
  * A string template tag that removes padding from the left side of multi-line strings
  * @param {Array} strings array of code strings (only one expected)
@@ -1425,5 +1417,46 @@ if (!process.env.CI) {
   tests.invalid = tests.invalid.filter(predicate);
 }
 
-const eslintTester = new ESLintTester();
-eslintTester.run('react-hooks', ReactHooksESLintRule, tests);
+describe('react-hooks/rules-of-hooks', () => {
+  const parserOptions = {
+    ecmaFeatures: {
+      jsx: true,
+    },
+    ecmaVersion: 6,
+    sourceType: 'module',
+  };
+
+  new ESLintTester({
+    parser: require.resolve('babel-eslint'),
+    parserOptions,
+  }).run('parser: babel-eslint', ReactHooksESLintRule, tests);
+
+  new ESLintTester({
+    parser: require.resolve('@babel/eslint-parser'),
+    parserOptions,
+  }).run('parser: @babel/eslint-parser', ReactHooksESLintRule, tests);
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v2'),
+    parserOptions,
+  }).run('parser: @typescript-eslint/parser@2.x', ReactHooksESLintRule, tests);
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v3'),
+    parserOptions,
+  }).run('parser: @typescript-eslint/parser@3.x', ReactHooksESLintRule, tests);
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v4'),
+    parserOptions,
+  }).run('parser: @typescript-eslint/parser@4.x', ReactHooksESLintRule, tests);
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v5'),
+    parserOptions,
+  }).run(
+    'parser: @typescript-eslint/parser@^5.0.0',
+    ReactHooksESLintRule,
+    tests
+  );
+});
