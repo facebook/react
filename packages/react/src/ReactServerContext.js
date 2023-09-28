@@ -30,6 +30,13 @@ export function createServerContext<T: ServerContextJSONValue>(
   if (!enableServerContext) {
     throw new Error('Not implemented.');
   }
+  if (__DEV__) {
+    console.error(
+      'Server Context is deprecated and will soon be removed. ' +
+        'It was never documented and we have found it not to be useful ' +
+        'enough to warrant the downside it imposes on all apps.',
+    );
+  }
   let wasDefined = true;
   if (!ContextRegistry[globalName]) {
     wasDefined = false;

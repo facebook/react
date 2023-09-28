@@ -3321,12 +3321,19 @@ describe('ReactDOMFizzServer', () => {
     let ServerContext;
     function inlineLazyServerContextInitialization() {
       if (!ServerContext) {
-        ServerContext = React.createServerContext('ServerContext', 'default');
+        expect(() => {
+          ServerContext = React.createServerContext('ServerContext', 'default');
+        }).toErrorDev(
+          'Server Context is deprecated and will soon be removed. ' +
+            'It was never documented and we have found it not to be useful ' +
+            'enough to warrant the downside it imposes on all apps.',
+        );
       }
       return ServerContext;
     }
 
     function Foo() {
+      React.useState(); // component stack generation shouldn't reinit
       inlineLazyServerContextInitialization();
       return (
         <>
@@ -5604,7 +5611,15 @@ describe('ReactDOMFizzServer', () => {
   it('basic use(context)', async () => {
     const ContextA = React.createContext('default');
     const ContextB = React.createContext('B');
-    const ServerContext = React.createServerContext('ServerContext', 'default');
+    let ServerContext;
+    expect(() => {
+      ServerContext = React.createServerContext('ServerContext', 'default');
+    }).toErrorDev(
+      'Server Context is deprecated and will soon be removed. ' +
+        'It was never documented and we have found it not to be useful ' +
+        'enough to warrant the downside it imposes on all apps.',
+      {withoutStack: true},
+    );
     function Client() {
       return use(ContextA) + use(ContextB);
     }

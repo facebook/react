@@ -98,6 +98,19 @@ describe('ReactFlight', () => {
     jest.restoreAllMocks();
   });
 
+  function createServerContext(globalName, defaultValue, withStack) {
+    let ctx;
+    expect(() => {
+      ctx = React.createServerContext(globalName, defaultValue);
+    }).toErrorDev(
+      'Server Context is deprecated and will soon be removed. ' +
+        'It was never documented and we have found it not to be useful ' +
+        'enough to warrant the downside it imposes on all apps.',
+      {withoutStack: !withStack},
+    );
+    return ctx;
+  }
+
   function clientReference(value) {
     return Object.defineProperties(
       function () {
@@ -1063,7 +1076,7 @@ describe('ReactFlight', () => {
   describe('ServerContext', () => {
     // @gate enableServerContext
     it('supports basic createServerContext usage', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerContext(
         'ServerContext',
         'hello from server',
       );
@@ -1084,10 +1097,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('propagates ServerContext providers in flight', async () => {
-      const ServerContext = React.createServerContext(
-        'ServerContext',
-        'default',
-      );
+      const ServerContext = createServerContext('ServerContext', 'default');
 
       function Foo() {
         return (
@@ -1115,7 +1125,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('errors if you try passing JSX through ServerContext value', () => {
-      const ServerContext = React.createServerContext('ServerContext', {
+      const ServerContext = createServerContext('ServerContext', {
         foo: {
           bar: <span>hi this is default</span>,
         },
@@ -1149,10 +1159,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('propagates ServerContext and cleans up the providers in flight', async () => {
-      const ServerContext = React.createServerContext(
-        'ServerContext',
-        'default',
-      );
+      const ServerContext = createServerContext('ServerContext', 'default');
 
       function Foo() {
         return (
@@ -1196,10 +1203,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('propagates ServerContext providers in flight after suspending', async () => {
-      const ServerContext = React.createServerContext(
-        'ServerContext',
-        'default',
-      );
+      const ServerContext = createServerContext('ServerContext', 'default');
 
       function Foo() {
         return (
@@ -1254,10 +1258,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('serializes ServerContext to client', async () => {
-      const ServerContext = React.createServerContext(
-        'ServerContext',
-        'default',
-      );
+      const ServerContext = createServerContext('ServerContext', 'default');
 
       function ClientBar() {
         Scheduler.log('ClientBar');
@@ -1294,16 +1295,13 @@ describe('ReactFlight', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
 
       expect(() => {
-        React.createServerContext('ServerContext', 'default');
+        createServerContext('ServerContext', 'default');
       }).toThrow('ServerContext: ServerContext already defined');
     });
 
     // @gate enableServerContext
     it('takes ServerContext from the client for refetching use cases', async () => {
-      const ServerContext = React.createServerContext(
-        'ServerContext',
-        'default',
-      );
+      const ServerContext = createServerContext('ServerContext', 'default');
       function Bar() {
         return <span>{React.useContext(ServerContext)}</span>;
       }
@@ -1323,7 +1321,7 @@ describe('ReactFlight', () => {
       let ServerContext;
       function inlineLazyServerContextInitialization() {
         if (!ServerContext) {
-          ServerContext = React.createServerContext('ServerContext', 'default');
+          ServerContext = createServerContext('ServerContext', 'default');
         }
         return ServerContext;
       }
@@ -1331,7 +1329,7 @@ describe('ReactFlight', () => {
       let ClientContext;
       function inlineContextInitialization() {
         if (!ClientContext) {
-          ClientContext = React.createServerContext('ServerContext', 'default');
+          ClientContext = createServerContext('ServerContext', 'default', true);
         }
         return ClientContext;
       }

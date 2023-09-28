@@ -609,8 +609,22 @@ describe('ReactFlightDOMBrowser', () => {
   });
 
   it('basic use(context)', async () => {
-    const ContextA = React.createServerContext('ContextA', '');
-    const ContextB = React.createServerContext('ContextB', 'B');
+    let ContextA;
+    let ContextB;
+    expect(() => {
+      ContextA = React.createServerContext('ContextA', '');
+      ContextB = React.createServerContext('ContextB', 'B');
+    }).toErrorDev(
+      [
+        'Server Context is deprecated and will soon be removed. ' +
+          'It was never documented and we have found it not to be useful ' +
+          'enough to warrant the downside it imposes on all apps.',
+        'Server Context is deprecated and will soon be removed. ' +
+          'It was never documented and we have found it not to be useful ' +
+          'enough to warrant the downside it imposes on all apps.',
+      ],
+      {withoutStack: true},
+    );
 
     function ServerComponent() {
       return use(ContextA) + use(ContextB);
