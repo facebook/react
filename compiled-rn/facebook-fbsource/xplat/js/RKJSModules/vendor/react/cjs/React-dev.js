@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7acac2f2a74dcdd0d337dca60149a207>>
+ * @generated SignedSource<<8e6aba2a8a22d8a171df886dcebe4930>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-canary-34de2986d-20230927";
+var ReactVersion = "18.3.0-canary-1ebedbec2-20230928";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2706,6 +2706,14 @@ function cloneElementWithValidation(element, props, children) {
 
 var ContextRegistry = ReactSharedInternals.ContextRegistry;
 function createServerContext(globalName, defaultValue) {
+  {
+    error(
+      "Server Context is deprecated and will soon be removed. " +
+        "It was never documented and we have found it not to be useful " +
+        "enough to warrant the downside it imposes on all apps."
+    );
+  }
+
   var wasDefined = true;
 
   if (!ContextRegistry[globalName]) {
