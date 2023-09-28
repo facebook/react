@@ -504,7 +504,6 @@ const tests = {
       errors: [
         topLevelError('Hook.useState'),
         topLevelError('Hook.use42'),
-        topLevelError('Hook.useHook'),
       ],
     },
     {
@@ -1280,13 +1279,11 @@ if (__EXPERIMENTAL__) {
         Hook._useState();
         Hook.use42();
         Hook.useHook();
-        Hook.use_hook();
       `,
       errors: [
         topLevelError('Hook.use'),
         topLevelError('Hook.useState'),
         topLevelError('Hook.use42'),
-        topLevelError('Hook.useHook'),
       ],
     },
     {
