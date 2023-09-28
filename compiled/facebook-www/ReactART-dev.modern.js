@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-b17bda5a";
+var ReactVersion = "18.3.0-www-modern-87c144fd";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -7154,10 +7154,7 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
   if (!mightHavePendingSyncWork) {
     // Fast path. There's no sync work to do.
     return;
-  }
-
-  var workInProgressRoot = getWorkInProgressRoot();
-  var workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes(); // There may or may not be synchronous work scheduled. Let's check.
+  } // There may or may not be synchronous work scheduled. Let's check.
 
   var didPerformSomeWork;
   var errors = null;
@@ -7170,6 +7167,8 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
     while (root !== null) {
       if (onlyLegacy && root.tag !== LegacyRoot);
       else {
+        var workInProgressRoot = getWorkInProgressRoot();
+        var workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
         var nextLanes = getNextLanes(
           root,
           root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes
@@ -7178,10 +7177,8 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
         if (includesSyncLane(nextLanes)) {
           // This root has pending sync work. Flush it now.
           try {
-            // TODO: Pass nextLanes as an argument instead of computing it again
-            // inside performSyncWorkOnRoot.
             didPerformSomeWork = true;
-            performSyncWorkOnRoot(root);
+            performSyncWorkOnRoot(root, nextLanes);
           } catch (error) {
             // Collect errors so we can rethrow them at the end
             if (errors === null) {
@@ -24294,23 +24291,26 @@ function markRootSuspended(root, suspendedLanes) {
 } // This is the entry point for synchronous tasks that don't go
 // through Scheduler
 
-function performSyncWorkOnRoot(root) {
-  {
-    syncNestedUpdateFlag();
-  }
-
+function performSyncWorkOnRoot(root, lanes) {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error("Should not already be working.");
   }
 
-  flushPassiveEffects(); // TODO: This was already computed in the caller. Pass it as an argument.
+  var didFlushPassiveEffects = flushPassiveEffects();
 
-  var lanes = getNextLanes(root, NoLanes);
-
-  if (!includesSyncLane(lanes)) {
-    // There's no remaining sync work left.
+  if (didFlushPassiveEffects) {
+    // If passive effects were flushed, exit to the outer work loop in the root
+    // scheduler, so we can recompute the priority.
+    // TODO: We don't actually need this `ensureRootIsScheduled` call because
+    // this path is only reachable if the root is already part of the schedule.
+    // I'm including it only for consistency with the other exit points from
+    // this function. Can address in a subsequent refactor.
     ensureRootIsScheduled(root);
     return null;
+  }
+
+  {
+    syncNestedUpdateFlag();
   }
 
   var exitStatus = renderRootSync(root, lanes);
