@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-6c7b6f54";
+var ReactVersion = "18.3.0-www-modern-df3e4079";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2915,6 +2915,14 @@ function cloneElementWithValidation(element, props, children) {
 
 var ContextRegistry = ReactSharedInternals.ContextRegistry;
 function createServerContext(globalName, defaultValue) {
+  {
+    error(
+      "Server Context is deprecated and will soon be removed. " +
+        "It was never documented and we have found it not to be useful " +
+        "enough to warrant the downside it imposes on all apps."
+    );
+  }
+
   var wasDefined = true;
 
   if (!ContextRegistry[globalName]) {
