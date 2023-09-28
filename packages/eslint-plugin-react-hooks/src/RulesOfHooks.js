@@ -19,7 +19,7 @@ function isHookName(s) {
   if (__EXPERIMENTAL__) {
     return s === 'use' || /^use[A-Z0-9]/.test(s);
   }
-  return /^use[A-Z0-9]/.test(s);
+  return /^use[A-Z0-9_]/.test(s);
 }
 
 /**
