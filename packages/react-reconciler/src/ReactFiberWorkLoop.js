@@ -154,6 +154,8 @@ import {
   includesOnlyNonUrgentLanes,
   includesSomeLane,
   OffscreenLane,
+  SyncUpdateLanes,
+  UpdateLanes,
 } from './ReactFiberLane';
 import {
   DiscreteEventPriority,
@@ -1254,23 +1256,25 @@ function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
 
 // This is the entry point for synchronous tasks that don't go
 // through Scheduler
-export function performSyncWorkOnRoot(root: FiberRoot): null {
-  if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
-    syncNestedUpdateFlag();
-  }
-
+export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     throw new Error('Should not already be working.');
   }
 
-  flushPassiveEffects();
-
-  // TODO: This was already computed in the caller. Pass it as an argument.
-  let lanes = getNextLanes(root, NoLanes);
-  if (!includesSyncLane(lanes)) {
-    // There's no remaining sync work left.
+  const didFlushPassiveEffects = flushPassiveEffects();
+  if (didFlushPassiveEffects) {
+    // If passive effects were flushed, exit to the outer work loop in the root
+    // scheduler, so we can recompute the priority.
+    // TODO: We don't actually need this `ensureRootIsScheduled` call because
+    // this path is only reachable if the root is already part of the schedule.
+    // I'm including it only for consistency with the other exit points from
+    // this function. Can address in a subsequent refactor.
     ensureRootIsScheduled(root);
     return null;
+  }
+
+  if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
+    syncNestedUpdateFlag();
   }
 
   let exitStatus = renderRootSync(root, lanes);
@@ -2930,7 +2934,17 @@ function commitRootImpl(
 
   // Read this again, since a passive effect might have updated it
   remainingLanes = root.pendingLanes;
-  if (includesSyncLane(remainingLanes)) {
+
+  // Check if this render scheduled a cascading synchronous update. This is a
+  // heurstic to detect infinite update loops. We are intentionally excluding
+  // hydration lanes in this check, because render triggered by selective
+  // hydration is conceptually not an update.
+  if (
+    // Was the finished render the result of an update (not hydration)?
+    includesSomeLane(lanes, UpdateLanes) &&
+    // Did it schedule a sync update?
+    includesSomeLane(remainingLanes, SyncUpdateLanes)
+  ) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
     }
