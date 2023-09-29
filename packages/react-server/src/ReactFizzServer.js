@@ -487,7 +487,7 @@ export function resumeRequest(
     progressiveChunkSize: postponedState.progressiveChunkSize,
     status: OPEN,
     fatalError: null,
-    nextSegmentId: 0,
+    nextSegmentId: postponedState.nextSegmentId,
     allPendingTasks: 0,
     pendingRootTasks: 0,
     completedRootSegment: null,
@@ -1965,50 +1965,6 @@ function resumeNode(
   }
 }
 
-function resumeElement(
-  request: Request,
-  task: ReplayTask,
-  keyPath: KeyNode,
-  segmentId: number,
-  prevThenableState: ThenableState | null,
-  type: any,
-  props: Object,
-  ref: any,
-): void {
-  const prevReplay = task.replay;
-  const blockedBoundary = task.blockedBoundary;
-  const resumedSegment = createPendingSegment(
-    request,
-    0,
-    null,
-    task.formatContext,
-    false,
-    false,
-  );
-  resumedSegment.id = segmentId;
-  resumedSegment.parentFlushed = true;
-  try {
-    // Convert the current ReplayTask to a RenderTask.
-    const renderTask: RenderTask = (task: any);
-    renderTask.replay = null;
-    renderTask.blockedSegment = resumedSegment;
-    renderElement(request, task, keyPath, prevThenableState, type, props, ref);
-    resumedSegment.status = COMPLETED;
-    if (blockedBoundary === null) {
-      request.completedRootSegment = resumedSegment;
-    } else {
-      queueCompletedSegment(blockedBoundary, resumedSegment);
-      if (blockedBoundary.parentFlushed) {
-        request.partialBoundaries.push(blockedBoundary);
-      }
-    }
-  } finally {
-    // Restore to a ReplayTask.
-    task.replay = prevReplay;
-    task.blockedSegment = null;
-  }
-}
-
 function replayElement(
   request: Request,
   task: ReplayTask,
@@ -2045,29 +2001,15 @@ function replayElement(
       const childSlots = node[3];
       task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
       try {
-        if (typeof childSlots === 'number') {
-          // Matched a resumable element.
-          resumeElement(
-            request,
-            task,
-            keyPath,
-            childSlots,
-            prevThenableState,
-            type,
-            props,
-            ref,
-          );
-        } else {
-          renderElement(
-            request,
-            task,
-            keyPath,
-            prevThenableState,
-            type,
-            props,
-            ref,
-          );
-        }
+        renderElement(
+          request,
+          task,
+          keyPath,
+          prevThenableState,
+          type,
+          props,
+          ref,
+        );
         if (
           task.replay.pendingTasks === 1 &&
           task.replay.nodes.length > 0
@@ -2215,6 +2157,12 @@ function renderNodeDestructiveImpl(
   node: ReactNodeList,
   childIndex: number,
 ): void {
+  if (task.replay !== null && typeof task.replay.slots === 'number') {
+    // TODO: Figure out a cheaper place than this hot path to do this check.
+    const resumeSegmentID = task.replay.slots;
+    resumeNode(request, task, resumeSegmentID, node, childIndex);
+    return;
+  }
   // Stash the node we're working on. We'll pick up from this task in case
   // something suspends.
   task.node = node;
