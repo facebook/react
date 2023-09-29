@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9dc743c9a683670534bfd600e2d75ee4>>
+ * @generated SignedSource<<14e99fd9af6d1296fe24000cb0277c83>>
  */
 
 "use strict";
@@ -7302,12 +7302,12 @@ function commitRootImpl(
       finishedWork < recoverableErrors.length;
       finishedWork++
     )
-      (lanes = recoverableErrors[finishedWork]),
-        (remainingLanes = {
-          digest: lanes.digest,
-          componentStack: lanes.stack
+      (remainingLanes = recoverableErrors[finishedWork]),
+        (transitions = {
+          digest: remainingLanes.digest,
+          componentStack: remainingLanes.stack
         }),
-        renderPriorityLevel(lanes.value, remainingLanes);
+        renderPriorityLevel(remainingLanes.value, transitions);
   if (hasUncaughtError)
     throw (
       ((hasUncaughtError = !1),
@@ -7319,7 +7319,7 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (remainingLanes & 3)
+  0 !== (lanes & 8388522) && 0 !== (remainingLanes & 2)
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -8623,7 +8623,7 @@ var devToolsConfig$jscomp$inline_1030 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-13d0225c7-20230928",
+  version: "18.3.0-canary-d900fadbf-20230929",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1229 = {
@@ -8654,7 +8654,7 @@ var internals$jscomp$inline_1229 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-13d0225c7-20230928"
+  reconcilerVersion: "18.3.0-canary-d900fadbf-20230929"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1230 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0f6895c278fc07ac65d927cf7df07416>>
+ * @generated SignedSource<<414a6a10fa06a82746a814c00a3d620f>>
  */
 
 
@@ -8840,37 +8840,37 @@ function commitRootImpl(
   while (null !== rootWithPendingPassiveEffects);
   if (0 !== (executionContext & 6))
     throw Error("Should not already be working.");
-  transitions = root.finishedWork;
-  var lanes = root.finishedLanes;
+  var finishedWork = root.finishedWork;
+  transitions = root.finishedLanes;
   null !== injectedProfilingHooks &&
     "function" === typeof injectedProfilingHooks.markCommitStarted &&
-    injectedProfilingHooks.markCommitStarted(lanes);
-  if (null === transitions) return markCommitStopped(), null;
+    injectedProfilingHooks.markCommitStarted(transitions);
+  if (null === finishedWork) return markCommitStopped(), null;
   root.finishedWork = null;
   root.finishedLanes = 0;
-  if (transitions === root.current)
+  if (finishedWork === root.current)
     throw Error(
       "Cannot commit the same tree as before. This error is likely caused by a bug in React. Please file an issue."
     );
   root.callbackNode = null;
   root.callbackPriority = 0;
   root.cancelPendingCommit = null;
-  var remainingLanes = transitions.lanes | transitions.childLanes;
+  var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
   remainingLanes |= concurrentlyUpdatedLanes;
   markRootFinished(root, remainingLanes);
   root === workInProgressRoot &&
     ((workInProgress = workInProgressRoot = null),
     (workInProgressRootRenderLanes = 0));
-  (0 === (transitions.subtreeFlags & 10256) &&
-    0 === (transitions.flags & 10256)) ||
+  (0 === (finishedWork.subtreeFlags & 10256) &&
+    0 === (finishedWork.flags & 10256)) ||
     rootDoesHavePassiveEffects ||
     ((rootDoesHavePassiveEffects = !0),
     scheduleCallback(NormalPriority, function () {
       flushPassiveEffects();
       return null;
     }));
-  remainingLanes = 0 !== (transitions.flags & 15990);
-  if (0 !== (transitions.subtreeFlags & 15990) || remainingLanes) {
+  remainingLanes = 0 !== (finishedWork.flags & 15990);
+  if (0 !== (finishedWork.subtreeFlags & 15990) || remainingLanes) {
     remainingLanes = ReactCurrentBatchConfig.transition;
     ReactCurrentBatchConfig.transition = null;
     var previousPriority = currentUpdatePriority;
@@ -8878,14 +8878,14 @@ function commitRootImpl(
     var prevExecutionContext = executionContext;
     executionContext |= 4;
     ReactCurrentOwner.current = null;
-    commitBeforeMutationEffects(root, transitions);
+    commitBeforeMutationEffects(root, finishedWork);
     commitTime = now();
-    commitMutationEffects(root, transitions, lanes);
-    root.current = transitions;
+    commitMutationEffects(root, finishedWork, transitions);
+    root.current = finishedWork;
     null !== injectedProfilingHooks &&
       "function" === typeof injectedProfilingHooks.markLayoutEffectsStarted &&
-      injectedProfilingHooks.markLayoutEffectsStarted(lanes);
-    commitLayoutEffects(transitions, root, lanes);
+      injectedProfilingHooks.markLayoutEffectsStarted(transitions);
+    commitLayoutEffects(finishedWork, root, transitions);
     null !== injectedProfilingHooks &&
       "function" === typeof injectedProfilingHooks.markLayoutEffectsStopped &&
       injectedProfilingHooks.markLayoutEffectsStopped();
@@ -8893,28 +8893,28 @@ function commitRootImpl(
     executionContext = prevExecutionContext;
     currentUpdatePriority = previousPriority;
     ReactCurrentBatchConfig.transition = remainingLanes;
-  } else (root.current = transitions), (commitTime = now());
+  } else (root.current = finishedWork), (commitTime = now());
   rootDoesHavePassiveEffects &&
     ((rootDoesHavePassiveEffects = !1),
     (rootWithPendingPassiveEffects = root),
-    (pendingPassiveEffectsLanes = lanes));
+    (pendingPassiveEffectsLanes = transitions));
   remainingLanes = root.pendingLanes;
   0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
-  onCommitRoot(transitions.stateNode, renderPriorityLevel);
+  onCommitRoot(finishedWork.stateNode, renderPriorityLevel);
   isDevToolsPresent && root.memoizedUpdaters.clear();
   ensureRootIsScheduled(root);
   if (null !== recoverableErrors)
     for (
-      renderPriorityLevel = root.onRecoverableError, transitions = 0;
-      transitions < recoverableErrors.length;
-      transitions++
+      renderPriorityLevel = root.onRecoverableError, finishedWork = 0;
+      finishedWork < recoverableErrors.length;
+      finishedWork++
     )
-      (lanes = recoverableErrors[transitions]),
-        (remainingLanes = {
-          digest: lanes.digest,
-          componentStack: lanes.stack
+      (remainingLanes = recoverableErrors[finishedWork]),
+        (previousPriority = {
+          digest: remainingLanes.digest,
+          componentStack: remainingLanes.stack
         }),
-        renderPriorityLevel(lanes.value, remainingLanes);
+        renderPriorityLevel(remainingLanes.value, previousPriority);
   if (hasUncaughtError)
     throw (
       ((hasUncaughtError = !1),
@@ -8926,7 +8926,7 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (remainingLanes & 3)
+  0 !== (transitions & 8388522) && 0 !== (remainingLanes & 2)
     ? ((nestedUpdateScheduled = !0),
       root === rootWithNestedUpdates
         ? nestedUpdateCount++
@@ -10136,7 +10136,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1117 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-25e3e8de",
+    version: "18.3.0-canary-075b6563",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10192,7 +10192,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-25e3e8de"
+  reconcilerVersion: "18.3.0-canary-075b6563"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
