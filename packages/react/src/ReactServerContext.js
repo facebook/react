@@ -19,7 +19,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import {enableServerContext} from 'shared/ReactFeatureFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from './ReactSharedInternals';
 
 const ContextRegistry = ReactSharedInternals.ContextRegistry;
 
