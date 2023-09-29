@@ -18,6 +18,7 @@ import {
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
 import {isValidElement, cloneAndReplaceKey} from './ReactElement';
+import * as React from './React';
 
 const SEPARATOR = '.';
 const SUBSEPARATOR = ':';
@@ -206,6 +207,14 @@ function mapIntoArray(
     } else if (type === 'object') {
       // eslint-disable-next-line react-internal/safe-string-coercion
       const childrenString = String((children: any));
+
+      if (childrenString === '[object Promise]') {
+        throw new Error(
+          'Promises and async components are not valid as a React child in React ' +
+            React.version +
+            '. If you meant to render an async component, install React 18.3 or use a compatible meta framework or library.',
+        );
+      }
 
       throw new Error(
         `Objects are not valid as a React child (found: ${
