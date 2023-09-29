@@ -16,3 +16,6 @@ type TaintEntry = {
 
 export const TaintRegistryObjects: WeakMap<Reference, string> = new WeakMap();
 export const TaintRegistryValues: Map<string | bigint, TaintEntry> = new Map();
+// Byte lengths of all binary values we've ever seen. We don't both refcounting this.
+// We expect to see only a few lengths here such as the length of token.
+export const TaintRegistryByteLengths: Set<number> = new Set();

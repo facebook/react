@@ -206,6 +206,7 @@ export type Request = {
 const {
   TaintRegistryObjects,
   TaintRegistryValues,
+  TaintRegistryByteLengths,
   ReactCurrentDispatcher,
   ReactCurrentCache,
 } = ReactServerSharedInternals;
@@ -796,14 +797,15 @@ function serializeTypedArray(
   typedArray: $ArrayBufferView,
 ): string {
   if (enableTaint) {
-    // TODO: This is way too slow for the common case. We should first check if
-    // there even could be a match such as if there are any tainted arrays of
-    // equal size.
-    const tainted = TaintRegistryValues.get(
-      binaryToComparableString(typedArray),
-    );
-    if (tainted !== undefined) {
-      throwTaintViolation(tainted.message);
+    if (TaintRegistryByteLengths.has(typedArray.byteLength)) {
+      // If we have had any tainted values of this length, we check
+      // to see if these bytes matches any entries in the registry.
+      const tainted = TaintRegistryValues.get(
+        binaryToComparableString(typedArray),
+      );
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
     }
   }
   request.pendingChunks += 2;

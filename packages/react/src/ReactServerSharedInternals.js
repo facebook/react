@@ -7,7 +7,11 @@
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentCache from './ReactCurrentCache';
-import {TaintRegistryObjects, TaintRegistryValues} from './ReactTaintRegistry';
+import {
+  TaintRegistryObjects,
+  TaintRegistryValues,
+  TaintRegistryByteLengths,
+} from './ReactTaintRegistry';
 
 import {enableTaint} from 'shared/ReactFeatureFlags';
 
@@ -19,6 +23,8 @@ const ReactServerSharedInternals = {
 if (enableTaint) {
   ReactServerSharedInternals.TaintRegistryObjects = TaintRegistryObjects;
   ReactServerSharedInternals.TaintRegistryValues = TaintRegistryValues;
+  ReactServerSharedInternals.TaintRegistryByteLengths =
+    TaintRegistryByteLengths;
 }
 
 export default ReactServerSharedInternals;

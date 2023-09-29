@@ -12,7 +12,8 @@ import {enableTaint, enableBinaryFlight} from 'shared/ReactFeatureFlags';
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import ReactServerSharedInternals from './ReactServerSharedInternals';
-const {TaintRegistryObjects, TaintRegistryValues} = ReactServerSharedInternals;
+const {TaintRegistryObjects, TaintRegistryValues, TaintRegistryByteLengths} =
+  ReactServerSharedInternals;
 
 interface Reference {}
 
@@ -74,6 +75,7 @@ export function taintValue(
     // hashing in the Map implementation. It doesn't really matter what form the string
     // take as long as it's the same when we look it up.
     // We're not too worried about collisions since this should be a high entropy value.
+    TaintRegistryByteLengths.add(value.byteLength);
     entryValue = binaryToComparableString(value);
   } else {
     const kind = value === null ? 'null' : typeof value;
