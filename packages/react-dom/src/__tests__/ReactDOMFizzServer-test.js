@@ -6988,4 +6988,100 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
   });
+
+  // @gate enablePostpone
+  it('can discover new suspense boundaries in the resume', async () => {
+    let prerendering = true;
+    let resolveA;
+    const promiseA = new Promise(r => (resolveA = r));
+    let resolveB;
+    const promiseB = new Promise(r => (resolveB = r));
+
+    function WaitA() {
+      return React.use(promiseA);
+    }
+    function WaitB() {
+      return React.use(promiseB);
+    }
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return (
+        <span>
+          <Suspense fallback="Loading again...">
+            <WaitA />
+          </Suspense>
+          <WaitB />
+        </span>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <p>
+              <Postpone />
+            </p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    const resumed = await ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // Read what we've completed so far
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    // Still blocked
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // Resolve the first promise, this unblocks the inner boundary
+    await act(() => {
+      resolveA('Hello');
+    });
+
+    // Still blocked
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // Resolve the second promise, this unblocks the outer boundary
+    await act(() => {
+      resolveB('World');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>
+          <span>
+            {'Hello'}
+            {'World'}
+          </span>
+        </p>
+      </div>,
+    );
+  });
 });
