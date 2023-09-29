@@ -62,7 +62,7 @@ describe('ReactFlightDOM', () => {
 
     // This reset is to load modules for the SSR/Browser scope.
     jest.unmock('react-server-dom-webpack/server');
-    jest.unmock('react');
+    __unmockReact();
     jest.resetModules();
     act = require('internal-test-utils').act;
     Stream = require('stream');

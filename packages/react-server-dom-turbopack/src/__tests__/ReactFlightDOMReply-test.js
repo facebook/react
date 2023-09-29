@@ -24,6 +24,7 @@ describe('ReactFlightDOMReply', () => {
   beforeEach(() => {
     jest.resetModules();
     // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.shared-subset'));
     jest.mock('react-server-dom-turbopack/server', () =>
       require('react-server-dom-turbopack/server.browser'),
     );
@@ -31,6 +32,7 @@ describe('ReactFlightDOMReply', () => {
     // serverExports = TurbopackMock.serverExports;
     turbopackServerMap = TurbopackMock.turbopackServerMap;
     ReactServerDOMServer = require('react-server-dom-turbopack/server.browser');
+    jest.resetModules();
     ReactServerDOMClient = require('react-server-dom-turbopack/client');
   });
 

@@ -32,6 +32,7 @@ async function fetchMock(resource, options) {
 }
 
 let React;
+let ReactServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let use;
@@ -43,23 +44,21 @@ describe('ReactFetch', () => {
     fetchCount = 0;
     global.fetch = fetchMock;
 
-    if (gate(flags => !flags.www)) {
-      jest.mock('react', () => require('react/react.shared-subset'));
-    }
+    jest.mock('react', () => require('react/react.shared-subset'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.browser'),
     );
     require('react-server-dom-webpack/src/__tests__/utils/WebpackMock');
-
-    React = require('react');
     ReactServerDOMServer = require('react-server-dom-webpack/server');
+    ReactServer = require('react');
 
     jest.resetModules();
-    jest.unmock('react');
+    __unmockReact();
     jest.unmock('react-server-dom-webpack/server');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
-    use = React.use;
-    cache = React.cache;
+    React = require('react');
+    use = ReactServer.use;
+    cache = ReactServer.cache;
   });
 
   async function render(Component) {

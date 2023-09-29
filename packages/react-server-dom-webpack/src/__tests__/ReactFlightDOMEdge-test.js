@@ -48,7 +48,7 @@ describe('ReactFlightDOMEdge', () => {
     webpackModuleLoading = WebpackMock.moduleLoading;
 
     jest.resetModules();
-    jest.unmock('react');
+    __unmockReact();
     jest.unmock('react-server-dom-webpack/server');
     jest.mock('react-server-dom-webpack/client', () =>
       require('react-server-dom-webpack/client.edge'),

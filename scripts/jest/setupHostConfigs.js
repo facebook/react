@@ -43,13 +43,20 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   return resolvedEntry;
 }
 
-jest.mock('react', () => {
-  const resolvedEntryPoint = resolveEntryFork(
-    require.resolve('react'),
-    global.__WWW__
-  );
-  return jest.requireActual(resolvedEntryPoint);
-});
+function mockReact() {
+  jest.mock('react', () => {
+    const resolvedEntryPoint = resolveEntryFork(
+      require.resolve('react'),
+      global.__WWW__
+    );
+    return jest.requireActual(resolvedEntryPoint);
+  });
+}
+
+// When we want to unmock React we really need to mock it again.
+global.__unmockReact = mockReact;
+
+mockReact();
 
 jest.mock('react/react.shared-subset', () => {
   const resolvedEntryPoint = resolveEntryFork(
