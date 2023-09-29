@@ -7068,7 +7068,7 @@ describe('ReactDOMFizzServer', () => {
     // Still blocked
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
 
-    // Resolve the first promise, this unblocks the inner boundary
+    // Resolve the second promise, this unblocks the outer boundary
     await act(() => {
       resolveB('World');
     });
