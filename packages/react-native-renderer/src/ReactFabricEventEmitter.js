@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,23 +7,31 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
+import type {
+  AnyNativeEvent,
+  LegacyPluginModule,
+} from './legacy-events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {LegacyPluginModule} from './legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from './legacy-events/ReactSyntheticEventType';
-import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
+import type {
+  RNTopLevelEventType,
+  TopLevelType,
+} from './legacy-events/TopLevelEventTypes';
 
-import {registrationNameModules} from './legacy-events/EventPluginRegistry';
+import {
+  registrationNameModules,
+  plugins,
+} from './legacy-events/EventPluginRegistry';
 import {batchedUpdates} from './legacy-events/ReactGenericBatching';
 import accumulateInto from './legacy-events/accumulateInto';
 
-import {plugins} from './legacy-events/EventPluginRegistry';
-import getListeners from './ReactNativeGetListeners';
+import getListener from './ReactNativeGetListener';
 import {runEventsInBatch} from './legacy-events/EventBatching';
 
 import {RawEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+import {getPublicInstance} from './ReactFiberConfigFabric';
 
-export {getListeners, registrationNameModules as registrationNames};
+export {getListener, registrationNameModules as registrationNames};
 
 /**
  * Allows registered plugins an opportunity to extract events from top-level
@@ -38,7 +46,7 @@ function extractPluginEvents(
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
-  let events = null;
+  let events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null = null;
   const legacyPlugins = ((plugins: any): Array<LegacyPluginModule<Event>>);
   for (let i = 0; i < legacyPlugins.length; i++) {
     // Not every plugin in the ordering may be loaded at runtime.
@@ -85,11 +93,12 @@ export function dispatchEvent(
     const stateNode = targetFiber.stateNode;
     // Guard against Fiber being unmounted
     if (stateNode != null) {
-      eventTarget = stateNode.canonical;
+      // $FlowExpectedError[incompatible-cast] public instances in Fabric do not implement `EventTarget` yet.
+      eventTarget = (getPublicInstance(stateNode): EventTarget);
     }
   }
 
-  batchedUpdates(function() {
+  batchedUpdates(function () {
     // Emit event to the RawEventEmitter. This is an unused-by-default EventEmitter
     // that can be used to instrument event performance monitoring (primarily - could be useful
     // for other things too).
@@ -112,7 +121,9 @@ export function dispatchEvent(
     // Note that extracted events are *not* emitted,
     // only events that have a 1:1 mapping with a native event, at least for now.
     const event = {eventName: topLevelType, nativeEvent};
+    // $FlowFixMe[class-object-subtyping] found when upgrading Flow
     RawEventEmitter.emit(topLevelType, event);
+    // $FlowFixMe[class-object-subtyping] found when upgrading Flow
     RawEventEmitter.emit('*', event);
 
     // Heritage plugin event system

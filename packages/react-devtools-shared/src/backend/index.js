@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,8 +11,16 @@ import Agent from './agent';
 
 import {attach} from './renderer';
 import {attach as attachLegacy} from './legacy/renderer';
+import {hasAssignedBackend} from './utils';
 
 import type {DevToolsHook, ReactRenderer, RendererInterface} from './types';
+
+// this is the backend that is compatible with all older React versions
+function isMatchingRender(version: string): boolean {
+  return !hasAssignedBackend(version);
+}
+
+export type InitBackend = typeof initBackend;
 
 export function initBackend(
   hook: DevToolsHook,
@@ -23,6 +31,7 @@ export function initBackend(
     // DevTools didn't get injected into this page (maybe b'c of the contentType).
     return () => {};
   }
+
   const subs = [
     hook.sub(
       'renderer-attached',
@@ -56,6 +65,10 @@ export function initBackend(
   ];
 
   const attachRenderer = (id: number, renderer: ReactRenderer) => {
+    // only attach if the renderer is compatible with the current version of the backend
+    if (!isMatchingRender(renderer.reconcilerVersion || renderer.version)) {
+      return;
+    }
     let rendererInterface = hook.rendererInterfaces.get(id);
 
     // Inject any not-yet-injected renderers (if we didn't reload-and-profile)

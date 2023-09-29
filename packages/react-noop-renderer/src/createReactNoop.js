@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,8 +18,8 @@ import type {
   Fiber,
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
-import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
-import type {ReactNodeList, OffscreenMode} from 'shared/ReactTypes';
+import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue';
+import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
@@ -47,9 +47,10 @@ type Props = {
   left?: null | number,
   right?: null | number,
   top?: null | number,
+  src?: string,
   ...
 };
-type Instance = {|
+type Instance = {
   type: string,
   id: number,
   parent: number,
@@ -58,31 +59,35 @@ type Instance = {|
   prop: any,
   hidden: boolean,
   context: HostContext,
-|};
-type TextInstance = {|
+};
+type TextInstance = {
   text: string,
   id: number,
   parent: number,
   hidden: boolean,
   context: HostContext,
-|};
+};
 type HostContext = Object;
 type CreateRootOptions = {
-  transitionCallbacks?: TransitionTracingCallbacks,
+  unstable_transitionCallbacks?: TransitionTracingCallbacks,
   ...
 };
 
+type SuspenseyCommitSubscription = {
+  pendingCount: number,
+  commit: null | (() => void),
+};
+
+export type TransitionStatus = mixed;
+
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
   let instanceCounter = 0;
-  let hostDiffCounter = 0;
   let hostUpdateCounter = 0;
   let hostCloneCounter = 0;
 
@@ -215,7 +220,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function cloneInstance(
     instance: Instance,
-    updatePayload: null | Object,
     type: string,
     oldProps: Props,
     newProps: Props,
@@ -238,6 +242,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hidden: !!newProps.hidden,
       context: instance.context,
     };
+
+    if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+      clone.src = newProps.src;
+    }
+
     Object.defineProperty(clone, 'id', {
       value: clone.id,
       enumerable: false,
@@ -271,16 +280,87 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     return hostContext === UPPERCASE_CONTEXT ? rawText.toUpperCase() : rawText;
   }
 
+  type SuspenseyThingRecord = {
+    status: 'pending' | 'fulfilled',
+    subscriptions: Array<SuspenseyCommitSubscription> | null,
+  };
+
+  let suspenseyThingCache: Map<
+    SuspenseyThingRecord,
+    'pending' | 'fulfilled',
+  > | null = null;
+
+  // Represents a subscription for all the suspensey things that block a
+  // particular commit. Once they've all loaded, the commit phase can proceed.
+  let suspenseyCommitSubscription: SuspenseyCommitSubscription | null = null;
+
+  function startSuspendingCommit(): void {
+    // This is where we might suspend on things that aren't associated with a
+    // particular node, like document.fonts.ready.
+    suspenseyCommitSubscription = null;
+  }
+
+  function suspendInstance(type: string, props: Props): void {
+    const src = props.src;
+    if (type === 'suspensey-thing' && typeof src === 'string') {
+      // Attach a listener to the suspensey thing and create a subscription
+      // object that uses reference counting to track when all the suspensey
+      // things have loaded.
+      const record = suspenseyThingCache.get(src);
+      if (record === undefined) {
+        throw new Error('Could not find record for key.');
+      }
+      if (record.status === 'fulfilled') {
+        // Already loaded.
+      } else if (record.status === 'pending') {
+        if (suspenseyCommitSubscription === null) {
+          suspenseyCommitSubscription = {
+            pendingCount: 1,
+            commit: null,
+          };
+        } else {
+          suspenseyCommitSubscription.pendingCount++;
+        }
+        // Stash the subscription on the record. In `resolveSuspenseyThing`,
+        // we'll use this fire the commit once all the things have loaded.
+        if (record.subscriptions === null) {
+          record.subscriptions = [];
+        }
+        record.subscriptions.push(suspenseyCommitSubscription);
+      }
+    } else {
+      throw new Error(
+        'Did not expect this host component to be visited when suspending ' +
+          'the commit. Did you check the SuspendCommit flag?',
+      );
+    }
+  }
+
+  function waitForCommitToBeReady():
+    | ((commit: () => mixed) => () => void)
+    | null {
+    const subscription = suspenseyCommitSubscription;
+    if (subscription !== null) {
+      suspenseyCommitSubscription = null;
+      return (commit: () => void) => {
+        subscription.commit = commit;
+        const cancelCommit = () => {
+          subscription.commit = null;
+        };
+        return cancelCommit;
+      };
+    }
+    return null;
+  }
+
   const sharedHostConfig = {
+    supportsSingletons: false,
+
     getRootHostContext() {
       return NO_CONTEXT;
     },
 
-    getChildHostContext(
-      parentHostContext: HostContext,
-      type: string,
-      rootcontainerInstance: Container,
-    ) {
+    getChildHostContext(parentHostContext: HostContext, type: string) {
       if (type === 'offscreen') {
         return parentHostContext;
       }
@@ -324,6 +404,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         hidden: !!props.hidden,
         context: hostContext,
       };
+
+      if (type === 'suspensey-thing' && typeof props.src === 'string') {
+        inst.src = props.src;
+      }
+
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
       Object.defineProperty(inst, 'parent', {
@@ -363,25 +448,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       props: Props,
     ): boolean {
       return false;
-    },
-
-    prepareUpdate(
-      instance: Instance,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-    ): null | {...} {
-      if (type === 'errorInCompletePhase') {
-        throw new Error('Error in host config.');
-      }
-      if (oldProps === null) {
-        throw new Error('Should have old props');
-      }
-      if (newProps === null) {
-        throw new Error('Should have new props');
-      }
-      hostDiffCounter++;
-      return UPDATE_SIGNAL;
     },
 
     shouldSetTextContent,
@@ -444,6 +510,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return currentEventPriority;
     },
 
+    shouldAttemptEagerTransition(): boolean {
+      return false;
+    },
+
     now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,
@@ -477,6 +547,74 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     logRecoverableError() {
       // no-op
     },
+
+    requestPostPaintCallback(callback) {
+      const endTime = Scheduler.unstable_now();
+      callback(endTime);
+    },
+
+    maySuspendCommit(type: string, props: Props): boolean {
+      // Asks whether it's possible for this combination of type and props
+      // to ever need to suspend. This is different from asking whether it's
+      // currently ready because even if it's ready now, it might get purged
+      // from the cache later.
+      return type === 'suspensey-thing' && typeof props.src === 'string';
+    },
+
+    mayResourceSuspendCommit(resource: mixed): boolean {
+      throw new Error(
+        'Resources are not implemented for React Noop yet. This method should not be called',
+      );
+    },
+
+    preloadInstance(type: string, props: Props): boolean {
+      if (type !== 'suspensey-thing' || typeof props.src !== 'string') {
+        throw new Error('Attempted to preload unexpected instance: ' + type);
+      }
+
+      // In addition to preloading an instance, this method asks whether the
+      // instance is ready to be committed. If it's not, React may yield to the
+      // main thread and ask again. It's possible a load event will fire in
+      // between, in which case we can avoid showing a fallback.
+      if (suspenseyThingCache === null) {
+        suspenseyThingCache = new Map();
+      }
+      const record = suspenseyThingCache.get(props.src);
+      if (record === undefined) {
+        const newRecord: SuspenseyThingRecord = {
+          status: 'pending',
+          subscriptions: null,
+        };
+        suspenseyThingCache.set(props.src, newRecord);
+        const onLoadStart = props.onLoadStart;
+        if (typeof onLoadStart === 'function') {
+          onLoadStart();
+        }
+        return false;
+      } else {
+        // If this is false, React will trigger a fallback, if needed.
+        return record.status === 'fulfilled';
+      }
+    },
+
+    preloadResource(resource: mixed): boolean {
+      throw new Error(
+        'Resources are not implemented for React Noop yet. This method should not be called',
+      );
+    },
+
+    startSuspendingCommit,
+    suspendInstance,
+
+    suspendResource(resource: mixed): void {
+      throw new Error(
+        'Resources are not implemented for React Noop yet. This method should not be called',
+      );
+    },
+
+    waitForCommitToBeReady,
+
+    NotPendingTransition: (null: TransitionStatus),
   };
 
   const hostConfig = useMutation
@@ -503,6 +641,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           hostUpdateCounter++;
           instance.prop = newProps.prop;
           instance.hidden = !!newProps.hidden;
+
+          if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+            instance.src = newProps.src;
+          }
+
           if (shouldSetTextContent(type, newProps)) {
             if (__DEV__) {
               checkPropStringCoercion(newProps.children, 'children');
@@ -595,20 +738,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           container.children = newChildren;
         },
 
-        getOffscreenContainerType(): string {
-          return 'offscreen';
-        },
-
-        getOffscreenContainerProps(
-          mode: OffscreenMode,
-          children: ReactNodeList,
-        ): Props {
-          return {
-            hidden: mode === 'hidden',
-            children,
-          };
-        },
-
         cloneHiddenInstance(
           instance: Instance,
           type: string,
@@ -617,7 +746,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         ): Instance {
           const clone = cloneInstance(
             instance,
-            null,
             type,
             props,
             props,
@@ -683,7 +811,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (child.length === 1) {
         return childToJSX(child[0], null);
       }
-      // $FlowFixMe
       const children = child.map(c => childToJSX(c, null));
       if (children.every(c => typeof c === 'string' || typeof c === 'number')) {
         return children.join('');
@@ -697,6 +824,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const props = ({prop: instance.prop}: any);
       if (instance.hidden) {
         props.hidden = true;
+      }
+      if (instance.src) {
+        props.src = instance.src;
       }
       if (children !== null) {
         props.children = children;
@@ -721,9 +851,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getChildren(root) {
     if (root) {
-      return useMutation
-        ? root.children
-        : removeOffscreenContainersFromChildren(root.children, false);
+      return root.children;
     } else {
       return null;
     }
@@ -731,167 +859,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function getPendingChildren(root) {
     if (root) {
-      return useMutation
-        ? root.children
-        : removeOffscreenContainersFromChildren(root.pendingChildren, false);
+      return root.children;
     } else {
       return null;
     }
-  }
-
-  function removeOffscreenContainersFromChildren(children, hideNearestNode) {
-    // Mutation mode and persistent mode have different outputs for Offscreen
-    // and Suspense trees. Persistent mode adds an additional host node wrapper,
-    // whereas mutation mode does not.
-    //
-    // This function removes the offscreen host wrappers so that the output is
-    // consistent. If the offscreen node is hidden, it transfers the hiddenness
-    // to the child nodes, to mimic how it works in mutation mode. That way our
-    // tests don't have to fork tree assertions.
-    //
-    // So, it takes a tree that looks like this:
-    //
-    //    <offscreen hidden={true}>
-    //      <span>A</span>
-    //      <span>B</span>
-    //    </offscren>
-    //
-    // And turns it into this:
-    //
-    //   <span hidden={true}>A</span>
-    //   <span hidden={true}>B</span>
-    //
-    // We don't mutate the original tree, but instead return a copy.
-    //
-    // This function is only used by our test assertions, via the `getChildren`
-    // and `getChildrenAsJSX` methods.
-    let didClone = false;
-    const newChildren = [];
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i];
-      const innerChildren = child.children;
-      if (innerChildren !== undefined) {
-        // This is a host instance instance
-        const instance: Instance = (child: any);
-        if (instance.type === 'offscreen') {
-          // This is an offscreen wrapper instance. Remove it from the tree
-          // and recursively return its children, as if it were a fragment.
-          didClone = true;
-          if (instance.text !== null) {
-            // If this offscreen tree contains only text, we replace it with
-            // a text child. Related to `shouldReplaceTextContent` feature.
-            const offscreenTextInstance: TextInstance = {
-              text: instance.text,
-              id: instanceCounter++,
-              parent: instance.parent,
-              hidden: hideNearestNode || instance.hidden,
-              context: instance.context,
-            };
-            // Hide from unit tests
-            Object.defineProperty(offscreenTextInstance, 'id', {
-              value: offscreenTextInstance.id,
-              enumerable: false,
-            });
-            Object.defineProperty(offscreenTextInstance, 'parent', {
-              value: offscreenTextInstance.parent,
-              enumerable: false,
-            });
-            Object.defineProperty(offscreenTextInstance, 'context', {
-              value: offscreenTextInstance.context,
-              enumerable: false,
-            });
-            newChildren.push(offscreenTextInstance);
-          } else {
-            // Skip the offscreen node and replace it with its children
-            const offscreenChildren = removeOffscreenContainersFromChildren(
-              innerChildren,
-              hideNearestNode || instance.hidden,
-            );
-            newChildren.push.apply(newChildren, offscreenChildren);
-          }
-        } else {
-          // This is a regular (non-offscreen) instance. If the nearest
-          // offscreen boundary is hidden, hide this node.
-          const hidden = hideNearestNode ? true : instance.hidden;
-          const clonedChildren = removeOffscreenContainersFromChildren(
-            instance.children,
-            // We never need to hide the children of this node, since if we're
-            // inside a hidden tree, then the hidden style will be applied to
-            // this node.
-            false,
-          );
-          if (
-            clonedChildren === instance.children &&
-            hidden === instance.hidden
-          ) {
-            // No changes. Reuse the original instance without cloning.
-            newChildren.push(instance);
-          } else {
-            didClone = true;
-            const clone: Instance = {
-              id: instance.id,
-              type: instance.type,
-              parent: instance.parent,
-              children: clonedChildren,
-              text: instance.text,
-              prop: instance.prop,
-              hidden: hideNearestNode ? true : instance.hidden,
-              context: instance.context,
-            };
-            Object.defineProperty(clone, 'id', {
-              value: clone.id,
-              enumerable: false,
-            });
-            Object.defineProperty(clone, 'parent', {
-              value: clone.parent,
-              enumerable: false,
-            });
-            Object.defineProperty(clone, 'text', {
-              value: clone.text,
-              enumerable: false,
-            });
-            Object.defineProperty(clone, 'context', {
-              value: clone.context,
-              enumerable: false,
-            });
-            newChildren.push(clone);
-          }
-        }
-      } else {
-        // This is a text instance
-        const textInstance: TextInstance = (child: any);
-        if (hideNearestNode) {
-          didClone = true;
-          const clone = {
-            text: textInstance.text,
-            id: textInstance.id,
-            parent: textInstance.parent,
-            hidden: textInstance.hidden || hideNearestNode,
-            context: textInstance.context,
-          };
-          Object.defineProperty(clone, 'id', {
-            value: clone.id,
-            enumerable: false,
-          });
-          Object.defineProperty(clone, 'parent', {
-            value: clone.parent,
-            enumerable: false,
-          });
-          Object.defineProperty(clone, 'context', {
-            value: clone.context,
-            enumerable: false,
-          });
-
-          newChildren.push(clone);
-        } else {
-          newChildren.push(textInstance);
-        }
-      }
-    }
-    // There are some tests that assume reference equality, so preserve it
-    // when possible. Alternatively, we could update the tests to compare the
-    // ids instead.
-    return didClone ? newChildren : children;
   }
 
   function getChildrenAsJSX(root) {
@@ -957,11 +928,35 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     _Scheduler: Scheduler,
 
     getChildren(rootID: string = DEFAULT_ROOT_ID) {
+      throw new Error(
+        'No longer supported due to bad performance when used with `expect()`. ' +
+          'Use `ReactNoop.getChildrenAsJSX()` instead or, if you really need to, `dangerouslyGetChildren` after you carefully considered the warning in its JSDOC.',
+      );
+    },
+
+    getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
+      throw new Error(
+        'No longer supported due to bad performance when used with `expect()`. ' +
+          'Use `ReactNoop.getPendingChildrenAsJSX()` instead or, if you really need to, `dangerouslyGetPendingChildren` after you carefully considered the warning in its JSDOC.',
+      );
+    },
+
+    /**
+     * Prefer using `getChildrenAsJSX`.
+     * Using the returned children in `.toEqual` has very poor performance on mismatch due to deep equality checking of fiber structures.
+     * Make sure you deeply remove enumerable properties before passing it to `.toEqual`, or, better, use `getChildrenAsJSX` or `toMatchRenderedOutput`.
+     */
+    dangerouslyGetChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getChildren(container);
     },
 
-    getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
+    /**
+     * Prefer using `getPendingChildrenAsJSX`.
+     * Using the returned children in `.toEqual` has very poor performance on mismatch due to deep equality checking of fiber structures.
+     * Make sure you deeply remove enumerable properties before passing it to `.toEqual`, or, better, use `getChildrenAsJSX` or `toMatchRenderedOutput`.
+     */
+    dangerouslyGetPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getPendingChildren(container);
     },
@@ -979,6 +974,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           false,
           '',
           onRecoverableError,
+          null,
         );
         roots.set(rootID, root);
       }
@@ -1000,8 +996,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         '',
         onRecoverableError,
-        options && options.transitionCallbacks
-          ? options.transitionCallbacks
+        options && options.unstable_transitionCallbacks
+          ? options.unstable_transitionCallbacks
           : null,
       );
       return {
@@ -1032,6 +1028,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         false,
         '',
         onRecoverableError,
+        null,
       );
       return {
         _Scheduler: Scheduler,
@@ -1055,6 +1052,50 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     getPendingChildrenAsJSX(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getPendingChildrenAsJSX(container);
+    },
+
+    getSuspenseyThingStatus(src): string | null {
+      if (suspenseyThingCache === null) {
+        return null;
+      } else {
+        const record = suspenseyThingCache.get(src);
+        return record === undefined ? null : record.status;
+      }
+    },
+
+    resolveSuspenseyThing(key: string): void {
+      if (suspenseyThingCache === null) {
+        suspenseyThingCache = new Map();
+      }
+      const record = suspenseyThingCache.get(key);
+      if (record === undefined) {
+        const newRecord: SuspenseyThingRecord = {
+          status: 'fulfilled',
+          subscriptions: null,
+        };
+        suspenseyThingCache.set(key, newRecord);
+      } else {
+        if (record.status === 'pending') {
+          record.status = 'fulfilled';
+          const subscriptions = record.subscriptions;
+          if (subscriptions !== null) {
+            record.subscriptions = null;
+            for (let i = 0; i < subscriptions.length; i++) {
+              const subscription = subscriptions[i];
+              subscription.pendingCount--;
+              if (subscription.pendingCount === 0) {
+                const commit = subscription.commit;
+                subscription.commit = null;
+                commit();
+              }
+            }
+          }
+        }
+      }
+    },
+
+    resetSuspenseyThingCache() {
+      suspenseyThingCache = null;
     },
 
     createPortal(
@@ -1122,39 +1163,32 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     flushNextYield(): Array<mixed> {
       Scheduler.unstable_flushNumberOfYields(1);
-      return Scheduler.unstable_clearYields();
+      return Scheduler.unstable_clearLog();
     },
 
-    flushWithHostCounters(
-      fn: () => void,
-    ):
-      | {|
-          hostDiffCounter: number,
-          hostUpdateCounter: number,
-        |}
-      | {|
-          hostDiffCounter: number,
-          hostCloneCounter: number,
-        |} {
-      hostDiffCounter = 0;
+    startTrackingHostCounters(): void {
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
-      try {
-        Scheduler.unstable_flushAll();
-        return useMutation
-          ? {
-              hostDiffCounter,
-              hostUpdateCounter,
-            }
-          : {
-              hostDiffCounter,
-              hostCloneCounter,
-            };
-      } finally {
-        hostDiffCounter = 0;
-        hostUpdateCounter = 0;
-        hostCloneCounter = 0;
-      }
+    },
+
+    stopTrackingHostCounters():
+      | {
+          hostUpdateCounter: number,
+        }
+      | {
+          hostCloneCounter: number,
+        } {
+      const result = useMutation
+        ? {
+            hostUpdateCounter,
+          }
+        : {
+            hostCloneCounter,
+          };
+      hostUpdateCounter = 0;
+      hostCloneCounter = 0;
+
+      return result;
     },
 
     expire: Scheduler.unstable_advanceTime,
@@ -1209,9 +1243,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           if (typeof child.text === 'string') {
             log(indent + '- ' + child.text);
           } else {
-            // $FlowFixMe - The child should've been refined now.
             log(indent + '- ' + child.type + '#' + child.id);
-            // $FlowFixMe - The child should've been refined now.
             logHostInstances(child.children, depth + 1);
           }
         }

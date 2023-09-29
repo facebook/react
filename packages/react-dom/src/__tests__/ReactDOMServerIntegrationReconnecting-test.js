@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,7 +18,7 @@ let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
-  jest.resetModuleRegistry();
+  jest.resetModules();
 
   React = require('react');
   ReactDOM = require('react-dom');
@@ -33,18 +33,15 @@ function initModules() {
   };
 }
 
-const {
-  resetModules,
-  expectMarkupMismatch,
-  expectMarkupMatch,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, expectMarkupMismatch, expectMarkupMatch} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
     resetModules();
   });
 
-  describe('reconnecting to server markup', function() {
+  describe('reconnecting to server markup', function () {
     let EmptyComponent;
     beforeEach(() => {
       EmptyComponent = class extends React.Component {
@@ -54,8 +51,8 @@ describe('ReactDOMServerIntegration', () => {
       };
     });
 
-    describe('elements', function() {
-      describe('reconnecting different component implementations', function() {
+    describe('elements', function () {
+      describe('reconnecting different component implementations', function () {
         let ES6ClassComponent, PureComponent, bareElement;
         beforeEach(() => {
           // try each type of component on client and server.
@@ -165,7 +162,7 @@ describe('ReactDOMServerIntegration', () => {
         ));
     });
 
-    describe('inline styles', function() {
+    describe('inline styles', function () {
       it('should error reconnecting missing style attribute', () =>
         expectMarkupMismatch(<div style={{width: '1px'}} />, <div />));
 
@@ -215,7 +212,7 @@ describe('ReactDOMServerIntegration', () => {
         ));
     });
 
-    describe('text nodes', function() {
+    describe('text nodes', function () {
       it('should error reconnecting different text', () =>
         expectMarkupMismatch(<div>Text</div>, <div>Other Text</div>));
 
@@ -259,7 +256,7 @@ describe('ReactDOMServerIntegration', () => {
         ));
     });
 
-    describe('element trees and children', function() {
+    describe('element trees and children', function () {
       it('should error reconnecting missing children', () =>
         expectMarkupMismatch(
           <div>

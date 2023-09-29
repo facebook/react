@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,13 +18,24 @@ import {readModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightClient from 'react-client/flight';
 
-type Source = Array<string>;
+type Source = Array<Uint8Array>;
 
-const {createResponse, processStringChunk, close} = ReactFlightClient({
-  supportsBinaryStreams: false,
-  resolveModuleReference(idx: string) {
+const decoderOptions = {stream: true};
+
+const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
+  createStringDecoder() {
+    return new TextDecoder();
+  },
+  readPartialStringChunk(decoder: TextDecoder, buffer: Uint8Array): string {
+    return decoder.decode(buffer, decoderOptions);
+  },
+  readFinalStringChunk(decoder: TextDecoder, buffer: Uint8Array): string {
+    return decoder.decode(buffer);
+  },
+  resolveClientReference(bundlerConfig: null, idx: string) {
     return idx;
   },
+  prepareDestinationForModule(moduleLoading: null, metadata: string) {},
   preloadModule(idx: string) {},
   requireModule(idx: string) {
     return readModule(idx);
@@ -34,13 +45,13 @@ const {createResponse, processStringChunk, close} = ReactFlightClient({
   },
 });
 
-function read<T>(source: Source): T {
-  const response = createResponse(source);
+function read<T>(source: Source): Thenable<T> {
+  const response = createResponse(source, null);
   for (let i = 0; i < source.length; i++) {
-    processStringChunk(response, source[i], 0);
+    processBinaryChunk(response, source[i], 0);
   }
   close(response);
-  return response.readRoot();
+  return getRoot(response);
 }
 
 export {read};

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -32,7 +32,7 @@ const parserOptions = {
 const warnings = new Set();
 
 function transform(file, enc, cb) {
-  fs.readFile(file.path, 'utf8', function(err, source) {
+  fs.readFile(file.path, 'utf8', function (err, source) {
     if (err) {
       cb(err);
       return;
@@ -48,7 +48,7 @@ function transform(file, enc, cb) {
 
     traverse(ast, {
       CallExpression: {
-        exit: function(astPath) {
+        exit: function (astPath) {
           const callee = astPath.get('callee');
           if (
             callee.matchesPattern('console.warn') ||
@@ -91,11 +91,7 @@ gs([
   '!**/node_modules/**/*.js',
 ]).pipe(
   through.obj(transform, cb => {
-    process.stdout.write(
-      Array.from(warnings)
-        .sort()
-        .join('\n') + '\n'
-    );
+    process.stdout.write(Array.from(warnings).sort().join('\n') + '\n');
     cb();
   })
 );

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,7 +10,10 @@
 'use strict';
 
 // Set by `yarn test-fire`.
-const {disableInputAttributeSyncing} = require('shared/ReactFeatureFlags');
+const {
+  enableCustomElementPropertySupport,
+  disableInputAttributeSyncing,
+} = require('shared/ReactFeatureFlags');
 
 describe('DOMPropertyOperations', () => {
   let React;
@@ -81,7 +84,7 @@ describe('DOMPropertyOperations', () => {
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
       const obj = {
-        toString: function() {
+        toString: function () {
           return 'css-class';
         },
       };
@@ -149,7 +152,7 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.hasAttribute('hidden')).toBe(false);
     });
 
-    it('should always assign the value attribute for non-inputs', function() {
+    it('should always assign the value attribute for non-inputs', function () {
       const container = document.createElement('div');
       ReactDOM.render(<progress />, container);
       spyOnDevAndProd(container.firstChild, 'setAttribute');
@@ -256,8 +259,12 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.getAttribute('onstring')).toBe('hello');
       expect(customElement.getAttribute('onobj')).toBe('[object Object]');
       expect(customElement.getAttribute('onarray')).toBe('one,two');
-      expect(customElement.getAttribute('ontrue')).toBe('true');
-      expect(customElement.getAttribute('onfalse')).toBe('false');
+      expect(customElement.getAttribute('ontrue')).toBe(
+        enableCustomElementPropertySupport ? '' : 'true',
+      );
+      expect(customElement.getAttribute('onfalse')).toBe(
+        enableCustomElementPropertySupport ? null : 'false',
+      );
 
       // Dispatch the corresponding event names to make sure that nothing crashes.
       customElement.dispatchEvent(new Event('string'));
@@ -960,6 +967,21 @@ describe('DOMPropertyOperations', () => {
     });
 
     // @gate enableCustomElementPropertySupport
+    it('boolean props should not be stringified in attributes', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+      ReactDOM.render(<my-custom-element foo={true} />, container);
+      const customElement = container.querySelector('my-custom-element');
+
+      expect(customElement.getAttribute('foo')).toBe('');
+
+      // true => false
+      ReactDOM.render(<my-custom-element foo={false} />, container);
+
+      expect(customElement.getAttribute('foo')).toBe(null);
+    });
+
+    // @gate enableCustomElementPropertySupport
     it('custom element custom event handlers assign multiple types', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -1019,10 +1041,10 @@ describe('DOMPropertyOperations', () => {
       const customelement = container.querySelector('my-custom-element');
       // Install a setter to activate the `in` heuristic
       Object.defineProperty(customelement, 'oncustomevent', {
-        set: function(x) {
+        set: function (x) {
           this._oncustomevent = x;
         },
-        get: function() {
+        get: function () {
           return this._oncustomevent;
         },
       });
@@ -1073,10 +1095,10 @@ describe('DOMPropertyOperations', () => {
 
       // Install a setter to activate the `in` heuristic
       Object.defineProperty(customElement, 'foo', {
-        set: function(x) {
+        set: function (x) {
           this._foo = x;
         },
-        get: function() {
+        get: function () {
           return this._foo;
         },
       });
@@ -1094,10 +1116,10 @@ describe('DOMPropertyOperations', () => {
 
       // Install a setter to activate the `in` heuristic
       Object.defineProperty(customElement, 'foo', {
-        set: function(x) {
+        set: function (x) {
           this._foo = x;
         },
-        get: function() {
+        get: function () {
           return this._foo;
         },
       });
@@ -1127,7 +1149,7 @@ describe('DOMPropertyOperations', () => {
     it('should not remove attributes for special properties', () => {
       const container = document.createElement('div');
       ReactDOM.render(
-        <input type="text" value="foo" onChange={function() {}} />,
+        <input type="text" value="foo" onChange={function () {}} />,
         container,
       );
       if (disableInputAttributeSyncing) {
@@ -1138,7 +1160,7 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.value).toBe('foo');
       expect(() =>
         ReactDOM.render(
-          <input type="text" onChange={function() {}} />,
+          <input type="text" onChange={function () {}} />,
           container,
         ),
       ).toErrorDev(

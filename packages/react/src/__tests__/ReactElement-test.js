@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -71,9 +71,7 @@ describe('ReactElement', () => {
 
   it('should warn when `key` is being accessed on a host element', () => {
     const element = <div key="3" />;
-    expect(
-      () => void element.props.key,
-    ).toErrorDev(
+    expect(() => void element.props.key).toErrorDev(
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -93,7 +91,7 @@ describe('ReactElement', () => {
       render() {
         return (
           <div>
-            <Child ref="childElement" />
+            <Child ref={React.createRef()} />
           </div>
         );
       }
@@ -336,7 +334,7 @@ describe('ReactElement', () => {
         const el = <div className="moo" />;
 
         if (__DEV__) {
-          expect(function() {
+          expect(function () {
             el.props.className = 'quack';
           }).toThrow();
           expect(el.props.className).toBe('moo');
@@ -363,7 +361,7 @@ describe('ReactElement', () => {
         const el = <div>{this.props.sound}</div>;
 
         if (__DEV__) {
-          expect(function() {
+          expect(function () {
             el.props.className = 'quack';
           }).toThrow();
           expect(el.props.className).toBe(undefined);
@@ -393,40 +391,5 @@ describe('ReactElement', () => {
     }
     const test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
     expect(test.props.value).toBeNaN();
-  });
-
-  // NOTE: We're explicitly not using JSX here. This is intended to test
-  // classic JS without JSX.
-  it('identifies elements, but not JSON, if Symbols are supported', () => {
-    class Component extends React.Component {
-      render() {
-        return React.createElement('div');
-      }
-    }
-
-    expect(React.isValidElement(React.createElement('div'))).toEqual(true);
-    expect(React.isValidElement(React.createElement(Component))).toEqual(true);
-
-    expect(React.isValidElement(null)).toEqual(false);
-    expect(React.isValidElement(true)).toEqual(false);
-    expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement('string')).toEqual(false);
-    if (!__EXPERIMENTAL__) {
-      let factory;
-      expect(() => {
-        factory = React.createFactory('div');
-      }).toWarnDev(
-        'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
-      );
-      expect(React.isValidElement(factory)).toEqual(false);
-    }
-    expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
-
-    const jsonElement = JSON.stringify(React.createElement('div'));
-    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 });

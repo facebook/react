@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -11,13 +11,13 @@ import * as React from 'react';
 import {Fragment} from 'react';
 
 class ErrorBoundary extends React.Component {
-  state = {hasError: false};
+  state: {hasError: boolean} = {hasError: false};
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: any): {hasError: boolean} {
     return {hasError: true};
   }
 
-  render() {
+  render(): any {
     const {hasError} = this.state;
     if (hasError) {
       return (
@@ -49,11 +49,12 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+// $FlowFixMe[missing-local-annot]
 function Component({label}) {
   return <div>{label}</div>;
 }
 
-export default function ErrorBoundaries() {
+export default function ErrorBoundaries(): React.Node {
   return (
     <Fragment>
       <h1>Nested error boundaries demo</h1>

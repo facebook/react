@@ -3,4 +3,4 @@ import {hydrateRoot} from 'react-dom/client';
 
 import App from './components/App';
 
-let root = hydrateRoot(document, <App assets={window.assetManifest} />);
+hydrateRoot(document, <App assets={window.assetManifest} />);

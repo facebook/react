@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -35,6 +35,7 @@ describe('ReactContextValidator', () => {
   // TODO: This behavior creates a runtime dependency on propTypes. We should
   // ensure that this is not required for ES6 classes with Flow.
 
+  // @gate !disableLegacyContext
   it('should filter out context not in contextTypes', () => {
     class Component extends React.Component {
       render() {
@@ -46,6 +47,8 @@ describe('ReactContextValidator', () => {
     };
 
     class ComponentInFooBarContext extends React.Component {
+      childRef = React.createRef();
+
       getChildContext() {
         return {
           foo: 'abc',
@@ -54,7 +57,7 @@ describe('ReactContextValidator', () => {
       }
 
       render() {
-        return <Component ref="child" />;
+        return <Component ref={this.childRef} />;
       }
     }
     ComponentInFooBarContext.childContextTypes = {
@@ -65,9 +68,10 @@ describe('ReactContextValidator', () => {
     const instance = ReactTestUtils.renderIntoDocument(
       <ComponentInFooBarContext />,
     );
-    expect(instance.refs.child.context).toEqual({foo: 'abc'});
+    expect(instance.childRef.current.context).toEqual({foo: 'abc'});
   });
 
+  // @gate !disableLegacyContext
   it('should pass next context to lifecycles', () => {
     let componentDidMountContext;
     let componentDidUpdateContext;
@@ -146,6 +150,7 @@ describe('ReactContextValidator', () => {
     expect(componentDidUpdateContext).toEqual({foo: 'def'});
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('should check context types', () => {
     class Component extends React.Component {
       render() {
@@ -211,6 +216,7 @@ describe('ReactContextValidator', () => {
     );
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('should check child context types', () => {
     class Component extends React.Component {
       getChildContext() {
@@ -276,6 +282,7 @@ describe('ReactContextValidator', () => {
 
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
+  // @gate !disableLegacyContext || !__DEV__
   it('should warn (but not error) if getChildContext method is missing', () => {
     class ComponentA extends React.Component {
       static childContextTypes = {
@@ -312,6 +319,7 @@ describe('ReactContextValidator', () => {
 
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
+  // @gate !disableLegacyContext
   it('should pass parent context if getChildContext method is missing', () => {
     class ParentContextProvider extends React.Component {
       static childContextTypes = {
@@ -472,6 +480,7 @@ describe('ReactContextValidator', () => {
     expect(renderedContext).toBe(secondContext);
   });
 
+  // @gate !disableLegacyContext || !__DEV__
   it('should warn if both contextType and contextTypes are defined', () => {
     const Context = React.createContext();
 

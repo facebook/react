@@ -9,14 +9,6 @@ const {getArtifactsList, logPromise} = require('../utils');
 const theme = require('../theme');
 
 const run = async ({build, cwd, releaseChannel}) => {
-  const CIRCLE_TOKEN = process.env.CIRCLE_CI_API_TOKEN;
-  if (!CIRCLE_TOKEN) {
-    console.error(
-      theme.error('Missing required environment variable: CIRCLE_CI_API_TOKEN')
-    );
-    process.exit(1);
-  }
-
   const artifacts = await getArtifactsList(build);
   const buildArtifacts = artifacts.find(entry =>
     entry.path.endsWith('build.tgz')
@@ -30,9 +22,15 @@ const run = async ({build, cwd, releaseChannel}) => {
   }
 
   // Download and extract artifact
+  const {CIRCLE_CI_API_TOKEN} = process.env;
+  let header = '';
+  // Add Circle CI API token to request header if available.
+  if (CIRCLE_CI_API_TOKEN != null) {
+    header = '-H "Circle-Token: ${CIRCLE_CI_API_TOKEN}" ';
+  }
   await exec(`rm -rf ./build`, {cwd});
   await exec(
-    `curl -L $(fwdproxy-config curl) ${buildArtifacts.url} -H "Circle-Token: ${CIRCLE_TOKEN}" | tar -xvz`,
+    `curl -L $(fwdproxy-config curl) ${buildArtifacts.url} ${header}| tar -xvz`,
     {
       cwd,
     }

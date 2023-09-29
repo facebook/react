@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -92,7 +92,7 @@ describe('ReactElement.jsx', () => {
         const el = JSXRuntime.jsx('div', {className: 'moo'});
 
         if (__DEV__) {
-          expect(function() {
+          expect(function () {
             el.props.className = 'quack';
           }).toThrow();
           expect(el.props.className).toBe('moo');
@@ -121,7 +121,7 @@ describe('ReactElement.jsx', () => {
         const el = JSXRuntime.jsx('div', {children: this.props.sound});
 
         if (__DEV__) {
-          expect(function() {
+          expect(function () {
             el.props.className = 'quack';
           }).toThrow();
           expect(el.props.className).toBe(undefined);
@@ -200,9 +200,7 @@ describe('ReactElement.jsx', () => {
 
   it('should warn when `key` is being accessed on a host element', () => {
     const element = JSXRuntime.jsxs('div', {}, '3');
-    expect(
-      () => void element.props.key,
-    ).toErrorDev(
+    expect(() => void element.props.key).toErrorDev(
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -221,7 +219,7 @@ describe('ReactElement.jsx', () => {
     class Parent extends React.Component {
       render() {
         return JSXRuntime.jsx('div', {
-          children: JSXRuntime.jsx(Child, {ref: 'childElement'}),
+          children: JSXRuntime.jsx(Child, {ref: React.createRef()}),
         });
       }
     }
@@ -233,47 +231,6 @@ describe('ReactElement.jsx', () => {
         'value within the child component, you should pass it as a different ' +
         'prop. (https://reactjs.org/link/special-props)',
     );
-  });
-
-  it('identifies elements, but not JSON, if Symbols are supported', () => {
-    class Component extends React.Component {
-      render() {
-        return JSXRuntime.jsx('div', {});
-      }
-    }
-
-    expect(React.isValidElement(JSXRuntime.jsx('div', {}))).toEqual(true);
-    expect(React.isValidElement(JSXRuntime.jsx(Component, {}))).toEqual(true);
-    expect(
-      React.isValidElement(JSXRuntime.jsx(JSXRuntime.Fragment, {})),
-    ).toEqual(true);
-    if (__DEV__) {
-      expect(React.isValidElement(JSXDEVRuntime.jsxDEV('div', {}))).toEqual(
-        true,
-      );
-    }
-
-    expect(React.isValidElement(null)).toEqual(false);
-    expect(React.isValidElement(true)).toEqual(false);
-    expect(React.isValidElement({})).toEqual(false);
-    expect(React.isValidElement('string')).toEqual(false);
-    if (!__EXPERIMENTAL__) {
-      let factory;
-      expect(() => {
-        factory = React.createFactory('div');
-      }).toWarnDev(
-        'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
-        {withoutStack: true},
-      );
-      expect(React.isValidElement(factory)).toEqual(false);
-    }
-    expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
-
-    const jsonElement = JSON.stringify(JSXRuntime.jsx('div', {}));
-    expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
 
   it('should warn when unkeyed children are passed to jsx', () => {
@@ -305,30 +262,31 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  if (require('shared/ReactFeatureFlags').warnAboutSpreadingKeyToJSX) {
-    it('should warn when keys are passed as part of props', () => {
-      const container = document.createElement('div');
-      class Child extends React.Component {
-        render() {
-          return JSXRuntime.jsx('div', {});
-        }
+  it('should warn when keys are passed as part of props', () => {
+    const container = document.createElement('div');
+    class Child extends React.Component {
+      render() {
+        return JSXRuntime.jsx('div', {});
       }
-      class Parent extends React.Component {
-        render() {
-          return JSXRuntime.jsx('div', {
-            children: [JSXRuntime.jsx(Child, {key: '0'})],
-          });
-        }
+    }
+    class Parent extends React.Component {
+      render() {
+        return JSXRuntime.jsx('div', {
+          children: [JSXRuntime.jsx(Child, {key: '0', prop: 'hi'})],
+        });
       }
-      expect(() =>
-        ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
-      ).toErrorDev(
-        'Warning: React.jsx: Spreading a key to JSX is a deprecated pattern. ' +
-          'Explicitly pass a key after spreading props in your JSX call. ' +
-          'E.g. <Child {...props} key={key} />',
-      );
-    });
-  }
+    }
+    expect(() =>
+      ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
+    ).toErrorDev(
+      'Warning: A props object containing a "key" prop is being spread into JSX:\n' +
+        '  let props = {key: someKey, prop: ...};\n' +
+        '  <Child {...props} />\n' +
+        'React keys must be passed directly to JSX without using spread:\n' +
+        '  let props = {prop: ...};\n' +
+        '  <Child key={someKey} {...props} />',
+    );
+  });
 
   it('should not warn when unkeyed children are passed to jsxs', () => {
     const container = document.createElement('div');

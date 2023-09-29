@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -29,21 +29,28 @@ function runJest(testFile) {
   const cwd = process.cwd();
   const extension = process.platform === 'win32' ? '.cmd' : '';
   const command = process.env.npm_lifecycle_event;
+  const defaultReporter = '--reporters=default';
+  const equivalenceReporter =
+    '--reporters=<rootDir>/scripts/jest/spec-equivalence-reporter/equivalenceReporter.js';
   if (!command.startsWith('test')) {
     throw new Error(
       'Expected this test to run as a result of one of test commands.',
     );
   }
-  const result = spawnSync('yarn' + extension, [command, testFile], {
-    cwd,
-    env: Object.assign({}, process.env, {
-      REACT_CLASS_EQUIVALENCE_TEST: 'true',
-      // Remove these so that the test file is not filtered out by the mechanism
-      // we use to parallelize tests in CI
-      CIRCLE_NODE_TOTAL: '',
-      CIRCLE_NODE_INDEX: '',
-    }),
-  });
+  const result = spawnSync(
+    'yarn' + extension,
+    [command, testFile, defaultReporter, equivalenceReporter],
+    {
+      cwd,
+      env: Object.assign({}, process.env, {
+        REACT_CLASS_EQUIVALENCE_TEST: 'true',
+        // Remove these so that the test file is not filtered out by the mechanism
+        // we use to parallelize tests in CI
+        CIRCLE_NODE_TOTAL: '',
+        CIRCLE_NODE_INDEX: '',
+      }),
+    },
+  );
 
   if (result.error) {
     throw result.error;

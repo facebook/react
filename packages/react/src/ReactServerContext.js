@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -29,6 +29,13 @@ export function createServerContext<T: ServerContextJSONValue>(
 ): ReactServerContext<T> {
   if (!enableServerContext) {
     throw new Error('Not implemented.');
+  }
+  if (__DEV__) {
+    console.error(
+      'Server Context is deprecated and will soon be removed. ' +
+        'It was never documented and we have found it not to be useful ' +
+        'enough to warrant the downside it imposes on all apps.',
+    );
   }
   let wasDefined = true;
   if (!ContextRegistry[globalName]) {

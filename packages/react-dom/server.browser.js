@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -37,7 +37,14 @@ export function renderToStaticNodeStream() {
 }
 
 export function renderToReadableStream() {
-  return require('./src/server/ReactDOMFizzServerBrowser').renderToReadableStream.apply(
+  return require('./src/server/react-dom-server.browser').renderToReadableStream.apply(
+    this,
+    arguments,
+  );
+}
+
+export function resume() {
+  return require('./src/server/react-dom-server.browser').resume.apply(
     this,
     arguments,
   );

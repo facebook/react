@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,7 +10,8 @@
 import {hydrate, fillInPath} from 'react-devtools-shared/src/hydration';
 import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
 import Store from 'react-devtools-shared/src/devtools/store';
-import TimeoutError from 'react-devtools-shared/src/TimeoutError';
+import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
+import ElementPollingCancellationError from 'react-devtools-shared/src/errors/ElementPollingCancellationError';
 
 import type {
   InspectedElement as InspectedElementBackend,
@@ -28,10 +29,10 @@ import type {
 export function clearErrorsAndWarnings({
   bridge,
   store,
-}: {|
+}: {
   bridge: FrontendBridge,
   store: Store,
-|}): void {
+}): void {
   store.rootIDToRendererID.forEach(rendererID => {
     bridge.send('clearErrorsAndWarnings', {rendererID});
   });
@@ -41,11 +42,11 @@ export function clearErrorsForElement({
   bridge,
   id,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   id: number,
   rendererID: number,
-|}): void {
+}): void {
   bridge.send('clearErrorsForFiberID', {
     rendererID,
     id,
@@ -56,11 +57,11 @@ export function clearWarningsForElement({
   bridge,
   id,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   id: number,
   rendererID: number,
-|}): void {
+}): void {
   bridge.send('clearWarningsForFiberID', {
     rendererID,
     id,
@@ -72,12 +73,12 @@ export function copyInspectedElementPath({
   id,
   path,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   id: number,
   path: Array<string | number>,
   rendererID: number,
-|}): void {
+}): void {
   bridge.send('copyElementPath', {
     id,
     path,
@@ -91,13 +92,13 @@ export function inspectElement({
   id,
   path,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   forceFullData: boolean,
   id: number,
   path: Array<string | number> | null,
   rendererID: number,
-|}): Promise<InspectedElementPayload> {
+}): Promise<InspectedElementPayload> {
   const requestID = requestCounter++;
   const promise = getPromiseForRequestID<InspectedElementPayload>(
     requestID,
@@ -124,12 +125,12 @@ export function storeAsGlobal({
   id,
   path,
   rendererID,
-}: {|
+}: {
   bridge: FrontendBridge,
   id: number,
   path: Array<string | number>,
   rendererID: number,
-|}): void {
+}): void {
   bridge.send('storeAsGlobal', {
     count: storeAsGlobalCount++,
     id,
@@ -138,7 +139,7 @@ export function storeAsGlobal({
   });
 }
 
-const TIMEOUT_DELAY = 5000;
+const TIMEOUT_DELAY = 10_000;
 
 let requestCounter = 0;
 
@@ -151,8 +152,15 @@ function getPromiseForRequestID<T>(
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       bridge.removeListener(eventType, onInspectedElement);
+      bridge.removeListener('shutdown', onDisconnect);
+      bridge.removeListener('pauseElementPolling', onDisconnect);
 
       clearTimeout(timeoutID);
+    };
+
+    const onDisconnect = () => {
+      cleanup();
+      reject(new ElementPollingCancellationError());
     };
 
     const onInspectedElement = (data: any) => {
@@ -168,6 +176,8 @@ function getPromiseForRequestID<T>(
     };
 
     bridge.addListener(eventType, onInspectedElement);
+    bridge.addListener('shutdown', onDisconnect);
+    bridge.addListener('pauseElementPolling', onDisconnect);
 
     const timeoutID = setTimeout(onTimeout, TIMEOUT_DELAY);
   });

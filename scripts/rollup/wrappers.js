@@ -2,17 +2,21 @@
 
 const {resolve} = require('path');
 const {readFileSync} = require('fs');
+const {signFile, getSigningToken} = require('signedsource');
 const {bundleTypes, moduleTypes} = require('./bundles');
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
+  BUN_DEV,
+  BUN_PROD,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -22,6 +26,7 @@ const {
   RN_FB_DEV,
   RN_FB_PROD,
   RN_FB_PROFILING,
+  BROWSER_SCRIPT,
 } = bundleTypes;
 
 const {RECONCILER} = moduleTypes;
@@ -40,12 +45,10 @@ function registerInternalModuleStop(globalName) {
 
   // Remove the 'use strict' directive from the footer.
   // This directive is only meaningful when it is the first statement in a file or function.
-  return String(file)
-    .replace(USE_STRICT_HEADER_REGEX, '')
-    .trim();
+  return String(file).replace(USE_STRICT_HEADER_REGEX, '').trim();
 }
 
-const license = ` * Copyright (c) Facebook, Inc. and its affiliates.
+const license = ` * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.`;
@@ -65,8 +68,44 @@ ${license}
 ${source}`;
   },
 
-  /***************** NODE_ESM *****************/
-  [NODE_ESM](source, globalName, filename, moduleType) {
+  /***************** ESM_DEV *****************/
+  [ESM_DEV](source, globalName, filename, moduleType) {
+    return `/**
+* @license React
+ * ${filename}
+ *
+${license}
+ */
+
+${source}`;
+  },
+
+  /***************** ESM_PROD *****************/
+  [ESM_PROD](source, globalName, filename, moduleType) {
+    return `/**
+* @license React
+ * ${filename}
+ *
+${license}
+ */
+
+${source}`;
+  },
+
+  /***************** BUN_DEV *****************/
+  [BUN_DEV](source, globalName, filename, moduleType) {
+    return `/**
+* @license React
+ * ${filename}
+ *
+${license}
+ */
+
+${source}`;
+  },
+
+  /***************** BUN_PROD *****************/
+  [BUN_PROD](source, globalName, filename, moduleType) {
     return `/**
 * @license React
  * ${filename}
@@ -200,14 +239,14 @@ ${source}`;
 
   /****************** RN_OSS_DEV ******************/
   [RN_OSS_DEV](source, globalName, filename, moduleType) {
-    return `/**
+    return signFile(`/**
 ${license}
  *
  * @noflow
  * @nolint
  * @providesModule ${globalName}-dev
  * @preventMunge
- * ${'@gen' + 'erated'}
+ * ${getSigningToken()}
  */
 
 'use strict';
@@ -216,48 +255,48 @@ if (__DEV__) {
   (function() {
 ${source}
   })();
-}`;
+}`);
   },
 
   /****************** RN_OSS_PROD ******************/
   [RN_OSS_PROD](source, globalName, filename, moduleType) {
-    return `/**
+    return signFile(`/**
 ${license}
  *
  * @noflow
  * @nolint
  * @providesModule ${globalName}-prod
  * @preventMunge
- * ${'@gen' + 'erated'}
+ * ${getSigningToken()}
  */
 
-${source}`;
+${source}`);
   },
 
   /****************** RN_OSS_PROFILING ******************/
   [RN_OSS_PROFILING](source, globalName, filename, moduleType) {
-    return `/**
+    return signFile(`/**
 ${license}
  *
  * @noflow
  * @nolint
  * @providesModule ${globalName}-profiling
  * @preventMunge
- * ${'@gen' + 'erated'}
+ * ${getSigningToken()}
  */
 
-${source}`;
+${source}`);
   },
 
   /****************** RN_FB_DEV ******************/
   [RN_FB_DEV](source, globalName, filename, moduleType) {
-    return `/**
+    return signFile(`/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${'@gen' + 'erated'}
+ * ${getSigningToken()}
  */
 
 'use strict';
@@ -266,35 +305,35 @@ if (__DEV__) {
   (function() {
 ${source}
   })();
-}`;
+}`);
   },
 
   /****************** RN_FB_PROD ******************/
   [RN_FB_PROD](source, globalName, filename, moduleType) {
-    return `/**
+    return signFile(`/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${'@gen' + 'erated'}
+ * ${getSigningToken()}
  */
 
-${source}`;
+${source}`);
   },
 
   /****************** RN_FB_PROFILING ******************/
   [RN_FB_PROFILING](source, globalName, filename, moduleType) {
-    return `/**
+    return signFile(`/**
 ${license}
  *
  * @noflow
  * @nolint
  * @preventMunge
- * ${'@gen' + 'erated'}
+ * ${getSigningToken()}
  */
 
-${source}`;
+${source}`);
   },
 };
 
@@ -311,12 +350,15 @@ ${license}
 'use strict';
 
 if (process.env.NODE_ENV !== "production") {
-  module.exports = function $$$reconciler($$$hostConfig) {
+  module.exports = function $$$reconciler($$$config) {
     var exports = {};
 ${source}
     return exports;
   };
-}`;
+  module.exports.default = module.exports;
+  Object.defineProperty(module.exports, "__esModule", { value: true });
+}
+`;
   },
 
   /***************** NODE_PROD (reconciler only) *****************/
@@ -327,11 +369,15 @@ ${source}
  *
 ${license}
  */
-module.exports = function $$$reconciler($$$hostConfig) {
+module.exports = function $$$reconciler($$$config) {
+
     var exports = {};
 ${source}
     return exports;
-};`;
+};
+module.exports.default = module.exports;
+Object.defineProperty(module.exports, "__esModule", { value: true });
+`;
   },
 
   /***************** NODE_PROFILING (reconciler only) *****************/
@@ -342,11 +388,14 @@ ${source}
  *
 ${license}
  */
-module.exports = function $$$reconciler($$$hostConfig) {
+module.exports = function $$$reconciler($$$config) {
     var exports = {};
 ${source}
     return exports;
-};`;
+};
+module.exports.default = module.exports;
+Object.defineProperty(module.exports, "__esModule", { value: true });
+`;
   },
 };
 
@@ -384,6 +433,12 @@ function wrapBundle(
     }
   }
 
+  if (bundleType === BROWSER_SCRIPT) {
+    // Bundles of type BROWSER_SCRIPT get sent straight to the browser without
+    // additional processing. So we should exclude any extra wrapper comments.
+    return source;
+  }
+
   if (moduleType === RECONCILER) {
     // Standalone reconciler is only used by third-party renderers.
     // It is handled separately.
@@ -395,6 +450,7 @@ function wrapBundle(
     }
     return wrapper(source, globalName, filename, moduleType);
   }
+
   // All the other packages.
   const wrapper = wrappers[bundleType];
   if (typeof wrapper !== 'function') {

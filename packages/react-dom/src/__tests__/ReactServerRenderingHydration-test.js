@@ -1,10 +1,11 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -13,7 +14,9 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
-let Scheduler;
+let ReactDOMServerBrowser;
+let waitForAll;
+let act;
 
 // These tests rely both on ReactDOMServer and ReactDOM.
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
@@ -24,7 +27,11 @@ describe('ReactDOMServerHydration', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    Scheduler = require('scheduler');
+    ReactDOMServerBrowser = require('react-dom/server.browser');
+
+    const InternalTestUtils = require('internal-test-utils');
+    waitForAll = InternalTestUtils.waitForAll;
+    act = InternalTestUtils.act;
   });
 
   it('should have the correct mounting behavior (new hydrate API)', () => {
@@ -32,6 +39,8 @@ describe('ReactDOMServerHydration', () => {
     let numClicks = 0;
 
     class TestComponent extends React.Component {
+      spanRef = React.createRef();
+
       componentDidMount() {
         mountCount++;
       }
@@ -42,7 +51,7 @@ describe('ReactDOMServerHydration', () => {
 
       render() {
         return (
-          <span ref="span" onClick={this.click}>
+          <span ref={this.spanRef} onClick={this.click}>
             Name: {this.props.name}
           </span>
         );
@@ -85,7 +94,7 @@ describe('ReactDOMServerHydration', () => {
 
       // Ensure the events system works after mount into server markup
       expect(numClicks).toEqual(0);
-      instance.refs.span.click();
+      instance.spanRef.current.click();
       expect(numClicks).toEqual(1);
 
       ReactDOM.unmountComponentAtNode(element);
@@ -103,7 +112,7 @@ describe('ReactDOMServerHydration', () => {
 
       // Ensure the events system works after markup mismatch.
       expect(numClicks).toEqual(1);
-      instance.refs.span.click();
+      instance.spanRef.current.click();
       expect(numClicks).toEqual(2);
     } finally {
       document.body.removeChild(element);
@@ -186,6 +195,7 @@ describe('ReactDOMServerHydration', () => {
     );
   });
 
+  // @gate !disableIEWorkarounds || !__DEV__
   it('should not warn when the style property differs on whitespace or order in IE', () => {
     document.documentMode = 11;
     jest.resetModules();
@@ -394,25 +404,22 @@ describe('ReactDOMServerHydration', () => {
     ReactDOM.hydrate(<HelloWorld />, element);
     expect(element.textContent).toBe('Hello loading');
 
-    jest.runAllTimers();
-    await Promise.resolve();
-    Scheduler.unstable_flushAll();
-    await null;
+    // Resolve Lazy component
+    await act(() => jest.runAllTimers());
     expect(element.textContent).toBe('Hello world');
   });
 
-  it('does not re-enter hydration after committing the first one', () => {
+  it('does not re-enter hydration after committing the first one', async () => {
     const finalHTML = ReactDOMServer.renderToString(<div />);
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    const root = ReactDOMClient.hydrateRoot(container, <div />);
-    Scheduler.unstable_flushAll();
-    root.render(null);
-    Scheduler.unstable_flushAll();
+    const root = await act(() =>
+      ReactDOMClient.hydrateRoot(container, <div />),
+    );
+    await act(() => root.render(null));
     // This should not reenter hydration state and therefore not trigger hydration
     // warnings.
-    root.render(<div />);
-    Scheduler.unstable_flushAll();
+    await act(() => root.render(<div />));
   });
 
   it('Suspense + hydration in legacy mode', () => {
@@ -575,18 +582,18 @@ describe('ReactDOMServerHydration', () => {
 
     // Install setters to activate `in` check
     Object.defineProperty(customElement, 'str', {
-      set: function(x) {
+      set: function (x) {
         this._str = x;
       },
-      get: function() {
+      get: function () {
         return this._str;
       },
     });
     Object.defineProperty(customElement, 'obj', {
-      set: function(x) {
+      set: function (x) {
         this._obj = x;
       },
-      get: function() {
+      get: function () {
         return this._obj;
       },
     });
@@ -597,5 +604,151 @@ describe('ReactDOMServerHydration', () => {
     expect(customElement.getAttribute('obj')).toBe(null);
     expect(customElement.str).toBe(undefined);
     expect(customElement.obj).toBe(undefined);
+  });
+
+  it('refers users to apis that support Suspense when something suspends', async () => {
+    const theInfinitePromise = new Promise(() => {});
+    function InfiniteSuspend() {
+      throw theInfinitePromise;
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <React.Suspense fallback={'fallback'}>
+            {isClient ? 'resolved' : <InfiniteSuspend />}
+          </React.Suspense>
+        </div>
+      );
+    }
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServer.renderToString(
+      <App isClient={false} />,
+    );
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push(error.message);
+      },
+    });
+
+    await waitForAll([]);
+    expect(errors.length).toBe(1);
+    if (__DEV__) {
+      expect(errors[0]).toBe(
+        'The server did not finish this Suspense boundary: The server used "renderToString" ' +
+          'which does not support Suspense. If you intended for this Suspense boundary to render ' +
+          'the fallback content on the server consider throwing an Error somewhere within the ' +
+          'Suspense boundary. If you intended to have the server wait for the suspended component ' +
+          'please switch to "renderToPipeableStream" which supports Suspense on the server',
+      );
+    } else {
+      expect(errors[0]).toBe(
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      );
+    }
+  });
+
+  it('refers users to apis that support Suspense when something suspends (browser)', async () => {
+    const theInfinitePromise = new Promise(() => {});
+    function InfiniteSuspend() {
+      throw theInfinitePromise;
+    }
+
+    function App({isClient}) {
+      return (
+        <div>
+          <React.Suspense fallback={'fallback'}>
+            {isClient ? 'resolved' : <InfiniteSuspend />}
+          </React.Suspense>
+        </div>
+      );
+    }
+    const container = document.createElement('div');
+    container.innerHTML = ReactDOMServerBrowser.renderToString(
+      <App isClient={false} />,
+    );
+
+    const errors = [];
+    ReactDOMClient.hydrateRoot(container, <App isClient={true} />, {
+      onRecoverableError(error, errorInfo) {
+        errors.push(error.message);
+      },
+    });
+
+    await waitForAll([]);
+    expect(errors.length).toBe(1);
+    if (__DEV__) {
+      expect(errors[0]).toBe(
+        'The server did not finish this Suspense boundary: The server used "renderToString" ' +
+          'which does not support Suspense. If you intended for this Suspense boundary to render ' +
+          'the fallback content on the server consider throwing an Error somewhere within the ' +
+          'Suspense boundary. If you intended to have the server wait for the suspended component ' +
+          'please switch to "renderToReadableStream" which supports Suspense on the server',
+      );
+    } else {
+      expect(errors[0]).toBe(
+        'The server could not finish this Suspense boundary, likely due to ' +
+          'an error during server rendering. Switched to client rendering.',
+      );
+    }
+  });
+
+  // @gate enableFormActions
+  it('allows rendering extra hidden inputs in a form', async () => {
+    const element = document.createElement('div');
+    element.innerHTML =
+      '<form>' +
+      '<input type="hidden" /><input type="hidden" name="a" value="A" />' +
+      '<input type="hidden" /><input type="submit" name="b" value="B" />' +
+      '<input type="hidden" /><button name="c" value="C"></button>' +
+      '<input type="hidden" />' +
+      '</form>';
+    const form = element.firstChild;
+    const ref = React.createRef();
+    const a = React.createRef();
+    const b = React.createRef();
+    const c = React.createRef();
+    await act(async () => {
+      ReactDOMClient.hydrateRoot(
+        element,
+        <form ref={ref}>
+          <input type="hidden" name="a" value="A" ref={a} />
+          <input type="submit" name="b" value="B" ref={b} />
+          <button name="c" value="C" ref={c} />
+        </form>,
+      );
+    });
+
+    // The content should not have been client rendered.
+    expect(ref.current).toBe(form);
+
+    expect(a.current.name).toBe('a');
+    expect(a.current.value).toBe('A');
+    expect(b.current.name).toBe('b');
+    expect(b.current.value).toBe('B');
+    expect(c.current.name).toBe('c');
+    expect(c.current.value).toBe('C');
+  });
+
+  // @gate enableFormActions
+  it('allows rendering extra hidden inputs immediately before a text instance', async () => {
+    const element = document.createElement('div');
+    element.innerHTML =
+      '<button><input name="a" value="A" type="hidden" />Click <!-- -->me</button>';
+    const button = element.firstChild;
+    const ref = React.createRef();
+    const extraText = 'me';
+
+    await act(() => {
+      ReactDOMClient.hydrateRoot(
+        element,
+        <button ref={ref}>Click {extraText}</button>,
+      );
+    });
+
+    expect(ref.current).toBe(button);
   });
 });

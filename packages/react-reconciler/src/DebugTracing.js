@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Lane, Lanes} from './ReactFiberLane.old';
+import type {Lane, Lanes} from './ReactFiberLane';
 import type {Wakeable} from 'shared/ReactTypes';
 
 import {enableDebugTracing} from 'shared/ReactFeatureFlags';
@@ -22,7 +22,7 @@ function formatLanes(laneOrLanes: Lane | Lanes): string {
   return '0b' + (laneOrLanes: any).toString(2).padStart(31, '0');
 }
 
-function group(...groupArgs): void {
+function group(...groupArgs: Array<string>): void {
   pendingGroupArgs.push(groupArgs);
 
   if (nativeConsoleLog === null) {
@@ -44,7 +44,7 @@ function groupEnd(): void {
   }
 }
 
-function log(...logArgs): void {
+function log(...logArgs: Array<mixed>): void {
   if (printedGroupIndex < pendingGroupArgs.length - 1) {
     for (let i = printedGroupIndex + 1; i < pendingGroupArgs.length; i++) {
       const groupArgs = pendingGroupArgs[i];
@@ -84,7 +84,7 @@ export function logCommitStopped(): void {
 }
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
+// $FlowFixMe[incompatible-type]: Flow cannot handle polymorphic WeakMaps
 const wakeableIDs: WeakMap<Wakeable, number> = new PossiblyWeakMap();
 let wakeableID: number = 0;
 function getWakeableID(wakeable: Wakeable): number {

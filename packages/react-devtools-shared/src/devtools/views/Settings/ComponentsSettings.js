@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,7 +16,10 @@ import {
   useRef,
   useState,
 } from 'react';
-import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
+import {
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
+  LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET,
+} from '../../../constants';
 import {useLocalStorage, useSubscription} from '../hooks';
 import {StoreContext} from '../context';
 import Button from '../Button';
@@ -51,7 +54,9 @@ import type {
   RegExpComponentFilter,
 } from 'react-devtools-shared/src/types';
 
-export default function ComponentsSettings(_: {||}) {
+const vscodeFilepath = 'vscode://file/{path}:{line}';
+
+export default function ComponentsSettings(_: {}): React.Node {
   const store = useContext(StoreContext);
   const {parseHookNames, setParseHookNames} = useContext(SettingsContext);
 
@@ -70,18 +75,22 @@ export default function ComponentsSettings(_: {||}) {
   );
 
   const updateCollapseNodesByDefault = useCallback(
-    ({currentTarget}) => {
+    ({currentTarget}: $FlowFixMe) => {
       store.collapseNodesByDefault = !currentTarget.checked;
     },
     [store],
   );
 
   const updateParseHookNames = useCallback(
-    ({currentTarget}) => {
+    ({currentTarget}: $FlowFixMe) => {
       setParseHookNames(currentTarget.checked);
     },
     [setParseHookNames],
   );
+
+  const [openInEditorURLPreset, setOpenInEditorURLPreset] = useLocalStorage<
+    'vscode' | 'custom',
+  >(LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET, 'custom');
 
   const [openInEditorURL, setOpenInEditorURL] = useLocalStorage<string>(
     LOCAL_STORAGE_OPEN_IN_EDITOR_URL,
@@ -209,6 +218,10 @@ export default function ComponentsSettings(_: {||}) {
     });
   }, []);
 
+  const removeAllFilter = () => {
+    setComponentFilters([]);
+  };
+
   const toggleFilterIsEnabled = useCallback(
     (componentFilter: ComponentFilter, isEnabled: boolean) => {
       setComponentFilters(prevComponentFilters => {
@@ -280,15 +293,32 @@ export default function ComponentsSettings(_: {||}) {
 
       <label className={styles.OpenInURLSetting}>
         Open in Editor URL:{' '}
-        <input
-          className={styles.Input}
-          type="text"
-          placeholder={process.env.EDITOR_URL ?? 'vscode://file/{path}:{line}'}
-          value={openInEditorURL}
-          onChange={event => {
-            setOpenInEditorURL(event.target.value);
-          }}
-        />
+        <select
+          className={styles.Select}
+          value={openInEditorURLPreset}
+          onChange={({currentTarget}) => {
+            const selectedValue = currentTarget.value;
+            setOpenInEditorURLPreset(selectedValue);
+            if (selectedValue === 'vscode') {
+              setOpenInEditorURL(vscodeFilepath);
+            } else if (selectedValue === 'custom') {
+              setOpenInEditorURL('');
+            }
+          }}>
+          <option value="vscode">VS Code</option>
+          <option value="custom">Custom</option>
+        </select>
+        {openInEditorURLPreset === 'custom' && (
+          <input
+            className={styles.Input}
+            type="text"
+            placeholder={process.env.EDITOR_URL ? process.env.EDITOR_URL : ''}
+            value={openInEditorURL}
+            onChange={event => {
+              setOpenInEditorURL(event.target.value);
+            }}
+          />
+        )}
       </label>
 
       <div className={styles.Header}>Hide components where...</div>
@@ -373,7 +403,7 @@ export default function ComponentsSettings(_: {||}) {
                     <option value={ElementTypeFunction}>function</option>
                     <option value={ElementTypeForwardRef}>forward ref</option>
                     <option value={ElementTypeHostComponent}>
-                      host (e.g. &lt;div&gt;)
+                      dom nodes (e.g. &lt;div&gt;)
                     </option>
                     <option value={ElementTypeMemo}>memo</option>
                     <option value={ElementTypeOtherOrUnknown}>other</option>
@@ -408,19 +438,24 @@ export default function ComponentsSettings(_: {||}) {
           ))}
         </tbody>
       </table>
-
-      <Button onClick={addFilter}>
+      <Button onClick={addFilter} title="Add filter">
         <ButtonIcon className={styles.ButtonIcon} type="add" />
         Add filter
       </Button>
+      {componentFilters.length > 0 && (
+        <Button onClick={removeAllFilter} title="Delete all filters">
+          <ButtonIcon className={styles.ButtonIcon} type="delete" />
+          Delete all filters
+        </Button>
+      )}
     </div>
   );
 }
 
-type ToggleIconProps = {|
+type ToggleIconProps = {
   isEnabled: boolean,
   isValid: boolean,
-|};
+};
 function ToggleIcon({isEnabled, isValid}: ToggleIconProps) {
   let className;
   if (isValid) {

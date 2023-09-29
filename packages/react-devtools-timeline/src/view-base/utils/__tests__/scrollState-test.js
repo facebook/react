@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -210,7 +210,7 @@ describe(zoomState, () => {
     });
 
     expect(zoomedState).toMatchInlineSnapshot(`
-      Object {
+      {
         "length": 200,
         "offset": -50,
       }
@@ -232,7 +232,7 @@ describe(moveStateToRange, () => {
     });
 
     expect(movedState).toMatchInlineSnapshot(`
-      Object {
+      {
         "length": 400,
         "offset": -50,
       }

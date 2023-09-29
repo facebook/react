@@ -2,6 +2,7 @@
 
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
+const crypto = require('node:crypto');
 const fs = require('fs');
 const fse = require('fs-extra');
 const {spawnSync} = require('child_process');
@@ -12,7 +13,7 @@ const {
   ReactVersion,
   stablePackages,
   experimentalPackages,
-  nextChannelLabel,
+  canaryChannelLabel,
 } = require('../../ReactVersions');
 
 // Runs the build script for both stable and experimental release channels,
@@ -38,6 +39,17 @@ if (dateString.startsWith("'")) {
   dateString = dateString.slice(1, 9);
 }
 
+// Build the artifacts using a placeholder React version. We'll then do a string
+// replace to swap it with the correct version per release channel.
+const PLACEHOLDER_REACT_VERSION = ReactVersion + '-PLACEHOLDER';
+
+// TODO: We should inject the React version using a build-time parameter
+// instead of overwriting the source files.
+fs.writeFileSync(
+  './packages/shared/ReactVersion.js',
+  `export default '${PLACEHOLDER_REACT_VERSION}';\n`
+);
+
 if (process.env.CIRCLE_NODE_TOTAL) {
   // In CI, we use multiple concurrent processes. Allocate half the processes to
   // build the stable channel, and the other half for experimental. Override
@@ -48,33 +60,21 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   if (index < halfTotal) {
     const nodeTotal = halfTotal;
     const nodeIndex = index;
-    updateTheReactVersionThatDevToolsReads(
-      ReactVersion + '-' + sha + '-' + dateString
-    );
     buildForChannel('stable', nodeTotal, nodeIndex);
     processStable('./build');
   } else {
     const nodeTotal = total - halfTotal;
     const nodeIndex = index - halfTotal;
-    updateTheReactVersionThatDevToolsReads(
-      ReactVersion + '-experimental-' + sha + '-' + dateString
-    );
     buildForChannel('experimental', nodeTotal, nodeIndex);
     processExperimental('./build');
   }
 } else {
   // Running locally, no concurrency. Move each channel's build artifacts into
   // a temporary directory so that they don't conflict.
-  updateTheReactVersionThatDevToolsReads(
-    ReactVersion + '-' + sha + '-' + dateString
-  );
   buildForChannel('stable', '', '');
   const stableDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', stableDir);
   processStable(stableDir);
-  updateTheReactVersionThatDevToolsReads(
-    ReactVersion + '-experimental-' + sha + '-' + dateString
-  );
   buildForChannel('experimental', '', '');
   const experimentalDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', experimentalDir);
@@ -91,15 +91,24 @@ if (process.env.CIRCLE_NODE_TOTAL) {
 }
 
 function buildForChannel(channel, nodeTotal, nodeIndex) {
-  spawnSync('node', ['./scripts/rollup/build.js', ...process.argv.slice(2)], {
-    stdio: ['pipe', process.stdout, process.stderr],
-    env: {
-      ...process.env,
-      RELEASE_CHANNEL: channel,
-      CIRCLE_NODE_TOTAL: nodeTotal,
-      CIRCLE_NODE_INDEX: nodeIndex,
-    },
-  });
+  const {status} = spawnSync(
+    'node',
+    ['./scripts/rollup/build.js', ...process.argv.slice(2)],
+    {
+      stdio: ['pipe', process.stdout, process.stderr],
+      env: {
+        ...process.env,
+        RELEASE_CHANNEL: channel,
+        CIRCLE_NODE_TOTAL: nodeTotal,
+        CIRCLE_NODE_INDEX: nodeIndex,
+      },
+    }
+  );
+
+  if (status !== 0) {
+    // Error of spawned process is already piped to this stderr
+    process.exit(status);
+  }
 }
 
 function processStable(buildDir) {
@@ -118,7 +127,7 @@ function processStable(buildDir) {
       const version = stablePackages[moduleName];
       versionsMap.set(
         moduleName,
-        version + '-' + nextChannelLabel + '-' + sha + '-' + dateString,
+        version + '-' + canaryChannelLabel + '-' + sha + '-' + dateString,
         defaultVersionIfNotFound
       );
     }
@@ -129,6 +138,10 @@ function processStable(buildDir) {
       true
     );
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-stable');
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      buildDir + '/oss-stable',
+      ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
+    );
 
     // Now do the semver ones
     const semverVersionsMap = new Map();
@@ -142,17 +155,53 @@ function processStable(buildDir) {
       defaultVersionIfNotFound,
       false
     );
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      buildDir + '/oss-stable-semver',
+      ReactVersion
+    );
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    for (const fileName of fs.readdirSync(buildDir + '/facebook-www')) {
+    const hash = crypto.createHash('sha1');
+    for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
+        hash.update(fs.readFileSync(filePath));
         fs.renameSync(filePath, filePath.replace('.js', '.classic.js'));
       }
     }
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      buildDir + '/facebook-www',
+      ReactVersion + '-www-classic-' + hash.digest('hex').slice(0, 8)
+    );
   }
+
+  const reactNativeBuildDir = buildDir + '/react-native/implementations/';
+  if (fs.existsSync(reactNativeBuildDir)) {
+    const hash = crypto.createHash('sha1');
+    for (const fileName of fs.readdirSync(reactNativeBuildDir).sort()) {
+      const filePath = reactNativeBuildDir + fileName;
+      const stats = fs.statSync(filePath);
+      if (!stats.isDirectory()) {
+        hash.update(fs.readFileSync(filePath));
+      }
+    }
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      reactNativeBuildDir,
+      ReactVersion +
+        '-' +
+        canaryChannelLabel +
+        '-' +
+        hash.digest('hex').slice(0, 8)
+    );
+  }
+
+  // Update remaining placeholders with canary channel version
+  updatePlaceholderReactVersionInCompiledArtifacts(
+    buildDir,
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
+  );
 
   if (fs.existsSync(buildDir + '/sizes')) {
     fs.renameSync(buildDir + '/sizes', buildDir + '/sizes-stable');
@@ -162,7 +211,7 @@ function processStable(buildDir) {
 function processExperimental(buildDir, version) {
   if (fs.existsSync(buildDir + '/node_modules')) {
     const defaultVersionIfNotFound =
-      '0.0.0' + '-' + 'experimental' + '-' + sha + '-' + dateString;
+      '0.0.0' + '-experimental-' + sha + '-' + dateString;
     const versionsMap = new Map();
     for (const moduleName in stablePackages) {
       versionsMap.set(moduleName, defaultVersionIfNotFound);
@@ -177,17 +226,36 @@ function processExperimental(buildDir, version) {
       true
     );
     fs.renameSync(buildDir + '/node_modules', buildDir + '/oss-experimental');
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      buildDir + '/oss-experimental',
+      // TODO: The npm version for experimental releases does not include the
+      // React version, but the runtime version does so that DevTools can do
+      // feature detection. Decide what to do about this later.
+      ReactVersion + '-experimental-' + sha + '-' + dateString
+    );
   }
 
   if (fs.existsSync(buildDir + '/facebook-www')) {
-    for (const fileName of fs.readdirSync(buildDir + '/facebook-www')) {
+    const hash = crypto.createHash('sha1');
+    for (const fileName of fs.readdirSync(buildDir + '/facebook-www').sort()) {
       const filePath = buildDir + '/facebook-www/' + fileName;
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
+        hash.update(fs.readFileSync(filePath));
         fs.renameSync(filePath, filePath.replace('.js', '.modern.js'));
       }
     }
+    updatePlaceholderReactVersionInCompiledArtifacts(
+      buildDir + '/facebook-www',
+      ReactVersion + '-www-modern-' + hash.digest('hex').slice(0, 8)
+    );
   }
+
+  // Update remaining placeholders with canary channel version
+  updatePlaceholderReactVersionInCompiledArtifacts(
+    buildDir,
+    ReactVersion + '-' + canaryChannelLabel + '-' + sha + '-' + dateString
+  );
 
   if (fs.existsSync(buildDir + '/sizes')) {
     fs.renameSync(buildDir + '/sizes', buildDir + '/sizes-experimental');
@@ -251,7 +319,11 @@ function updatePackageVersions(
         }
       }
       if (packageInfo.peerDependencies) {
-        if (!pinToExactVersion && moduleName === 'use-sync-external-store') {
+        if (
+          !pinToExactVersion &&
+          (moduleName === 'use-sync-external-store' ||
+            moduleName === 'use-subscription')
+        ) {
           // use-sync-external-store supports older versions of React, too, so
           // we don't override to the latest version. We should figure out some
           // better way to handle this.
@@ -274,14 +346,32 @@ function updatePackageVersions(
   }
 }
 
-function updateTheReactVersionThatDevToolsReads(version) {
-  // Overwrite the ReactVersion module before the build script runs so that it
-  // is included in the final bundles. This only runs in CI, so it's fine to
-  // edit the source file.
-  fs.writeFileSync(
-    './packages/shared/ReactVersion.js',
-    `export default '${version}';\n`
-  );
+function updatePlaceholderReactVersionInCompiledArtifacts(
+  artifactsDirectory,
+  newVersion
+) {
+  // Update the version of React in the compiled artifacts by searching for
+  // the placeholder string and replacing it with a new one.
+  const artifactFilenames = String(
+    spawnSync('grep', [
+      '-lr',
+      PLACEHOLDER_REACT_VERSION,
+      '--',
+      artifactsDirectory,
+    ]).stdout
+  )
+    .trim()
+    .split('\n')
+    .filter(filename => filename.endsWith('.js'));
+
+  for (const artifactFilename of artifactFilenames) {
+    const originalText = fs.readFileSync(artifactFilename, 'utf8');
+    const replacedText = originalText.replaceAll(
+      PLACEHOLDER_REACT_VERSION,
+      newVersion
+    );
+    fs.writeFileSync(artifactFilename, replacedText);
+  }
 }
 
 /**

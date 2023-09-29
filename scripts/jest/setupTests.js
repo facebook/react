@@ -10,23 +10,18 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // require that instead.
   require('./spec-equivalence-reporter/setupTests.js');
 } else {
-  const env = jasmine.getEnv();
   const errorMap = require('../error-codes/codes.json');
 
-  // TODO: Stop using spyOn in all the test since that seem deprecated.
-  // This is a legacy upgrade path strategy from:
-  // https://github.com/facebook/jest/blob/v20.0.4/packages/jest-matchers/src/spyMatchers.js#L160
-  const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
-
-  const spyOn = global.spyOn;
-  const noop = function() {};
+  // By default, jest.spyOn also calls the spied method.
+  const spyOn = jest.spyOn;
+  const noop = jest.fn;
 
   // Spying on console methods in production builds can mask errors.
   // This is why we added an explicit spyOnDev() helper.
   // It's too easy to accidentally use the more familiar spyOn() helper though,
   // So we disable it entirely.
   // Spying on both dev and prod will require using both spyOnDev() and spyOnProd().
-  global.spyOn = function() {
+  global.spyOn = function () {
     throw new Error(
       'Do not use spyOn(). ' +
         'It can accidentally hide unexpected errors in production builds. ' +
@@ -55,10 +50,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // global variable. The global lets us detect an infinite loop even if
   // the actual error object ends up being caught and ignored. An infinite
   // loop must always fail the test!
-  env.beforeEach(() => {
+  beforeEach(() => {
     global.infiniteLoopError = null;
   });
-  env.afterEach(() => {
+  afterEach(() => {
     const error = global.infiniteLoopError;
     global.infiniteLoopError = null;
     if (error) {
@@ -69,7 +64,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // TODO: Consider consolidating this with `yieldValue`. In both cases, tests
   // should not be allowed to exit without asserting on the entire log.
   const patchConsoleMethod = (methodName, unexpectedConsoleCallStacks) => {
-    const newMethod = function(format, ...args) {
+    const newMethod = function (format, ...args) {
       // Ignore uncaught errors reported by jsdom
       // and React addendums because they're too noisy.
       if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
@@ -97,7 +92,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     expectedMatcher,
     unexpectedConsoleCallStacks
   ) => {
-    if (console[methodName] !== mockMethod && !isSpy(console[methodName])) {
+    if (
+      console[methodName] !== mockMethod &&
+      !jest.isMockFunction(console[methodName])
+    ) {
       throw new Error(
         `Test did not tear down console.${methodName} mock properly.`
       );
@@ -157,8 +155,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     unexpectedWarnCallStacks.length = 0;
   };
 
-  env.beforeEach(resetAllUnexpectedConsoleCalls);
-  env.afterEach(flushAllUnexpectedConsoleCalls);
+  beforeEach(resetAllUnexpectedConsoleCalls);
+  afterEach(flushAllUnexpectedConsoleCalls);
 
   if (process.env.NODE_ENV === 'production') {
     // In production, we strip error messages and turn them into codes.
@@ -167,7 +165,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     //    also proxies error instances with `proxyErrorInstance`.
     // 2. `proxyErrorInstance` decodes error messages when the `message`
     //    property is changed.
-    const decodeErrorMessage = function(message) {
+    const decodeErrorMessage = function (message) {
       if (!message) {
         return message;
       }
@@ -190,7 +188,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     // V8's Error.captureStackTrace (used in Jest) fails if the error object is
     // a Proxy, so we need to pass it the unproxied instance.
     const originalErrorInstances = new WeakMap();
-    const captureStackTrace = function(error, ...args) {
+    const captureStackTrace = function (error, ...args) {
       return OriginalError.captureStackTrace.call(
         this,
         originalErrorInstances.get(error) ||
@@ -309,6 +307,4 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     const flags = getTestFlags();
     return fn(flags);
   };
-
-  require('jasmine-check').install();
 }

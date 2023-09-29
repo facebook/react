@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,6 @@
 
 import * as React from 'react';
 import {useContext} from 'react';
-import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 import {ProfilerContext} from '../Profiler/ProfilerContext';
 import {StoreContext} from '../context';
 
@@ -33,11 +32,11 @@ function hookIndicesToString(indices: Array<number>): string {
   }
 }
 
-type Props = {|
+type Props = {
   fiberID: number,
-|};
+};
 
-export default function WhatChanged({fiberID}: Props) {
+export default function WhatChanged({fiberID}: Props): React.Node {
   const {profilerStore} = useContext(StoreContext);
   const {rootID, selectedCommitIndex} = useContext(ProfilerContext);
 
@@ -63,14 +62,8 @@ export default function WhatChanged({fiberID}: Props) {
     return null;
   }
 
-  const {
-    context,
-    didHooksChange,
-    hooks,
-    isFirstMount,
-    props,
-    state,
-  } = changeDescription;
+  const {context, didHooksChange, hooks, isFirstMount, props, state} =
+    changeDescription;
 
   if (isFirstMount) {
     return (
@@ -109,7 +102,7 @@ export default function WhatChanged({fiberID}: Props) {
   }
 
   if (didHooksChange) {
-    if (enableProfilerChangedHookIndices && Array.isArray(hooks)) {
+    if (Array.isArray(hooks)) {
       changes.push(
         <div key="hooks" className={styles.Item}>
           • {hookIndicesToString(hooks)}

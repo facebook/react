@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -47,10 +47,10 @@ describe('TreeListContext', () => {
     ReactDOM = require('react-dom');
     TestRenderer = utils.requireTestRenderer();
 
-    BridgeContext = require('react-devtools-shared/src/devtools/views/context')
-      .BridgeContext;
-    StoreContext = require('react-devtools-shared/src/devtools/views/context')
-      .StoreContext;
+    BridgeContext =
+      require('react-devtools-shared/src/devtools/views/context').BridgeContext;
+    StoreContext =
+      require('react-devtools-shared/src/devtools/views/context').StoreContext;
     TreeContext = require('react-devtools-shared/src/devtools/views/Components/TreeContext');
   });
 

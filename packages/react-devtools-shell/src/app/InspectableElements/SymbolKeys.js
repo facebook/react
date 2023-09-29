@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -16,6 +16,7 @@ const base = Object.create(Object.prototype, {
     enumerable: true,
     configurable: true,
   },
+  // $FlowFixMe[invalid-computed-prop]
   [Symbol('enumerableSymbolBase')]: {
     value: 1,
     writable: true,
@@ -28,6 +29,7 @@ const base = Object.create(Object.prototype, {
     enumerable: false,
     configurable: true,
   },
+  // $FlowFixMe[invalid-computed-prop]
   [Symbol('nonEnumerableSymbolBase')]: {
     value: 1,
     writable: true,
@@ -55,12 +57,14 @@ const data = Object.create(base, {
     enumerable: true,
     configurable: true,
   },
+  // $FlowFixMe[invalid-computed-prop]
   [Symbol('nonEnumerableSymbol')]: {
     value: 2,
     writable: true,
     enumerable: false,
     configurable: true,
   },
+  // $FlowFixMe[invalid-computed-prop]
   [Symbol('enumerableSymbol')]: {
     value: 3,
     writable: true,
@@ -69,7 +73,7 @@ const data = Object.create(base, {
   },
 });
 
-export default function SymbolKeys() {
+export default function SymbolKeys(): React.Node {
   return <ChildComponent data={data} />;
 }
 

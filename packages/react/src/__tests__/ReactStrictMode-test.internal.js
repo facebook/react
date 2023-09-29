@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,10 +19,7 @@ describe('ReactStrictMode', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
 
-    act = require('jest-react').act;
-
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableStrictEffects = __DEV__;
+    act = require('internal-test-utils').act;
   });
 
   describe('levels', () => {
@@ -48,8 +45,8 @@ describe('ReactStrictMode', () => {
       return null;
     }
 
-    it('should default to not strict', () => {
-      act(() => {
+    it('should default to not strict', async () => {
+      await act(() => {
         const container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
         root.render(<Component label="A" />);
@@ -63,8 +60,8 @@ describe('ReactStrictMode', () => {
     });
 
     if (__DEV__) {
-      it('should support enabling strict mode via createRoot option', () => {
-        act(() => {
+      it('should support enabling strict mode via createRoot option', async () => {
+        await act(() => {
           const container = document.createElement('div');
           const root = ReactDOMClient.createRoot(container, {
             unstable_strictMode: true,
@@ -84,8 +81,8 @@ describe('ReactStrictMode', () => {
         ]);
       });
 
-      it('should include legacy + strict effects mode', () => {
-        act(() => {
+      it('should include legacy + strict effects mode', async () => {
+        await act(() => {
           const container = document.createElement('div');
           const root = ReactDOMClient.createRoot(container);
           root.render(
@@ -107,8 +104,54 @@ describe('ReactStrictMode', () => {
         ]);
       });
 
-      it('should allow level to be increased with nesting', () => {
-        act(() => {
+      // @gate enableDO_NOT_USE_disableStrictPassiveEffect
+      it('should include legacy + strict effects mode, but not strict passive effect with disableStrictPassiveEffect', async () => {
+        await act(() => {
+          const container = document.createElement('div');
+          const root = ReactDOMClient.createRoot(container);
+          root.render(
+            <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
+              <Component label="A" />
+            </React.StrictMode>,
+          );
+        });
+
+        expect(log).toEqual([
+          'A: render',
+          'A: render',
+          'A: useLayoutEffect mount',
+          'A: useEffect mount',
+          'A: useLayoutEffect unmount',
+          'A: useLayoutEffect mount',
+        ]);
+      });
+
+      // @gate enableDO_NOT_USE_disableStrictPassiveEffect
+      it('should include legacy + strict effects mode, but not strict passive effect with disableStrictPassiveEffect in Suspense', async () => {
+        await act(() => {
+          const container = document.createElement('div');
+          const root = ReactDOMClient.createRoot(container);
+          root.render(
+            <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
+              <React.Suspense>
+                <Component label="A" />
+              </React.Suspense>
+            </React.StrictMode>,
+          );
+        });
+
+        expect(log).toEqual([
+          'A: render',
+          'A: render',
+          'A: useLayoutEffect mount',
+          'A: useEffect mount',
+          'A: useLayoutEffect unmount',
+          'A: useLayoutEffect mount',
+        ]);
+      });
+
+      it('should allow level to be increased with nesting', async () => {
+        await act(() => {
           const container = document.createElement('div');
           const root = ReactDOMClient.createRoot(container);
           root.render(

@@ -1,11 +1,12 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracingMarkerComponent';
 import type {StartTransitionOptions} from 'shared/ReactTypes';
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
@@ -16,7 +17,7 @@ export function startTransition(
   options?: StartTransitionOptions,
 ) {
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
+  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
   const currentTransition = ReactCurrentBatchConfig.transition;
 
   if (__DEV__) {
@@ -25,7 +26,9 @@ export function startTransition(
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       ReactCurrentBatchConfig.transition.name = options.name;
+      // $FlowFixMe[incompatible-use] found when upgrading Flow
       ReactCurrentBatchConfig.transition.startTime = -1;
     }
   }
@@ -38,6 +41,7 @@ export function startTransition(
     if (__DEV__) {
       if (prevTransition === null && currentTransition._updatedFibers) {
         const updatedFibersCount = currentTransition._updatedFibers.size;
+        currentTransition._updatedFibers.clear();
         if (updatedFibersCount > 10) {
           console.warn(
             'Detected a large number of updates inside startTransition. ' +
@@ -45,7 +49,6 @@ export function startTransition(
               'Otherwise concurrent mode guarantees are off the table.',
           );
         }
-        currentTransition._updatedFibers.clear();
       }
     }
   }

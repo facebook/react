@@ -5,6 +5,7 @@ const chalk = require('chalk');
 const yargs = require('yargs');
 const fs = require('fs');
 const path = require('path');
+const semver = require('semver');
 
 const ossConfig = './scripts/jest/config.source.js';
 const wwwConfig = './scripts/jest/config.source-www.js';
@@ -44,7 +45,7 @@ const argv = yargs
       describe: 'Run with the given release channel.',
       requiresArg: true,
       type: 'string',
-      default: 'www-modern',
+      default: 'experimental',
       choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
     },
     env: {
@@ -101,6 +102,17 @@ const argv = yargs
       alias: 'c',
       describe: 'Compact console output (hide file locations).',
       requiresArg: false,
+      type: 'boolean',
+      default: false,
+    },
+    reactVersion: {
+      describe: 'DevTools testing for specific version of React',
+      requiresArg: true,
+      type: 'string',
+    },
+    sourceMaps: {
+      describe:
+        'Enable inline source maps when transforming source files with Jest. Useful for debugging, but makes it slower.',
       type: 'boolean',
       default: false,
     },
@@ -166,9 +178,18 @@ function validateOptions() {
       logError('DevTool tests require --build.');
       success = false;
     }
+
+    if (argv.reactVersion && !semver.validRange(argv.reactVersion)) {
+      success = false;
+      logError('please specify a valid version range for --reactVersion');
+    }
   } else {
     if (argv.compactConsole) {
       logError('Only DevTool tests support compactConsole flag.');
+      success = false;
+    }
+    if (argv.reactVersion) {
+      logError('Only DevTools tests supports the --reactVersion flag.');
       success = false;
     }
   }
@@ -234,7 +255,7 @@ function validateOptions() {
     const buildDir = path.resolve('./build');
     if (!fs.existsSync(buildDir)) {
       logError(
-        'Build directory does not exist, please run `yarn build-combined` or remove the --build option.'
+        'Build directory does not exist, please run `yarn build` or remove the --build option.'
       );
       success = false;
     } else if (Date.now() - fs.statSync(buildDir).mtimeMs > 1000 * 60 * 15) {
@@ -312,6 +333,16 @@ function getEnvars() {
 
   if (argv.variant) {
     envars.VARIANT = true;
+  }
+
+  if (argv.reactVersion) {
+    envars.REACT_VERSION = semver.coerce(argv.reactVersion);
+  }
+
+  if (argv.sourceMaps) {
+    // This is off by default because it slows down the test runner, but it's
+    // super useful when running the debugger.
+    envars.JEST_ENABLE_SOURCE_MAPS = 'inline';
   }
 
   return envars;

@@ -6,9 +6,15 @@ const {spawn} = require('child_process');
 const {join} = require('path');
 
 const ROOT_PATH = join(__dirname, '..', '..');
-
+const reactVersion = process.argv[2];
 const inlinePackagePath = join(ROOT_PATH, 'packages', 'react-devtools-inline');
 const shellPackagePath = join(ROOT_PATH, 'packages', 'react-devtools-shell');
+const screenshotPath = join(ROOT_PATH, 'tmp', 'screenshots');
+
+const {SUCCESSFUL_COMPILATION_MESSAGE} = require(join(
+  shellPackagePath,
+  'constants.js'
+));
 
 let buildProcess = null;
 let serverProcess = null;
@@ -70,13 +76,21 @@ function runTestShell() {
     // Assume the test shell server failed to start.
     logError('Testing shell server failed to start');
     exitWithCode(1);
-  }, 30000);
+  }, 60 * 1000);
 
   logBright('Starting testing shell server');
 
-  serverProcess = spawn('yarn', ['start'], {cwd: shellPackagePath});
+  if (!reactVersion) {
+    serverProcess = spawn('yarn', ['start'], {cwd: shellPackagePath});
+  } else {
+    serverProcess = spawn('yarn', ['start'], {
+      cwd: shellPackagePath,
+      env: {...process.env, REACT_VERSION: reactVersion},
+    });
+  }
+
   serverProcess.stdout.on('data', data => {
-    if (`${data}`.includes('Compiled successfully.')) {
+    if (`${data}`.includes(SUCCESSFUL_COMPILATION_MESSAGE)) {
       logBright('Testing shell server running');
 
       clearTimeout(timeoutID);
@@ -84,6 +98,7 @@ function runTestShell() {
       runEndToEndTests();
     }
   });
+
   serverProcess.stderr.on('data', data => {
     if (`${data}`.includes('EADDRINUSE')) {
       // Something is occupying this port;
@@ -106,8 +121,17 @@ function runTestShell() {
 
 async function runEndToEndTests() {
   logBright('Running e2e tests');
+  if (!reactVersion) {
+    testProcess = spawn('yarn', ['test:e2e', `--output=${screenshotPath}`], {
+      cwd: inlinePackagePath,
+    });
+  } else {
+    testProcess = spawn('yarn', ['test:e2e', `--output=${screenshotPath}`], {
+      cwd: inlinePackagePath,
+      env: {...process.env, REACT_VERSION: reactVersion},
+    });
+  }
 
-  testProcess = spawn('yarn', ['test:e2e'], {cwd: inlinePackagePath});
   testProcess.stdout.on('data', data => {
     // Log without formatting because Playwright applies its own formatting.
     const formatted = format(data);
