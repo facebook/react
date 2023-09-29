@@ -1019,11 +1019,7 @@ function replaySuspenseBoundary(
   }
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
-    if (typeof childSlots === 'number') {
-      resumeNode(request, task, childSlots, content, -1);
-    } else {
-      renderNode(request, task, content, -1);
-    }
+    renderNode(request, task, content, -1);
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
       throw new Error(
         "Couldn't find all resumable slots by key/index during replaying. " +
@@ -1086,56 +1082,27 @@ function replaySuspenseBoundary(
 
   const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
 
-  let suspendedFallbackTask;
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
-  if (typeof fallbackSlots === 'number') {
-    // Resuming directly in the fallback.
-    const resumedSegment = createPendingSegment(
-      request,
-      0,
-      null,
-      task.formatContext,
-      false,
-      false,
-    );
-    resumedSegment.id = fallbackSlots;
-    resumedSegment.parentFlushed = true;
-    suspendedFallbackTask = createRenderTask(
-      request,
-      null,
-      fallback,
-      -1,
-      parentBoundary,
-      resumedSegment,
-      fallbackAbortSet,
-      fallbackKeyPath,
-      task.formatContext,
-      task.legacyContext,
-      task.context,
-      task.treeContext,
-    );
-  } else {
-    const fallbackReplay = {
-      nodes: fallbackNodes,
-      slots: fallbackSlots,
-      pendingTasks: 0,
-    };
-    suspendedFallbackTask = createReplayTask(
-      request,
-      null,
-      fallbackReplay,
-      fallback,
-      -1,
-      parentBoundary,
-      fallbackAbortSet,
-      fallbackKeyPath,
-      task.formatContext,
-      task.legacyContext,
-      task.context,
-      task.treeContext,
-    );
-  }
+  const fallbackReplay = {
+    nodes: fallbackNodes,
+    slots: fallbackSlots,
+    pendingTasks: 0,
+  };
+  const suspendedFallbackTask = createReplayTask(
+    request,
+    null,
+    fallbackReplay,
+    fallback,
+    -1,
+    parentBoundary,
+    fallbackAbortSet,
+    fallbackKeyPath,
+    task.formatContext,
+    task.legacyContext,
+    task.context,
+    task.treeContext,
+  );
   if (__DEV__) {
     suspendedFallbackTask.componentStack = task.componentStack;
   }
