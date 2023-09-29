@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<baa752d40dc19ca131b74496ee679c02>>
+ * @generated SignedSource<<22271ab359f8fb6e33230ec4e7180433>>
  */
 
 "use strict";
@@ -282,14 +282,14 @@ function createCacheNode() {
 }
 var ReactCurrentDispatcher = { current: null },
   ReactCurrentBatchConfig = { transition: null },
+  ContextRegistry = {},
   ReactSharedInternals = {
     ReactCurrentDispatcher: ReactCurrentDispatcher,
     ReactCurrentCache: ReactCurrentCache,
     ReactCurrentBatchConfig: ReactCurrentBatchConfig,
     ReactCurrentOwner: ReactCurrentOwner$1,
-    ContextRegistry: {}
+    ContextRegistry: ContextRegistry
   },
-  ContextRegistry = ReactSharedInternals.ContextRegistry,
   ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
 function jsx$1(type, config, maybeKey) {
@@ -616,4 +616,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-d900fadbf-20230929";
+exports.version = "18.3.0-canary-c7ba8c098-20230929";

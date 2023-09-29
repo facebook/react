@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8e6aba2a8a22d8a171df886dcebe4930>>
+ * @generated SignedSource<<e3459cf1c934729db6159301ee96abb3>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-canary-d900fadbf-20230929";
+var ReactVersion = "18.3.0-canary-c7ba8c098-20230929";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -159,7 +159,7 @@ var enableDebugTracing = false;
 var enableScopeAPI = false;
 var enableTransitionTracing = false;
 
-var ContextRegistry$1 = {};
+var ContextRegistry = {};
 
 var ReactSharedInternals = {
   ReactCurrentDispatcher: ReactCurrentDispatcher,
@@ -174,7 +174,7 @@ var ReactSharedInternals = {
 }
 
 {
-  ReactSharedInternals.ContextRegistry = ContextRegistry$1;
+  ReactSharedInternals.ContextRegistry = ContextRegistry;
 }
 
 // by calls to these methods by a Babel plugin.
@@ -2704,7 +2704,6 @@ function cloneElementWithValidation(element, props, children) {
   return newElement;
 }
 
-var ContextRegistry = ReactSharedInternals.ContextRegistry;
 function createServerContext(globalName, defaultValue) {
   {
     error(
