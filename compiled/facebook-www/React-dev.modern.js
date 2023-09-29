@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-df3e4079";
+var ReactVersion = "18.3.0-www-modern-3b1c1c68";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2177,7 +2177,7 @@ function setExtraStackFrame(stack) {
   };
 }
 
-var ContextRegistry$1 = {};
+var ContextRegistry = {};
 
 var ReactSharedInternals = {
   ReactCurrentDispatcher: ReactCurrentDispatcher$1,
@@ -2192,7 +2192,7 @@ var ReactSharedInternals = {
 }
 
 {
-  ReactSharedInternals.ContextRegistry = ContextRegistry$1;
+  ReactSharedInternals.ContextRegistry = ContextRegistry;
 }
 
 var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -2913,7 +2913,6 @@ function cloneElementWithValidation(element, props, children) {
   return newElement;
 }
 
-var ContextRegistry = ReactSharedInternals.ContextRegistry;
 function createServerContext(globalName, defaultValue) {
   {
     error(

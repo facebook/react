@@ -262,14 +262,14 @@ function createCacheNode() {
 }
 var ReactCurrentDispatcher = { current: null },
   ReactCurrentBatchConfig = { transition: null },
+  ContextRegistry = {},
   ReactSharedInternals = {
     ReactCurrentDispatcher: ReactCurrentDispatcher,
     ReactCurrentCache: ReactCurrentCache,
     ReactCurrentBatchConfig: ReactCurrentBatchConfig,
     ReactCurrentOwner: ReactCurrentOwner$1,
-    ContextRegistry: {}
+    ContextRegistry: ContextRegistry
   },
-  ContextRegistry = ReactSharedInternals.ContextRegistry,
   ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
 function jsx$1(type, config, maybeKey) {
@@ -626,7 +626,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-a77dd006";
+exports.version = "18.3.0-www-modern-1a772a6d";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
