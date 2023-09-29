@@ -38,7 +38,6 @@ describe('ReactFlightDOMEdge', () => {
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.edge'),
     );
-    ReactServerDOMServer = require('react-server-dom-webpack/server');
 
     const WebpackMock = require('./utils/WebpackMock');
 
@@ -46,6 +45,8 @@ describe('ReactFlightDOMEdge', () => {
     webpackMap = WebpackMock.webpackMap;
     webpackModules = WebpackMock.webpackModules;
     webpackModuleLoading = WebpackMock.moduleLoading;
+
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
 
     jest.resetModules();
     __unmockReact();

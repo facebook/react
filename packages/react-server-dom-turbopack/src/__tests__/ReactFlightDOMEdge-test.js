@@ -42,9 +42,14 @@ describe('ReactFlightDOMEdge', () => {
     clientExports = TurbopackMock.clientExports;
     turbopackMap = TurbopackMock.turbopackMap;
     turbopackModules = TurbopackMock.turbopackModules;
+
+    ReactServerDOMServer = require('react-server-dom-turbopack/server.edge');
+
+    jest.resetModules();
+    __unmockReact();
+
     React = require('react');
     ReactDOMServer = require('react-dom/server.edge');
-    ReactServerDOMServer = require('react-server-dom-turbopack/server.edge');
     ReactServerDOMClient = require('react-server-dom-turbopack/client.edge');
     use = React.use;
   });
