@@ -169,7 +169,7 @@ inlinedHostConfigs.forEach(rendererInfo => {
 // Make it possible to import this module inside
 // the React package itself.
 jest.mock('shared/ReactSharedInternals', () =>
-  jest.requireActual('react/src/ReactSharedInternals')
+  jest.requireActual('react/src/ReactSharedInternalsClient')
 );
 
 // Make it possible to import this module inside

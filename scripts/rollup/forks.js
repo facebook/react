@@ -60,8 +60,11 @@ const forks = Object.freeze({
     entry,
     dependencies
   ) => {
-    if (entry === 'react' || entry === 'react/src/ReactSharedSubset.js') {
-      return './packages/react/src/ReactSharedInternals.js';
+    if (entry === 'react') {
+      return './packages/react/src/ReactSharedInternalsClient.js';
+    }
+    if (entry === 'react/src/ReactSharedSubset.js') {
+      return './packages/react/src/ReactSharedInternalsServer.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
