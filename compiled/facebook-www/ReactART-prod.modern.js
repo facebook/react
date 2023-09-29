@@ -277,11 +277,12 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-var nextTransitionLane = 128,
+var SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2,
+  nextTransitionLane = 128,
   nextRetryLane = 8388608;
 function getHighestPriorityLanes(lanes) {
   if (enableUnifiedSyncLane) {
-    var pendingSyncLanes = lanes & 42;
+    var pendingSyncLanes = lanes & SyncUpdateLanes;
     if (0 !== pendingSyncLanes) return pendingSyncLanes;
   }
   switch (lanes & -lanes) {
@@ -4571,7 +4572,8 @@ function updateDehydratedSuspenseComponent(
     nextProps = workInProgressRoot;
     if (null !== nextProps) {
       didSuspend = renderLanes & -renderLanes;
-      if (enableUnifiedSyncLane && 0 !== (didSuspend & 42)) didSuspend = 1;
+      if (enableUnifiedSyncLane && 0 !== (didSuspend & SyncUpdateLanes))
+        didSuspend = 1;
       else
         switch (didSuspend) {
           case 2:
@@ -8677,12 +8679,12 @@ function commitRootImpl(
       finishedWork < recoverableErrors.length;
       finishedWork++
     )
-      (lanes = recoverableErrors[finishedWork]),
-        (remainingLanes = {
-          digest: lanes.digest,
-          componentStack: lanes.stack
+      (remainingLanes = recoverableErrors[finishedWork]),
+        (transitions = {
+          digest: remainingLanes.digest,
+          componentStack: remainingLanes.stack
         }),
-        renderPriorityLevel(lanes.value, remainingLanes);
+        renderPriorityLevel(remainingLanes.value, transitions);
   if (hasUncaughtError)
     throw (
       ((hasUncaughtError = !1),
@@ -8694,7 +8696,7 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (remainingLanes & 3)
+  0 !== (lanes & 8388522) && 0 !== (remainingLanes & SyncUpdateLanes)
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -9770,7 +9772,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-a4e8bc7c",
+    version: "18.3.0-www-modern-df7dbab9",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1284 = {
@@ -9801,7 +9803,7 @@ var internals$jscomp$inline_1284 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-a4e8bc7c"
+  reconcilerVersion: "18.3.0-www-modern-df7dbab9"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1285 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

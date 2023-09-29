@@ -195,11 +195,12 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-var nextTransitionLane = 128,
+var SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2,
+  nextTransitionLane = 128,
   nextRetryLane = 8388608;
 function getHighestPriorityLanes(lanes) {
   if (enableUnifiedSyncLane) {
-    var pendingSyncLanes = lanes & 42;
+    var pendingSyncLanes = lanes & SyncUpdateLanes;
     if (0 !== pendingSyncLanes) return pendingSyncLanes;
   }
   switch (lanes & -lanes) {
@@ -5815,7 +5816,7 @@ function updateDehydratedSuspenseComponent(
     nextProps = workInProgressRoot;
     if (null !== nextProps) {
       digest = renderLanes & -renderLanes;
-      if (enableUnifiedSyncLane && 0 !== (digest & 42)) digest = 1;
+      if (enableUnifiedSyncLane && 0 !== (digest & SyncUpdateLanes)) digest = 1;
       else
         switch (digest) {
           case 2:
@@ -10758,12 +10759,12 @@ function commitRootImpl(
       finishedWork < recoverableErrors.length;
       finishedWork++
     )
-      (lanes = recoverableErrors[finishedWork]),
-        (remainingLanes = {
-          digest: lanes.digest,
-          componentStack: lanes.stack
+      (remainingLanes = recoverableErrors[finishedWork]),
+        (transitions = {
+          digest: remainingLanes.digest,
+          componentStack: remainingLanes.stack
         }),
-        renderPriorityLevel(lanes.value, remainingLanes);
+        renderPriorityLevel(remainingLanes.value, transitions);
   if (hasUncaughtError)
     throw (
       ((hasUncaughtError = !1),
@@ -10775,7 +10776,7 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (remainingLanes & 3)
+  0 !== (lanes & 8388522) && 0 !== (remainingLanes & SyncUpdateLanes)
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -16280,7 +16281,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1767 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-9df16c08",
+  version: "18.3.0-www-modern-a77dd006",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2121 = {
@@ -16311,7 +16312,7 @@ var internals$jscomp$inline_2121 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-9df16c08"
+  reconcilerVersion: "18.3.0-www-modern-a77dd006"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2122 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16727,4 +16728,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-9df16c08";
+exports.version = "18.3.0-www-modern-a77dd006";

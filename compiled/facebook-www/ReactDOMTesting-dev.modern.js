@@ -1099,9 +1099,9 @@ var DefaultHydrationLane =
 var DefaultLane =
   /*                     */
   32;
-var SyncUpdateLanes =
-  /*                */
-  42;
+var SyncUpdateLanes = enableUnifiedSyncLane
+  ? SyncLane | InputContinuousLane | DefaultLane
+  : SyncLane;
 var TransitionHydrationLane =
   /*                */
   64;
@@ -1186,7 +1186,11 @@ var IdleLane =
   536870912;
 var OffscreenLane =
   /*                   */
-  1073741824; // This function is used for the experimental timeline (react-devtools-timeline)
+  1073741824; // Any lane that might schedule an update. This is used to detect infinite
+// update loops, so it doesn't include hydration lanes or retries.
+
+var UpdateLanes =
+  SyncLane | InputContinuousLane | DefaultLane | TransitionLanes; // This function is used for the experimental timeline (react-devtools-timeline)
 // It should be kept in sync with the Lanes values above.
 
 function getLabelForLane(lane) {
@@ -32167,9 +32171,16 @@ function commitRootImpl(
     flushPassiveEffects();
   } // Read this again, since a passive effect might have updated it
 
-  remainingLanes = root.pendingLanes;
+  remainingLanes = root.pendingLanes; // Check if this render scheduled a cascading synchronous update. This is a
+  // heurstic to detect infinite update loops. We are intentionally excluding
+  // hydration lanes in this check, because render triggered by selective
+  // hydration is conceptually not an update.
 
-  if (includesSyncLane(remainingLanes)) {
+  if (
+    // Was the finished render the result of an update (not hydration)?
+    includesSomeLane(lanes, UpdateLanes) && // Did it schedule a sync update?
+    includesSomeLane(remainingLanes, SyncUpdateLanes)
+  ) {
     {
       markNestedUpdateScheduled();
     } // Count the number of times the root synchronously re-renders without
@@ -34423,7 +34434,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-1f62d21d";
+var ReactVersion = "18.3.0-www-modern-34d9e517";
 
 function createPortal$1(
   children,

@@ -1175,6 +1175,7 @@ var DefaultHydrationLane =
 var DefaultLane =
   /*                     */
   32;
+var SyncUpdateLanes = SyncLane;
 var TransitionHydrationLane =
   /*                */
   64;
@@ -1259,7 +1260,11 @@ var IdleLane =
   536870912;
 var OffscreenLane =
   /*                   */
-  1073741824; // This function is used for the experimental timeline (react-devtools-timeline)
+  1073741824; // Any lane that might schedule an update. This is used to detect infinite
+// update loops, so it doesn't include hydration lanes or retries.
+
+var UpdateLanes =
+  SyncLane | InputContinuousLane | DefaultLane | TransitionLanes; // This function is used for the experimental timeline (react-devtools-timeline)
 var NoTimestamp = -1;
 var nextTransitionLane = TransitionLane1;
 var nextRetryLane = RetryLane1;
@@ -22408,9 +22413,16 @@ function commitRootImpl(
     flushPassiveEffects();
   } // Read this again, since a passive effect might have updated it
 
-  remainingLanes = root.pendingLanes;
+  remainingLanes = root.pendingLanes; // Check if this render scheduled a cascading synchronous update. This is a
+  // heurstic to detect infinite update loops. We are intentionally excluding
+  // hydration lanes in this check, because render triggered by selective
+  // hydration is conceptually not an update.
 
-  if (includesSyncLane(remainingLanes)) {
+  if (
+    // Was the finished render the result of an update (not hydration)?
+    includesSomeLane(lanes, UpdateLanes) && // Did it schedule a sync update?
+    includesSomeLane(remainingLanes, SyncUpdateLanes)
+  ) {
     {
       markNestedUpdateScheduled();
     } // Count the number of times the root synchronously re-renders without
@@ -24347,7 +24359,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-c48f4a25";
+var ReactVersion = "18.3.0-www-modern-318a7f7c";
 
 // Might add PROFILE later.
 
