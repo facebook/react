@@ -33,6 +33,7 @@ describe('ReactFlightDOMEdge', () => {
     jest.resetModules();
 
     // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.shared-subset'));
     jest.mock('react-server-dom-turbopack/server', () =>
       require('react-server-dom-turbopack/server.edge'),
     );
@@ -41,9 +42,14 @@ describe('ReactFlightDOMEdge', () => {
     clientExports = TurbopackMock.clientExports;
     turbopackMap = TurbopackMock.turbopackMap;
     turbopackModules = TurbopackMock.turbopackModules;
+
+    ReactServerDOMServer = require('react-server-dom-turbopack/server.edge');
+
+    jest.resetModules();
+    __unmockReact();
+
     React = require('react');
     ReactDOMServer = require('react-dom/server.edge');
-    ReactServerDOMServer = require('react-server-dom-turbopack/server.edge');
     ReactServerDOMClient = require('react-server-dom-turbopack/client.edge');
     use = React.use;
   });

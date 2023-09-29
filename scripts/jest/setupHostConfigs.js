@@ -43,13 +43,20 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   return resolvedEntry;
 }
 
-jest.mock('react', () => {
-  const resolvedEntryPoint = resolveEntryFork(
-    require.resolve('react'),
-    global.__WWW__
-  );
-  return jest.requireActual(resolvedEntryPoint);
-});
+function mockReact() {
+  jest.mock('react', () => {
+    const resolvedEntryPoint = resolveEntryFork(
+      require.resolve('react'),
+      global.__WWW__
+    );
+    return jest.requireActual(resolvedEntryPoint);
+  });
+}
+
+// When we want to unmock React we really need to mock it again.
+global.__unmockReact = mockReact;
+
+mockReact();
 
 jest.mock('react/react.shared-subset', () => {
   const resolvedEntryPoint = resolveEntryFork(
@@ -162,7 +169,7 @@ inlinedHostConfigs.forEach(rendererInfo => {
 // Make it possible to import this module inside
 // the React package itself.
 jest.mock('shared/ReactSharedInternals', () =>
-  jest.requireActual('react/src/ReactSharedInternals')
+  jest.requireActual('react/src/ReactSharedInternalsClient')
 );
 
 // Make it possible to import this module inside

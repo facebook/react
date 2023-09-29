@@ -517,6 +517,7 @@ module.exports = {
     __TEST__: 'readonly',
     __UMD__: 'readonly',
     __VARIANT__: 'readonly',
+    __unmockReact: 'readonly',
     gate: 'readonly',
     trustedTypes: 'readonly',
     IS_REACT_ACT_ENVIRONMENT: 'readonly',

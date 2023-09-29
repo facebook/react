@@ -19,9 +19,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import {enableServerContext} from 'shared/ReactFeatureFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-
-const ContextRegistry = ReactSharedInternals.ContextRegistry;
+import {ContextRegistry} from './ReactServerContextRegistry';
 
 export function createServerContext<T: ServerContextJSONValue>(
   globalName: string,

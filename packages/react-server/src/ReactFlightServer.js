@@ -104,7 +104,7 @@ import {
 } from 'shared/ReactSerializationErrors';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactServerSharedInternals from './ReactServerSharedInternals';
 import isArray from 'shared/isArray';
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
@@ -197,8 +197,9 @@ export type Request = {
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
 };
 
-const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
+const ReactCurrentDispatcher =
+  ReactServerSharedInternals.ReactCurrentDispatcher;
+const ReactCurrentCache = ReactServerSharedInternals.ReactCurrentCache;
 
 function defaultErrorHandler(error: mixed) {
   console['error'](error);

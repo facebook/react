@@ -42,7 +42,7 @@ describe('ReactFlightDOMNode', () => {
     turbopackModuleLoading = TurbopackMock.moduleLoading;
 
     jest.resetModules();
-    jest.unmock('react');
+    __unmockReact();
     jest.unmock('react-server-dom-turbopack/server');
     jest.mock('react-server-dom-turbopack/client', () =>
       require('react-server-dom-turbopack/client.node'),

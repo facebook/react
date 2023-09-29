@@ -67,7 +67,7 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import {createServerContext} from './ReactServerContext';
-import ReactSharedInternals from './ReactSharedInternals';
+import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 

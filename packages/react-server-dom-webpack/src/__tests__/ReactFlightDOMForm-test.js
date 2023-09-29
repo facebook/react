@@ -38,16 +38,19 @@ describe('ReactFlightDOMForm', () => {
   beforeEach(() => {
     jest.resetModules();
     // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.shared-subset'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.edge'),
     );
+    ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     serverExports = WebpackMock.serverExports;
     webpackMap = WebpackMock.webpackMap;
     webpackServerMap = WebpackMock.webpackServerMap;
+    __unmockReact();
+    jest.resetModules();
     React = require('react');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
     ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
     ReactDOMServer = require('react-dom/server.edge');
     ReactDOMClient = require('react-dom/client');

@@ -48,9 +48,7 @@ describe('ReactFetch', () => {
     fetchCount = 0;
     global.fetch = fetchMock;
 
-    if (gate(flags => !flags.www)) {
-      jest.mock('react', () => require('react/react.shared-subset'));
-    }
+    jest.mock('react', () => require('react/react.shared-subset'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.edge'),
     );
@@ -60,7 +58,7 @@ describe('ReactFetch', () => {
     ReactServerDOMServer = require('react-server-dom-webpack/server');
 
     jest.resetModules();
-    jest.unmock('react');
+    __unmockReact();
     jest.unmock('react-server-dom-webpack/server');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.use;
