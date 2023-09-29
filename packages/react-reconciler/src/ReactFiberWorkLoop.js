@@ -154,6 +154,8 @@ import {
   includesOnlyNonUrgentLanes,
   includesSomeLane,
   OffscreenLane,
+  SyncUpdateLanes,
+  UpdateLanes,
 } from './ReactFiberLane';
 import {
   DiscreteEventPriority,
@@ -2932,7 +2934,17 @@ function commitRootImpl(
 
   // Read this again, since a passive effect might have updated it
   remainingLanes = root.pendingLanes;
-  if (includesSyncLane(remainingLanes)) {
+
+  // Check if this render scheduled a cascading synchronous update. This is a
+  // heurstic to detect infinite update loops. We are intentionally excluding
+  // hydration lanes in this check, because render triggered by selective
+  // hydration is conceptually not an update.
+  if (
+    // Was the finished render the result of an update (not hydration)?
+    includesSomeLane(lanes, UpdateLanes) &&
+    // Did it schedule a sync update?
+    includesSomeLane(remainingLanes, SyncUpdateLanes)
+  ) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
     }
