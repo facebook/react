@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-93baf717";
+var ReactVersion = "18.3.0-www-classic-bdb0331d";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -10566,11 +10566,7 @@ function replaySuspenseBoundary(
 
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
-    if (typeof childSlots === "number") {
-      resumeNode(request, task, childSlots, content, -1);
-    } else {
-      renderNode(request, task, content, -1);
-    }
+    renderNode(request, task, content, -1);
 
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
       throw new Error(
@@ -10625,57 +10621,28 @@ function replaySuspenseBoundary(
     task.keyPath = prevKeyPath;
   }
 
-  var fallbackKeyPath = [keyPath[0], "Suspense Fallback", keyPath[2]];
-  var suspendedFallbackTask; // We create suspended task for the fallback because we don't want to actually work
+  var fallbackKeyPath = [keyPath[0], "Suspense Fallback", keyPath[2]]; // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
 
-  if (typeof fallbackSlots === "number") {
-    // Resuming directly in the fallback.
-    var resumedSegment = createPendingSegment(
-      request,
-      0,
-      null,
-      task.formatContext,
-      false,
-      false
-    );
-    resumedSegment.id = fallbackSlots;
-    resumedSegment.parentFlushed = true;
-    suspendedFallbackTask = createRenderTask(
-      request,
-      null,
-      fallback,
-      -1,
-      parentBoundary,
-      resumedSegment,
-      fallbackAbortSet,
-      fallbackKeyPath,
-      task.formatContext,
-      task.legacyContext,
-      task.context,
-      task.treeContext
-    );
-  } else {
-    var fallbackReplay = {
-      nodes: fallbackNodes,
-      slots: fallbackSlots,
-      pendingTasks: 0
-    };
-    suspendedFallbackTask = createReplayTask(
-      request,
-      null,
-      fallbackReplay,
-      fallback,
-      -1,
-      parentBoundary,
-      fallbackAbortSet,
-      fallbackKeyPath,
-      task.formatContext,
-      task.legacyContext,
-      task.context,
-      task.treeContext
-    );
-  }
+  var fallbackReplay = {
+    nodes: fallbackNodes,
+    slots: fallbackSlots,
+    pendingTasks: 0
+  };
+  var suspendedFallbackTask = createReplayTask(
+    request,
+    null,
+    fallbackReplay,
+    fallback,
+    -1,
+    parentBoundary,
+    fallbackAbortSet,
+    fallbackKeyPath,
+    task.formatContext,
+    task.legacyContext,
+    task.context,
+    task.treeContext
+  );
 
   {
     suspendedFallbackTask.componentStack = task.componentStack;
@@ -11433,53 +11400,6 @@ function resumeNode(request, task, segmentId, node, childIndex) {
   }
 }
 
-function resumeElement(
-  request,
-  task,
-  keyPath,
-  segmentId,
-  prevThenableState,
-  type,
-  props,
-  ref
-) {
-  var prevReplay = task.replay;
-  var blockedBoundary = task.blockedBoundary;
-  var resumedSegment = createPendingSegment(
-    request,
-    0,
-    null,
-    task.formatContext,
-    false,
-    false
-  );
-  resumedSegment.id = segmentId;
-  resumedSegment.parentFlushed = true;
-
-  try {
-    // Convert the current ReplayTask to a RenderTask.
-    var renderTask = task;
-    renderTask.replay = null;
-    renderTask.blockedSegment = resumedSegment;
-    renderElement(request, task, keyPath, prevThenableState, type, props, ref);
-    resumedSegment.status = COMPLETED;
-
-    if (blockedBoundary === null) {
-      request.completedRootSegment = resumedSegment;
-    } else {
-      queueCompletedSegment(blockedBoundary, resumedSegment);
-
-      if (blockedBoundary.parentFlushed) {
-        request.partialBoundaries.push(blockedBoundary);
-      }
-    }
-  } finally {
-    // Restore to a ReplayTask.
-    task.replay = prevReplay;
-    task.blockedSegment = null;
-  }
-}
-
 function replayElement(
   request,
   task,
@@ -11524,29 +11444,15 @@ function replayElement(
       };
 
       try {
-        if (typeof childSlots === "number") {
-          // Matched a resumable element.
-          resumeElement(
-            request,
-            task,
-            keyPath,
-            childSlots,
-            prevThenableState,
-            type,
-            props,
-            ref
-          );
-        } else {
-          renderElement(
-            request,
-            task,
-            keyPath,
-            prevThenableState,
-            type,
-            props,
-            ref
-          );
-        }
+        renderElement(
+          request,
+          task,
+          keyPath,
+          prevThenableState,
+          type,
+          props,
+          ref
+        );
 
         if (
           task.replay.pendingTasks === 1 &&
@@ -11682,8 +11588,14 @@ function renderNodeDestructiveImpl(
   node,
   childIndex
 ) {
-  // Stash the node we're working on. We'll pick up from this task in case
+  if (task.replay !== null && typeof task.replay.slots === "number") {
+    // TODO: Figure out a cheaper place than this hot path to do this check.
+    var resumeSegmentID = task.replay.slots;
+    resumeNode(request, task, resumeSegmentID, node, childIndex);
+    return;
+  } // Stash the node we're working on. We'll pick up from this task in case
   // something suspends.
+
   task.node = node;
   task.childIndex = childIndex; // Handle object types
 
