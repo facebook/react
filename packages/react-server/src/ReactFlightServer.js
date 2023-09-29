@@ -198,6 +198,7 @@ export type Request = {
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
   identifierCount: number,
+  taintCleanupQueue: Array<string | bigint>,
   onError: (error: mixed) => ?string,
   onPostpone: (reason: string) => void,
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
@@ -207,6 +208,7 @@ const {
   TaintRegistryObjects,
   TaintRegistryValues,
   TaintRegistryByteLengths,
+  TaintRegistryPendingRequests,
   ReactCurrentDispatcher,
   ReactCurrentCache,
 } = ReactServerSharedInternals;
@@ -214,6 +216,23 @@ const {
 function throwTaintViolation(message: string) {
   // eslint-disable-next-line react-internal/prod-error-codes
   throw new Error(message);
+}
+
+function cleanupTaintQueue(request: Request): void {
+  const cleanupQueue = request.taintCleanupQueue;
+  TaintRegistryPendingRequests.delete(cleanupQueue);
+  for (let i = 0; i < cleanupQueue.length; i++) {
+    const entryValue = cleanupQueue[i];
+    const entry = TaintRegistryValues.get(entryValue);
+    if (entry !== undefined) {
+      if (entry.count === 1) {
+        TaintRegistryValues.delete(entryValue);
+      } else {
+        entry.count--;
+      }
+    }
+  }
+  cleanupQueue.length = 0;
 }
 
 function defaultErrorHandler(error: mixed) {
@@ -250,6 +269,10 @@ export function createRequest(
 
   const abortSet: Set<Task> = new Set();
   const pingedTasks: Array<Task> = [];
+  const cleanupQueue: Array<string | bigint> = [];
+  if (enableTaint) {
+    TaintRegistryPendingRequests.add(cleanupQueue);
+  }
   const hints = createHints();
   const request: Request = {
     status: OPEN,
@@ -273,6 +296,7 @@ export function createRequest(
     writtenProviders: new Map(),
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
+    taintCleanupQueue: cleanupQueue,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onPostpone: onPostpone === undefined ? defaultPostponeHandler : onPostpone,
     // $FlowFixMe[missing-this-annot]
@@ -1249,6 +1273,9 @@ function logRecoverableError(request: Request, error: mixed): string {
 }
 
 function fatalError(request: Request, error: mixed): void {
+  if (enableTaint) {
+    cleanupTaintQueue(request);
+  }
   // This is called outside error handling code such as if an error happens in React internals.
   if (request.destination !== null) {
     request.status = CLOSED;
@@ -1573,6 +1600,9 @@ function flushCompletedChunks(
   flushBuffered(destination);
   if (request.pendingChunks === 0) {
     // We're done.
+    if (enableTaint) {
+      cleanupTaintQueue(request);
+    }
     close(destination);
   }
 }

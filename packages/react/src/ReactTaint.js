@@ -12,8 +12,12 @@ import {enableTaint, enableBinaryFlight} from 'shared/ReactFeatureFlags';
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import ReactServerSharedInternals from './ReactServerSharedInternals';
-const {TaintRegistryObjects, TaintRegistryValues, TaintRegistryByteLengths} =
-  ReactServerSharedInternals;
+const {
+  TaintRegistryObjects,
+  TaintRegistryValues,
+  TaintRegistryByteLengths,
+  TaintRegistryPendingRequests,
+} = ReactServerSharedInternals;
 
 interface Reference {}
 
@@ -29,6 +33,10 @@ const defaultMessage =
 function cleanup(entryValue: string | bigint): void {
   const entry = TaintRegistryValues.get(entryValue);
   if (entry !== undefined) {
+    TaintRegistryPendingRequests.forEach(function (requestQueue) {
+      requestQueue.push(entryValue);
+      entry.count++;
+    });
     if (entry.count === 1) {
       TaintRegistryValues.delete(entryValue);
     } else {

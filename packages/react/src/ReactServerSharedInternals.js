@@ -11,6 +11,7 @@ import {
   TaintRegistryObjects,
   TaintRegistryValues,
   TaintRegistryByteLengths,
+  TaintRegistryPendingRequests,
 } from './ReactTaintRegistry';
 
 import {enableTaint} from 'shared/ReactFeatureFlags';
@@ -25,6 +26,8 @@ if (enableTaint) {
   ReactServerSharedInternals.TaintRegistryValues = TaintRegistryValues;
   ReactServerSharedInternals.TaintRegistryByteLengths =
     TaintRegistryByteLengths;
+  ReactServerSharedInternals.TaintRegistryPendingRequests =
+    TaintRegistryPendingRequests;
 }
 
 export default ReactServerSharedInternals;
