@@ -175,8 +175,13 @@ export function updateInput(
     }
   }
 
-  if (checked != null && node.checked !== !!checked) {
-    node.checked = checked;
+  if (checked != null) {
+    // Important to set this even if it's not a change in order to update input
+    // value tracking with radio buttons
+    // TODO: Should really update input value tracking for the whole radio
+    // button group in an effect or something (similar to #27024)
+    node.checked =
+      checked && typeof checked !== 'function' && typeof checked !== 'symbol';
   }
 
   if (
