@@ -1094,18 +1094,12 @@ describe('ReactDOMComponent', () => {
 
     it('should not incur unnecessary DOM mutations for boolean properties', () => {
       const container = document.createElement('div');
-      function onChange() {
-        // noop
-      }
-      ReactDOM.render(
-        <input type="checkbox" onChange={onChange} checked={true} />,
-        container,
-      );
+      ReactDOM.render(<audio muted={true} />, container);
 
       const node = container.firstChild;
       let nodeValue = true;
       const nodeValueSetter = jest.fn();
-      Object.defineProperty(node, 'checked', {
+      Object.defineProperty(node, 'muted', {
         get: function () {
           return nodeValue;
         },
@@ -1114,48 +1108,11 @@ describe('ReactDOMComponent', () => {
         }),
       });
 
-      ReactDOM.render(
-        <input
-          type="checkbox"
-          onChange={onChange}
-          checked={true}
-          data-unrelated={true}
-        />,
-        container,
-      );
+      ReactDOM.render(<audio muted={true} data-unrelated="yes" />, container);
       expect(nodeValueSetter).toHaveBeenCalledTimes(0);
 
-      expect(() => {
-        ReactDOM.render(
-          <input type="checkbox" onChange={onChange} />,
-          container,
-        );
-      }).toErrorDev(
-        'A component is changing a controlled input to be uncontrolled. This is likely caused by ' +
-          'the value changing from a defined to undefined, which should not happen. Decide between ' +
-          'using a controlled or uncontrolled input element for the lifetime of the component.',
-      );
-      // This leaves the current checked value in place, just like text inputs.
-      expect(nodeValueSetter).toHaveBeenCalledTimes(0);
-
-      expect(() => {
-        ReactDOM.render(
-          <input type="checkbox" onChange={onChange} checked={false} />,
-          container,
-        );
-      }).toErrorDev(
-        ' A component is changing an uncontrolled input to be controlled. This is likely caused by ' +
-          'the value changing from undefined to a defined value, which should not happen. Decide between ' +
-          'using a controlled or uncontrolled input element for the lifetime of the component.',
-      );
-
+      ReactDOM.render(<audio muted={false} data-unrelated="ok" />, container);
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
-
-      ReactDOM.render(
-        <input type="checkbox" onChange={onChange} checked={true} />,
-        container,
-      );
-      expect(nodeValueSetter).toHaveBeenCalledTimes(2);
     });
 
     it('should ignore attribute list for elements with the "is" attribute', () => {
