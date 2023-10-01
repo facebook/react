@@ -24,6 +24,8 @@ export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 export const enableFormActions = true; // Doesn't affect Test Renderer
+export const enableBinaryFlight = true;
+export const enablePostpone = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
@@ -58,7 +60,6 @@ export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableServerContext = true;
-export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;
 
@@ -66,9 +67,9 @@ export const enableFloat = true;
 export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 
-export const diffInCommitPhase = true;
 export const enableAsyncActions = false;
 
 export const alwaysThrottleRetries = true;

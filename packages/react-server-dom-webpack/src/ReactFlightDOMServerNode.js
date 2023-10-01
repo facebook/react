@@ -22,6 +22,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -36,14 +37,32 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
-import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+import {
+  decodeAction,
+  decodeFormState,
+} from 'react-server/src/ReactFlightActionServer';
+
+export {
+  registerServerReference,
+  registerClientReference,
+  createClientModuleProxy,
+} from './ReactFlightWebpackReferences';
 
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
 }
 
+function createCancelHandler(request: Request, reason: string) {
+  return () => {
+    stopFlowing(request);
+    // eslint-disable-next-line react-internal/prod-error-codes
+    abort(request, new Error(reason));
+  };
+}
+
 type Options = {
   onError?: (error: mixed) => void,
+  onPostpone?: (reason: string) => void,
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 };
@@ -64,6 +83,7 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -77,6 +97,17 @@ function renderToPipeableStream(
       hasStartedFlowing = true;
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
+      destination.on(
+        'error',
+        createCancelHandler(
+          request,
+          'The destination stream errored while writing data.',
+        ),
+      );
+      destination.on(
+        'close',
+        createCancelHandler(request, 'The destination stream closed early.'),
+      );
       return destination;
     },
     abort(reason: mixed) {
@@ -159,4 +190,5 @@ export {
   decodeReplyFromBusboy,
   decodeReply,
   decodeAction,
+  decodeFormState,
 };

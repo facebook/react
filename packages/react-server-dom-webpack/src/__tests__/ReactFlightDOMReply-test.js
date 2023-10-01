@@ -23,10 +23,16 @@ let ReactServerDOMClient;
 describe('ReactFlightDOMReply', () => {
   beforeEach(() => {
     jest.resetModules();
+    // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.browser'),
+    );
     const WebpackMock = require('./utils/WebpackMock');
     // serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
+    jest.resetModules();
     ReactServerDOMClient = require('react-server-dom-webpack/client');
   });
 
@@ -196,5 +202,33 @@ describe('ReactFlightDOMReply', () => {
 
     expect(d).toEqual(d2);
     expect(d % 1000).toEqual(123); // double-check the milliseconds made it through
+  });
+
+  it('can pass a Map as a reply', async () => {
+    const objKey = {obj: 'key'};
+    const m = new Map([
+      ['hi', {greet: 'world'}],
+      [objKey, 123],
+    ]);
+    const body = await ReactServerDOMClient.encodeReply(m);
+    const m2 = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+
+    expect(m2 instanceof Map).toBe(true);
+    expect(m2.size).toBe(2);
+    expect(m2.get('hi').greet).toBe('world');
+    expect(m2).toEqual(m);
+  });
+
+  it('can pass a Set as a reply', async () => {
+    const objKey = {obj: 'key'};
+    const s = new Set(['hi', objKey]);
+
+    const body = await ReactServerDOMClient.encodeReply(s);
+    const s2 = await ReactServerDOMServer.decodeReply(body, webpackServerMap);
+
+    expect(s2 instanceof Set).toBe(true);
+    expect(s2.size).toBe(2);
+    expect(s2.has('hi')).toBe(true);
+    expect(s2).toEqual(s);
   });
 });

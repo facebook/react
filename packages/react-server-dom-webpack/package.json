@@ -33,13 +33,13 @@
     "./plugin": "./plugin.js",
     "./client": {
       "workerd": "./client.edge.js",
-      "edge-light": "./client.edge.js",
       "deno": "./client.edge.js",
       "worker": "./client.edge.js",
       "node": {
         "webpack": "./client.node.js",
         "default": "./client.node.unbundled.js"
       },
+      "edge-light": "./client.edge.js",
       "browser": "./client.browser.js",
       "default": "./client.browser.js"
     },
@@ -50,12 +50,12 @@
     "./server": {
       "react-server": {
         "workerd": "./server.edge.js",
-        "edge-light": "./server.edge.js",
         "deno": "./server.browser.js",
         "node": {
           "webpack": "./server.node.js",
           "default": "./server.node.unbundled.js"
         },
+        "edge-light": "./server.edge.js",
         "browser": "./server.browser.js"
       },
       "default": "./server.js"

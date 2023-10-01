@@ -2,9 +2,6 @@
 
 module.exports = {
   globalSetup: require.resolve('./setupGlobal.js'),
-  haste: {
-    hasteImplModulePath: require.resolve('./noHaste.js'),
-  },
   modulePathIgnorePatterns: [
     '<rootDir>/scripts/rollup/shims/',
     '<rootDir>/scripts/bench/',

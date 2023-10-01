@@ -7,9 +7,6 @@ const path = require('path');
 // Do this as the first thing so that any code reading it knows the right env.
 process.env.BABEL_ENV = process.env.NODE_ENV;
 
-const register = require('react-server-dom-webpack/node-register');
-register();
-
 const babelRegister = require('@babel/register');
 babelRegister({
   babelrc: false,
@@ -25,8 +22,7 @@ babelRegister({
       return false;
     },
   ],
-  presets: ['react-app'],
-  plugins: ['@babel/transform-modules-commonjs'],
+  presets: ['@babel/preset-react'],
 });
 
 // Ensure environment variables are read.
@@ -37,6 +33,7 @@ const compress = require('compression');
 const chalk = require('chalk');
 const express = require('express');
 const http = require('http');
+const React = require('react');
 
 const {renderToPipeableStream} = require('react-dom/server');
 const {createFromNodeStream} = require('react-server-dom-webpack/client');
@@ -66,6 +63,11 @@ if (process.env.NODE_ENV === 'development') {
     webpackMiddleware(compiler, {
       publicPath: paths.publicUrlOrPath.slice(0, -1),
       serverSideRender: true,
+      headers: () => {
+        return {
+          'Cache-Control': 'no-store, must-revalidate',
+        };
+      },
     })
   );
   app.use(webpackHotMiddleware(compiler));
@@ -125,12 +127,13 @@ app.all('/', async function (req, res, next) {
         buildPath = path.join(__dirname, '../build/');
       }
       // Read the module map from the virtual file system.
-      const moduleMap = JSON.parse(
+      const ssrManifest = JSON.parse(
         await virtualFs.readFile(
           path.join(buildPath, 'react-ssr-manifest.json'),
           'utf8'
         )
       );
+
       // Read the entrypoints containing the initial JS to bootstrap everything.
       // For other pages, the chunks in the RSC payload are enough.
       const mainJSChunks = JSON.parse(
@@ -142,11 +145,35 @@ app.all('/', async function (req, res, next) {
       // For HTML, we're a "client" emulator that runs the client code,
       // so we start by consuming the RSC payload. This needs a module
       // map that reverse engineers the client-side path to the SSR path.
-      const root = await createFromNodeStream(rscResponse, moduleMap);
+
+      // This is a bad hack to set the form state after SSR has started. It works
+      // because we block the root component until we have the form state and
+      // any form that reads it necessarily will come later. It also only works
+      // because the formstate type is an object which may change in the future
+      const lazyFormState = [];
+
+      let cachedResult = null;
+      async function getRootAndFormState() {
+        const {root, formState} = await createFromNodeStream(
+          rscResponse,
+          ssrManifest
+        );
+        // We shouldn't be assuming formState is an object type but at the moment
+        // we have no way of setting the form state from within the render
+        Object.assign(lazyFormState, formState);
+        return root;
+      }
+      let Root = () => {
+        if (!cachedResult) {
+          cachedResult = getRootAndFormState();
+        }
+        return React.use(cachedResult);
+      };
       // Render it into HTML by resolving the client components
       res.set('Content-type', 'text/html');
-      const {pipe} = renderToPipeableStream(root, {
+      const {pipe} = renderToPipeableStream(React.createElement(Root), {
         bootstrapScripts: mainJSChunks,
+        experimental_formState: lazyFormState,
       });
       pipe(res);
     } catch (e) {

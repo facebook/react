@@ -82,10 +82,8 @@ export type TransitionStatus = mixed;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
@@ -222,7 +220,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function cloneInstance(
     instance: Instance,
-    updatePayload: null | Object,
     type: string,
     oldProps: Props,
     newProps: Props,
@@ -451,21 +448,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       props: Props,
     ): boolean {
       return false;
-    },
-
-    prepareUpdate(
-      instance: Instance,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-    ): null | {...} {
-      if (oldProps === null) {
-        throw new Error('Should have old props');
-      }
-      if (newProps === null) {
-        throw new Error('Should have new props');
-      }
-      return UPDATE_SIGNAL;
     },
 
     shouldSetTextContent,
@@ -764,7 +746,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         ): Instance {
           const clone = cloneInstance(
             instance,
-            null,
             type,
             props,
             props,

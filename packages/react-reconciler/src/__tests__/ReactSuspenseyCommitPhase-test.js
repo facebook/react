@@ -21,7 +21,7 @@ describe('ReactSuspenseyCommitPhase', () => {
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
     if (gate(flags => flags.enableSuspenseList)) {
-      SuspenseList = React.SuspenseList;
+      SuspenseList = React.unstable_SuspenseList;
     }
     Offscreen = React.unstable_Offscreen;
     useMemo = React.useMemo;

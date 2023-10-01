@@ -51,7 +51,7 @@ type Destination = {
   stack: Array<Segment | Instance | SuspenseInstance>,
 };
 
-type Resources = null;
+type RenderState = null;
 type BoundaryResources = null;
 
 const POP = Buffer.from('/', 'utf8');
@@ -90,13 +90,6 @@ const ReactNoopServer = ReactFizzServer({
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
 
-  UNINITIALIZED_SUSPENSE_BOUNDARY_ID: null,
-
-  assignSuspenseBoundaryID(): SuspenseInstance {
-    // The ID is a pointer to the boundary itself.
-    return {state: 'pending', children: []};
-  },
-
   getChildFormatContext(): null {
     return null;
   },
@@ -104,7 +97,7 @@ const ReactNoopServer = ReactFizzServer({
   pushTextInstance(
     target: Array<Uint8Array>,
     text: string,
-    responseState: ResponseState,
+    renderState: RenderState,
     textEmbedded: boolean,
   ): boolean {
     const textInstance: TextInstance = {
@@ -140,21 +133,21 @@ const ReactNoopServer = ReactFizzServer({
   // This is a noop in ReactNoop
   pushSegmentFinale(
     target: Array<Uint8Array>,
-    responseState: ResponseState,
+    renderState: RenderState,
     lastPushedText: boolean,
     textEmbedded: boolean,
   ): void {},
 
   writeCompletedRoot(
     destination: Destination,
-    responseState: ResponseState,
+    renderState: RenderState,
   ): boolean {
     return true;
   },
 
   writePlaceholder(
     destination: Destination,
-    responseState: ResponseState,
+    renderState: RenderState,
     id: number,
   ): boolean {
     const parent = destination.stack[destination.stack.length - 1];
@@ -166,7 +159,7 @@ const ReactNoopServer = ReactFizzServer({
 
   writeStartCompletedSuspenseBoundary(
     destination: Destination,
-    responseState: ResponseState,
+    renderState: RenderState,
     suspenseInstance: SuspenseInstance,
   ): boolean {
     suspenseInstance.state = 'complete';
@@ -176,7 +169,7 @@ const ReactNoopServer = ReactFizzServer({
   },
   writeStartPendingSuspenseBoundary(
     destination: Destination,
-    responseState: ResponseState,
+    renderState: RenderState,
     suspenseInstance: SuspenseInstance,
   ): boolean {
     suspenseInstance.state = 'pending';
@@ -186,7 +179,7 @@ const ReactNoopServer = ReactFizzServer({
   },
   writeStartClientRenderedSuspenseBoundary(
     destination: Destination,
-    responseState: ResponseState,
+    renderState: RenderState,
     suspenseInstance: SuspenseInstance,
   ): boolean {
     suspenseInstance.state = 'client-render';
@@ -206,7 +199,7 @@ const ReactNoopServer = ReactFizzServer({
 
   writeStartSegment(
     destination: Destination,
-    responseState: ResponseState,
+    renderState: RenderState,
     formatContext: null,
     id: number,
   ): boolean {
@@ -225,7 +218,7 @@ const ReactNoopServer = ReactFizzServer({
 
   writeCompletedSegmentInstruction(
     destination: Destination,
-    responseState: ResponseState,
+    renderState: RenderState,
     contentSegmentID: number,
   ): boolean {
     const segment = destination.segments.get(contentSegmentID);
@@ -245,7 +238,7 @@ const ReactNoopServer = ReactFizzServer({
 
   writeCompletedBoundaryInstruction(
     destination: Destination,
-    responseState: ResponseState,
+    renderState: RenderState,
     boundary: SuspenseInstance,
     contentSegmentID: number,
   ): boolean {
@@ -259,7 +252,7 @@ const ReactNoopServer = ReactFizzServer({
 
   writeClientRenderBoundaryInstruction(
     destination: Destination,
-    responseState: ResponseState,
+    renderState: RenderState,
     boundary: SuspenseInstance,
   ): boolean {
     boundary.status = 'client-render';
@@ -268,10 +261,6 @@ const ReactNoopServer = ReactFizzServer({
   writePreamble() {},
   writeHoistables() {},
   writePostamble() {},
-
-  createResources(): Resources {
-    return null;
-  },
 
   createBoundaryResources(): BoundaryResources {
     return null;

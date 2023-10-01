@@ -8,9 +8,6 @@
  */
 
 import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
   StartTransitionOptions,
@@ -273,23 +270,6 @@ function useMemo<T>(
   return value;
 }
 
-function useMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  // useMutableSource() composes multiple hooks internally.
-  // Advance the current hook index the same number of times
-  // so that subsequent hooks have the right memoized state.
-  nextHook(); // MutableSource
-  nextHook(); // State
-  nextHook(); // Effect
-  nextHook(); // Effect
-  const value = getSnapshot(source._source);
-  hookLog.push({primitive: 'MutableSource', stackError: new Error(), value});
-  return value;
-}
-
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
@@ -396,7 +376,6 @@ const Dispatcher: DispatcherType = {
   useRef,
   useState,
   useTransition,
-  useMutableSource,
   useSyncExternalStore,
   useDeferredValue,
   useId,

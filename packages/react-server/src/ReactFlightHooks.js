@@ -87,7 +87,6 @@ export const HooksDispatcher: Dispatcher = {
   useImperativeHandle: (unsupportedHook: any),
   useEffect: (unsupportedHook: any),
   useId,
-  useMutableSource: (unsupportedHook: any),
   useSyncExternalStore: (unsupportedHook: any),
   useCacheRefresh(): <T>(?() => T, ?T) => void {
     return unsupportedRefresh;

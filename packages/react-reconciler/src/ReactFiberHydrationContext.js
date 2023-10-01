@@ -38,7 +38,6 @@ import {
 import {
   enableHostSingletons,
   enableClientRenderFallbackOnTextMismatch,
-  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -76,6 +75,8 @@ import {
   canHydrateInstance,
   canHydrateTextInstance,
   canHydrateSuspenseInstance,
+  canHydrateFormStateMarker,
+  isFormStateMarkerMatching,
   isHydratableText,
 } from './ReactFiberConfig';
 import {OffscreenLane} from './ReactFiberLane';
@@ -595,10 +596,38 @@ function tryToClaimNextHydratableSuspenseInstance(fiber: Fiber): void {
   }
 }
 
+export function tryToClaimNextHydratableFormMarkerInstance(
+  fiber: Fiber,
+): boolean {
+  if (!isHydrating) {
+    return false;
+  }
+  if (nextHydratableInstance) {
+    const markerInstance = canHydrateFormStateMarker(
+      nextHydratableInstance,
+      rootOrSingletonContext,
+    );
+    if (markerInstance) {
+      // Found the marker instance.
+      nextHydratableInstance = getNextHydratableSibling(markerInstance);
+      // Return true if this marker instance should use the state passed
+      // to hydrateRoot.
+      // TODO: As an optimization, Fizz should only emit these markers if form
+      // state is passed at the root.
+      return isFormStateMarkerMatching(markerInstance);
+    }
+  }
+  // Should have found a marker instance. Throw an error to trigger client
+  // rendering. We don't bother to check if we're in a concurrent root because
+  // useFormState is a new API, so backwards compat is not an issue.
+  throwOnHydrationMismatch(fiber);
+  return false;
+}
+
 function prepareToHydrateHostInstance(
   fiber: Fiber,
   hostContext: HostContext,
-): boolean {
+): void {
   if (!supportsHydration) {
     throw new Error(
       'Expected prepareToHydrateHostInstance() to never be called. ' +
@@ -608,7 +637,7 @@ function prepareToHydrateHostInstance(
 
   const instance: Instance = fiber.stateNode;
   const shouldWarnIfMismatchDev = !didSuspendOrErrorDEV;
-  const updatePayload = hydrateInstance(
+  hydrateInstance(
     instance,
     fiber.type,
     fiber.memoizedProps,
@@ -616,17 +645,6 @@ function prepareToHydrateHostInstance(
     fiber,
     shouldWarnIfMismatchDev,
   );
-
-  // TODO: Type this specific to this type of component.
-  if (!diffInCommitPhase) {
-    fiber.updateQueue = (updatePayload: any);
-    // If the update payload indicates that there is a change or if there
-    // is a new ref we mark this as an update.
-    if (updatePayload !== null) {
-      return true;
-    }
-  }
-  return false;
 }
 
 function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {

@@ -33,22 +33,23 @@ describe('react-dom-server-rendering-stub', () => {
     expect(ReactDOM.hydrate).toBe(undefined);
     expect(ReactDOM.render).toBe(undefined);
     expect(ReactDOM.unmountComponentAtNode).toBe(undefined);
-    expect(ReactDOM.unstable_batchedUpdates).toBe(undefined);
     expect(ReactDOM.unstable_createEventHandle).toBe(undefined);
     expect(ReactDOM.unstable_renderSubtreeIntoContainer).toBe(undefined);
     expect(ReactDOM.unstable_runWithPriority).toBe(undefined);
   });
 
   // @gate enableFloat
-  it('provides preload and preinit exports', async () => {
+  it('provides preload, preloadModule, preinit, and preinitModule exports', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
+      ReactDOM.preloadModule('foomodule');
       ReactDOM.preinit('bar', {as: 'style'});
+      ReactDOM.preinitModule('barmodule');
       return <div>foo</div>;
     }
     const html = ReactDOMFizzServer.renderToString(<App />);
     expect(html).toEqual(
-      '<link rel="stylesheet" href="bar" data-precedence="default"/><link rel="preload" as="style" href="foo"/><div>foo</div>',
+      '<link rel="stylesheet" href="bar" data-precedence="default"/><script src="barmodule" type="module" async=""></script><link rel="preload" href="foo" as="style"/><link rel="modulepreload" href="foomodule"/><div>foo</div>',
     );
   });
 

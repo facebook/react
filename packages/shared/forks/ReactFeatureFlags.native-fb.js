@@ -36,6 +36,8 @@ export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 export const enableFormActions = true; // Doesn't affect Native
+export const enableBinaryFlight = true;
+export const enablePostpone = false;
 export const enableSchedulerDebugging = false;
 export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const disableJavaScriptURLs = false;
@@ -74,17 +76,15 @@ export const enableCustomElementPropertySupport = false;
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableServerContext = true;
 
-export const enableUseMutableSource = true;
-
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;
 export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 
-export const diffInCommitPhase = true;
 export const enableAsyncActions = false;
 
 // Flow magic to verify the exports of this file match the original version.

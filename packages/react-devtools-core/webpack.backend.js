@@ -39,7 +39,7 @@ process.env.BABEL_CONFIG_ADDITIONAL_TARGETS = JSON.stringify({
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
+  devtool: __DEV__ ? 'eval-cheap-module-source-map' : 'source-map',
   entry: {
     backend: './src/backend.js',
   },

@@ -38,10 +38,7 @@ import {
   enableCache,
   enableTransitionTracing,
   enableFloat,
-  diffInCommitPhase,
 } from 'shared/ReactFeatureFlags';
-
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 
 import {now} from './Scheduler';
 
@@ -99,7 +96,6 @@ import {
   resolveSingletonInstance,
   appendInitialChild,
   finalizeInitialChildren,
-  prepareUpdate,
   supportsMutation,
   supportsPersistence,
   supportsResources,
@@ -433,33 +429,7 @@ function updateHostComponent(
       return;
     }
 
-    if (diffInCommitPhase) {
-      markUpdate(workInProgress);
-    } else {
-      // If we get updated because one of our children updated, we don't
-      // have newProps so we'll have to reuse them.
-      // TODO: Split the update API as separate for the props vs. children.
-      // Even better would be if children weren't special cased at all tho.
-      const instance: Instance = workInProgress.stateNode;
-      // TODO: Experiencing an error where oldProps is null. Suggests a host
-      // component is hitting the resume path. Figure out why. Possibly
-      // related to `hidden`.
-      const currentHostContext = getHostContext();
-      const updatePayload = prepareUpdate(
-        instance,
-        type,
-        oldProps,
-        newProps,
-        currentHostContext,
-      );
-      // TODO: Type this specific to this type of component.
-      workInProgress.updateQueue = (updatePayload: any);
-      // If the update payload indicates that there is a change or if there
-      // is a new ref we mark this as an update. All the work is done in commitWork.
-      if (updatePayload) {
-        markUpdate(workInProgress);
-      }
-    }
+    markUpdate(workInProgress);
   } else if (supportsPersistence) {
     const currentInstance = current.stateNode;
     const oldProps = current.memoizedProps;
@@ -474,27 +444,8 @@ function updateHostComponent(
     }
     const recyclableInstance: Instance = workInProgress.stateNode;
     const currentHostContext = getHostContext();
-    let updatePayload = null;
-    if (!diffInCommitPhase) {
-      if (oldProps !== newProps) {
-        updatePayload = prepareUpdate(
-          recyclableInstance,
-          type,
-          oldProps,
-          newProps,
-          currentHostContext,
-        );
-      }
-      if (childrenUnchanged && updatePayload === null) {
-        // No changes, just reuse the existing instance.
-        // Note that this might release a previous clone.
-        workInProgress.stateNode = currentInstance;
-        return;
-      }
-    }
     const newInstance = cloneInstance(
       currentInstance,
-      updatePayload,
       type,
       oldProps,
       newProps,
@@ -502,7 +453,7 @@ function updateHostComponent(
       childrenUnchanged,
       recyclableInstance,
     );
-    if (diffInCommitPhase && newInstance === currentInstance) {
+    if (newInstance === currentInstance) {
       // No changes, just reuse the existing instance.
       // Note that this might release a previous clone.
       workInProgress.stateNode = currentInstance;
@@ -1038,7 +989,6 @@ function completeWork(
       popRootTransition(workInProgress, fiberRoot, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
-      resetMutableSourceWorkInProgressVersions();
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;
         fiberRoot.pendingContext = null;
@@ -1160,17 +1110,23 @@ function completeWork(
             return null;
           } else {
             // This is a Hoistable Instance
-            //
-            // We may have props to update on the Hoistable instance. We use the
-            // updateHostComponent path becuase it produces the update queue
-            // we need for Hoistables.
-            updateHostComponent(
-              current,
-              workInProgress,
-              type,
-              newProps,
-              renderLanes,
-            );
+            // We may have props to update on the Hoistable instance.
+            if (supportsMutation) {
+              const oldProps = current.memoizedProps;
+              if (oldProps !== newProps) {
+                markUpdate(workInProgress);
+              }
+            } else {
+              // We use the updateHostComponent path becuase it produces
+              // the update queue we need for Hoistables.
+              updateHostComponent(
+                current,
+                workInProgress,
+                type,
+                newProps,
+                renderLanes,
+              );
+            }
 
             // This must come at the very end of the complete phase.
             bubbleProperties(workInProgress);
@@ -1192,13 +1148,20 @@ function completeWork(
         const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
         if (current !== null && workInProgress.stateNode != null) {
-          updateHostComponent(
-            current,
-            workInProgress,
-            type,
-            newProps,
-            renderLanes,
-          );
+          if (supportsMutation) {
+            const oldProps = current.memoizedProps;
+            if (oldProps !== newProps) {
+              markUpdate(workInProgress);
+            }
+          } else {
+            updateHostComponent(
+              current,
+              workInProgress,
+              type,
+              newProps,
+              renderLanes,
+            );
+          }
 
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);
@@ -1286,13 +1249,7 @@ function completeWork(
         if (wasHydrated) {
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
-          if (
-            prepareToHydrateHostInstance(workInProgress, currentHostContext)
-          ) {
-            // If changes to the hydrated node need to be applied at the
-            // commit-phase we mark this as such.
-            markUpdate(workInProgress);
-          }
+          prepareToHydrateHostInstance(workInProgress, currentHostContext);
         } else {
           const rootContainerInstance = getRootHostContainer();
           const instance = createInstance(

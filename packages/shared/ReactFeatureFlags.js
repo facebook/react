@@ -32,9 +32,6 @@ export const enableComponentStackLocations = true;
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
 
-// Recoil still uses useMutableSource in www, need to delete
-export const enableUseMutableSource = false;
-
 // Not sure if www still uses this. We don't have a replacement but whatever we
 // replace it with will likely be different than what's already there, so we
 // probably should just delete it as long as nothing in www relies on it.
@@ -87,6 +84,10 @@ export const enableFetchInstrumentation = true;
 
 export const enableFormActions = __EXPERIMENTAL__;
 
+export const enableBinaryFlight = __EXPERIMENTAL__;
+
+export const enablePostpone = __EXPERIMENTAL__;
+
 export const enableTransitionTracing = false;
 
 // No known bugs, but needs performance testing
@@ -116,9 +117,6 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // Enables DOM-server to stream its instruction set as data-attributes
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = true;
-
-// Performance related test
-export const diffInCommitPhase = __EXPERIMENTAL__;
 
 export const enableAsyncActions = __EXPERIMENTAL__;
 
@@ -237,3 +235,4 @@ export const consoleManagedByDevToolsDuringStrictMode = true;
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
 export const useModernStrictMode = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;

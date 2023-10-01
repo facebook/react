@@ -36,6 +36,7 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {cache} from './ReactCache';
+import {postpone} from './ReactPostpone';
 import {
   getCacheSignal,
   getCacheForType,
@@ -48,7 +49,6 @@ import {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  useMutableSource,
   useSyncExternalStore,
   useReducer,
   useRef,
@@ -67,8 +67,7 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import {createServerContext} from './ReactServerContext';
-import {createMutableSource} from './ReactMutableSource';
-import ReactSharedInternals from './ReactSharedInternals';
+import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
 
@@ -93,7 +92,6 @@ const Children = {
 
 export {
   Children,
-  createMutableSource,
   createRef,
   Component,
   PureComponent,
@@ -103,6 +101,7 @@ export {
   lazy,
   memo,
   cache,
+  postpone as unstable_postpone,
   useCallback,
   useContext,
   useEffect,
@@ -112,7 +111,6 @@ export {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  useMutableSource,
   useOptimistic as experimental_useOptimistic,
   useSyncExternalStore,
   useReducer,
@@ -134,7 +132,7 @@ export {
   useTransition,
   startTransition,
   useDeferredValue,
-  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   REACT_OFFSCREEN_TYPE as unstable_Offscreen,
   getCacheSignal as unstable_getCacheSignal,

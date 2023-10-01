@@ -46,7 +46,9 @@ export const InputContinuousLane: Lane = /*             */ 0b0000000000000000000
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000010000;
 export const DefaultLane: Lane = /*                     */ 0b0000000000000000000000000100000;
 
-export const SyncUpdateLanes: Lane = /*                */ 0b0000000000000000000000000101010;
+export const SyncUpdateLanes: Lane = enableUnifiedSyncLane
+  ? SyncLane | InputContinuousLane | DefaultLane
+  : SyncLane;
 
 const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000001000000;
 const TransitionLanes: Lanes = /*                       */ 0b0000000011111111111111110000000;
@@ -83,6 +85,11 @@ export const IdleHydrationLane: Lane = /*               */ 0b0010000000000000000
 export const IdleLane: Lane = /*                        */ 0b0100000000000000000000000000000;
 
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
+
+// Any lane that might schedule an update. This is used to detect infinite
+// update loops, so it doesn't include hydration lanes or retries.
+export const UpdateLanes: Lanes =
+  SyncLane | InputContinuousLane | DefaultLane | TransitionLanes;
 
 // This function is used for the experimental timeline (react-devtools-timeline)
 // It should be kept in sync with the Lanes values above.
@@ -299,8 +306,8 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // time it takes to show the final state, which is what they are actually
   // waiting for.
   //
-  // For those exceptions where entanglement is semantically important, like
-  // useMutableSource, we should ensure that there is no partial work at the
+  // For those exceptions where entanglement is semantically important,
+  // we should ensure that there is no partial work at the
   // time we apply the entanglement.
   const entangledLanes = root.entangledLanes;
   if (entangledLanes !== NoLanes) {
@@ -622,10 +629,6 @@ export function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 
-export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
-  root.mutableReadLanes |= updateLane & root.pendingLanes;
-}
-
 export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
 
@@ -636,11 +639,11 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.pingedLanes = NoLanes;
 
   root.expiredLanes &= remainingLanes;
-  root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;
 
   root.errorRecoveryDisabledLanes &= remainingLanes;
+  root.shellSuspendCounter = 0;
 
   const entanglements = root.entanglements;
   const expirationTimes = root.expirationTimes;

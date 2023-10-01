@@ -1101,6 +1101,10 @@ export function attach(
 
   function unpatchConsoleForStrictMode() {}
 
+  function hasFiberWithId(id: number): boolean {
+    return idToInternalInstanceMap.has(id);
+  }
+
   return {
     clearErrorsAndWarnings,
     clearErrorsForFiberID,
@@ -1124,6 +1128,7 @@ export function attach(
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     handlePostCommitFiberRoot,
+    hasFiberWithId,
     inspectElement,
     logElementToConsole,
     overrideError,

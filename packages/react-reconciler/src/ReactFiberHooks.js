@@ -8,9 +8,6 @@
  */
 
 import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
   Usable,
@@ -37,7 +34,6 @@ import {
   enableCache,
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
-  enableUseMutableSource,
   enableTransitionTracing,
   enableUseMemoCacheHook,
   enableUseEffectEventHook,
@@ -58,6 +54,7 @@ import {
   DebugTracingMode,
   StrictEffectsMode,
   StrictLegacyMode,
+  NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
   NoLane,
@@ -73,7 +70,6 @@ import {
   intersectLanes,
   isTransitionLane,
   markRootEntangled,
-  markRootMutableRead,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -115,13 +111,10 @@ import {
   markWorkInProgressReceivedUpdate,
   checkIfWorkInProgressReceivedUpdate,
 } from './ReactFiberBeginWork';
-import {getIsHydrating} from './ReactFiberHydrationContext';
 import {
-  getWorkInProgressVersion,
-  markSourceAsDirty,
-  setWorkInProgressVersion,
-  warnAboutMultipleRenderersDEV,
-} from './ReactMutableSource';
+  getIsHydrating,
+  tryToClaimNextHydratableFormMarkerInstance,
+} from './ReactFiberHydrationContext';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {
   markStateUpdateScheduled,
@@ -147,7 +140,10 @@ import {
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
-import {requestAsyncActionContext} from './ReactFiberAsyncAction';
+import {
+  requestAsyncActionContext,
+  requestSyncActionContext,
+} from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 
@@ -173,9 +169,11 @@ export type UpdateQueue<S, A> = {
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnUncachedGetSnapshot: void | true;
 let didWarnAboutUseWrappedInTryCatch;
+let didWarnAboutAsyncClientComponent;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set<string | null>();
   didWarnAboutUseWrappedInTryCatch = new Set<string | null>();
+  didWarnAboutAsyncClientComponent = new Set<string | null>();
 }
 
 export type Hook = {
@@ -380,6 +378,59 @@ function warnOnHookMismatchInDev(currentHookName: HookType): void {
   }
 }
 
+function warnIfAsyncClientComponent(
+  Component: Function,
+  componentDoesIncludeHooks: boolean,
+) {
+  if (__DEV__) {
+    // This dev-only check only works for detecting native async functions,
+    // not transpiled ones. There's also a prod check that we use to prevent
+    // async client components from crashing the app; the prod one works even
+    // for transpiled async functions. Neither mechanism is completely
+    // bulletproof but together they cover the most common cases.
+    const isAsyncFunction =
+      // $FlowIgnore[method-unbinding]
+      Object.prototype.toString.call(Component) === '[object AsyncFunction]';
+    if (isAsyncFunction) {
+      // Encountered an async Client Component. This is not yet supported,
+      // except in certain constrained cases, like during a route navigation.
+      const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
+      if (!didWarnAboutAsyncClientComponent.has(componentName)) {
+        didWarnAboutAsyncClientComponent.add(componentName);
+
+        // Check if this is a sync update. We use the "root" render lanes here
+        // because the "subtree" render lanes may include additional entangled
+        // lanes related to revealing previously hidden content.
+        const root = getWorkInProgressRoot();
+        const rootRenderLanes = getWorkInProgressRootRenderLanes();
+        if (root !== null && includesBlockingLane(root, rootRenderLanes)) {
+          console.error(
+            'async/await is not yet supported in Client Components, only ' +
+              'Server Components. This error is often caused by accidentally ' +
+              "adding `'use client'` to a module that was originally written " +
+              'for the server.',
+          );
+        } else {
+          // This is a concurrent (Transition, Retry, etc) render. We don't
+          // warn in these cases.
+          //
+          // However, Async Components are forbidden to include hooks, even
+          // during a transition, so let's check for that here.
+          //
+          // TODO: Add a corresponding warning to Server Components runtime.
+          if (componentDoesIncludeHooks) {
+            console.error(
+              'Hooks are not supported inside an async component. This ' +
+                "error is often caused by accidentally adding `'use client'` " +
+                'to a module that was originally written for the server.',
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
 function throwInvalidHookError() {
   throw new Error(
     'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
@@ -564,19 +615,27 @@ export function renderWithHooks<Props, SecondArg>(
     }
   }
 
-  finishRenderingHooks(current, workInProgress);
+  finishRenderingHooks(current, workInProgress, Component);
 
   return children;
 }
 
-function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
+function finishRenderingHooks<Props, SecondArg>(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: (p: Props, arg: SecondArg) => any,
+): void {
+  if (__DEV__) {
+    workInProgress._debugHookTypes = hookTypesDev;
+
+    const componentDoesIncludeHooks =
+      workInProgressHook !== null || thenableIndexCounter !== 0;
+    warnIfAsyncClientComponent(Component, componentDoesIncludeHooks);
+  }
+
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
-
-  if (__DEV__) {
-    workInProgress._debugHookTypes = hookTypesDev;
-  }
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
   // hookTypesDev could catch more cases (e.g. context) but only in DEV bundles.
@@ -655,7 +714,13 @@ function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
     if (checkIfUseWrappedInTryCatch()) {
       const componentName =
         getComponentNameFromFiber(workInProgress) || 'Unknown';
-      if (!didWarnAboutUseWrappedInTryCatch.has(componentName)) {
+      if (
+        !didWarnAboutUseWrappedInTryCatch.has(componentName) &&
+        // This warning also fires if you suspend with `use` inside an
+        // async component. Since we warn for that above, we'll silence this
+        // second warning by checking here.
+        !didWarnAboutAsyncClientComponent.has(componentName)
+      ) {
         didWarnAboutUseWrappedInTryCatch.add(componentName);
         console.error(
           '`use` was called from inside a try/catch block. This is not allowed ' +
@@ -693,7 +758,7 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
     props,
     secondArg,
   );
-  finishRenderingHooks(current, workInProgress);
+  finishRenderingHooks(current, workInProgress, Component);
   return children;
 }
 
@@ -1402,301 +1467,6 @@ function rerenderReducer<S, I, A>(
   return [newState, dispatch];
 }
 
-type MutableSourceMemoizedState<Source, Snapshot> = {
-  refs: {
-    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-    setSnapshot: Snapshot => void,
-  },
-  source: MutableSource<any>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-};
-
-function readFromUnsubscribedMutableSource<Source, Snapshot>(
-  root: FiberRoot,
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-): Snapshot {
-  if (__DEV__) {
-    warnAboutMultipleRenderersDEV(source);
-  }
-
-  const getVersion = source._getVersion;
-  const version = getVersion(source._source);
-
-  // Is it safe for this component to read from this source during the current render?
-  let isSafeToReadFromSource = false;
-
-  // Check the version first.
-  // If this render has already been started with a specific version,
-  // we can use it alone to determine if we can safely read from the source.
-  const currentRenderVersion = getWorkInProgressVersion(source);
-  if (currentRenderVersion !== null) {
-    // It's safe to read if the store hasn't been mutated since the last time
-    // we read something.
-    isSafeToReadFromSource = currentRenderVersion === version;
-  } else {
-    // If there's no version, then this is the first time we've read from the
-    // source during the current render pass, so we need to do a bit more work.
-    // What we need to determine is if there are any hooks that already
-    // subscribed to the source, and if so, whether there are any pending
-    // mutations that haven't been synchronized yet.
-    //
-    // If there are no pending mutations, then `root.mutableReadLanes` will be
-    // empty, and we know we can safely read.
-    //
-    // If there *are* pending mutations, we may still be able to safely read
-    // if the currently rendering lanes are inclusive of the pending mutation
-    // lanes, since that guarantees that the value we're about to read from
-    // the source is consistent with the values that we read during the most
-    // recent mutation.
-    isSafeToReadFromSource = isSubsetOfLanes(
-      renderLanes,
-      root.mutableReadLanes,
-    );
-
-    if (isSafeToReadFromSource) {
-      // If it's safe to read from this source during the current render,
-      // store the version in case other components read from it.
-      // A changed version number will let those components know to throw and restart the render.
-      setWorkInProgressVersion(source, version);
-    }
-  }
-
-  if (isSafeToReadFromSource) {
-    const snapshot = getSnapshot(source._source);
-    if (__DEV__) {
-      if (typeof snapshot === 'function') {
-        console.error(
-          'Mutable source should not return a function as the snapshot value. ' +
-            'Functions may close over mutable values and cause tearing.',
-        );
-      }
-    }
-    return snapshot;
-  } else {
-    // This handles the special case of a mutable source being shared between renderers.
-    // In that case, if the source is mutated between the first and second renderer,
-    // The second renderer don't know that it needs to reset the WIP version during unwind,
-    // (because the hook only marks sources as dirty if it's written to their WIP version).
-    // That would cause this tear check to throw again and eventually be visible to the user.
-    // We can avoid this infinite loop by explicitly marking the source as dirty.
-    //
-    // This can lead to tearing in the first renderer when it resumes,
-    // but there's nothing we can do about that (short of throwing here and refusing to continue the render).
-    markSourceAsDirty(source);
-
-    // Intentioally throw an error to force React to retry synchronously. During
-    // the synchronous retry, it will block interleaved mutations, so we should
-    // get a consistent read. Therefore, the following error should never be
-    // visible to the user.
-
-    // We expect this error not to be thrown during the synchronous retry,
-    // because we blocked interleaved mutations.
-    throw new Error(
-      'Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue.',
-    );
-  }
-}
-
-function useMutableSource<Source, Snapshot>(
-  hook: Hook,
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  if (!enableUseMutableSource) {
-    return (undefined: any);
-  }
-
-  const root = ((getWorkInProgressRoot(): any): FiberRoot);
-
-  if (root === null) {
-    throw new Error(
-      'Expected a work-in-progress root. This is a bug in React. Please file an issue.',
-    );
-  }
-
-  const getVersion = source._getVersion;
-  const version = getVersion(source._source);
-
-  const dispatcher = ReactCurrentDispatcher.current;
-
-  // eslint-disable-next-line prefer-const
-  let [currentSnapshot, setSnapshot] = dispatcher.useState(() =>
-    readFromUnsubscribedMutableSource(root, source, getSnapshot),
-  );
-  let snapshot = currentSnapshot;
-
-  // Grab a handle to the state hook as well.
-  // We use it to clear the pending update queue if we have a new source.
-  const stateHook = ((workInProgressHook: any): Hook);
-
-  const memoizedState = ((hook.memoizedState: any): MutableSourceMemoizedState<
-    Source,
-    Snapshot,
-  >);
-  const refs = memoizedState.refs;
-  const prevGetSnapshot = refs.getSnapshot;
-  const prevSource = memoizedState.source;
-  const prevSubscribe = memoizedState.subscribe;
-
-  const fiber = currentlyRenderingFiber;
-
-  hook.memoizedState = ({
-    refs,
-    source,
-    subscribe,
-  }: MutableSourceMemoizedState<Source, Snapshot>);
-
-  // Sync the values needed by our subscription handler after each commit.
-  dispatcher.useEffect(() => {
-    refs.getSnapshot = getSnapshot;
-
-    // Normally the dispatch function for a state hook never changes,
-    // but this hook recreates the queue in certain cases  to avoid updates from stale sources.
-    // handleChange() below needs to reference the dispatch function without re-subscribing,
-    // so we use a ref to ensure that it always has the latest version.
-    refs.setSnapshot = setSnapshot;
-
-    // Check for a possible change between when we last rendered now.
-    const maybeNewVersion = getVersion(source._source);
-    if (!is(version, maybeNewVersion)) {
-      const maybeNewSnapshot = getSnapshot(source._source);
-      if (__DEV__) {
-        if (typeof maybeNewSnapshot === 'function') {
-          console.error(
-            'Mutable source should not return a function as the snapshot value. ' +
-              'Functions may close over mutable values and cause tearing.',
-          );
-        }
-      }
-
-      if (!is(snapshot, maybeNewSnapshot)) {
-        setSnapshot(maybeNewSnapshot);
-
-        const lane = requestUpdateLane(fiber);
-        markRootMutableRead(root, lane);
-      }
-      // If the source mutated between render and now,
-      // there may be state updates already scheduled from the old source.
-      // Entangle the updates so that they render in the same batch.
-      markRootEntangled(root, root.mutableReadLanes);
-    }
-  }, [getSnapshot, source, subscribe]);
-
-  // If we got a new source or subscribe function, re-subscribe in a passive effect.
-  dispatcher.useEffect(() => {
-    const handleChange = () => {
-      const latestGetSnapshot = refs.getSnapshot;
-      const latestSetSnapshot = refs.setSnapshot;
-
-      try {
-        latestSetSnapshot(latestGetSnapshot(source._source));
-
-        // Record a pending mutable source update with the same expiration time.
-        const lane = requestUpdateLane(fiber);
-
-        markRootMutableRead(root, lane);
-      } catch (error) {
-        // A selector might throw after a source mutation.
-        // e.g. it might try to read from a part of the store that no longer exists.
-        // In this case we should still schedule an update with React.
-        // Worst case the selector will throw again and then an error boundary will handle it.
-        latestSetSnapshot(
-          (() => {
-            throw error;
-          }: any),
-        );
-      }
-    };
-
-    const unsubscribe = subscribe(source._source, handleChange);
-    if (__DEV__) {
-      if (typeof unsubscribe !== 'function') {
-        console.error(
-          'Mutable source subscribe function must return an unsubscribe function.',
-        );
-      }
-    }
-
-    return unsubscribe;
-  }, [source, subscribe]);
-
-  // If any of the inputs to useMutableSource change, reading is potentially unsafe.
-  //
-  // If either the source or the subscription have changed we can't can't trust the update queue.
-  // Maybe the source changed in a way that the old subscription ignored but the new one depends on.
-  //
-  // If the getSnapshot function changed, we also shouldn't rely on the update queue.
-  // It's possible that the underlying source was mutated between the when the last "change" event fired,
-  // and when the current render (with the new getSnapshot function) is processed.
-  //
-  // In both cases, we need to throw away pending updates (since they are no longer relevant)
-  // and treat reading from the source as we do in the mount case.
-  if (
-    !is(prevGetSnapshot, getSnapshot) ||
-    !is(prevSource, source) ||
-    !is(prevSubscribe, subscribe)
-  ) {
-    // Create a new queue and setState method,
-    // So if there are interleaved updates, they get pushed to the older queue.
-    // When this becomes current, the previous queue and dispatch method will be discarded,
-    // including any interleaving updates that occur.
-    const newQueue: UpdateQueue<Snapshot, BasicStateAction<Snapshot>> = {
-      pending: null,
-      lanes: NoLanes,
-      dispatch: null,
-      lastRenderedReducer: basicStateReducer,
-      lastRenderedState: snapshot,
-    };
-    newQueue.dispatch = setSnapshot = (dispatchSetState.bind(
-      null,
-      currentlyRenderingFiber,
-      newQueue,
-    ): any);
-    stateHook.queue = newQueue;
-    stateHook.baseQueue = null;
-    snapshot = readFromUnsubscribedMutableSource(root, source, getSnapshot);
-    stateHook.memoizedState = stateHook.baseState = snapshot;
-  }
-
-  return snapshot;
-}
-
-function mountMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  if (!enableUseMutableSource) {
-    return (undefined: any);
-  }
-
-  const hook = mountWorkInProgressHook();
-  hook.memoizedState = ({
-    refs: {
-      getSnapshot,
-      setSnapshot: (null: any),
-    },
-    source,
-    subscribe,
-  }: MutableSourceMemoizedState<Source, Snapshot>);
-  return useMutableSource(hook, source, getSnapshot, subscribe);
-}
-
-function updateMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  if (!enableUseMutableSource) {
-    return (undefined: any);
-  }
-
-  const hook = updateWorkInProgressHook();
-  return useMutableSource(hook, source, getSnapshot, subscribe);
-}
-
 function mountSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
@@ -2029,7 +1799,20 @@ function updateOptimistic<S, A>(
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   const hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(
+    hook,
+    ((currentHook: any): Hook),
+    passthrough,
+    reducer,
+  );
+}
 
+function updateOptimisticImpl<S, A>(
+  hook: Hook,
+  current: Hook | null,
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
   // Optimistic updates are always rebased on top of the latest value passed in
   // as an argument. It's called a passthrough because if there are no pending
   // updates, it will be returned as-is.
@@ -2056,19 +1839,345 @@ function rerenderOptimistic<S, A>(
   // So instead of a forked re-render implementation that knows how to handle
   // render phase udpates, we can use the same implementation as during a
   // regular mount or update.
+  const hook = updateWorkInProgressHook();
 
   if (currentHook !== null) {
     // This is an update. Process the update queue.
-    return updateOptimistic(passthrough, reducer);
+    return updateOptimisticImpl(
+      hook,
+      ((currentHook: any): Hook),
+      passthrough,
+      reducer,
+    );
   }
 
   // This is a mount. No updates to process.
-  const hook = updateWorkInProgressHook();
+
   // Reset the base state and memoized state to the passthrough. Future
   // updates will be applied on top of this.
   hook.baseState = hook.memoizedState = passthrough;
   const dispatch = hook.queue.dispatch;
   return [passthrough, dispatch];
+}
+
+// useFormState actions run sequentially, because each action receives the
+// previous state as an argument. We store pending actions on a queue.
+type FormStateActionQueue<S, P> = {
+  // This is the most recent state returned from an action. It's updated as
+  // soon as the action finishes running.
+  state: S,
+  // A stable dispatch method, passed to the user.
+  dispatch: Dispatch<P>,
+  // This is the most recent action function that was rendered. It's updated
+  // during the commit phase.
+  action: (S, P) => Promise<S>,
+  // This is a circular linked list of pending action payloads. It incudes the
+  // action that is currently running.
+  pending: FormStateActionQueueNode<P> | null,
+};
+
+type FormStateActionQueueNode<P> = {
+  payload: P,
+  // This is never null because it's part of a circular linked list.
+  next: FormStateActionQueueNode<P>,
+};
+
+function dispatchFormState<S, P>(
+  fiber: Fiber,
+  actionQueue: FormStateActionQueue<S, P>,
+  setState: Dispatch<Thenable<S>>,
+  payload: P,
+): void {
+  if (isRenderPhaseUpdate(fiber)) {
+    throw new Error('Cannot update form state while rendering.');
+  }
+  const last = actionQueue.pending;
+  if (last === null) {
+    // There are no pending actions; this is the first one. We can run
+    // it immediately.
+    const newLast: FormStateActionQueueNode<P> = {
+      payload,
+      next: (null: any), // circular
+    };
+    newLast.next = actionQueue.pending = newLast;
+
+    runFormStateAction(actionQueue, setState, payload);
+  } else {
+    // There's already an action running. Add to the queue.
+    const first = last.next;
+    const newLast: FormStateActionQueueNode<P> = {
+      payload,
+      next: first,
+    };
+    last.next = newLast;
+  }
+}
+
+function runFormStateAction<S, P>(
+  actionQueue: FormStateActionQueue<S, P>,
+  setState: Dispatch<Thenable<S>>,
+  payload: P,
+) {
+  const action = actionQueue.action;
+  const prevState = actionQueue.state;
+
+  // This is a fork of startTransition
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
+  const currentTransition = ReactCurrentBatchConfig.transition;
+  if (__DEV__) {
+    ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+  }
+  try {
+    const promise = action(prevState, payload);
+
+    if (__DEV__) {
+      if (
+        promise === null ||
+        typeof promise !== 'object' ||
+        typeof (promise: any).then !== 'function'
+      ) {
+        console.error(
+          'The action passed to useFormState must be an async function.',
+        );
+      }
+    }
+
+    // Attach a listener to read the return state of the action. As soon as this
+    // resolves, we can run the next action in the sequence.
+    promise.then(
+      (nextState: S) => {
+        actionQueue.state = nextState;
+        finishRunningFormStateAction(actionQueue, setState);
+      },
+      () => finishRunningFormStateAction(actionQueue, setState),
+    );
+
+    // Create a thenable that resolves once the current async action scope has
+    // finished. Then stash that thenable in state. We'll unwrap it with the
+    // `use` algorithm during render. This is the same logic used
+    // by startTransition.
+    const entangledThenable: Thenable<S> = requestAsyncActionContext(
+      promise,
+      null,
+    );
+    setState(entangledThenable);
+  } finally {
+    ReactCurrentBatchConfig.transition = prevTransition;
+
+    if (__DEV__) {
+      if (prevTransition === null && currentTransition._updatedFibers) {
+        const updatedFibersCount = currentTransition._updatedFibers.size;
+        currentTransition._updatedFibers.clear();
+        if (updatedFibersCount > 10) {
+          console.warn(
+            'Detected a large number of updates inside startTransition. ' +
+              'If this is due to a subscription please re-write it to use React provided hooks. ' +
+              'Otherwise concurrent mode guarantees are off the table.',
+          );
+        }
+      }
+    }
+  }
+}
+
+function finishRunningFormStateAction<S, P>(
+  actionQueue: FormStateActionQueue<S, P>,
+  setState: Dispatch<Thenable<S>>,
+) {
+  // The action finished running. Pop it from the queue and run the next pending
+  // action, if there are any.
+  const last = actionQueue.pending;
+  if (last !== null) {
+    const first = last.next;
+    if (first === last) {
+      // This was the last action in the queue.
+      actionQueue.pending = null;
+    } else {
+      // Remove the first node from the circular queue.
+      const next = first.next;
+      last.next = next;
+
+      // Run the next action.
+      runFormStateAction(actionQueue, setState, next.payload);
+    }
+  }
+}
+
+function formStateReducer<S>(oldState: S, newState: S): S {
+  return newState;
+}
+
+function mountFormState<S, P>(
+  action: (S, P) => Promise<S>,
+  initialStateProp: S,
+  permalink?: string,
+): [S, (P) => void] {
+  let initialState = initialStateProp;
+  if (getIsHydrating()) {
+    const root: FiberRoot = (getWorkInProgressRoot(): any);
+    const ssrFormState = root.formState;
+    // If a formState option was passed to the root, there are form state
+    // markers that we need to hydrate. These indicate whether the form state
+    // matches this hook instance.
+    if (ssrFormState !== null) {
+      const isMatching = tryToClaimNextHydratableFormMarkerInstance(
+        currentlyRenderingFiber,
+      );
+      if (isMatching) {
+        initialState = ssrFormState[0];
+      }
+    }
+  }
+  const initialStateThenable: Thenable<S> = {
+    status: 'fulfilled',
+    value: initialState,
+    then() {},
+  };
+
+  // State hook. The state is stored in a thenable which is then unwrapped by
+  // the `use` algorithm during render.
+  const stateHook = mountWorkInProgressHook();
+  stateHook.memoizedState = stateHook.baseState = initialStateThenable;
+  const stateQueue: UpdateQueue<Thenable<S>, Thenable<S>> = {
+    pending: null,
+    lanes: NoLanes,
+    dispatch: null,
+    lastRenderedReducer: formStateReducer,
+    lastRenderedState: initialStateThenable,
+  };
+  stateHook.queue = stateQueue;
+  const setState: Dispatch<Thenable<S>> = (dispatchSetState.bind(
+    null,
+    currentlyRenderingFiber,
+    stateQueue,
+  ): any);
+  stateQueue.dispatch = setState;
+
+  // Action queue hook. This is used to queue pending actions. The queue is
+  // shared between all instances of the hook. Similar to a regular state queue,
+  // but different because the actions are run sequentially, and they run in
+  // an event instead of during render.
+  const actionQueueHook = mountWorkInProgressHook();
+  const actionQueue: FormStateActionQueue<S, P> = {
+    state: initialState,
+    dispatch: (null: any), // circular
+    action,
+    pending: null,
+  };
+  actionQueueHook.queue = actionQueue;
+  const dispatch = dispatchFormState.bind(
+    null,
+    currentlyRenderingFiber,
+    actionQueue,
+    setState,
+  );
+  actionQueue.dispatch = dispatch;
+
+  // Stash the action function on the memoized state of the hook. We'll use this
+  // to detect when the action function changes so we can update it in
+  // an effect.
+  actionQueueHook.memoizedState = action;
+
+  return [initialState, dispatch];
+}
+
+function updateFormState<S, P>(
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  permalink?: string,
+): [S, (P) => void] {
+  const stateHook = updateWorkInProgressHook();
+  const currentStateHook = ((currentHook: any): Hook);
+  return updateFormStateImpl(
+    stateHook,
+    currentStateHook,
+    action,
+    initialState,
+    permalink,
+  );
+}
+
+function updateFormStateImpl<S, P>(
+  stateHook: Hook,
+  currentStateHook: Hook,
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  permalink?: string,
+): [S, (P) => void] {
+  const [thenable] = updateReducerImpl<Thenable<S>, Thenable<S>>(
+    stateHook,
+    currentStateHook,
+    formStateReducer,
+  );
+
+  // This will suspend until the action finishes.
+  const state = useThenable(thenable);
+
+  const actionQueueHook = updateWorkInProgressHook();
+  const actionQueue = actionQueueHook.queue;
+  const dispatch = actionQueue.dispatch;
+
+  // Check if a new action was passed. If so, update it in an effect.
+  const prevAction = actionQueueHook.memoizedState;
+  if (action !== prevAction) {
+    currentlyRenderingFiber.flags |= PassiveEffect;
+    pushEffect(
+      HookHasEffect | HookPassive,
+      formStateActionEffect.bind(null, actionQueue, action),
+      createEffectInstance(),
+      null,
+    );
+  }
+
+  return [state, dispatch];
+}
+
+function formStateActionEffect<S, P>(
+  actionQueue: FormStateActionQueue<S, P>,
+  action: (S, P) => Promise<S>,
+): void {
+  actionQueue.action = action;
+}
+
+function rerenderFormState<S, P>(
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  permalink?: string,
+): [S, (P) => void] {
+  // Unlike useState, useFormState doesn't support render phase updates.
+  // Also unlike useState, we need to replay all pending updates again in case
+  // the passthrough value changed.
+  //
+  // So instead of a forked re-render implementation that knows how to handle
+  // render phase udpates, we can use the same implementation as during a
+  // regular mount or update.
+  const stateHook = updateWorkInProgressHook();
+  const currentStateHook = currentHook;
+
+  if (currentStateHook !== null) {
+    // This is an update. Process the update queue.
+    return updateFormStateImpl(
+      stateHook,
+      currentStateHook,
+      action,
+      initialState,
+      permalink,
+    );
+  }
+
+  // This is a mount. No updates to process.
+  const thenable: Thenable<S> = stateHook.memoizedState;
+  const state = useThenable(thenable);
+
+  const actionQueueHook = updateWorkInProgressHook();
+  const actionQueue = actionQueueHook.queue;
+  const dispatch = actionQueue.dispatch;
+
+  // This may have changed during the rerender.
+  actionQueueHook.memoizedState = action;
+
+  return [state, dispatch];
 }
 
 function pushEffect(
@@ -2257,7 +2366,8 @@ function mountEffect(
 ): void {
   if (
     __DEV__ &&
-    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode &&
+    (currentlyRenderingFiber.mode & NoStrictPassiveEffectsMode) === NoMode
   ) {
     mountEffectImpl(
       MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
@@ -2644,15 +2754,37 @@ function startTransition<S>(
     if (enableAsyncActions) {
       const returnValue = callback();
 
-      // This is either `finishedState` or a thenable that resolves to
-      // `finishedState`, depending on whether the action scope is an async
-      // function. In the async case, the resulting render will suspend until
-      // the async action scope has finished.
-      const maybeThenable = requestAsyncActionContext(
-        returnValue,
-        finishedState,
-      );
-      dispatchSetState(fiber, queue, maybeThenable);
+      // Check if we're inside an async action scope. If so, we'll entangle
+      // this new action with the existing scope.
+      //
+      // If we're not already inside an async action scope, and this action is
+      // async, then we'll create a new async scope.
+      //
+      // In the async case, the resulting render will suspend until the async
+      // action scope has finished.
+      if (
+        returnValue !== null &&
+        typeof returnValue === 'object' &&
+        typeof returnValue.then === 'function'
+      ) {
+        const thenable = ((returnValue: any): Thenable<mixed>);
+        // This is a thenable that resolves to `finishedState` once the async
+        // action scope has finished.
+        const entangledResult = requestAsyncActionContext(
+          thenable,
+          finishedState,
+        );
+        dispatchSetState(fiber, queue, entangledResult);
+      } else {
+        // This is either `finishedState` or a thenable that resolves to
+        // `finishedState`, depending on whether we're inside an async
+        // action scope.
+        const entangledResult = requestSyncActionContext(
+          returnValue,
+          finishedState,
+        );
+        dispatchSetState(fiber, queue, entangledResult);
+      }
     } else {
       // Async actions are not enabled.
       dispatchSetState(fiber, queue, finishedState);
@@ -3201,7 +3333,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useDebugValue: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
-  useMutableSource: throwInvalidHookError,
   useSyncExternalStore: throwInvalidHookError,
   useId: throwInvalidHookError,
 };
@@ -3217,6 +3348,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useFormState = throwInvalidHookError;
 }
 if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
@@ -3239,7 +3371,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useDebugValue: mountDebugValue,
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
-  useMutableSource: mountMutableSource,
   useSyncExternalStore: mountSyncExternalStore,
   useId: mountId,
 };
@@ -3255,6 +3386,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnMount: Dispatcher).useFormState = mountFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
@@ -3277,7 +3409,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useDebugValue: updateDebugValue,
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
-  useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId,
 };
@@ -3293,6 +3424,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnUpdate: Dispatcher).useFormState = updateFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
@@ -3315,7 +3447,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useDebugValue: updateDebugValue,
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
-  useMutableSource: updateMutableSource,
   useSyncExternalStore: updateSyncExternalStore,
   useId: updateId,
 };
@@ -3331,6 +3462,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnRerender: Dispatcher).useFormState = rerenderFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useOptimistic = rerenderOptimistic;
@@ -3476,15 +3608,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      mountHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -3524,6 +3647,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnMountInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        permalink?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        mountHookTypesDev();
+        return mountFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
@@ -3644,15 +3777,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      updateHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -3693,6 +3817,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        permalink?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return mountFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useOptimistic =
@@ -3816,15 +3950,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -3864,6 +3989,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        permalink?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return updateFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -3987,15 +4122,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -4035,6 +4161,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        permalink?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
@@ -4172,16 +4308,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return mountMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -4228,6 +4354,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        permalink?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
@@ -4369,16 +4506,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -4425,6 +4552,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        permalink?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -4566,16 +4704,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderTransition();
     },
-    useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-    ): Snapshot {
-      currentHookNameInDev = 'useMutableSource';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return updateMutableSource(source, getSnapshot, subscribe);
-    },
     useSyncExternalStore<T>(
       subscribe: (() => void) => () => void,
       getSnapshot: () => T,
@@ -4622,6 +4750,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (S, P) => Promise<S>,
+        initialState: S,
+        permalink?: string,
+      ): [S, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
