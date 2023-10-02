@@ -11,7 +11,11 @@ import type {Chunk, BinaryChunk, Destination} from './ReactServerStreamConfig';
 
 import type {Postpone} from 'react/src/ReactPostpone';
 
-import {enableBinaryFlight, enablePostpone} from 'shared/ReactFeatureFlags';
+import {
+  enableBinaryFlight,
+  enablePostpone,
+  enableTaint,
+} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
@@ -106,6 +110,8 @@ import {
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactServerSharedInternals from './ReactServerSharedInternals';
 import isArray from 'shared/isArray';
+import binaryToComparableString from 'shared/binaryToComparableString';
+
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
 type JSONValue =
@@ -192,14 +198,42 @@ export type Request = {
   writtenProviders: Map<string, number>,
   identifierPrefix: string,
   identifierCount: number,
+  taintCleanupQueue: Array<string | bigint>,
   onError: (error: mixed) => ?string,
   onPostpone: (reason: string) => void,
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
 };
 
-const ReactCurrentDispatcher =
-  ReactServerSharedInternals.ReactCurrentDispatcher;
-const ReactCurrentCache = ReactServerSharedInternals.ReactCurrentCache;
+const {
+  TaintRegistryObjects,
+  TaintRegistryValues,
+  TaintRegistryByteLengths,
+  TaintRegistryPendingRequests,
+  ReactCurrentDispatcher,
+  ReactCurrentCache,
+} = ReactServerSharedInternals;
+
+function throwTaintViolation(message: string) {
+  // eslint-disable-next-line react-internal/prod-error-codes
+  throw new Error(message);
+}
+
+function cleanupTaintQueue(request: Request): void {
+  const cleanupQueue = request.taintCleanupQueue;
+  TaintRegistryPendingRequests.delete(cleanupQueue);
+  for (let i = 0; i < cleanupQueue.length; i++) {
+    const entryValue = cleanupQueue[i];
+    const entry = TaintRegistryValues.get(entryValue);
+    if (entry !== undefined) {
+      if (entry.count === 1) {
+        TaintRegistryValues.delete(entryValue);
+      } else {
+        entry.count--;
+      }
+    }
+  }
+  cleanupQueue.length = 0;
+}
 
 function defaultErrorHandler(error: mixed) {
   console['error'](error);
@@ -235,6 +269,10 @@ export function createRequest(
 
   const abortSet: Set<Task> = new Set();
   const pingedTasks: Array<Task> = [];
+  const cleanupQueue: Array<string | bigint> = [];
+  if (enableTaint) {
+    TaintRegistryPendingRequests.add(cleanupQueue);
+  }
   const hints = createHints();
   const request: Request = {
     status: OPEN,
@@ -258,6 +296,7 @@ export function createRequest(
     writtenProviders: new Map(),
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
+    taintCleanupQueue: cleanupQueue,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onPostpone: onPostpone === undefined ? defaultPostponeHandler : onPostpone,
     // $FlowFixMe[missing-this-annot]
@@ -781,6 +820,18 @@ function serializeTypedArray(
   tag: string,
   typedArray: $ArrayBufferView,
 ): string {
+  if (enableTaint) {
+    if (TaintRegistryByteLengths.has(typedArray.byteLength)) {
+      // If we have had any tainted values of this length, we check
+      // to see if these bytes matches any entries in the registry.
+      const tainted = TaintRegistryValues.get(
+        binaryToComparableString(typedArray),
+      );
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
+  }
   request.pendingChunks += 2;
   const bufferId = request.nextChunkId++;
   // TODO: Convert to little endian if that's not the server default.
@@ -959,6 +1010,12 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'object') {
+    if (enableTaint) {
+      const tainted = TaintRegistryObjects.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted);
+      }
+    }
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
       // $FlowFixMe[method-unbinding]
@@ -1091,6 +1148,12 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'string') {
+    if (enableTaint) {
+      const tainted = TaintRegistryValues.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
     // TODO: Maybe too clever. If we support URL there's no similar trick.
     if (value[value.length - 1] === 'Z') {
       // Possibly a Date, whose toJSON automatically calls toISOString
@@ -1122,6 +1185,12 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'function') {
+    if (enableTaint) {
+      const tainted = TaintRegistryObjects.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted);
+      }
+    }
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
     }
@@ -1171,6 +1240,12 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'bigint') {
+    if (enableTaint) {
+      const tainted = TaintRegistryValues.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted.message);
+      }
+    }
     return serializeBigInt(value);
   }
 
@@ -1198,6 +1273,9 @@ function logRecoverableError(request: Request, error: mixed): string {
 }
 
 function fatalError(request: Request, error: mixed): void {
+  if (enableTaint) {
+    cleanupTaintQueue(request);
+  }
   // This is called outside error handling code such as if an error happens in React internals.
   if (request.destination !== null) {
     request.status = CLOSED;
@@ -1522,6 +1600,9 @@ function flushCompletedChunks(
   flushBuffered(destination);
   if (request.pendingChunks === 0) {
     // We're done.
+    if (enableTaint) {
+      cleanupTaintQueue(request);
+    }
     close(destination);
   }
 }

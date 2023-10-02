@@ -25,6 +25,7 @@ export const enableCacheElement = __EXPERIMENTAL__;
 export const enableFetchInstrumentation = true;
 export const enableFormActions = true; // Doesn't affect Test Renderer
 export const enableBinaryFlight = true;
+export const enableTaint = true;
 export const enablePostpone = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;

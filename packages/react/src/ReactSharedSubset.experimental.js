@@ -14,6 +14,12 @@ export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './R
 
 export {default as __SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './ReactServerSharedInternals';
 
+// These are server-only
+export {
+  taintUniqueValue as experimental_taintUniqueValue,
+  taintObjectReference as experimental_taintObjectReference,
+} from './ReactTaint';
+
 export {
   Children,
   Fragment,

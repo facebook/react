@@ -506,6 +506,7 @@ module.exports = {
     Thenable: 'readonly',
     TimeoutID: 'readonly',
     WheelEventHandler: 'readonly',
+    FinalizationRegistry: 'readonly',
 
     spyOnDev: 'readonly',
     spyOnDevAndProd: 'readonly',

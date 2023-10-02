@@ -24,6 +24,8 @@ declare var queueMicrotask: (fn: Function) => void;
 declare var reportError: (error: mixed) => void;
 declare var AggregateError: Class<Error>;
 
+declare var FinalizationRegistry: any;
+
 declare module 'create-react-class' {
   declare var exports: React$CreateClass;
 }

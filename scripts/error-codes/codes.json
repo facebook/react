@@ -477,5 +477,10 @@
   "489": "Expected to see a component of type \"%s\" in this slot. The tree doesn't match so React will fallback to client rendering.",
   "490": "Expected to see a Suspense boundary in this slot. The tree doesn't match so React will fallback to client rendering.",
   "491": "It should not be possible to postpone both at the root of an element as well as a slot below. This is a bug in React.",
-  "492": "The \"react\" package in this environment is not configured correctly. The \"react-server\" condition must be enabled in any environment that runs React Server Components."
+  "492": "The \"react\" package in this environment is not configured correctly. The \"react-server\" condition must be enabled in any environment that runs React Server Components.",
+  "493": "To taint a value, a lifetime must be defined by passing an object that holds the value.",
+  "494": "taintUniqueValue cannot taint objects or functions. Try taintObjectReference instead.",
+  "495": "Cannot taint a %s because the value is too general and not unique enough to block globally.",
+  "496": "Only objects or functions can be passed to taintObjectReference. Try taintUniqueValue instead.",
+  "497": "Only objects or functions can be passed to taintObjectReference."
 }

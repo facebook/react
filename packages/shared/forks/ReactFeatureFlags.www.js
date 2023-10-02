@@ -75,6 +75,7 @@ export const enableFetchInstrumentation = false;
 export const enableFormActions = false;
 
 export const enableBinaryFlight = true;
+export const enableTaint = false;
 
 export const enablePostpone = false;
 

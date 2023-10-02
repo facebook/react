@@ -10,6 +10,23 @@
 
 'use strict';
 
+const heldValues = [];
+let finalizationCallback;
+function FinalizationRegistryMock(callback) {
+  finalizationCallback = callback;
+}
+FinalizationRegistryMock.prototype.register = function (target, heldValue) {
+  heldValues.push(heldValue);
+};
+global.FinalizationRegistry = FinalizationRegistryMock;
+
+function gc() {
+  for (let i = 0; i < heldValues.length; i++) {
+    finalizationCallback(heldValues[i]);
+  }
+  heldValues.length = 0;
+}
+
 let act;
 let use;
 let startTransition;
@@ -1445,5 +1462,203 @@ describe('ReactFlight', () => {
         </>,
       );
     });
+  });
+
+  // @gate enableTaint
+  it('errors when a tainted object is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    const user = {
+      name: 'Seb',
+      age: 'rather not say',
+    };
+    ReactServer.experimental_taintObjectReference(
+      "Don't pass the raw user object to the client",
+      user,
+    );
+    const errors = [];
+    ReactNoopFlightServer.render(<User user={user} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(["Don't pass the raw user object to the client"]);
+  });
+
+  // @gate enableTaint
+  it('errors with a specific message when a tainted function is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    function change() {}
+    ReactServer.experimental_taintObjectReference(
+      'A change handler cannot be passed to a client component',
+      change,
+    );
+    const errors = [];
+    ReactNoopFlightServer.render(<User onChange={change} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual([
+      'A change handler cannot be passed to a client component',
+    ]);
+  });
+
+  // @gate enableTaint
+  it('errors when a tainted string is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    const process = {
+      env: {
+        SECRET: '3e971ecc1485fe78625598bf9b6f85db',
+      },
+    };
+    ReactServer.experimental_taintUniqueValue(
+      'Cannot pass a secret token to the client',
+      process,
+      process.env.SECRET,
+    );
+
+    const errors = [];
+    ReactNoopFlightServer.render(<User token={process.env.SECRET} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+
+    // This just ensures the process object is kept alive for the life time of
+    // the test since we're simulating a global as an example.
+    expect(process.env.SECRET).toBe('3e971ecc1485fe78625598bf9b6f85db');
+  });
+
+  // @gate enableTaint
+  it('errors when a tainted bigint is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    const currentUser = {
+      name: 'Seb',
+      token: BigInt('0x3e971ecc1485fe78625598bf9b6f85dc'),
+    };
+    ReactServer.experimental_taintUniqueValue(
+      'Cannot pass a secret token to the client',
+      currentUser,
+      currentUser.token,
+    );
+
+    function App({user}) {
+      return <User token={user.token} />;
+    }
+
+    const errors = [];
+    ReactNoopFlightServer.render(<App user={currentUser} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+  });
+
+  // @gate enableTaint && enableBinaryFlight
+  it('errors when a tainted binary value is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    const currentUser = {
+      name: 'Seb',
+      token: new Uint32Array([0x3e971ecc, 0x1485fe78, 0x625598bf, 0x9b6f85dd]),
+    };
+    ReactServer.experimental_taintUniqueValue(
+      'Cannot pass a secret token to the client',
+      currentUser,
+      currentUser.token,
+    );
+
+    function App({user}) {
+      const clone = user.token.slice();
+      return <User token={clone} />;
+    }
+
+    const errors = [];
+    ReactNoopFlightServer.render(<App user={currentUser} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+  });
+
+  // @gate enableTaint
+  it('keep a tainted value tainted until the end of any pending requests', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    function getUser() {
+      const user = {
+        name: 'Seb',
+        token: '3e971ecc1485fe78625598bf9b6f85db',
+      };
+      ReactServer.experimental_taintUniqueValue(
+        'Cannot pass a secret token to the client',
+        user,
+        user.token,
+      );
+      return user;
+    }
+
+    function App() {
+      const user = getUser();
+      const derivedValue = {...user};
+      // A garbage collection can happen at any time. Even before the end of
+      // this request. This would clean up the user object.
+      gc();
+      // We should still block the tainted value.
+      return <User user={derivedValue} />;
+    }
+
+    let errors = [];
+    ReactNoopFlightServer.render(<App />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+
+    // After the previous requests finishes, the token can be rendered again.
+
+    errors = [];
+    ReactNoopFlightServer.render(
+      <User user={{token: '3e971ecc1485fe78625598bf9b6f85db'}} />,
+      {
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
+    );
+
+    expect(errors).toEqual([]);
   });
 });
