@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3ef3b6c24cd3072b8a7244b669c781b8>>
+ * @generated SignedSource<<4d93f2723dd9dce45836c9aa389d421c>>
  */
 
 'use strict';
@@ -2897,7 +2897,8 @@ function set(key, value) {
 var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries; // The rest of the flags are static for better dead code elimination.
+  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries;
+// The rest of the flags are static for better dead code elimination.
 var enableSchedulingProfiler = true;
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
@@ -27552,7 +27553,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-596cae65";
+var ReactVersion = "18.3.0-canary-35bc08a0";
 
 function createPortal$1(
   children,

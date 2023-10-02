@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<86fb5a18e030273bb12b79024c6073c2>>
+ * @generated SignedSource<<c7798d7e49297e588bffdcccc6aa6cb9>>
  */
 
 'use strict';
@@ -3178,7 +3178,9 @@ function dispatchEvent(target, topLevelType, nativeEvent) {
 var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
-  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries; // The rest of the flags are static for better dead code elimination.
+  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+  useMicrotasksForSchedulingInFabric =
+    dynamicFlags.useMicrotasksForSchedulingInFabric; // The rest of the flags are static for better dead code elimination.
 var enableSchedulingProfiler = true;
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
@@ -5073,6 +5075,12 @@ function preloadInstance(type, props) {
 function waitForCommitToBeReady() {
   return null;
 }
+//     Microtasks
+// -------------------
+
+var supportsMicrotasks = useMicrotasksForSchedulingInFabric;
+var scheduleMicrotask =
+  typeof queueMicrotask === "function" ? queueMicrotask : scheduleTimeout;
 
 // This is ok in DOM because they types are interchangeable, but in React Native
 // they aren't.
@@ -10097,7 +10105,28 @@ function scheduleImmediateTask(cb) {
   } // TODO: Can we land supportsMicrotasks? Which environments don't support it?
   // Alternatively, can we move this check to the host config?
 
-  {
+  if (supportsMicrotasks) {
+    scheduleMicrotask(function () {
+      // In Safari, appending an iframe forces microtasks to run.
+      // https://github.com/facebook/react/issues/22459
+      // We don't support running callbacks in the middle of render
+      // or commit so we need to check against that.
+      var executionContext = getExecutionContext();
+
+      if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
+        // Note that this would still prematurely flush the callbacks
+        // if this happens outside render or commit phase (e.g. in an event).
+        // Intentionally using a macrotask instead of a microtask here. This is
+        // wrong semantically but it prevents an infinite loop. The bug is
+        // Safari's, not ours, so we just do our best to not crash even though
+        // the behavior isn't completely correct.
+        scheduleCallback$2(ImmediatePriority, cb);
+        return;
+      }
+
+      cb();
+    });
+  } else {
     // If microtasks are not supported, use Scheduler.
     scheduleCallback$2(ImmediatePriority, cb);
   }
@@ -27034,7 +27063,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-84876954";
+var ReactVersion = "18.3.0-canary-4227b2ef";
 
 function createPortal$1(
   children,

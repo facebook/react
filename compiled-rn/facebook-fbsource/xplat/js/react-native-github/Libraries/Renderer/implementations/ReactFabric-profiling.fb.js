@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<414a6a10fa06a82746a814c00a3d620f>>
+ * @generated SignedSource<<df1cf7efe8e63b1b6ce66d40c776cdc1>>
  */
 
 
@@ -1329,6 +1329,8 @@ var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+  useMicrotasksForSchedulingInFabric =
+    dynamicFlags.useMicrotasksForSchedulingInFabric,
   scheduleCallback$2 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
@@ -1755,6 +1757,8 @@ function cloneHiddenInstance(instance) {
     canonical: instance.canonical
   };
 }
+var scheduleMicrotask =
+  "function" === typeof queueMicrotask ? queueMicrotask : scheduleTimeout;
 function getInstanceFromNode(node) {
   return null != node.canonical && null != node.canonical.internalInstanceHandle
     ? node.canonical.internalInstanceHandle
@@ -3489,7 +3493,7 @@ function ensureRootIsScheduled(root) {
   mightHavePendingSyncWork = !0;
   didScheduleMicrotask ||
     ((didScheduleMicrotask = !0),
-    scheduleCallback$2(ImmediatePriority, processRootScheduleInMicrotask));
+    scheduleImmediateTask(processRootScheduleInMicrotask));
   enableDeferRootSchedulingToMicrotask ||
     scheduleTaskForRootDuringMicrotask(root, now$1());
 }
@@ -3576,8 +3580,7 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
         if ("function" === typeof AggregateError)
           throw new AggregateError(errors);
         for (onlyLegacy = 1; onlyLegacy < errors.length; onlyLegacy++)
-          (didPerformSomeWork = throwError.bind(null, errors[onlyLegacy])),
-            scheduleCallback$2(ImmediatePriority, didPerformSomeWork);
+          scheduleImmediateTask(throwError.bind(null, errors[onlyLegacy]));
       }
       throw errors[0];
     }
@@ -3676,6 +3679,15 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   root.callbackPriority = currentTime;
   root.callbackNode = suspendedLanes;
   return currentTime;
+}
+function scheduleImmediateTask(cb) {
+  useMicrotasksForSchedulingInFabric
+    ? scheduleMicrotask(function () {
+        0 !== (executionContext & 6)
+          ? scheduleCallback$2(ImmediatePriority, cb)
+          : cb();
+      })
+    : scheduleCallback$2(ImmediatePriority, cb);
 }
 var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
   ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig,
@@ -10133,10 +10145,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1117 = {
+  devToolsConfig$jscomp$inline_1113 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-075b6563",
+    version: "18.3.0-canary-00f435b3",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10166,10 +10178,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1117.bundleType,
-  version: devToolsConfig$jscomp$inline_1117.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1117.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1117.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1113.bundleType,
+  version: devToolsConfig$jscomp$inline_1113.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1113.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1113.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10185,14 +10197,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1117.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1113.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-075b6563"
+  reconcilerVersion: "18.3.0-canary-00f435b3"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

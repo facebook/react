@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3cf0c7070b82c229b406663b7dbae937>>
+ * @generated SignedSource<<d08221cdf198c30256d8574839ecbf7a>>
  */
 
 'use strict';
@@ -145,7 +145,7 @@ var createRootStrictEffectsByDefault = false;
 var enableLazyContextPropagation = false;
 var enableLegacyHidden = false;
 var enableAsyncActions = false;
-var alwaysThrottleRetries = true; // Flow magic to verify the exports of this file match the original version.
+var alwaysThrottleRetries = true;
 
 var FunctionComponent = 0;
 var ClassComponent = 1;
@@ -23997,7 +23997,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-a6ed60a8e-20230929";
+var ReactVersion = "18.3.0-canary-54baa7997-20231002";
 
 // Might add PROFILE later.
 

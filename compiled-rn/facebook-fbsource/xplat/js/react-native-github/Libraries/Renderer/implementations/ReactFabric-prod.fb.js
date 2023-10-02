@@ -7,14 +7,14 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c369fd4070037f1dc7d616d80d10dcfd>>
+ * @generated SignedSource<<35a02eea4da4b468c9397d48533b560b>>
  */
 
 "use strict";
 require("react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore");
 var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/ReactNativePrivateInterface"),
-  React = require("react"),
   dynamicFlags = require("ReactNativeInternalFeatureFlags"),
+  React = require("react"),
   Scheduler = require("scheduler");
 function invokeGuardedCallbackImpl(name, func, context) {
   var funcArgs = Array.prototype.slice.call(arguments, 3);
@@ -1318,6 +1318,8 @@ var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+  useMicrotasksForSchedulingInFabric =
+    dynamicFlags.useMicrotasksForSchedulingInFabric,
   scheduleCallback$2 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
@@ -1627,6 +1629,8 @@ function cloneHiddenInstance(instance) {
     canonical: instance.canonical
   };
 }
+var scheduleMicrotask =
+  "function" === typeof queueMicrotask ? queueMicrotask : scheduleTimeout;
 function getInstanceFromNode(node) {
   return null != node.canonical && null != node.canonical.internalInstanceHandle
     ? node.canonical.internalInstanceHandle
@@ -3361,7 +3365,7 @@ function ensureRootIsScheduled(root) {
   mightHavePendingSyncWork = !0;
   didScheduleMicrotask ||
     ((didScheduleMicrotask = !0),
-    scheduleCallback$2(ImmediatePriority, processRootScheduleInMicrotask));
+    scheduleImmediateTask(processRootScheduleInMicrotask));
   enableDeferRootSchedulingToMicrotask ||
     scheduleTaskForRootDuringMicrotask(root, now());
 }
@@ -3446,8 +3450,7 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
         if ("function" === typeof AggregateError)
           throw new AggregateError(errors);
         for (onlyLegacy = 1; onlyLegacy < errors.length; onlyLegacy++)
-          (didPerformSomeWork = throwError.bind(null, errors[onlyLegacy])),
-            scheduleCallback$2(ImmediatePriority, didPerformSomeWork);
+          scheduleImmediateTask(throwError.bind(null, errors[onlyLegacy]));
       }
       throw errors[0];
     }
@@ -3546,6 +3549,15 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   root.callbackPriority = currentTime;
   root.callbackNode = suspendedLanes;
   return currentTime;
+}
+function scheduleImmediateTask(cb) {
+  useMicrotasksForSchedulingInFabric
+    ? scheduleMicrotask(function () {
+        0 !== (executionContext & 6)
+          ? scheduleCallback$2(ImmediatePriority, cb)
+          : cb();
+      })
+    : scheduleCallback$2(ImmediatePriority, cb);
 }
 var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
   ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig,
@@ -9425,10 +9437,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1039 = {
+  devToolsConfig$jscomp$inline_1035 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-0ca674fe",
+    version: "18.3.0-canary-6367a5b9",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9444,11 +9456,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1281 = {
-  bundleType: devToolsConfig$jscomp$inline_1039.bundleType,
-  version: devToolsConfig$jscomp$inline_1039.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1039.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1039.rendererConfig,
+var internals$jscomp$inline_1277 = {
+  bundleType: devToolsConfig$jscomp$inline_1035.bundleType,
+  version: devToolsConfig$jscomp$inline_1035.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1035.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1035.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9464,26 +9476,26 @@ var internals$jscomp$inline_1281 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1039.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1035.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-0ca674fe"
+  reconcilerVersion: "18.3.0-canary-6367a5b9"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1282 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1278 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1282.isDisabled &&
-    hook$jscomp$inline_1282.supportsFiber
+    !hook$jscomp$inline_1278.isDisabled &&
+    hook$jscomp$inline_1278.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1282.inject(
-        internals$jscomp$inline_1281
+      (rendererID = hook$jscomp$inline_1278.inject(
+        internals$jscomp$inline_1277
       )),
-        (injectedHook = hook$jscomp$inline_1282);
+        (injectedHook = hook$jscomp$inline_1278);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
