@@ -1414,6 +1414,83 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
+  it('should control radio buttons if the tree updates during render (case 2; #26876)', () => {
+    let thunk = null;
+    function App() {
+      const [disabled, setDisabled] = React.useState(false);
+      const [value, setValue] = React.useState('one');
+      function handleChange(e) {
+        setDisabled(true);
+        // Pretend this is in a setTimeout or something
+        thunk = () => {
+          setDisabled(false);
+          setValue(e.target.value);
+        };
+      }
+      return (
+        <>
+          <input
+            type="radio"
+            name="fruit"
+            value="one"
+            checked={value === 'one'}
+            onChange={handleChange}
+            disabled={disabled}
+          />
+          <input
+            type="radio"
+            name="fruit"
+            value="two"
+            checked={value === 'two'}
+            onChange={handleChange}
+            disabled={disabled}
+          />
+        </>
+      );
+    }
+    ReactDOM.render(<App />, container);
+    const [one, two] = container.querySelectorAll('input');
+    expect(one.checked).toBe(true);
+    expect(two.checked).toBe(false);
+    expect(isCheckedDirty(one)).toBe(true);
+    expect(isCheckedDirty(two)).toBe(true);
+    assertInputTrackingIsCurrent(container);
+
+    // Click two
+    setUntrackedChecked.call(two, true);
+    dispatchEventOnNode(two, 'click');
+    expect(one.checked).toBe(true);
+    expect(two.checked).toBe(false);
+    expect(isCheckedDirty(one)).toBe(true);
+    expect(isCheckedDirty(two)).toBe(true);
+    assertInputTrackingIsCurrent(container);
+
+    // After a delay...
+    ReactDOM.unstable_batchedUpdates(thunk);
+    expect(one.checked).toBe(false);
+    expect(two.checked).toBe(true);
+    expect(isCheckedDirty(one)).toBe(true);
+    expect(isCheckedDirty(two)).toBe(true);
+    assertInputTrackingIsCurrent(container);
+
+    // Click back to one
+    setUntrackedChecked.call(one, true);
+    dispatchEventOnNode(one, 'click');
+    expect(one.checked).toBe(false);
+    expect(two.checked).toBe(true);
+    expect(isCheckedDirty(one)).toBe(true);
+    expect(isCheckedDirty(two)).toBe(true);
+    assertInputTrackingIsCurrent(container);
+
+    // After a delay...
+    ReactDOM.unstable_batchedUpdates(thunk);
+    expect(one.checked).toBe(true);
+    expect(two.checked).toBe(false);
+    expect(isCheckedDirty(one)).toBe(true);
+    expect(isCheckedDirty(two)).toBe(true);
+    assertInputTrackingIsCurrent(container);
+  });
+
   it('should warn with value and no onChange handler and readOnly specified', () => {
     ReactDOM.render(
       <input type="text" value="zoink" readOnly={true} />,
