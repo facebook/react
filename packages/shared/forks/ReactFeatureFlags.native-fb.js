@@ -21,6 +21,7 @@ export const {
   enableUseRefAccessWarning,
   enableDeferRootSchedulingToMicrotask,
   alwaysThrottleRetries,
+  useMicrotasksForSchedulingInFabric,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
