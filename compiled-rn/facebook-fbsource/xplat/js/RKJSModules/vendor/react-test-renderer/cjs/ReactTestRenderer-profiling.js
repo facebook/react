@@ -9049,7 +9049,7 @@ var devToolsConfig$jscomp$inline_1072 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-843ec0702-20231002",
+  version: "18.3.0-canary-4f4c52a3c-20231002",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1270 = {
@@ -9080,7 +9080,7 @@ var internals$jscomp$inline_1270 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-843ec0702-20231002"
+  reconcilerVersion: "18.3.0-canary-4f4c52a3c-20231002"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1271 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
