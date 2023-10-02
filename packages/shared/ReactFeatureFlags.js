@@ -122,6 +122,8 @@ export const enableAsyncActions = __EXPERIMENTAL__;
 
 export const alwaysThrottleRetries = true;
 
+export const useMicrotasksForSchedulingInFabric = false;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //

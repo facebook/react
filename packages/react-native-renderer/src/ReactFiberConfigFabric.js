@@ -47,6 +47,8 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
+import {useMicrotasksForSchedulingInFabric} from 'shared/ReactFeatureFlags';
+
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
 // Counter for uniquely identifying views.
@@ -119,7 +121,6 @@ export * from 'react-reconciler/src/ReactFiberConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoTestSelectors';
-export * from 'react-reconciler/src/ReactFiberConfigWithNoMicrotasks';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 
@@ -470,3 +471,10 @@ export function waitForCommitToBeReady(): null {
 }
 
 export const NotPendingTransition: TransitionStatus = null;
+
+// -------------------
+//     Microtasks
+// -------------------
+export const supportsMicrotasks = useMicrotasksForSchedulingInFabric;
+export const scheduleMicrotask: any =
+  typeof queueMicrotask === 'function' ? queueMicrotask : scheduleTimeout;
