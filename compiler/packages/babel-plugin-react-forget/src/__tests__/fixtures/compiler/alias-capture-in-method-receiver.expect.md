@@ -20,7 +20,7 @@ function Component() {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component() {
-  const $ = useMemoCache(2);
+  const $ = useMemoCache(3);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = someObj();
@@ -29,15 +29,20 @@ function Component() {
     t0 = $[0];
   }
   const a = t0;
-  let t1;
+  let x;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    const x = [];
+    x = [];
     x.push(a);
-
-    t1 = [x, a];
-    $[1] = t1;
+    $[1] = x;
   } else {
-    t1 = $[1];
+    x = $[1];
+  }
+  let t1;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = [x, a];
+    $[2] = t1;
+  } else {
+    t1 = $[2];
   }
   return t1;
 }

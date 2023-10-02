@@ -29,6 +29,7 @@ export function transformFixtureInput(
   let compilationMode: CompilationMode = "all";
   let enableForest = false;
   let enableNoAliasOptimizations = false;
+  let enableMergeConsecutiveScopes = false;
   let bailoutOnHoleyArrays = false;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
@@ -93,6 +94,9 @@ export function transformFixtureInput(
     bailoutOnHoleyArrays = true;
   }
 
+  if (firstLine.includes("@enableMergeConsecutiveScopes")) {
+    enableMergeConsecutiveScopes = true;
+  }
 
   return pluginFn(
     input,
@@ -141,6 +145,7 @@ export function transformFixtureInput(
         validateFrozenLambdas: true,
         validateNoSetStateInRender,
         enableEmitFreeze,
+        enableMergeConsecutiveScopes,
         assertValidMutableRanges: true,
         bailoutOnHoleyArrays,
         enableForest,

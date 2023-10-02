@@ -76,13 +76,16 @@ function cond(x) {
 }
 
 function testFunction(props) {
-  const $ = useMemoCache(1);
-  let t0;
+  const $ = useMemoCache(5);
+  let a;
+  let b;
+  let c;
+  let d;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    let a = {};
-    let b = {};
-    let c = {};
-    let d = {};
+    a = {};
+    b = {};
+    c = {};
+    d = {};
     while (true) {
       const z = a;
       a = b;
@@ -104,10 +107,22 @@ function testFunction(props) {
     }
 
     mutate(d, null);
-    t0 = { a, b, c, d };
-    $[0] = t0;
+    $[0] = a;
+    $[1] = b;
+    $[2] = c;
+    $[3] = d;
   } else {
-    t0 = $[0];
+    a = $[0];
+    b = $[1];
+    c = $[2];
+    d = $[3];
+  }
+  let t0;
+  if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = { a, b, c, d };
+    $[4] = t0;
+  } else {
+    t0 = $[4];
   }
   return t0;
 }

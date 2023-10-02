@@ -209,6 +209,13 @@ export type EnvironmentConfig = Partial<{
   enableEmitFreeze: ExternalFunction | null;
 
   /**
+   * Enable merging consecutive scopes that invalidate together.
+   *
+   * Defaults to false.
+   */
+  enableMergeConsecutiveScopes: boolean;
+
+  /**
    * Enable validation of mutable ranges
    *
    * Defaults to false
@@ -253,6 +260,7 @@ export class Environment {
   enableNoAliasOptimizations: boolean;
   disableAllMemoization: boolean;
   enableEmitFreeze: ExternalFunction | null;
+  enableMergeConsecutiveScopes: boolean;
   assertValidMutableRanges: boolean;
   bailoutOnHoleyArrays: boolean;
   enableForest: boolean;
@@ -307,6 +315,8 @@ export class Environment {
       config?.enableTreatHooksAsFunctions ?? true;
     this.disableAllMemoization = config?.disableAllMemoization ?? false;
     this.enableEmitFreeze = config?.enableEmitFreeze ?? null;
+    this.enableMergeConsecutiveScopes =
+      config?.enableMergeConsecutiveScopes ?? false;
     this.assertValidMutableRanges = config?.assertValidMutableRanges ?? false;
     this.validateNoSetStateInRender =
       config?.validateNoSetStateInRender ?? false;

@@ -42,7 +42,7 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import { fbt } from "fbt";
 
 function Component() {
-  const $ = useMemoCache(2);
+  const $ = useMemoCache(4);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = () => {
@@ -73,16 +73,26 @@ function Component() {
   const buttonLabel = t0;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t1 = (
-      <View>
-        <Button text={buttonLabel()} />
-      </View>
-    );
+    t1 = buttonLabel();
     $[1] = t1;
   } else {
     t1 = $[1];
   }
-  return t1;
+  let t2;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = <Button text={t1} />;
+    $[2] = t2;
+  } else {
+    t2 = $[2];
+  }
+  let t3;
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+    t3 = <View>{t2}</View>;
+    $[3] = t3;
+  } else {
+    t3 = $[3];
+  }
+  return t3;
 }
 
 ```

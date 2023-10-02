@@ -28,19 +28,24 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import { makeObject_Primitives, mutate, Stringify } from "shared-runtime";
 
 function Component(_props) {
-  const $ = useMemoCache(1);
-  let t0;
+  const $ = useMemoCache(2);
+  let results;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const collection = [makeObject_Primitives()];
-    const results = [];
+    results = [];
     for (const item of collection) {
       results.push(<div key={Stringify(item)}>{Stringify(mutate(item))}</div>);
     }
-
-    t0 = <div>{results}</div>;
-    $[0] = t0;
+    $[0] = results;
   } else {
-    t0 = $[0];
+    results = $[0];
+  }
+  let t0;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = <div>{results}</div>;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
   }
   return t0;
 }

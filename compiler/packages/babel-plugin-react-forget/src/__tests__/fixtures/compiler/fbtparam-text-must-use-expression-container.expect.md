@@ -25,19 +25,22 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
 
 function Component(props) {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(2);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = (
-      <Foo
-        value={fbt._("{value}%", [fbt._param("value", "0")], { hk: "10F5Cc" })}
-      />
-    );
+    t0 = fbt._("{value}%", [fbt._param("value", "0")], { hk: "10F5Cc" });
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  return t0;
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = <Foo value={t0} />;
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  return t1;
 }
 
 ```

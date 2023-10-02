@@ -270,12 +270,14 @@ export function* run(
     value: reactiveFunction,
   });
 
-  mergeConsecutiveScopes(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "MergeConsecutiveScopes",
-    value: reactiveFunction,
-  });
+  if (env.enableMergeConsecutiveScopes) {
+    mergeConsecutiveScopes(reactiveFunction);
+    yield log({
+      kind: "reactive",
+      name: "MergeConsecutiveScopes",
+      value: reactiveFunction,
+    });
+  }
 
   if (config?.enableForest) {
     yield* lowerToForest(reactiveFunction);

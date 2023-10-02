@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableMergeConsecutiveScopes
 function Component() {
   let [state, setState] = useState(0);
   return (
@@ -25,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { unstable_useMemoCache as useMemoCache } from "react"; // @enableMergeConsecutiveScopes
 function Component() {
   const $ = useMemoCache(8);
   const [state, setState] = useState(0);
