@@ -335,7 +335,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       )}(${instrValue.args.map((arg) => printPattern(arg)).join(", ")})`;
       break;
     }
-    case "JSXText":
+    case "JSXText": {
+      value = `JSXText ${JSON.stringify(instrValue.value)}`;
+      break;
+    }
     case "Primitive": {
       if (instrValue.value === undefined) {
         value = "<undefined>";

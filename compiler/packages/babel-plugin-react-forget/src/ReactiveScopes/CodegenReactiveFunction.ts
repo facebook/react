@@ -418,9 +418,9 @@ function codegenTerminal(
     case "for": {
       return t.forStatement(
         codegenForInit(cx, terminal.init),
-        codegenInstructionValue(cx, terminal.test),
+        codegenInstructionValueToExpression(cx, terminal.test),
         terminal.update !== null
-          ? codegenInstructionValue(cx, terminal.update)
+          ? codegenInstructionValueToExpression(cx, terminal.update)
           : null,
         codegenBlock(cx, terminal.loop)
       );
@@ -504,7 +504,7 @@ function codegenTerminal(
           createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
             t.variableDeclarator(lval, null),
           ]),
-          codegenInstructionValue(cx, iterableCollection.value),
+          codegenInstructionValueToExpression(cx, iterableCollection.value),
           codegenBlock(cx, terminal.loop)
         );
       } else {
@@ -514,13 +514,13 @@ function codegenTerminal(
           createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
             t.variableDeclarator(lval, null),
           ]),
-          codegenInstructionValue(cx, iterableCollection.value),
+          codegenInstructionValueToExpression(cx, iterableCollection.value),
           codegenBlock(cx, terminal.loop)
         );
       }
     }
     case "if": {
-      const test = codegenPlace(cx, terminal.test);
+      const test = codegenPlaceToExpression(cx, terminal.test);
       const consequent = codegenBlock(cx, terminal.consequent);
       let alternate: t.Statement | null = null;
       if (terminal.alternate !== null) {
@@ -532,7 +532,7 @@ function codegenTerminal(
       return t.ifStatement(test, consequent, alternate);
     }
     case "return": {
-      const value = codegenPlace(cx, terminal.value);
+      const value = codegenPlaceToExpression(cx, terminal.value);
       if (value.type === "Identifier" && value.name === "undefined") {
         // Use implicit undefined
         return t.returnStatement();
@@ -541,24 +541,26 @@ function codegenTerminal(
     }
     case "switch": {
       return t.switchStatement(
-        codegenPlace(cx, terminal.test),
+        codegenPlaceToExpression(cx, terminal.test),
         terminal.cases.map((case_) => {
           const test =
-            case_.test !== null ? codegenPlace(cx, case_.test) : null;
+            case_.test !== null
+              ? codegenPlaceToExpression(cx, case_.test)
+              : null;
           const block = codegenBlock(cx, case_.block!);
           return t.switchCase(test, [block]);
         })
       );
     }
     case "throw": {
-      return t.throwStatement(codegenPlace(cx, terminal.value));
+      return t.throwStatement(codegenPlaceToExpression(cx, terminal.value));
     }
     case "do-while": {
-      const test = codegenInstructionValue(cx, terminal.test);
+      const test = codegenInstructionValueToExpression(cx, terminal.test);
       return t.doWhileStatement(test, codegenBlock(cx, terminal.loop));
     }
     case "while": {
-      const test = codegenInstructionValue(cx, terminal.test);
+      const test = codegenInstructionValueToExpression(cx, terminal.test);
       return t.whileStatement(test, codegenBlock(cx, terminal.loop));
     }
     case "label": {
@@ -603,10 +605,10 @@ function codegenInstructionNullable(
         ? InstructionKind.Reassign
         : kind;
       lvalue = instr.value.lvalue.place;
-      value = codegenPlace(cx, instr.value.value);
+      value = codegenPlaceToExpression(cx, instr.value.value);
     } else if (instr.value.kind === "StoreContext") {
       lvalue = instr.value.lvalue.place;
-      value = codegenPlace(cx, instr.value.value);
+      value = codegenPlaceToExpression(cx, instr.value.value);
     } else if (
       instr.value.kind === "DeclareLocal" ||
       instr.value.kind === "DeclareContext"
@@ -643,7 +645,7 @@ function codegenInstructionNullable(
       } else if (hasReasign) {
         kind = InstructionKind.Reassign;
       }
-      value = codegenPlace(cx, instr.value.value);
+      value = codegenPlaceToExpression(cx, instr.value.value);
     }
     switch (kind) {
       case InstructionKind.Const: {
@@ -749,7 +751,7 @@ function codegenForInit(
     });
     return declaration;
   } else {
-    return codegenInstructionValue(cx, init);
+    return codegenInstructionValueToExpression(cx, init);
   }
 }
 
@@ -804,7 +806,7 @@ const createJsxText = withLoc(t.jsxText);
 const createJsxClosingElement = withLoc(t.jsxClosingElement);
 const createStringLiteral = withLoc(t.stringLiteral);
 
-type Temporaries = Map<IdentifierId, t.Expression | null>;
+type Temporaries = Map<IdentifierId, t.Expression | t.JSXText | null>;
 
 function codegenLabel(id: BlockId): string {
   return `bb${id}`;
@@ -813,48 +815,69 @@ function codegenLabel(id: BlockId): string {
 function codegenInstruction(
   cx: Context,
   instr: ReactiveInstruction,
-  value: t.Expression
+  value: t.Expression | t.JSXText
 ): t.Statement {
   if (t.isStatement(value)) {
     return value;
   }
   if (instr.lvalue === null) {
-    return t.expressionStatement(value);
+    return t.expressionStatement(convertValueToExpression(value));
   }
   if (instr.lvalue.identifier.name === null) {
     // temporary
     cx.temp.set(instr.lvalue.identifier.id, value);
     return t.emptyStatement();
   } else {
+    const expressionValue = convertValueToExpression(value);
     if (cx.hasDeclared(instr.lvalue.identifier)) {
       return createExpressionStatement(
         instr.loc,
         t.assignmentExpression(
           "=",
           convertIdentifier(instr.lvalue.identifier),
-          value
+          expressionValue
         )
       );
     } else {
       return createVariableDeclaration(instr.loc, "const", [
-        t.variableDeclarator(convertIdentifier(instr.lvalue.identifier), value),
+        t.variableDeclarator(
+          convertIdentifier(instr.lvalue.identifier),
+          expressionValue
+        ),
       ]);
     }
   }
 }
 
-function codegenInstructionValue(
+function convertValueToExpression(
+  value: t.JSXText | t.Expression
+): t.Expression {
+  if (value.type === "JSXText") {
+    return createStringLiteral(value.loc, value.value);
+  }
+  return value;
+}
+
+function codegenInstructionValueToExpression(
   cx: Context,
   instrValue: ReactiveValue
 ): t.Expression {
-  let value: t.Expression;
+  const value = codegenInstructionValue(cx, instrValue);
+  return convertValueToExpression(value);
+}
+
+function codegenInstructionValue(
+  cx: Context,
+  instrValue: ReactiveValue
+): t.Expression | t.JSXText {
+  let value: t.Expression | t.JSXText;
   switch (instrValue.kind) {
     case "ArrayExpression": {
       const elements = instrValue.elements.map((element) => {
         if (element.kind === "Identifier") {
-          return codegenPlace(cx, element);
+          return codegenPlaceToExpression(cx, element);
         } else if (element.kind === "Spread") {
-          return t.spreadElement(codegenPlace(cx, element.place));
+          return t.spreadElement(codegenPlaceToExpression(cx, element.place));
         } else {
           return null;
         }
@@ -863,8 +886,8 @@ function codegenInstructionValue(
       break;
     }
     case "BinaryExpression": {
-      const left = codegenPlace(cx, instrValue.left);
-      const right = codegenPlace(cx, instrValue.right);
+      const left = codegenPlaceToExpression(cx, instrValue.left);
+      const right = codegenPlaceToExpression(cx, instrValue.right);
       value = createBinaryExpression(
         instrValue.loc,
         instrValue.operator,
@@ -876,7 +899,7 @@ function codegenInstructionValue(
     case "UnaryExpression": {
       value = t.unaryExpression(
         instrValue.operator as "throw", // todo
-        codegenPlace(cx, instrValue.value)
+        codegenPlaceToExpression(cx, instrValue.value)
       );
       break;
     }
@@ -885,13 +908,16 @@ function codegenInstructionValue(
       break;
     }
     case "CallExpression": {
-      const callee = codegenPlace(cx, instrValue.callee);
+      const callee = codegenPlaceToExpression(cx, instrValue.callee);
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
       value = createCallExpression(instrValue.loc, callee, args);
       break;
     }
     case "OptionalExpression": {
-      const optionalValue = codegenInstructionValue(cx, instrValue.value);
+      const optionalValue = codegenInstructionValueToExpression(
+        cx,
+        instrValue.value
+      );
       switch (optionalValue.type) {
         case "OptionalCallExpression":
         case "CallExpression": {
@@ -938,7 +964,7 @@ function codegenInstructionValue(
       break;
     }
     case "MethodCall": {
-      const memberExpr = codegenPlace(cx, instrValue.property);
+      const memberExpr = codegenPlaceToExpression(cx, instrValue.property);
       CompilerError.invariant(
         t.isMemberExpression(memberExpr) ||
           t.isOptionalMemberExpression(memberExpr),
@@ -954,7 +980,7 @@ function codegenInstructionValue(
       CompilerError.invariant(
         t.isNodesEquivalent(
           memberExpr.object,
-          codegenPlace(cx, instrValue.receiver)
+          codegenPlaceToExpression(cx, instrValue.receiver)
         ),
         {
           reason:
@@ -970,7 +996,7 @@ function codegenInstructionValue(
       break;
     }
     case "NewExpression": {
-      const callee = codegenPlace(cx, instrValue.callee);
+      const callee = codegenPlaceToExpression(cx, instrValue.callee);
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
       value = t.newExpression(callee, args);
       break;
@@ -983,7 +1009,7 @@ function codegenInstructionValue(
 
           switch (property.type) {
             case "property": {
-              const value = codegenPlace(cx, property.place);
+              const value = codegenPlaceToExpression(cx, property.place);
               properties.push(
                 t.objectProperty(
                   key,
@@ -1029,14 +1055,16 @@ function codegenInstructionValue(
               );
           }
         } else {
-          properties.push(t.spreadElement(codegenPlace(cx, property.place)));
+          properties.push(
+            t.spreadElement(codegenPlaceToExpression(cx, property.place))
+          );
         }
       }
       value = t.objectExpression(properties);
       break;
     }
     case "JSXText": {
-      value = createStringLiteral(instrValue.loc, instrValue.value);
+      value = createJsxText(instrValue.loc, instrValue.value);
       break;
     }
     case "JsxExpression": {
@@ -1046,7 +1074,7 @@ function codegenInstructionValue(
       }
       let tagValue =
         instrValue.tag.kind === "Identifier"
-          ? codegenPlace(cx, instrValue.tag)
+          ? codegenPlaceToExpression(cx, instrValue.tag)
           : t.stringLiteral(instrValue.tag.name);
       let tag: t.JSXIdentifier | t.JSXNamespacedName | t.JSXMemberExpression;
       if (tagValue.type === "Identifier") {
@@ -1130,15 +1158,15 @@ function codegenInstructionValue(
       value = t.assignmentExpression(
         "=",
         t.memberExpression(
-          codegenPlace(cx, instrValue.object),
+          codegenPlaceToExpression(cx, instrValue.object),
           t.identifier(instrValue.property)
         ),
-        codegenPlace(cx, instrValue.value)
+        codegenPlaceToExpression(cx, instrValue.value)
       );
       break;
     }
     case "PropertyLoad": {
-      const object = codegenPlace(cx, instrValue.object);
+      const object = codegenPlaceToExpression(cx, instrValue.object);
       // We currently only lower single chains of optional memberexpr.
       // (See BuildHIR.ts for more detail.)
       value = t.memberExpression(
@@ -1152,7 +1180,7 @@ function codegenInstructionValue(
       value = t.unaryExpression(
         "delete",
         t.memberExpression(
-          codegenPlace(cx, instrValue.object),
+          codegenPlaceToExpression(cx, instrValue.object),
           t.identifier(instrValue.property)
         )
       );
@@ -1162,17 +1190,17 @@ function codegenInstructionValue(
       value = t.assignmentExpression(
         "=",
         t.memberExpression(
-          codegenPlace(cx, instrValue.object),
-          codegenPlace(cx, instrValue.property),
+          codegenPlaceToExpression(cx, instrValue.object),
+          codegenPlaceToExpression(cx, instrValue.property),
           true
         ),
-        codegenPlace(cx, instrValue.value)
+        codegenPlaceToExpression(cx, instrValue.value)
       );
       break;
     }
     case "ComputedLoad": {
-      const object = codegenPlace(cx, instrValue.object);
-      const property = codegenPlace(cx, instrValue.property);
+      const object = codegenPlaceToExpression(cx, instrValue.object);
+      const property = codegenPlaceToExpression(cx, instrValue.property);
       value = t.memberExpression(object, property, true);
       break;
     }
@@ -1180,8 +1208,8 @@ function codegenInstructionValue(
       value = t.unaryExpression(
         "delete",
         t.memberExpression(
-          codegenPlace(cx, instrValue.object),
-          codegenPlace(cx, instrValue.property),
+          codegenPlaceToExpression(cx, instrValue.object),
+          codegenPlaceToExpression(cx, instrValue.property),
           true
         )
       );
@@ -1189,7 +1217,7 @@ function codegenInstructionValue(
     }
     case "LoadLocal":
     case "LoadContext": {
-      value = codegenPlace(cx, instrValue.place);
+      value = codegenPlaceToExpression(cx, instrValue.place);
       break;
     }
     case "FunctionExpression": {
@@ -1223,14 +1251,14 @@ function codegenInstructionValue(
     case "TaggedTemplateExpression": {
       value = createTaggedTemplateExpression(
         instrValue.loc,
-        codegenPlace(cx, instrValue.tag),
+        codegenPlaceToExpression(cx, instrValue.tag),
         t.templateLiteral([t.templateElement(instrValue.value)], [])
       );
       break;
     }
     case "TypeCastExpression": {
       value = t.typeCastExpression(
-        codegenPlace(cx, instrValue.value),
+        codegenPlaceToExpression(cx, instrValue.value),
         instrValue.type
       );
       break;
@@ -1239,17 +1267,17 @@ function codegenInstructionValue(
       value = createLogicalExpression(
         instrValue.loc,
         instrValue.operator,
-        codegenInstructionValue(cx, instrValue.left),
-        codegenInstructionValue(cx, instrValue.right)
+        codegenInstructionValueToExpression(cx, instrValue.left),
+        codegenInstructionValueToExpression(cx, instrValue.right)
       );
       break;
     }
     case "ConditionalExpression": {
       value = createConditionalExpression(
         instrValue.loc,
-        codegenInstructionValue(cx, instrValue.test),
-        codegenInstructionValue(cx, instrValue.consequent),
-        codegenInstructionValue(cx, instrValue.alternate)
+        codegenInstructionValueToExpression(cx, instrValue.test),
+        codegenInstructionValueToExpression(cx, instrValue.consequent),
+        codegenInstructionValueToExpression(cx, instrValue.alternate)
       );
       break;
     }
@@ -1288,11 +1316,11 @@ function codegenInstructionValue(
         }
       });
       if (expressions.length === 0) {
-        value = codegenInstructionValue(cx, instrValue.value);
+        value = codegenInstructionValueToExpression(cx, instrValue.value);
       } else {
         value = createSequenceExpression(instrValue.loc, [
           ...expressions,
-          codegenInstructionValue(cx, instrValue.value),
+          codegenInstructionValueToExpression(cx, instrValue.value),
         ]);
       }
       break;
@@ -1301,7 +1329,7 @@ function codegenInstructionValue(
       value = createTemplateLiteral(
         instrValue.loc,
         instrValue.quasis.map((q) => t.templateElement(q)),
-        instrValue.subexprs.map((p) => codegenPlace(cx, p))
+        instrValue.subexprs.map((p) => codegenPlaceToExpression(cx, p))
       );
       break;
     }
@@ -1314,21 +1342,21 @@ function codegenInstructionValue(
       break;
     }
     case "Await": {
-      value = t.awaitExpression(codegenPlace(cx, instrValue.value));
+      value = t.awaitExpression(codegenPlaceToExpression(cx, instrValue.value));
       break;
     }
     case "NextIterableOf": {
-      value = codegenPlace(cx, instrValue.value);
+      value = codegenPlaceToExpression(cx, instrValue.value);
       break;
     }
     case "NextPropertyOf": {
-      value = codegenPlace(cx, instrValue.value);
+      value = codegenPlaceToExpression(cx, instrValue.value);
       break;
     }
     case "PostfixUpdate": {
       value = t.updateExpression(
         instrValue.operation,
-        codegenPlace(cx, instrValue.lvalue),
+        codegenPlaceToExpression(cx, instrValue.lvalue),
         false
       );
       break;
@@ -1336,7 +1364,7 @@ function codegenInstructionValue(
     case "PrefixUpdate": {
       value = t.updateExpression(
         instrValue.operation,
-        codegenPlace(cx, instrValue.lvalue),
+        codegenPlaceToExpression(cx, instrValue.lvalue),
         true
       );
       break;
@@ -1382,7 +1410,7 @@ function codegenJsxAttribute(
           createJsxIdentifier(attribute.place.loc, name)
         );
       }
-      const innerValue = codegenPlace(cx, attribute.place);
+      const innerValue = codegenPlaceToExpression(cx, attribute.place);
       let value;
       switch (innerValue.type) {
         case "StringLiteral": {
@@ -1401,7 +1429,9 @@ function codegenJsxAttribute(
       return createJsxAttribute(attribute.place.loc, propName, value);
     }
     case "JsxSpreadAttribute": {
-      return t.jsxSpreadAttribute(codegenPlace(cx, attribute.argument));
+      return t.jsxSpreadAttribute(
+        codegenPlaceToExpression(cx, attribute.argument)
+      );
     }
     default: {
       assertExhaustive(
@@ -1423,7 +1453,7 @@ function codegenJsxElement(
   | t.JSXFragment {
   const value = codegenPlace(cx, place);
   switch (value.type) {
-    case "StringLiteral": {
+    case "JSXText": {
       return createJsxText(place.loc, value.value);
     }
     case "JSXElement":
@@ -1448,6 +1478,7 @@ function codegenJsxFbtChildElement(
   const value = codegenPlace(cx, place);
   switch (value.type) {
     // fbt:param only allows JSX element or expression container as children
+    case "JSXText":
     case "JSXElement": {
       return value;
     }
@@ -1565,13 +1596,18 @@ function codegenArgument(
   arg: Place | SpreadPattern
 ): t.Expression | t.SpreadElement {
   if (arg.kind === "Identifier") {
-    return codegenPlace(cx, arg);
+    return codegenPlaceToExpression(cx, arg);
   } else {
-    return t.spreadElement(codegenPlace(cx, arg.place));
+    return t.spreadElement(codegenPlaceToExpression(cx, arg.place));
   }
 }
 
-function codegenPlace(cx: Context, place: Place): t.Expression {
+function codegenPlaceToExpression(cx: Context, place: Place): t.Expression {
+  const value = codegenPlace(cx, place);
+  return convertValueToExpression(value);
+}
+
+function codegenPlace(cx: Context, place: Place): t.Expression | t.JSXText {
   let tmp = cx.temp.get(place.identifier.id);
   if (tmp != null) {
     return tmp;

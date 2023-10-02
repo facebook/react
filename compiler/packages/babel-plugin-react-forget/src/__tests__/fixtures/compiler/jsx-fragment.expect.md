@@ -43,8 +43,7 @@ function Foo(props) {
   if (c_1) {
     t1 = (
       <>
-        Hello {props.greeting}
-        {t0}
+        Hello {props.greeting} {t0}
       </>
     );
     $[1] = props.greeting;

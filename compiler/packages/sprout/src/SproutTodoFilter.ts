@@ -459,6 +459,7 @@ const skipFilter = new Set([
   "fbtparam-with-jsx-element-content",
   "fbtparam-text-must-use-expression-container",
   "fbtparam-with-jsx-fragment-value",
+  "fbt-preserve-jsxtext",
 ]);
 
 export default skipFilter;
