@@ -164,9 +164,6 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
     return;
   }
 
-  const workInProgressRoot = getWorkInProgressRoot();
-  const workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
-
   // There may or may not be synchronous work scheduled. Let's check.
   let didPerformSomeWork;
   let errors: Array<mixed> | null = null;
@@ -178,6 +175,9 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
       if (onlyLegacy && root.tag !== LegacyRoot) {
         // Skip non-legacy roots.
       } else {
+        const workInProgressRoot = getWorkInProgressRoot();
+        const workInProgressRootRenderLanes =
+          getWorkInProgressRootRenderLanes();
         const nextLanes = getNextLanes(
           root,
           root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
@@ -185,10 +185,8 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
         if (includesSyncLane(nextLanes)) {
           // This root has pending sync work. Flush it now.
           try {
-            // TODO: Pass nextLanes as an argument instead of computing it again
-            // inside performSyncWorkOnRoot.
             didPerformSomeWork = true;
-            performSyncWorkOnRoot(root);
+            performSyncWorkOnRoot(root, nextLanes);
           } catch (error) {
             // Collect errors so we can rethrow them at the end
             if (errors === null) {

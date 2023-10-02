@@ -24,8 +24,8 @@ import {
 import {TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
 import {
-  checkForUpdate,
   inspectElement,
+  startElementUpdatesPolling,
 } from 'react-devtools-shared/src/inspectedElementCache';
 import {
   clearHookNamesCache,
@@ -58,8 +58,6 @@ type Context = {
 
 export const InspectedElementContext: ReactContext<Context> =
   createContext<Context>(((null: any): Context));
-
-const POLL_INTERVAL = 1000;
 
 export type Props = {
   children: ReactNodeList,
@@ -106,6 +104,8 @@ export function InspectedElementContextController({
   const [parseHookNames, setParseHookNames] = useState<boolean>(
     parseHookNamesByDefault || alreadyLoadedHookNames,
   );
+
+  const [bridgeIsAlive, setBridgeIsAliveStatus] = useState<boolean>(true);
 
   const elementHasChanged = element !== null && element !== state.element;
 
@@ -213,16 +213,34 @@ export function InspectedElementContextController({
     }
   }, [state]);
 
+  useEffect(() => {
+    // Assuming that new bridge is always alive at this moment
+    setBridgeIsAliveStatus(true);
+
+    const listener = () => setBridgeIsAliveStatus(false);
+    bridge.addListener('shutdown', listener);
+
+    return () => bridge.removeListener('shutdown', listener);
+  }, [bridge]);
+
   // Periodically poll the selected element for updates.
   useEffect(() => {
-    if (element !== null) {
-      const checkForUpdateWrapper = () => {
-        checkForUpdate({bridge, element, refresh, store});
-        timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
-      };
-      let timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
+    if (element !== null && bridgeIsAlive) {
+      const {abort, pause, resume} = startElementUpdatesPolling({
+        bridge,
+        element,
+        refresh,
+        store,
+      });
+
+      bridge.addListener('resumeElementPolling', resume);
+      bridge.addListener('pauseElementPolling', pause);
+
       return () => {
-        clearTimeout(timeoutID);
+        bridge.removeListener('resumeElementPolling', resume);
+        bridge.removeListener('pauseElementPolling', pause);
+
+        abort();
       };
     }
   }, [
@@ -232,6 +250,7 @@ export function InspectedElementContextController({
     // No sense to ping right away after e.g. inspecting/hydrating a path.
     inspectedElement,
     state,
+    bridgeIsAlive,
   ]);
 
   const value = useMemo<Context>(

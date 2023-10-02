@@ -12,69 +12,66 @@ import type {
   FulfilledThenable,
   RejectedThenable,
 } from 'shared/ReactTypes';
+import type {ModuleLoading} from 'react-client/src/ReactFlightClientConfig';
 
-export type SSRManifest = {
-  [clientId: string]: {
-    [clientExportName: string]: ClientReference<any>,
-  },
-};
+export type SSRModuleMap = string; // Module root path
 
-export type ServerManifest = void;
+export type ServerManifest = string; // Module root path
 
 export type ServerReferenceId = string;
 
-export opaque type ClientReferenceMetadata = {
-  id: string,
-  chunks: Array<string>,
-  name: string,
-  async?: boolean,
-};
+import {prepareDestinationForModuleImpl} from 'react-client/src/ReactFlightClientConfig';
+
+export opaque type ClientReferenceMetadata = [
+  string, // module path
+  string, // export name
+];
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {
   specifier: string,
   name: string,
-  async?: boolean,
 };
 
+// The reason this function needs to defined here in this file instead of just
+// being exported directly from the WebpackDestination... file is because the
+// ClientReferenceMetadata is opaque and we can't unwrap it there.
+// This should get inlined and we could also just implement an unwrapping function
+// though that risks it getting used in places it shouldn't be. This is unfortunate
+// but currently it seems to be the best option we have.
+export function prepareDestinationForModule(
+  moduleLoading: ModuleLoading,
+  nonce: ?string,
+  metadata: ClientReferenceMetadata,
+) {
+  prepareDestinationForModuleImpl(moduleLoading, metadata[0], nonce);
+}
+
 export function resolveClientReference<T>(
-  bundlerConfig: SSRManifest,
+  bundlerConfig: SSRModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  const moduleExports = bundlerConfig[metadata.id];
-  let resolvedModuleData = moduleExports[metadata.name];
-  let name;
-  if (resolvedModuleData) {
-    // The potentially aliased name.
-    name = resolvedModuleData.name;
-  } else {
-    // If we don't have this specific name, we might have the full module.
-    resolvedModuleData = moduleExports['*'];
-    if (!resolvedModuleData) {
-      throw new Error(
-        'Could not find the module "' +
-          metadata.id +
-          '" in the React SSR Manifest. ' +
-          'This is probably a bug in the React Server Components bundler.',
-      );
-    }
-    name = metadata.name;
-  }
+  const baseURL = bundlerConfig;
   return {
-    specifier: resolvedModuleData.specifier,
-    name: name,
-    async: metadata.async,
+    specifier: baseURL + metadata[0],
+    name: metadata[1],
   };
 }
 
 export function resolveServerReference<T>(
-  bundlerConfig: ServerManifest,
+  config: ServerManifest,
   id: ServerReferenceId,
 ): ClientReference<T> {
+  const baseURL: string = config;
   const idx = id.lastIndexOf('#');
-  const specifier = id.slice(0, idx);
-  const name = id.slice(idx + 1);
-  return {specifier, name};
+  const exportName = id.slice(idx + 1);
+  const fullURL = id.slice(0, idx);
+  if (!fullURL.startsWith(baseURL)) {
+    throw new Error(
+      'Attempted to load a Server Reference outside the hosted root.',
+    );
+  }
+  return {specifier: fullURL, name: exportName};
 }
 
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();
@@ -90,16 +87,7 @@ export function preloadModule<T>(
     return existingPromise;
   } else {
     // $FlowFixMe[unsupported-syntax]
-    let modulePromise: Promise<T> = import(metadata.specifier);
-    if (metadata.async) {
-      // If the module is async, it must have been a CJS module.
-      // CJS modules are accessed through the default export in
-      // Node.js so we have to get the default export to get the
-      // full module exports.
-      modulePromise = modulePromise.then(function (value) {
-        return (value: any).default;
-      });
-    }
+    const modulePromise: Thenable<T> = import(metadata.specifier);
     modulePromise.then(
       value => {
         const fulfilledThenable: FulfilledThenable<mixed> =
@@ -127,16 +115,6 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
     moduleExports = promise.value;
   } else {
     throw promise.reason;
-  }
-  if (metadata.name === '*') {
-    // This is a placeholder value that represents that the caller imported this
-    // as a CommonJS module as is.
-    return moduleExports;
-  }
-  if (metadata.name === '') {
-    // This is a placeholder value that represents that the caller accessed the
-    // default property of this if it was an ESM interop module.
-    return moduleExports.default;
   }
   return moduleExports[metadata.name];
 }

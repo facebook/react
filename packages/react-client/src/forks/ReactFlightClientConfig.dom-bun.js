@@ -11,7 +11,8 @@ export * from 'react-client/src/ReactFlightClientConfigBrowser';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 
 export type Response = any;
-export opaque type SSRManifest = mixed;
+export opaque type ModuleLoading = mixed;
+export opaque type SSRModuleMap = mixed;
 export opaque type ServerManifest = mixed;
 export opaque type ServerReferenceId = string;
 export opaque type ClientReferenceMetadata = mixed;
@@ -20,4 +21,5 @@ export const resolveClientReference: any = null;
 export const resolveServerReference: any = null;
 export const preloadModule: any = null;
 export const requireModule: any = null;
+export const prepareDestinationForModule: any = null;
 export const usedWithSSR = true;

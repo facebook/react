@@ -7,7 +7,13 @@
  * @flow
  */
 
-import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  PendingThenable,
+  FulfilledThenable,
+  RejectedThenable,
+  ReactCustomFormAction,
+} from 'shared/ReactTypes';
 
 import {
   REACT_ELEMENT_TYPE,
@@ -23,10 +29,6 @@ import {
 } from 'shared/ReactSerializationErrors';
 
 import isArray from 'shared/isArray';
-import type {
-  FulfilledThenable,
-  RejectedThenable,
-} from '../../shared/ReactTypes';
 
 import {usedWithSSR} from './ReactFlightClientConfig';
 
@@ -44,7 +46,7 @@ export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
 
 export type ServerReferenceId = any;
 
-export const knownServerReferences: WeakMap<
+const knownServerReferences: WeakMap<
   Function,
   {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
 > = new WeakMap();
@@ -488,6 +490,109 @@ export function encodeFormAction(
   };
 }
 
+function isSignatureEqual(
+  this: any => Promise<any>,
+  referenceId: ServerReferenceId,
+  numberOfBoundArgs: number,
+): boolean {
+  const reference = knownServerReferences.get(this);
+  if (!reference) {
+    throw new Error(
+      'Tried to encode a Server Action from a different instance than the encoder is from. ' +
+        'This is a bug in React.',
+    );
+  }
+  if (reference.id !== referenceId) {
+    // These are different functions.
+    return false;
+  }
+  // Now check if the number of bound arguments is the same.
+  const boundPromise = reference.bound;
+  if (boundPromise === null) {
+    // No bound arguments.
+    return numberOfBoundArgs === 0;
+  }
+  // Unwrap the bound arguments array by suspending, if necessary. As with
+  // encodeFormData, this means isSignatureEqual can only be called while React
+  // is rendering.
+  switch (boundPromise.status) {
+    case 'fulfilled': {
+      const boundArgs = boundPromise.value;
+      return boundArgs.length === numberOfBoundArgs;
+    }
+    case 'pending': {
+      throw boundPromise;
+    }
+    case 'rejected': {
+      throw boundPromise.reason;
+    }
+    default: {
+      if (typeof boundPromise.status === 'string') {
+        // Only instrument the thenable if the status if not defined.
+      } else {
+        const pendingThenable: PendingThenable<Array<any>> =
+          (boundPromise: any);
+        pendingThenable.status = 'pending';
+        pendingThenable.then(
+          (boundArgs: Array<any>) => {
+            const fulfilledThenable: FulfilledThenable<Array<any>> =
+              (boundPromise: any);
+            fulfilledThenable.status = 'fulfilled';
+            fulfilledThenable.value = boundArgs;
+          },
+          (error: mixed) => {
+            const rejectedThenable: RejectedThenable<number> =
+              (boundPromise: any);
+            rejectedThenable.status = 'rejected';
+            rejectedThenable.reason = error;
+          },
+        );
+      }
+      throw boundPromise;
+    }
+  }
+}
+
+export function registerServerReference(
+  proxy: any,
+  reference: {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+) {
+  // Expose encoder for use by SSR, as well as a special bind that can be used to
+  // keep server capabilities.
+  if (usedWithSSR) {
+    // Only expose this in builds that would actually use it. Not needed on the client.
+    Object.defineProperties((proxy: any), {
+      $$FORM_ACTION: {value: encodeFormAction},
+      $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
+      bind: {value: bind},
+    });
+  }
+  knownServerReferences.set(proxy, reference);
+}
+
+// $FlowFixMe[method-unbinding]
+const FunctionBind = Function.prototype.bind;
+// $FlowFixMe[method-unbinding]
+const ArraySlice = Array.prototype.slice;
+function bind(this: Function) {
+  // $FlowFixMe[unsupported-syntax]
+  const newFn = FunctionBind.apply(this, arguments);
+  const reference = knownServerReferences.get(this);
+  if (reference) {
+    const args = ArraySlice.call(arguments, 1);
+    let boundPromise = null;
+    if (reference.bound !== null) {
+      boundPromise = Promise.resolve((reference.bound: any)).then(boundArgs =>
+        boundArgs.concat(args),
+      );
+    } else {
+      boundPromise = Promise.resolve(args);
+    }
+    registerServerReference(newFn, {id: reference.id, bound: boundPromise});
+  }
+  return newFn;
+}
+
 export function createServerReference<A: Iterable<any>, T>(
   id: ServerReferenceId,
   callServer: CallServerCallback,
@@ -497,11 +602,6 @@ export function createServerReference<A: Iterable<any>, T>(
     const args = Array.prototype.slice.call(arguments);
     return callServer(id, args);
   };
-  // Expose encoder for use by SSR.
-  if (usedWithSSR) {
-    // Only expose this in builds that would actually use it. Not needed on the client.
-    (proxy: any).$$FORM_ACTION = encodeFormAction;
-  }
-  knownServerReferences.set(proxy, {id: id, bound: null});
+  registerServerReference(proxy, {id, bound: null});
   return proxy;
 }

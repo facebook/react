@@ -14,6 +14,7 @@ let act;
 let use;
 let startTransition;
 let React;
+let ReactServer;
 let ReactNoop;
 let ReactNoopFlightServer;
 let ReactNoopFlightClient;
@@ -25,12 +26,18 @@ let assertLog;
 describe('ReactFlight', () => {
   beforeEach(() => {
     jest.resetModules();
-
+    jest.mock('react', () => require('react/react.shared-subset'));
+    ReactServer = require('react');
+    ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+    // This stores the state so we need to preserve it
+    const flightModules = require('react-noop-renderer/flight-modules');
+    __unmockReact();
+    jest.resetModules();
+    jest.mock('react-noop-renderer/flight-modules', () => flightModules);
     React = require('react');
     startTransition = React.startTransition;
     use = React.use;
     ReactNoop = require('react-noop-renderer');
-    ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
@@ -97,6 +104,32 @@ describe('ReactFlight', () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
+
+  function createServerContext(globalName, defaultValue, withStack) {
+    let ctx;
+    expect(() => {
+      ctx = React.createServerContext(globalName, defaultValue);
+    }).toErrorDev(
+      'Server Context is deprecated and will soon be removed. ' +
+        'It was never documented and we have found it not to be useful ' +
+        'enough to warrant the downside it imposes on all apps.',
+      {withoutStack: !withStack},
+    );
+    return ctx;
+  }
+
+  function createServerServerContext(globalName, defaultValue, withStack) {
+    let ctx;
+    expect(() => {
+      ctx = ReactServer.createServerContext(globalName, defaultValue);
+    }).toErrorDev(
+      'Server Context is deprecated and will soon be removed. ' +
+        'It was never documented and we have found it not to be useful ' +
+        'enough to warrant the downside it imposes on all apps.',
+      {withoutStack: !withStack},
+    );
+    return ctx;
+  }
 
   function clientReference(value) {
     return Object.defineProperties(
@@ -957,7 +990,7 @@ describe('ReactFlight', () => {
     const Context = React.createContext();
     const ClientContext = clientReference(Context);
     function ServerComponent() {
-      return React.useContext(ClientContext);
+      return ReactServer.useContext(ClientContext);
     }
     expect(() => {
       const transport = ReactNoopFlightServer.render(<ServerComponent />);
@@ -969,7 +1002,7 @@ describe('ReactFlight', () => {
 
   describe('Hooks', () => {
     function DivWithId({children}) {
-      const id = React.useId();
+      const id = ReactServer.useId();
       return <div prop={id}>{children}</div>;
     }
 
@@ -1026,7 +1059,7 @@ describe('ReactFlight', () => {
       // so the output passed to the Client has no knowledge of the useId use. In the future we would like to add a DEV warning when this happens. For now
       // we just accept that it is a nuance of useId in Flight
       function App() {
-        const id = React.useId();
+        const id = ReactServer.useId();
         const div = <div prop={id}>{id}</div>;
         return <ClientDoublerModuleRef el={div} />;
       }
@@ -1063,19 +1096,17 @@ describe('ReactFlight', () => {
   describe('ServerContext', () => {
     // @gate enableServerContext
     it('supports basic createServerContext usage', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'hello from server',
       );
       function Foo() {
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return <div>{context}</div>;
       }
 
       const transport = ReactNoopFlightServer.render(<Foo />);
       await act(async () => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(await ReactNoopFlightClient.read(transport));
       });
 
@@ -1084,7 +1115,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('propagates ServerContext providers in flight', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
@@ -1099,14 +1130,12 @@ describe('ReactFlight', () => {
         );
       }
       function Bar() {
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return context;
       }
 
       const transport = ReactNoopFlightServer.render(<Foo />);
       await act(async () => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(await ReactNoopFlightClient.read(transport));
       });
 
@@ -1115,7 +1144,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('errors if you try passing JSX through ServerContext value', () => {
-      const ServerContext = React.createServerContext('ServerContext', {
+      const ServerContext = createServerServerContext('ServerContext', {
         foo: {
           bar: <span>hi this is default</span>,
         },
@@ -1136,7 +1165,7 @@ describe('ReactFlight', () => {
         );
       }
       function Bar() {
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return context.foo.bar;
       }
 
@@ -1149,7 +1178,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('propagates ServerContext and cleans up the providers in flight', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
@@ -1174,7 +1203,7 @@ describe('ReactFlight', () => {
         );
       }
       function Bar() {
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return <span>{context}</span>;
       }
 
@@ -1196,7 +1225,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('propagates ServerContext providers in flight after suspending', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
@@ -1227,7 +1256,7 @@ describe('ReactFlight', () => {
           throw promise;
         }
         Scheduler.log('rendered');
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return context;
       }
 
@@ -1244,8 +1273,6 @@ describe('ReactFlight', () => {
       assertLog(['rendered']);
 
       await act(async () => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(await ReactNoopFlightClient.read(transport));
       });
 
@@ -1254,14 +1281,15 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('serializes ServerContext to client', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
+      const ClientContext = createServerContext('ServerContext', 'default');
 
       function ClientBar() {
         Scheduler.log('ClientBar');
-        const context = React.useContext(ServerContext);
+        const context = React.useContext(ClientContext);
         return <span>{context}</span>;
       }
 
@@ -1284,8 +1312,6 @@ describe('ReactFlight', () => {
       assertLog([]);
 
       await act(async () => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         const flightModel = await ReactNoopFlightClient.read(transport);
         ReactNoop.render(flightModel.foo);
       });
@@ -1294,18 +1320,18 @@ describe('ReactFlight', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
 
       expect(() => {
-        React.createServerContext('ServerContext', 'default');
+        createServerContext('ServerContext', 'default');
       }).toThrow('ServerContext: ServerContext already defined');
     });
 
     // @gate enableServerContext
     it('takes ServerContext from the client for refetching use cases', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
       function Bar() {
-        return <span>{React.useContext(ServerContext)}</span>;
+        return <span>{ReactServer.useContext(ServerContext)}</span>;
       }
       const transport = ReactNoopFlightServer.render(<Bar />, {
         context: [['ServerContext', 'Override']],
@@ -1323,7 +1349,7 @@ describe('ReactFlight', () => {
       let ServerContext;
       function inlineLazyServerContextInitialization() {
         if (!ServerContext) {
-          ServerContext = React.createServerContext('ServerContext', 'default');
+          ServerContext = createServerServerContext('ServerContext', 'default');
         }
         return ServerContext;
       }
@@ -1331,7 +1357,7 @@ describe('ReactFlight', () => {
       let ClientContext;
       function inlineContextInitialization() {
         if (!ClientContext) {
-          ClientContext = React.createServerContext('ServerContext', 'default');
+          ClientContext = createServerContext('ServerContext', 'default', true);
         }
         return ClientContext;
       }
@@ -1348,7 +1374,7 @@ describe('ReactFlight', () => {
         return (
           <article>
             <div>
-              {React.useContext(inlineLazyServerContextInitialization())}
+              {ReactServer.useContext(inlineLazyServerContextInitialization())}
             </div>
             <Baz />
           </article>
@@ -1383,11 +1409,17 @@ describe('ReactFlight', () => {
       // Reset all modules, except flight-modules which keeps the registry of Client Components
       const flightModules = require('react-noop-renderer/flight-modules');
       jest.resetModules();
+      jest.mock('react', () => require('react/react.shared-subset'));
       jest.mock('react-noop-renderer/flight-modules', () => flightModules);
 
+      ReactServer = require('react');
+      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+
+      __unmockReact();
+      jest.resetModules();
+      jest.mock('react-noop-renderer/flight-modules', () => flightModules);
       React = require('react');
       ReactNoop = require('react-noop-renderer');
-      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
       ReactNoopFlightClient = require('react-noop-renderer/flight-client');
       act = require('internal-test-utils').act;
       Scheduler = require('scheduler');

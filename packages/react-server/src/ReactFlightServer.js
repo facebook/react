@@ -37,6 +37,7 @@ import type {
   ServerReference,
   ServerReferenceId,
   Hints,
+  HintCode,
   HintModel,
 } from './ReactFlightServerConfig';
 import type {ContextSnapshot} from './ReactFlightNewContext';
@@ -103,7 +104,7 @@ import {
 } from 'shared/ReactSerializationErrors';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactServerSharedInternals from './ReactServerSharedInternals';
 import isArray from 'shared/isArray';
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
@@ -196,8 +197,9 @@ export type Request = {
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
 };
 
-const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-const ReactCurrentCache = ReactSharedInternals.ReactCurrentCache;
+const ReactCurrentDispatcher =
+  ReactServerSharedInternals.ReactCurrentDispatcher;
+const ReactCurrentCache = ReactServerSharedInternals.ReactCurrentCache;
 
 function defaultErrorHandler(error: mixed) {
   console['error'](error);
@@ -358,6 +360,7 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
     },
     reason => {
       newTask.status = ERRORED;
+      request.abortableTasks.delete(newTask);
       // TODO: We should ideally do this inside performWork so it's scheduled
       const digest = logRecoverableError(request, reason);
       emitErrorChunk(request, newTask.id, digest, reason);
@@ -370,10 +373,10 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
   return newTask.id;
 }
 
-export function emitHint(
+export function emitHint<Code: HintCode>(
   request: Request,
-  code: string,
-  model: HintModel,
+  code: Code,
+  model: HintModel<Code>,
 ): void {
   emitHintChunk(request, code, model);
   enqueueFlush(request);
@@ -1272,7 +1275,11 @@ function emitImportChunk(
   request.completedImportChunks.push(processedChunk);
 }
 
-function emitHintChunk(request: Request, code: string, model: HintModel): void {
+function emitHintChunk<Code: HintCode>(
+  request: Request,
+  code: Code,
+  model: HintModel<Code>,
+): void {
   const json: string = stringify(model);
   const id = request.nextChunkId++;
   const row = serializeRowHeader('H' + code, id) + json + '\n';
@@ -1563,6 +1570,10 @@ export function startFlowing(request: Request, destination: Destination): void {
     logRecoverableError(request, error);
     fatalError(request, error);
   }
+}
+
+export function stopFlowing(request: Request): void {
+  request.destination = null;
 }
 
 // This is called to early terminate a request. It creates an error at all pending tasks.

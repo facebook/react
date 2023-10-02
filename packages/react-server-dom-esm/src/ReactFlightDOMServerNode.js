@@ -22,6 +22,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -36,7 +37,10 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
-import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+import {
+  decodeAction,
+  decodeFormState,
+} from 'react-server/src/ReactFlightActionServer';
 
 export {
   registerServerReference,
@@ -87,6 +91,7 @@ function renderToPipeableStream(
       return destination;
     },
     abort(reason: mixed) {
+      stopFlowing(request);
       abort(request, reason);
     },
   };
@@ -166,4 +171,5 @@ export {
   decodeReplyFromBusboy,
   decodeReply,
   decodeAction,
+  decodeFormState,
 };

@@ -7,7 +7,12 @@
  * @flow
  */
 
-import type {ResumableState, BoundaryResources} from './ReactFizzConfigDOM';
+import type {
+  ResumableState,
+  BoundaryResources,
+  StyleQueue,
+  Resource,
+} from './ReactFizzConfigDOM';
 
 import {
   createRenderState as createRenderStateImpl,
@@ -35,14 +40,31 @@ export type RenderState = {
   // Keep this in sync with ReactFizzConfigDOM
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
-  boundaryPrefix: string,
+  boundaryPrefix: PrecomputedChunk,
   startInlineScript: PrecomputedChunk,
   htmlChunks: null | Array<Chunk | PrecomputedChunk>,
   headChunks: null | Array<Chunk | PrecomputedChunk>,
+  externalRuntimeScript: null | any,
+  bootstrapChunks: Array<Chunk | PrecomputedChunk>,
   charsetChunks: Array<Chunk | PrecomputedChunk>,
   preconnectChunks: Array<Chunk | PrecomputedChunk>,
+  importMapChunks: Array<Chunk | PrecomputedChunk>,
   preloadChunks: Array<Chunk | PrecomputedChunk>,
   hoistableChunks: Array<Chunk | PrecomputedChunk>,
+  preconnects: Set<Resource>,
+  fontPreloads: Set<Resource>,
+  highImagePreloads: Set<Resource>,
+  // usedImagePreloads: Set<Resource>,
+  styles: Map<string, StyleQueue>,
+  bootstrapScripts: Set<Resource>,
+  scripts: Set<Resource>,
+  bulkPreloads: Set<Resource>,
+  preloads: {
+    images: Map<string, Resource>,
+    stylesheets: Map<string, Resource>,
+    scripts: Map<string, Resource>,
+    moduleScripts: Map<string, Resource>,
+  },
   boundaryResources: ?BoundaryResources,
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
@@ -51,10 +73,17 @@ export type RenderState = {
 
 export function createRenderState(
   resumableState: ResumableState,
-  nonce: string | void,
   generateStaticMarkup: boolean,
 ): RenderState {
-  const renderState = createRenderStateImpl(resumableState, nonce);
+  const renderState = createRenderStateImpl(
+    resumableState,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+  );
   return {
     // Keep this in sync with ReactFizzConfigDOM
     placeholderPrefix: renderState.placeholderPrefix,
@@ -63,10 +92,22 @@ export function createRenderState(
     startInlineScript: renderState.startInlineScript,
     htmlChunks: renderState.htmlChunks,
     headChunks: renderState.headChunks,
+    externalRuntimeScript: renderState.externalRuntimeScript,
+    bootstrapChunks: renderState.bootstrapChunks,
     charsetChunks: renderState.charsetChunks,
     preconnectChunks: renderState.preconnectChunks,
+    importMapChunks: renderState.importMapChunks,
     preloadChunks: renderState.preloadChunks,
     hoistableChunks: renderState.hoistableChunks,
+    preconnects: renderState.preconnects,
+    fontPreloads: renderState.fontPreloads,
+    highImagePreloads: renderState.highImagePreloads,
+    // usedImagePreloads: renderState.usedImagePreloads,
+    styles: renderState.styles,
+    bootstrapScripts: renderState.bootstrapScripts,
+    scripts: renderState.scripts,
+    bulkPreloads: renderState.bulkPreloads,
+    preloads: renderState.preloads,
     boundaryResources: renderState.boundaryResources,
     stylesToHoist: renderState.stylesToHoist,
 
@@ -87,18 +128,17 @@ export type {
   ResumableState,
   BoundaryResources,
   FormatContext,
-  SuspenseBoundaryID,
 } from './ReactFizzConfigDOM';
 
 export {
   getChildFormatContext,
-  UNINITIALIZED_SUSPENSE_BOUNDARY_ID,
-  assignSuspenseBoundaryID,
   makeId,
   pushStartInstance,
   pushEndInstance,
   pushStartCompletedSuspenseBoundary,
   pushEndCompletedSuspenseBoundary,
+  pushFormStateMarkerIsMatching,
+  pushFormStateMarkerIsNotMatching,
   writeStartSegment,
   writeEndSegment,
   writeCompletedSegmentInstruction,

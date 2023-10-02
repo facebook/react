@@ -38,12 +38,22 @@ export function createServerReference<A: Iterable<any>, T>(
   return createServerReferenceImpl(id, noServerCall);
 }
 
+export type Options = {
+  nonce?: string,
+};
+
 function createFromNodeStream<T>(
   stream: Readable,
   moduleRootPath: string,
-  moduleBaseURL: string, // TODO: Used for preloading hints
+  moduleBaseURL: string,
+  options?: Options,
 ): Thenable<T> {
-  const response: Response = createResponse(moduleRootPath, noServerCall);
+  const response: Response = createResponse(
+    moduleRootPath,
+    moduleBaseURL,
+    noServerCall,
+    options && typeof options.nonce === 'string' ? options.nonce : undefined,
+  );
   stream.on('data', chunk => {
     processBinaryChunk(response, chunk);
   });

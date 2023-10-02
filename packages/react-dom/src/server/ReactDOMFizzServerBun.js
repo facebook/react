@@ -7,8 +7,9 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -16,6 +17,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
 
@@ -37,6 +39,8 @@ type Options = {
   onError?: (error: mixed) => ?string,
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+  importMap?: ImportMap,
+  experimental_formState?: ReactFormState<any, any> | null,
 };
 
 // TODO: Move to sub-classing ReadableStream.
@@ -65,6 +69,7 @@ function renderToReadableStream(
             startFlowing(request, controller);
           },
           cancel: (reason): ?Promise<void> => {
+            stopFlowing(request);
             abort(request);
           },
         },
@@ -84,16 +89,20 @@ function renderToReadableStream(
     }
     const resumableState = createResumableState(
       options ? options.identifierPrefix : undefined,
-      options ? options.nonce : undefined,
-      options ? options.bootstrapScriptContent : undefined,
-      options ? options.bootstrapScripts : undefined,
-      options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     );
     const request = createRequest(
       children,
       resumableState,
-      createRenderState(resumableState, options ? options.nonce : undefined),
+      createRenderState(
+        resumableState,
+        options ? options.nonce : undefined,
+        options ? options.bootstrapScriptContent : undefined,
+        options ? options.bootstrapScripts : undefined,
+        options ? options.bootstrapModules : undefined,
+        options ? options.unstable_externalRuntimeSrc : undefined,
+        options ? options.importMap : undefined,
+      ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,
@@ -102,6 +111,7 @@ function renderToReadableStream(
       onShellError,
       onFatalError,
       options ? options.onPostpone : undefined,
+      options ? options.experimental_formState : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;

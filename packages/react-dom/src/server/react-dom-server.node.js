@@ -8,3 +8,4 @@
  */
 
 export * from './ReactDOMFizzServerNode.js';
+export {prerenderToNodeStream} from './ReactDOMFizzStaticNode.js';

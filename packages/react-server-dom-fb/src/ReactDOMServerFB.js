@@ -52,16 +52,19 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
   };
   const resumableState = createResumableState(
     options ? options.identifierPrefix : undefined,
-    undefined,
-    options ? options.bootstrapScriptContent : undefined,
-    options ? options.bootstrapScripts : undefined,
-    options ? options.bootstrapModules : undefined,
     options ? options.unstable_externalRuntimeSrc : undefined,
   );
   const request = createRequest(
     children,
     resumableState,
-    createRenderState(resumableState, undefined),
+    createRenderState(
+      resumableState,
+      undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+    ),
     createRootFormatContext(undefined),
     options ? options.progressiveChunkSize : undefined,
     options.onError,
@@ -78,8 +81,8 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
   };
 }
 
-function abortStream(stream: Stream): void {
-  abort(stream.request);
+function abortStream(stream: Stream, reason: mixed): void {
+  abort(stream.request, reason);
 }
 
 function renderNextChunk(stream: Stream): string {

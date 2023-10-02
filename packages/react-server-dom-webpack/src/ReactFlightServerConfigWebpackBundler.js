@@ -8,6 +8,10 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
+import type {
+  ImportMetadata,
+  ImportManifestEntry,
+} from './shared/ReactFlightImportMetadata';
 
 import type {
   ClientReference,
@@ -17,17 +21,13 @@ import type {
 export type {ClientReference, ServerReference};
 
 export type ClientManifest = {
-  [id: string]: ClientReferenceMetadata,
+  [id: string]: ClientReferenceManifestEntry,
 };
 
 export type ServerReferenceId = string;
 
-export type ClientReferenceMetadata = {
-  id: string,
-  chunks: Array<string>,
-  name: string,
-  async: boolean,
-};
+export type ClientReferenceMetadata = ImportMetadata;
+export opaque type ClientReferenceManifestEntry = ImportManifestEntry;
 
 export type ClientReferenceKey = string;
 
@@ -71,12 +71,11 @@ export function resolveClientReferenceMetadata<T>(
       );
     }
   }
-  return {
-    id: resolvedModuleData.id,
-    chunks: resolvedModuleData.chunks,
-    name: name,
-    async: !!clientReference.$$async,
-  };
+  if (clientReference.$$async === true) {
+    return [resolvedModuleData.id, resolvedModuleData.chunks, name, 1];
+  } else {
+    return [resolvedModuleData.id, resolvedModuleData.chunks, name];
+  }
 }
 
 export function getServerReferenceId<T>(

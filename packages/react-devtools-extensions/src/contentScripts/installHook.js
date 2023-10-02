@@ -10,8 +10,11 @@ if (!window.hasOwnProperty('__REACT_DEVTOOLS_GLOBAL_HOOK__')) {
     function ({reactBuildType}) {
       window.postMessage(
         {
-          source: 'react-devtools-detector',
-          reactBuildType,
+          source: 'react-devtools-hook',
+          payload: {
+            type: 'react-renderer-attached',
+            reactBuildType,
+          },
         },
         '*',
       );

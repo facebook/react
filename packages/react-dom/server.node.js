@@ -43,8 +43,8 @@ export function renderToPipeableStream() {
   );
 }
 
-export function resume() {
-  return require('./src/server/react-dom-server.node').resume.apply(
+export function resumeToPipeableStream() {
+  return require('./src/server/react-dom-server.node').resumeToPipeableStream.apply(
     this,
     arguments,
   );

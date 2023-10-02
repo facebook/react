@@ -10,4 +10,4 @@
 export {
   prerenderToNodeStream,
   version,
-} from './src/server/ReactDOMFizzStaticNode';
+} from './src/server/react-dom-server.node';

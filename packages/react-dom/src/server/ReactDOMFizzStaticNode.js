@@ -10,13 +10,14 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 import type {PostponedState} from 'react-server/src/ReactFizzServer';
+import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import {Writable, Readable} from 'stream';
 
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
+  createPrerenderRequest,
   startWork,
   startFlowing,
   abort,
@@ -40,6 +41,7 @@ type Options = {
   onError?: (error: mixed) => ?string,
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+  importMap?: ImportMap,
 };
 
 type StaticResult = {
@@ -86,16 +88,20 @@ function prerenderToNodeStream(
     }
     const resumableState = createResumableState(
       options ? options.identifierPrefix : undefined,
-      undefined, // nonce is not compatible with prerendered bootstrap scripts
-      options ? options.bootstrapScriptContent : undefined,
-      options ? options.bootstrapScripts : undefined,
-      options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     );
-    const request = createRequest(
+    const request = createPrerenderRequest(
       children,
       resumableState,
-      createRenderState(resumableState, undefined),
+      createRenderState(
+        resumableState,
+        undefined, // nonce is not compatible with prerendered bootstrap scripts
+        options ? options.bootstrapScriptContent : undefined,
+        options ? options.bootstrapScripts : undefined,
+        options ? options.bootstrapModules : undefined,
+        options ? options.unstable_externalRuntimeSrc : undefined,
+        options ? options.importMap : undefined,
+      ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
       options ? options.onError : undefined,

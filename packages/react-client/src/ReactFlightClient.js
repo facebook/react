@@ -13,11 +13,15 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import type {
   ClientReference,
   ClientReferenceMetadata,
-  SSRManifest,
+  SSRModuleMap,
   StringDecoder,
+  ModuleLoading,
 } from './ReactFlightClientConfig';
 
-import type {HintModel} from 'react-server/src/ReactFlightServerConfig';
+import type {
+  HintCode,
+  HintModel,
+} from 'react-server/src/ReactFlightServerConfig';
 
 import type {CallServerCallback} from './ReactFlightReplyClient';
 
@@ -33,13 +37,10 @@ import {
   readPartialStringChunk,
   readFinalStringChunk,
   createStringDecoder,
-  usedWithSSR,
+  prepareDestinationForModule,
 } from './ReactFlightClientConfig';
 
-import {
-  encodeFormAction,
-  knownServerReferences,
-} from './ReactFlightReplyClient';
+import {registerServerReference} from './ReactFlightReplyClient';
 
 import {
   REACT_LAZY_TYPE,
@@ -179,8 +180,10 @@ Chunk.prototype.then = function <T>(
 };
 
 export type Response = {
-  _bundlerConfig: SSRManifest,
+  _bundlerConfig: SSRModuleMap,
+  _moduleLoading: ModuleLoading,
   _callServer: CallServerCallback,
+  _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
   _stringDecoder: StringDecoder,
@@ -545,12 +548,7 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
       return callServer(metaData.id, bound.concat(args));
     });
   };
-  // Expose encoder for use by SSR.
-  if (usedWithSSR) {
-    // Only expose this in builds that would actually use it. Not needed on the client.
-    (proxy: any).$$FORM_ACTION = encodeFormAction;
-  }
-  knownServerReferences.set(proxy, metaData);
+  registerServerReference(proxy, metaData);
   return proxy;
 }
 
@@ -712,13 +710,17 @@ function missingCall() {
 }
 
 export function createResponse(
-  bundlerConfig: SSRManifest,
+  bundlerConfig: SSRModuleMap,
+  moduleLoading: ModuleLoading,
   callServer: void | CallServerCallback,
+  nonce: void | string,
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
   const response: Response = {
     _bundlerConfig: bundlerConfig,
+    _moduleLoading: moduleLoading,
     _callServer: callServer !== undefined ? callServer : missingCall,
+    _nonce: nonce,
     _chunks: chunks,
     _stringDecoder: createStringDecoder(),
     _fromJSON: (null: any),
@@ -777,6 +779,12 @@ function resolveModule(
   );
   const clientReference = resolveClientReference<$FlowFixMe>(
     response._bundlerConfig,
+    clientReferenceMetadata,
+  );
+
+  prepareDestinationForModule(
+    response._moduleLoading,
+    response._nonce,
     clientReferenceMetadata,
   );
 
@@ -924,12 +932,12 @@ function resolvePostponeDev(
   }
 }
 
-function resolveHint(
+function resolveHint<Code: HintCode>(
   response: Response,
-  code: string,
+  code: Code,
   model: UninitializedModel,
 ): void {
-  const hintModel: HintModel = parseModel(response, model);
+  const hintModel: HintModel<Code> = parseModel(response, model);
   dispatchHint(code, hintModel);
 }
 
@@ -1053,7 +1061,7 @@ function processFullRow(
       return;
     }
     case 72 /* "H" */: {
-      const code = row[0];
+      const code: HintCode = (row[0]: any);
       resolveHint(response, code, row.slice(1));
       return;
     }
