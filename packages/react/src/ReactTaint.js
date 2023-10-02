@@ -67,7 +67,7 @@ export function taintUniqueValue(
     (typeof lifetime !== 'object' && typeof lifetime !== 'function')
   ) {
     throw new Error(
-      'To taint a value, a life time must be defined by passing an object that holds ' +
+      'To taint a value, a lifetime must be defined by passing an object that holds ' +
         'the value.',
     );
   }
@@ -95,8 +95,7 @@ export function taintUniqueValue(
     throw new Error(
       'Cannot taint a ' +
         kind +
-        ' because the value is too general and cannot be ' +
-        'a secret by',
+        ' because the value is too general and not unique enough to block globally.',
     );
   }
   const existingEntry = TaintRegistryValues.get(entryValue);
