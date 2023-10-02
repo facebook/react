@@ -106,7 +106,10 @@ function applyConstantPropagation(
   const functionDependencies = new Set<IdentifierId>();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      if (instr.value.kind === "FunctionExpression") {
+      if (
+        instr.value.kind === "FunctionExpression" ||
+        instr.value.kind === "ObjectMethod"
+      ) {
         for (const operand of instr.value.loweredFunc.dependencies) {
           functionDependencies.add(operand.identifier.id);
         }

@@ -732,6 +732,7 @@ export type InstructionValue =
       properties: Array<ObjectProperty | SpreadPattern>;
       loc: SourceLocation;
     }
+  | ObjectMethod
   | ArrayExpression
   | { kind: "JsxFragment"; children: Array<Place>; loc: SourceLocation }
   | {

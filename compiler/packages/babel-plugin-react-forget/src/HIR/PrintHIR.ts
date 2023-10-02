@@ -462,6 +462,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       )}]`;
       break;
     }
+    case "ObjectMethod":
     case "FunctionExpression": {
       const fn = printFunction(instrValue.loweredFunc.func)
         .split("\n")

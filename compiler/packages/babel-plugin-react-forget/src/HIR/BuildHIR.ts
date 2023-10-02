@@ -1277,6 +1277,23 @@ function lowerStatement(
   }
 }
 
+function lowerObjectMethod(
+  builder: HIRBuilder,
+  property: NodePath<t.ObjectMethod>
+): InstructionValue {
+  const loc = property.node.loc ?? GeneratedSource;
+  const loweredFunc = lowerFunction(builder, property);
+  if (!loweredFunc) {
+    return { kind: "UnsupportedNode", node: property.node, loc: loc };
+  }
+
+  return {
+    kind: "ObjectMethod",
+    loc,
+    loweredFunc,
+  };
+}
+
 function lowerObjectPropertyKey(
   builder: HIRBuilder,
   key: t.PrivateName | t.Expression
@@ -1378,6 +1395,22 @@ function lowerExpression(
           properties.push({
             kind: "Spread",
             place,
+          });
+        } else if (propertyPath.isObjectMethod()) {
+          const method = lowerObjectMethod(builder, propertyPath);
+          const place = lowerValueToTemporary(builder, method);
+          const loweredKey = lowerObjectPropertyKey(
+            builder,
+            propertyPath.node.key
+          );
+          if (!loweredKey) {
+            continue;
+          }
+          properties.push({
+            kind: "ObjectProperty",
+            type: "method",
+            place,
+            key: loweredKey,
           });
         } else {
           builder.errors.push({

@@ -714,6 +714,7 @@ function inferBlock(
         valueKind = ValueKind.Immutable;
         break;
       }
+      case "ObjectMethod":
       case "FunctionExpression": {
         let hasMutableOperand = false;
         for (const operand of eachInstructionOperand(instr)) {

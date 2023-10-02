@@ -9,6 +9,7 @@ type FindContextIdentifierState = {
     | NodePath<t.FunctionDeclaration>
     | NodePath<t.FunctionExpression>
     | NodePath<t.ArrowFunctionExpression>
+    | NodePath<t.ObjectMethod>
   >;
   reassigned: Set<t.Identifier>;
   referenced: Set<t.Identifier>;
@@ -75,6 +76,12 @@ export function findContextIdentifiers(
         const left = path.get("left");
         handleAssignment(state.reassigned, left);
       },
+      ObjectMethod(
+        fn: NodePath<t.ObjectMethod>,
+        state: FindContextIdentifierState
+      ): void {
+        state.currentLambda.push(fn);
+      },
       Identifier(
         path: NodePath<t.Identifier>,
         state: FindContextIdentifierState
@@ -93,7 +100,8 @@ function handleIdentifier(
   currentLambda:
     | NodePath<t.FunctionDeclaration>
     | NodePath<t.FunctionExpression>
-    | NodePath<t.ArrowFunctionExpression>,
+    | NodePath<t.ArrowFunctionExpression>
+    | NodePath<t.ObjectMethod>,
   referenced: Set<t.Identifier>,
   path: NodePath<t.Identifier>
 ): void {

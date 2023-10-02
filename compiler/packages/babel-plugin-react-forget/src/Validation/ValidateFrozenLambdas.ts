@@ -15,6 +15,7 @@ import {
   FunctionExpression,
   HIRFunction,
   IdentifierId,
+  ObjectMethod,
   Place,
   isRefValueType,
   isUseRefType,
@@ -66,6 +67,7 @@ export function validateFrozenLambdas(fn: HIRFunction): void {
     }
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
+        case "ObjectMethod":
         case "FunctionExpression": {
           if (
             instr.value.loweredFunc.dependencies.some(
@@ -119,7 +121,7 @@ export function validateFrozenLambdas(fn: HIRFunction): void {
 }
 
 class State {
-  lambdas: Map<IdentifierId, FunctionExpression> = new Map();
+  lambdas: Map<IdentifierId, FunctionExpression | ObjectMethod> = new Map();
   temporaries: Map<IdentifierId, IdentifierId> = new Map();
 }
 
@@ -132,9 +134,13 @@ function validateOperand(
       state.temporaries.get(operand.identifier.id) ?? operand.identifier.id;
     const lambda = state.lambdas.get(operandId);
     if (lambda !== undefined) {
-      // TODO: these seem to always be null, we should try to preserve original names from source
+      // TODO: these seem to always be null, we should try to preserve original
+      // names from source
+      // TODO: figure out how to print object methods as they don't have names
       const description =
-        lambda.name !== null && operand.identifier.name !== null
+        lambda.kind === "FunctionExpression" &&
+        lambda.name !== null &&
+        operand.identifier.name !== null
           ? `\`${lambda.name}\` is a function that may mutate \`${operand.identifier.name}\`. If you must mutate \`${operand.identifier.name}\` try using a React API like useState and use its setter function instead`
           : null;
       return new CompilerErrorDetail({

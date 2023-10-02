@@ -32,7 +32,10 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
   const merged = new MergedBlocks();
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
-      if (instr.value.kind === "FunctionExpression") {
+      if (
+        instr.value.kind === "FunctionExpression" ||
+        instr.value.kind === "ObjectMethod"
+      ) {
         mergeConsecutiveBlocks(instr.value.loweredFunc.func);
       }
     }

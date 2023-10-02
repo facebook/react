@@ -36,6 +36,7 @@ export function validateNoSetStateInRender(
     if (unconditionalBlocks.has(block.id)) {
       for (const instr of block.instructions) {
         switch (instr.value.kind) {
+          case "ObjectMethod":
           case "FunctionExpression": {
             /**
              * TODO: setState's return value is considered Frozen, so the lambda's mutable range

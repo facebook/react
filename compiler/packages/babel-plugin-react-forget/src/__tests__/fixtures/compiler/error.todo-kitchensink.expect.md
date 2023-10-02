@@ -83,8 +83,6 @@ let moduleLocal = false;
 
 [ReactForget] Todo: (BuildHIR::lowerStatement) Handle ClassDeclaration statements (5:10)
 
-[ReactForget] Todo: (BuildHIR::lowerExpression) Handle ObjectMethod properties in ObjectExpression (12:12)
-
 [ReactForget] Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (20:22)
 
 [ReactForget] Todo: (BuildHIR::lowerStatement) Handle non-variable initialization in ForStatement (23:25)

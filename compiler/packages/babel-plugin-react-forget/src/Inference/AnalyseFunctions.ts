@@ -8,12 +8,12 @@
 import { CompilerError } from "../CompilerError";
 import {
   Effect,
-  FunctionExpression,
   HIRFunction,
   Identifier,
   isRefValueType,
   isSetStateType,
   isUseRefType,
+  LoweredFunction,
   Place,
   ReactiveScopeDependency,
 } from "../HIR";
@@ -70,9 +70,10 @@ export default function analyseFunctions(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
+        case "ObjectMethod":
         case "FunctionExpression": {
           lower(instr.value.loweredFunc.func);
-          infer(instr.value, state, func.context);
+          infer(instr.value.loweredFunc, state, func.context);
           break;
         }
         case "PropertyLoad": {
@@ -113,12 +114,12 @@ function lower(func: HIRFunction): void {
 }
 
 function infer(
-  value: FunctionExpression,
+  loweredFunc: LoweredFunction,
   state: IdentifierState,
   context: Place[]
 ): void {
   const mutations = new Map<string, Effect>();
-  for (const operand of value.loweredFunc.func.context) {
+  for (const operand of loweredFunc.func.context) {
     if (
       isMutatedOrReassigned(operand.identifier) &&
       operand.identifier.name !== null
@@ -128,7 +129,7 @@ function infer(
     operand.identifier.mutableRange.end = operand.identifier.mutableRange.start;
   }
 
-  for (const dep of value.loweredFunc.dependencies) {
+  for (const dep of loweredFunc.dependencies) {
     let name: string | null = null;
 
     if (state.properties.has(dep.identifier)) {
@@ -174,7 +175,7 @@ function infer(
     const effect = mutations.get(place.identifier.name);
     if (effect !== undefined) {
       place.effect = effect === Effect.Unknown ? Effect.Capture : effect;
-      value.loweredFunc.dependencies.push(place);
+      loweredFunc.dependencies.push(place);
     }
   }
 }

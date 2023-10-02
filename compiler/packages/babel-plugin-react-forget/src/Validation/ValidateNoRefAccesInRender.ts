@@ -59,6 +59,7 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
           }
           break;
         }
+        case "ObjectMethod":
         case "FunctionExpression": {
           // functions are allowed to capture refs, so long as the function is not called
           // during render. see AnalyzeFunctions for how we ensure that functions which

@@ -16,6 +16,7 @@ import {
   IdentifierId,
   InstructionKind,
   JsxAttribute,
+  ObjectMethod,
   ObjectPropertyKey,
   Pattern,
   Place,
@@ -118,6 +119,8 @@ class Context {
   #declarations: Set<IdentifierId> = new Set();
   temp: Temporaries = new Map();
   errors: CompilerError = new CompilerError();
+  objectMethods: Map<IdentifierId, ObjectMethod> = new Map();
+
   constructor(env: Environment, fnName: string) {
     this.env = env;
     this.fnName = fnName;
@@ -707,6 +710,14 @@ function codegenInstructionNullable(
     }
   } else if (instr.value.kind === "Debugger") {
     return t.debuggerStatement();
+  } else if (instr.value.kind === "ObjectMethod") {
+    CompilerError.invariant(instr.lvalue, {
+      reason: "Expected object methods to have a temp lvalue",
+      loc: null,
+      suggestions: null,
+    });
+    cx.objectMethods.set(instr.lvalue.identifier.id, instr.value);
+    return null;
   } else {
     const value = codegenInstructionValue(cx, instr.value);
     const statement = codegenInstruction(cx, instr, value);
@@ -969,15 +980,54 @@ function codegenInstructionValue(
       for (const property of instrValue.properties) {
         if (property.kind === "ObjectProperty") {
           const key = codegenObjectPropertyKey(property.key);
-          const value = codegenPlace(cx, property.place);
-          properties.push(
-            t.objectProperty(
-              key,
-              value,
-              false,
-              value.type === "Identifier" && value.name === property.key.name
-            )
-          );
+
+          switch (property.type) {
+            case "property": {
+              const value = codegenPlace(cx, property.place);
+              properties.push(
+                t.objectProperty(
+                  key,
+                  value,
+                  false,
+                  value.type === "Identifier" &&
+                    value.name === property.key.name
+                )
+              );
+              break;
+            }
+            case "method": {
+              const method = cx.objectMethods.get(property.place.identifier.id);
+              CompilerError.invariant(method, {
+                reason: "Expected ObjectMethod instruction",
+                loc: null,
+                suggestions: null,
+              });
+              const loweredFunc = method.loweredFunc;
+              const reactiveFunction = buildReactiveFunction(loweredFunc.func);
+              pruneUnusedLabels(reactiveFunction);
+              pruneUnusedLValues(reactiveFunction);
+              renameVariables(reactiveFunction);
+              const fn = codegenReactiveFunction(reactiveFunction).unwrap();
+
+              properties.push(
+                t.objectMethod(
+                  "method",
+                  key,
+                  fn.params,
+                  fn.body,
+                  false,
+                  fn.generator,
+                  fn.async
+                )
+              );
+              break;
+            }
+            default:
+              assertExhaustive(
+                property.type,
+                `Unexpected property type: ${property.type}`
+              );
+          }
         } else {
           properties.push(t.spreadElement(codegenPlace(cx, property.place)));
         }
@@ -1296,6 +1346,7 @@ function codegenInstructionValue(
     case "DeclareContext":
     case "Destructure":
     case "StoreLocal":
+    case "ObjectMethod":
     case "StoreContext": {
       CompilerError.invariant(false, {
         reason: `Unexpected ${instrValue.kind} in codegenInstructionValue`,

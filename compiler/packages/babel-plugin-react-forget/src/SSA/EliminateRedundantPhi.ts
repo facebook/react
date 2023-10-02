@@ -106,7 +106,10 @@ export function eliminateRedundantPhi(
           rewritePlace(place, rewrites);
         }
 
-        if (instr.value.kind === "FunctionExpression") {
+        if (
+          instr.value.kind === "FunctionExpression" ||
+          instr.value.kind === "ObjectMethod"
+        ) {
           const { context } = instr.value.loweredFunc.func;
           for (const place of context) {
             rewritePlace(place, rewrites);

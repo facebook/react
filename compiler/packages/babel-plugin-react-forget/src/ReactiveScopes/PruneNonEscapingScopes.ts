@@ -661,6 +661,7 @@ function computeMemoizationInputs(
       };
     }
     case "RegExpLiteral":
+    case "ObjectMethod":
     case "FunctionExpression":
     case "TaggedTemplateExpression":
     case "ArrayExpression":

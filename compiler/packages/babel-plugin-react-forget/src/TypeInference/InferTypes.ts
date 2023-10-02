@@ -255,6 +255,7 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "ObjectMethod":
     case "FunctionExpression": {
       yield* generate(value.loweredFunc.func);
       break;
