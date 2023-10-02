@@ -1083,6 +1083,10 @@ export function makeInstructionId(id: number): InstructionId {
   return id as InstructionId;
 }
 
+export function isObjectMethodType(id: Identifier): boolean {
+  return id.type.kind == "ObjectMethod";
+}
+
 export function isObjectType(id: Identifier): boolean {
   return id.type.kind === "Object";
 }

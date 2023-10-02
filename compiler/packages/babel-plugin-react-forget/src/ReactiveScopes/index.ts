@@ -15,6 +15,7 @@ export {
 export { extractScopeDeclarationsFromDestructuring } from "./ExtractScopeDeclarationsFromDestructuring";
 export { flattenReactiveLoops } from "./FlattenReactiveLoops";
 export { flattenScopesWithHooks } from "./FlattenScopesWithHooks";
+export { flattenScopesWithObjectMethods } from "./FlattenScopesWithObjectMethods";
 export { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 export { memoizeFbtOperandsInSameScope } from "./MemoizeFbtOperandsInSameScope";
 export { mergeConsecutiveScopes } from "./MergeConsecutiveScopes";

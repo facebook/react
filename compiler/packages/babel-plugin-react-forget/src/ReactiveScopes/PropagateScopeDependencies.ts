@@ -11,6 +11,7 @@ import {
   IdentifierId,
   InstructionId,
   InstructionKind,
+  isObjectMethodType,
   isRefValueType,
   isUseRefType,
   makeInstructionId,
@@ -327,6 +328,12 @@ class Context {
 
     // ref value is not a valid dep
     if (isRefValueType(maybeDependency.identifier)) {
+      return false;
+    }
+
+    // object methods are not deps because they will be codegen'ed back in to
+    // the object literal.
+    if (isObjectMethodType(maybeDependency.identifier)) {
       return false;
     }
 

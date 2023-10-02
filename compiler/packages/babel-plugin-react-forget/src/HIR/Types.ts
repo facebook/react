@@ -9,7 +9,13 @@ import { CompilerError } from "../CompilerError";
 
 export type BuiltInType = PrimitiveType | FunctionType | ObjectType;
 
-export type Type = BuiltInType | PhiType | TypeVar | PolyType | PropType;
+export type Type =
+  | BuiltInType
+  | PhiType
+  | TypeVar
+  | PolyType
+  | PropType
+  | ObjectMethod;
 export type PrimitiveType = { kind: "Primitive" };
 
 /**
@@ -54,6 +60,11 @@ export type PropType = {
   object: Type;
   propertyName: string;
 };
+
+export type ObjectMethod = {
+  kind: "ObjectMethod";
+};
+
 /**
  * Simulated opaque type for TypeId to prevent using normal numbers as ids
  * accidentally.
@@ -87,7 +98,8 @@ export function typeEquals(tA: Type, tB: Type): boolean {
     objectTypeEquals(tA, tB) ||
     primitiveTypeEquals(tA, tB) ||
     polyTypeEquals(tA, tB) ||
-    phiTypeEquals(tA, tB)
+    phiTypeEquals(tA, tB) ||
+    objectMethodTypeEquals(tA, tB)
   );
 }
 
@@ -100,6 +112,10 @@ function typeVarEquals(tA: Type, tB: Type): boolean {
 
 function typeKindCheck(tA: Type, tb: Type, type: string): boolean {
   return tA.kind === type && tb.kind === type;
+}
+
+function objectMethodTypeEquals(tA: Type, tB: Type): boolean {
+  return typeKindCheck(tA, tB, "ObjectMethod");
 }
 
 function primitiveTypeEquals(tA: Type, tB: Type): boolean {

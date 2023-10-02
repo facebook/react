@@ -40,6 +40,7 @@ import {
   extractScopeDeclarationsFromDestructuring,
   flattenReactiveLoops,
   flattenScopesWithHooks,
+  flattenScopesWithObjectMethods,
   inferReactiveScopeVariables,
   memoizeFbtOperandsInSameScope,
   mergeConsecutiveScopes,
@@ -227,6 +228,13 @@ export function* run(
   yield log({
     kind: "reactive",
     name: "FlattenScopesWithHooks",
+    value: reactiveFunction,
+  });
+
+  flattenScopesWithObjectMethods(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "FlattenScopesWithObjectMethods",
     value: reactiveFunction,
   });
 

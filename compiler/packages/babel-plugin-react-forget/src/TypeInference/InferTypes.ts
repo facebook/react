@@ -255,7 +255,6 @@ function* generateInstructionTypes(
       break;
     }
 
-    case "ObjectMethod":
     case "FunctionExpression": {
       yield* generate(value.loweredFunc.func);
       break;
@@ -263,6 +262,11 @@ function* generateInstructionTypes(
 
     case "NextPropertyOf": {
       yield equation(left, { kind: "Primitive" });
+      break;
+    }
+
+    case "ObjectMethod": {
+      yield equation(left, { kind: "ObjectMethod" });
       break;
     }
 
