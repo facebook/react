@@ -141,7 +141,7 @@ var createRootStrictEffectsByDefault = false;
 var enableLazyContextPropagation = false;
 var enableLegacyHidden = false;
 var enableAsyncActions = false;
-var alwaysThrottleRetries = true; // Flow magic to verify the exports of this file match the original version.
+var alwaysThrottleRetries = true;
 
 var FunctionComponent = 0;
 var ClassComponent = 1;
@@ -24359,7 +24359,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-318a7f7c";
+var ReactVersion = "18.3.0-www-modern-d3a76be5";
 
 // Might add PROFILE later.
 
