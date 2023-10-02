@@ -108,6 +108,9 @@ class Transform extends ReactiveFunctionTransform<void> {
     // The updated set of instructions for the block. Stays null until
     // we make changes (ie merge scopes)
     let nextInstructions: ReactiveBlock | null = null;
+    // The maximum index within the original instructions that we have reached.
+    // Used to avoid emitting duplicate instructions
+    let maxIndex: number = 0;
 
     // Called when we find some instruction that cannot be merged into a
     // preceding scope, or we otherwise need to reset and not consider
@@ -121,8 +124,14 @@ class Transform extends ReactiveFunctionTransform<void> {
         if (currentScope !== null) {
           nextInstructions.push(...block.slice(currentScope.to, index));
         }
-        if (index < block.length) {
+        // We can sometimes call resetCurrentScope twice for the same index,
+        // such as when an instruction resets and then a subsequent scope also resets.
+        // This is the only case in which we push instructions w/o gating on
+        // `currentScope != null`, so we avoid duplicates by checking the max index
+        // already emitted.
+        if (index < block.length && index > maxIndex) {
           nextInstructions.push(block[index]!);
+          maxIndex = index;
         }
       }
       currentScope = null;
