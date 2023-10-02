@@ -1475,7 +1475,7 @@ describe('ReactFlight', () => {
       name: 'Seb',
       age: 'rather not say',
     };
-    ReactServer.unstable_taintShallowObject(
+    ReactServer.experimental_taintObjectReference(
       "Don't pass the raw user object to the client",
       user,
     );
@@ -1497,7 +1497,7 @@ describe('ReactFlight', () => {
     const User = clientReference(UserClient);
 
     function change() {}
-    ReactServer.unstable_taintShallowObject(
+    ReactServer.experimental_taintObjectReference(
       'A change handler cannot be passed to a client component',
       change,
     );
@@ -1525,7 +1525,7 @@ describe('ReactFlight', () => {
         SECRET: '3e971ecc1485fe78625598bf9b6f85db',
       },
     };
-    ReactServer.unstable_taintValue(
+    ReactServer.experimental_taintUniqueValue(
       'Cannot pass a secret token to the client',
       process,
       process.env.SECRET,
@@ -1556,7 +1556,7 @@ describe('ReactFlight', () => {
       name: 'Seb',
       token: BigInt('0x3e971ecc1485fe78625598bf9b6f85dc'),
     };
-    ReactServer.unstable_taintValue(
+    ReactServer.experimental_taintUniqueValue(
       'Cannot pass a secret token to the client',
       currentUser,
       currentUser.token,
@@ -1587,7 +1587,7 @@ describe('ReactFlight', () => {
       name: 'Seb',
       token: new Uint32Array([0x3e971ecc, 0x1485fe78, 0x625598bf, 0x9b6f85dd]),
     };
-    ReactServer.unstable_taintValue(
+    ReactServer.experimental_taintUniqueValue(
       'Cannot pass a secret token to the client',
       currentUser,
       currentUser.token,
@@ -1620,7 +1620,7 @@ describe('ReactFlight', () => {
         name: 'Seb',
         token: '3e971ecc1485fe78625598bf9b6f85db',
       };
-      ReactServer.unstable_taintValue(
+      ReactServer.experimental_taintUniqueValue(
         'Cannot pass a secret token to the client',
         user,
         user.token,

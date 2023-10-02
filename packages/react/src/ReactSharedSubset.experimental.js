@@ -16,8 +16,8 @@ export {default as __SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} fr
 
 // These are server-only
 export {
-  taintValue as unstable_taintValue,
-  taintShallowObject as unstable_taintShallowObject,
+  taintUniqueValue as experimental_taintUniqueValue,
+  taintObjectReference as experimental_taintObjectReference,
 } from './ReactTaint';
 
 export {

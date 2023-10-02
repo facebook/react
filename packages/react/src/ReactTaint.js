@@ -52,7 +52,7 @@ const finalizationRegistry =
     ? new FinalizationRegistry(cleanup)
     : null;
 
-export function taintValue(
+export function taintUniqueValue(
   message: ?string,
   lifetime: Reference,
   value: string | bigint | $ArrayBufferView,
@@ -89,7 +89,7 @@ export function taintValue(
     const kind = value === null ? 'null' : typeof value;
     if (kind === 'object' || kind === 'function') {
       throw new Error(
-        'taintValue cannot taint objects or functions. Try taintShallowObject instead.',
+        'taintUniqueValue cannot taint objects or functions. Try taintObjectReference instead.',
       );
     }
     throw new Error(
@@ -113,7 +113,10 @@ export function taintValue(
   }
 }
 
-export function taintShallowObject(message: ?string, object: Reference): void {
+export function taintObjectReference(
+  message: ?string,
+  object: Reference,
+): void {
   if (!enableTaint) {
     throw new Error('Not implemented.');
   }
@@ -121,7 +124,7 @@ export function taintShallowObject(message: ?string, object: Reference): void {
   message = '' + (message || defaultMessage);
   if (typeof object === 'string' || typeof object === 'bigint') {
     throw new Error(
-      'Only objects or functions can be passed to taintShallowObject. Try taintValue instead.',
+      'Only objects or functions can be passed to taintObjectReference. Try taintUniqueValue instead.',
     );
   }
   if (
@@ -129,7 +132,7 @@ export function taintShallowObject(message: ?string, object: Reference): void {
     (typeof object !== 'object' && typeof object !== 'function')
   ) {
     throw new Error(
-      'Only objects or functions can be passed to taintShallowObject.',
+      'Only objects or functions can be passed to taintObjectReference.',
     );
   }
   TaintRegistryObjects.set(object, message);
