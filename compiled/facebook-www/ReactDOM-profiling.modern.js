@@ -1036,8 +1036,8 @@ function updateInput(
       null != defaultChecked &&
       (element.defaultChecked = !!defaultChecked);
   null != checked &&
-    element.checked !== !!checked &&
-    (element.checked = checked);
+    (element.checked =
+      checked && "function" !== typeof checked && "symbol" !== typeof checked);
   null != name &&
   "function" !== typeof name &&
   "symbol" !== typeof name &&
@@ -16666,7 +16666,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1823 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-f998be57",
+  version: "18.3.0-www-modern-ea3ac45f",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16711,7 +16711,7 @@ var devToolsConfig$jscomp$inline_1823 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-f998be57"
+  reconcilerVersion: "18.3.0-www-modern-ea3ac45f"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16963,7 +16963,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-f998be57";
+exports.version = "18.3.0-www-modern-ea3ac45f";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

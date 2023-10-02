@@ -892,8 +892,8 @@ function updateInput(
       null != defaultChecked &&
       (element.defaultChecked = !!defaultChecked);
   null != checked &&
-    element.checked !== !!checked &&
-    (element.checked = checked);
+    (element.checked =
+      checked && "function" !== typeof checked && "symbol" !== typeof checked);
   null != name &&
   "function" !== typeof name &&
   "symbol" !== typeof name &&
@@ -15897,7 +15897,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1738 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-84053073",
+  version: "18.3.0-www-modern-7f3360c5",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2087 = {
@@ -15928,7 +15928,7 @@ var internals$jscomp$inline_2087 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-84053073"
+  reconcilerVersion: "18.3.0-www-modern-7f3360c5"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2088 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16193,4 +16193,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-84053073";
+exports.version = "18.3.0-www-modern-7f3360c5";
