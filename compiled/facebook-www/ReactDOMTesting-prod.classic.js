@@ -3829,7 +3829,7 @@ function updateOptimistic(passthrough, reducer) {
   return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
 }
 function updateOptimisticImpl(hook, current, passthrough, reducer) {
-  hook.baseState = hook.memoizedState = passthrough;
+  hook.baseState = passthrough;
   return updateReducerImpl(
     hook,
     currentHook,
@@ -3840,7 +3840,7 @@ function rerenderOptimistic(passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   if (null !== currentHook)
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
-  hook.baseState = hook.memoizedState = passthrough;
+  hook.baseState = passthrough;
   return [passthrough, hook.queue.dispatch];
 }
 function pushEffect(tag, create, inst, deps) {
@@ -16704,7 +16704,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1808 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-136a3d2d",
+  version: "18.3.0-www-classic-d32d685e",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2157 = {
@@ -16734,7 +16734,7 @@ var internals$jscomp$inline_2157 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-136a3d2d"
+  reconcilerVersion: "18.3.0-www-classic-d32d685e"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2158 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17222,4 +17222,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-136a3d2d";
+exports.version = "18.3.0-www-classic-d32d685e";

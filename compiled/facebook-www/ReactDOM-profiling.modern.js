@@ -3782,7 +3782,7 @@ function updateOptimistic(passthrough, reducer) {
   return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
 }
 function updateOptimisticImpl(hook, current, passthrough, reducer) {
-  hook.baseState = hook.memoizedState = passthrough;
+  hook.baseState = passthrough;
   return updateReducerImpl(
     hook,
     currentHook,
@@ -3793,7 +3793,7 @@ function rerenderOptimistic(passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   if (null !== currentHook)
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
-  hook.baseState = hook.memoizedState = passthrough;
+  hook.baseState = passthrough;
   return [passthrough, hook.queue.dispatch];
 }
 function pushEffect(tag, create, inst, deps) {
@@ -16666,7 +16666,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1823 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-9d2908e6",
+  version: "18.3.0-www-modern-bff6f39a",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16711,7 +16711,7 @@ var devToolsConfig$jscomp$inline_1823 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-9d2908e6"
+  reconcilerVersion: "18.3.0-www-modern-bff6f39a"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16963,7 +16963,7 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-9d2908e6";
+exports.version = "18.3.0-www-modern-bff6f39a";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

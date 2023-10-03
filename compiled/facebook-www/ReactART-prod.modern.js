@@ -2809,7 +2809,7 @@ function updateOptimistic(passthrough, reducer) {
   return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
 }
 function updateOptimisticImpl(hook, current, passthrough, reducer) {
-  hook.baseState = hook.memoizedState = passthrough;
+  hook.baseState = passthrough;
   return updateReducerImpl(
     hook,
     currentHook,
@@ -2820,7 +2820,7 @@ function rerenderOptimistic(passthrough, reducer) {
   var hook = updateWorkInProgressHook();
   if (null !== currentHook)
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
-  hook.baseState = hook.memoizedState = passthrough;
+  hook.baseState = passthrough;
   return [passthrough, hook.queue.dispatch];
 }
 function pushEffect(tag, create, inst, deps) {
@@ -9772,7 +9772,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-d368bffd",
+    version: "18.3.0-www-modern-46965381",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1284 = {
@@ -9803,7 +9803,7 @@ var internals$jscomp$inline_1284 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-d368bffd"
+  reconcilerVersion: "18.3.0-www-modern-46965381"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1285 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

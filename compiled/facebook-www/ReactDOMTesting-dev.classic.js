@@ -13977,9 +13977,9 @@ function updateOptimisticImpl(hook, current, passthrough, reducer) {
   // as an argument. It's called a passthrough because if there are no pending
   // updates, it will be returned as-is.
   //
-  // Reset the base state and memoized state to the passthrough. Future
-  // updates will be applied on top of this.
-  hook.baseState = hook.memoizedState = passthrough; // If a reducer is not provided, default to the same one used by useState.
+  // Reset the base state to the passthrough. Future updates will be applied
+  // on top of this.
+  hook.baseState = passthrough; // If a reducer is not provided, default to the same one used by useState.
 
   var resolvedReducer =
     typeof reducer === "function" ? reducer : basicStateReducer;
@@ -14000,10 +14000,10 @@ function rerenderOptimistic(passthrough, reducer) {
     // This is an update. Process the update queue.
     return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
   } // This is a mount. No updates to process.
-  // Reset the base state and memoized state to the passthrough. Future
-  // updates will be applied on top of this.
+  // Reset the base state to the passthrough. Future updates will be applied
+  // on top of this.
 
-  hook.baseState = hook.memoizedState = passthrough;
+  hook.baseState = passthrough;
   var dispatch = hook.queue.dispatch;
   return [passthrough, dispatch];
 } // useFormState actions run sequentially, because each action receives the
@@ -34593,7 +34593,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-32c273fd";
+var ReactVersion = "18.3.0-www-classic-7b09e670";
 
 function createPortal$1(
   children,
