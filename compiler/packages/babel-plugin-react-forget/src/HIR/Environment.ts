@@ -85,7 +85,7 @@ export type Hook = {
 //   missing required shapes (BuiltInArray for [] and BuiltInObject for {})
 //   missing some recursive Object / Function shapeIds
 
-export type CompleteEnvironmentConfig = {
+export type EnvironmentConfig = {
   customHooks: Map<string, Hook> | null;
 
   // 🌲
@@ -246,7 +246,7 @@ export type CompleteEnvironmentConfig = {
   bailoutOnHoleyArrays: boolean;
 };
 
-const DEFAULT_ENVIRONMENT_CONFIG: CompleteEnvironmentConfig = {
+const DEFAULT_ENVIRONMENT_CONFIG: EnvironmentConfig = {
   customHooks: null,
 
   enableTreatHooksAsFunctions: true,
@@ -269,14 +269,14 @@ const DEFAULT_ENVIRONMENT_CONFIG: CompleteEnvironmentConfig = {
   validateRefAccessDuringRender: false,
 };
 
-export type PartialEnvironmentConfig = Partial<CompleteEnvironmentConfig>;
+export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
 
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
-  config: CompleteEnvironmentConfig;
+  config: EnvironmentConfig;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
@@ -286,9 +286,9 @@ export class Environment {
     contextIdentifiers: Set<t.Identifier>
   ) {
     this.#shapes = new Map(DEFAULT_SHAPES);
-    const config: CompleteEnvironmentConfig = { ...DEFAULT_ENVIRONMENT_CONFIG };
+    const config: EnvironmentConfig = { ...DEFAULT_ENVIRONMENT_CONFIG };
     for (const rawKey in DEFAULT_ENVIRONMENT_CONFIG) {
-      const key = rawKey as keyof CompleteEnvironmentConfig;
+      const key = rawKey as keyof EnvironmentConfig;
       const value = partialConfig?.[key] ?? DEFAULT_ENVIRONMENT_CONFIG[key];
       config[key] = value as any;
     }
