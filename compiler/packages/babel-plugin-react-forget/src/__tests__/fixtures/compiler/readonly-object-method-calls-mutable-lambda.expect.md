@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @enableNoAliasOptimizations
 function Component(props) {
   const x = makeObject();
   const user = useFragment(
@@ -24,7 +23,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableNoAliasOptimizations
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(3);
   const x = makeObject();

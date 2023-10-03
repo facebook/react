@@ -28,7 +28,6 @@ export function transformFixtureInput(
   let enableEmitFreeze = null;
   let compilationMode: CompilationMode = "all";
   let enableForest = false;
-  let enableNoAliasOptimizations = false;
   let enableMergeConsecutiveScopes = false;
   let bailoutOnHoleyArrays = false;
 
@@ -86,10 +85,6 @@ export function transformFixtureInput(
   if (firstLine.includes("@enableForest true")) {
     enableForest = true;
   }
-  if (firstLine.includes("@enableNoAliasOptimizations")) {
-    enableNoAliasOptimizations = true;
-  }
-
   if (firstLine.includes("@bailoutOnHoleyArrays")) {
     bailoutOnHoleyArrays = true;
   }
@@ -134,13 +129,9 @@ export function transformFixtureInput(
           ],
         ]),
         enableAssumeHooksFollowRulesOfReact,
-        enableFunctionCallSignatureOptimizations: true,
-        enableNoAliasOptimizations,
         disableAllMemoization,
         enableTreatHooksAsFunctions,
-        inlineUseMemo: true,
         memoizeJsxElements,
-        validateHooksUsage: true,
         validateRefAccessDuringRender,
         validateFrozenLambdas: true,
         validateNoSetStateInRender,

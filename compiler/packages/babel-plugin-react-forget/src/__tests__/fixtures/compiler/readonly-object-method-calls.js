@@ -1,4 +1,3 @@
-// @enableNoAliasOptimizations
 function Component(props) {
   const user = useFragment(
     graphql`fragment Component_user on User { ... }`,

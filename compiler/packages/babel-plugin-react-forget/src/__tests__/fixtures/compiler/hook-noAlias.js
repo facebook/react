@@ -1,4 +1,3 @@
-// @enableNoAliasOptimizations
 import { useNoAlias } from "shared-runtime";
 
 function Component(props) {

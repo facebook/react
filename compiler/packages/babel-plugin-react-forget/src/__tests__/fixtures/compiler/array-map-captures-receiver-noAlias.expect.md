@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @enableNoAliasOptimizations
 function Component(props) {
   // This item is part of the receiver, should be memoized
   const item = { a: props.a };
@@ -22,7 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableNoAliasOptimizations
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
   const c_0 = $[0] !== props.a;

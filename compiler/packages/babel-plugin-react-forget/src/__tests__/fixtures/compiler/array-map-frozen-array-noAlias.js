@@ -1,4 +1,3 @@
-// @enableNoAliasOptimizations
 function Component(props) {
   const x = [];
   <dif>{x}</dif>;

@@ -251,6 +251,10 @@ const DEFAULT_ENVIRONMENT_CONFIG: CompleteEnvironmentConfig = {
 
   enableTreatHooksAsFunctions: true,
   memoizeJsxElements: true,
+  enableFunctionCallSignatureOptimizations: true,
+  inlineUseMemo: true,
+  validateHooksUsage: true,
+  enableNoAliasOptimizations: true,
 
   assertValidMutableRanges: false,
   bailoutOnHoleyArrays: false,
@@ -258,13 +262,9 @@ const DEFAULT_ENVIRONMENT_CONFIG: CompleteEnvironmentConfig = {
   enableAssumeHooksFollowRulesOfReact: false,
   enableEmitFreeze: null,
   enableForest: false,
-  enableFunctionCallSignatureOptimizations: false,
   enableMergeConsecutiveScopes: false,
-  enableNoAliasOptimizations: false,
-  inlineUseMemo: false,
 
   validateFrozenLambdas: false,
-  validateHooksUsage: false,
   validateNoSetStateInRender: false,
   validateRefAccessDuringRender: false,
 };

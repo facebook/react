@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @enableNoAliasOptimizations
 import { useNoAlias } from "shared-runtime";
 
 function Component(props) {
@@ -28,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableNoAliasOptimizations
+import { unstable_useMemoCache as useMemoCache } from "react";
 import { useNoAlias } from "shared-runtime";
 
 function Component(props) {

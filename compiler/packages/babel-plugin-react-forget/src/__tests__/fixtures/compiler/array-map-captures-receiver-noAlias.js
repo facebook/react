@@ -1,4 +1,3 @@
-// @enableNoAliasOptimizations
 function Component(props) {
   // This item is part of the receiver, should be memoized
   const item = { a: props.a };
