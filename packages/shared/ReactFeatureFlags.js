@@ -124,6 +124,8 @@ export const alwaysThrottleRetries = true;
 
 export const useMicrotasksForSchedulingInFabric = false;
 
+export const passChildrenWhenCloningPersistedNodes = false;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
