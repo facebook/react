@@ -1111,6 +1111,10 @@ export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
 }
 
+export function isContextType(id: Identifier): boolean {
+  return id.type.kind === "Object" && id.type.shapeId === "BuiltInContext";
+}
+
 export function getHookKind(env: Environment, id: Identifier): HookKind | null {
   const idType = id.type;
   if (idType.kind === "Function") {

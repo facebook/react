@@ -170,6 +170,7 @@ export const BuiltInUseStateId = "BuiltInUseState";
 export const BuiltInSetStateId = "BuiltInSetState";
 export const BuiltInUseRefId = "BuiltInUseRefId";
 export const BuiltInRefValueId = "BuiltInRefValue";
+export const BuiltInContextId = "BuiltInContext";
 export const BuiltInMixedReadonlyId = "BuiltInMixedReadonly";
 
 /**
@@ -291,6 +292,10 @@ addObject(BUILTIN_SHAPES, BuiltInUseStateId, [
 
 addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
   ["current", { kind: "Object", shapeId: BuiltInRefValueId }],
+]);
+
+addObject(BUILTIN_SHAPES, BuiltInContextId, [
+  ["*", { kind: "Object", shapeId: BuiltInContextId }],
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInRefValueId, []);
