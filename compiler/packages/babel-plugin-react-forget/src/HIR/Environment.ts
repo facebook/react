@@ -374,9 +374,12 @@ export class Environment {
         loc: null,
         suggestions: null,
       });
-      return (
-        shape.properties.get(property) ?? shape.properties.get("*") ?? null
-      );
+      let value =
+        shape.properties.get(property) ?? shape.properties.get("*") ?? null;
+      if (value === null && isHookName(property)) {
+        value = this.#getCustomHookType();
+      }
+      return value;
     } else if (isHookName(property)) {
       return this.#getCustomHookType();
     } else {
