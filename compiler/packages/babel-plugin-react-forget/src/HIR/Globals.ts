@@ -17,7 +17,7 @@ import {
   addHook,
   addObject,
 } from "./ObjectShape";
-import { BuiltInType, FunctionType, PolyType } from "./Types";
+import { BuiltInType, PolyType } from "./Types";
 
 /**
  * This file exports types and defaults for JavaScript global objects.
@@ -234,7 +234,7 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
 
 // TODO(mofeiZ): We currently only store rest param effects for hooks
 // until FeatureFlag `enableTreatHooksAsFunctions` is removed
-const BUILTIN_HOOKS: Array<[string, FunctionType]> = [
+const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
   [
     "useContext",
     addHook(DEFAULT_SHAPES, [], {
@@ -313,6 +313,8 @@ const BUILTIN_HOOKS: Array<[string, FunctionType]> = [
     }),
   ],
 ];
+
+TYPED_GLOBALS.push(["React", addObject(DEFAULT_SHAPES, null, BUILTIN_HOOKS)]);
 
 export type Global = BuiltInType | PolyType;
 export type GlobalRegistry = Map<string, Global>;

@@ -54,6 +54,10 @@ export function getNumber(): number {
   return 4;
 }
 
+export function calculateExpensiveNumber(x: number): number {
+  return x;
+}
+
 /**
  * Functions that do not mutate their parameters
  */
