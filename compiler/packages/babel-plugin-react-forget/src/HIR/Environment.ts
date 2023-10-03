@@ -84,8 +84,9 @@ export type Hook = {
 // i.e.
 //   missing required shapes (BuiltInArray for [] and BuiltInObject for {})
 //   missing some recursive Object / Function shapeIds
-export type EnvironmentConfig = Partial<{
-  customHooks: Map<string, Hook>;
+
+export type CompleteEnvironmentConfig = {
+  customHooks: Map<string, Hook> | null;
 
   // 🌲
   enableForest: boolean;
@@ -243,42 +244,59 @@ export type EnvironmentConfig = Partial<{
    * https://github.com/babel/babel/pull/10917/files#diff-19b555d2f3904c206af406540d9df200b1e16befedb83ff39ebfcbd876f7fa8aL52-R56
    */
   bailoutOnHoleyArrays: boolean;
-}>;
+};
+
+const DEFAULT_ENVIRONMENT_CONFIG: CompleteEnvironmentConfig = {
+  customHooks: null,
+
+  enableTreatHooksAsFunctions: true,
+  memoizeJsxElements: true,
+
+  assertValidMutableRanges: false,
+  bailoutOnHoleyArrays: false,
+  disableAllMemoization: false,
+  enableAssumeHooksFollowRulesOfReact: false,
+  enableEmitFreeze: null,
+  enableForest: false,
+  enableFunctionCallSignatureOptimizations: false,
+  enableMergeConsecutiveScopes: false,
+  enableNoAliasOptimizations: false,
+  inlineUseMemo: false,
+
+  validateFrozenLambdas: false,
+  validateHooksUsage: false,
+  validateNoSetStateInRender: false,
+  validateRefAccessDuringRender: false,
+};
+
+export type PartialEnvironmentConfig = Partial<CompleteEnvironmentConfig>;
 
 export class Environment {
   #globals: GlobalRegistry;
   #shapes: ShapeRegistry;
   #nextIdentifer: number = 0;
   #nextBlock: number = 0;
-  validateHooksUsage: boolean;
-  validateRefAccessDuringRender: boolean;
-  validateFrozenLambdas: boolean;
-  validateNoSetStateInRender: boolean;
-  enableFunctionCallSignatureOptimizations: boolean;
-  enableAssumeHooksFollowRulesOfReact: boolean;
-  enableTreatHooksAsFunctions: boolean;
-  enableNoAliasOptimizations: boolean;
-  inlineUseMemo: boolean;
-  memoizeJsxElements: boolean;
-  disableAllMemoization: boolean;
-  enableEmitFreeze: ExternalFunction | null;
-  enableMergeConsecutiveScopes: boolean;
-  assertValidMutableRanges: boolean;
-  bailoutOnHoleyArrays: boolean;
-  enableForest: boolean;
+  config: CompleteEnvironmentConfig;
 
   #contextIdentifiers: Set<t.Identifier>;
   #hoistedIdentifiers: Set<t.Identifier>;
 
   constructor(
-    config: EnvironmentConfig | null,
+    partialConfig: PartialEnvironmentConfig | null,
     contextIdentifiers: Set<t.Identifier>
   ) {
     this.#shapes = new Map(DEFAULT_SHAPES);
+    const config: CompleteEnvironmentConfig = { ...DEFAULT_ENVIRONMENT_CONFIG };
+    for (const rawKey in DEFAULT_ENVIRONMENT_CONFIG) {
+      const key = rawKey as keyof CompleteEnvironmentConfig;
+      const value = partialConfig?.[key] ?? DEFAULT_ENVIRONMENT_CONFIG[key];
+      config[key] = value as any;
+    }
+    this.config = config;
 
-    if (config?.customHooks) {
+    if (this.config.customHooks != null && this.config.customHooks.size > 0) {
       this.#globals = new Map(DEFAULT_GLOBALS);
-      for (const [hookName, hook] of config.customHooks) {
+      for (const [hookName, hook] of this.config.customHooks) {
         CompilerError.invariant(!this.#globals.has(hookName), {
           reason: `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
           description: null,
@@ -303,29 +321,6 @@ export class Environment {
     } else {
       this.#globals = DEFAULT_GLOBALS;
     }
-    this.validateHooksUsage = config?.validateHooksUsage ?? false;
-    this.validateRefAccessDuringRender =
-      config?.validateRefAccessDuringRender ?? false;
-    this.validateFrozenLambdas = config?.validateFrozenLambdas ?? false;
-    this.enableFunctionCallSignatureOptimizations =
-      config?.enableFunctionCallSignatureOptimizations ?? false;
-    this.enableNoAliasOptimizations =
-      config?.enableNoAliasOptimizations ?? false;
-    this.enableAssumeHooksFollowRulesOfReact =
-      config?.enableAssumeHooksFollowRulesOfReact ?? false;
-    this.enableTreatHooksAsFunctions =
-      config?.enableTreatHooksAsFunctions ?? true;
-    this.disableAllMemoization = config?.disableAllMemoization ?? false;
-    this.enableEmitFreeze = config?.enableEmitFreeze ?? null;
-    this.enableMergeConsecutiveScopes =
-      config?.enableMergeConsecutiveScopes ?? false;
-    this.assertValidMutableRanges = config?.assertValidMutableRanges ?? false;
-    this.validateNoSetStateInRender =
-      config?.validateNoSetStateInRender ?? false;
-    this.inlineUseMemo = config?.inlineUseMemo ?? false;
-    this.memoizeJsxElements = config?.memoizeJsxElements ?? true;
-    this.bailoutOnHoleyArrays = config?.bailoutOnHoleyArrays ?? false;
-    this.enableForest = config?.enableForest ?? false;
 
     this.#contextIdentifiers = contextIdentifiers;
     this.#hoistedIdentifiers = new Set();
@@ -412,7 +407,7 @@ export class Environment {
   }
 
   #getCustomHookType(): Global {
-    if (this.enableAssumeHooksFollowRulesOfReact) {
+    if (this.config.enableAssumeHooksFollowRulesOfReact) {
       return DefaultNonmutatingHook;
     } else {
       return DefaultMutatingHook;

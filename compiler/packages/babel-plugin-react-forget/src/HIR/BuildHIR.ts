@@ -1436,7 +1436,7 @@ function lowerExpression(
           elements.push({
             kind: "Hole",
           });
-          if (builder.environment.bailoutOnHoleyArrays) {
+          if (builder.environment.config.bailoutOnHoleyArrays) {
             builder.errors.push({
               reason: `(BuildHIR::lower) Fix babel holey array backward compatibility.`,
               severity: ErrorSeverity.Todo,

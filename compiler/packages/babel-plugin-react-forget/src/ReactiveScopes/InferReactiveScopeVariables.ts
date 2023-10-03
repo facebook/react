@@ -250,7 +250,7 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     }
     case "CallExpression":
     case "MethodCall": {
-      if (env.enableFunctionCallSignatureOptimizations) {
+      if (env.config.enableFunctionCallSignatureOptimizations) {
         return instruction.lvalue.identifier.type.kind !== "Primitive";
       }
       return true;

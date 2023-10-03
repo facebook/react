@@ -184,12 +184,12 @@ function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
 }
 
 function wrapCacheDep(cx: Context, value: t.Expression): t.Expression {
-  if (cx.env.enableEmitFreeze != null) {
+  if (cx.env.config.enableEmitFreeze != null) {
     // The import declaration for emitFreeze is inserted in the Babel plugin
     return t.conditionalExpression(
       t.identifier("__DEV__"),
       t.callExpression(
-        t.identifier(cx.env.enableEmitFreeze.importSpecifierName),
+        t.identifier(cx.env.config.enableEmitFreeze.importSpecifierName),
         [value, t.stringLiteral(cx.fnName)]
       ),
       value
@@ -383,7 +383,7 @@ function codegenReactiveScope(
   scope: ReactiveScope,
   block: ReactiveBlock
 ): void {
-  if (cx.env.enableForest) {
+  if (cx.env.config.enableForest) {
     codegenSignalBlockForReactiveScope(cx, statements, scope, block);
   } else {
     codegenMemoBlockForReactiveScope(cx, statements, scope, block);

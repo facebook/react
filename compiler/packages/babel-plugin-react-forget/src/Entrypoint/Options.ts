@@ -7,7 +7,7 @@
 
 import * as t from "@babel/types";
 import { CompilerErrorDetailOptions } from "../CompilerError";
-import { EnvironmentConfig } from "../HIR/Environment";
+import { PartialEnvironmentConfig } from "../HIR/Environment";
 
 export type ExternalFunction = {
   /**
@@ -39,7 +39,7 @@ export type PanicThresholdOptions =
   | "NONE";
 
 export type PluginOptions = {
-  environment: EnvironmentConfig | null;
+  environment: PartialEnvironmentConfig | null;
 
   logger: Logger | null;
 

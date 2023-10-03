@@ -17,7 +17,7 @@ import {
   lower,
   mergeConsecutiveBlocks,
 } from "../HIR";
-import { Environment, EnvironmentConfig } from "../HIR/Environment";
+import { Environment, PartialEnvironmentConfig } from "../HIR/Environment";
 import { findContextIdentifiers } from "../HIR/FindContextIdentifiers";
 import {
   analyseFunctions,
@@ -82,7 +82,7 @@ export function* run(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  config?: EnvironmentConfig | null
+  config?: PartialEnvironmentConfig | null
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(config ?? null, contextIdentifiers);
@@ -106,7 +106,7 @@ function* runWithEnvironment(
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
 
-  if (env.inlineUseMemo) {
+  if (env.config.inlineUseMemo) {
     inlineUseMemo(hir);
     yield log({ kind: "hir", name: "RewriteUseMemo", value: hir });
   }
@@ -131,7 +131,7 @@ function* runWithEnvironment(
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
 
-  if (env.validateHooksUsage) {
+  if (env.config.validateHooksUsage) {
     validateHooksUsage(hir);
     const conditionalHooksResult = validateUnconditionalHooks(hir).unwrap();
     yield log({
@@ -150,7 +150,7 @@ function* runWithEnvironment(
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
 
-  if (env.validateFrozenLambdas) {
+  if (env.config.validateFrozenLambdas) {
     validateFrozenLambdas(hir);
   }
 
@@ -164,15 +164,15 @@ function* runWithEnvironment(
   inferMutableRanges(hir);
   yield log({ kind: "hir", name: "InferMutableRanges", value: hir });
 
-  if (env.assertValidMutableRanges) {
+  if (env.config.assertValidMutableRanges) {
     assertValidMutableRanges(hir);
   }
 
-  if (env.validateRefAccessDuringRender) {
+  if (env.config.validateRefAccessDuringRender) {
     validateNoRefAccessInRender(hir);
   }
 
-  if (env.validateNoSetStateInRender) {
+  if (env.config.validateNoSetStateInRender) {
     const noSetStateInRenderResult = validateNoSetStateInRender(hir).unwrap();
     yield log({
       kind: "debug",
@@ -222,7 +222,7 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  if (env.disableAllMemoization) {
+  if (env.config.disableAllMemoization) {
     pruneAllReactiveScopes(reactiveFunction);
     yield log({
       kind: "reactive",
@@ -259,8 +259,8 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  let memoizeJsxElements = env.memoizeJsxElements;
-  if (env.enableForest) {
+  let memoizeJsxElements = env.config.memoizeJsxElements;
+  if (env.config.enableForest) {
     memoizeJsxElements = false;
   }
   pruneNonEscapingScopes(reactiveFunction, { memoizeJsxElements });
@@ -284,7 +284,7 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  if (env.enableMergeConsecutiveScopes) {
+  if (env.config.enableMergeConsecutiveScopes) {
     mergeConsecutiveScopes(reactiveFunction);
     yield log({
       kind: "reactive",
@@ -293,7 +293,7 @@ function* runWithEnvironment(
     });
   }
 
-  if (env.enableForest) {
+  if (env.config.enableForest) {
     yield* lowerToForest(reactiveFunction);
   }
 
@@ -349,7 +349,7 @@ export function compileFn(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  options?: Partial<EnvironmentConfig> | null
+  options?: Partial<PartialEnvironmentConfig> | null
 ): CodegenFunction {
   let generator = run(func, options);
   while (true) {

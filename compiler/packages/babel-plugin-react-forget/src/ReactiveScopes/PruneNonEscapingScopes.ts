@@ -611,7 +611,7 @@ function computeMemoizationInputs(
       };
     }
     case "CallExpression": {
-      const signature = env.enableNoAliasOptimizations
+      const signature = env.config.enableNoAliasOptimizations
         ? getFunctionCallSignature(env, value.callee.identifier.type)
         : null;
       const operands = [...eachReactiveValueOperand(value)];
@@ -636,7 +636,7 @@ function computeMemoizationInputs(
       };
     }
     case "MethodCall": {
-      const signature = env.enableNoAliasOptimizations
+      const signature = env.config.enableNoAliasOptimizations
         ? getFunctionCallSignature(env, value.property.identifier.type)
         : null;
       const operands = [...eachReactiveValueOperand(value)];
@@ -808,7 +808,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     } else if (instruction.value.kind === "CallExpression") {
       const callee = instruction.value.callee;
       if (getHookKind(state.env, callee.identifier) != null) {
-        const signature = this.env.enableNoAliasOptimizations
+        const signature = this.env.config.enableNoAliasOptimizations
           ? getFunctionCallSignature(
               this.env,
               instruction.value.callee.identifier.type

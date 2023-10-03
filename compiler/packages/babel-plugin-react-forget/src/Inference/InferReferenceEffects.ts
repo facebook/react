@@ -747,7 +747,7 @@ function inferBlock(
           instrValue.callee.identifier.type
         );
         signature =
-          env.enableFunctionCallSignatureOptimizations ||
+          env.config.enableFunctionCallSignatureOptimizations ||
           signature?.hookKind != null
             ? signature
             : null;
@@ -755,7 +755,7 @@ function inferBlock(
         if (
           signature &&
           signature.hookKind != null &&
-          !env.enableTreatHooksAsFunctions
+          !env.config.enableTreatHooksAsFunctions
         ) {
           effectKind = signature.restParam;
           valueKind = signature.returnValueKind;
