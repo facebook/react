@@ -246,7 +246,7 @@ export type EnvironmentConfig = {
   bailoutOnHoleyArrays: boolean;
 };
 
-const DEFAULT_ENVIRONMENT_CONFIG: EnvironmentConfig = {
+const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
   customHooks: null,
 
   enableTreatHooksAsFunctions: true,
@@ -269,6 +269,10 @@ const DEFAULT_ENVIRONMENT_CONFIG: EnvironmentConfig = {
   validateRefAccessDuringRender: false,
 };
 
+function isEnvironmentConfigKey(key: string): key is keyof EnvironmentConfig {
+  return Object.prototype.hasOwnProperty.call(DEFAULT_ENVIRONMENT_CONFIG, key);
+}
+
 export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
 
 export class Environment {
@@ -287,10 +291,15 @@ export class Environment {
   ) {
     this.#shapes = new Map(DEFAULT_SHAPES);
     const config: EnvironmentConfig = { ...DEFAULT_ENVIRONMENT_CONFIG };
-    for (const rawKey in DEFAULT_ENVIRONMENT_CONFIG) {
-      const key = rawKey as keyof EnvironmentConfig;
-      const value = partialConfig?.[key] ?? DEFAULT_ENVIRONMENT_CONFIG[key];
-      config[key] = value as any;
+    if (partialConfig != null) {
+      for (const key of Object.keys(DEFAULT_ENVIRONMENT_CONFIG)) {
+        if (!isEnvironmentConfigKey(key)) {
+          continue;
+        }
+        if (Object.prototype.hasOwnProperty.call(partialConfig, key)) {
+          config[key] = partialConfig[key] as any; // we know the key is present from hasOwnProperty
+        }
+      }
     }
     this.config = config;
 
