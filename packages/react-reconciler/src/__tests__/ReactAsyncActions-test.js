@@ -1112,4 +1112,67 @@ describe('ReactAsyncActions', () => {
       </>,
     );
   });
+
+  // @gate enableAsyncActions
+  test('useOptimistic can update repeatedly in the same async action', async () => {
+    let startTransition;
+    let setLoadingProgress;
+    let setText;
+    function App() {
+      const [, _startTransition] = useTransition();
+      const [text, _setText] = useState('A');
+      const [loadingProgress, _setLoadingProgress] = useOptimistic(0);
+      startTransition = _startTransition;
+      setText = _setText;
+      setLoadingProgress = _setLoadingProgress;
+
+      return (
+        <>
+          {loadingProgress !== 0 ? (
+            <div key="progress">
+              <Text text={`Loading... (${loadingProgress})`} />
+            </div>
+          ) : null}
+          <div key="real">
+            <Text text={text} />
+          </div>
+        </>
+      );
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App text="A" />));
+    assertLog(['A']);
+    expect(root).toMatchRenderedOutput(<div>A</div>);
+
+    await act(async () => {
+      startTransition(async () => {
+        setLoadingProgress('25%');
+        await getText('Wait 1');
+        setLoadingProgress('75%');
+        await getText('Wait 2');
+        startTransition(() => setText('B'));
+      });
+    });
+    assertLog(['Loading... (25%)', 'A']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Loading... (25%)</div>
+        <div>A</div>
+      </>,
+    );
+
+    await act(() => resolveText('Wait 1'));
+    assertLog(['Loading... (75%)', 'A']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Loading... (75%)</div>
+        <div>A</div>
+      </>,
+    );
+
+    await act(() => resolveText('Wait 2'));
+    assertLog(['B']);
+  });
 });
