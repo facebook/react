@@ -11,8 +11,12 @@ export default function (func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
+        case "MethodCall":
         case "CallExpression": {
-          const hookKind = getHookKind(func.env, instr.value.callee.identifier);
+          const hookKind =
+            instr.value.kind === "CallExpression"
+              ? getHookKind(func.env, instr.value.callee.identifier)
+              : getHookKind(func.env, instr.value.property.identifier);
           if (hookKind != null) {
             if (hookKind === "useMemo") {
               const [fn] = instr.value.args;
@@ -61,6 +65,7 @@ export default function (func: HIRFunction): void {
               }
             }
           }
+          break;
         }
       }
     }
