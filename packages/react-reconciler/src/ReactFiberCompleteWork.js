@@ -328,7 +328,7 @@ function appendAllChildrenToContainer(
     let node = workInProgress.child;
     while (node !== null) {
       // eslint-disable-next-line no-labels
-      branches: if (node.tag === HostComponent) {
+      if (node.tag === HostComponent) {
         let instance = node.stateNode;
         if (needsVisibilityToggle && isHidden) {
           // This child is inside a timed out tree. Hide it.
