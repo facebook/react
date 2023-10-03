@@ -86,13 +86,27 @@ export function* run(
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(config ?? null, contextIdentifiers);
+  const ast = yield* runWithEnvironment(func, env);
+  return ast;
+}
+
+/**
+ * Note: this is split from run() to make `config` out of scope, so that all
+ * access to feature flags has to be through the Environment for consistency.
+ */
+function* runWithEnvironment(
+  func: NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >,
+  env: Environment
+): Generator<CompilerPipelineValue, CodegenFunction> {
   const hir = lower(func, env).unwrap();
   yield log({ kind: "hir", name: "HIR", value: hir });
 
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
 
-  if (config?.inlineUseMemo) {
+  if (env.inlineUseMemo) {
     inlineUseMemo(hir);
     yield log({ kind: "hir", name: "RewriteUseMemo", value: hir });
   }
@@ -245,8 +259,8 @@ export function* run(
     value: reactiveFunction,
   });
 
-  let memoizeJsxElements = config?.memoizeJsxElements ?? true;
-  if (config?.enableForest) {
+  let memoizeJsxElements = env.memoizeJsxElements;
+  if (env.enableForest) {
     memoizeJsxElements = false;
   }
   pruneNonEscapingScopes(reactiveFunction, { memoizeJsxElements });
@@ -279,7 +293,7 @@ export function* run(
     });
   }
 
-  if (config?.enableForest) {
+  if (env.enableForest) {
     yield* lowerToForest(reactiveFunction);
   }
 

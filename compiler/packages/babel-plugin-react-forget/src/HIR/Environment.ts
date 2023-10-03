@@ -258,6 +258,8 @@ export class Environment {
   enableAssumeHooksFollowRulesOfReact: boolean;
   enableTreatHooksAsFunctions: boolean;
   enableNoAliasOptimizations: boolean;
+  inlineUseMemo: boolean;
+  memoizeJsxElements: boolean;
   disableAllMemoization: boolean;
   enableEmitFreeze: ExternalFunction | null;
   enableMergeConsecutiveScopes: boolean;
@@ -320,6 +322,8 @@ export class Environment {
     this.assertValidMutableRanges = config?.assertValidMutableRanges ?? false;
     this.validateNoSetStateInRender =
       config?.validateNoSetStateInRender ?? false;
+    this.inlineUseMemo = config?.inlineUseMemo ?? false;
+    this.memoizeJsxElements = config?.memoizeJsxElements ?? true;
     this.bailoutOnHoleyArrays = config?.bailoutOnHoleyArrays ?? false;
     this.enableForest = config?.enableForest ?? false;
 
