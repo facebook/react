@@ -301,14 +301,12 @@ class Unifier {
   unify(tA: Type, tB: Type): void {
     if (tB.kind === "Property") {
       const objectType = this.get(tB.object);
-      if (objectType.kind === "Object" || objectType.kind === "Function") {
-        const propertyType = this.env.getPropertyType(
-          objectType,
-          tB.propertyName
-        );
-        if (propertyType !== null) {
-          this.unify(tA, propertyType);
-        }
+      const propertyType = this.env.getPropertyType(
+        objectType,
+        tB.propertyName
+      );
+      if (propertyType !== null) {
+        this.unify(tA, propertyType);
       }
       // We do not error if tB is not a known object or function (even if it
       // is a primitive), since JS implicit conversion to objects

@@ -11,7 +11,7 @@ import {
   ErrorSeverity,
 } from "../CompilerError";
 import { PostDominator, computePostDominatorTree } from "../HIR/Dominator";
-import { BlockId, HIRFunction, getHookKind } from "../HIR/HIR";
+import { BlockId, HIRFunction, SourceLocation, getHookKind } from "../HIR/HIR";
 import { findBlocksWithBackEdges } from "../Optimization/DeadCodeElimination";
 import { Err, Ok, Result } from "../Utils/Result";
 
@@ -78,6 +78,19 @@ export function validateUnconditionalHooks(
   }
 
   const errors = new CompilerError();
+  function recordError(loc: SourceLocation): void {
+    errors.pushErrorDetail(
+      new CompilerErrorDetail({
+        description: null,
+        reason:
+          "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
+        loc,
+        severity: ErrorSeverity.InvalidReact,
+        suggestions: null,
+      })
+    );
+  }
+
   for (const [, block] of fn.body.blocks) {
     if (unconditionalBlocks.has(block.id)) {
       continue;
@@ -87,20 +100,15 @@ export function validateUnconditionalHooks(
         instr.value.kind === "CallExpression" &&
         getHookKind(fn.env, instr.value.callee.identifier) != null
       ) {
-        const loc = instr.loc;
         // TODO: the current ESLint rule has different error messages for code that is called conditionally, in a loop, etc.
         // An option would be to first record an Array<[BlockId, Place]> of problematic hooks, then compute the normal dominator graph
         // and walk upward to determine whether each error location was due to a loop, if, etc.
-        errors.pushErrorDetail(
-          new CompilerErrorDetail({
-            description: null,
-            reason:
-              "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
-            loc,
-            severity: ErrorSeverity.InvalidReact,
-            suggestions: null,
-          })
-        );
+        recordError(instr.loc);
+      } else if (
+        instr.value.kind === "MethodCall" &&
+        getHookKind(fn.env, instr.value.property.identifier) != null
+      ) {
+        recordError(instr.loc);
       }
     }
   }

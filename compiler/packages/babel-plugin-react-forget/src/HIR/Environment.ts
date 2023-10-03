@@ -21,8 +21,8 @@ import {
   Effect,
   FunctionType,
   IdentifierId,
-  ObjectType,
   PolyType,
+  Type,
   ValueKind,
   makeBlockId,
   makeIdentifierId,
@@ -348,11 +348,7 @@ export class Environment {
     if (resolvedGlobal === null) {
       // Hack, since we don't track module level declarations and imports
       if (isHookName(name)) {
-        if (this.enableAssumeHooksFollowRulesOfReact) {
-          return DefaultNonmutatingHook;
-        } else {
-          return DefaultMutatingHook;
-        }
+        return this.#getCustomHookType();
       } else {
         log(() => `Undefined global '${name}'`);
       }
@@ -361,10 +357,13 @@ export class Environment {
   }
 
   getPropertyType(
-    receiver: ObjectType | FunctionType,
+    receiver: Type,
     property: string
   ): BuiltInType | PolyType | null {
-    const { shapeId } = receiver;
+    let shapeId = null;
+    if (receiver.kind === "Object" || receiver.kind === "Function") {
+      shapeId = receiver.shapeId;
+    }
     if (shapeId !== null) {
       // If an object or function has a shapeId, it must have been assigned
       // by Forget (and be present in a builtin or user-defined registry)
@@ -378,6 +377,8 @@ export class Environment {
       return (
         shape.properties.get(property) ?? shape.properties.get("*") ?? null
       );
+    } else if (isHookName(property)) {
+      return this.#getCustomHookType();
     } else {
       return null;
     }
@@ -401,6 +402,14 @@ export class Environment {
   addHoistedIdentifier(node: t.Identifier): void {
     this.#contextIdentifiers.add(node);
     this.#hoistedIdentifiers.add(node);
+  }
+
+  #getCustomHookType(): Global {
+    if (this.enableAssumeHooksFollowRulesOfReact) {
+      return DefaultNonmutatingHook;
+    } else {
+      return DefaultMutatingHook;
+    }
   }
 }
 

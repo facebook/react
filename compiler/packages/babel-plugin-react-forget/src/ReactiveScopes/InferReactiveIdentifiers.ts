@@ -68,17 +68,24 @@ class Visitor extends ReactiveFunctionVisitor<State> {
         break;
       }
     }
-    if (
-      !hasReactiveInput &&
-      instr.value.kind === "CallExpression" &&
-      getHookKind(state.env, instr.value.callee.identifier) != null
-    ) {
-      // Hooks cannot be memoized. Even if they do not accept any reactive inputs,
-      // they are not guaranteed to memoize their return value, and their result
-      // must be assumed to be reactive.
-      // TODO: use types or an opt-in registry of custom hook information to
-      // allow treating safe hooks as non-reactive.
-      hasReactiveInput = true;
+    if (!hasReactiveInput) {
+      if (
+        instr.value.kind === "CallExpression" &&
+        getHookKind(state.env, instr.value.callee.identifier) != null
+      ) {
+        // Hooks cannot be memoized. Even if they do not accept any reactive inputs,
+        // they are not guaranteed to memoize their return value, and their result
+        // must be assumed to be reactive.
+        // TODO: use types or an opt-in registry of custom hook information to
+        // allow treating safe hooks as non-reactive.
+        hasReactiveInput = true;
+      } else if (
+        instr.value.kind === "MethodCall" &&
+        getHookKind(state.env, instr.value.property.identifier) != null
+      ) {
+        // Same as above, but for invoking hooks via a property load such as `React.useState()`
+        hasReactiveInput = true;
+      }
     }
     state.reactivityMap.set(lval.identifier.id, hasReactiveInput);
 

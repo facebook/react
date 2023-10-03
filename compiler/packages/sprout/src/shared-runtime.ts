@@ -153,3 +153,9 @@ export function toJSON(value: any) {
     return val;
   });
 }
+
+export const ObjectWithHooks = {
+  useFoo(): number {
+    return 0;
+  },
+};
