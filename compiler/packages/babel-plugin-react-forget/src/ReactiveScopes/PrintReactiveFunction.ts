@@ -35,12 +35,12 @@ export function printReactiveFunction(fn: ReactiveFunction): string {
     }
   });
   writer.writeLine(") {");
-  printReactiveInstructions(writer, fn.body);
+  writeReactiveInstructions(writer, fn.body);
   writer.writeLine("}");
   return writer.complete();
 }
 
-export function printReactiveBlock(
+export function writeReactiveBlock(
   writer: Writer,
   block: ReactiveScopeBlock
 ): void {
@@ -57,7 +57,7 @@ export function printReactiveBlock(
       (reassign) => printIdentifier(reassign)
     )}] {`
   );
-  printReactiveInstructions(writer, block.instructions);
+  writeReactiveInstructions(writer, block.instructions);
   writer.writeLine("}");
 }
 
@@ -68,18 +68,18 @@ function printDependency(dependency: ReactiveScopeDependency): string {
   return `${identifier}${dependency.path.map((prop) => `.${prop}`).join("")}`;
 }
 
-export function printReactiveInstructions(
+export function writeReactiveInstructions(
   writer: Writer,
   instructions: Array<ReactiveStatement>
 ): void {
   writer.indented(() => {
     for (const instr of instructions) {
-      printReactiveInstruction(writer, instr);
+      writeReactiveInstruction(writer, instr);
     }
   });
 }
 
-function printReactiveInstruction(
+function writeReactiveInstruction(
   writer: Writer,
   instr: ReactiveStatement
 ): void {
@@ -90,21 +90,21 @@ function printReactiveInstruction(
 
       if (instruction.lvalue !== null) {
         writer.write(`${id} ${printPlace(instruction.lvalue)} = `);
-        printReactiveValue(writer, instruction.value);
+        writeReactiveValue(writer, instruction.value);
         writer.newline();
       } else {
         writer.write(`${id} `);
-        printReactiveValue(writer, instruction.value);
+        writeReactiveValue(writer, instruction.value);
         writer.newline();
       }
       break;
     }
     case "scope": {
-      printReactiveBlock(writer, instr);
+      writeReactiveBlock(writer, instr);
       break;
     }
     case "terminal": {
-      printTerminal(writer, instr.terminal);
+      writeTerminal(writer, instr.terminal);
       break;
     }
     default: {
@@ -116,61 +116,83 @@ function printReactiveInstruction(
   }
 }
 
-function printReactiveValue(writer: Writer, value: ReactiveValue): void {
+export function printReactiveValue(value: ReactiveValue): string {
+  const writer = new Writer();
+  writeReactiveValue(writer, value);
+  return writer.complete();
+}
+
+function writeReactiveValue(writer: Writer, value: ReactiveValue): void {
   switch (value.kind) {
     case "ConditionalExpression": {
-      writer.append(`Ternary `);
-      printReactiveValue(writer, value.test);
-      writer.newline();
+      writer.writeLine(`Ternary `);
       writer.indented(() => {
-        writer.write(`? `);
-        printReactiveValue(writer, value.consequent);
-        writer.newline();
-        writer.write(`: `);
-        printReactiveValue(writer, value.alternate);
-        writer.newline();
+        writeReactiveValue(writer, value.test);
+        writer.writeLine(`? `);
+        writer.indented(() => {
+          writeReactiveValue(writer, value.consequent);
+        });
+        writer.writeLine(`: `);
+        writer.indented(() => {
+          writeReactiveValue(writer, value.alternate);
+        });
       });
+      writer.newline();
       break;
     }
     case "LogicalExpression": {
-      writer.append(`Logical ${value.operator} `);
-      printReactiveValue(writer, value.left);
+      writer.writeLine(`Logical`);
+      writer.indented(() => {
+        writeReactiveValue(writer, value.left);
+        writer.write(`${value.operator} `);
+        writeReactiveValue(writer, value.right);
+      });
       writer.newline();
-      printReactiveValue(writer, value.right);
       break;
     }
     case "SequenceExpression": {
+      writer.writeLine(`Sequence`);
       writer.indented(() => {
-        writer.newline();
-        writer.writeLine(`Sequence`);
         writer.indented(() => {
           value.instructions.forEach((instr) =>
-            printReactiveInstruction(writer, {
+            writeReactiveInstruction(writer, {
               kind: "instruction",
               instruction: instr,
             })
           );
           writer.write(`[${value.id}] `);
-          printReactiveValue(writer, value.value);
+          writeReactiveValue(writer, value.value);
         });
       });
+      writer.newline();
       break;
     }
     case "OptionalExpression": {
       writer.append(`OptionalExpression optional=${value.optional}`);
       writer.newline();
       writer.indented(() => {
-        printReactiveValue(writer, value.value);
+        writeReactiveValue(writer, value.value);
       });
+      writer.newline();
       break;
     }
     default: {
-      writer.append(printInstructionValue(value));
+      const printed = printInstructionValue(value);
+      const lines = printed.split("\n");
+      if (lines.length === 1) {
+        writer.writeLine(printed);
+      } else {
+        writer.indented(() => {
+          for (const line of lines) {
+            writer.writeLine(line);
+          }
+        });
+      }
     }
   }
 }
 
-function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
+function writeTerminal(writer: Writer, terminal: ReactiveTerminal): void {
   switch (terminal.kind) {
     case "break": {
       const id = terminal.id !== null ? `[${terminal.id}]` : [];
@@ -194,27 +216,31 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
     }
     case "do-while": {
       writer.writeLine(`[${terminal.id}] do-while {`);
-      printReactiveInstructions(writer, terminal.loop);
+      writeReactiveInstructions(writer, terminal.loop);
       writer.writeLine("} (");
-      printReactiveValue(writer, terminal.test);
+      writer.indented(() => {
+        writeReactiveValue(writer, terminal.test);
+      });
       writer.writeLine(")");
       break;
     }
     case "while": {
       writer.writeLine(`[${terminal.id}] while (`);
-      printReactiveValue(writer, terminal.test);
+      writer.indented(() => {
+        writeReactiveValue(writer, terminal.test);
+      });
       writer.writeLine(") {");
-      printReactiveInstructions(writer, terminal.loop);
+      writeReactiveInstructions(writer, terminal.loop);
       writer.writeLine("}");
       break;
     }
     case "if": {
       const { test, consequent, alternate } = terminal;
       writer.writeLine(`[${terminal.id}] if (${printPlace(test)}) {`);
-      printReactiveInstructions(writer, consequent);
+      writeReactiveInstructions(writer, consequent);
       if (alternate !== null) {
         writer.writeLine("} else {");
-        printReactiveInstructions(writer, alternate);
+        writeReactiveInstructions(writer, alternate);
       }
       writer.writeLine("}");
       break;
@@ -236,7 +262,7 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
               loc: case_.test?.loc ?? null,
               suggestions: null,
             });
-            printReactiveInstructions(writer, block);
+            writeReactiveInstructions(writer, block);
           });
           writer.writeLine("}");
         }
@@ -246,31 +272,37 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
     }
     case "for": {
       writer.writeLine(`[${terminal.id}] for (`);
-      printReactiveValue(writer, terminal.init);
-      writer.writeLine(";");
-      printReactiveValue(writer, terminal.test);
-      writer.writeLine(";");
-      if (terminal.update !== null) {
-        printReactiveValue(writer, terminal.update);
-      }
+      writer.indented(() => {
+        writeReactiveValue(writer, terminal.init);
+        writer.writeLine(";");
+        writeReactiveValue(writer, terminal.test);
+        writer.writeLine(";");
+        if (terminal.update !== null) {
+          writeReactiveValue(writer, terminal.update);
+        }
+      });
       writer.writeLine(") {");
-      printReactiveInstructions(writer, terminal.loop);
+      writeReactiveInstructions(writer, terminal.loop);
       writer.writeLine("}");
       break;
     }
     case "for-of": {
       writer.writeLine(`[${terminal.id}] for-of (`);
-      printReactiveValue(writer, terminal.init);
+      writer.indented(() => {
+        writeReactiveValue(writer, terminal.init);
+      });
       writer.writeLine(") {");
-      printReactiveInstructions(writer, terminal.loop);
+      writeReactiveInstructions(writer, terminal.loop);
       writer.writeLine("}");
       break;
     }
     case "for-in": {
       writer.writeLine(`[${terminal.id}] for-in (`);
-      printReactiveValue(writer, terminal.init);
+      writer.indented(() => {
+        writeReactiveValue(writer, terminal.init);
+      });
       writer.writeLine(") {");
-      printReactiveInstructions(writer, terminal.loop);
+      writeReactiveInstructions(writer, terminal.loop);
       writer.writeLine("}");
       break;
     }
@@ -284,15 +316,15 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
     }
     case "label": {
       writer.writeLine("{");
-      printReactiveInstructions(writer, terminal.block);
+      writeReactiveInstructions(writer, terminal.block);
       writer.writeLine("}");
       break;
     }
     case "try": {
       writer.writeLine(`[${terminal.id}] try {`);
-      printReactiveInstructions(writer, terminal.block);
+      writeReactiveInstructions(writer, terminal.block);
       writer.writeLine(`} catch {`);
-      printReactiveInstructions(writer, terminal.handler);
+      writeReactiveInstructions(writer, terminal.handler);
       writer.writeLine("}");
       break;
     }
@@ -303,30 +335,45 @@ function printTerminal(writer: Writer, terminal: ReactiveTerminal): void {
 
 export class Writer {
   #out: Array<string> = [];
+  #line: string;
   #depth: number;
 
   constructor({ depth }: { depth: number } = { depth: 0 }) {
-    this.#depth = depth;
+    this.#depth = Math.max(depth, 0);
+    this.#line = "";
   }
 
   complete(): string {
-    return this.#out.join("");
+    const line = this.#line.trimEnd();
+    if (line.length > 0) {
+      this.#out.push(line);
+    }
+    return this.#out.join("\n");
   }
 
   append(s: string): void {
-    this.#out.push(s);
+    this.write(s);
   }
 
   newline(): void {
-    this.#out.push("\n");
+    const line = this.#line.trimEnd();
+    if (line.length > 0) {
+      this.#out.push(line);
+    }
+    this.#line = "";
   }
 
   write(s: string): void {
-    this.#out.push("  ".repeat(this.#depth) + s);
+    if (this.#line.length === 0 && this.#depth > 0) {
+      // indent before writing
+      this.#line = "  ".repeat(this.#depth);
+    }
+    this.#line += s;
   }
 
   writeLine(s: string): void {
-    this.#out.push("  ".repeat(this.#depth) + s + "\n");
+    this.write(s);
+    this.newline();
   }
 
   indented(f: () => void): void {
