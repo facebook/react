@@ -1079,7 +1079,7 @@ function initInput(
   }
   value = null != checked ? checked : defaultChecked;
   value = "function" !== typeof value && "symbol" !== typeof value && !!value;
-  isHydrating || (element.checked = !!value);
+  element.checked = isHydrating ? element.checked : !!value;
   disableInputAttributeSyncing
     ? null != defaultChecked && (element.defaultChecked = !!defaultChecked)
     : (element.defaultChecked = !!value);
@@ -16281,7 +16281,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1767 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-622fc29e",
+  version: "18.3.0-www-modern-de10697a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2121 = {
@@ -16312,7 +16312,7 @@ var internals$jscomp$inline_2121 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-622fc29e"
+  reconcilerVersion: "18.3.0-www-modern-de10697a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2122 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16728,4 +16728,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-622fc29e";
+exports.version = "18.3.0-www-modern-de10697a";

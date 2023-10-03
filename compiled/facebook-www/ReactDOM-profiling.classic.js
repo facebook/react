@@ -1228,7 +1228,7 @@ function initInput(
   }
   value = null != checked ? checked : defaultChecked;
   value = "function" !== typeof value && "symbol" !== typeof value && !!value;
-  isHydrating || (element.checked = !!value);
+  element.checked = isHydrating ? element.checked : !!value;
   disableInputAttributeSyncing
     ? null != defaultChecked && (element.defaultChecked = !!defaultChecked)
     : (element.defaultChecked = !!value);
@@ -17150,7 +17150,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1864 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-9802da3a",
+  version: "18.3.0-www-classic-bf660d13",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17194,7 +17194,7 @@ var devToolsConfig$jscomp$inline_1864 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-9802da3a"
+  reconcilerVersion: "18.3.0-www-classic-bf660d13"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17518,7 +17518,7 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-9802da3a";
+exports.version = "18.3.0-www-classic-bf660d13";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

@@ -4150,13 +4150,12 @@ function initInput(
   var initialChecked =
     typeof checkedOrDefault !== "function" &&
     typeof checkedOrDefault !== "symbol" &&
-    !!checkedOrDefault; // The checked property never gets assigned. It must be manually set.
-  // We don't want to do this when hydrating so that existing user input isn't
-  // modified
-  // TODO: I'm pretty sure this is a bug because initialValueTracking won't be
-  // correct for the hydration case then.
+    !!checkedOrDefault;
 
-  if (!isHydrating) {
+  if (isHydrating) {
+    // Detach .checked from .defaultChecked but leave user input alone
+    node.checked = node.checked;
+  } else {
     node.checked = !!initialChecked;
   }
 
@@ -34594,7 +34593,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-ffc4f8d2";
+var ReactVersion = "18.3.0-www-classic-32c273fd";
 
 function createPortal$1(
   children,
