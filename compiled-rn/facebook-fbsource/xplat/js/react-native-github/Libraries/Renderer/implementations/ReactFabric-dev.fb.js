@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c7798d7e49297e588bffdcccc6aa6cb9>>
+ * @generated SignedSource<<d547d784dfd2ff8ab9a6adadb432b1cc>>
  */
 
 'use strict';
@@ -12065,13 +12065,13 @@ function startTransition(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
   var prevTransition = ReactCurrentBatchConfig$2.transition;
+  var currentTransition = {};
 
   {
     ReactCurrentBatchConfig$2.transition = null;
     dispatchSetState(fiber, queue, pendingState);
+    ReactCurrentBatchConfig$2.transition = currentTransition;
   }
-
-  var currentTransition = (ReactCurrentBatchConfig$2.transition = {});
 
   {
     ReactCurrentBatchConfig$2.transition._updatedFibers = new Set();
@@ -27063,7 +27063,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-4227b2ef";
+var ReactVersion = "18.3.0-canary-112791ea";
 
 function createPortal$1(
   children,
