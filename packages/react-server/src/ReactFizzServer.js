@@ -3464,6 +3464,12 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
       task.replay.nodes,
       task.replay.slots,
     );
+    request.pendingRootTasks--;
+    if (request.pendingRootTasks === 0) {
+      request.onShellError = noop;
+      const onShellReady = request.onShellReady;
+      onShellReady();
+    }
     request.allPendingTasks--;
     if (request.allPendingTasks === 0) {
       const onAllReady = request.onAllReady;

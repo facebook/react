@@ -996,6 +996,11 @@ describe('ReactDOMFizzStaticBrowser', () => {
       return children;
     }
 
+    const lazySpan = React.lazy(async () => {
+      await 0;
+      return {default: <span />};
+    });
+
     function App() {
       const children = (
         <Suspense fallback="Loading...">
@@ -1013,7 +1018,7 @@ describe('ReactDOMFizzStaticBrowser', () => {
                 </div>
               </Suspense>
             ) : (
-              <span />
+              lazySpan
             )}
           </div>
         </>
