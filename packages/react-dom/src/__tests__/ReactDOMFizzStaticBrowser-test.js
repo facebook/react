@@ -981,4 +981,83 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
+
+  // @gate enablePostpone
+  it('errors if the replay does not line up', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function Wrapper({children}) {
+      return children;
+    }
+
+    function App() {
+      const children = (
+        <Suspense fallback="Loading...">
+          <Postpone />
+        </Suspense>
+      );
+      return (
+        <>
+          <div>{prerendering ? <Wrapper>{children}</Wrapper> : children}</div>
+          <div>
+            {prerendering ? (
+              <Suspense fallback="Loading...">
+                <div>
+                  <Postpone />
+                </div>
+              </Suspense>
+            ) : (
+              <span />
+            )}
+          </div>
+        </>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual([
+      <div>Loading...</div>,
+      <div>Loading...</div>,
+    ]);
+
+    prerendering = false;
+
+    const errors = [];
+    const resumed = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+      {
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
+    );
+
+    expect(errors).toEqual([
+      'Expected the resume to render <Wrapper> in this slot but instead it rendered <Suspense>. ' +
+        "The tree doesn't match so React will fallback to client rendering.",
+      'Expected the resume to render <Suspense> in this slot but instead it rendered <span>. ' +
+        "The tree doesn't match so React will fallback to client rendering.",
+    ]);
+
+    // TODO: Test the component stack but we don't expose it to the server yet.
+
+    await readIntoContainer(resumed);
+
+    // Client rendered
+    expect(getVisibleChildren(container)).toEqual([
+      <div>Loading...</div>,
+      <div>Loading...</div>,
+    ]);
+  });
 });
