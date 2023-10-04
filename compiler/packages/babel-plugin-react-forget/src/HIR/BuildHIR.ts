@@ -3144,6 +3144,15 @@ function lowerAssignment(
           items.push({
             kind: "Hole",
           });
+
+          if (builder.environment.config.bailoutOnHoleyArrays) {
+            builder.errors.push({
+              reason: `(BuildHIR::lower) Fix babel holey array backward compatibility.`,
+              severity: ErrorSeverity.Todo,
+              loc: lvalue.node.loc ?? null,
+              suggestions: null,
+            });
+          }
           continue;
         }
         if (element.isRestElement()) {
