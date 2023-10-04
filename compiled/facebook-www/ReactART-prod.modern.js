@@ -2964,12 +2964,14 @@ function startTransition(
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
-  var prevTransition = ReactCurrentBatchConfig$2.transition;
+  var prevTransition = ReactCurrentBatchConfig$2.transition,
+    currentTransition = {};
   enableAsyncActions
-    ? dispatchOptimisticSetState(fiber, !1, queue, pendingState)
+    ? ((ReactCurrentBatchConfig$2.transition = currentTransition),
+      dispatchOptimisticSetState(fiber, !1, queue, pendingState))
     : ((ReactCurrentBatchConfig$2.transition = null),
-      dispatchSetState(fiber, queue, pendingState));
-  ReactCurrentBatchConfig$2.transition = {};
+      dispatchSetState(fiber, queue, pendingState),
+      (ReactCurrentBatchConfig$2.transition = currentTransition));
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
@@ -9772,7 +9774,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-46965381",
+    version: "18.3.0-www-modern-e0184800",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1284 = {
@@ -9803,7 +9805,7 @@ var internals$jscomp$inline_1284 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-46965381"
+  reconcilerVersion: "18.3.0-www-modern-e0184800"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1285 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -8429,13 +8429,13 @@ function startTransition(
     higherEventPriority(previousPriority, ContinuousEventPriority)
   );
   var prevTransition = ReactCurrentBatchConfig$2.transition;
+  var currentTransition = {};
 
   {
     ReactCurrentBatchConfig$2.transition = null;
     dispatchSetState(fiber, queue, pendingState);
+    ReactCurrentBatchConfig$2.transition = currentTransition;
   }
-
-  var currentTransition = (ReactCurrentBatchConfig$2.transition = {});
 
   {
     ReactCurrentBatchConfig$2.transition._updatedFibers = new Set();
@@ -24359,7 +24359,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-29f3c7ed";
+var ReactVersion = "18.3.0-www-classic-03d59dfb";
 
 // Might add PROFILE later.
 

@@ -3984,12 +3984,14 @@ function startTransition(
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
-  var prevTransition = ReactCurrentBatchConfig$3.transition;
+  var prevTransition = ReactCurrentBatchConfig$3.transition,
+    currentTransition = {};
   enableAsyncActions
-    ? dispatchOptimisticSetState(fiber, !1, queue, pendingState)
+    ? ((ReactCurrentBatchConfig$3.transition = currentTransition),
+      dispatchOptimisticSetState(fiber, !1, queue, pendingState))
     : ((ReactCurrentBatchConfig$3.transition = null),
-      dispatchSetState(fiber, queue, pendingState));
-  ReactCurrentBatchConfig$3.transition = {};
+      dispatchSetState(fiber, queue, pendingState),
+      (ReactCurrentBatchConfig$3.transition = currentTransition));
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
@@ -16704,7 +16706,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1808 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-d32d685e",
+  version: "18.3.0-www-classic-f9aace21",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2157 = {
@@ -16734,7 +16736,7 @@ var internals$jscomp$inline_2157 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-d32d685e"
+  reconcilerVersion: "18.3.0-www-classic-f9aace21"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2158 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17222,4 +17224,4 @@ exports.unstable_renderSubtreeIntoContainer = function (
   );
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-classic-d32d685e";
+exports.version = "18.3.0-www-classic-f9aace21";

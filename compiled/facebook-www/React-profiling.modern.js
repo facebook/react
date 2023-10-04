@@ -626,7 +626,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-7e2c0d38";
+exports.version = "18.3.0-www-modern-fa7e58e7";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

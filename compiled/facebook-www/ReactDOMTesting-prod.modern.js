@@ -3932,12 +3932,14 @@ function startTransition(
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
-  var prevTransition = ReactCurrentBatchConfig$3.transition;
+  var prevTransition = ReactCurrentBatchConfig$3.transition,
+    currentTransition = {};
   enableAsyncActions
-    ? dispatchOptimisticSetState(fiber, !1, queue, pendingState)
+    ? ((ReactCurrentBatchConfig$3.transition = currentTransition),
+      dispatchOptimisticSetState(fiber, !1, queue, pendingState))
     : ((ReactCurrentBatchConfig$3.transition = null),
-      dispatchSetState(fiber, queue, pendingState));
-  ReactCurrentBatchConfig$3.transition = {};
+      dispatchSetState(fiber, queue, pendingState),
+      (ReactCurrentBatchConfig$3.transition = currentTransition));
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
@@ -16281,7 +16283,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1767 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-7e2c0d38",
+  version: "18.3.0-www-modern-fa7e58e7",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2121 = {
@@ -16312,7 +16314,7 @@ var internals$jscomp$inline_2121 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-7e2c0d38"
+  reconcilerVersion: "18.3.0-www-modern-fa7e58e7"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2122 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16728,4 +16730,4 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-7e2c0d38";
+exports.version = "18.3.0-www-modern-fa7e58e7";
