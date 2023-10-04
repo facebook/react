@@ -1,14 +1,12 @@
 {
   "name": "cpu-demo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "dependencies": {
-    "glamor": "^2.20.40",
     "react": "0.0.0-experimental-269dd6ec5",
     "react-dom": "0.0.0-experimental-269dd6ec5",
-    "react-markdown": "^3.2.0",
-    "react-scripts": "^1.1.4",
-    "victory": "^0.25.6"
+    "react-scripts": "^5.0.1",
+    "victory": "^36.0.0"
   },
   "scripts": {
     "copy-source": "cp -r ../../../build/oss-experimental/* ./node_modules/",
@@ -16,5 +14,17 @@
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
   }
 }

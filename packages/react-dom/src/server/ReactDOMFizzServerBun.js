@@ -40,7 +40,7 @@ type Options = {
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
-  experimental_formState?: ReactFormState<any, any> | null,
+  formState?: ReactFormState<any, any> | null,
 };
 
 // TODO: Move to sub-classing ReadableStream.
@@ -111,7 +111,7 @@ function renderToReadableStream(
       onShellError,
       onFatalError,
       options ? options.onPostpone : undefined,
-      options ? options.experimental_formState : undefined,
+      options ? options.formState : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;
