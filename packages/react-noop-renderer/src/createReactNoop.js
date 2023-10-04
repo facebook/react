@@ -704,9 +704,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         cloneInstance,
         clearContainer,
 
-        createContainerChildSet(
-          container: Container,
-        ): Array<Instance | TextInstance> {
+        createContainerChildSet(): Array<Instance | TextInstance> {
           return [];
         },
 

@@ -1724,7 +1724,7 @@ function emptyPortalContainer(current: Fiber) {
     ...
   } = current.stateNode;
   const {containerInfo} = portal;
-  const emptyChildSet = createContainerChildSet(containerInfo);
+  const emptyChildSet = createContainerChildSet();
   replaceContainerChildren(containerInfo, emptyChildSet);
 }
 

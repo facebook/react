@@ -47,7 +47,10 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
-import {useMicrotasksForSchedulingInFabric} from 'shared/ReactFeatureFlags';
+import {
+  useMicrotasksForSchedulingInFabric,
+  passChildrenWhenCloningPersistedNodes,
+} from 'shared/ReactFeatureFlags';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -87,7 +90,7 @@ export type TextInstance = {
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
 export type Container = number;
-export type ChildSet = Object;
+export type ChildSet = Object | Array<Node>;
 export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
 }>;
@@ -405,15 +408,23 @@ export function cloneHiddenTextInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function createContainerChildSet(container: Container): ChildSet {
-  return createChildNodeSet(container);
+export function createContainerChildSet(): ChildSet {
+  if (passChildrenWhenCloningPersistedNodes) {
+    return [];
+  } else {
+    return createChildNodeSet();
+  }
 }
 
 export function appendChildToContainerChildSet(
   childSet: ChildSet,
   child: Instance | TextInstance,
 ): void {
-  appendChildNodeToSet(childSet, child.node);
+  if (passChildrenWhenCloningPersistedNodes) {
+    childSet.push(child.node);
+  } else {
+    appendChildNodeToSet(childSet, child.node);
+  }
 }
 
 export function finalizeContainerChildren(
@@ -426,7 +437,9 @@ export function finalizeContainerChildren(
 export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
-): void {}
+): void {
+  // Noop - children will be replaced in finalizeContainerChildren
+}
 
 export function getInstanceFromNode(node: any): empty {
   throw new Error('Not yet implemented.');

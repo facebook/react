@@ -181,7 +181,7 @@ declare var nativeFabricUIManager: {
   cloneNodeWithNewChildrenAndProps: (node: Object, newProps: ?Object) => Object,
   appendChild: (node: Object, childNode: Object) => void,
 
-  createChildSet: (rootTag: number) => Object,
+  createChildSet: () => Object,
   appendChildToSet: (childSet: Object, childNode: Object) => void,
   completeRoot: (rootTag: number, childSet: Object) => void,
   registerEventHandler: (

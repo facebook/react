@@ -390,6 +390,7 @@ function appendAllChildrenToContainer(
     }
   }
 }
+
 function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
   if (supportsPersistence) {
     const portalOrRoot: {
@@ -402,9 +403,14 @@ function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
       // No changes, just reuse the existing instance.
     } else {
       const container = portalOrRoot.containerInfo;
-      const newChildSet = createContainerChildSet(container);
+      const newChildSet = createContainerChildSet();
       // If children might have changed, we have to add them all to the set.
-      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
+      appendAllChildrenToContainer(
+        newChildSet,
+        workInProgress,
+        /* needsVisibilityToggle */ false,
+        /* isHidden */ false,
+      );
       portalOrRoot.pendingChildren = newChildSet;
       // Schedule an update on the container to swap out the container.
       markUpdate(workInProgress);
@@ -412,6 +418,7 @@ function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
     }
   }
 }
+
 function updateHostComponent(
   current: Fiber,
   workInProgress: Fiber,
@@ -460,6 +467,9 @@ function updateHostComponent(
       return;
     }
 
+    // Certain renderers require commit-time effects for initial mount.
+    // (eg DOM renderer supports auto-focus for certain elements).
+    // Make sure such renderers get scheduled for later work.
     if (
       finalizeInitialChildren(newInstance, type, newProps, currentHostContext)
     ) {
@@ -473,7 +483,12 @@ function updateHostComponent(
       markUpdate(workInProgress);
     } else {
       // If children might have changed, we have to add them all to the set.
-      appendAllChildren(newInstance, workInProgress, false, false);
+      appendAllChildren(
+        newInstance,
+        workInProgress,
+        /* needsVisibilityToggle */ false,
+        /* isHidden */ false,
+      );
     }
   }
 }
