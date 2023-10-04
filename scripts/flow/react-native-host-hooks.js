@@ -176,9 +176,16 @@ declare var nativeFabricUIManager: {
     eventTarget: Object,
   ) => Object,
   cloneNode: (node: Object) => Object,
-  cloneNodeWithNewChildren: (node: Object) => Object,
+  cloneNodeWithNewChildren: (
+    node: Object,
+    children?: $ReadOnlyArray<Object>,
+  ) => Object,
   cloneNodeWithNewProps: (node: Object, newProps: ?Object) => Object,
-  cloneNodeWithNewChildrenAndProps: (node: Object, newProps: ?Object) => Object,
+  cloneNodeWithNewChildrenAndProps: (
+    node: Object,
+    newPropsOrChildren: ?Object | $ReadOnlyArray<Object>,
+    newProps?: ?Object,
+  ) => Object,
   appendChild: (node: Object, childNode: Object) => void,
 
   createChildSet: () => Object,

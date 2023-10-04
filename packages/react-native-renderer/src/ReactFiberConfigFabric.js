@@ -349,9 +349,8 @@ export function cloneInstance(
   type: string,
   oldProps: Props,
   newProps: Props,
-  internalInstanceHandle: InternalInstanceHandle,
   keepChildren: boolean,
-  recyclableInstance: null | Instance,
+  newChildSet: ?ChildSet,
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
   const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
@@ -370,12 +369,26 @@ export function cloneInstance(
       return instance;
     }
   } else {
-    if (updatePayload !== null) {
-      clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+    // If passChildrenWhenCloningPersistedNodes is enabled, children will be non-null
+    if (newChildSet != null) {
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(
+          node,
+          newChildSet,
+          updatePayload,
+        );
+      } else {
+        clone = cloneNodeWithNewChildren(node, newChildSet);
+      }
     } else {
-      clone = cloneNodeWithNewChildren(node);
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+      } else {
+        clone = cloneNodeWithNewChildren(node);
+      }
     }
   }
+
   return {
     node: clone,
     canonical: instance.canonical,
@@ -386,7 +399,6 @@ export function cloneHiddenInstance(
   instance: Instance,
   type: string,
   props: Props,
-  internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
   const node = instance.node;
@@ -403,7 +415,6 @@ export function cloneHiddenInstance(
 export function cloneHiddenTextInstance(
   instance: Instance,
   text: string,
-  internalInstanceHandle: InternalInstanceHandle,
 ): TextInstance {
   throw new Error('Not yet implemented.');
 }
