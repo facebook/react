@@ -1110,7 +1110,6 @@ function replaySuspenseBoundary(
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
 
-  // TODO: Should this be in the finally?
   popComponentStackInDEV(task);
 }
 
@@ -1953,17 +1952,19 @@ function replayElement(
     if (keyOrIndex !== node[1]) {
       continue;
     }
-    // Let's double check that the component name matches as a precaution.
-    if (name !== null && name !== node[0]) {
-      throw new Error(
-        'Expected to see a component of type "' +
-          name +
-          '" in this slot. ' +
-          "The tree doesn't match so React will fallback to client rendering.",
-      );
-    }
     if (node.length === 4) {
       // Matched a replayable path.
+      // Let's double check that the component name matches as a precaution.
+      if (name !== null && name !== node[0]) {
+        throw new Error(
+          'Expected the resume to render <' +
+            (node[0]: any) +
+            '> in this slot but instead it rendered <' +
+            name +
+            '>. ' +
+            "The tree doesn't match so React will fallback to client rendering.",
+        );
+      }
       const childNodes = node[2];
       const childSlots = node[3];
       task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
@@ -2009,8 +2010,13 @@ function replayElement(
     } else {
       // Let's double check that the component type matches.
       if (type !== REACT_SUSPENSE_TYPE) {
+        const expectedType = 'Suspense';
         throw new Error(
-          'Expected to see a Suspense boundary in this slot. ' +
+          'Expected the resume to render <' +
+            expectedType +
+            '> in this slot but instead it rendered <' +
+            (getComponentNameFromType(type) || 'Unknown') +
+            '>. ' +
             "The tree doesn't match so React will fallback to client rendering.",
         );
       }
@@ -2378,6 +2384,7 @@ function replayFragment(
       // in the original prerender. What's unable to complete is the child
       // replay nodes which might be Suspense boundaries which are able to
       // absorb the error and we can still continue with siblings.
+      // This is an error, stash the component stack if it is null.
       erroredReplay(request, task.blockedBoundary, x, childNodes, childSlots);
     } finally {
       task.replay.pendingTasks--;
@@ -2849,6 +2856,7 @@ function renderNode(
           if (__DEV__) {
             task.componentStack = previousComponentStack;
           }
+          lastBoundaryErrorComponentStackDev = null;
           return;
         }
       }
@@ -2930,6 +2938,7 @@ function erroredTask(
     errorDigest = logRecoverableError(request, error);
   }
   if (boundary === null) {
+    lastBoundaryErrorComponentStackDev = null;
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
@@ -2949,6 +2958,8 @@ function erroredTask(
         // We reuse the same queue for errors.
         request.clientRenderedBoundaries.push(boundary);
       }
+    } else {
+      lastBoundaryErrorComponentStackDev = null;
     }
   }
 
@@ -3077,7 +3088,6 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 
   if (boundary === null) {
-    request.allPendingTasks--;
     if (request.status !== CLOSING && request.status !== CLOSED) {
       const replay: null | ReplaySet = task.replay;
       if (replay === null) {
@@ -3085,6 +3095,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         // the request;
         logRecoverableError(request, error);
         fatalError(request, error);
+        return;
       } else {
         // If the shell aborts during a replay, that's not a fatal error. Instead
         // we should be able to recover by client rendering all the root boundaries in
@@ -3100,6 +3111,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             error,
             errorDigest,
           );
+        }
+        request.pendingRootTasks--;
+        if (request.pendingRootTasks === 0) {
+          request.onShellError = noop;
+          const onShellReady = request.onShellReady;
+          onShellReady();
         }
       }
     }
@@ -3137,12 +3154,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       abortTask(fallbackTask, request, error),
     );
     boundary.fallbackAbortableTasks.clear();
+  }
 
-    request.allPendingTasks--;
-    if (request.allPendingTasks === 0) {
-      const onAllReady = request.onAllReady;
-      onAllReady();
-    }
+  request.allPendingTasks--;
+  if (request.allPendingTasks === 0) {
+    const onAllReady = request.onAllReady;
+    onAllReady();
   }
 }
 
@@ -3365,6 +3382,7 @@ function retryRenderTask(
         logPostpone(request, postponeInstance.message);
         trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, task.blockedBoundary, segment);
+        lastBoundaryErrorComponentStackDev = null;
         return;
       }
     }
@@ -3452,6 +3470,12 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
       task.replay.nodes,
       task.replay.slots,
     );
+    request.pendingRootTasks--;
+    if (request.pendingRootTasks === 0) {
+      request.onShellError = noop;
+      const onShellReady = request.onShellReady;
+      onShellReady();
+    }
     request.allPendingTasks--;
     if (request.allPendingTasks === 0) {
       const onAllReady = request.onAllReady;
