@@ -3088,7 +3088,6 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 
   if (boundary === null) {
-    request.allPendingTasks--;
     if (request.status !== CLOSING && request.status !== CLOSED) {
       const replay: null | ReplaySet = task.replay;
       if (replay === null) {
@@ -3096,6 +3095,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         // the request;
         logRecoverableError(request, error);
         fatalError(request, error);
+        return;
       } else {
         // If the shell aborts during a replay, that's not a fatal error. Instead
         // we should be able to recover by client rendering all the root boundaries in
@@ -3111,6 +3111,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             error,
             errorDigest,
           );
+        }
+        request.pendingRootTasks--;
+        if (request.pendingRootTasks === 0) {
+          request.onShellError = noop;
+          const onShellReady = request.onShellReady;
+          onShellReady();
         }
       }
     }
@@ -3148,12 +3154,12 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       abortTask(fallbackTask, request, error),
     );
     boundary.fallbackAbortableTasks.clear();
+  }
 
-    request.allPendingTasks--;
-    if (request.allPendingTasks === 0) {
-      const onAllReady = request.onAllReady;
-      onAllReady();
-    }
+  request.allPendingTasks--;
+  if (request.allPendingTasks === 0) {
+    const onAllReady = request.onAllReady;
+    onAllReady();
   }
 }
 

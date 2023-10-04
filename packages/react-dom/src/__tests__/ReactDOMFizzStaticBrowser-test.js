@@ -1065,4 +1065,65 @@ describe('ReactDOMFizzStaticBrowser', () => {
       <div>Loading...</div>,
     ]);
   });
+
+  // @gate enablePostpone
+  it('can abort the resume', async () => {
+    let prerendering = true;
+    const infinitePromise = new Promise(() => {});
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      if (!prerendering) {
+        React.use(infinitePromise);
+      }
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Postpone />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    prerendering = false;
+
+    const controller = new AbortController();
+
+    const errors = [];
+
+    const resumedPromise = ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+      {
+        signal: controller.signal,
+        onError(x) {
+          errors.push(x);
+        },
+      },
+    );
+
+    controller.abort('abort');
+
+    const resumed = await resumedPromise;
+    await resumed.allReady;
+
+    expect(errors).toEqual(['abort']);
+
+    await readIntoContainer(resumed);
+
+    // Client rendered
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+  });
 });
