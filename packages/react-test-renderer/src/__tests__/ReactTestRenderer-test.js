@@ -120,5 +120,46 @@ describe('ReactTestRenderer', () => {
       await waitForAll([]);
       expect(root.toJSON().children).toEqual(['dynamic']);
     });
+
+    it('failing test', async () => {
+      const SELECT_ALL_FILTERS_VALUE = '_selected_all_filters_';
+      function Parent() {
+        const [selectedFilters, setSelectedFilters] = React.useState(null);
+        const filterList = ['green', 'red', 'gray'];
+        return (
+          <Child
+            selectedFilters={selectedFilters}
+            setSelectedFilters={setSelectedFilters}
+            filterList={filterList}
+          />
+        );
+      }
+
+      function Child({selectedFilters, setSelectedFilters, filterList}) {
+        const selectedFiltersString = React.useMemo(() => {
+          if (selectedFilters == null) {
+            return 'none';
+          }
+          if (selectedFilters.length === 1) {
+            return selectedFilters[0];
+          }
+          return SELECT_ALL_FILTERS_VALUE;
+        }, [selectedFilters]);
+
+        React.useEffect(() => {
+          if (selectedFilters == null) {
+            setSelectedFilters(SELECT_ALL_FILTERS_VALUE);
+          }
+        }, [selectedFilters]);
+
+        return <div>Selected Filters: {selectedFiltersString}</div>;
+      }
+
+      const root = ReactTestRenderer.create(<Parent />);
+      await waitForAll([]);
+      expect(root.toJSON()).toEqual(
+        '<div>Selected Filters: _selected_all_filters_</div>',
+      );
+    });
   });
 });
