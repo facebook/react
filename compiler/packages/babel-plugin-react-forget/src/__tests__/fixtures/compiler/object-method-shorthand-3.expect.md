@@ -9,7 +9,7 @@ function Component(a) {
   let obj = {
     method() {
       mutate(x);
-      return x.a;
+      return x;
     },
   };
   return obj.method();
@@ -32,7 +32,7 @@ function Component(a) {
   const obj = {
     method() {
       mutate(x);
-      return x.a;
+      return x;
     },
   };
   return obj.method();

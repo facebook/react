@@ -5,7 +5,7 @@ function Component(a) {
   let obj = {
     method() {
       mutate(x);
-      return x.a;
+      return x;
     },
   };
   return obj.method();

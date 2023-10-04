@@ -34,11 +34,21 @@ export const CONST_NUMBER2 = 2;
 export const CONST_TRUE = true;
 export const CONST_FALSE = false;
 
-let count: number = 0;
 export function mutate(arg: any): void {
   // don't mutate primitive
-  if (typeof arg != null && typeof arg === "object") {
-    arg["wat" + count++] = "joe";
+  if (typeof arg === null || typeof arg !== "object") {
+    return;
+  }
+
+  let count: number = 0;
+  let key;
+  while (true) {
+    key = "wat" + count;
+    if (!Object.hasOwn(arg, key)) {
+      arg[key] = "joe";
+      return;
+    }
+    count++;
   }
 }
 
