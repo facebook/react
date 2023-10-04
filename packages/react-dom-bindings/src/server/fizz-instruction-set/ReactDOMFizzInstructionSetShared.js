@@ -47,7 +47,9 @@ export function completeBoundary(suspenseBoundaryID, contentID, errorDigest) {
   const contentNode = document.getElementById(contentID);
   // We'll detach the content node so that regardless of what happens next we don't leave in the tree.
   // This might also help by not causing recalcing each time we move a child from here to the target.
-  contentNode.parentNode.removeChild(contentNode);
+  if (contentNode.parentNode) {
+    contentNode.parentNode.removeChild(contentNode);
+  }  
 
   // Find the fallback's first element.
   const suspenseIdNode = document.getElementById(suspenseBoundaryID);
