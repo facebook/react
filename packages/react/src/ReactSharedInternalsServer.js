@@ -5,12 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 import {enableServerContext} from 'shared/ReactFeatureFlags';
 import {ContextRegistry} from './ReactServerContextRegistry';
 
 const ReactSharedInternals = {
+  ReactCurrentDispatcher,
   ReactCurrentOwner,
 };
 
