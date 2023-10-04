@@ -128,6 +128,7 @@ async function run(
             LOGGER_PATH,
             fixture,
             compilerVersion,
+            filter?.debug ?? false,
             isOnlyFixture
           )
           .then((result) => [fixtureName, result])
@@ -143,6 +144,7 @@ async function run(
         LOGGER_PATH,
         fixture,
         compilerVersion,
+        filter?.debug ?? false,
         isOnlyFixture
       );
       entries.push([fixtureName, output]);

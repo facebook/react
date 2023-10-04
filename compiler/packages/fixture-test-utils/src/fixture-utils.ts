@@ -1,16 +1,18 @@
 import fs from "fs/promises";
 import glob from "glob";
-import invariant from "invariant";
 import path from "path";
 import { FILTER_PATH, FIXTURES_PATH } from "./constants";
 
+const KIND_DEFAULT = "only";
 export type TestFilter =
   | {
       kind: "only";
+      debug: boolean;
       paths: Array<string>;
     }
   | {
       kind: "skip";
+      debug: boolean;
       paths: Array<string>;
     };
 
@@ -30,27 +32,32 @@ export async function readTestFilter(): Promise<TestFilter | null> {
 
   const input = await fs.readFile(FILTER_PATH, "utf8");
   const lines = input.trim().split("\n");
-  if (lines.length < 2) {
-    console.warn("Misformed filter file. Expected at least two lines.");
-    return null;
-  }
 
-  let filter: "only" | "skip" | null = null;
-  if (lines[0]!.indexOf("@only") !== -1) {
-    filter = "only";
+  let filter: "only" | "skip" = KIND_DEFAULT;
+  let debug: boolean = false;
+  const line0 = lines[0];
+  if (line0 != null) {
+    // Try to parse pragmas
+    let consumedLine0 = false;
+    if (line0.indexOf("@only") !== -1) {
+      filter = "only";
+      consumedLine0 = true;
+    } else if (line0.indexOf("@skip") !== -1) {
+      filter = "skip";
+      consumedLine0 = true;
+    }
+    if (line0.indexOf("@debug") !== -1) {
+      debug = true;
+      consumedLine0 = true;
+    }
+
+    if (consumedLine0) {
+      lines.shift();
+    }
   }
-  if (lines[0]!.indexOf("@skip") !== -1) {
-    filter = "skip";
-  }
-  if (filter === null) {
-    console.warn(
-      "Misformed filter file. Expected first line to contain @only or @skip"
-    );
-    return null;
-  }
-  lines.shift();
   return {
     kind: filter,
+    debug,
     paths: lines,
   };
 }

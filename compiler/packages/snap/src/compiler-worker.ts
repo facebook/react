@@ -41,6 +41,7 @@ export async function compile(
   loggerPath: string,
   fixture: TestFixture,
   compilerVersion: number,
+  implicitDebugMode: boolean,
   isOnlyFixture: boolean
 ): Promise<TestResult> {
   const seenConsoleErrors: Array<string> = [];
@@ -81,7 +82,7 @@ export async function compile(
     // only try logging if we filtered out all but one fixture,
     // since console log order is non-deterministic
     const shouldLogPragma = input.split("\n")[0].includes("@debug");
-    toggleLogging(isOnlyFixture && shouldLogPragma);
+    toggleLogging(isOnlyFixture && (shouldLogPragma || implicitDebugMode));
     code = transformFixtureInput(
       input,
       basename,
