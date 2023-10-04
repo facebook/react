@@ -33851,7 +33851,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-47efbea5";
+var ReactVersion = "18.3.0-www-modern-cb7c50df";
 
 function createPortal$1(
   children,
@@ -45048,8 +45048,8 @@ function hydrateRoot$1(container, initialChildren, options) {
     }
 
     if (enableAsyncActions && enableFormActions) {
-      if (options.experimental_formState !== undefined) {
-        formState = options.experimental_formState;
+      if (options.formState !== undefined) {
+        formState = options.formState;
       }
     }
   }
