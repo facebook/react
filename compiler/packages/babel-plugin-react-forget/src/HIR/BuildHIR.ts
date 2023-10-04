@@ -1175,7 +1175,7 @@ function lowerStatement(
         };
       }
 
-      const handler = builder.enter("block", (_blockId) => {
+      const handler = builder.enter("catch", (_blockId) => {
         if (handlerBinding !== null) {
           lowerAssignment(
             builder,

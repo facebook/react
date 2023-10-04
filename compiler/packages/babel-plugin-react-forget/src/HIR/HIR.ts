@@ -264,7 +264,7 @@ export type HIR = {
  * an exception occurs, therefore the block model only represents explicit throw
  * statements and not implicit exceptions which may occur.
  */
-export type BlockKind = "block" | "value" | "loop" | "sequence";
+export type BlockKind = "block" | "value" | "loop" | "sequence" | "catch";
 export type BasicBlock = {
   kind: BlockKind;
   id: BlockId;

@@ -5,7 +5,7 @@ function useFoo() {
     return getNumber();
   } catch {}
 }
-export const FIXTURE_ENTRYPONT = {
+export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
   params: [],
 };

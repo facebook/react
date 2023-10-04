@@ -183,7 +183,9 @@ export function leaveSSA(fn: HIRFunction): void {
             originalLVal.lvalue === value.lvalue // in case this was pre-declared for the `for` initializer
           ) {
             CompilerError.invariant(
-              originalLVal !== undefined || block.kind === "block",
+              originalLVal !== undefined ||
+                block.kind === "block" ||
+                block.kind === "catch",
               {
                 reason: `TODO: Handle reassignment in a value block where the original declaration was removed by dead code elimination (DCE)`,
                 description: null,
