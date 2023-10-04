@@ -143,6 +143,7 @@ import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 import {
   requestAsyncActionContext,
   requestSyncActionContext,
+  peekEntangledActionLane,
 } from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
@@ -2722,6 +2723,7 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactCurrentBatchConfig.transition;
+  const currentTransition: BatchConfigTransition = {};
 
   if (enableAsyncActions) {
     // We don't really need to use an optimistic update here, because we
@@ -2730,14 +2732,13 @@ function startTransition<S>(
     // optimistic update anyway to make it less likely the behavior accidentally
     // diverges; for example, both an optimistic update and this one should
     // share the same lane.
+    ReactCurrentBatchConfig.transition = currentTransition;
     dispatchOptimisticSetState(fiber, false, queue, pendingState);
   } else {
     ReactCurrentBatchConfig.transition = null;
     dispatchSetState(fiber, queue, pendingState);
+    ReactCurrentBatchConfig.transition = currentTransition;
   }
-
-  const currentTransition = (ReactCurrentBatchConfig.transition =
-    ({}: BatchConfigTransition));
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
@@ -3201,14 +3202,48 @@ function dispatchOptimisticSetState<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ): void {
+  if (__DEV__) {
+    if (ReactCurrentBatchConfig.transition === null) {
+      // An optimistic update occurred, but startTransition is not on the stack.
+      // There are two likely scenarios.
+
+      // One possibility is that the optimistic update is triggered by a regular
+      // event handler (e.g. `onSubmit`) instead of an action. This is a mistake
+      // and we will warn.
+
+      // The other possibility is the optimistic update is inside an async
+      // action, but after an `await`. In this case, we can make it "just work"
+      // by associating the optimistic update with the pending async action.
+
+      // Technically it's possible that the optimistic update is unrelated to
+      // the pending action, but we don't have a way of knowing this for sure
+      // because browsers currently do not provide a way to track async scope.
+      // (The AsyncContext proposal, if it lands, will solve this in the
+      // future.) However, this is no different than the problem of unrelated
+      // transitions being grouped together — it's not wrong per se, but it's
+      // not ideal.
+
+      // Once AsyncContext starts landing in browsers, we will provide better
+      // warnings in development for these cases.
+      if (peekEntangledActionLane() !== NoLane) {
+        // There is a pending async action. Don't warn.
+      } else {
+        // There's no pending async action. The most likely cause is that we're
+        // inside a regular event handler (e.g. onSubmit) instead of an action.
+        console.error(
+          'An optimistic state update occurred outside a transition or ' +
+            'action. To fix, move the update to an action, or wrap ' +
+            'with startTransition.',
+        );
+      }
+    }
+  }
+
   const update: Update<S, A> = {
     // An optimistic update commits synchronously.
     lane: SyncLane,
     // After committing, the optimistic update is "reverted" using the same
     // lane as the transition it's associated with.
-    //
-    // TODO: Warn if there's no transition/action associated with this
-    // optimistic update.
     revertLane: requestTransitionLane(),
     action,
     hasEagerState: false,

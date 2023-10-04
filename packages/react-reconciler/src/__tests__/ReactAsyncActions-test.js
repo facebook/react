@@ -1142,7 +1142,7 @@ describe('ReactAsyncActions', () => {
 
     // Initial render
     const root = ReactNoop.createRoot();
-    await act(() => root.render(<App text="A" />));
+    await act(() => root.render(<App />));
     assertLog(['A']);
     expect(root).toMatchRenderedOutput(<div>A</div>);
 
@@ -1174,5 +1174,54 @@ describe('ReactAsyncActions', () => {
 
     await act(() => resolveText('Wait 2'));
     assertLog(['B']);
+    expect(root).toMatchRenderedOutput(<div>B</div>);
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimistic warns if outside of a transition', async () => {
+    let startTransition;
+    let setLoadingProgress;
+    let setText;
+    function App() {
+      const [, _startTransition] = useTransition();
+      const [text, _setText] = useState('A');
+      const [loadingProgress, _setLoadingProgress] = useOptimistic(0);
+      startTransition = _startTransition;
+      setText = _setText;
+      setLoadingProgress = _setLoadingProgress;
+
+      return (
+        <>
+          {loadingProgress !== 0 ? (
+            <div key="progress">
+              <Text text={`Loading... (${loadingProgress})`} />
+            </div>
+          ) : null}
+          <div key="real">
+            <Text text={text} />
+          </div>
+        </>
+      );
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    assertLog(['A']);
+    expect(root).toMatchRenderedOutput(<div>A</div>);
+
+    await expect(async () => {
+      await act(() => {
+        setLoadingProgress('25%');
+        startTransition(() => setText('B'));
+      });
+    }).toErrorDev(
+      'An optimistic state update occurred outside a transition or ' +
+        'action. To fix, move the update to an action, or wrap ' +
+        'with startTransition.',
+      {withoutStack: true},
+    );
+    assertLog(['Loading... (25%)', 'A', 'B']);
+    expect(root).toMatchRenderedOutput(<div>B</div>);
   });
 });
