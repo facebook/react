@@ -12,6 +12,7 @@ import {
   BlockId,
   CallExpression,
   Effect,
+  GeneratedSource,
   HIRFunction,
   IdentifierId,
   InstructionKind,
@@ -38,6 +39,12 @@ import {
   eachTerminalSuccessor,
 } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
+
+const UndefinedValue: InstructionValue = {
+  kind: "Primitive",
+  loc: GeneratedSource,
+  value: undefined,
+};
 
 /**
  * For every usage of a value in the given function, infers the effect or action
@@ -933,11 +940,7 @@ function inferBlock(
         continue;
       }
       case "DeclareLocal": {
-        const value: InstructionValue = {
-          kind: "Primitive",
-          loc: instrValue.loc,
-          value: undefined,
-        };
+        const value = UndefinedValue;
         state.initialize(
           value,
           // Catch params may be aliased to mutable values

@@ -461,6 +461,7 @@ const skipFilter = new Set([
   "fbtparam-with-jsx-fragment-value",
   "fbt-preserve-jsxtext",
   "useContext-mutable-value",
+  "loop-unused-let",
 ]);
 
 export default skipFilter;
