@@ -85,9 +85,9 @@ describe('react-dom-server-rendering-stub', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  it('exports experimental_useFormStatus', async () => {
+  it('exports useFormStatus', async () => {
     function App() {
-      const {pending} = ReactDOM.experimental_useFormStatus();
+      const {pending} = ReactDOM.useFormStatus();
       return 'Pending: ' + pending;
     }
 

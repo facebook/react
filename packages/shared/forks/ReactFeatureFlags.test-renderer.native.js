@@ -71,7 +71,7 @@ export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 
-export const enableAsyncActions = false;
+export const enableAsyncActions = true;
 
 export const alwaysThrottleRetries = true;
 

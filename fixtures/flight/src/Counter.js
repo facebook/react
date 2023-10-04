@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import {experimental_useFormState as useFormState} from 'react-dom';
+import {useFormState} from 'react-dom';
 
 import Container from './Container.js';
 

@@ -19,7 +19,7 @@ describe('ReactAsyncActions', () => {
     assertLog = require('internal-test-utils').assertLog;
     useTransition = React.useTransition;
     useState = React.useState;
-    useOptimistic = React.experimental_useOptimistic;
+    useOptimistic = React.useOptimistic;
 
     textCache = new Map();
   });
