@@ -34006,7 +34006,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-07a731ef";
+var ReactVersion = "18.3.0-www-classic-41a19799";
 
 function createPortal$1(
   children,
@@ -46623,8 +46623,6 @@ assign(Internals, {
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = createPortal;
 exports.createRoot = createRoot;
-exports.experimental_useFormState = useFormState;
-exports.experimental_useFormStatus = useFormStatus;
 exports.findDOMNode = findDOMNode;
 exports.flushSync = flushSync;
 exports.hydrate = hydrate;
@@ -46641,6 +46639,8 @@ exports.unstable_batchedUpdates = batchedUpdates$1;
 exports.unstable_createEventHandle = createEventHandle;
 exports.unstable_renderSubtreeIntoContainer = renderSubtreeIntoContainer;
 exports.unstable_runWithPriority = runWithPriority;
+exports.useFormState = useFormState;
+exports.useFormStatus = useFormStatus;
 exports.version = ReactVersion;
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */

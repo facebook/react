@@ -16668,7 +16668,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1823 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-b31f3a02",
+  version: "18.3.0-www-modern-b2fdc00b",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16713,7 +16713,7 @@ var devToolsConfig$jscomp$inline_1823 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-b31f3a02"
+  reconcilerVersion: "18.3.0-www-modern-b2fdc00b"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16759,12 +16759,6 @@ exports.createRoot = function (container, options) {
     8 === container.nodeType ? container.parentNode : container
   );
   return new ReactDOMRoot(options);
-};
-exports.experimental_useFormState = function () {
-  throw Error(formatProdErrorMessage(248));
-};
-exports.experimental_useFormStatus = function () {
-  throw Error(formatProdErrorMessage(248));
 };
 exports.flushSync = function (fn) {
   return flushSync$1(fn);
@@ -16965,7 +16959,13 @@ exports.unstable_createEventHandle = function (type, options) {
   return eventHandle;
 };
 exports.unstable_runWithPriority = runWithPriority;
-exports.version = "18.3.0-www-modern-b31f3a02";
+exports.useFormState = function () {
+  throw Error(formatProdErrorMessage(248));
+};
+exports.useFormStatus = function () {
+  throw Error(formatProdErrorMessage(248));
+};
+exports.version = "18.3.0-www-modern-b2fdc00b";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

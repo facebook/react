@@ -34623,7 +34623,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-8f113be5";
+var ReactVersion = "18.3.0-www-classic-eb6d9c3d";
 
 function createPortal$1(
   children,
@@ -47379,8 +47379,6 @@ exports.createRoleSelector = createRoleSelector;
 exports.createRoot = createRoot;
 exports.createTestNameSelector = createTestNameSelector;
 exports.createTextSelector = createTextSelector;
-exports.experimental_useFormState = useFormState;
-exports.experimental_useFormStatus = useFormStatus;
 exports.findAllNodes = findAllNodes;
 exports.findBoundingRects = findBoundingRects;
 exports.findDOMNode = findDOMNode;
@@ -47402,6 +47400,8 @@ exports.unstable_batchedUpdates = batchedUpdates$1;
 exports.unstable_createEventHandle = createEventHandle;
 exports.unstable_renderSubtreeIntoContainer = renderSubtreeIntoContainer;
 exports.unstable_runWithPriority = runWithPriority;
+exports.useFormState = useFormState;
+exports.useFormStatus = useFormStatus;
 exports.version = ReactVersion;
 
   })();
