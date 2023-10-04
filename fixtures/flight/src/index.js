@@ -48,7 +48,7 @@ async function hydrateApp() {
     // the state needs to be transported as part of the HTML stream. We intend
     // to add a feature to Fizz for this, but for now it's up to the
     // metaframework to implement correctly.
-    experimental_formState: formState,
+    formState: formState,
   });
 }
 

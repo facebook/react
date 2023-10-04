@@ -173,7 +173,7 @@ app.all('/', async function (req, res, next) {
       res.set('Content-type', 'text/html');
       const {pipe} = renderToPipeableStream(React.createElement(Root), {
         bootstrapScripts: mainJSChunks,
-        experimental_formState: lazyFormState,
+        formState: lazyFormState,
       });
       pipe(res);
     } catch (e) {
