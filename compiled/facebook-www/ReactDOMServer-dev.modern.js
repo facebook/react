@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-73c8edac";
+var ReactVersion = "18.3.0-www-modern-55737203";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -10408,8 +10408,7 @@ function replaySuspenseBoundary(
   } // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
 
-  request.pingedTasks.push(suspendedFallbackTask); // TODO: Should this be in the finally?
-
+  request.pingedTasks.push(suspendedFallbackTask);
   popComponentStackInDEV(task);
 }
 
@@ -11170,19 +11169,22 @@ function replayElement(
 
     if (keyOrIndex !== node[1]) {
       continue;
-    } // Let's double check that the component name matches as a precaution.
-
-    if (name !== null && name !== node[0]) {
-      throw new Error(
-        'Expected to see a component of type "' +
-          name +
-          '" in this slot. ' +
-          "The tree doesn't match so React will fallback to client rendering."
-      );
     }
 
     if (node.length === 4) {
       // Matched a replayable path.
+      // Let's double check that the component name matches as a precaution.
+      if (name !== null && name !== node[0]) {
+        throw new Error(
+          "Expected the resume to render <" +
+            node[0] +
+            "> in this slot but instead it rendered <" +
+            name +
+            ">. " +
+            "The tree doesn't match so React will fallback to client rendering."
+        );
+      }
+
       var childNodes = node[2];
       var childSlots = node[3];
       task.replay = {
@@ -11233,8 +11235,13 @@ function replayElement(
     } else {
       // Let's double check that the component type matches.
       if (type !== REACT_SUSPENSE_TYPE) {
+        var expectedType = "Suspense";
         throw new Error(
-          "Expected to see a Suspense boundary in this slot. " +
+          "Expected the resume to render <" +
+            expectedType +
+            "> in this slot but instead it rendered <" +
+            (getComponentNameFromType(type) || "Unknown") +
+            ">. " +
             "The tree doesn't match so React will fallback to client rendering."
         );
       } // Matched a replayable path.
@@ -11599,6 +11606,7 @@ function replayFragment(request, task, children, childIndex) {
       // in the original prerender. What's unable to complete is the child
       // replay nodes which might be Suspense boundaries which are able to
       // absorb the error and we can still continue with siblings.
+      // This is an error, stash the component stack if it is null.
 
       erroredReplay(request, task.blockedBoundary, x, childNodes, childSlots);
     } finally {
@@ -11913,6 +11921,7 @@ function erroredTask(request, boundary, error) {
   }
 
   if (boundary === null) {
+    lastBoundaryErrorComponentStackDev = null;
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
@@ -11933,6 +11942,8 @@ function erroredTask(request, boundary, error) {
         // We reuse the same queue for errors.
         request.clientRenderedBoundaries.push(boundary);
       }
+    } else {
+      lastBoundaryErrorComponentStackDev = null;
     }
   }
 
@@ -12071,8 +12082,6 @@ function abortTask(task, request, error) {
   }
 
   if (boundary === null) {
-    request.allPendingTasks--;
-
     if (request.status !== CLOSING && request.status !== CLOSED) {
       var replay = task.replay;
 
@@ -12081,6 +12090,7 @@ function abortTask(task, request, error) {
         // the request;
         logRecoverableError(request, error);
         fatalError(request, error);
+        return;
       } else {
         // If the shell aborts during a replay, that's not a fatal error. Instead
         // we should be able to recover by client rendering all the root boundaries in
@@ -12097,6 +12107,14 @@ function abortTask(task, request, error) {
             error,
             errorDigest
           );
+        }
+
+        request.pendingRootTasks--;
+
+        if (request.pendingRootTasks === 0) {
+          request.onShellError = noop;
+          var onShellReady = request.onShellReady;
+          onShellReady();
         }
       }
     }
@@ -12138,12 +12156,13 @@ function abortTask(task, request, error) {
       return abortTask(fallbackTask, request, error);
     });
     boundary.fallbackAbortableTasks.clear();
-    request.allPendingTasks--;
+  }
 
-    if (request.allPendingTasks === 0) {
-      var onAllReady = request.onAllReady;
-      onAllReady();
-    }
+  request.allPendingTasks--;
+
+  if (request.allPendingTasks === 0) {
+    var onAllReady = request.onAllReady;
+    onAllReady();
   }
 }
 
@@ -12426,6 +12445,14 @@ function retryReplayTask(request, task) {
       task.replay.nodes,
       task.replay.slots
     );
+    request.pendingRootTasks--;
+
+    if (request.pendingRootTasks === 0) {
+      request.onShellError = noop;
+      var onShellReady = request.onShellReady;
+      onShellReady();
+    }
+
     request.allPendingTasks--;
 
     if (request.allPendingTasks === 0) {

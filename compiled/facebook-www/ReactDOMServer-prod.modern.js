@@ -2289,16 +2289,16 @@ function hoistStylesheetDependency(stylesheet) {
 function createRenderState(resumableState, generateStaticMarkup) {
   var idPrefix = resumableState.idPrefix;
   resumableState = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1553 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1555 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1565 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1566 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1567 = new Set(),
-    JSCompiler_object_inline_styles_1568 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1569 = new Set(),
-    JSCompiler_object_inline_scripts_1570 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1571 = new Set(),
-    JSCompiler_object_inline_preloads_1572 = {
+  var JSCompiler_object_inline_preconnects_1567 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1568 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1569 = new Set(),
+    JSCompiler_object_inline_styles_1570 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1571 = new Set(),
+    JSCompiler_object_inline_scripts_1572 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1573 = new Set(),
+    JSCompiler_object_inline_preloads_1574 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2306,7 +2306,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
     };
   return {
     placeholderPrefix: resumableState,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1553,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1555,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2318,14 +2318,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     importMapChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1565,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1566,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1567,
-    styles: JSCompiler_object_inline_styles_1568,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1569,
-    scripts: JSCompiler_object_inline_scripts_1570,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1571,
-    preloads: JSCompiler_object_inline_preloads_1572,
+    preconnects: JSCompiler_object_inline_preconnects_1567,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1568,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1569,
+    styles: JSCompiler_object_inline_styles_1570,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1571,
+    scripts: JSCompiler_object_inline_scripts_1572,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1573,
+    preloads: JSCompiler_object_inline_preloads_1574,
     boundaryResources: null,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -3632,9 +3632,9 @@ function renderNodeDestructiveImpl(
               ) {
                 var node = childIndex[node$jscomp$0];
                 if (keyOrIndex === node[1]) {
-                  if (null !== name && name !== node[0])
-                    throw Error(formatProdErrorMessage(489, name));
                   if (4 === node.length) {
+                    if (null !== name && name !== node[0])
+                      throw Error(formatProdErrorMessage(490, node[0], name));
                     name = node[2];
                     node = node[3];
                     task.replay = { nodes: name, slots: node, pendingTasks: 1 };
@@ -3678,7 +3678,13 @@ function renderNodeDestructiveImpl(
                     }
                   } else {
                     if (type !== REACT_SUSPENSE_TYPE)
-                      throw Error(formatProdErrorMessage(490));
+                      throw Error(
+                        formatProdErrorMessage(
+                          490,
+                          "Suspense",
+                          getComponentNameFromType(type) || "Unknown"
+                        )
+                      );
                     b: {
                       boundary = void 0;
                       prevThenableState = node[5];
@@ -4092,26 +4098,32 @@ function abortTask(task, request, error) {
   var boundary = task.blockedBoundary,
     segment = task.blockedSegment;
   null !== segment && (segment.status = 3);
-  null === boundary
-    ? (request.allPendingTasks--,
-      1 !== request.status &&
-        2 !== request.status &&
-        ((task = task.replay),
-        null === task
-          ? (logRecoverableError(request, error), fatalError(request, error))
-          : (task.pendingTasks--,
-            0 === task.pendingTasks &&
-              0 < task.nodes.length &&
-              ((boundary = logRecoverableError(request, error)),
-              abortRemainingReplayNodes(
-                request,
-                null,
-                task.nodes,
-                task.slots,
-                error,
-                boundary
-              )))))
-    : (boundary.pendingTasks--,
+  if (null === boundary) {
+    if (1 !== request.status && 2 !== request.status) {
+      task = task.replay;
+      if (null === task) {
+        logRecoverableError(request, error);
+        fatalError(request, error);
+        return;
+      }
+      task.pendingTasks--;
+      0 === task.pendingTasks &&
+        0 < task.nodes.length &&
+        ((boundary = logRecoverableError(request, error)),
+        abortRemainingReplayNodes(
+          request,
+          null,
+          task.nodes,
+          task.slots,
+          error,
+          boundary
+        ));
+      request.pendingRootTasks--;
+      0 === request.pendingRootTasks &&
+        ((request.onShellError = noop), (task = request.onShellReady), task());
+    }
+  } else
+    boundary.pendingTasks--,
       4 !== boundary.status &&
         ((boundary.status = 4),
         (boundary.errorDigest = logRecoverableError(request, error)),
@@ -4120,9 +4132,9 @@ function abortTask(task, request, error) {
       boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
         return abortTask(fallbackTask, request, error);
       }),
-      boundary.fallbackAbortableTasks.clear(),
-      request.allPendingTasks--,
-      0 === request.allPendingTasks && ((task = request.onAllReady), task()));
+      boundary.fallbackAbortableTasks.clear();
+  request.allPendingTasks--;
+  0 === request.allPendingTasks && ((task = request.onAllReady), task());
 }
 function queueCompletedSegment(boundary, segment) {
   if (
@@ -4248,6 +4260,12 @@ function performWork(request$jscomp$2) {
                   error$jscomp$0,
                   request
                 );
+                request$jscomp$0.pendingRootTasks--;
+                if (0 === request$jscomp$0.pendingRootTasks) {
+                  request$jscomp$0.onShellError = noop;
+                  var onShellReady = request$jscomp$0.onShellReady;
+                  onShellReady();
+                }
                 request$jscomp$0.allPendingTasks--;
                 if (0 === request$jscomp$0.allPendingTasks) {
                   var onAllReady = request$jscomp$0.onAllReady;
@@ -4965,4 +4983,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-e0184800";
+exports.version = "18.3.0-www-modern-f919825d";

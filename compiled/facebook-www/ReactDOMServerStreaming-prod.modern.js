@@ -3572,13 +3572,15 @@ function renderNodeDestructiveImpl(
               ) {
                 var node = childIndex[node$jscomp$0];
                 if (keyOrIndex === node[1]) {
-                  if (null !== name && name !== node[0])
-                    throw Error(
-                      'Expected to see a component of type "' +
-                        name +
-                        "\" in this slot. The tree doesn't match so React will fallback to client rendering."
-                    );
                   if (4 === node.length) {
+                    if (null !== name && name !== node[0])
+                      throw Error(
+                        "Expected the resume to render <" +
+                          node[0] +
+                          "> in this slot but instead it rendered <" +
+                          name +
+                          ">. The tree doesn't match so React will fallback to client rendering."
+                      );
                     name = node[2];
                     node = node[3];
                     task.replay = { nodes: name, slots: node, pendingTasks: 1 };
@@ -3625,7 +3627,9 @@ function renderNodeDestructiveImpl(
                   } else {
                     if (type !== REACT_SUSPENSE_TYPE)
                       throw Error(
-                        "Expected to see a Suspense boundary in this slot. The tree doesn't match so React will fallback to client rendering."
+                        "Expected the resume to render <Suspense> in this slot but instead it rendered <" +
+                          (getComponentNameFromType(type) || "Unknown") +
+                          ">. The tree doesn't match so React will fallback to client rendering."
                       );
                     b: {
                       boundary = void 0;
@@ -4048,26 +4052,32 @@ function abortTask(task, request, error) {
   var boundary = task.blockedBoundary,
     segment = task.blockedSegment;
   null !== segment && (segment.status = 3);
-  null === boundary
-    ? (request.allPendingTasks--,
-      1 !== request.status &&
-        2 !== request.status &&
-        ((task = task.replay),
-        null === task
-          ? (logRecoverableError(request, error), fatalError(request, error))
-          : (task.pendingTasks--,
-            0 === task.pendingTasks &&
-              0 < task.nodes.length &&
-              ((boundary = logRecoverableError(request, error)),
-              abortRemainingReplayNodes(
-                request,
-                null,
-                task.nodes,
-                task.slots,
-                error,
-                boundary
-              )))))
-    : (boundary.pendingTasks--,
+  if (null === boundary) {
+    if (1 !== request.status && 2 !== request.status) {
+      task = task.replay;
+      if (null === task) {
+        logRecoverableError(request, error);
+        fatalError(request, error);
+        return;
+      }
+      task.pendingTasks--;
+      0 === task.pendingTasks &&
+        0 < task.nodes.length &&
+        ((boundary = logRecoverableError(request, error)),
+        abortRemainingReplayNodes(
+          request,
+          null,
+          task.nodes,
+          task.slots,
+          error,
+          boundary
+        ));
+      request.pendingRootTasks--;
+      0 === request.pendingRootTasks &&
+        ((request.onShellError = noop), (task = request.onShellReady), task());
+    }
+  } else
+    boundary.pendingTasks--,
       4 !== boundary.status &&
         ((boundary.status = 4),
         (boundary.errorDigest = logRecoverableError(request, error)),
@@ -4076,9 +4086,9 @@ function abortTask(task, request, error) {
       boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
         return abortTask(fallbackTask, request, error);
       }),
-      boundary.fallbackAbortableTasks.clear(),
-      request.allPendingTasks--,
-      0 === request.allPendingTasks && ((task = request.onAllReady), task()));
+      boundary.fallbackAbortableTasks.clear();
+  request.allPendingTasks--;
+  0 === request.allPendingTasks && ((task = request.onAllReady), task());
 }
 function queueCompletedSegment(boundary, segment) {
   if (
@@ -4762,6 +4772,12 @@ exports.renderNextChunk = function (stream) {
                   x,
                   errorDigest
                 );
+                request.pendingRootTasks--;
+                if (0 === request.pendingRootTasks) {
+                  request.onShellError = noop;
+                  var onShellReady = request.onShellReady;
+                  onShellReady();
+                }
                 request.allPendingTasks--;
                 if (0 === request.allPendingTasks) {
                   var onAllReady = request.onAllReady;
