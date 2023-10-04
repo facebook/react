@@ -14,6 +14,7 @@ let React;
 let ReactCache;
 let ReactTestRenderer;
 let waitForAll;
+let act;
 
 describe('ReactTestRenderer', () => {
   beforeEach(() => {
@@ -27,6 +28,7 @@ describe('ReactTestRenderer', () => {
     ReactTestRenderer = require('react-test-renderer');
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    act = ReactTestRenderer.act;
   });
 
   it('should warn if used to render a ReactDOM portal', () => {
@@ -155,11 +157,17 @@ describe('ReactTestRenderer', () => {
         return <div>Selected Filters: {selectedFiltersString}</div>;
       }
 
-      const root = ReactTestRenderer.create(<Parent />);
-      await waitForAll([]);
-      expect(root.toJSON()).toEqual(
-        '<div>Selected Filters: _selected_all_filters_</div>',
-      );
+      let root;
+      act(() => {
+        root = ReactTestRenderer.create(<Parent />);
+      });
+
+      expect(root.toJSON()).toMatchInlineSnapshot(`
+        <div>
+          Selected Filters: 
+          _selected_all_filters_
+        </div>
+      `);
     });
   });
 });
