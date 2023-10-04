@@ -53,6 +53,9 @@ commands:
             if [ $? -ne 0 ]; then
               yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
             fi
+          environment:
+          # If we start needing the Electron binary, please ensure the binary is cached in CI following https://www.electronjs.org/docs/latest/tutorial/installation
+            ELECTRON_SKIP_BINARY_DOWNLOAD: 1
       - save_cache:
           name: Save yarn cache
           key: v2-yarn_cache-{{ arch }}-{{ checksum "yarn.lock" }}
