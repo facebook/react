@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c82cbcaf7bd2b54bba5420820659796c>>
+ * @generated SignedSource<<afc9b8a86c7cb5b70c67da50c5d06db9>>
  */
 
 
@@ -501,9 +501,6 @@ exports.createServerContext = function (globalName, defaultValue) {
 exports.experimental_useEffectEvent = function (callback) {
   return ReactCurrentDispatcher.current.useEffectEvent(callback);
 };
-exports.experimental_useOptimistic = function (passthrough, reducer) {
-  return ReactCurrentDispatcher.current.useOptimistic(passthrough, reducer);
-};
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
@@ -596,6 +593,9 @@ exports.useLayoutEffect = function (create, deps) {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
+exports.useOptimistic = function (passthrough, reducer) {
+  return ReactCurrentDispatcher.current.useOptimistic(passthrough, reducer);
+};
 exports.useReducer = function (reducer, initialArg, init) {
   return ReactCurrentDispatcher.current.useReducer(reducer, initialArg, init);
 };
@@ -619,7 +619,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-88d56b8e8-20231004";
+exports.version = "18.3.0-canary-bfefb2284-20231004";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

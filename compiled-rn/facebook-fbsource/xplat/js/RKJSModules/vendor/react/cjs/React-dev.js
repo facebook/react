@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e3459cf1c934729db6159301ee96abb3>>
+ * @generated SignedSource<<3f31df2fa14ee4c981d6843f3d4d7ead>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-canary-88d56b8e8-20231004";
+var ReactVersion = "18.3.0-canary-bfefb2284-20231004";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -3915,7 +3915,6 @@ exports.createFactory = createFactory;
 exports.createRef = createRef;
 exports.createServerContext = createServerContext;
 exports.experimental_useEffectEvent = useEffectEvent;
-exports.experimental_useOptimistic = useOptimistic;
 exports.forwardRef = forwardRef;
 exports.isValidElement = isValidElement$1;
 exports.jsx = jsx;
@@ -3947,6 +3946,7 @@ exports.useImperativeHandle = useImperativeHandle;
 exports.useInsertionEffect = useInsertionEffect;
 exports.useLayoutEffect = useLayoutEffect;
 exports.useMemo = useMemo;
+exports.useOptimistic = useOptimistic;
 exports.useReducer = useReducer;
 exports.useRef = useRef;
 exports.useState = useState;
