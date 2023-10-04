@@ -31,9 +31,9 @@ describe('ReactDOMFizzForm', () => {
     React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
-    useFormStatus = require('react-dom').experimental_useFormStatus;
-    useFormState = require('react-dom').experimental_useFormState;
-    useOptimistic = require('react').experimental_useOptimistic;
+    useFormStatus = require('react-dom').useFormStatus;
+    useFormState = require('react-dom').useFormState;
+    useOptimistic = require('react').useOptimistic;
     act = require('internal-test-utils').act;
     container = document.createElement('div');
     document.body.appendChild(container);

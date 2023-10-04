@@ -55,7 +55,7 @@ describe('ReactFlightDOMForm', () => {
     ReactDOMServer = require('react-dom/server.edge');
     ReactDOMClient = require('react-dom/client');
     act = require('react-dom/test-utils').act;
-    useFormState = require('react-dom').experimental_useFormState;
+    useFormState = require('react-dom').useFormState;
     container = document.createElement('div');
     document.body.appendChild(container);
   });

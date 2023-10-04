@@ -55,8 +55,8 @@ describe('ReactDOMForm', () => {
     useState = React.useState;
     Suspense = React.Suspense;
     startTransition = React.startTransition;
-    useFormStatus = ReactDOM.experimental_useFormStatus;
-    useFormState = ReactDOM.experimental_useFormState;
+    useFormStatus = ReactDOM.useFormStatus;
+    useFormState = ReactDOM.useFormState;
     container = document.createElement('div');
     document.body.appendChild(container);
 

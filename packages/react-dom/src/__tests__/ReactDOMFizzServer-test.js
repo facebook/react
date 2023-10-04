@@ -89,7 +89,7 @@ describe('ReactDOMFizzServer', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.unstable_SuspenseList;
     }
-    useFormState = ReactDOM.experimental_useFormState;
+    useFormState = ReactDOM.useFormState;
 
     PropTypes = require('prop-types');
 
