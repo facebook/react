@@ -3457,78 +3457,141 @@ function gatherCapturedDeps(
     to: componentScope,
   });
 
-  function visit(path: NodePath<Expression>): void {
-    // Babel has a bug where it doesn't visit the LHS of an
-    // AssignmentExpression if it's an Identifier. Work around it by explicitly
-    // visiting it.
-    if (path.isAssignmentExpression()) {
-      const left = path.get("left");
-      if (left.isIdentifier()) {
-        visit(left);
+  function addCapturedId(bindingIdentifier: t.Identifier): number {
+    if (!capturedIds.has(bindingIdentifier)) {
+      const index = capturedIds.size;
+      capturedIds.set(bindingIdentifier, index);
+      return index;
+    } else {
+      return capturedIds.get(bindingIdentifier)!;
+    }
+  }
+
+  function handleMaybeDependency(
+    path:
+      | NodePath<t.MemberExpression>
+      | NodePath<t.Identifier>
+      | NodePath<t.JSXOpeningElement>
+  ): void {
+    // Base context variable to depend on
+    let baseIdentifier: NodePath<t.Identifier | t.JSXIdentifier>;
+    // Base expression to depend on, which (for now) may contain non side-effectful
+    // member expressions
+    let dependency:
+      | NodePath<t.MemberExpression>
+      | NodePath<t.Identifier>
+      | NodePath<t.JSXIdentifier>;
+    if (path.isJSXOpeningElement()) {
+      const name = path.get("name");
+      if (!(name.isJSXMemberExpression() || name.isJSXIdentifier())) {
+        // TODO: should JSX namespaced names be handled here as well?
+        return;
       }
-      return;
+      let current: NodePath<t.JSXMemberExpression | t.JSXIdentifier> = name;
+      while (current.isJSXMemberExpression()) {
+        current = current.get("object");
+      }
+      invariant(
+        current.isJSXIdentifier(),
+        "Invalid logic in gatherCapturedDeps"
+      );
+      baseIdentifier = current;
+      dependency = current;
+    } else if (path.isMemberExpression()) {
+      // Calculate baseIdentifier
+      let current: NodePath<Expression> = path;
+      while (current.isMemberExpression()) {
+        current = current.get("object");
+      }
+      if (!current.isIdentifier()) {
+        return;
+      }
+      baseIdentifier = current;
+
+      // Get the expression to depend on, which may involve PropertyLoads
+      // for member expressions
+      current =
+        path.parent.type === "CallExpression" &&
+        path.parent.callee === path.node
+          ? path.get("object")
+          : path;
+      while (current.isMemberExpression() && current.node.computed) {
+        // computed nodes may contain side-effectful subexpressions
+        current = current.get("object");
+      }
+      invariant(
+        current.isMemberExpression() || current.isIdentifier(),
+        "Internal invariant broken in BuildHIR, unexpected type for capturedDep"
+      );
+      dependency = current;
+    } else {
+      baseIdentifier = path;
+      dependency = path;
     }
 
-    let obj = path;
-    while (obj.isMemberExpression()) {
-      obj = obj.get("object");
-    }
+    /**
+     * Skip dependency path, as we already tried to recursively add it (+ all subexpressions)
+     * as a dependency.
+     */
+    dependency.skip();
 
-    if (!obj.isIdentifier()) {
-      return;
-    }
-
-    const binding = obj.scope.getBinding(obj.node.name);
+    /**
+     * Add the base identifier binding as a dependency.
+     */
+    const binding = baseIdentifier.scope.getBinding(baseIdentifier.node.name);
     if (binding === undefined || !pureScopes.has(binding.scope)) {
       return;
     }
+    const idKey = String(addCapturedId(binding.identifier));
 
-    if (path.isMemberExpression()) {
-      // For CallExpression, we need to depend on the receiver, not the
-      // function itself.
-      if (
-        path.parent.type === "CallExpression" &&
-        path.parent.callee === path.node
-      ) {
-        path = path.get("object");
+    /**
+     * Add the expression (potentially a memberexpr path) as a dependency.
+     */
+    let exprKey = idKey;
+    if (dependency.isMemberExpression()) {
+      let pathTokens = [];
+      let current: NodePath<Expression> = dependency;
+      while (current.isMemberExpression()) {
+        const property = current.get("property") as NodePath<t.Identifier>;
+        pathTokens.push(property.node.name);
+        current = current.get("object");
       }
 
-      // Skip the computed part of the member expression.
-      while (path.isMemberExpression() && path.node.computed) {
-        path = path.get("object");
+      exprKey += "." + pathTokens.reverse().join(".");
+    }
+
+    if (!seenPaths.has(exprKey)) {
+      let loweredDep: Place;
+      if (dependency.isJSXIdentifier()) {
+        loweredDep = lowerValueToTemporary(builder, {
+          kind: "LoadLocal",
+          place: lowerIdentifier(builder, dependency),
+          loc: path.node.loc ?? GeneratedSource,
+        });
+      } else {
+        loweredDep = lowerExpressionToTemporary(builder, dependency);
       }
-
-      path.skip();
-    }
-
-    // Store the top-level identifiers that are captured as well as the list
-    // of Places (including PropertyLoad)
-    let index: number;
-    if (!capturedIds.has(binding.identifier)) {
-      index = capturedIds.size;
-      capturedIds.set(binding.identifier, index);
-    } else {
-      index = capturedIds.get(binding.identifier)!;
-    }
-    let pathTokens = [];
-    let current = path;
-    while (current.isMemberExpression()) {
-      const property = path.get("property") as NodePath<t.Identifier>;
-      pathTokens.push(property.node.name);
-      current = current.get("object");
-    }
-    pathTokens.push(String(index));
-    pathTokens.reverse();
-    const pathKey = pathTokens.join(".");
-    if (!seenPaths.has(pathKey)) {
-      capturedRefs.add(lowerExpressionToTemporary(builder, path));
-      seenPaths.add(pathKey);
+      capturedRefs.add(loweredDep);
+      seenPaths.add(exprKey);
     }
   }
 
   fn.traverse({
     Expression(path) {
-      visit(path);
+      if (path.isAssignmentExpression()) {
+        // Babel has a bug where it doesn't visit the LHS of an
+        // AssignmentExpression if it's an Identifier. Work around it by explicitly
+        // visiting it.
+        const left = path.get("left");
+        if (left.isIdentifier()) {
+          handleMaybeDependency(left);
+        }
+        return;
+      } else if (path.isJSXElement()) {
+        handleMaybeDependency(path.get("openingElement"));
+      } else if (path.isMemberExpression() || path.isIdentifier()) {
+        handleMaybeDependency(path);
+      }
     },
   });
 
