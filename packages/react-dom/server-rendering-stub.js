@@ -30,7 +30,10 @@ export {
 } from './src/server/ReactDOMServerRenderingStub';
 
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
-import {useFormStatus, useFormState} from './src/client/ReactDOM';
+import {
+  useFormStatus,
+  useFormState,
+} from './src/server/ReactDOMServerRenderingStub';
 
 export function experimental_useFormStatus(): FormStatus {
   if (__DEV__) {
