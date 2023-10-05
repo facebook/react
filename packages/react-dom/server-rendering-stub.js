@@ -28,3 +28,30 @@ export {
   useFormState,
   unstable_batchedUpdates,
 } from './src/server/ReactDOMServerRenderingStub';
+
+import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
+import {useFormStatus, useFormState} from './src/client/ReactDOM';
+
+export function experimental_useFormStatus(): FormStatus {
+  if (__DEV__) {
+    console.error(
+      'useFormStatus is now in canary. Remove the experimental_ prefix. ' +
+        'The prefixed alias will be removed in an upcoming release.',
+    );
+  }
+  return useFormStatus();
+}
+
+export function experimental_useFormState<S, P>(
+  action: (S, P) => Promise<S>,
+  initialState: S,
+  permalink?: string,
+): [S, (P) => void] {
+  if (__DEV__) {
+    console.error(
+      'useFormState is now in canary. Remove the experimental_ prefix. ' +
+        'The prefixed alias will be removed in an upcoming release.',
+    );
+  }
+  return useFormState(action, initialState, permalink);
+}
