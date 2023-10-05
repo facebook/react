@@ -168,16 +168,6 @@ export type EnvironmentConfig = {
   enableAssumeHooksFollowRulesOfReact: boolean;
 
   /**
-   * When enabled, the compiler treats hooks as normal typed functions for
-   * type and effect inference.
-   * Enabling this may change inference to have a higher confidence level
-   * and create more bailouts (e.g. for mutable effects to immutable values).
-   *
-   * Defaults to true
-   */
-  enableTreatHooksAsFunctions: boolean;
-
-  /**
    * When enabled, removes *all* memoization from the function: this includes
    * removing manually added useMemo/useCallback as well as not adding Forget's
    * usual useMemoCache-based memoization.
@@ -249,7 +239,6 @@ export type EnvironmentConfig = {
 const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
   customHooks: null,
 
-  enableTreatHooksAsFunctions: true,
   memoizeJsxElements: true,
   enableFunctionCallSignatureOptimizations: true,
   inlineUseMemo: true,

@@ -21,7 +21,6 @@ export function transformFixtureInput(
   let instrumentForget = null;
   let memoizeJsxElements = true;
   let enableAssumeHooksFollowRulesOfReact = false;
-  let enableTreatHooksAsFunctions = true;
   let disableAllMemoization = false;
   let validateRefAccessDuringRender = true;
   let validateNoSetStateInRender = true;
@@ -63,9 +62,6 @@ export function transformFixtureInput(
   }
   if (firstLine.includes("@enableAssumeHooksFollowRulesOfReact true")) {
     enableAssumeHooksFollowRulesOfReact = true;
-  }
-  if (firstLine.includes("@enableTreatHooksAsFunctions false")) {
-    enableTreatHooksAsFunctions = false;
   }
   if (firstLine.includes("@disableAllMemoization true")) {
     disableAllMemoization = true;
@@ -130,7 +126,6 @@ export function transformFixtureInput(
         ]),
         enableAssumeHooksFollowRulesOfReact,
         disableAllMemoization,
-        enableTreatHooksAsFunctions,
         memoizeJsxElements,
         validateRefAccessDuringRender,
         validateFrozenLambdas: true,

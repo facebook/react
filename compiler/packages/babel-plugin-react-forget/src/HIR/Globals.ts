@@ -232,8 +232,9 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
   // TODO: rest of Global objects
 ];
 
-// TODO(mofeiZ): We currently only store rest param effects for hooks
-// until FeatureFlag `enableTreatHooksAsFunctions` is removed
+// TODO(mofeiZ): We currently only store rest param effects for hooks.
+// now that FeatureFlag `enableTreatHooksAsFunctions` is removed we can
+// use positional params too (?)
 const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
   [
     "useContext",

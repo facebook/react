@@ -111,7 +111,6 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
 function parsePragma(pragma: string) {
   let memoizeJsxElements = true;
   let enableAssumeHooksFollowRulesOfReact = false;
-  let enableTreatHooksAsFunctions = true;
   let disableAllMemoization = false;
   let validateRefAccessDuringRender = true;
   let enableEmitFreeze = null;
@@ -126,9 +125,6 @@ function parsePragma(pragma: string) {
   }
   if (pragma.includes("@enableAssumeHooksFollowRulesOfReact true")) {
     enableAssumeHooksFollowRulesOfReact = true;
-  }
-  if (pragma.includes("@enableTreatHooksAsFunctions false")) {
-    enableTreatHooksAsFunctions = false;
   }
   if (pragma.includes("@disableAllMemoization true")) {
     disableAllMemoization = true;
@@ -162,7 +158,6 @@ function parsePragma(pragma: string) {
     enableAssumeHooksFollowRulesOfReact,
     enableFunctionCallSignatureOptimizations,
     disableAllMemoization,
-    enableTreatHooksAsFunctions,
     inlineUseMemo,
     memoizeJsxElements,
     validateHooksUsage,

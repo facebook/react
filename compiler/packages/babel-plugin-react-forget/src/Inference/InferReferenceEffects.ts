@@ -752,16 +752,6 @@ function inferBlock(
             ? signature
             : null;
 
-        if (
-          signature &&
-          signature.hookKind != null &&
-          !env.config.enableTreatHooksAsFunctions
-        ) {
-          effectKind = signature.restParam;
-          valueKind = signature.returnValueKind;
-          break;
-        }
-
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
         const returnValueKind =
