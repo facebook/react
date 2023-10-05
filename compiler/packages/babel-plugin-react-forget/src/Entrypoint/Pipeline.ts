@@ -7,6 +7,7 @@
 
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
+import prettyFormat from "pretty-format";
 import { lowerToForest } from "../Forest";
 import {
   HIRFunction,
@@ -60,6 +61,7 @@ import { eliminateRedundantPhi, enterSSA, leaveSSA } from "../SSA";
 import { inferTypes } from "../TypeInference";
 import {
   logCodegenFunction,
+  logDebug,
   logHIRFunction,
   logReactiveFunction,
 } from "../Utils/logger";
@@ -86,6 +88,11 @@ export function* run(
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
   const env = new Environment(config ?? null, contextIdentifiers);
+  yield {
+    kind: "debug",
+    name: "EnvironmentConfig",
+    value: prettyFormat(env.config),
+  };
   const ast = yield* runWithEnvironment(func, env);
   return ast;
 }
@@ -373,6 +380,7 @@ export function log(value: CompilerPipelineValue): CompilerPipelineValue {
       break;
     }
     case "debug": {
+      logDebug(value.name, value.value);
       break;
     }
     default: {

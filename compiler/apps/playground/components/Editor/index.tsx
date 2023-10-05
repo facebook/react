@@ -11,6 +11,7 @@ import * as t from "@babel/types";
 import {
   Effect,
   Hook,
+  parseConfigPragma,
   printHIR,
   printReactiveFunction,
   run,
@@ -108,56 +109,6 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
   ],
 ];
 
-function parsePragma(pragma: string) {
-  let memoizeJsxElements = true;
-  let enableAssumeHooksFollowRulesOfReact = false;
-  let disableAllMemoization = false;
-  let validateRefAccessDuringRender = true;
-  let enableEmitFreeze = null;
-  let validateHooksUsage = true;
-  let validateFrozenLambdas = true;
-  let assertValidMutableRanges = true;
-
-  if (pragma.includes("@memoizeJsxElements false")) {
-    memoizeJsxElements = false;
-  }
-  if (pragma.includes("@enableAssumeHooksFollowRulesOfReact true")) {
-    enableAssumeHooksFollowRulesOfReact = true;
-  }
-  if (pragma.includes("@disableAllMemoization true")) {
-    disableAllMemoization = true;
-  }
-  if (pragma.includes("@validateRefAccessDuringRender false")) {
-    validateRefAccessDuringRender = false;
-  }
-  if (pragma.includes("@enableEmitFreeze")) {
-    enableEmitFreeze = {
-      source: "react-forget-runtime",
-      importSpecifierName: "makeReadOnly",
-    };
-  }
-  if (pragma.includes("@validateHooksUsage false")) {
-    validateHooksUsage = false;
-  }
-  if (pragma.includes("@validateFrozenLambdas false")) {
-    validateHooksUsage = false;
-  }
-  if (pragma.includes("@assertValidMutableRanges false")) {
-    assertValidMutableRanges = false;
-  }
-
-  return {
-    enableAssumeHooksFollowRulesOfReact,
-    disableAllMemoization,
-    memoizeJsxElements,
-    validateHooksUsage,
-    validateRefAccessDuringRender,
-    validateFrozenLambdas,
-    enableEmitFreeze,
-    assertValidMutableRanges,
-  };
-}
-
 function compile(source: string): CompilerOutput {
   const results = new Map<string, PrintedCompilerPipelineValue[]>();
   const upsert = (result: PrintedCompilerPipelineValue) => {
@@ -171,12 +122,12 @@ function compile(source: string): CompilerOutput {
   try {
     // Extract the first line to quickly check for custom test directives
     const pragma = source.substring(0, source.indexOf("\n"));
-    const options = parsePragma(pragma);
+    const config = parseConfigPragma(pragma);
 
     for (const fn of parseFunctions(source)) {
       for (const result of run(fn, {
+        ...config,
         customHooks: new Map([...COMMON_HOOKS]),
-        ...options,
       })) {
         const fnName = fn.node.id?.name ?? null;
         switch (result.kind) {

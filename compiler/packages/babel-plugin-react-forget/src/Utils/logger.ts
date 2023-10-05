@@ -21,6 +21,12 @@ export function toggleLogging(enabled: boolean): void {
   ENABLED = enabled;
 }
 
+export function logDebug(step: string, value: string): void {
+  if (ENABLED) {
+    process.stdout.write(`${chalk.gray(step)}:\n${value}\n\n`);
+  }
+}
+
 export function logHIR(step: string, ir: HIR): void {
   if (ENABLED) {
     const printed = printHIR(ir);
