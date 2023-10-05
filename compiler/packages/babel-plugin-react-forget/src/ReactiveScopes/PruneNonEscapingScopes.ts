@@ -611,9 +611,10 @@ function computeMemoizationInputs(
       };
     }
     case "CallExpression": {
-      const signature = env.config.enableNoAliasOptimizations
-        ? getFunctionCallSignature(env, value.callee.identifier.type)
-        : null;
+      const signature = getFunctionCallSignature(
+        env,
+        value.callee.identifier.type
+      );
       const operands = [...eachReactiveValueOperand(value)];
       let lvalues = [];
       if (lvalue !== null) {
@@ -636,9 +637,10 @@ function computeMemoizationInputs(
       };
     }
     case "MethodCall": {
-      const signature = env.config.enableNoAliasOptimizations
-        ? getFunctionCallSignature(env, value.property.identifier.type)
-        : null;
+      const signature = getFunctionCallSignature(
+        env,
+        value.property.identifier.type
+      );
       const operands = [...eachReactiveValueOperand(value)];
       let lvalues = [];
       if (lvalue !== null) {
@@ -808,12 +810,10 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
     } else if (instruction.value.kind === "CallExpression") {
       const callee = instruction.value.callee;
       if (getHookKind(state.env, callee.identifier) != null) {
-        const signature = this.env.config.enableNoAliasOptimizations
-          ? getFunctionCallSignature(
-              this.env,
-              instruction.value.callee.identifier.type
-            )
-          : null;
+        const signature = getFunctionCallSignature(
+          this.env,
+          instruction.value.callee.identifier.type
+        );
         // Hook values are assumed to escape by default since they can be inputs
         // to reactive scopes in the hook. However if the hook is annotated as
         // noAlias we know that the arguments cannot escape and don't need to
