@@ -114,7 +114,6 @@ function parsePragma(pragma: string) {
   let disableAllMemoization = false;
   let validateRefAccessDuringRender = true;
   let enableEmitFreeze = null;
-  let inlineUseMemo = true;
   let validateHooksUsage = true;
   let validateFrozenLambdas = true;
   let assertValidMutableRanges = true;
@@ -137,9 +136,6 @@ function parsePragma(pragma: string) {
       importSpecifierName: "makeReadOnly",
     };
   }
-  if (pragma.includes("@inlineUseMemo false")) {
-    inlineUseMemo = false;
-  }
   if (pragma.includes("@validateHooksUsage false")) {
     validateHooksUsage = false;
   }
@@ -153,7 +149,6 @@ function parsePragma(pragma: string) {
   return {
     enableAssumeHooksFollowRulesOfReact,
     disableAllMemoization,
-    inlineUseMemo,
     memoizeJsxElements,
     validateHooksUsage,
     validateRefAccessDuringRender,

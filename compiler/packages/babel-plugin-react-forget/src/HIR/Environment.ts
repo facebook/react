@@ -133,14 +133,6 @@ export type EnvironmentConfig = {
   validateNoSetStateInRender: boolean;
 
   /**
-   * Enable inlining of `useMemo()` function expressions so that they can be more optimally
-   * compiled.
-   *
-   * Defaults to false
-   */
-  inlineUseMemo: boolean;
-
-  /**
    * When enabled, the compiler assumes that hooks follow the Rules of React:
    * - Hooks may memoize computation based on any of their parameters, thus
    *   any arguments to a hook are assumed frozen after calling the hook.
@@ -224,7 +216,6 @@ const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
   customHooks: null,
 
   memoizeJsxElements: true,
-  inlineUseMemo: true,
   validateHooksUsage: true,
 
   assertValidMutableRanges: false,

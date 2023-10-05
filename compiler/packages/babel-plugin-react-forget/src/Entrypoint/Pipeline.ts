@@ -106,10 +106,8 @@ function* runWithEnvironment(
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
 
-  if (env.config.inlineUseMemo) {
-    inlineUseMemo(hir);
-    yield log({ kind: "hir", name: "RewriteUseMemo", value: hir });
-  }
+  inlineUseMemo(hir);
+  yield log({ kind: "hir", name: "RewriteUseMemo", value: hir });
 
   mergeConsecutiveBlocks(hir);
   yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });
