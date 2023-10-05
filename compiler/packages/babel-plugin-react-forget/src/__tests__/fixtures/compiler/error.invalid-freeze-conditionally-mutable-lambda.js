@@ -1,3 +1,4 @@
+// @validateFrozenLambdas
 function Component(props) {
   const x = {};
   let fn;

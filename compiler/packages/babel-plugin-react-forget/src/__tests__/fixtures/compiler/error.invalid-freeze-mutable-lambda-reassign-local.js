@@ -1,3 +1,4 @@
+// @validateFrozenLambdas
 function Component(props) {
   let x = "";
   const onChange = (e) => {

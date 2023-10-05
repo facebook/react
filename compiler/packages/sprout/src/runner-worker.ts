@@ -5,22 +5,28 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { NodePath, PluginItem, transformFromAstSync } from "@babel/core";
+import * as parser from "@babel/parser";
+import * as t from "@babel/types";
 import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from "babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin";
+import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-forget/src/HIR/Environment";
 import {
   COMPILER_PATH,
+  PARSE_CONFIG_PRAGMA_PATH,
   parseLanguage,
   TestFixture,
   transformFixtureInput,
 } from "fixture-test-utils";
-import { NodePath, PluginItem, transformFromAstSync } from "@babel/core";
 import fs from "fs/promises";
-import * as parser from "@babel/parser";
-import * as t from "@babel/types";
-import { doEval, EvaluatorResult } from "./runner-evaluator";
 import path from "path";
+import { doEval, EvaluatorResult } from "./runner-evaluator";
 
 const { runReactForgetBabelPlugin } = require(COMPILER_PATH) as {
   runReactForgetBabelPlugin: typeof RunReactForgetBabelPlugin;
+};
+
+const { parseConfigPragma } = require(PARSE_CONFIG_PRAGMA_PATH) as {
+  parseConfigPragma: typeof ParseConfigPragma;
 };
 
 // TODO: save output in .sprout.md files
@@ -118,6 +124,7 @@ function transformFixtureForget(
       input,
       filename,
       runReactForgetBabelPlugin,
+      parseConfigPragma,
       true
     );
 

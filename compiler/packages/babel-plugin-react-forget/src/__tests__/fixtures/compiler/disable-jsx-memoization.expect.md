@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @memoizeJsxElements false
+// @memoizeJsxElements:false
 function Component(props) {
   const [name, setName] = useState(null);
   const onChange = function (e) {
@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @memoizeJsxElements false
+import { unstable_useMemoCache as useMemoCache } from "react"; // @memoizeJsxElements:false
 function Component(props) {
   const $ = useMemoCache(1);
   const [name, setName] = useState(null);

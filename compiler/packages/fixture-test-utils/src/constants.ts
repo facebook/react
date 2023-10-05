@@ -13,6 +13,12 @@ export const LOGGER_PATH = path.join(
   "Utils",
   "logger.js"
 );
+export const PARSE_CONFIG_PRAGMA_PATH = path.join(
+  process.cwd(),
+  "dist",
+  "HIR",
+  "Environment.js"
+);
 export const FIXTURES_PATH = path.join(
   process.cwd(),
   "src",

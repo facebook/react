@@ -2,6 +2,7 @@ import assert from "assert";
 import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from "babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin";
 import { CompilationMode } from "babel-plugin-react-forget/src/Entrypoint";
 import type { Effect, ValueKind } from "babel-plugin-react-forget/src/HIR";
+import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-forget/src/HIR/Environment";
 
 export function parseLanguage(source: string): "flow" | "typescript" {
   return source.indexOf("@flow") !== -1 ? "flow" : "typescript";
@@ -11,6 +12,7 @@ export function transformFixtureInput(
   input: string,
   basename: string,
   pluginFn: typeof RunReactForgetBabelPlugin,
+  parseConfigPragmaFn: typeof ParseConfigPragma,
   includeAst: boolean = false
 ) {
   // Extract the first line to quickly check for custom test directives
@@ -19,16 +21,8 @@ export function transformFixtureInput(
   let language = parseLanguage(firstLine);
   let gating = null;
   let instrumentForget = null;
-  let memoizeJsxElements = true;
-  let enableAssumeHooksFollowRulesOfReact = false;
-  let disableAllMemoization = false;
-  let validateRefAccessDuringRender = true;
-  let validateNoSetStateInRender = true;
   let enableEmitFreeze = null;
   let compilationMode: CompilationMode = "all";
-  let enableForest = false;
-  let enableMergeConsecutiveScopes = false;
-  let bailoutOnHoleyArrays = false;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -57,37 +51,13 @@ export function transformFixtureInput(
       importSpecifierName: "useRenderCounter",
     };
   }
-  if (firstLine.includes("@memoizeJsxElements false")) {
-    memoizeJsxElements = false;
-  }
-  if (firstLine.includes("@enableAssumeHooksFollowRulesOfReact true")) {
-    enableAssumeHooksFollowRulesOfReact = true;
-  }
-  if (firstLine.includes("@disableAllMemoization true")) {
-    disableAllMemoization = true;
-  }
-  if (firstLine.includes("@validateRefAccessDuringRender false")) {
-    validateRefAccessDuringRender = false;
-  }
-  if (firstLine.includes("@validateNoSetStateInRender false")) {
-    validateNoSetStateInRender = false;
-  }
   if (firstLine.includes("@enableEmitFreeze")) {
     enableEmitFreeze = {
       source: "react-forget-runtime",
       importSpecifierName: "makeReadOnly",
     };
   }
-  if (firstLine.includes("@enableForest true")) {
-    enableForest = true;
-  }
-  if (firstLine.includes("@bailoutOnHoleyArrays")) {
-    bailoutOnHoleyArrays = true;
-  }
-
-  if (firstLine.includes("@enableMergeConsecutiveScopes")) {
-    enableMergeConsecutiveScopes = true;
-  }
+  const config = parseConfigPragmaFn(firstLine);
 
   return pluginFn(
     input,
@@ -95,6 +65,7 @@ export function transformFixtureInput(
     language,
     {
       environment: {
+        ...config,
         customHooks: new Map([
           [
             "useFreeze",
@@ -124,17 +95,8 @@ export function transformFixtureInput(
             },
           ],
         ]),
-        enableAssumeHooksFollowRulesOfReact,
-        disableAllMemoization,
-        memoizeJsxElements,
-        validateRefAccessDuringRender,
-        validateFrozenLambdas: true,
-        validateNoSetStateInRender,
         enableEmitFreeze,
-        enableMergeConsecutiveScopes,
         assertValidMutableRanges: true,
-        bailoutOnHoleyArrays,
-        enableForest,
       },
       compilationMode,
       logger: null,

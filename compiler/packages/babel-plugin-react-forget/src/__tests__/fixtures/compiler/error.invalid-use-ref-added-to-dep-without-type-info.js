@@ -1,3 +1,4 @@
+// @validateRefAccessDuringRender
 function Foo({ a }) {
   const ref = useRef();
   // type information is lost here as we don't track types of fields

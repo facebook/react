@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateNoSetStateInRender
 function Component(props) {
   const logEvent = useLogging(props.appId);
   const [currentStep, setCurrentStep] = useState(0);
@@ -33,7 +34,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (11:11)
+[ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (12:12)
 ```
           
       

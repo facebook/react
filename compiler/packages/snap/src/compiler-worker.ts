@@ -6,6 +6,7 @@
  */
 
 import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from "babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin";
+import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-forget/src/HIR/Environment";
 import {
   TestFixture,
   transformFixtureInput,
@@ -39,6 +40,7 @@ export type TestResult = {
 export async function compile(
   compilerPath: string,
   loggerPath: string,
+  parseConfigPragmaPath: string,
   fixture: TestFixture,
   compilerVersion: number,
   implicitDebugMode: boolean,
@@ -78,6 +80,9 @@ export async function compile(
       runReactForgetBabelPlugin: typeof RunReactForgetBabelPlugin;
     };
     const { toggleLogging } = require(loggerPath);
+    const { parseConfigPragma } = require(parseConfigPragmaPath) as {
+      parseConfigPragma: typeof ParseConfigPragma;
+    };
 
     // only try logging if we filtered out all but one fixture,
     // since console log order is non-deterministic
@@ -86,7 +91,8 @@ export async function compile(
     code = transformFixtureInput(
       input,
       basename,
-      runReactForgetBabelPlugin
+      runReactForgetBabelPlugin,
+      parseConfigPragma
     ).code;
   } catch (e) {
     e.message = e.message.replace(/\u001b[^m]*m/g, "");

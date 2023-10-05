@@ -1,4 +1,4 @@
-// @memoizeJsxElements false
+// @memoizeJsxElements:false
 function Component(props) {
   const [name, setName] = useState(null);
   const onChange = function (e) {

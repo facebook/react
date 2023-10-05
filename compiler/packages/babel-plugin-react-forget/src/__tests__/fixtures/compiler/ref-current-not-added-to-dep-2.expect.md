@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @validateRefAccessDuringRender false
 function Foo({ a }) {
   const ref = useRef();
   const x = { a, val: ref.current };
@@ -15,7 +14,7 @@ function Foo({ a }) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @validateRefAccessDuringRender false
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Foo(t17) {
   const $ = useMemoCache(4);
   const { a } = t17;

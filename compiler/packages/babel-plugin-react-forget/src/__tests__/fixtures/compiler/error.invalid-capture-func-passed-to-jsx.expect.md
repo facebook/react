@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateFrozenLambdas
 function component(a, b) {
   let y = { b };
   let z = { a };
@@ -20,7 +21,7 @@ function component(a, b) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: This mutates a variable that is managed by React, where an immutable value or a function was expected (8:8)
+[ReactForget] InvalidReact: This mutates a variable that is managed by React, where an immutable value or a function was expected (9:9)
 ```
           
       

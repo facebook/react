@@ -1,3 +1,4 @@
+// @validateFrozenLambdas
 function component(a, b) {
   let y = { b };
   let z = { a };

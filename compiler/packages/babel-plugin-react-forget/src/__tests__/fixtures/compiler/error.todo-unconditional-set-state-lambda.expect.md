@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateNoSetStateInRender
 function Component(props) {
   let y = 0;
   const [x, setX] = useState(0);
@@ -21,7 +22,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (6:6)
+[ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (7:7)
 ```
           
       

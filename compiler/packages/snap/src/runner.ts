@@ -9,12 +9,14 @@ import watcher from "@parcel/watcher";
 import chalk from "chalk";
 import {
   COMPILER_PATH,
-  LOGGER_PATH,
-  FIXTURES_PATH,
   FILTER_FILENAME,
   FILTER_PATH,
-  readTestFilter,
+  FIXTURES_PATH,
+  LOGGER_PATH,
+  PARSE_CONFIG_PRAGMA_PATH,
   TestFilter,
+  getFixtures,
+  readTestFilter,
 } from "fixture-test-utils";
 import fs from "fs";
 import invariant from "invariant";
@@ -26,9 +28,8 @@ import * as readline from "readline";
 import ts from "typescript";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { TestResult } from "./compiler-worker";
 import * as compiler from "./compiler-worker";
-import { getFixtures } from "fixture-test-utils";
+import { TestResult } from "./compiler-worker";
 
 const WORKER_PATH = require.resolve("./compiler-worker.js");
 
@@ -126,6 +127,7 @@ async function run(
           .compile(
             COMPILER_PATH,
             LOGGER_PATH,
+            PARSE_CONFIG_PRAGMA_PATH,
             fixture,
             compilerVersion,
             filter?.debug ?? false,
@@ -142,6 +144,7 @@ async function run(
       let output = await compiler.compile(
         COMPILER_PATH,
         LOGGER_PATH,
+        PARSE_CONFIG_PRAGMA_PATH,
         fixture,
         compilerVersion,
         filter?.debug ?? false,

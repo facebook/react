@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @validateFrozenLambdas
 function Component(props) {
   let x = "";
   const onChange = (e) => {
@@ -16,7 +17,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: This mutates a variable that is managed by React, where an immutable value or a function was expected (6:6)
+[ReactForget] InvalidReact: This mutates a variable that is managed by React, where an immutable value or a function was expected (7:7)
 ```
           
       
