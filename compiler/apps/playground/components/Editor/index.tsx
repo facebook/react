@@ -116,7 +116,6 @@ function parsePragma(pragma: string) {
   let enableEmitFreeze = null;
   let inlineUseMemo = true;
   let validateHooksUsage = true;
-  let enableFunctionCallSignatureOptimizations = true;
   let validateFrozenLambdas = true;
   let assertValidMutableRanges = true;
 
@@ -141,9 +140,6 @@ function parsePragma(pragma: string) {
   if (pragma.includes("@inlineUseMemo false")) {
     inlineUseMemo = false;
   }
-  if (pragma.includes("@enableFunctionCallSignatureOptimizations false")) {
-    enableFunctionCallSignatureOptimizations = false;
-  }
   if (pragma.includes("@validateHooksUsage false")) {
     validateHooksUsage = false;
   }
@@ -156,7 +152,6 @@ function parsePragma(pragma: string) {
 
   return {
     enableAssumeHooksFollowRulesOfReact,
-    enableFunctionCallSignatureOptimizations,
     disableAllMemoization,
     inlineUseMemo,
     memoizeJsxElements,

@@ -742,15 +742,10 @@ function inferBlock(
         continue;
       }
       case "CallExpression": {
-        let signature = getFunctionCallSignature(
+        const signature = getFunctionCallSignature(
           env,
           instrValue.callee.identifier.type
         );
-        signature =
-          env.config.enableFunctionCallSignatureOptimizations ||
-          signature?.hookKind != null
-            ? signature
-            : null;
 
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;

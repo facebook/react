@@ -141,13 +141,6 @@ export type EnvironmentConfig = {
   inlineUseMemo: boolean;
 
   /**
-   * Enable optimizations based on the signature of (non-method) built-in function calls.
-   *
-   * Defaults to false
-   */
-  enableFunctionCallSignatureOptimizations: boolean;
-
-  /**
    * Enable optimizations based on the `noAlias` flag of method signatures. When enabled,
    * function signatures can declare that they do not alias their arguments, allowing
    * Forget to (in some cases) avoid memoizing arguments if they do not otherwise escape.
@@ -240,7 +233,6 @@ const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
   customHooks: null,
 
   memoizeJsxElements: true,
-  enableFunctionCallSignatureOptimizations: true,
   inlineUseMemo: true,
   validateHooksUsage: true,
   enableNoAliasOptimizations: true,
