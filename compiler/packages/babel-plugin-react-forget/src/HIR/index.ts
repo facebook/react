@@ -10,7 +10,12 @@ export { assertTerminalSuccessorsExist } from "./AssertTerminalSuccessorsExist";
 export { assertValidMutableRanges } from "./AssertValidMutableRanges";
 export { lower } from "./BuildHIR";
 export { computeDominatorTree, computePostDominatorTree } from "./Dominator";
-export { Environment, Hook } from "./Environment";
+export {
+  DEFAULT_ENVIRONMENT_CONFIG,
+  Environment,
+  Hook,
+  parseConfigPragma,
+} from "./Environment";
 export * from "./HIR";
 export {
   markInstructionIds,

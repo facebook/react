@@ -212,7 +212,7 @@ export type EnvironmentConfig = {
   bailoutOnHoleyArrays: boolean;
 };
 
-const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
+export const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
   customHooks: null,
 
   memoizeJsxElements: true,
@@ -230,6 +230,29 @@ const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
   validateNoSetStateInRender: false,
   validateRefAccessDuringRender: false,
 };
+
+export function parseConfigPragma(pragma: string): EnvironmentConfig {
+  const config = { ...DEFAULT_ENVIRONMENT_CONFIG };
+  for (const key of Object.keys(DEFAULT_ENVIRONMENT_CONFIG)) {
+    if (!isEnvironmentConfigKey(key)) {
+      continue;
+    }
+    const value = config[key];
+    if (typeof value !== "boolean") {
+      // We only support setting boolean flags via pragma strings
+      continue;
+    }
+    if (pragma.includes(`@${key}:true`)) {
+      config[key] = true as any;
+    } else if (pragma.includes(`@${key}:false`)) {
+      config[key] = false as any;
+    } else if (pragma.includes(`@${key}`)) {
+      config[key] = true as any;
+    }
+  }
+
+  return config;
+}
 
 function isEnvironmentConfigKey(key: string): key is keyof EnvironmentConfig {
   return Object.prototype.hasOwnProperty.call(DEFAULT_ENVIRONMENT_CONFIG, key);

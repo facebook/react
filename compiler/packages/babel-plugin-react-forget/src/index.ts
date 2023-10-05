@@ -19,7 +19,15 @@ export {
   parsePluginOptions,
   run,
 } from "./Entrypoint";
-export { Effect, Hook, SourceLocation, ValueKind, printHIR } from "./HIR";
+export {
+  DEFAULT_ENVIRONMENT_CONFIG,
+  Effect,
+  Hook,
+  SourceLocation,
+  ValueKind,
+  parseConfigPragma,
+  printHIR,
+} from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
 
 declare global {
