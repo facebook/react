@@ -636,7 +636,7 @@ describe('ReactHooksInspectionIntegration', () => {
   });
 
   // @gate enableUseMemoCacheHook
-  it('should support useMemoCache hook', () => {
+  it('useMemoCache should not be inspectable', () => {
     function Foo() {
       const $ = useMemoCache(1);
       let t0;
@@ -655,11 +655,7 @@ describe('ReactHooksInspectionIntegration', () => {
     const childFiber = renderer.root.findByType(Foo)._currentFiber();
     const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
-    expect(tree.length).toEqual(1);
-    expect(tree[0].isStateEditable).toBe(false);
-    expect(tree[0].name).toBe('MemoCache');
-    expect(tree[0].value).toHaveLength(1);
-    expect(tree[0].value[0]).toEqual(<div>{1}</div>);
+    expect(tree.length).toEqual(0);
   });
 
   describe('useDebugValue', () => {
