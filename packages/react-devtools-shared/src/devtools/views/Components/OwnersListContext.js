@@ -20,7 +20,7 @@ import type {OwnersList} from 'react-devtools-shared/src/backend/types';
 import type {
   Element,
   SerializedElement,
-} from 'react-devtools-shared/src/devtools/views/Components/types';
+} from 'react-devtools-shared/src/frontend/types';
 import type {Resource, Thenable} from '../../cache';
 
 type Context = (id: number) => Array<SerializedElement> | null;

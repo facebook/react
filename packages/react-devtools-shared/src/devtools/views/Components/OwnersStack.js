@@ -32,7 +32,7 @@ import {
   MenuItem,
 } from '../Components/reach-ui/menu-button';
 
-import type {SerializedElement} from './types';
+import type {SerializedElement} from 'react-devtools-shared/src/frontend/types';
 
 import styles from './OwnersStack.css';
 
