@@ -63,7 +63,9 @@ export function isNonNamespacedImportOfReact(
     importDeclPath.get("source").node.value === "react" &&
     importDeclPath
       .get("specifiers")
-      .every((specifier) => specifier.isImportSpecifier())
+      .every((specifier) => specifier.isImportSpecifier()) &&
+    importDeclPath.node.importKind !== "type" &&
+    importDeclPath.node.importKind !== "typeof"
   );
 }
 
@@ -111,8 +113,6 @@ export function updateExistingReactImportDeclaration(
     ImportDeclaration(importDeclPath) {
       if (
         !didInsertUseMemoCache &&
-        importDeclPath.node.importKind !== "type" &&
-        importDeclPath.node.importKind !== "typeof" &&
         isNonNamespacedImportOfReact(importDeclPath)
       ) {
         importDeclPath.pushContainer(
