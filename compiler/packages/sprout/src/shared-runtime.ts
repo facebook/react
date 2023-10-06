@@ -52,6 +52,24 @@ export function mutate(arg: any): void {
   }
 }
 
+export function setProperty(arg: any, property: any): void {
+  // don't mutate primitive
+  if (typeof arg === null || typeof arg !== "object") {
+    return;
+  }
+
+  let count: number = 0;
+  let key;
+  while (true) {
+    key = "wat" + count;
+    if (!Object.hasOwn(arg, key)) {
+      arg[key] = property;
+      return;
+    }
+    count++;
+  }
+}
+
 export function graphql(value: string): string {
   return value;
 }

@@ -472,17 +472,10 @@ function addSubtreeIntersection(
     suggestions: null,
   });
 
-  otherProperties.forEach((properties) =>
-    properties.forEach((node, _) =>
-      CompilerError.invariant(!isUnconditional(node.accessType), {
-        reason:
-          "[DeriveMinimalDependencies] Expected otherProperties to only contain unconditional nodes!",
-        description: null,
-        loc: null,
-        suggestions: null,
-      })
-    )
-  );
+  // otherProperties here may contain unconditional nodes as the result of
+  // recursively merging exhaustively conditional children with unconditionally
+  // accessed nodes (e.g. in the test condition itself)
+  // See `reduce-reactive-cond-deps-cfg-nested-testifelse` fixture for example
 
   for (const [propertyName, currNode] of currProperties) {
     const otherNodes = mapNonNull(otherProperties, (properties) =>
