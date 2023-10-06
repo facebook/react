@@ -1927,6 +1927,12 @@ function lowerExpression(
         let value;
         if (valueExpr.isJSXElement() || valueExpr.isStringLiteral()) {
           value = lowerExpressionToTemporary(builder, valueExpr);
+        } else if (valueExpr.type == null) {
+          value = lowerValueToTemporary(builder, {
+            kind: "Primitive",
+            value: true,
+            loc: attribute.node.loc ?? GeneratedSource,
+          });
         } else {
           if (!valueExpr.isJSXExpressionContainer()) {
             builder.errors.push({
