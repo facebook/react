@@ -5608,6 +5608,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('ABC');
   });
 
+  // @gate enableServerContext
   it('basic use(context)', async () => {
     const ContextA = React.createContext('default');
     const ContextB = React.createContext('B');
