@@ -1445,6 +1445,9 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'feSpotLight',
   },
+  {name: 'popover'},
+  {name: 'popoverTarget', tagName: 'input'},
+  {name: 'popoverTargetAction', tagName: 'input'},
   {
     name: 'poster',
     tagName: 'video',
