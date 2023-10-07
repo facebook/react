@@ -275,7 +275,7 @@ describe('ReactElementClone', () => {
     ).toErrorDev('Each child in a list should have a unique "key" prop.');
   });
 
-  it('does not warns for arrays of elements with keys', () => {
+  it('does not warn for arrays of elements with keys', () => {
     React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]);
   });
 
