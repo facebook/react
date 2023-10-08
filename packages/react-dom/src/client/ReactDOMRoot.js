@@ -57,7 +57,7 @@ export type HydrateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
-  formState?: ReactFormState<any, any> | null,
+  experimental_formState?: ReactFormState<any, any> | null,
   ...
 };
 
@@ -326,8 +326,8 @@ export function hydrateRoot(
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
     if (enableAsyncActions && enableFormActions) {
-      if (options.formState !== undefined) {
-        formState = options.formState;
+      if (options.experimental_formState !== undefined) {
+        formState = options.experimental_formState;
       }
     }
   }

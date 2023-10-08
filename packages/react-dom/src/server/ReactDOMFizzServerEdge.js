@@ -43,7 +43,7 @@ type Options = {
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
-  formState?: ReactFormState<any, any> | null,
+  experimental_formState?: ReactFormState<any, any> | null,
 };
 
 type ResumeOptions = {
@@ -121,7 +121,7 @@ function renderToReadableStream(
       onShellError,
       onFatalError,
       options ? options.onPostpone : undefined,
-      options ? options.formState : undefined,
+      options ? options.experimental_formState : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;

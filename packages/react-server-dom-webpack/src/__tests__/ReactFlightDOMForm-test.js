@@ -454,7 +454,7 @@ describe('ReactFlightDOMForm', () => {
     );
     const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
       postbackResponse,
-      {formState: formState},
+      {experimental_formState: formState},
     );
     await readIntoContainer(postbackSsrStream);
 
@@ -468,7 +468,7 @@ describe('ReactFlightDOMForm', () => {
       // also does. Remove dev condition once FlightServer.act() is available.
       await act(() => {
         ReactDOMClient.hydrateRoot(container, postbackResponse, {
-          formState: formState,
+          experimental_formState: formState,
         });
       });
       expect(container.textContent).toBe('121');
@@ -552,7 +552,7 @@ describe('ReactFlightDOMForm', () => {
       );
       const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
         postbackResponse,
-        {formState: formState},
+        {experimental_formState: formState},
       );
       await readIntoContainer(postbackSsrStream);
 
@@ -584,7 +584,7 @@ describe('ReactFlightDOMForm', () => {
       );
       const postbackSsrStream2 = await ReactDOMServer.renderToReadableStream(
         postbackResponse2,
-        {formState: formState2},
+        {experimental_formState: formState2},
       );
       await readIntoContainer(postbackSsrStream2);
 
@@ -668,7 +668,7 @@ describe('ReactFlightDOMForm', () => {
     );
     const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
       postbackResponse,
-      {formState: formState},
+      {experimental_formState: formState},
     );
     await readIntoContainer(postbackSsrStream);
 
@@ -744,7 +744,7 @@ describe('ReactFlightDOMForm', () => {
     );
     const postbackSsrStream = await ReactDOMServer.renderToReadableStream(
       postbackResponse,
-      {formState: formState},
+      {experimental_formState: formState},
     );
     await readIntoContainer(postbackSsrStream);
 
@@ -772,7 +772,7 @@ describe('ReactFlightDOMForm', () => {
     );
     const postbackSsrStream2 = await ReactDOMServer.renderToReadableStream(
       postbackResponse2,
-      {formState: formState2},
+      {experimental_formState: formState2},
     );
     await readIntoContainer(postbackSsrStream2);
 
