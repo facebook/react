@@ -108,6 +108,7 @@ import {
 } from 'shared/ReactSerializationErrors';
 
 import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactServerSharedInternals from './ReactServerSharedInternals';
 import isArray from 'shared/isArray';
 import binaryToComparableString from 'shared/binaryToComparableString';
@@ -209,9 +210,9 @@ const {
   TaintRegistryValues,
   TaintRegistryByteLengths,
   TaintRegistryPendingRequests,
-  ReactCurrentDispatcher,
   ReactCurrentCache,
 } = ReactServerSharedInternals;
+const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 function throwTaintViolation(message: string) {
   // eslint-disable-next-line react-internal/prod-error-codes

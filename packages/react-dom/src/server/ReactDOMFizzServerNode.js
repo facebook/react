@@ -59,7 +59,7 @@ type Options = {
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
-  experimental_formState?: ReactFormState<any, any> | null,
+  formState?: ReactFormState<any, any> | null,
 };
 
 type ResumeOptions = {
@@ -103,7 +103,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     options ? options.onShellError : undefined,
     undefined,
     options ? options.onPostpone : undefined,
-    options ? options.experimental_formState : undefined,
+    options ? options.formState : undefined,
   );
 }
 

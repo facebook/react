@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentCache from './ReactCurrentCache';
 import {
   TaintRegistryObjects,
@@ -17,7 +16,6 @@ import {
 import {enableTaint} from 'shared/ReactFeatureFlags';
 
 const ReactServerSharedInternals = {
-  ReactCurrentDispatcher,
   ReactCurrentCache,
 };
 

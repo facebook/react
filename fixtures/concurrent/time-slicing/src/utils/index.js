@@ -1,10 +1,10 @@
-import _range from "lodash/range";
-import _random from "lodash/random";
+import _range from 'lodash/range';
+import _random from 'lodash/random';
 
 const cachedData = new Map();
 
 // Random data for the chart
-export const getStreamData = (input) => {
+export const getStreamData = input => {
   if (cachedData.has(input)) {
     return cachedData.get(input);
   }
@@ -12,7 +12,7 @@ export const getStreamData = (input) => {
   const complexity =
     (parseInt(window.location.search.slice(1), 10) / 100) * 25 || 25;
 
-  const data = _range(5).map((t) =>
+  const data = _range(5).map(t =>
     _range(complexity * multiplier).map((j, i) => {
       return {
         x: j,
