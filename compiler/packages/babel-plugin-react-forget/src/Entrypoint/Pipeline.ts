@@ -25,7 +25,7 @@ import {
   dropManualMemoization,
   inferMutableRanges,
   inferReferenceEffects,
-  inlineUseMemo,
+  inlineImmediatelyInvokedFunctionExpressions,
 } from "../Inference";
 import {
   constantPropagation,
@@ -149,8 +149,12 @@ function* runWithEnvironment(
   dropManualMemoization(hir);
   yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
 
-  inlineUseMemo(hir);
-  yield log({ kind: "hir", name: "InlineUseMemo", value: hir });
+  inlineImmediatelyInvokedFunctionExpressions(hir);
+  yield log({
+    kind: "hir",
+    name: "InlineImmediatelyInvokedFunctionExpressions",
+    value: hir,
+  });
 
   analyseFunctions(hir);
   yield log({ kind: "hir", name: "AnalyseFunctions", value: hir });
