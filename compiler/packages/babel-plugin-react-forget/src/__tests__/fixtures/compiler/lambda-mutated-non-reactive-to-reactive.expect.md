@@ -27,14 +27,14 @@ function f(a) {
   const c_0 = $[0] !== a;
   let x;
   if (c_0) {
-    (() => {
-      x = { a };
-    })();
+    x;
+    x = { a };
     $[0] = a;
     $[1] = x;
   } else {
     x = $[1];
   }
+
   const t0 = x;
   const c_2 = $[2] !== t0;
   let t1;

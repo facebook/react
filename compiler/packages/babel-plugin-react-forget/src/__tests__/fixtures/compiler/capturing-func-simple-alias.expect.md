@@ -5,9 +5,10 @@
 function component(a) {
   let x = { a };
   let y = {};
-  (function () {
+  const f0 = function () {
     y = x;
-  })();
+  };
+  f0();
   mutate(y);
   return y;
 }
@@ -25,9 +26,11 @@ function component(a) {
   if (c_0) {
     const x = { a };
     y = {};
-    (function () {
+    const f0 = function () {
       y = x;
-    })();
+    };
+
+    f0();
     mutate(y);
     $[0] = a;
     $[1] = y;

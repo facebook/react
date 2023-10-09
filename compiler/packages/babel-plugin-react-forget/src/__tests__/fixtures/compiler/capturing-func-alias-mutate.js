@@ -1,9 +1,10 @@
 function component(a) {
   let x = { a };
   let y = {};
-  (function () {
+  const f0 = function () {
     y.x = x;
-  })();
+  };
+  f0();
   mutate(y);
   return y;
 }

@@ -9,4 +9,4 @@ export { default as analyseFunctions } from "./AnalyseFunctions";
 export { dropManualMemoization } from "./DropManualMemoization";
 export { inferMutableRanges } from "./InferMutableRanges";
 export { default as inferReferenceEffects } from "./InferReferenceEffects";
-export { inlineUseMemo } from "./InlineUseMemo";
+export { inlineImmediatelyInvokedFunctionExpressions as inlineUseMemo } from "./InlineImmediatelyInvokedFunctionExpressions";

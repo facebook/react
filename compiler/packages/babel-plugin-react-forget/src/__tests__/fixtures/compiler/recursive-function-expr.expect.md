@@ -12,7 +12,7 @@ function foo() {
 
 ```javascript
 function foo() {
-  (() => foo())();
+  foo();
 }
 
 ```

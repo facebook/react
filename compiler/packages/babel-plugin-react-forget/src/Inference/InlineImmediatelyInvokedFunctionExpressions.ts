@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
@@ -20,56 +19,70 @@ import {
   InstructionKind,
   LabelTerminal,
   Place,
-  getHookKind,
   makeInstructionId,
   makeType,
   reversePostorderBlocks,
 } from "../HIR";
 import { markInstructionIds, markPredecessors } from "../HIR/HIRBuilder";
+import { eachInstructionValueOperand } from "../HIR/visitors";
 import { retainWhere } from "../Utils/utils";
 
 /**
- * Rewrites `useMemo()` calls, rewriting so that the lambda body becomes part of the
- * outer block's instructions.
+ * Inlines immediately invoked function expressions (IIFEs) to allow more fine-grained memoization
+ * of the values they produce.
  *
  * Example:
  *
- * ```javascript
- * // Before
- * const x = useMemo(() => foo(y, z), [y, z])
+ * ```
+ * const x = (() => {
+ *   const x = [];
+ *   x.push(foo());
+ *   return x;
+ * })();
  *
- * // After
- * const x = foo(y, z);
+ * =>
+ *
+ * bb0:
+ *    // placeholder for the result, all return statements will assign here
+ *   let t0;
+ *   // Label allows using a goto (break) to exit out of the body
+ *   Label block=bb1 fallthrough=bb2
+ * bb1:
+ *   // code within the function expression
+ *   const x0 = [];
+ *   x0.push(foo());
+ *   // return is replaced by assignment to the result variable...
+ *   t0 = x0;
+ *   // ...and a goto to the code after the function expression invocation
+ *   Goto bb2
+ * bb2:
+ *   // code after the IIFE call
+ *   const x = t0;
  * ```
  *
- * The main challenge is dealing with the possibility of complex control flow within
- * the lambda body. The approach is roughly:
- * - split the block with the useMemo call in two:
- *   - the first block is everything up to the memo call plus the lambda body
- *   - the second block is everything after the memo call
- * - use the temporary from the useMemo call result value as the place to store
- *   the useMemo result
- * - for every return terminal in the lambda body:
- *   - add a StoreLocal to the temporary, assigning the return value
- *   - replace the terminal w a goto to the second block
- *
- * NOTE: *this pass must be run prior to EnterSSA*. Prior to entering SSA form identifiers
- *       in the top-level function and any function expressions will have consistent
- *       correlation between `Identifier` instances and IdentifierIds. After entering SSA
- *       form we drop this correspondence. It's much easier to write this inlining pass
- *       without having to worry about SSA form.
+ * The implementation relies on HIR's ability to support labeled blocks:
+ * - We terminate the basic block just prior to the CallExpression of the IIFE
+ *   with a LabelTerminal whose fallback is the code following the CallExpression.
+ *   Just prior to the terminal we also create a named temporary variable which
+ *   will hold the result.
+ * - We then inline the contents of the function "in between" (conceptually) those
+ *   two blocks.
+ * - All return statements in the original function expression are replaced with a
+ *   StoreLocal to the temporary we allocated before plus a Goto to the fallthrough
+ *   block (code following the CallExpression).
  */
-export function inlineUseMemo(fn: HIRFunction): void {
-  // Track all function expressions in case they appear as the argument to a useMemo
+export function inlineImmediatelyInvokedFunctionExpressions(
+  fn: HIRFunction
+): void {
+  // Track all function expressions that are assigned to a temporary
   const functions = new Map<IdentifierId, FunctionExpression>();
-  // Identifiers (lvalues) for known useMemo functions, so that we can prune them
-  // at the end of the pass
-  const useMemoFunctions = new Set<IdentifierId>();
+  // Functions that are inlined
+  const inlinedFunctions = new Set<IdentifierId>();
 
-  // Iterate the *existing* blocks from the outer component to find useMemo calls
+  // Iterate the *existing* blocks from the outer component to find IIFEs
   // and inline them. During iteration we will modify `fn` (by inlining the CFG
-  // of useMemo callbacks) so we explicitly copy references to just the original
-  // function's blocks first. As blocks are split to make room for useMemo calls,
+  // of IIFEs) so we explicitly copy references to just the original
+  // function's blocks first. As blocks are split to make room for IIFE calls,
   // the split portions of the blocks will be added to this queue.
   const queue = Array.from(fn.body.blocks.values());
   queue: for (const block of queue) {
@@ -77,51 +90,35 @@ export function inlineUseMemo(fn: HIRFunction): void {
       const instr = block.instructions[ii]!;
       switch (instr.value.kind) {
         case "FunctionExpression": {
-          functions.set(instr.lvalue.identifier.id, instr.value);
+          if (instr.lvalue.identifier.name === null) {
+            functions.set(instr.lvalue.identifier.id, instr.value);
+          }
           break;
         }
-        case "MethodCall":
         case "CallExpression": {
-          const hookKind =
-            instr.value.kind === "CallExpression"
-              ? getHookKind(fn.env, instr.value.callee.identifier)
-              : getHookKind(fn.env, instr.value.property.identifier);
-          if (hookKind !== "useMemo") {
+          if (instr.value.args.length !== 0) {
+            // We don't support inlining when there are arguments
             continue;
           }
-          const [lambda] = instr.value.args;
-          if (lambda.kind === "Spread") {
-            continue;
-          }
-          const body = functions.get(lambda.identifier.id);
+          const body = functions.get(instr.value.callee.identifier.id);
           if (body === undefined) {
-            // Allow passing a named function to useMemo, eg `useMemo(someImportedFunction, [])`
+            // Not invoking a local function expression, can't inline
             continue;
           }
 
-          if (body.loweredFunc.func.params.length > 0) {
-            CompilerError.invalidReact({
-              reason: "useMemo callbacks may not accept any arguments",
-              description: null,
-              loc: body.loc,
-              suggestions: null,
-            });
+          if (
+            body.loweredFunc.func.params.length > 0 ||
+            body.loweredFunc.func.async ||
+            body.loweredFunc.func.generator
+          ) {
+            // Can't inline functions with params, or async/generator functions
+            continue;
           }
 
-          if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
-            CompilerError.invalidReact({
-              reason:
-                "useMemo callbacks may not be async or generator functions",
-              description: null,
-              loc: body.loc,
-              suggestions: null,
-            });
-          }
+          // We know this function is used for an IIFE and can prune it later
+          inlinedFunctions.add(instr.value.callee.identifier.id);
 
-          // We know this function is used for useMemo and can prune it later
-          useMemoFunctions.add(lambda.identifier.id);
-
-          // Create a new block which will contain code following the useMemo call
+          // Create a new block which will contain code following the IIFE call
           const continuationBlockId = fn.env.nextBlockId;
           const continuationBlock: BasicBlock = {
             id: continuationBlockId,
@@ -134,7 +131,7 @@ export function inlineUseMemo(fn: HIRFunction): void {
           fn.body.blocks.set(continuationBlockId, continuationBlock);
 
           // Trim the original block to contain instructions up to (but not including)
-          // the useMemo
+          // the IIFE
           block.instructions.length = ii;
 
           // To account for complex control flow within the lambda, we treat the lambda
@@ -149,10 +146,10 @@ export function inlineUseMemo(fn: HIRFunction): void {
           };
           block.terminal = newTerminal;
 
-          // We store the result in the useMemo temporary
+          // We store the result in the IIFE temporary
           const result = instr.lvalue;
 
-          // Declare the useMemo temporary
+          // Declare the IIFE temporary
           declareTemporary(fn.env, block, result);
 
           // Promote the temporary with a name as we require this to persist
@@ -167,20 +164,26 @@ export function inlineUseMemo(fn: HIRFunction): void {
           }
 
           // Ensure we visit the continuation block, since there may have been
-          // sequential useMemos that need to be visited.
+          // sequential IIFEs that need to be visited.
           queue.push(continuationBlock);
           continue queue;
+        }
+        default: {
+          for (const place of eachInstructionValueOperand(instr.value)) {
+            // Any other use of a function expression means it isn't an IIFE
+            functions.delete(place.identifier.id);
+          }
         }
       }
     }
   }
 
-  if (useMemoFunctions.size !== 0) {
+  if (inlinedFunctions.size !== 0) {
     // Remove instructions that define lambdas which we inlined
     for (const [, block] of fn.body.blocks) {
       retainWhere(
         block.instructions,
-        (instr) => !useMemoFunctions.has(instr.lvalue.identifier.id)
+        (instr) => !inlinedFunctions.has(instr.lvalue.identifier.id)
       );
     }
 

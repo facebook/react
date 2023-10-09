@@ -72,6 +72,7 @@ import {
   validateNoRefAccessInRender,
   validateNoSetStateInRender,
   validateUnconditionalHooks,
+  validateUseMemo,
 } from "../Validation";
 
 export type CompilerPipelineValue =
@@ -133,6 +134,8 @@ function* runWithEnvironment(
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
 
+  validateUseMemo(hir);
+
   if (env.config.validateHooksUsage) {
     validateHooksUsage(hir);
     const conditionalHooksResult = validateUnconditionalHooks(hir).unwrap();
@@ -143,11 +146,11 @@ function* runWithEnvironment(
     });
   }
 
-  inlineUseMemo(hir);
-  yield log({ kind: "hir", name: "InlineUseMemo", value: hir });
-
   dropManualMemoization(hir);
   yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
+
+  inlineUseMemo(hir);
+  yield log({ kind: "hir", name: "InlineUseMemo", value: hir });
 
   analyseFunctions(hir);
   yield log({ kind: "hir", name: "AnalyseFunctions", value: hir });

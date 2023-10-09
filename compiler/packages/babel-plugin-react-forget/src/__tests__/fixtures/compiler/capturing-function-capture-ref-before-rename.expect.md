@@ -29,14 +29,14 @@ function component(a, b) {
   let z;
   if (c_0) {
     z = { a };
-    (function () {
-      mutate(z);
-    })();
+
+    mutate(z);
     $[0] = a;
     $[1] = z;
   } else {
     z = $[1];
   }
+
   let y = z;
   const c_2 = $[2] !== b;
   let t0;

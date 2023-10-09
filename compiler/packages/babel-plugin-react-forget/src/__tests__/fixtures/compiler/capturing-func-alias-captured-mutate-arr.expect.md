@@ -5,11 +5,12 @@
 function component(foo, bar) {
   let x = { foo };
   let y = { bar };
-  (function () {
+  const f0 = function () {
     let a = [y];
     let b = x;
     a.x = b;
-  })();
+  };
+  f0();
   mutate(y);
   return y;
 }
@@ -28,11 +29,13 @@ function component(foo, bar) {
   if (c_0 || c_1) {
     const x = { foo };
     y = { bar };
-    (function () {
+    const f0 = function () {
       const a = [y];
       const b = x;
       a.x = b;
-    })();
+    };
+
+    f0();
     mutate(y);
     $[0] = foo;
     $[1] = bar;

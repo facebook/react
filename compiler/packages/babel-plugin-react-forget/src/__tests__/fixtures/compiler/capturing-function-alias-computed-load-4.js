@@ -1,9 +1,10 @@
 function bar(a) {
   let x = [a];
   let y = {};
-  (function () {
+  const f0 = function () {
     y = x[0].a[1];
-  })();
+  };
+  f0();
 
   return y;
 }

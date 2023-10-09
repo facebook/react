@@ -25,9 +25,10 @@ function component(a) {
   if (c_0) {
     const x = { a };
     y = 1;
-    (function () {
-      y = x;
-    })();
+
+    y;
+    y = x;
+
     mutate(y);
     $[0] = a;
     $[1] = y;

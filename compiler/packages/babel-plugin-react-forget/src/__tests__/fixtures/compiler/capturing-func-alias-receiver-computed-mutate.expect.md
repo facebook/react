@@ -5,10 +5,11 @@
 function component(a) {
   let x = { a };
   let y = {};
-  (function () {
+  const f0 = function () {
     let a = y;
     a["x"] = x;
-  })();
+  };
+  f0();
   mutate(y);
   return y;
 }
@@ -26,10 +27,12 @@ function component(a) {
   if (c_0) {
     const x = { a };
     y = {};
-    (function () {
+    const f0 = function () {
       const a_0 = y;
       a_0.x = x;
-    })();
+    };
+
+    f0();
     mutate(y);
     $[0] = a;
     $[1] = y;

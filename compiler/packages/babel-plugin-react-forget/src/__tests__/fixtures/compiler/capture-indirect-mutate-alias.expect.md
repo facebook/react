@@ -4,12 +4,14 @@
 ```javascript
 function component(a) {
   let x = { a };
-  (function () {
+  const f0 = function () {
     let q = x;
-    (function () {
+    const f1 = function () {
       q.b = 1;
-    })();
-  })();
+    };
+    f1();
+  };
+  f0();
 
   return x;
 }
@@ -32,12 +34,16 @@ function component(a) {
   let x;
   if (c_0) {
     x = { a };
-    (function () {
+    const f0 = function () {
       const q = x;
-      (function () {
+      const f1 = function () {
         q.b = 1;
-      })();
-    })();
+      };
+
+      f1();
+    };
+
+    f0();
     $[0] = a;
     $[1] = x;
   } else {

@@ -4,11 +4,13 @@
 ```javascript
 function component(a) {
   let z = { a };
-  (function () {
-    (function () {
+  const f0 = function () {
+    const f1 = function () {
       z.b = 1;
-    })();
-  })();
+    };
+    f1();
+  };
+  f0();
   return z;
 }
 
@@ -30,11 +32,15 @@ function component(a) {
   let z;
   if (c_0) {
     z = { a };
-    (function () {
-      (function () {
+    const f0 = function () {
+      const f1 = function () {
         z.b = 1;
-      })();
-    })();
+      };
+
+      f1();
+    };
+
+    f0();
     $[0] = a;
     $[1] = z;
   } else {

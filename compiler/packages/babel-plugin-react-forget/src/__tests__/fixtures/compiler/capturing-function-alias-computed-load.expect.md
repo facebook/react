@@ -5,9 +5,10 @@
 function bar(a) {
   let x = [a];
   let y = {};
-  (function () {
+  const f0 = function () {
     y = x[0];
-  })();
+  };
+  f0();
 
   return y;
 }
@@ -31,9 +32,11 @@ function bar(a) {
   if (c_0) {
     const x = [a];
     y = {};
-    (function () {
+    const f0 = function () {
       y = x[0];
-    })();
+    };
+
+    f0();
     $[0] = a;
     $[1] = y;
   } else {

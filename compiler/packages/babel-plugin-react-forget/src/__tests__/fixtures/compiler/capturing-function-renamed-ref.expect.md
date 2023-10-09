@@ -33,9 +33,8 @@ function component(a, b) {
   const z = t0;
 
   const z_0 = { b };
-  (function () {
-    mutate(z_0);
-  })();
+
+  mutate(z_0);
   return z;
 }
 
