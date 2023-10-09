@@ -10,6 +10,8 @@ const semver = require('semver');
 const ossConfig = './scripts/jest/config.source.js';
 const wwwConfig = './scripts/jest/config.source-www.js';
 const devToolsConfig = './scripts/jest/config.build-devtools.js';
+const nativeOssConfig = './scripts/jest/config.source-native-oss.js';
+const nativeFbConfig = './scripts/jest/config.source-native-fb.js';
 
 // TODO: These configs are separate but should be rolled into the configs above
 // so that the CLI can provide them as options for any of the configs.
@@ -46,7 +48,14 @@ const argv = yargs
       requiresArg: true,
       type: 'string',
       default: 'experimental',
-      choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
+      choices: [
+        'experimental',
+        'stable',
+        'www-classic',
+        'www-modern',
+        'native-oss',
+        'native-fb',
+      ],
     },
     env: {
       alias: 'e',
@@ -129,12 +138,6 @@ function isWWWConfig() {
   );
 }
 
-function isOSSConfig() {
-  return (
-    argv.releaseChannel === 'stable' || argv.releaseChannel === 'experimental'
-  );
-}
-
 function validateOptions() {
   let success = true;
 
@@ -194,7 +197,7 @@ function validateOptions() {
     }
   }
 
-  if (isWWWConfig()) {
+  if (isWWWConfig() || argv.releaseChannel === 'native-fb') {
     if (argv.variant === undefined) {
       // Turn internal experiments on by default
       argv.variant = true;
@@ -202,7 +205,7 @@ function validateOptions() {
   } else {
     if (argv.variant) {
       logError(
-        'Variant is only supported for the www release channels. Update these options to continue.'
+        `Variant not supported for release channel ${argv.releaseChannel}. Update these options to continue.`
       );
       success = false;
     }
@@ -215,9 +218,15 @@ function validateOptions() {
     success = false;
   }
 
-  if (!isOSSConfig() && argv.persistent) {
+  if (
+    argv.persistent === true &&
+    argv.releaseChannel !== 'experimental' &&
+    argv.releaseChannel !== 'stable' &&
+    argv.releaseChannel !== 'native-oss' &&
+    argv.releaseChannel !== 'native-fb'
+  ) {
     logError(
-      'Persistence only supported for oss release channels. Update these options to continue.'
+      `Persistence not supported for release channel ${argv.releaseChannel}. Update these options to continue.`
     );
     success = false;
   }
@@ -282,8 +291,15 @@ function getCommandArgs() {
     args.push(persistentConfig);
   } else if (isWWWConfig()) {
     args.push(wwwConfig);
-  } else if (isOSSConfig()) {
+  } else if (
+    argv.releaseChannel === 'stable' ||
+    argv.releaseChannel === 'experimental'
+  ) {
     args.push(ossConfig);
+  } else if (argv.releaseChannel === 'native-oss') {
+    args.push(nativeOssConfig);
+  } else if (argv.releaseChannel === 'native-fb') {
+    args.push(nativeFbConfig);
   } else {
     // We should not get here.
     logError('Unrecognized release channel');

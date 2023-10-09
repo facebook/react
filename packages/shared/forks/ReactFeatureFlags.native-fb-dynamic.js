@@ -15,10 +15,6 @@ import typeof * as DynamicFlagsType from 'ReactNativeInternalFeatureFlags';
 //
 // Use __VARIANT__ to simulate a GK. The tests will be run twice: once
 // with the __VARIANT__ set to `true`, and once set to `false`.
-//
-// TODO: __VARIANT__ isn't supported for React Native flags yet. You can set the
-// flag here but it won't be set to `true` in any of our test runs. Need to
-// update the test configuration.
 
 export const enableUseRefAccessWarning = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;

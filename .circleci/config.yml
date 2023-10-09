@@ -450,8 +450,15 @@ workflows:
                 - "-r=www-modern --env=production --variant=false"
                 - "-r=www-modern --env=development --variant=true"
                 - "-r=www-modern --env=production --variant=true"
+                - "-r=native-oss --env=development"
+                - "-r=native-oss --env=production"
+                - "-r=native-fb --env=development --variant=false"
+                - "-r=native-fb --env=production --variant=false"
+                - "-r=native-fb --env=development --variant=true"
+                - "-r=native-fb --env=production --variant=true"
 
-                # TODO: Test more persistent configurations?
+                # TODO: Maybe we can delete these because the RN
+                # configurations above are sufficient?
                 - '-r=stable --env=development --persistent'
                 - '-r=experimental --env=development --persistent'
       - yarn_build:

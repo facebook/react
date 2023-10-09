@@ -25,10 +25,6 @@ const SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT =
   "sendAccessibilityEvent was called with a ref that isn't a " +
   'native component. Use React.forwardRef to get access to the underlying native component';
 
-jest.mock('shared/ReactFeatureFlags', () =>
-  require('shared/forks/ReactFeatureFlags.native-oss'),
-);
-
 describe('ReactFabric', () => {
   beforeEach(() => {
     jest.resetModules();
