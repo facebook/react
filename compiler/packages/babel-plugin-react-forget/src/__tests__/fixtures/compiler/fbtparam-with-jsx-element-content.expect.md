@@ -29,36 +29,40 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
 
 function Component(t39) {
-  const $ = useMemoCache(6);
+  const $ = useMemoCache(4);
   const { name, data, icon } = t39;
   const c_0 = $[0] !== name;
   const c_1 = $[1] !== icon;
   const c_2 = $[2] !== data;
   let t0;
   if (c_0 || c_1 || c_2) {
-    t0 = fbt._(
-      "{item author}{icon}{=m2}",
-      [
-        fbt._param(
-          "item author",
+    t0 = (
+      <Text type="body4">
+        {fbt._(
+          "{item author}{icon}{=m2}",
+          [
+            fbt._param(
+              "item author",
 
-          <Text type="h4">{name}</Text>
-        ),
-        fbt._param(
-          "icon",
+              <Text type="h4">{name}</Text>
+            ),
+            fbt._param(
+              "icon",
 
-          icon
-        ),
-        fbt._implicitParam(
-          "=m2",
-          <Text type="h4">
-            {fbt._("{item details}", [fbt._param("item details", data)], {
-              hk: "4jLfVq",
-            })}
-          </Text>
-        ),
-      ],
-      { hk: "2HLm2j" }
+              icon
+            ),
+            fbt._implicitParam(
+              "=m2",
+              <Text type="h4">
+                {fbt._("{item details}", [fbt._param("item details", data)], {
+                  hk: "4jLfVq",
+                })}
+              </Text>
+            ),
+          ],
+          { hk: "2HLm2j" }
+        )}
+      </Text>
     );
     $[0] = name;
     $[1] = icon;
@@ -67,16 +71,7 @@ function Component(t39) {
   } else {
     t0 = $[3];
   }
-  const c_4 = $[4] !== t0;
-  let t1;
-  if (c_4) {
-    t1 = <Text type="body4">{t0}</Text>;
-    $[4] = t0;
-    $[5] = t1;
-  } else {
-    t1 = $[5];
-  }
-  return t1;
+  return t0;
 }
 
 ```

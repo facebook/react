@@ -217,6 +217,7 @@ export const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
 
   memoizeJsxElements: true,
   validateHooksUsage: true,
+  enableMergeConsecutiveScopes: true,
 
   assertValidMutableRanges: false,
   bailoutOnHoleyArrays: false,
@@ -224,7 +225,6 @@ export const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
   enableAssumeHooksFollowRulesOfReact: false,
   enableEmitFreeze: null,
   enableForest: false,
-  enableMergeConsecutiveScopes: false,
 
   validateFrozenLambdas: false,
   validateNoSetStateInRender: false,
