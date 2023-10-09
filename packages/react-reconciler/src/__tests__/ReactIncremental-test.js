@@ -2687,6 +2687,17 @@ describe('ReactIncremental', () => {
   it('does not break with a bad Map polyfill', async () => {
     const realMapSet = Map.prototype.set;
 
+    const capturedWarnings = [];
+    const originalWarn = console.warn;
+    // Override console.warn temporarily
+    console.warn = (message, ...rest) => {
+      if (message.includes('Detected a bad Map/Set polyfill')) {
+          capturedWarnings.push(message);
+          return;
+      }
+      originalWarn.call(console, message, ...rest);
+    };
+
     async function triggerCodePathThatUsesFibersAsMapKeys() {
       function Thing() {
         throw new Error('No.');
@@ -2779,6 +2790,9 @@ describe('ReactIncremental', () => {
       // eslint-disable-next-line no-extend-native
       Map.prototype.set = realMapSet;
     }
+
+    expect(capturedWarnings).toContain('Warning: Detected a bad Map/Set polyfill. Consider using a reliable polyfill or updating the current one.');
+    console.warn = originalWarn;
     // If we got this far, our feature detection worked.
     // We knew that Map#set() throws for non-extensible objects,
     // so we didn't set them as non-extensible for that reason.
