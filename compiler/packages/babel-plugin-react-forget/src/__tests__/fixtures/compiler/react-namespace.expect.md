@@ -30,45 +30,36 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 const FooContext = React.createContext({ current: null });
 
 function Component(props) {
-  const $ = useMemoCache(7);
+  const $ = useMemoCache(5);
   const foo = React.useContext(FooContext);
   const ref = React.useRef();
   const [x, setX] = React.useState(false);
-  const c_0 = $[0] !== foo.current;
+  const onClick = () => {
+    setX(true);
+    ref.current = true;
+    foo.current = true;
+  };
+  const c_0 = $[0] !== props.children;
   let t0;
   if (c_0) {
-    t0 = () => {
-      setX(true);
-      ref.current = true;
-      foo.current = true;
-    };
-    $[0] = foo.current;
+    t0 = React.cloneElement(props.children);
+    $[0] = props.children;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const onClick = t0;
-  const c_2 = $[2] !== props.children;
+  const c_2 = $[2] !== onClick;
+  const c_3 = $[3] !== t0;
   let t1;
-  if (c_2) {
-    t1 = React.cloneElement(props.children);
-    $[2] = props.children;
-    $[3] = t1;
+  if (c_2 || c_3) {
+    t1 = <div onClick={onClick}>{t0}</div>;
+    $[2] = onClick;
+    $[3] = t0;
+    $[4] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[4];
   }
-  const c_4 = $[4] !== onClick;
-  const c_5 = $[5] !== t1;
-  let t2;
-  if (c_4 || c_5) {
-    t2 = <div onClick={onClick}>{t1}</div>;
-    $[4] = onClick;
-    $[5] = t1;
-    $[6] = t2;
-  } else {
-    t2 = $[6];
-  }
-  return t2;
+  return t1;
 }
 
 export const FIXTURE_ENTRYPOINT = {

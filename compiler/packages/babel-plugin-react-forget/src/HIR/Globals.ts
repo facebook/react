@@ -9,7 +9,6 @@ import { Effect, ValueKind } from "./HIR";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
-  BuiltInContextId,
   BuiltInUseRefId,
   BuiltInUseStateId,
   ShapeRegistry,
@@ -241,7 +240,7 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
     addHook(DEFAULT_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Read,
-      returnType: { kind: "Object", shapeId: BuiltInContextId },
+      returnType: { kind: "Poly" },
       calleeEffect: Effect.Read,
       hookKind: "useContext",
       returnValueKind: ValueKind.Mutable,

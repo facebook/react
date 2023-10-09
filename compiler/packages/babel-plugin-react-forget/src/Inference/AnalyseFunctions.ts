@@ -10,7 +10,6 @@ import {
   Effect,
   HIRFunction,
   Identifier,
-  isContextType,
   isRefValueType,
   isSetStateType,
   isUseRefType,
@@ -143,8 +142,7 @@ function infer(
     if (
       isUseRefType(dep.identifier) ||
       isRefValueType(dep.identifier) ||
-      isSetStateType(dep.identifier) ||
-      isContextType(dep.identifier)
+      isSetStateType(dep.identifier)
     ) {
       // TODO: this is a hack to ensure we treat functions which reference refs
       // as having a capture and therefore being considered mutable. this ensures

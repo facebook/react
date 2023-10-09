@@ -460,7 +460,7 @@ const skipFilter = new Set([
   "fbtparam-text-must-use-expression-container",
   "fbtparam-with-jsx-fragment-value",
   "fbt-preserve-jsxtext",
-  "useContext-mutable-value",
+  "todo.useContext-mutate-context-in-callback",
   "loop-unused-let",
 ]);
 
