@@ -8,6 +8,7 @@
 import { CompilerError } from "../CompilerError";
 import {
   ReactiveFunction,
+  ReactiveScope,
   ReactiveScopeBlock,
   ReactiveScopeDependency,
   ReactiveStatement,
@@ -40,23 +41,25 @@ export function printReactiveFunction(fn: ReactiveFunction): string {
   return writer.complete();
 }
 
+export function printReactiveScopeSummary(scope: ReactiveScope): string {
+  return `scope @${scope.id} [${scope.range.start}:${
+    scope.range.end
+  }] dependencies=[${Array.from(scope.dependencies)
+    .map((dep) => printDependency(dep))
+    .join(", ")}] declarations=[${Array.from(scope.declarations)
+    .map(([, decl]) =>
+      printIdentifier({ ...decl.identifier, scope: decl.scope })
+    )
+    .join(", ")}] reassignments=[${Array.from(scope.reassignments).map(
+    (reassign) => printIdentifier(reassign)
+  )}]`;
+}
+
 export function writeReactiveBlock(
   writer: Writer,
   block: ReactiveScopeBlock
 ): void {
-  writer.writeLine(
-    `scope @${block.scope.id} [${block.scope.range.start}:${
-      block.scope.range.end
-    }] dependencies=[${Array.from(block.scope.dependencies)
-      .map((dep) => printDependency(dep))
-      .join(", ")}] declarations=[${Array.from(block.scope.declarations)
-      .map(([, decl]) =>
-        printIdentifier({ ...decl.identifier, scope: decl.scope })
-      )
-      .join(", ")}] reassignments=[${Array.from(block.scope.reassignments).map(
-      (reassign) => printIdentifier(reassign)
-    )}] {`
-  );
+  writer.writeLine(`${printReactiveScopeSummary(block.scope)} {`);
   writeReactiveInstructions(writer, block.instructions);
   writer.writeLine("}");
 }
@@ -66,6 +69,14 @@ function printDependency(dependency: ReactiveScopeDependency): string {
     printIdentifier(dependency.identifier) +
     printType(dependency.identifier.type);
   return `${identifier}${dependency.path.map((prop) => `.${prop}`).join("")}`;
+}
+
+export function printReactiveInstructions(
+  instructions: Array<ReactiveStatement>
+): string {
+  const writer = new Writer();
+  writeReactiveInstructions(writer, instructions);
+  return writer.complete();
 }
 
 export function writeReactiveInstructions(

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { CompilerError } from "..";
 import {
   IdentifierId,
   InstructionId,
@@ -17,6 +18,8 @@ import {
   ReactiveScopeDependency,
   makeInstructionId,
 } from "../HIR";
+import { assertExhaustive } from "../Utils/utils";
+import { printReactiveScopeSummary } from "./PrintReactiveFunction";
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
@@ -62,6 +65,13 @@ export function mergeConsecutiveScopes(fn: ReactiveFunction): void {
   );
 }
 
+const DEBUG: boolean = false;
+function log(msg: string): void {
+  if (DEBUG) {
+    console.log(msg);
+  }
+}
+
 class FindLastUsageVisitor extends ReactiveFunctionVisitor<void> {
   lastUsage: Map<IdentifierId, InstructionId> = new Map();
 
@@ -84,137 +94,194 @@ class Transform extends ReactiveFunctionTransform<void> {
   }
 
   override visitBlock(block: ReactiveBlock, state: void): void {
+    // Pass 1: visit nested blocks to potentially merge their scopes
     this.traverseBlock(block, state);
 
-    // The current reactive scope which is a candidate for subsequent scopes
-    // to be merged into
-    let currentScope: {
-      // The scope itself
+    // Pass 2: identify scopes for merging
+    type MergedScope = {
       scope: ReactiveScopeBlock;
-      // the starting index within `block` of this scope (inclusive)
       from: number;
-      // the index within `block` of instructions which are merged into this
-      // scope (exclusive)
       to: number;
-      // Whether this block has been emitted yet onto `nextInstructions`
-      merged: boolean;
-    } | null = null;
-
-    // Tracks the lvalues of instructions which occur between reactive scopes
-    // We can't merge two scopes if their intervening instructions are needed
-    // by subsequent code
-    const lvalues: Set<IdentifierId> = new Set();
-
-    // The updated set of instructions for the block. Stays null until
-    // we make changes (ie merge scopes)
-    let nextInstructions: ReactiveBlock | null = null;
-    // The maximum index within the original instructions that we have reached.
-    // Used to avoid emitting duplicate instructions
-    let maxIndex: number = 0;
-
-    // Called when we find some instruction that cannot be merged into a
-    // preceding scope, or we otherwise need to reset and not consider
-    // the previous candidate scope to be mergeable anymore.
-    function resetCurrentScope(index: number): void {
-      if (nextInstructions !== null) {
-        if (currentScope !== null && !currentScope.merged) {
-          currentScope.merged = true;
-          nextInstructions.push(block[currentScope.from]!);
-        }
-        if (currentScope !== null) {
-          nextInstructions.push(...block.slice(currentScope.to, index));
-        }
-        // We can sometimes call resetCurrentScope twice for the same index,
-        // such as when an instruction resets and then a subsequent scope also resets.
-        // This is the only case in which we push instructions w/o gating on
-        // `currentScope != null`, so we avoid duplicates by checking the max index
-        // already emitted.
-        if (index < block.length && index > maxIndex) {
-          nextInstructions.push(block[index]!);
-          maxIndex = index;
-        }
+      lvalues: Set<IdentifierId>;
+    };
+    let current: MergedScope | null = null;
+    const merged: Array<MergedScope> = [];
+    function reset(): void {
+      CompilerError.invariant(current !== null, {
+        loc: null,
+        reason:
+          "MergeConsecutiveScopes: expected current scope to be non-null if reset()",
+        suggestions: null,
+        description: null,
+      });
+      if (current.to > current.from + 1) {
+        merged.push(current);
       }
-      currentScope = null;
+      current = null;
     }
-
     for (let i = 0; i < block.length; i++) {
       const instr = block[i]!;
-      if (instr.kind === "terminal") {
-        // Don't merge scopes with terminals in between.
-        // In theory we could allow certain types of terminals,
-        // such as loops, but for simplicity we just skip all
-        // cases with terminals
-        resetCurrentScope(i);
-      } else if (instr.kind === "instruction") {
-        switch (instr.instruction.value.kind) {
-          case "JSXText":
-          case "Primitive":
-          case "LoadLocal":
-          case "PropertyLoad":
-          case "ComputedLoad": {
-            // Allow simple instructions between scopes
-            if (currentScope === null && nextInstructions !== null) {
-              nextInstructions.push(instr);
-            } else if (
-              currentScope !== null &&
-              instr.instruction.lvalue !== null
-            ) {
-              lvalues.add(instr.instruction.lvalue.identifier.id);
+      switch (instr.kind) {
+        case "terminal": {
+          // For now we don't merge across terminals
+          if (current !== null) {
+            log(
+              `Reset scope @${current.scope.scope.id} from terminal [${instr.terminal.id}]`
+            );
+            reset();
+          }
+          break;
+        }
+        case "instruction": {
+          switch (instr.instruction.value.kind) {
+            case "ComputedLoad":
+            case "JSXText":
+            case "LoadLocal":
+            case "Primitive":
+            case "PropertyLoad": {
+              // We can merge two scopes if there are intervening instructions, but:
+              // - Only if the instructions are simple and it's okay to make them
+              //   execute conditionally (hence allowing a conservative subset of value kinds)
+              // - The values produced are used at or before the next scope. If they are used
+              //   later and we move them into the scope, then they wouldn't be accessible to
+              //   subsequent code wo expanding the set of declarations, which we want to avoid
+              if (current !== null && instr.instruction.lvalue !== null) {
+                current.lvalues.add(instr.instruction.lvalue.identifier.id);
+              }
+              break;
             }
-            break;
+            default: {
+              // Other instructions are known to prevent merging, so we reset the scope if present
+              if (current !== null) {
+                log(
+                  `Reset scope @${current.scope.scope.id} from instruction [${instr.instruction.id}]`
+                );
+                reset();
+              }
+            }
           }
-          default: {
-            // skip merging if there are complex intermediate instructions
-            resetCurrentScope(i);
-          }
+          break;
         }
-      } else {
-        if (
-          currentScope !== null &&
-          canMergeScopes(currentScope.scope, instr) &&
-          // If there are intermediate instructions, we can only merge the scopes
-          // if those intermediate instructions are all used by the second scope.
-          // if not, merging them would make those values unavailable to subsequent
-          // code by moving them inside a different block scope in the output.
-          areLValuesLastUsedByScope(instr.scope, lvalues, this.lastUsage)
-        ) {
-          const intermediateInstructions = block.slice(currentScope.to, i);
-          currentScope.scope.scope.range.end = makeInstructionId(
-            Math.max(currentScope.scope.scope.range.end, instr.scope.range.end)
+        case "scope": {
+          if (
+            current !== null &&
+            canMergeScopes(current.scope, instr) &&
+            areLValuesLastUsedByScope(
+              instr.scope,
+              current.lvalues,
+              this.lastUsage
+            )
+          ) {
+            // The current and next scopes can merge!
+            log(
+              `Can merge scope @${current.scope.scope.id} with @${instr.scope.id}`
+            );
+            // Update the merged scope's range
+            current.scope.scope.range.end = makeInstructionId(
+              Math.max(current.scope.scope.range.end, instr.scope.range.end)
+            );
+            // Add declarations
+            for (const [key, value] of instr.scope.declarations) {
+              current.scope.scope.declarations.set(key, value);
+            }
+            // Then prune declarations - this removes declarations from the earlier
+            // scope that are last-used at or before the newly merged subsequent scope
+            updateScopeDeclarations(current.scope.scope, this.lastUsage);
+            current.to = i + 1;
+            // We already checked that intermediate values were used at-or-before the merged
+            // scoped, so we can reset
+            current.lvalues.clear();
+
+            if (!scopeAlwaysInvalidatesOnDependencyChanges(instr)) {
+              // The subsequent scope that we just merged isn't guaranteed to invalidate if its
+              // inputs change, so it is not a candidate for future merging
+              log(
+                `  but scope @${instr.scope.id} doesnt guaranteed invalidate so it cannot merge further`
+              );
+              reset();
+            }
+          } else {
+            // No previous scope, or the scope cannot merge
+            if (current !== null) {
+              // Reset if necessary
+              log(
+                `Reset scope @${current.scope.scope.id}, not mergeable with subsequent scope @${instr.scope.id}`
+              );
+              reset();
+            }
+            // Only set a new merge candidate if the scope is guaranteed to invalidate on changes
+            if (scopeAlwaysInvalidatesOnDependencyChanges(instr)) {
+              current = {
+                scope: instr,
+                from: i,
+                to: i + 1,
+                lvalues: new Set(),
+              };
+            } else {
+              log(
+                `scope @${instr.scope.id} doesnt guaranteed invalidate so it cannot merge further`
+              );
+            }
+          }
+          break;
+        }
+        default: {
+          assertExhaustive(
+            instr,
+            `Unexpected instruction kind '${(instr as any).kind}'`
           );
-          currentScope.scope.instructions.push(...intermediateInstructions);
-          currentScope.scope.instructions.push(...instr.instructions);
-          for (const [key, value] of instr.scope.declarations) {
-            currentScope.scope.scope.declarations.set(key, value);
-          }
-          if (nextInstructions === null) {
-            nextInstructions = block.slice(0, currentScope.from);
-            nextInstructions.push(currentScope.scope);
-            currentScope.merged = true;
-          }
-          currentScope.to = i + 1;
-          lvalues.clear();
-        } else {
-          resetCurrentScope(i - 1); // don't include the current scope
-          currentScope = { scope: instr, from: i, to: i + 1, merged: false };
-          lvalues.clear();
         }
       }
     }
-    if (currentScope !== null && nextInstructions !== null) {
-      nextInstructions.push(...block.slice(currentScope.to, block.length));
+    if (current !== null) {
+      reset();
+    }
+    if (merged.length) {
+      log(`merged ${merged.length} scopes:`);
+      for (const entry of merged) {
+        log(
+          printReactiveScopeSummary(entry.scope.scope) +
+            ` from=${entry.from} to=${entry.to}`
+        );
+      }
     }
 
-    if (nextInstructions !== null) {
-      for (const instr of nextInstructions) {
+    // Pass 3: optional: if scopes can be merged, merge them and update the block
+    if (merged.length === 0) {
+      // Nothing merged, nothing to do!
+      return;
+    }
+    const nextInstructions = [];
+    let index = 0;
+    for (const entry of merged) {
+      if (index < entry.from) {
+        nextInstructions.push(...block.slice(index, entry.from));
+        index = entry.from;
+      }
+      const mergedScope = block[entry.from]!;
+      CompilerError.invariant(mergedScope.kind === "scope", {
+        loc: null,
+        reason:
+          "MergeConsecutiveScopes: Expected scope starting index to be a scope",
+        description: null,
+        suggestions: null,
+      });
+      nextInstructions.push(mergedScope);
+      index++;
+      while (index < entry.to) {
+        const instr = block[index++]!;
         if (instr.kind === "scope") {
-          updateScopeDeclarations(instr.scope, this.lastUsage);
+          mergedScope.instructions.push(...instr.instructions);
+        } else {
+          mergedScope.instructions.push(instr);
         }
       }
-
-      block.length = 0;
-      block.push(...nextInstructions);
     }
+    while (index < block.length) {
+      nextInstructions.push(block[index++]!);
+    }
+    block.length = 0;
+    block.push(...nextInstructions);
   }
 }
 
@@ -247,6 +314,7 @@ function areLValuesLastUsedByScope(
   for (const lvalue of lvalues) {
     const lastUsedAt = lastUsage.get(lvalue)!;
     if (lastUsedAt >= scope.range.end) {
+      log(`  lvalue ${lvalue} used after scope @${scope.id}, cannot merge`);
       return false;
     }
   }
@@ -256,10 +324,12 @@ function areLValuesLastUsedByScope(
 function canMergeScopes(a: ReactiveScopeBlock, b: ReactiveScopeBlock): boolean {
   // Don't merge scopes with reassignments
   if (a.scope.reassignments.size !== 0 || b.scope.reassignments.size !== 0) {
+    log(`  cannot merge, has reassignments`);
     return false;
   }
   // Merge scopes whose dependencies are identical
   if (areEqualDependencies(a.scope.dependencies, b.scope.dependencies)) {
+    log(`  canMergeScopes: dependencies are equal`);
     return true;
   }
   // Merge scopes where the outputs of the previous scope are the inputs
@@ -278,11 +348,14 @@ function canMergeScopes(a: ReactiveScopeBlock, b: ReactiveScopeBlock): boolean {
         }))
       ),
       b.scope.dependencies
-    ) &&
-    scopeAlwaysInvalidatesOnDependencyChanges(a)
+    )
   ) {
+    log(`  outputs of prev are input to current`);
     return true;
   }
+  log(`  cannot merge scopes:`);
+  log(`  ${printReactiveScopeSummary(a.scope)}`);
+  log(`  ${printReactiveScopeSummary(b.scope)}`);
   return false;
 }
 
@@ -332,6 +405,13 @@ class DeclarationTypeVisitor extends ReactiveFunctionVisitor<void> {
     this.scope = scope;
   }
 
+  override visitScope(scope: ReactiveScopeBlock, state: void): void {
+    if (scope.scope.id !== this.scope.id) {
+      return;
+    }
+    this.traverseScope(scope, state);
+  }
+
   override visitInstruction(
     instruction: ReactiveInstruction,
     state: void
@@ -343,6 +423,14 @@ class DeclarationTypeVisitor extends ReactiveFunctionVisitor<void> {
     ) {
       // no lvalue or this instruction isn't directly constructing a
       // scope output value, skip
+      log(
+        `    skip instruction lvalue=${
+          instruction.lvalue?.identifier.id
+        } declaration?=${
+          instruction.lvalue != null &&
+          this.scope.declarations.has(instruction.lvalue.identifier.id)
+        } scope=${printReactiveScopeSummary(this.scope)}`
+      );
       return;
     }
     switch (instruction.value.kind) {
