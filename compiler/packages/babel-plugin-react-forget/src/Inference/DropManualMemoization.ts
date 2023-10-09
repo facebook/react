@@ -7,7 +7,7 @@
 
 import { Effect, HIRFunction, getHookKind } from "../HIR";
 
-export default function (func: HIRFunction): void {
+export function dropManualMemoization(func: HIRFunction): void {
   for (const [_, block] of func.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {

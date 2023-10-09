@@ -22,7 +22,7 @@ import { Environment, PartialEnvironmentConfig } from "../HIR/Environment";
 import { findContextIdentifiers } from "../HIR/FindContextIdentifiers";
 import {
   analyseFunctions,
-  dropMemoCalls,
+  dropManualMemoization,
   inferMutableRanges,
   inferReferenceEffects,
   inlineUseMemo,
@@ -146,8 +146,8 @@ function* runWithEnvironment(
     });
   }
 
-  dropMemoCalls(hir);
-  yield log({ kind: "hir", name: "DropMemoCalls", value: hir });
+  dropManualMemoization(hir);
+  yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
 
   analyseFunctions(hir);
   yield log({ kind: "hir", name: "AnalyseFunctions", value: hir });

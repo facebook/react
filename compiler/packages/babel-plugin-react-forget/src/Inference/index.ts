@@ -6,7 +6,7 @@
  */
 
 export { default as analyseFunctions } from "./AnalyseFunctions";
-export { default as dropMemoCalls } from "./DropMemoCalls";
+export { dropManualMemoization } from "./DropManualMemoization";
 export { inferMutableRanges } from "./InferMutableRanges";
 export { default as inferReferenceEffects } from "./InferReferenceEffects";
 export { inlineUseMemo } from "./InlineUseMemo";
