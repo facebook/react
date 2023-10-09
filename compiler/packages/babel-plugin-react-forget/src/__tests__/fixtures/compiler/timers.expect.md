@@ -35,7 +35,8 @@ function Component(props) {
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = (
       <div>
-        rendering took {time} at {now}
+        rendering took
+        {time} at {now}
       </div>
     );
     $[1] = t1;

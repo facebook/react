@@ -21,63 +21,48 @@ function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(9);
+  const $ = useMemoCache(6);
   let t1;
   let T2;
-  let t3;
   let t0;
-  let t4;
-  let T5;
-  let t6;
+  let T3;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const count = new MaybeMutable();
 
-    T5 = View;
-    t6 = "\n      ";
+    T3 = View;
     T2 = View;
-    t3 = "\n        ";
-    if ($[7] === Symbol.for("react.memo_cache_sentinel")) {
+    if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
       t0 = <span>Text</span>;
-      $[7] = t0;
+      $[4] = t0;
     } else {
-      t0 = $[7];
+      t0 = $[4];
     }
-    t4 = "\n        ";
     t1 = maybeMutate(count);
     $[0] = t1;
     $[1] = T2;
-    $[2] = t3;
-    $[3] = t0;
-    $[4] = t4;
-    $[5] = T5;
-    $[6] = t6;
+    $[2] = t0;
+    $[3] = T3;
   } else {
     t1 = $[0];
     T2 = $[1];
-    t3 = $[2];
-    t0 = $[3];
-    t4 = $[4];
-    T5 = $[5];
-    t6 = $[6];
+    t0 = $[2];
+    T3 = $[3];
   }
-  let t7;
-  if ($[8] === Symbol.for("react.memo_cache_sentinel")) {
-    t7 = (
-      <T5>
-        {t6}
+  let t4;
+  if ($[5] === Symbol.for("react.memo_cache_sentinel")) {
+    t4 = (
+      <T3>
         <T2>
-          {t3}
           {t0}
-          {t4}
           <span>{t1}</span>
         </T2>
-      </T5>
+      </T3>
     );
-    $[8] = t7;
+    $[5] = t4;
   } else {
-    t7 = $[8];
+    t4 = $[5];
   }
-  return t7;
+  return t4;
 }
 
 ```

@@ -78,6 +78,7 @@ function Component() {
   }
   return t3;
 }
+
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ value: 42 }],

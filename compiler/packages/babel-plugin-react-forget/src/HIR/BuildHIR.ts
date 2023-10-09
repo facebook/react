@@ -2829,9 +2829,13 @@ function lowerJsxElement(
       return lowerExpressionToTemporary(builder, expression);
     }
   } else if (exprPath.isJSXText()) {
+    const text = trimJsxText(exprPath.node.value);
+    if (text === null) {
+      return null;
+    }
     const place = lowerValueToTemporary(builder, {
       kind: "JSXText",
-      value: exprPath.node.value,
+      value: text,
       loc: exprLoc,
     });
     return place;
@@ -2848,6 +2852,67 @@ function lowerJsxElement(
       loc: exprLoc,
     });
     return place;
+  }
+}
+
+/**
+ * Trims whitespace according to the JSX spec:
+ * > JSX removes whitespace at the beginning and ending of a line.
+ * > It also removes blank lines. New lines adjacent to tags are removed;
+ * > new lines that occur in the middle of string literals are condensed
+ * > into a single space.
+ *
+ * From https://legacy.reactjs.org/docs/jsx-in-depth.html#string-literals-1
+ *
+ * Implementation adapted from Babel:
+ * https://github.com/babel/babel/blob/54d30f206057be64b496d2da1ec8c49d244ba4e4/packages/babel-types/src/utils/react/cleanJSXElementLiteralChild.ts#L5
+ */
+function trimJsxText(original: string): string | null {
+  const lines = original.split(/\r\n|\n|\r/);
+
+  let lastNonEmptyLine = 0;
+
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].match(/[^ \t]/)) {
+      lastNonEmptyLine = i;
+    }
+  }
+
+  let str = "";
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    const isFirstLine = i === 0;
+    const isLastLine = i === lines.length - 1;
+    const isLastNonEmptyLine = i === lastNonEmptyLine;
+
+    // replace rendered whitespace tabs with spaces
+    let trimmedLine = line.replace(/\t/g, " ");
+
+    // trim whitespace touching a newline
+    if (!isFirstLine) {
+      trimmedLine = trimmedLine.replace(/^[ ]+/, "");
+    }
+
+    // trim whitespace touching an endline
+    if (!isLastLine) {
+      trimmedLine = trimmedLine.replace(/[ ]+$/, "");
+    }
+
+    if (trimmedLine) {
+      if (!isLastNonEmptyLine) {
+        trimmedLine += " ";
+      }
+
+      str += trimmedLine;
+    }
+  }
+
+  if (str.length !== 0) {
+    return str;
+  } else {
+    return null;
   }
 }
 
