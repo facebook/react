@@ -128,8 +128,10 @@ if (__DEV__) {
     new Set([nonExtensibleObject]);
     /* eslint-enable no-new */
   } catch (e) {
-    // TODO: Consider warning about bad polyfills
     hasBadMapPolyfill = true;
+    console.warn(
+      'Detected a bad Map/Set polyfill. Consider using a reliable polyfill or updating the current one.',
+    );
   }
 }
 
