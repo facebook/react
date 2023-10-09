@@ -15,7 +15,12 @@ function component(a) {
 
 ```javascript
 function component(a) {
+  let t23;
+
   mutate(a);
+  t23 = undefined;
+  const x = t23;
+  return x;
 }
 
 ```

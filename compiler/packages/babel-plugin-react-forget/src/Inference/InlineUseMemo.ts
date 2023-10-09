@@ -20,6 +20,7 @@ import {
   InstructionKind,
   LabelTerminal,
   Place,
+  getHookKind,
   makeInstructionId,
   makeType,
   reversePostorderBlocks,
@@ -61,8 +62,6 @@ import { retainWhere } from "../Utils/utils";
 export function inlineUseMemo(fn: HIRFunction): void {
   // Track all function expressions in case they appear as the argument to a useMemo
   const functions = new Map<IdentifierId, FunctionExpression>();
-  // Track all references to `useMemo`
-  const useMemoGlobals = new Set<IdentifierId>();
   // Identifiers (lvalues) for known useMemo functions, so that we can prune them
   // at the end of the pass
   const useMemoFunctions = new Set<IdentifierId>();
@@ -77,103 +76,100 @@ export function inlineUseMemo(fn: HIRFunction): void {
     for (let ii = 0; ii < block.instructions.length; ii++) {
       const instr = block.instructions[ii]!;
       switch (instr.value.kind) {
-        case "LoadGlobal": {
-          if (instr.value.name === "useMemo") {
-            useMemoGlobals.add(instr.lvalue.identifier.id);
-          }
-          break;
-        }
         case "FunctionExpression": {
           functions.set(instr.lvalue.identifier.id, instr.value);
           break;
         }
+        case "MethodCall":
         case "CallExpression": {
-          if (useMemoGlobals.has(instr.value.callee.identifier.id)) {
-            const [lambda] = instr.value.args;
-            if (lambda.kind === "Spread") {
-              continue;
-            }
-            const body = functions.get(lambda.identifier.id);
-            if (body === undefined) {
-              // Allow passing a named function to useMemo, eg `useMemo(someImportedFunction, [])`
-              continue;
-            }
-
-            if (body.loweredFunc.func.params.length > 0) {
-              CompilerError.invalidReact({
-                reason: "useMemo callbacks may not accept any arguments",
-                description: null,
-                loc: body.loc,
-                suggestions: null,
-              });
-            }
-
-            if (
-              body.loweredFunc.func.async ||
-              body.loweredFunc.func.generator
-            ) {
-              CompilerError.invalidReact({
-                reason:
-                  "useMemo callbacks may not be async or generator functions",
-                description: null,
-                loc: body.loc,
-                suggestions: null,
-              });
-            }
-
-            // We know this function is used for useMemo and can prune it later
-            useMemoFunctions.add(lambda.identifier.id);
-
-            // Create a new block which will contain code following the useMemo call
-            const continuationBlockId = fn.env.nextBlockId;
-            const continuationBlock: BasicBlock = {
-              id: continuationBlockId,
-              instructions: block.instructions.slice(ii + 1),
-              kind: block.kind,
-              phis: new Set(),
-              preds: new Set(),
-              terminal: block.terminal,
-            };
-            fn.body.blocks.set(continuationBlockId, continuationBlock);
-
-            // Trim the original block to contain instructions up to (but not including)
-            // the useMemo
-            block.instructions.length = ii;
-
-            // To account for complex control flow within the lambda, we treat the lambda
-            // as if it were a single labeled statement, and replace all returns with gotos
-            // to the label fallthrough.
-            const newTerminal: LabelTerminal = {
-              block: body.loweredFunc.func.body.entry,
-              id: makeInstructionId(0),
-              kind: "label",
-              fallthrough: continuationBlockId,
-              loc: block.terminal.loc,
-            };
-            block.terminal = newTerminal;
-
-            // We store the result in the useMemo temporary
-            const result = instr.lvalue;
-
-            // Declare the useMemo temporary
-            declareTemporary(fn.env, block, result);
-
-            // Promote the temporary with a name as we require this to persist
-            promoteTemporary(result.identifier);
-
-            // Rewrite blocks from the lambda to replace any `return` with a
-            // store to the result and `goto` the continuation block
-            for (const [id, block] of body.loweredFunc.func.body.blocks) {
-              block.preds.clear();
-              rewriteBlock(fn.env, block, continuationBlockId, result);
-              fn.body.blocks.set(id, block);
-            }
-
-            // Ensure we visit the continuation block, since there may have been
-            // sequential useMemos that need to be visited.
-            queue.push(continuationBlock);
-            continue queue;
+          const hookKind =
+            instr.value.kind === "CallExpression"
+              ? getHookKind(fn.env, instr.value.callee.identifier)
+              : getHookKind(fn.env, instr.value.property.identifier);
+          if (hookKind !== "useMemo") {
+            continue;
           }
+          const [lambda] = instr.value.args;
+          if (lambda.kind === "Spread") {
+            continue;
+          }
+          const body = functions.get(lambda.identifier.id);
+          if (body === undefined) {
+            // Allow passing a named function to useMemo, eg `useMemo(someImportedFunction, [])`
+            continue;
+          }
+
+          if (body.loweredFunc.func.params.length > 0) {
+            CompilerError.invalidReact({
+              reason: "useMemo callbacks may not accept any arguments",
+              description: null,
+              loc: body.loc,
+              suggestions: null,
+            });
+          }
+
+          if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
+            CompilerError.invalidReact({
+              reason:
+                "useMemo callbacks may not be async or generator functions",
+              description: null,
+              loc: body.loc,
+              suggestions: null,
+            });
+          }
+
+          // We know this function is used for useMemo and can prune it later
+          useMemoFunctions.add(lambda.identifier.id);
+
+          // Create a new block which will contain code following the useMemo call
+          const continuationBlockId = fn.env.nextBlockId;
+          const continuationBlock: BasicBlock = {
+            id: continuationBlockId,
+            instructions: block.instructions.slice(ii + 1),
+            kind: block.kind,
+            phis: new Set(),
+            preds: new Set(),
+            terminal: block.terminal,
+          };
+          fn.body.blocks.set(continuationBlockId, continuationBlock);
+
+          // Trim the original block to contain instructions up to (but not including)
+          // the useMemo
+          block.instructions.length = ii;
+
+          // To account for complex control flow within the lambda, we treat the lambda
+          // as if it were a single labeled statement, and replace all returns with gotos
+          // to the label fallthrough.
+          const newTerminal: LabelTerminal = {
+            block: body.loweredFunc.func.body.entry,
+            id: makeInstructionId(0),
+            kind: "label",
+            fallthrough: continuationBlockId,
+            loc: block.terminal.loc,
+          };
+          block.terminal = newTerminal;
+
+          // We store the result in the useMemo temporary
+          const result = instr.lvalue;
+
+          // Declare the useMemo temporary
+          declareTemporary(fn.env, block, result);
+
+          // Promote the temporary with a name as we require this to persist
+          promoteTemporary(result.identifier);
+
+          // Rewrite blocks from the lambda to replace any `return` with a
+          // store to the result and `goto` the continuation block
+          for (const [id, block] of body.loweredFunc.func.body.blocks) {
+            block.preds.clear();
+            rewriteBlock(fn.env, block, continuationBlockId, result);
+            fn.body.blocks.set(id, block);
+          }
+
+          // Ensure we visit the continuation block, since there may have been
+          // sequential useMemos that need to be visited.
+          queue.push(continuationBlock);
+          continue queue;
         }
       }
     }

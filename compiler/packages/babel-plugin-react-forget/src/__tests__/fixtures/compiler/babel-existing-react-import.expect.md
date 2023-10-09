@@ -32,6 +32,7 @@ import {
 function Component(props) {
   const $ = useMemoCache(4);
   const [x] = useState(0);
+  let t35;
   const c_0 = $[0] !== x;
   let t0;
   if (c_0) {
@@ -41,8 +42,8 @@ function Component(props) {
   } else {
     t0 = $[1];
   }
-  const t15 = t0;
-  const expensiveNumber = t15;
+  t35 = t0;
+  const expensiveNumber = t35;
   const c_2 = $[2] !== expensiveNumber;
   let t1;
   if (c_2) {
@@ -58,6 +59,7 @@ function Component(props) {
 function Component2(props) {
   const $ = useMemoCache(4);
   const [x] = useState(0);
+  let t35;
   const c_0 = $[0] !== x;
   let t0;
   if (c_0) {
@@ -67,8 +69,8 @@ function Component2(props) {
   } else {
     t0 = $[1];
   }
-  const t15 = t0;
-  const expensiveNumber = t15;
+  t35 = t0;
+  const expensiveNumber = t35;
   const c_2 = $[2] !== expensiveNumber;
   let t1;
   if (c_2) {

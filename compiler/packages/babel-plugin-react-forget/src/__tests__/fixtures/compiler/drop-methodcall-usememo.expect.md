@@ -27,30 +27,20 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import * as React from "react";
 
 function Component(props) {
-  const $ = useMemoCache(4);
+  const $ = useMemoCache(2);
+  let t42;
   const c_0 = $[0] !== props.value;
-  let t0;
+  let x;
   if (c_0) {
-    t0 = () => {
-      const x = [];
-      x.push(props.value);
-      return x;
-    };
+    x = [];
+    x.push(props.value);
     $[0] = props.value;
-    $[1] = t0;
+    $[1] = x;
   } else {
-    t0 = $[1];
+    x = $[1];
   }
-  const c_2 = $[2] !== t0;
-  let t1;
-  if (c_2) {
-    t1 = t0();
-    $[2] = t0;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
-  const x_0 = t1;
+  t42 = x;
+  const x_0 = t42;
   return x_0;
 }
 

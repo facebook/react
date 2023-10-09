@@ -24,11 +24,12 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function App(t25) {
+function App(t23) {
   const $ = useMemoCache(2);
-  const { text, hasDeps } = t25;
+  const { text, hasDeps } = t23;
 
   hasDeps ? null : [text];
+  let t44;
   const c_0 = $[0] !== text;
   let t0;
   if (c_0) {
@@ -38,8 +39,8 @@ function App(t25) {
   } else {
     t0 = $[1];
   }
-  const t18 = t0;
-  const resolvedText = t18;
+  t44 = t0;
+  const resolvedText = t44;
   return resolvedText;
 }
 

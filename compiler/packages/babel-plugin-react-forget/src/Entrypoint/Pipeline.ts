@@ -113,9 +113,6 @@ function* runWithEnvironment(
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
 
-  inlineUseMemo(hir);
-  yield log({ kind: "hir", name: "RewriteUseMemo", value: hir });
-
   mergeConsecutiveBlocks(hir);
   yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });
 
@@ -145,6 +142,9 @@ function* runWithEnvironment(
       value: conditionalHooksResult.debug(),
     });
   }
+
+  inlineUseMemo(hir);
+  yield log({ kind: "hir", name: "InlineUseMemo", value: hir });
 
   dropManualMemoization(hir);
   yield log({ kind: "hir", name: "DropManualMemoization", value: hir });

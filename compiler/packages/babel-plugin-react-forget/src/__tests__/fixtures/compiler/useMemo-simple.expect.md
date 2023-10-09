@@ -15,6 +15,7 @@ function component(a) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a) {
   const $ = useMemoCache(4);
+  let t24;
   const c_0 = $[0] !== a;
   let t0;
   if (c_0) {
@@ -24,8 +25,8 @@ function component(a) {
   } else {
     t0 = $[1];
   }
-  const t9 = t0;
-  const x = t9;
+  t24 = t0;
+  const x = t24;
   const c_2 = $[2] !== x;
   let t1;
   if (c_2) {
