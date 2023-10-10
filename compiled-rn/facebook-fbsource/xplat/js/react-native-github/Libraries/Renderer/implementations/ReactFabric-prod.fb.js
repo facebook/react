@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<35a02eea4da4b468c9397d48533b560b>>
+ * @generated SignedSource<<27f98703fa1feb0efea3c70de170400c>>
  */
 
 "use strict";
@@ -1320,6 +1320,8 @@ var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   useMicrotasksForSchedulingInFabric =
     dynamicFlags.useMicrotasksForSchedulingInFabric,
+  passChildrenWhenCloningPersistedNodes =
+    dynamicFlags.passChildrenWhenCloningPersistedNodes,
   scheduleCallback$2 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
@@ -5822,16 +5824,22 @@ function appendAllChildrenToContainer(
       needsVisibilityToggle &&
         isHidden &&
         (instance = cloneHiddenInstance(instance));
-      appendChildNodeToSet(containerChildSet, instance.node);
+      var childSet = containerChildSet;
+      passChildrenWhenCloningPersistedNodes
+        ? childSet.push(instance.node)
+        : appendChildNodeToSet(childSet, instance.node);
     } else if (6 === node.tag) {
       instance = node.stateNode;
       if (needsVisibilityToggle && isHidden)
         throw Error("Not yet implemented.");
-      appendChildNodeToSet(containerChildSet, instance.node);
+      childSet = containerChildSet;
+      passChildrenWhenCloningPersistedNodes
+        ? childSet.push(instance.node)
+        : appendChildNodeToSet(childSet, instance.node);
     } else if (4 !== node.tag)
       if (22 === node.tag && null !== node.memoizedState)
-        (instance = node.child),
-          null !== instance && (instance.return = node),
+        (childSet = node.child),
+          null !== childSet && (childSet.return = node),
           appendAllChildrenToContainer(
             containerChildSet,
             node,
@@ -5859,7 +5867,9 @@ function updateHostContainer(current, workInProgress) {
   var portalOrRoot = workInProgress.stateNode;
   if (!hadNoMutationsEffects(current, workInProgress)) {
     current = portalOrRoot.containerInfo;
-    var newChildSet = createChildNodeSet(current);
+    var newChildSet = passChildrenWhenCloningPersistedNodes
+      ? []
+      : createChildNodeSet();
     appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1);
     portalOrRoot.pendingChildren = newChildSet;
     workInProgress.flags |= 4;
@@ -5975,6 +5985,13 @@ function completeWork(current, workInProgress, renderLanes) {
         if (childrenUnchanged && oldProps === newProps)
           workInProgress.stateNode = renderLanes;
         else {
+          var newChildSet = null;
+          !childrenUnchanged &&
+            passChildrenWhenCloningPersistedNodes &&
+            ((newChildSet = passChildrenWhenCloningPersistedNodes
+              ? []
+              : createChildNodeSet()),
+            appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1));
           b: {
             oldProps = diffProperties(
               null,
@@ -5993,7 +6010,15 @@ function completeWork(current, workInProgress, renderLanes) {
               }
             else
               newProps =
-                null !== oldProps
+                null != newChildSet
+                  ? null !== oldProps
+                    ? cloneNodeWithNewChildrenAndProps(
+                        newProps,
+                        newChildSet,
+                        oldProps
+                      )
+                    : cloneNodeWithNewChildren(newProps, newChildSet)
+                  : null !== oldProps
                   ? cloneNodeWithNewChildrenAndProps(newProps, oldProps)
                   : cloneNodeWithNewChildren(newProps);
             newProps = { node: newProps, canonical: renderLanes.canonical };
@@ -6003,7 +6028,8 @@ function completeWork(current, workInProgress, renderLanes) {
             : ((workInProgress.stateNode = newProps),
               childrenUnchanged
                 ? (workInProgress.flags |= 4)
-                : appendAllChildren(newProps, workInProgress, !1, !1));
+                : passChildrenWhenCloningPersistedNodes ||
+                  appendAllChildren(newProps, workInProgress, !1, !1));
         }
         current.ref !== workInProgress.ref && (workInProgress.flags |= 2097664);
       } else {
@@ -6019,7 +6045,7 @@ function completeWork(current, workInProgress, renderLanes) {
         current = nextReactTag;
         nextReactTag += 2;
         renderLanes = getViewConfigForType(renderLanes);
-        oldProps = diffProperties(
+        newChildSet = diffProperties(
           null,
           emptyObject$1,
           newProps,
@@ -6029,10 +6055,10 @@ function completeWork(current, workInProgress, renderLanes) {
           current,
           renderLanes.uiViewClassName,
           childrenUnchanged,
-          oldProps,
+          newChildSet,
           workInProgress
         );
-        oldProps = ReactNativePrivateInterface.createPublicInstance(
+        newChildSet = ReactNativePrivateInterface.createPublicInstance(
           current,
           renderLanes,
           workInProgress
@@ -6044,7 +6070,7 @@ function completeWork(current, workInProgress, renderLanes) {
             viewConfig: renderLanes,
             currentProps: newProps,
             internalInstanceHandle: workInProgress,
-            publicInstance: oldProps
+            publicInstance: newChildSet
           }
         };
         appendAllChildren(current, workInProgress, !1, !1);
@@ -6142,8 +6168,8 @@ function completeWork(current, workInProgress, renderLanes) {
       if (null === childrenUnchanged)
         return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      oldProps = childrenUnchanged.rendering;
-      if (null === oldProps)
+      newChildSet = childrenUnchanged.rendering;
+      if (null === newChildSet)
         if (newProps) cutOffTailIfNeeded(childrenUnchanged, !1);
         else {
           if (
@@ -6151,11 +6177,11 @@ function completeWork(current, workInProgress, renderLanes) {
             (null !== current && 0 !== (current.flags & 128))
           )
             for (current = workInProgress.child; null !== current; ) {
-              oldProps = findFirstSuspended(current);
-              if (null !== oldProps) {
+              newChildSet = findFirstSuspended(current);
+              if (null !== newChildSet) {
                 workInProgress.flags |= 128;
                 cutOffTailIfNeeded(childrenUnchanged, !1);
-                current = oldProps.updateQueue;
+                current = newChildSet.updateQueue;
                 workInProgress.updateQueue = current;
                 scheduleRetryEffect(workInProgress, current);
                 workInProgress.subtreeFlags = 0;
@@ -6180,7 +6206,7 @@ function completeWork(current, workInProgress, renderLanes) {
         }
       else {
         if (!newProps)
-          if (((current = findFirstSuspended(oldProps)), null !== current)) {
+          if (((current = findFirstSuspended(newChildSet)), null !== current)) {
             if (
               ((workInProgress.flags |= 128),
               (newProps = !0),
@@ -6190,7 +6216,7 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(childrenUnchanged, !0),
               null === childrenUnchanged.tail &&
                 "hidden" === childrenUnchanged.tailMode &&
-                !oldProps.alternate)
+                !newChildSet.alternate)
             )
               return bubbleProperties(workInProgress), null;
           } else
@@ -6202,13 +6228,13 @@ function completeWork(current, workInProgress, renderLanes) {
               cutOffTailIfNeeded(childrenUnchanged, !1),
               (workInProgress.lanes = 8388608));
         childrenUnchanged.isBackwards
-          ? ((oldProps.sibling = workInProgress.child),
-            (workInProgress.child = oldProps))
+          ? ((newChildSet.sibling = workInProgress.child),
+            (workInProgress.child = newChildSet))
           : ((current = childrenUnchanged.last),
             null !== current
-              ? (current.sibling = oldProps)
-              : (workInProgress.child = oldProps),
-            (childrenUnchanged.last = oldProps));
+              ? (current.sibling = newChildSet)
+              : (workInProgress.child = newChildSet),
+            (childrenUnchanged.last = newChildSet));
       }
       if (null !== childrenUnchanged.tail)
         return (
@@ -6696,7 +6722,7 @@ function commitDeletionEffectsOnFiber(
     case 18:
       break;
     case 4:
-      createChildNodeSet(deletedFiber.stateNode.containerInfo);
+      passChildrenWhenCloningPersistedNodes || createChildNodeSet();
       recursivelyTraverseDeletionEffects(
         finishedRoot,
         nearestMountedAncestor,
@@ -9437,10 +9463,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1035 = {
+  devToolsConfig$jscomp$inline_1032 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-6367a5b9",
+    version: "18.3.0-canary-68bb52fc",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9456,11 +9482,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1277 = {
-  bundleType: devToolsConfig$jscomp$inline_1035.bundleType,
-  version: devToolsConfig$jscomp$inline_1035.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1035.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1035.rendererConfig,
+var internals$jscomp$inline_1274 = {
+  bundleType: devToolsConfig$jscomp$inline_1032.bundleType,
+  version: devToolsConfig$jscomp$inline_1032.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1032.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1032.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9476,26 +9502,26 @@ var internals$jscomp$inline_1277 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1035.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1032.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-6367a5b9"
+  reconcilerVersion: "18.3.0-canary-68bb52fc"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1278 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1275 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1278.isDisabled &&
-    hook$jscomp$inline_1278.supportsFiber
+    !hook$jscomp$inline_1275.isDisabled &&
+    hook$jscomp$inline_1275.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1278.inject(
-        internals$jscomp$inline_1277
+      (rendererID = hook$jscomp$inline_1275.inject(
+        internals$jscomp$inline_1274
       )),
-        (injectedHook = hook$jscomp$inline_1278);
+        (injectedHook = hook$jscomp$inline_1275);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

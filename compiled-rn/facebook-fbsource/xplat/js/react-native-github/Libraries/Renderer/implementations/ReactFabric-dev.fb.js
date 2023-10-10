@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d547d784dfd2ff8ab9a6adadb432b1cc>>
+ * @generated SignedSource<<f5489af768a0de079885e316e09faadd>>
  */
 
 'use strict';
@@ -3180,7 +3180,9 @@ var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   useMicrotasksForSchedulingInFabric =
-    dynamicFlags.useMicrotasksForSchedulingInFabric; // The rest of the flags are static for better dead code elimination.
+    dynamicFlags.useMicrotasksForSchedulingInFabric,
+  passChildrenWhenCloningPersistedNodes =
+    dynamicFlags.passChildrenWhenCloningPersistedNodes; // The rest of the flags are static for better dead code elimination.
 var enableSchedulingProfiler = true;
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
@@ -5007,9 +5009,8 @@ function cloneInstance(
   type,
   oldProps,
   newProps,
-  internalInstanceHandle,
   keepChildren,
-  recyclableInstance
+  newChildSet
 ) {
   var viewConfig = instance.canonical.viewConfig;
   var updatePayload = diff(oldProps, newProps, viewConfig.validAttributes); // TODO: If the event handlers have changed, we need to update the current props
@@ -5028,10 +5029,23 @@ function cloneInstance(
       return instance;
     }
   } else {
-    if (updatePayload !== null) {
-      clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+    // If passChildrenWhenCloningPersistedNodes is enabled, children will be non-null
+    if (newChildSet != null) {
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(
+          node,
+          newChildSet,
+          updatePayload
+        );
+      } else {
+        clone = cloneNodeWithNewChildren(node, newChildSet);
+      }
     } else {
-      clone = cloneNodeWithNewChildren(node);
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+      } else {
+        clone = cloneNodeWithNewChildren(node);
+      }
     }
   }
 
@@ -5040,7 +5054,7 @@ function cloneInstance(
     canonical: instance.canonical
   };
 }
-function cloneHiddenInstance(instance, type, props, internalInstanceHandle) {
+function cloneHiddenInstance(instance, type, props) {
   var viewConfig = instance.canonical.viewConfig;
   var node = instance.node;
   var updatePayload = create(
@@ -5056,19 +5070,29 @@ function cloneHiddenInstance(instance, type, props, internalInstanceHandle) {
     canonical: instance.canonical
   };
 }
-function cloneHiddenTextInstance(instance, text, internalInstanceHandle) {
+function cloneHiddenTextInstance(instance, text) {
   throw new Error("Not yet implemented.");
 }
-function createContainerChildSet(container) {
-  return createChildNodeSet(container);
+function createContainerChildSet() {
+  if (passChildrenWhenCloningPersistedNodes) {
+    return [];
+  } else {
+    return createChildNodeSet();
+  }
 }
 function appendChildToContainerChildSet(childSet, child) {
-  appendChildNodeToSet(childSet, child.node);
+  if (passChildrenWhenCloningPersistedNodes) {
+    childSet.push(child.node);
+  } else {
+    appendChildNodeToSet(childSet, child.node);
+  }
 }
 function finalizeContainerChildren(container, newChildren) {
   completeRoot(container, newChildren);
 }
-function replaceContainerChildren(container, newChildren) {}
+function replaceContainerChildren(container, newChildren) {
+  // Noop - children will be replaced in finalizeContainerChildren
+}
 function preloadInstance(type, props) {
   return true;
 }
@@ -18734,7 +18758,6 @@ function appendAllChildren(
     var _node = workInProgress.child;
 
     while (_node !== null) {
-      // eslint-disable-next-line no-labels
       if (_node.tag === HostComponent) {
         var instance = _node.stateNode;
 
@@ -18764,7 +18787,14 @@ function appendAllChildren(
           child.return = _node;
         }
 
-        appendAllChildren(parent, _node, true, true);
+        appendAllChildren(
+          parent,
+          _node,
+          /* needsVisibilityToggle */
+          true,
+          /* isHidden */
+          true
+        );
       } else if (_node.child !== null) {
         _node.child.return = _node;
         _node = _node.child;
@@ -18836,7 +18866,9 @@ function appendAllChildrenToContainer(
         appendAllChildrenToContainer(
           containerChildSet,
           node,
+          /* needsVisibilityToggle */
           _needsVisibilityToggle,
+          /* isHidden */
           true
         );
       } else if (node.child !== null) {
@@ -18874,9 +18906,16 @@ function updateHostContainer(current, workInProgress) {
     if (childrenUnchanged);
     else {
       var container = portalOrRoot.containerInfo;
-      var newChildSet = createContainerChildSet(container); // If children might have changed, we have to add them all to the set.
+      var newChildSet = createContainerChildSet(); // If children might have changed, we have to add them all to the set.
 
-      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
+      appendAllChildrenToContainer(
+        newChildSet,
+        workInProgress,
+        /* needsVisibilityToggle */
+        false,
+        /* isHidden */
+        false
+      );
       portalOrRoot.pendingChildren = newChildSet; // Schedule an update on the container to swap out the container.
 
       markUpdate(workInProgress);
@@ -18905,14 +18944,30 @@ function updateHostComponent(
       workInProgress.stateNode = currentInstance;
       return;
     }
+
     getHostContext();
+    var newChildSet = null;
+
+    if (!childrenUnchanged && passChildrenWhenCloningPersistedNodes) {
+      newChildSet = createContainerChildSet(); // If children might have changed, we have to add them all to the set.
+
+      appendAllChildrenToContainer(
+        newChildSet,
+        workInProgress,
+        /* needsVisibilityToggle */
+        false,
+        /* isHidden */
+        false
+      );
+    }
+
     var newInstance = cloneInstance(
       currentInstance,
       type,
       _oldProps,
       newProps,
-      workInProgress,
-      childrenUnchanged
+      childrenUnchanged,
+      newChildSet
     );
 
     if (newInstance === currentInstance) {
@@ -18920,7 +18975,7 @@ function updateHostComponent(
       // Note that this might release a previous clone.
       workInProgress.stateNode = currentInstance;
       return;
-    }
+    } // Certain renderers require commit-time effects for initial mount.
 
     workInProgress.stateNode = newInstance;
 
@@ -18929,9 +18984,16 @@ function updateHostComponent(
       // Even though we're not going to use it for anything.
       // Otherwise parents won't know that there are new children to propagate upwards.
       markUpdate(workInProgress);
-    } else {
+    } else if (!passChildrenWhenCloningPersistedNodes) {
       // If children might have changed, we have to add them all to the set.
-      appendAllChildren(newInstance, workInProgress, false, false);
+      appendAllChildren(
+        newInstance,
+        workInProgress,
+        /* needsVisibilityToggle */
+        false,
+        /* isHidden */
+        false
+      );
     }
   }
 } // This function must be called at the very end of the complete phase, because
@@ -19399,7 +19461,8 @@ function completeWork(current, workInProgress, renderLanes) {
             _rootContainerInstance,
             _currentHostContext,
             workInProgress
-          );
+          ); // TODO: For persistent renderers, we should pass children as part
+          // of the initial instance creation
 
           appendAllChildren(_instance3, workInProgress, false, false);
           workInProgress.stateNode = _instance3; // Certain renderers require commit-time effects for initial mount.
@@ -21092,9 +21155,7 @@ function detachFiberAfterEffects(fiber) {
 }
 
 function emptyPortalContainer(current) {
-  var portal = current.stateNode;
-  var containerInfo = portal.containerInfo;
-  createContainerChildSet(containerInfo);
+  createContainerChildSet();
 }
 
 function commitPlacement(finishedWork) {
@@ -21167,7 +21228,7 @@ function commitDeletionEffectsOnFiber(
 
     case HostPortal: {
       {
-        emptyPortalContainer(deletedFiber);
+        emptyPortalContainer();
         recursivelyTraverseDeletionEffects(
           finishedRoot,
           nearestMountedAncestor,
@@ -27063,7 +27124,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-112791ea";
+var ReactVersion = "18.3.0-canary-4b68b914";
 
 function createPortal$1(
   children,

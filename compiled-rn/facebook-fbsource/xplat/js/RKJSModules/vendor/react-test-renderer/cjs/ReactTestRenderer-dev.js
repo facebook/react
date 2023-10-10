@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<99f1fded76af1fea6984fd8b08571351>>
+ * @generated SignedSource<<73b93e8e6858b35c538fb675ac42495a>>
  */
 
 'use strict';
@@ -16335,7 +16335,8 @@ function completeWork(current, workInProgress, renderLanes) {
             _rootContainerInstance,
             _currentHostContext,
             workInProgress
-          );
+          ); // TODO: For persistent renderers, we should pass children as part
+          // of the initial instance creation
 
           appendAllChildren(_instance3, workInProgress);
           workInProgress.stateNode = _instance3; // Certain renderers require commit-time effects for initial mount.
@@ -24772,7 +24773,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-dddfe6882-20231005";
+var ReactVersion = "18.3.0-canary-151e75a12-20231010";
 
 // Might add PROFILE later.
 
