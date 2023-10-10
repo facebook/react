@@ -34,21 +34,27 @@ import {
 import { eliminateRedundantPhi } from "../SSA";
 
 /**
- * Applies constant propagation and constant folding to the given function.
- * Note that because HIR operands are always a Place, constants cannot be directly
- * propagated into the HIR itself (the closest option would be to copy constants to
- * new temporaries just before each use, and update usage sites to reference those
- * new temporaries).
+ * Applies constant propagation/folding to the given function. The approach is
+ * [Sparse Conditional Constant Propagation](https://en.wikipedia.org/wiki/Sparse_conditional_constant_propagation):
+ * we use abstract interpretation to record known constant values for identifiers,
+ * with lack of a value indicating that the identifier does not have a
+ * known constant value.
  *
- * Instead this pass implements constant folding, in which constant values are
- * propagated internally to the pass and subsequent operations are removed/folded where
- * possible.
+ * Instructions which can be compile-time evaluated *and* whose operands are known constants
+ * are replaced with the resulting constant value. For example a BinaryExpression
+ * where the left value is known to be `1` and the right value is known to be `2`
+ * can be replaced with a `Constant 3` instruction.
  *
- * Note that this pass may prune control flow blocks that are unreachable, for example
- * a consequent or alternate branch if an `if` test is provably truthy or falsey.
- * If (and only if) terminals change, the pass re-runs various stages to ensure the
- * CFG is in minimal form. This means instruction ids *may* change as a result of this
- * pass.
+ * This pass also exploits the use of SSA form, tracking the constant values of
+ * local variables. For example, in `let x = 4; let y = x + 1` we know that
+ * `x = 4` in the binary expression and can replace the binary expression with
+ * `Constant 5`.
+ *
+ * This pass also visits conditionals (currently only IfTerminal) and can prune
+ * unreachable branches when the condition is a known truthy/falsey constant. The
+ * pass uses fixpoint iteration, looping until no additional updates can be
+ * performed. This allows the compiler to find cases where once one conditional is pruned,
+ * other values become constant, allowing subsequent conditionals to be pruned and so on.
  */
 export function constantPropagation(fn: HIRFunction): void {
   const constants: Constants = new Map();
