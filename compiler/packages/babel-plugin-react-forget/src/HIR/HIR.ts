@@ -692,7 +692,7 @@ export type InstructionValue =
       value: number | boolean | string | null | undefined;
       loc: SourceLocation;
     }
-  | { kind: "JSXText"; value: string; loc: SourceLocation }
+  | JSXText
   | {
       kind: "BinaryExpression";
       operator: t.BinaryExpression["operator"];
@@ -888,6 +888,8 @@ export type Primitive = {
   value: number | boolean | string | null | undefined;
   loc: SourceLocation;
 };
+
+export type JSXText = { kind: "JSXText"; value: string; loc: SourceLocation };
 
 export type LoadGlobal = {
   kind: "LoadGlobal";
