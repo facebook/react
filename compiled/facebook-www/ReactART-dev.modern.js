@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-55737203";
+var ReactVersion = "18.3.0-www-modern-612d960e";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -18414,7 +18414,8 @@ function completeWork(current, workInProgress, renderLanes) {
         } else {
           getRootHostContainer();
 
-          var _instance3 = createInstance(_type2, newProps);
+          var _instance3 = createInstance(_type2, newProps); // TODO: For persistent renderers, we should pass children as part
+          // of the initial instance creation
 
           appendAllChildren(_instance3, workInProgress);
           workInProgress.stateNode = _instance3; // Certain renderers require commit-time effects for initial mount.

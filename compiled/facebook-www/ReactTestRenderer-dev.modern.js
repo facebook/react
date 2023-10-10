@@ -16764,7 +16764,8 @@ function completeWork(current, workInProgress, renderLanes) {
             _rootContainerInstance,
             _currentHostContext,
             workInProgress
-          );
+          ); // TODO: For persistent renderers, we should pass children as part
+          // of the initial instance creation
 
           appendAllChildren(_instance3, workInProgress);
           workInProgress.stateNode = _instance3; // Certain renderers require commit-time effects for initial mount.
@@ -25134,7 +25135,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-6a6d6e13";
+var ReactVersion = "18.3.0-www-modern-14703ddb";
 
 // Might add PROFILE later.
 
