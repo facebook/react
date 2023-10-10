@@ -8,7 +8,7 @@ import {installHook} from 'react-devtools-shared/src/hook';
 import setupNativeStyleEditor from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
-import type {Wall} from 'react-devtools-shared/src/types';
+import type {Wall} from 'react-devtools-shared/src/frontend/types';
 
 function startActivation(contentWindow: any, bridge: BackendBridge) {
   const onSavedPreferences = (data: $FlowFixMe) => {

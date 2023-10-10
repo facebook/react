@@ -40,7 +40,7 @@ import {
   ElementTypeOtherOrUnknown,
   ElementTypeProfiler,
   ElementTypeSuspense,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
 
 import styles from './SettingsShared.css';
@@ -52,7 +52,7 @@ import type {
   ElementType,
   ElementTypeComponentFilter,
   RegExpComponentFilter,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 
 const vscodeFilepath = 'vscode://file/{path}:{line}';
 

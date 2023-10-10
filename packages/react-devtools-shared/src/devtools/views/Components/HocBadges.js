@@ -10,7 +10,7 @@
 import * as React from 'react';
 import styles from './HocBadges.css';
 
-import type {Element} from './types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 type Props = {
   element: Element,
