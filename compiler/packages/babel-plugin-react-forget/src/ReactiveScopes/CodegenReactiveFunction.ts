@@ -139,6 +139,36 @@ class Context {
 }
 
 function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
+  const temp = new Map(cx.temp);
+  const result = codegenBlockNoReset(cx, block);
+  // Check that the block only added new temporaries and did not update the
+  // value of any existing temporary
+  for (const [key, value] of cx.temp) {
+    if (!temp.has(key)) {
+      continue;
+    }
+    CompilerError.invariant(temp.get(key)! === value, {
+      loc: null,
+      reason: "Expected temporary value to be unchanged",
+      description: null,
+      suggestions: null,
+    });
+  }
+  cx.temp = temp;
+  return result;
+}
+
+/**
+ * Generates code for the block, without resetting the Context's temporary state.
+ * This should not be used unless it is expected that temporaries from this block
+ * can be referenced later, which is currently only true for sequence expressions
+ * where the final `value` is expected to reference the temporary created in the
+ * preceding instructions of the sequence.
+ */
+function codegenBlockNoReset(
+  cx: Context,
+  block: ReactiveBlock
+): t.BlockStatement {
   const statements: Array<t.Statement> = [];
   for (const item of block) {
     switch (item.kind) {
@@ -1282,7 +1312,7 @@ function codegenInstructionValue(
       break;
     }
     case "SequenceExpression": {
-      const body = codegenBlock(
+      const body = codegenBlockNoReset(
         cx,
         instrValue.instructions.map((instruction) => ({
           kind: "instruction",
