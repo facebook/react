@@ -2638,20 +2638,20 @@ function updateMemo<T>(
   return nextValue;
 }
 
-function mountDeferredValue<T>(value: T): T {
+function mountDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = mountWorkInProgressHook();
   hook.memoizedState = value;
   return value;
 }
 
-function updateDeferredValue<T>(value: T): T {
+function updateDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = updateWorkInProgressHook();
   const resolvedCurrentHook: Hook = (currentHook: any);
   const prevValue: T = resolvedCurrentHook.memoizedState;
-  return updateDeferredValueImpl(hook, prevValue, value);
+  return updateDeferredValueImpl(hook, prevValue, value, initialValue);
 }
 
-function rerenderDeferredValue<T>(value: T): T {
+function rerenderDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = updateWorkInProgressHook();
   if (currentHook === null) {
     // This is a rerender during a mount.
@@ -2660,11 +2660,16 @@ function rerenderDeferredValue<T>(value: T): T {
   } else {
     // This is a rerender during an update.
     const prevValue: T = currentHook.memoizedState;
-    return updateDeferredValueImpl(hook, prevValue, value);
+    return updateDeferredValueImpl(hook, prevValue, value, initialValue);
   }
 }
 
-function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
+function updateDeferredValueImpl<T>(
+  hook: Hook,
+  prevValue: T,
+  value: T,
+  initialValue: ?T,
+): T {
   const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
   if (shouldDeferValue) {
     // This is an urgent update. If the value has changed, keep using the
@@ -3633,10 +3638,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       mountHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -3802,10 +3807,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -3975,10 +3980,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return updateDeferredValue(value);
+      return updateDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4147,10 +4152,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return rerenderDeferredValue(value);
+      return rerenderDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4331,11 +4336,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4529,11 +4534,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateDeferredValue(value);
+      return updateDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4727,11 +4732,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderDeferredValue(value);
+      return rerenderDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';

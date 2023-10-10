@@ -553,7 +553,7 @@ function useSyncExternalStore<T>(
   return getServerSnapshot();
 }
 
-function useDeferredValue<T>(value: T): T {
+function useDeferredValue<T>(value: T, initialValue?: T): T {
   resolveCurrentlyRenderingComponent();
   return value;
 }

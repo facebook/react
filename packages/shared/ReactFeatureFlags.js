@@ -126,6 +126,8 @@ export const useMicrotasksForSchedulingInFabric = false;
 
 export const passChildrenWhenCloningPersistedNodes = false;
 
+export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //

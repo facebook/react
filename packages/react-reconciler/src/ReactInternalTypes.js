@@ -399,7 +399,7 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useDeferredValue<T>(value: T): T,
+  useDeferredValue<T>(value: T, initialValue?: T): T,
   useTransition(): [
     boolean,
     (callback: () => void, options?: StartTransitionOptions) => void,

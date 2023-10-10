@@ -31,6 +31,7 @@ export const {
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,
+  enableUseDeferredValueInitialArg,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
