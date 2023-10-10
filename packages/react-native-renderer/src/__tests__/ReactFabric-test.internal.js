@@ -210,14 +210,67 @@ describe('ReactFabric', () => {
         11,
       );
     });
+    const argIndex = gate(flags => flags.passChildrenWhenCloningPersistedNodes)
+      ? 2
+      : 1;
     expect(
-      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps.mock.calls[0][1],
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps.mock.calls[0][
+        argIndex
+      ],
     ).toEqual({
       foo: 'b',
     });
     expect(
       nativeFabricUIManager.__dumpHierarchyForJestTestsOnly(),
     ).toMatchSnapshot();
+  });
+
+  it('should not clone nodes without children when updating props', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const Component = ({foo}) => (
+      <View>
+        <View foo={foo} />
+      </View>
+    );
+
+    await act(() => ReactFabric.render(<Component foo={true} />, 11));
+    expect(nativeFabricUIManager.completeRoot).toBeCalled();
+    jest.clearAllMocks();
+
+    await act(() => ReactFabric.render(<Component foo={false} />, 11));
+    expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(nativeFabricUIManager.cloneNodeWithNewProps).toHaveBeenCalledWith(
+      expect.anything(),
+      {foo: false},
+    );
+
+    expect(
+      nativeFabricUIManager.cloneNodeWithNewChildren,
+    ).toHaveBeenCalledTimes(1);
+    if (gate(flags => flags.passChildrenWhenCloningPersistedNodes)) {
+      expect(
+        nativeFabricUIManager.cloneNodeWithNewChildren,
+      ).toHaveBeenCalledWith(expect.anything(), [
+        expect.objectContaining({props: {foo: false}}),
+      ]);
+      expect(nativeFabricUIManager.appendChild).not.toBeCalled();
+    } else {
+      expect(
+        nativeFabricUIManager.cloneNodeWithNewChildren,
+      ).toHaveBeenCalledWith(expect.anything());
+      expect(nativeFabricUIManager.appendChild).toHaveBeenCalledTimes(1);
+    }
+    expect(
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).not.toBeCalled();
+    expect(nativeFabricUIManager.completeRoot).toBeCalled();
   });
 
   it('should call dispatchCommand for native refs', async () => {

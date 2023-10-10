@@ -110,6 +110,7 @@ export const enableFizzExternalRuntime = true;
 export const forceConcurrentByDefaultForTesting = false;
 
 export const useMicrotasksForSchedulingInFabric = false;
+export const passChildrenWhenCloningPersistedNodes = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
