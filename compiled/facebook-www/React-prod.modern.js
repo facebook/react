@@ -568,8 +568,8 @@ exports.useContext = function (Context) {
   return ReactCurrentDispatcher.current.useContext(Context);
 };
 exports.useDebugValue = function () {};
-exports.useDeferredValue = function (value) {
-  return ReactCurrentDispatcher.current.useDeferredValue(value);
+exports.useDeferredValue = function (value, initialValue) {
+  return ReactCurrentDispatcher.current.useDeferredValue(value, initialValue);
 };
 exports.useEffect = function (create, deps) {
   return ReactCurrentDispatcher.current.useEffect(create, deps);
@@ -615,4 +615,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-20e3e48a";
+exports.version = "18.3.0-www-modern-1eaea04e";

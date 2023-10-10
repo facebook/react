@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-6d747e3d";
+var ReactVersion = "18.3.0-www-classic-f6b9b0ac";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -329,8 +329,9 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
-  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions;
-// On WWW, false is used for a new modern build.
+  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+  enableUseDeferredValueInitialArg =
+    dynamicFeatureFlags.enableUseDeferredValueInitialArg; // On WWW, false is used for a new modern build.
 var enableFloat = true;
 
 // $FlowFixMe[method-unbinding]
@@ -9671,9 +9672,14 @@ function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   return getServerSnapshot();
 }
 
-function useDeferredValue(value) {
+function useDeferredValue(value, initialValue) {
   resolveCurrentlyRenderingComponent();
-  return value;
+
+  if (enableUseDeferredValueInitialArg) {
+    return initialValue !== undefined ? initialValue : value;
+  } else {
+    return value;
+  }
 }
 
 function unsupportedStartTransition() {

@@ -58,6 +58,8 @@ var ReactSharedInternals =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+  enableUseDeferredValueInitialArg =
+    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -3874,6 +3876,16 @@ function updateMemo(nextCreate, deps) {
   hook.memoizedState = [nextCreate, deps];
   return nextCreate;
 }
+function mountDeferredValueImpl(hook, value, initialValue) {
+  return enableUseDeferredValueInitialArg && void 0 !== initialValue
+    ? ((hook.memoizedState = initialValue),
+      (value = claimNextTransitionLane()),
+      (currentlyRenderingFiber$1.lanes |= value),
+      (workInProgressRootSkippedLanes |= value),
+      (hook.baseState = !0),
+      initialValue)
+    : (hook.memoizedState = value);
+}
 function updateDeferredValueImpl(hook, prevValue, value) {
   if (0 === (renderLanes$1 & 42))
     return (
@@ -4169,8 +4181,9 @@ var HooksDispatcherOnMount = {
     return [initialState.memoizedState, dispatch];
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
-    return (mountWorkInProgressHook().memoizedState = value);
+  useDeferredValue: function (value, initialValue) {
+    var hook = mountWorkInProgressHook();
+    return mountDeferredValueImpl(hook, value, initialValue);
   },
   useTransition: function () {
     var stateHook = mountStateImpl(!1);
@@ -4317,10 +4330,10 @@ var HooksDispatcherOnRerender = {
     return rerenderReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
     return null === currentHook
-      ? (hook.memoizedState = value)
+      ? mountDeferredValueImpl(hook, value, initialValue)
       : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
   },
   useTransition: function () {
@@ -16377,10 +16390,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1779 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-c9e82eec",
+  version: "18.3.0-www-classic-4be75e6a",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2123 = {
+var internals$jscomp$inline_2125 = {
   bundleType: devToolsConfig$jscomp$inline_1779.bundleType,
   version: devToolsConfig$jscomp$inline_1779.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1779.rendererPackageName,
@@ -16407,19 +16420,19 @@ var internals$jscomp$inline_2123 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-c9e82eec"
+  reconcilerVersion: "18.3.0-www-classic-4be75e6a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2124 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2126 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2124.isDisabled &&
-    hook$jscomp$inline_2124.supportsFiber
+    !hook$jscomp$inline_2126.isDisabled &&
+    hook$jscomp$inline_2126.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2124.inject(
-        internals$jscomp$inline_2123
+      (rendererID = hook$jscomp$inline_2126.inject(
+        internals$jscomp$inline_2125
       )),
-        (injectedHook = hook$jscomp$inline_2124);
+        (injectedHook = hook$jscomp$inline_2126);
     } catch (err) {}
 }
 assign(Internals, {
@@ -16744,4 +16757,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-c9e82eec";
+exports.version = "18.3.0-www-classic-4be75e6a";

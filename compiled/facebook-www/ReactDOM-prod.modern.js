@@ -61,6 +61,8 @@ var assign = Object.assign,
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+  enableUseDeferredValueInitialArg =
+    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   valueStack = [],
@@ -3767,6 +3769,16 @@ function updateMemo(nextCreate, deps) {
   hook.memoizedState = [nextCreate, deps];
   return nextCreate;
 }
+function mountDeferredValueImpl(hook, value, initialValue) {
+  return enableUseDeferredValueInitialArg && void 0 !== initialValue
+    ? ((hook.memoizedState = initialValue),
+      (value = claimNextTransitionLane()),
+      (currentlyRenderingFiber$1.lanes |= value),
+      (workInProgressRootSkippedLanes |= value),
+      (hook.baseState = !0),
+      initialValue)
+    : (hook.memoizedState = value);
+}
 function updateDeferredValueImpl(hook, prevValue, value) {
   if (0 === (renderLanes$1 & 42))
     return (
@@ -4062,8 +4074,9 @@ var HooksDispatcherOnMount = {
     return [initialState.memoizedState, dispatch];
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
-    return (mountWorkInProgressHook().memoizedState = value);
+  useDeferredValue: function (value, initialValue) {
+    var hook = mountWorkInProgressHook();
+    return mountDeferredValueImpl(hook, value, initialValue);
   },
   useTransition: function () {
     var stateHook = mountStateImpl(!1);
@@ -4210,10 +4223,10 @@ var HooksDispatcherOnRerender = {
     return rerenderReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
     return null === currentHook
-      ? (hook.memoizedState = value)
+      ? mountDeferredValueImpl(hook, value, initialValue)
       : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
   },
   useTransition: function () {
@@ -15899,10 +15912,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1738 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-012c009e",
+  version: "18.3.0-www-modern-81ff1bb4",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2087 = {
+var internals$jscomp$inline_2089 = {
   bundleType: devToolsConfig$jscomp$inline_1738.bundleType,
   version: devToolsConfig$jscomp$inline_1738.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1738.rendererPackageName,
@@ -15930,19 +15943,19 @@ var internals$jscomp$inline_2087 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-012c009e"
+  reconcilerVersion: "18.3.0-www-modern-81ff1bb4"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2088 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2090 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2088.isDisabled &&
-    hook$jscomp$inline_2088.supportsFiber
+    !hook$jscomp$inline_2090.isDisabled &&
+    hook$jscomp$inline_2090.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2088.inject(
-        internals$jscomp$inline_2087
+      (rendererID = hook$jscomp$inline_2090.inject(
+        internals$jscomp$inline_2089
       )),
-        (injectedHook = hook$jscomp$inline_2088);
+        (injectedHook = hook$jscomp$inline_2090);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -16195,4 +16208,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-012c009e";
+exports.version = "18.3.0-www-modern-81ff1bb4";

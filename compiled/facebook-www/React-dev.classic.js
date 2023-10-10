@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-f4ae0982";
+var ReactVersion = "18.3.0-www-classic-5bedd128";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -1986,9 +1986,9 @@ function useTransition() {
   var dispatcher = resolveDispatcher();
   return dispatcher.useTransition();
 }
-function useDeferredValue(value) {
+function useDeferredValue(value, initialValue) {
   var dispatcher = resolveDispatcher();
-  return dispatcher.useDeferredValue(value);
+  return dispatcher.useDeferredValue(value, initialValue);
 }
 function useId() {
   var dispatcher = resolveDispatcher();

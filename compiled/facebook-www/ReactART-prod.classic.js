@@ -77,6 +77,8 @@ var ReactSharedInternals =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+  enableUseDeferredValueInitialArg =
+    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -3134,6 +3136,16 @@ function updateMemo(nextCreate, deps) {
   hook.memoizedState = [nextCreate, deps];
   return nextCreate;
 }
+function mountDeferredValueImpl(hook, value, initialValue) {
+  return enableUseDeferredValueInitialArg && void 0 !== initialValue
+    ? ((hook.memoizedState = initialValue),
+      (value = claimNextTransitionLane()),
+      (currentlyRenderingFiber$1.lanes |= value),
+      (workInProgressRootSkippedLanes |= value),
+      (hook.baseState = !0),
+      initialValue)
+    : (hook.memoizedState = value);
+}
 function updateDeferredValueImpl(hook, prevValue, value) {
   if (0 === (renderLanes$1 & 42))
     return (
@@ -3429,8 +3441,9 @@ var HooksDispatcherOnMount = {
     return [initialState.memoizedState, dispatch];
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
-    return (mountWorkInProgressHook().memoizedState = value);
+  useDeferredValue: function (value, initialValue) {
+    var hook = mountWorkInProgressHook();
+    return mountDeferredValueImpl(hook, value, initialValue);
   },
   useTransition: function () {
     var stateHook = mountStateImpl(!1);
@@ -3547,10 +3560,10 @@ var HooksDispatcherOnRerender = {
     return rerenderReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
     return null === currentHook
-      ? (hook.memoizedState = value)
+      ? mountDeferredValueImpl(hook, value, initialValue)
       : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
   },
   useTransition: function () {
@@ -10109,10 +10122,10 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-bf99e5b1",
+    version: "18.3.0-www-classic-1b19eb12",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1304 = {
+var internals$jscomp$inline_1306 = {
   bundleType: devToolsConfig$jscomp$inline_1131.bundleType,
   version: devToolsConfig$jscomp$inline_1131.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1131.rendererPackageName,
@@ -10140,19 +10153,19 @@ var internals$jscomp$inline_1304 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-bf99e5b1"
+  reconcilerVersion: "18.3.0-www-classic-1b19eb12"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1305 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1307 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1305.isDisabled &&
-    hook$jscomp$inline_1305.supportsFiber
+    !hook$jscomp$inline_1307.isDisabled &&
+    hook$jscomp$inline_1307.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1305.inject(
-        internals$jscomp$inline_1304
+      (rendererID = hook$jscomp$inline_1307.inject(
+        internals$jscomp$inline_1306
       )),
-        (injectedHook = hook$jscomp$inline_1305);
+        (injectedHook = hook$jscomp$inline_1307);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

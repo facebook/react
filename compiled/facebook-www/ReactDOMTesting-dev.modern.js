@@ -122,7 +122,9 @@ var disableInputAttributeSyncing =
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop =
-    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop; // On WWW, true is used for a new modern build.
+    dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
+  enableUseDeferredValueInitialArg =
+    dynamicFeatureFlags.enableUseDeferredValueInitialArg; // On WWW, true is used for a new modern build.
 var enableProfilerTimer = true;
 var enableProfilerCommitHooks = true;
 var enableProfilerNestedUpdatePhase = true;
@@ -14362,26 +14364,24 @@ function updateMemo(nextCreate, deps) {
   return nextValue;
 }
 
-function mountDeferredValue(value) {
+function mountDeferredValue(value, initialValue) {
   var hook = mountWorkInProgressHook();
-  hook.memoizedState = value;
-  return value;
+  return mountDeferredValueImpl(hook, value, initialValue);
 }
 
-function updateDeferredValue(value) {
+function updateDeferredValue(value, initialValue) {
   var hook = updateWorkInProgressHook();
   var resolvedCurrentHook = currentHook;
   var prevValue = resolvedCurrentHook.memoizedState;
   return updateDeferredValueImpl(hook, prevValue, value);
 }
 
-function rerenderDeferredValue(value) {
+function rerenderDeferredValue(value, initialValue) {
   var hook = updateWorkInProgressHook();
 
   if (currentHook === null) {
     // This is a rerender during a mount.
-    hook.memoizedState = value;
-    return value;
+    return mountDeferredValueImpl(hook, value, initialValue);
   } else {
     // This is a rerender during an update.
     var prevValue = currentHook.memoizedState;
@@ -14389,7 +14389,36 @@ function rerenderDeferredValue(value) {
   }
 }
 
-function updateDeferredValueImpl(hook, prevValue, value) {
+function mountDeferredValueImpl(hook, value, initialValue) {
+  if (enableUseDeferredValueInitialArg && initialValue !== undefined) {
+    // When `initialValue` is provided, we defer the initial render even if the
+    // current render is not synchronous.
+    // TODO: However, to avoid waterfalls, we should not defer if this render
+    // was itself spawned by an earlier useDeferredValue. Plan is to add a
+    // Deferred lane to track this.
+    hook.memoizedState = initialValue; // Schedule a deferred render
+
+    var deferredLane = claimNextTransitionLane();
+    currentlyRenderingFiber$1.lanes = mergeLanes(
+      currentlyRenderingFiber$1.lanes,
+      deferredLane
+    );
+    markSkippedUpdateLanes(deferredLane); // Set this to true to indicate that the rendered value is inconsistent
+    // from the latest value. The name "baseState" doesn't really match how we
+    // use it because we're reusing a state hook field instead of creating a
+    // new one.
+
+    hook.baseState = true;
+    return initialValue;
+  } else {
+    hook.memoizedState = value;
+    return value;
+  }
+}
+
+function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
+  // TODO: We should also check if this component is going from
+  // hidden -> visible. If so, it should use the initialValue arg.
   var shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes$1);
 
   if (shouldDeferValue) {
@@ -15099,10 +15128,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       mountHookTypesDev();
       return mountDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       mountHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition: function () {
       currentHookNameInDev = "useTransition";
@@ -15238,10 +15267,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return mountDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       updateHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition: function () {
       currentHookNameInDev = "useTransition";
@@ -15375,7 +15404,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       updateHookTypesDev();
       return updateDeferredValue(value);
@@ -15514,10 +15543,10 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       updateHookTypesDev();
-      return rerenderDeferredValue(value);
+      return rerenderDeferredValue(value, initialValue);
     },
     useTransition: function () {
       currentHookNameInDev = "useTransition";
@@ -15669,11 +15698,11 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       mountHookTypesDev();
       return mountDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition: function () {
       currentHookNameInDev = "useTransition";
@@ -15830,7 +15859,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -15991,11 +16020,11 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderDeferredValue(value);
+      return rerenderDeferredValue(value, initialValue);
     },
     useTransition: function () {
       currentHookNameInDev = "useTransition";
@@ -34469,7 +34498,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-20e3e48a";
+var ReactVersion = "18.3.0-www-modern-1eaea04e";
 
 function createPortal$1(
   children,

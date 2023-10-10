@@ -326,8 +326,9 @@ var dynamicFeatureFlags = require("ReactFeatureFlags");
 var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
-  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions;
-// On WWW, true is used for a new modern build.
+  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+  enableUseDeferredValueInitialArg =
+    dynamicFeatureFlags.enableUseDeferredValueInitialArg; // On WWW, true is used for a new modern build.
 var enableFloat = true;
 
 // $FlowFixMe[method-unbinding]
@@ -9317,9 +9318,14 @@ function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
   return getServerSnapshot();
 }
 
-function useDeferredValue(value) {
+function useDeferredValue(value, initialValue) {
   resolveCurrentlyRenderingComponent();
-  return value;
+
+  if (enableUseDeferredValueInitialArg) {
+    return initialValue !== undefined ? initialValue : value;
+  } else {
+    return value;
+  }
 }
 
 function unsupportedStartTransition() {
