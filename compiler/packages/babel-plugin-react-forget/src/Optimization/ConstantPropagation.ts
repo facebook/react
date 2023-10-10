@@ -97,26 +97,6 @@ function applyConstantPropagation(
   fn: HIRFunction,
   constants: Constants
 ): boolean {
-  // Track the set of identifiers which are used as dependencies for function expressions
-  // in order to avoid propagating these constants. This is necessary because the function
-  // itself will still reference the original value. If the dependency is propagated but the
-  // function still refers to the original value, this can create a situation where DCE
-  // will think the original expression is unused. Until we are able to propagate constants
-  // into function expression bodies, we disable propagation of function deps.
-  const functionDependencies = new Set<IdentifierId>();
-  for (const [, block] of fn.body.blocks) {
-    for (const instr of block.instructions) {
-      if (
-        instr.value.kind === "FunctionExpression" ||
-        instr.value.kind === "ObjectMethod"
-      ) {
-        for (const operand of instr.value.loweredFunc.dependencies) {
-          functionDependencies.add(operand.identifier.id);
-        }
-      }
-    }
-  }
-
   let hasChanges = false;
   for (const [, block] of fn.body.blocks) {
     // Initialize phi values if all operands have the same known constant value.
