@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<65220b0abaca69059de8c8cc2114af51>>
+ * @generated SignedSource<<39bf2c8f9557be7ed54f82946845384a>>
  */
 
 
@@ -4272,6 +4272,16 @@ function updateMemo(nextCreate, deps) {
   hook.memoizedState = [nextCreate, deps];
   return nextCreate;
 }
+function mountDeferredValueImpl(hook, value, initialValue) {
+  return void 0 !== initialValue
+    ? ((hook.memoizedState = initialValue),
+      (value = claimNextTransitionLane()),
+      (currentlyRenderingFiber$1.lanes |= value),
+      (workInProgressRootSkippedLanes |= value),
+      (hook.baseState = !0),
+      initialValue)
+    : (hook.memoizedState = value);
+}
 function updateDeferredValueImpl(hook, prevValue, value) {
   if (0 === (renderLanes$1 & 42))
     return (
@@ -4480,8 +4490,9 @@ var HooksDispatcherOnMount = {
     return [initialState.memoizedState, dispatch];
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
-    return (mountWorkInProgressHook().memoizedState = value);
+  useDeferredValue: function (value, initialValue) {
+    var hook = mountWorkInProgressHook();
+    return mountDeferredValueImpl(hook, value, initialValue);
   },
   useTransition: function () {
     var stateHook = mountStateImpl(!1);
@@ -4581,10 +4592,10 @@ var HooksDispatcherOnRerender = {
     return rerenderReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
     return null === currentHook
-      ? (hook.memoizedState = value)
+      ? mountDeferredValueImpl(hook, value, initialValue)
       : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
   },
   useTransition: function () {
@@ -10392,7 +10403,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1173 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-1ba6f60e",
+    version: "18.3.0-canary-00f90fb9",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10448,7 +10459,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-1ba6f60e"
+  reconcilerVersion: "18.3.0-canary-00f90fb9"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

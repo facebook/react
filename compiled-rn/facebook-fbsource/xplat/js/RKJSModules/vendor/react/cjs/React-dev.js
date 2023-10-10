@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3f31df2fa14ee4c981d6843f3d4d7ead>>
+ * @generated SignedSource<<71499eceb285e226843aaef5ea44794f>>
  */
 
 'use strict';
@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-canary-77ec61885-20231010";
+var ReactVersion = "18.3.0-canary-be67db46b-20231010";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -2048,9 +2048,9 @@ function useTransition() {
   var dispatcher = resolveDispatcher();
   return dispatcher.useTransition();
 }
-function useDeferredValue(value) {
+function useDeferredValue(value, initialValue) {
   var dispatcher = resolveDispatcher();
-  return dispatcher.useDeferredValue(value);
+  return dispatcher.useDeferredValue(value, initialValue);
 }
 function useId() {
   var dispatcher = resolveDispatcher();

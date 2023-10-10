@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<436f4c30f340eebaa6d2b53cebf45483>>
+ * @generated SignedSource<<f2e4a74450979cfc7369836feb51f7b4>>
  */
 
 "use strict";
@@ -569,8 +569,8 @@ exports.useContext = function (Context) {
   return ReactCurrentDispatcher.current.useContext(Context);
 };
 exports.useDebugValue = function () {};
-exports.useDeferredValue = function (value) {
-  return ReactCurrentDispatcher.current.useDeferredValue(value);
+exports.useDeferredValue = function (value, initialValue) {
+  return ReactCurrentDispatcher.current.useDeferredValue(value, initialValue);
 };
 exports.useEffect = function (create, deps) {
   return ReactCurrentDispatcher.current.useEffect(create, deps);
@@ -616,4 +616,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-77ec61885-20231010";
+exports.version = "18.3.0-canary-be67db46b-20231010";

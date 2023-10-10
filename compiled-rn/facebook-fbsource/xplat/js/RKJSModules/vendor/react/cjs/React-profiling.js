@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<afc9b8a86c7cb5b70c67da50c5d06db9>>
+ * @generated SignedSource<<377c432dea6f7a43c2e92ce91bc02137>>
  */
 
 
@@ -572,8 +572,8 @@ exports.useContext = function (Context) {
   return ReactCurrentDispatcher.current.useContext(Context);
 };
 exports.useDebugValue = function () {};
-exports.useDeferredValue = function (value) {
-  return ReactCurrentDispatcher.current.useDeferredValue(value);
+exports.useDeferredValue = function (value, initialValue) {
+  return ReactCurrentDispatcher.current.useDeferredValue(value, initialValue);
 };
 exports.useEffect = function (create, deps) {
   return ReactCurrentDispatcher.current.useEffect(create, deps);
@@ -619,7 +619,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-77ec61885-20231010";
+exports.version = "18.3.0-canary-be67db46b-20231010";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

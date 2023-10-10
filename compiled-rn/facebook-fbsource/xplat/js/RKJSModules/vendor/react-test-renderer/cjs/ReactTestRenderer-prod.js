@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f640ba136e1c722c9a33b8847c0f8829>>
+ * @generated SignedSource<<74789ed84a7dc01a6249e9f3418afe20>>
  */
 
 "use strict";
@@ -3124,7 +3124,8 @@ var HooksDispatcherOnMount = {
   },
   useDebugValue: mountDebugValue,
   useDeferredValue: function (value) {
-    return (mountWorkInProgressHook().memoizedState = value);
+    mountWorkInProgressHook().memoizedState = value;
+    return value;
   },
   useTransition: function () {
     var stateHook = mountStateImpl(!1);
@@ -3302,7 +3303,7 @@ var HooksDispatcherOnRerender = {
   useDeferredValue: function (value) {
     var hook = updateWorkInProgressHook();
     return null === currentHook
-      ? (hook.memoizedState = value)
+      ? ((hook.memoizedState = value), value)
       : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
   },
   useTransition: function () {
@@ -8973,19 +8974,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_998 = {
+var devToolsConfig$jscomp$inline_1008 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-77ec61885-20231010",
+  version: "18.3.0-canary-be67db46b-20231010",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1191 = {
-  bundleType: devToolsConfig$jscomp$inline_998.bundleType,
-  version: devToolsConfig$jscomp$inline_998.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_998.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_998.rendererConfig,
+var internals$jscomp$inline_1201 = {
+  bundleType: devToolsConfig$jscomp$inline_1008.bundleType,
+  version: devToolsConfig$jscomp$inline_1008.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1008.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1008.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9002,26 +9003,26 @@ var internals$jscomp$inline_1191 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_998.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1008.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-77ec61885-20231010"
+  reconcilerVersion: "18.3.0-canary-be67db46b-20231010"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1192 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1202 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1192.isDisabled &&
-    hook$jscomp$inline_1192.supportsFiber
+    !hook$jscomp$inline_1202.isDisabled &&
+    hook$jscomp$inline_1202.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1192.inject(
-        internals$jscomp$inline_1191
+      (rendererID = hook$jscomp$inline_1202.inject(
+        internals$jscomp$inline_1201
       )),
-        (injectedHook = hook$jscomp$inline_1192);
+        (injectedHook = hook$jscomp$inline_1202);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

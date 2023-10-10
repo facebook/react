@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<73b93e8e6858b35c538fb675ac42495a>>
+ * @generated SignedSource<<97bac0ab36e9567435451d873bea4dcf>>
  */
 
 'use strict';
@@ -8500,26 +8500,24 @@ function updateMemo(nextCreate, deps) {
   return nextValue;
 }
 
-function mountDeferredValue(value) {
+function mountDeferredValue(value, initialValue) {
   var hook = mountWorkInProgressHook();
-  hook.memoizedState = value;
-  return value;
+  return mountDeferredValueImpl(hook, value);
 }
 
-function updateDeferredValue(value) {
+function updateDeferredValue(value, initialValue) {
   var hook = updateWorkInProgressHook();
   var resolvedCurrentHook = currentHook;
   var prevValue = resolvedCurrentHook.memoizedState;
   return updateDeferredValueImpl(hook, prevValue, value);
 }
 
-function rerenderDeferredValue(value) {
+function rerenderDeferredValue(value, initialValue) {
   var hook = updateWorkInProgressHook();
 
   if (currentHook === null) {
     // This is a rerender during a mount.
-    hook.memoizedState = value;
-    return value;
+    return mountDeferredValueImpl(hook, value);
   } else {
     // This is a rerender during an update.
     var prevValue = currentHook.memoizedState;
@@ -8527,7 +8525,16 @@ function rerenderDeferredValue(value) {
   }
 }
 
-function updateDeferredValueImpl(hook, prevValue, value) {
+function mountDeferredValueImpl(hook, value, initialValue) {
+  {
+    hook.memoizedState = value;
+    return value;
+  }
+}
+
+function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
+  // TODO: We should also check if this component is going from
+  // hidden -> visible. If so, it should use the initialValue arg.
   var shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes$1);
 
   if (shouldDeferValue) {
@@ -9187,7 +9194,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       mountHookTypesDev();
       return mountDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       mountHookTypesDev();
       return mountDeferredValue(value);
@@ -9327,7 +9334,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return mountDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       updateHookTypesDev();
       return mountDeferredValue(value);
@@ -9463,7 +9470,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       updateHookTypesDev();
       return updateDeferredValue(value);
@@ -9603,7 +9610,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       updateHookTypesDev();
       return rerenderDeferredValue(value);
@@ -9759,7 +9766,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       mountHookTypesDev();
       return mountDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -9916,7 +9923,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -10073,7 +10080,7 @@ var InvalidNestedHooksDispatcherOnRerenderInDEV = null;
       updateHookTypesDev();
       return updateDebugValue();
     },
-    useDeferredValue: function (value) {
+    useDeferredValue: function (value, initialValue) {
       currentHookNameInDev = "useDeferredValue";
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -24773,7 +24780,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-77ec61885-20231010";
+var ReactVersion = "18.3.0-canary-be67db46b-20231010";
 
 // Might add PROFILE later.
 

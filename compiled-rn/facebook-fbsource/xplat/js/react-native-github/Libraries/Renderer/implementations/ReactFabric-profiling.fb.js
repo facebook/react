@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<22e592d0aff592aea0c72beaaeae2d2e>>
+ * @generated SignedSource<<cb0ebbd0d63b5e70812f9101d4c42217>>
  */
 
 
@@ -4196,6 +4196,16 @@ function updateMemo(nextCreate, deps) {
   hook.memoizedState = [nextCreate, deps];
   return nextCreate;
 }
+function mountDeferredValueImpl(hook, value, initialValue) {
+  return void 0 !== initialValue
+    ? ((hook.memoizedState = initialValue),
+      (value = claimNextTransitionLane()),
+      (currentlyRenderingFiber$1.lanes |= value),
+      (workInProgressRootSkippedLanes |= value),
+      (hook.baseState = !0),
+      initialValue)
+    : (hook.memoizedState = value);
+}
 function updateDeferredValueImpl(hook, prevValue, value) {
   if (0 === (renderLanes$1 & 42))
     return (
@@ -4404,8 +4414,9 @@ var HooksDispatcherOnMount = {
     return [initialState.memoizedState, dispatch];
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
-    return (mountWorkInProgressHook().memoizedState = value);
+  useDeferredValue: function (value, initialValue) {
+    var hook = mountWorkInProgressHook();
+    return mountDeferredValueImpl(hook, value, initialValue);
   },
   useTransition: function () {
     var stateHook = mountStateImpl(!1);
@@ -4505,10 +4516,10 @@ var HooksDispatcherOnRerender = {
     return rerenderReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
     return null === currentHook
-      ? (hook.memoizedState = value)
+      ? mountDeferredValueImpl(hook, value, initialValue)
       : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
   },
   useTransition: function () {
@@ -10174,7 +10185,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1110 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-458981f7",
+    version: "18.3.0-canary-ff4e1e03",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10230,7 +10241,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-458981f7"
+  reconcilerVersion: "18.3.0-canary-ff4e1e03"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

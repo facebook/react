@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a14762fc8ef590b3d2e8b935d1234408>>
+ * @generated SignedSource<<e8ddfd204efd6a97949d69b045abcb56>>
  */
 
 "use strict";
@@ -4142,6 +4142,16 @@ function updateMemo(nextCreate, deps) {
   hook.memoizedState = [nextCreate, deps];
   return nextCreate;
 }
+function mountDeferredValueImpl(hook, value, initialValue) {
+  return void 0 !== initialValue
+    ? ((hook.memoizedState = initialValue),
+      (value = claimNextTransitionLane()),
+      (currentlyRenderingFiber$1.lanes |= value),
+      (workInProgressRootSkippedLanes |= value),
+      (hook.baseState = !0),
+      initialValue)
+    : (hook.memoizedState = value);
+}
 function updateDeferredValueImpl(hook, prevValue, value) {
   if (0 === (renderLanes$1 & 42))
     return (
@@ -4348,8 +4358,9 @@ var HooksDispatcherOnMount = {
     return [initialState.memoizedState, dispatch];
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
-    return (mountWorkInProgressHook().memoizedState = value);
+  useDeferredValue: function (value, initialValue) {
+    var hook = mountWorkInProgressHook();
+    return mountDeferredValueImpl(hook, value, initialValue);
   },
   useTransition: function () {
     var stateHook = mountStateImpl(!1);
@@ -4449,10 +4460,10 @@ var HooksDispatcherOnRerender = {
     return rerenderReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
     return null === currentHook
-      ? (hook.memoizedState = value)
+      ? mountDeferredValueImpl(hook, value, initialValue)
       : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
   },
   useTransition: function () {
@@ -9684,7 +9695,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1095 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-d65fcabf",
+    version: "18.3.0-canary-1520107d",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9700,7 +9711,7 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1351 = {
+var internals$jscomp$inline_1353 = {
   bundleType: devToolsConfig$jscomp$inline_1095.bundleType,
   version: devToolsConfig$jscomp$inline_1095.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1095.rendererPackageName,
@@ -9727,19 +9738,19 @@ var internals$jscomp$inline_1351 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-d65fcabf"
+  reconcilerVersion: "18.3.0-canary-1520107d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1352 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1354 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1352.isDisabled &&
-    hook$jscomp$inline_1352.supportsFiber
+    !hook$jscomp$inline_1354.isDisabled &&
+    hook$jscomp$inline_1354.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1352.inject(
-        internals$jscomp$inline_1351
+      (rendererID = hook$jscomp$inline_1354.inject(
+        internals$jscomp$inline_1353
       )),
-        (injectedHook = hook$jscomp$inline_1352);
+        (injectedHook = hook$jscomp$inline_1354);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
