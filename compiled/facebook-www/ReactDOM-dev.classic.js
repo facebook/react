@@ -34036,7 +34036,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-ba4a7e73";
+var ReactVersion = "18.3.0-www-classic-2d079347";
 
 function createPortal$1(
   children,
@@ -37189,7 +37189,7 @@ var topLevelEventsToReactNames = new Map(); // NOTE: Capitalization is important
 //
 // prettier-ignore
 
-var simpleEventPluginEvents = ['abort', 'auxClick', 'cancel', 'canPlay', 'canPlayThrough', 'click', 'close', 'contextMenu', 'copy', 'cut', 'drag', 'dragEnd', 'dragEnter', 'dragExit', 'dragLeave', 'dragOver', 'dragStart', 'drop', 'durationChange', 'emptied', 'encrypted', 'ended', 'error', 'gotPointerCapture', 'input', 'invalid', 'keyDown', 'keyPress', 'keyUp', 'load', 'loadedData', 'loadedMetadata', 'loadStart', 'lostPointerCapture', 'mouseDown', 'mouseMove', 'mouseOut', 'mouseOver', 'mouseUp', 'paste', 'pause', 'play', 'playing', 'pointerCancel', 'pointerDown', 'pointerMove', 'pointerOut', 'pointerOver', 'pointerUp', 'progress', 'rateChange', 'reset', 'resize', 'seeked', 'seeking', 'stalled', 'submit', 'suspend', 'timeUpdate', 'touchCancel', 'touchEnd', 'touchStart', 'volumeChange', 'scroll', 'toggle', 'touchMove', 'waiting', 'wheel'];
+var simpleEventPluginEvents = ['abort', 'auxClick', 'cancel', 'canPlay', 'canPlayThrough', 'click', 'close', 'contextMenu', 'copy', 'cut', 'drag', 'dragEnd', 'dragEnter', 'dragExit', 'dragLeave', 'dragOver', 'dragStart', 'drop', 'durationChange', 'emptied', 'encrypted', 'ended', 'error', 'gotPointerCapture', 'input', 'invalid', 'keyDown', 'keyPress', 'keyUp', 'load', 'loadedData', 'loadedMetadata', 'loadStart', 'lostPointerCapture', 'mouseDown', 'mouseMove', 'mouseOut', 'mouseOver', 'mouseUp', 'paste', 'pause', 'play', 'playing', 'pointerCancel', 'pointerDown', 'pointerMove', 'pointerOut', 'pointerOver', 'pointerUp', 'progress', 'rateChange', 'reset', 'resize', 'seeked', 'seeking', 'stalled', 'submit', 'suspend', 'timeUpdate', 'touchCancel', 'touchEnd', 'touchStart', 'volumeChange', 'scroll', 'scrollEnd', 'toggle', 'touchMove', 'waiting', 'wheel'];
 
 {
   // Special case: these two events don't have on* React handler
@@ -37325,6 +37325,7 @@ function extractEvents$1(
       break;
 
     case "scroll":
+    case "scrollend":
       SyntheticEventCtor = SyntheticUIEvent;
       break;
 
@@ -37385,7 +37386,7 @@ function extractEvents$1(
       // nonDelegatedEvents list in DOMPluginEventSystem.
       // Then we can remove this special list.
       // This is a breaking change that can wait until React 18.
-      domEventName === "scroll";
+      (domEventName === "scroll" || domEventName === "scrollend");
 
     var _listeners = accumulateSinglePhaseListeners(
       targetInst,
@@ -37525,9 +37526,15 @@ var mediaEventTypes = [
 // because these events do not consistently bubble in the DOM.
 
 var nonDelegatedEvents = new Set(
-  ["cancel", "close", "invalid", "load", "scroll", "toggle"].concat(
-    mediaEventTypes
-  )
+  [
+    "cancel",
+    "close",
+    "invalid",
+    "load",
+    "scroll",
+    "scrollend",
+    "toggle"
+  ].concat(mediaEventTypes)
 );
 
 function executeDispatch(event, listener, currentTarget) {
@@ -38786,6 +38793,18 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       break;
     }
 
+    case "onScrollEnd": {
+      if (value != null) {
+        if (typeof value !== "function") {
+          warnForInvalidEventListener(key, value);
+        }
+
+        listenToNonDelegatedEvent("scrollend", domElement);
+      }
+
+      break;
+    }
+
     case "dangerouslySetInnerHTML": {
       if (value != null) {
         if (typeof value !== "object" || !("__html" in value)) {
@@ -39189,6 +39208,18 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
         }
 
         listenToNonDelegatedEvent("scroll", domElement);
+      }
+
+      break;
+    }
+
+    case "onScrollEnd": {
+      if (value != null) {
+        if (typeof value !== "function") {
+          warnForInvalidEventListener(key, value);
+        }
+
+        listenToNonDelegatedEvent("scrollend", domElement);
       }
 
       break;
@@ -41255,6 +41286,10 @@ function diffHydratedProperties(
 
   if (props.onScroll != null) {
     listenToNonDelegatedEvent("scroll", domElement);
+  }
+
+  if (props.onScrollEnd != null) {
+    listenToNonDelegatedEvent("scrollend", domElement);
   }
 
   if (props.onClick != null) {

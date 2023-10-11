@@ -13402,7 +13402,7 @@ var ANIMATION_END = getVendorPrefixedEventName("animationend"),
   TRANSITION_END = getVendorPrefixedEventName("transitionend"),
   topLevelEventsToReactNames = new Map(),
   simpleEventPluginEvents =
-    "abort auxClick cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll toggle touchMove waiting wheel".split(
+    "abort auxClick cancel canPlay canPlayThrough click close contextMenu copy cut drag dragEnd dragEnter dragExit dragLeave dragOver dragStart drop durationChange emptied encrypted ended error gotPointerCapture input invalid keyDown keyPress keyUp load loadedData loadedMetadata loadStart lostPointerCapture mouseDown mouseMove mouseOut mouseOver mouseUp paste pause play playing pointerCancel pointerDown pointerMove pointerOut pointerOver pointerUp progress rateChange reset resize seeked seeking stalled submit suspend timeUpdate touchCancel touchEnd touchStart volumeChange scroll scrollEnd toggle touchMove waiting wheel".split(
       " "
     );
 topLevelEventsToReactNames.set("beforeblur", null);
@@ -13472,7 +13472,9 @@ var mediaEventTypes =
       " "
     ),
   nonDelegatedEvents = new Set(
-    "cancel close invalid load scroll toggle".split(" ").concat(mediaEventTypes)
+    "cancel close invalid load scroll scrollend toggle"
+      .split(" ")
+      .concat(mediaEventTypes)
   );
 function executeDispatch(event, listener, currentTarget) {
   var type = event.type || "unknown-event";
@@ -13749,6 +13751,7 @@ function dispatchEventForPluginEventSystem(
             SyntheticEventCtor = SyntheticTransitionEvent;
             break;
           case "scroll":
+          case "scrollend":
             SyntheticEventCtor = SyntheticUIEvent;
             break;
           case "wheel":
@@ -13793,7 +13796,8 @@ function dispatchEventForPluginEventSystem(
               reactName,
               nativeEvent.type,
               inCapturePhase,
-              !inCapturePhase && "scroll" === domEventName,
+              !inCapturePhase &&
+                ("scroll" === domEventName || "scrollend" === domEventName),
               nativeEvent
             )),
             0 < inCapturePhase.length &&
@@ -14322,6 +14326,9 @@ function setProp(domElement, tag, key, value, props, prevValue) {
     case "onScroll":
       null != value && listenToNonDelegatedEvent("scroll", domElement);
       break;
+    case "onScrollEnd":
+      null != value && listenToNonDelegatedEvent("scrollend", domElement);
+      break;
     case "dangerouslySetInnerHTML":
       if (null != value) {
         if ("object" !== typeof value || !("__html" in value))
@@ -14554,6 +14561,9 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
       break;
     case "onScroll":
       null != value && listenToNonDelegatedEvent("scroll", domElement);
+      break;
+    case "onScrollEnd":
+      null != value && listenToNonDelegatedEvent("scrollend", domElement);
       break;
     case "onClick":
       null != value && (domElement.onclick = noop$1);
@@ -15409,6 +15419,7 @@ function hydrateInstance(
       normalizeMarkupForTextOrAttribute(internalInstanceHandle)),
     "body" !== type && (instance.textContent = hostContext));
   null != props.onScroll && listenToNonDelegatedEvent("scroll", instance);
+  null != props.onScrollEnd && listenToNonDelegatedEvent("scrollend", instance);
   null != props.onClick && (instance.onclick = noop$1);
 }
 function getParentSuspenseInstance(targetInstance) {
@@ -16296,7 +16307,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1767 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-316f00ed",
+  version: "18.3.0-www-modern-313f0ec6",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2123 = {
@@ -16327,7 +16338,7 @@ var internals$jscomp$inline_2123 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-316f00ed"
+  reconcilerVersion: "18.3.0-www-modern-313f0ec6"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2124 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16743,4 +16754,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-316f00ed";
+exports.version = "18.3.0-www-modern-313f0ec6";
