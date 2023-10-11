@@ -618,6 +618,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('ABC');
   });
 
+  // @gate enableServerContext
   it('basic use(context)', async () => {
     let ContextA;
     let ContextB;

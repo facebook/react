@@ -60,7 +60,7 @@ export const enableUnifiedSyncLane = false;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = true;
+export const enableServerContext = false;
 
 export const enableTransitionTracing = false;
 

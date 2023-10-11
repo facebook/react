@@ -226,7 +226,7 @@ export const enableDebugTracing = false;
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableServerContext = true;
+export const enableServerContext = __EXPERIMENTAL__;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
