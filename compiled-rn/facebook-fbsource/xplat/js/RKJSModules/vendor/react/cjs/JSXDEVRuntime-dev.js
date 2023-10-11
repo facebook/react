@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<26475298aa34ad2cd59665f1ded7480c>>
+ * @generated SignedSource<<d07d0c4418febbfa3a7af950bf5a35a9>>
  */
 
 'use strict';
@@ -29,7 +29,6 @@ var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
 var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
 var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
 var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
 var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
 var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
 var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
@@ -240,11 +239,6 @@ function getComponentNameFromType(type) {
         } catch (x) {
           return null;
         }
-      }
-
-      case REACT_SERVER_CONTEXT_TYPE: {
-        var context2 = type;
-        return (context2.displayName || context2._globalName) + ".Provider";
       }
     }
   }

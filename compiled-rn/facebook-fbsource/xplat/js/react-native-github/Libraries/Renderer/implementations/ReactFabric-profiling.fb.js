@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cb0ebbd0d63b5e70812f9101d4c42217>>
+ * @generated SignedSource<<d7778311ad423998f61648d66880c391>>
  */
 
 
@@ -1812,10 +1812,7 @@ var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
 Symbol.for("react.cache");
 Symbol.for("react.tracing_marker");
-var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
-  REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
+var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
   if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
@@ -1867,11 +1864,7 @@ function getComponentNameFromType(type) {
         type = type._init;
         try {
           return getComponentNameFromType(type(innerType));
-        } catch (x) {
-          break;
-        }
-      case REACT_SERVER_CONTEXT_TYPE:
-        return (type.displayName || type._globalName) + ".Provider";
+        } catch (x) {}
     }
   return null;
 }
@@ -5952,11 +5945,7 @@ function resetContextDependencies() {
       null;
 }
 function popProvider(context) {
-  var currentValue = valueCursor.current;
-  context._currentValue2 =
-    currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-      ? context._defaultValue
-      : currentValue;
+  context._currentValue2 = valueCursor.current;
   pop(valueCursor);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
@@ -10185,7 +10174,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1110 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-ff4e1e03",
+    version: "18.3.0-canary-9fff8faa",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10241,7 +10230,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-ff4e1e03"
+  reconcilerVersion: "18.3.0-canary-9fff8faa"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

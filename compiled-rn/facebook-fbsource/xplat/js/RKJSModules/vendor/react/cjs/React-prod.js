@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f2e4a74450979cfc7369836feb51f7b4>>
+ * @generated SignedSource<<0c835208db0dbaff4c6fa25e0a04c118>>
  */
 
 "use strict";
@@ -18,7 +18,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
-  REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
@@ -30,9 +29,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
-  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
   if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
@@ -282,13 +278,11 @@ function createCacheNode() {
 }
 var ReactCurrentDispatcher = { current: null },
   ReactCurrentBatchConfig = { transition: null },
-  ContextRegistry = {},
   ReactSharedInternals = {
     ReactCurrentDispatcher: ReactCurrentDispatcher,
     ReactCurrentCache: ReactCurrentCache,
     ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-    ReactCurrentOwner: ReactCurrentOwner$1,
-    ContextRegistry: ContextRegistry
+    ReactCurrentOwner: ReactCurrentOwner$1
   },
   ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
@@ -464,36 +458,6 @@ exports.createFactory = function (type) {
 exports.createRef = function () {
   return { current: null };
 };
-exports.createServerContext = function (globalName, defaultValue) {
-  var wasDefined = !0;
-  if (!ContextRegistry[globalName]) {
-    wasDefined = !1;
-    var context$1 = {
-      $$typeof: REACT_SERVER_CONTEXT_TYPE,
-      _currentValue: defaultValue,
-      _currentValue2: defaultValue,
-      _defaultValue: defaultValue,
-      _threadCount: 0,
-      Provider: null,
-      Consumer: null,
-      _globalName: globalName
-    };
-    context$1.Provider = { $$typeof: REACT_PROVIDER_TYPE, _context: context$1 };
-    ContextRegistry[globalName] = context$1;
-  }
-  context$1 = ContextRegistry[globalName];
-  if (context$1._defaultValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED)
-    (context$1._defaultValue = defaultValue),
-      context$1._currentValue ===
-        REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED &&
-        (context$1._currentValue = defaultValue),
-      context$1._currentValue2 ===
-        REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED &&
-        (context$1._currentValue2 = defaultValue);
-  else if (wasDefined)
-    throw Error("ServerContext: " + globalName + " already defined");
-  return context$1;
-};
 exports.experimental_useEffectEvent = function (callback) {
   return ReactCurrentDispatcher.current.useEffectEvent(callback);
 };
@@ -616,4 +580,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-537228f9f-20231010";
+exports.version = "18.3.0-canary-1fc58281a-20231011";

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<39bf2c8f9557be7ed54f82946845384a>>
+ * @generated SignedSource<<8ef2cc142d91c0d00ac049494fe13842>>
  */
 
 
@@ -1193,10 +1193,7 @@ var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
 Symbol.for("react.cache");
 Symbol.for("react.tracing_marker");
-var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
-  REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
+var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
   if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
@@ -1248,11 +1245,7 @@ function getComponentNameFromType(type) {
         type = type._init;
         try {
           return getComponentNameFromType(type(innerType));
-        } catch (x) {
-          break;
-        }
-      case REACT_SERVER_CONTEXT_TYPE:
-        return (type.displayName || type._globalName) + ".Provider";
+        } catch (x) {}
     }
   return null;
 }
@@ -6018,11 +6011,7 @@ function resetContextDependencies() {
       null;
 }
 function popProvider(context) {
-  var currentValue = valueCursor.current;
-  context._currentValue =
-    currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-      ? context._defaultValue
-      : currentValue;
+  context._currentValue = valueCursor.current;
   pop(valueCursor);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
@@ -10403,7 +10392,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1173 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-00f90fb9",
+    version: "18.3.0-canary-306bec6b",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10459,7 +10448,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-00f90fb9"
+  reconcilerVersion: "18.3.0-canary-306bec6b"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

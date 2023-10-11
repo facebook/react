@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<74789ed84a7dc01a6249e9f3418afe20>>
+ * @generated SignedSource<<fb94d4d2ffdeb0cf3ea79a5a45198f2a>>
  */
 
 "use strict";
@@ -50,10 +50,7 @@ var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_CACHE_TYPE = Symbol.for("react.cache");
 Symbol.for("react.tracing_marker");
-var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
-  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
   if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
   maybeIterable =
@@ -106,11 +103,7 @@ function getComponentNameFromType(type) {
         type = type._init;
         try {
           return getComponentNameFromType(type(innerType));
-        } catch (x) {
-          break;
-        }
-      case REACT_SERVER_CONTEXT_TYPE:
-        return (type.displayName || type._globalName) + ".Provider";
+        } catch (x) {}
     }
   return null;
 }
@@ -4646,11 +4639,7 @@ function pushProvider(providerFiber, context, nextValue) {
   context._currentValue2 = nextValue;
 }
 function popProvider(context) {
-  var currentValue = valueCursor.current;
-  context._currentValue2 =
-    currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-      ? context._defaultValue
-      : currentValue;
+  context._currentValue2 = valueCursor.current;
   pop(valueCursor);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
@@ -8979,7 +8968,7 @@ var devToolsConfig$jscomp$inline_1008 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-537228f9f-20231010",
+  version: "18.3.0-canary-1fc58281a-20231011",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1201 = {
@@ -9010,7 +8999,7 @@ var internals$jscomp$inline_1201 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-537228f9f-20231010"
+  reconcilerVersion: "18.3.0-canary-1fc58281a-20231011"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1202 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
