@@ -482,5 +482,7 @@
   "494": "taintUniqueValue cannot taint objects or functions. Try taintObjectReference instead.",
   "495": "Cannot taint a %s because the value is too general and not unique enough to block globally.",
   "496": "Only objects or functions can be passed to taintObjectReference. Try taintUniqueValue instead.",
-  "497": "Only objects or functions can be passed to taintObjectReference."
+  "497": "Only objects or functions can be passed to taintObjectReference.",
+  "498": "Only plain objects, and a few built-ins, can be passed to Client Components from Server Components. Classes or null prototypes are not supported.",
+  "499": "Only plain objects, and a few built-ins, can be passed to Server Actions. Classes or null prototypes are not supported."
 }
