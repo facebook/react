@@ -7329,11 +7329,6 @@ function getComponentNameFromType(type) {
           return null;
         }
       }
-
-      case REACT_SERVER_CONTEXT_TYPE: {
-        var context2 = type;
-        return (context2.displayName || context2._globalName) + ".Provider";
-      }
     }
   }
 

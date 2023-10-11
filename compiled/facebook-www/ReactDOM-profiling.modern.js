@@ -112,9 +112,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
-  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
@@ -6292,11 +6289,7 @@ function pushProvider(providerFiber, context, nextValue) {
   context._currentValue = nextValue;
 }
 function popProvider(context) {
-  var currentValue = valueCursor.current;
-  context._currentValue =
-    currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-      ? context._defaultValue
-      : currentValue;
+  context._currentValue = valueCursor.current;
   pop(valueCursor);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
@@ -16692,7 +16685,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1823 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-003e81c0",
+  version: "18.3.0-www-modern-ad3ed8b9",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16737,7 +16730,7 @@ var devToolsConfig$jscomp$inline_1823 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-003e81c0"
+  reconcilerVersion: "18.3.0-www-modern-ad3ed8b9"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -16989,7 +16982,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-003e81c0";
+exports.version = "18.3.0-www-modern-ad3ed8b9";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

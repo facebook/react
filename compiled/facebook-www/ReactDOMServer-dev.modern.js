@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-7ef93208";
+var ReactVersion = "18.3.0-www-modern-5fb559f6";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -7441,11 +7441,6 @@ function getComponentNameFromType(type) {
         } catch (x) {
           return null;
         }
-      }
-
-      case REACT_SERVER_CONTEXT_TYPE: {
-        var context2 = type;
-        return (context2.displayName || context2._globalName) + ".Provider";
       }
     }
   }

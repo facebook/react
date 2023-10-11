@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-01108d4a";
+var ReactVersion = "18.3.0-www-classic-d874e0af";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -40,7 +40,6 @@ var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
 var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
 var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
 var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
 var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
 var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
 var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
@@ -52,9 +51,6 @@ var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
 var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
 var REACT_CACHE_TYPE = Symbol.for("react.cache");
 var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
-var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-  "react.default_value"
-);
 var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = "@@iterator";
 function getIteratorFn(maybeIterable) {
@@ -583,11 +579,6 @@ function getComponentNameFromType(type) {
         } catch (x) {
           return null;
         }
-      }
-
-      case REACT_SERVER_CONTEXT_TYPE: {
-        var context2 = type;
-        return (context2.displayName || context2._globalName) + ".Provider";
       }
     }
   }
@@ -2177,8 +2168,6 @@ function setExtraStackFrame(stack) {
   };
 }
 
-var ContextRegistry = {};
-
 var ReactSharedInternals = {
   ReactCurrentDispatcher: ReactCurrentDispatcher$1,
   ReactCurrentCache: ReactCurrentCache,
@@ -2189,10 +2178,6 @@ var ReactSharedInternals = {
 {
   ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame$2;
   ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
-}
-
-{
-  ReactSharedInternals.ContextRegistry = ContextRegistry;
 }
 
 var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -2945,87 +2930,6 @@ function cloneElementWithValidation(element, props, children) {
 
   validatePropTypes$1(newElement);
   return newElement;
-}
-
-function createServerContext(globalName, defaultValue) {
-  {
-    error(
-      "Server Context is deprecated and will soon be removed. " +
-        "It was never documented and we have found it not to be useful " +
-        "enough to warrant the downside it imposes on all apps."
-    );
-  }
-
-  var wasDefined = true;
-
-  if (!ContextRegistry[globalName]) {
-    wasDefined = false;
-    var _context = {
-      $$typeof: REACT_SERVER_CONTEXT_TYPE,
-      // As a workaround to support multiple concurrent renderers, we categorize
-      // some renderers as primary and others as secondary. We only expect
-      // there to be two concurrent renderers at most: React Native (primary) and
-      // Fabric (secondary); React DOM (primary) and React ART (secondary).
-      // Secondary renderers store their context values on separate fields.
-      _currentValue: defaultValue,
-      _currentValue2: defaultValue,
-      _defaultValue: defaultValue,
-      // Used to track how many concurrent renderers this context currently
-      // supports within in a single renderer. Such as parallel server rendering.
-      _threadCount: 0,
-      // These are circular
-      Provider: null,
-      Consumer: null,
-      _globalName: globalName
-    };
-    _context.Provider = {
-      $$typeof: REACT_PROVIDER_TYPE,
-      _context: _context
-    };
-
-    {
-      var hasWarnedAboutUsingConsumer;
-      _context._currentRenderer = null;
-      _context._currentRenderer2 = null;
-      Object.defineProperties(_context, {
-        Consumer: {
-          get: function () {
-            if (!hasWarnedAboutUsingConsumer) {
-              error("Consumer pattern is not supported by ReactServerContext");
-
-              hasWarnedAboutUsingConsumer = true;
-            }
-
-            return null;
-          }
-        }
-      });
-    }
-
-    ContextRegistry[globalName] = _context;
-  }
-
-  var context = ContextRegistry[globalName];
-
-  if (context._defaultValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-    context._defaultValue = defaultValue;
-
-    if (
-      context._currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-    ) {
-      context._currentValue = defaultValue;
-    }
-
-    if (
-      context._currentValue2 === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-    ) {
-      context._currentValue2 = defaultValue;
-    }
-  } else if (wasDefined) {
-    throw new Error("ServerContext: " + globalName + " already defined");
-  }
-
-  return context;
 }
 
 function startTransition(scope, options) {
@@ -4165,7 +4069,6 @@ exports.createContext = createContext;
 exports.createElement = createElement;
 exports.createFactory = createFactory;
 exports.createRef = createRef;
-exports.createServerContext = createServerContext;
 exports.experimental_useEffectEvent = useEffectEvent;
 exports.forwardRef = forwardRef;
 exports.isValidElement = isValidElement$1;

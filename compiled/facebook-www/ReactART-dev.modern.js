@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-7ef93208";
+var ReactVersion = "18.3.0-www-modern-5fb559f6";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -246,9 +246,6 @@ var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
 var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
 var REACT_CACHE_TYPE = Symbol.for("react.cache");
 var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
-var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-  "react.default_value"
-);
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
 var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = "@@iterator";
@@ -371,11 +368,6 @@ function getComponentNameFromType(type) {
         } catch (x) {
           return null;
         }
-      }
-
-      case REACT_SERVER_CONTEXT_TYPE: {
-        var context2 = type;
-        return (context2.displayName || context2._globalName) + ".Provider";
       }
     }
   }
@@ -16888,9 +16880,7 @@ function popProvider(context, providerFiber) {
   var currentValue = valueCursor.current;
 
   {
-    if (currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-      context._currentValue2 = context._defaultValue;
-    } else {
+    {
       context._currentValue2 = currentValue;
     }
 

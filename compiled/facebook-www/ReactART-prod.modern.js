@@ -98,9 +98,6 @@ var ReactSharedInternals =
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
-  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
@@ -4931,11 +4928,7 @@ function pushProvider(providerFiber, context, nextValue) {
   context._currentValue2 = nextValue;
 }
 function popProvider(context) {
-  var currentValue = valueCursor.current;
-  context._currentValue2 =
-    currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-      ? context._defaultValue
-      : currentValue;
+  context._currentValue2 = valueCursor.current;
   pop(valueCursor);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
@@ -9787,7 +9780,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-f6e4fdbf",
+    version: "18.3.0-www-modern-21a11200",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1286 = {
@@ -9818,7 +9811,7 @@ var internals$jscomp$inline_1286 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-f6e4fdbf"
+  reconcilerVersion: "18.3.0-www-modern-21a11200"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1287 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -93,9 +93,6 @@ var ReactSharedInternals =
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
-  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
@@ -152,11 +149,7 @@ function getComponentNameFromType(type) {
         type = type._init;
         try {
           return getComponentNameFromType(type(innerType));
-        } catch (x) {
-          break;
-        }
-      case REACT_SERVER_CONTEXT_TYPE:
-        return (type.displayName || type._globalName) + ".Provider";
+        } catch (x) {}
     }
   return null;
 }
@@ -6456,11 +6449,7 @@ function pushProvider(providerFiber, context, nextValue) {
   context._currentValue = nextValue;
 }
 function popProvider(context) {
-  var currentValue = valueCursor.current;
-  context._currentValue =
-    currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-      ? context._defaultValue
-      : currentValue;
+  context._currentValue = valueCursor.current;
   pop(valueCursor);
 }
 function scheduleContextWorkOnParentPath(parent, renderLanes, propagationRoot) {
@@ -17176,7 +17165,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1864 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-c1e1b7dc",
+  version: "18.3.0-www-classic-9e3678f6",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17220,7 +17209,7 @@ var devToolsConfig$jscomp$inline_1864 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-c1e1b7dc"
+  reconcilerVersion: "18.3.0-www-classic-9e3678f6"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17544,7 +17533,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-c1e1b7dc";
+exports.version = "18.3.0-www-classic-9e3678f6";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
