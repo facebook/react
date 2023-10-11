@@ -573,9 +573,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
   it('should support useDeferredValue hook', () => {
     function Foo(props) {
-      React.useDeferredValue('abc', {
-        timeoutMs: 500,
-      });
+      React.useDeferredValue('abc');
       const memoizedValue = React.useMemo(() => 1, []);
       React.useMemo(() => 2, []);
       return <div>{memoizedValue}</div>;
@@ -1031,52 +1029,6 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: {count: 2},
-        subHooks: [],
-      },
-    ]);
-  });
-
-  // @gate enableUseMutableSource
-  it('should support composite useMutableSource hook', () => {
-    const createMutableSource =
-      React.createMutableSource || React.unstable_createMutableSource;
-    const useMutableSource =
-      React.useMutableSource || React.unstable_useMutableSource;
-
-    const mutableSource = createMutableSource({}, () => 1);
-    function Foo(props) {
-      useMutableSource(
-        mutableSource,
-        () => 'snapshot',
-        () => {},
-      );
-      React.useMemo(() => 'memo', []);
-      React.useMemo(() => 'not used', []);
-      return <div />;
-    }
-    const renderer = ReactTestRenderer.create(<Foo />);
-    const childFiber = renderer.root.findByType(Foo)._currentFiber();
-    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree).toEqual([
-      {
-        id: 0,
-        isStateEditable: false,
-        name: 'MutableSource',
-        value: 'snapshot',
-        subHooks: [],
-      },
-      {
-        id: 1,
-        isStateEditable: false,
-        name: 'Memo',
-        value: 'memo',
-        subHooks: [],
-      },
-      {
-        id: 2,
-        isStateEditable: false,
-        name: 'Memo',
-        value: 'not used',
         subHooks: [],
       },
     ]);

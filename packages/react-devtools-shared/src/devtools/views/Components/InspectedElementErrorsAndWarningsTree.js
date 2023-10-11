@@ -24,7 +24,7 @@ import {
   clearWarningsForElement as clearWarningsForElementAPI,
 } from 'react-devtools-shared/src/backendAPI';
 
-import type {InspectedElement} from './types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 type Props = {

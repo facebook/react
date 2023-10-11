@@ -22,10 +22,6 @@
   text-overflow: ellipsis;
 }
 
-.Label {
-  font-weight: bold;
-}
-
 .CurrentCommit {
   margin: 0.25rem 0;
   display: block;

@@ -25,7 +25,7 @@ import {
   ElementTypeSuspenseList,
   ElementTypeTracingMarker,
   StrictMode,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {
   deletePathInObject,
   getDisplayName,
@@ -121,7 +121,7 @@ import type {
   ComponentFilter,
   ElementType,
   Plugins,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => symbol | number;
@@ -1419,22 +1419,20 @@ export function attach(
 
     const boundHasOwnProperty = hasOwnProperty.bind(queue);
 
-    // Detect the shape of useState() or useReducer()
+    // Detect the shape of useState() / useReducer() / useTransition()
     // using the attributes that are unique to these hooks
     // but also stable (e.g. not tied to current Lanes implementation)
-    const isStateOrReducer =
-      boundHasOwnProperty('pending') &&
-      boundHasOwnProperty('dispatch') &&
-      typeof queue.dispatch === 'function';
+    // We don't check for dispatch property, because useTransition doesn't have it
+    if (boundHasOwnProperty('pending')) {
+      return true;
+    }
 
     // Detect useSyncExternalStore()
-    const isSyncExternalStore =
+    return (
       boundHasOwnProperty('value') &&
       boundHasOwnProperty('getSnapshot') &&
-      typeof queue.getSnapshot === 'function';
-
-    // These are the only types of hooks that can schedule an update.
-    return isStateOrReducer || isSyncExternalStore;
+      typeof queue.getSnapshot === 'function'
+    );
   }
 
   function didStatefulHookChange(prev: any, next: any): boolean {
@@ -2345,6 +2343,18 @@ export function attach(
       const prevFallbackChildSet = prevFiberChild
         ? prevFiberChild.sibling
         : null;
+
+      if (prevFallbackChildSet == null && nextFallbackChildSet != null) {
+        mountFiberRecursively(
+          nextFallbackChildSet,
+          shouldIncludeInTree ? nextFiber : parentFiber,
+          true,
+          traceNearestHostComponentUpdate,
+        );
+
+        shouldResetChildren = true;
+      }
+
       if (
         nextFallbackChildSet != null &&
         prevFallbackChildSet != null &&
@@ -2736,21 +2746,11 @@ export function attach(
 
   function findNativeNodesForFiberID(id: number) {
     try {
-      let fiber = findCurrentFiberUsingSlowPathById(id);
+      const fiber = findCurrentFiberUsingSlowPathById(id);
       if (fiber === null) {
         return null;
       }
-      // Special case for a timed-out Suspense.
-      const isTimedOutSuspense =
-        fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
-      if (isTimedOutSuspense) {
-        // A timed-out Suspense's findDOMNode is useless.
-        // Try our best to find the fallback directly.
-        const maybeFallbackFiber = fiber.child && fiber.child.sibling;
-        if (maybeFallbackFiber != null) {
-          fiber = maybeFallbackFiber;
-        }
-      }
+
       const hostFibers = findAllCurrentHostFibers(id);
       return hostFibers.map(hostFiber => hostFiber.stateNode).filter(Boolean);
     } catch (err) {
@@ -2759,9 +2759,9 @@ export function attach(
     }
   }
 
-  function getDisplayNameForFiberID(id: number) {
+  function getDisplayNameForFiberID(id: number): null | string {
     const fiber = idToArbitraryFiberMap.get(id);
-    return fiber != null ? getDisplayNameForFiber(((fiber: any): Fiber)) : null;
+    return fiber != null ? getDisplayNameForFiber(fiber) : null;
   }
 
   function getFiberForNative(hostInstance: NativeType) {
@@ -3290,7 +3290,7 @@ export function attach(
     };
 
     if (enableStyleXFeatures) {
-      if (memoizedProps.hasOwnProperty('xstyle')) {
+      if (memoizedProps != null && memoizedProps.hasOwnProperty('xstyle')) {
         plugins.stylex = getStyleXData(memoizedProps.xstyle);
       }
     }
@@ -4456,6 +4456,10 @@ export function attach(
     traceUpdatesEnabled = isEnabled;
   }
 
+  function hasFiberWithId(id: number): boolean {
+    return idToArbitraryFiberMap.has(id);
+  }
+
   return {
     cleanup,
     clearErrorsAndWarnings,
@@ -4476,6 +4480,7 @@ export function attach(
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     handlePostCommitFiberRoot,
+    hasFiberWithId,
     inspectElement,
     logElementToConsole,
     patchConsoleForStrictMode,

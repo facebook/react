@@ -42,6 +42,7 @@ export {
   useLayoutEffect,
   useMemo,
   useReducer,
+  useOptimistic,
   useRef,
   useState,
   useSyncExternalStore,

@@ -54,12 +54,10 @@ export * from 'react-reconciler/src/ReactFiberConfigWithNoResources';
 export * from 'react-reconciler/src/ReactFiberConfigWithNoSingletons';
 
 const NO_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 const nodeToInstanceMap = new WeakMap<any, Instance>();
 
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 export function getPublicInstance(inst: Instance | TextInstance): $FlowFixMe {
@@ -184,17 +182,6 @@ export function finalizeInitialChildren(
   hostContext: Object,
 ): boolean {
   return false;
-}
-
-export function prepareUpdate(
-  testElement: Instance,
-  type: string,
-  oldProps: Props,
-  newProps: Props,
-  rootContainerInstance: Container,
-  hostContext: Object,
-): null | {...} {
-  return UPDATE_SIGNAL;
 }
 
 export function shouldSetTextContent(type: string, props: Props): boolean {

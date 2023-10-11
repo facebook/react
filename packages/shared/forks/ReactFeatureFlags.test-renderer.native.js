@@ -24,6 +24,9 @@ export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
 export const enableFormActions = true; // Doesn't affect Test Renderer
+export const enableBinaryFlight = true;
+export const enableTaint = true;
+export const enablePostpone = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
@@ -52,13 +55,12 @@ export const enableUseRefAccessWarning = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
-export const enableSyncDefaultUpdates = true;
+export const forceConcurrentByDefaultForTesting = false;
 export const enableUnifiedSyncLane = false;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableServerContext = true;
-export const enableUseMutableSource = false;
 
 export const enableTransitionTracing = false;
 
@@ -66,12 +68,16 @@ export const enableFloat = true;
 export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 
-export const diffInCommitPhase = true;
-export const enableAsyncActions = false;
+export const enableAsyncActions = true;
 
 export const alwaysThrottleRetries = true;
+
+export const useMicrotasksForSchedulingInFabric = false;
+export const passChildrenWhenCloningPersistedNodes = false;
+export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

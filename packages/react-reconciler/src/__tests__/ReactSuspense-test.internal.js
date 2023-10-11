@@ -224,19 +224,7 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('Initial');
 
     // The update will suspend.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        root.update(
-          <>
-            <Suspense fallback={<Text text="Loading..." />}>
-              <Async />
-            </Suspense>
-            <Text text="After Suspense" />
-            <Text text="Sibling" />
-          </>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       root.update(
         <>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -246,7 +234,7 @@ describe('ReactSuspense', () => {
           <Text text="Sibling" />
         </>,
       );
-    }
+    });
 
     // Yield past the Suspense boundary but don't complete the last sibling.
     await waitFor(['Suspend!', 'Loading...', 'After Suspense']);
@@ -339,7 +327,7 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AB');
   });
 
-  // @gate !enableSyncDefaultUpdates
+  // @gate forceConcurrentByDefaultForTesting
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already skipped over a lower priority update in " +

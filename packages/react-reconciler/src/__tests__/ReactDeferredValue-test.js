@@ -306,4 +306,39 @@ describe('ReactDeferredValue', () => {
       );
     });
   });
+
+  // @gate enableUseDeferredValueInitialArg
+  it('supports initialValue argument', async () => {
+    function App() {
+      const value = useDeferredValue('Final', 'Initial');
+      return <Text text={value} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+      await waitForPaint(['Initial']);
+      expect(root).toMatchRenderedOutput('Initial');
+    });
+    assertLog(['Final']);
+    expect(root).toMatchRenderedOutput('Final');
+  });
+
+  // @gate enableUseDeferredValueInitialArg
+  it('defers during initial render when initialValue is provided, even if render is not sync', async () => {
+    function App() {
+      const value = useDeferredValue('Final', 'Initial');
+      return <Text text={value} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      // Initial mount is a transition, but it should defer anyway
+      startTransition(() => root.render(<App />));
+      await waitForPaint(['Initial']);
+      expect(root).toMatchRenderedOutput('Initial');
+    });
+    assertLog(['Final']);
+    expect(root).toMatchRenderedOutput('Final');
+  });
 });

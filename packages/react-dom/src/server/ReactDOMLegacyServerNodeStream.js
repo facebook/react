@@ -19,7 +19,8 @@ import {
 } from 'react-server/src/ReactFizzServer';
 
 import {
-  createResponseState,
+  createResumableState,
+  createRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
 
@@ -70,13 +71,19 @@ function renderToNodeStreamImpl(
     startFlowing(request, destination);
   }
   const destination = new ReactMarkupReadableStream();
+  const resumableState = createResumableState(
+    options ? options.identifierPrefix : undefined,
+    undefined,
+  );
   const request = createRequest(
     children,
-    createResponseState(false, options ? options.identifierPrefix : undefined),
+    resumableState,
+    createRenderState(resumableState, false),
     createRootFormatContext(),
     Infinity,
     onError,
     onAllReady,
+    undefined,
     undefined,
     undefined,
   );

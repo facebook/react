@@ -24,6 +24,8 @@ declare var queueMicrotask: (fn: Function) => void;
 declare var reportError: (error: mixed) => void;
 declare var AggregateError: Class<Error>;
 
+declare var FinalizationRegistry: any;
+
 declare module 'create-react-class' {
   declare var exports: React$CreateClass;
 }
@@ -74,7 +76,14 @@ declare module 'EventListener' {
 }
 
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
-declare function __webpack_require__(id: string): any;
+declare var __webpack_require__: ((id: string) => any) & {
+  u: string => string,
+};
+
+declare function __turbopack_load__(id: string): Promise<mixed>;
+declare var __turbopack_require__: ((id: string) => any) & {
+  u: string => string,
+};
 
 declare module 'fs/promises' {
   declare var access: (path: string, mode?: number) => Promise<void>;
@@ -281,3 +290,9 @@ declare module 'node:worker_threads' {
     port2: MessagePort;
   }
 }
+
+declare var Bun: {
+  hash(
+    input: string | $TypedArray | DataView | ArrayBuffer | SharedArrayBuffer,
+  ): number,
+};

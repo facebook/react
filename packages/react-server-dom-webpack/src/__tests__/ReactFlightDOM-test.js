@@ -12,6 +12,7 @@
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
 // Don't wait before processing work on the server.
@@ -24,33 +25,53 @@ let clientExports;
 let clientModuleError;
 let webpackMap;
 let Stream;
+let FlightReact;
 let React;
-let ReactDOM;
+let FlightReactDOM;
 let ReactDOMClient;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let ReactDOMFizzServer;
 let Suspense;
 let ErrorBoundary;
+let JSDOM;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
+    // For this first reset we are going to load the dom-node version of react-server-dom-webpack/server
+    // This can be thought of as essentially being the React Server Components scope with react-server
+    // condition
     jest.resetModules();
-    act = require('internal-test-utils').act;
+
+    JSDOM = require('jsdom').JSDOM;
+
+    // Simulate the condition resolution
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.node.unbundled'),
+    );
+    jest.mock('react', () => require('react/react.shared-subset'));
+
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;
     clientModuleError = WebpackMock.clientModuleError;
     webpackMap = WebpackMock.webpackMap;
 
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
+    FlightReact = require('react');
+    FlightReactDOM = require('react-dom');
+
+    // This reset is to load modules for the SSR/Browser scope.
+    jest.unmock('react-server-dom-webpack/server');
+    __unmockReact();
+    jest.resetModules();
+    act = require('internal-test-utils').act;
     Stream = require('stream');
     React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMFizzServer = require('react-dom/server.node');
     use = React.use;
     Suspense = React.Suspense;
     ReactDOMClient = require('react-dom/client');
+    ReactDOMFizzServer = require('react-dom/server.node');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.node.unbundled');
 
     ErrorBoundary = class extends React.Component {
       state = {hasError: false, error: null};
@@ -90,6 +111,51 @@ describe('ReactFlightDOM', () => {
   const theInfinitePromise = new Promise(() => {});
   function InfiniteSuspend() {
     throw theInfinitePromise;
+  }
+
+  function getMeaningfulChildren(element) {
+    const children = [];
+    let node = element.firstChild;
+    while (node) {
+      if (node.nodeType === 1) {
+        if (
+          // some tags are ambiguous and might be hidden because they look like non-meaningful children
+          // so we have a global override where if this data attribute is included we also include the node
+          node.hasAttribute('data-meaningful') ||
+          (node.tagName === 'SCRIPT' &&
+            node.hasAttribute('src') &&
+            node.hasAttribute('async')) ||
+          (node.tagName !== 'SCRIPT' &&
+            node.tagName !== 'TEMPLATE' &&
+            node.tagName !== 'template' &&
+            !node.hasAttribute('hidden') &&
+            !node.hasAttribute('aria-hidden'))
+        ) {
+          const props = {};
+          const attributes = node.attributes;
+          for (let i = 0; i < attributes.length; i++) {
+            if (
+              attributes[i].name === 'id' &&
+              attributes[i].value.includes(':')
+            ) {
+              // We assume this is a React added ID that's a non-visual implementation detail.
+              continue;
+            }
+            props[attributes[i].name] = attributes[i].value;
+          }
+          props.children = getMeaningfulChildren(node);
+          children.push(React.createElement(node.tagName.toLowerCase(), props));
+        }
+      } else if (node.nodeType === 3) {
+        children.push(node.data);
+      }
+      node = node.nextSibling;
+    }
+    return children.length === 0
+      ? undefined
+      : children.length === 1
+      ? children[0]
+      : children;
   }
 
   it('should resolve HTML using Node streams', async () => {
@@ -429,7 +495,7 @@ describe('ReactFlightDOM', () => {
     const AsyncModuleRef = clientExports(AsyncModule);
 
     function ServerComponent() {
-      const text = use(AsyncModuleRef);
+      const text = FlightReact.use(AsyncModuleRef);
       return <p>{text}</p>;
     }
 
@@ -1141,7 +1207,7 @@ describe('ReactFlightDOM', () => {
     expect(reportedErrors).toEqual([theError]);
   });
 
-  it('should support ReactDOM.preload when rendering in Fiber', async () => {
+  it('should support float methods when rendering in Fiber', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -1149,9 +1215,25 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent() {
-      ReactDOM.preload('before', {as: 'style'});
+      FlightReactDOM.prefetchDNS('d before');
+      FlightReactDOM.preconnect('c before');
+      FlightReactDOM.preconnect('c2 before', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('l before', {as: 'style'});
+      FlightReactDOM.preloadModule('lm before');
+      FlightReactDOM.preloadModule('lm2 before', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preinit('i before', {as: 'script'});
+      FlightReactDOM.preinitModule('m before');
+      FlightReactDOM.preinitModule('m2 before', {crossOrigin: 'anonymous'});
       await 1;
-      ReactDOM.preload('after', {as: 'style'});
+      FlightReactDOM.prefetchDNS('d after');
+      FlightReactDOM.preconnect('c after');
+      FlightReactDOM.preconnect('c2 after', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('l after', {as: 'style'});
+      FlightReactDOM.preloadModule('lm after');
+      FlightReactDOM.preloadModule('lm2 after', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preinit('i after', {as: 'script'});
+      FlightReactDOM.preinitModule('m after');
+      FlightReactDOM.preinitModule('m2 after', {crossOrigin: 'anonymous'});
       return <ClientComponent />;
     }
 
@@ -1189,14 +1271,36 @@ describe('ReactFlightDOM', () => {
     await act(() => {
       root.render(<App />);
     });
-    expect(document.head.innerHTML).toBe(
-      '<link href="before" rel="preload" as="style">' +
-        '<link href="after" rel="preload" as="style">',
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="dns-prefetch" href="d before" />
+          <link rel="preconnect" href="c before" />
+          <link rel="preconnect" href="c2 before" crossorigin="" />
+          <link rel="preload" as="style" href="l before" />
+          <link rel="modulepreload" href="lm before" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="" />
+          <script async="" src="i before" />
+          <script type="module" async="" src="m before" />
+          <script type="module" async="" src="m2 before" crossorigin="" />
+          <link rel="dns-prefetch" href="d after" />
+          <link rel="preconnect" href="c after" />
+          <link rel="preconnect" href="c2 after" crossorigin="" />
+          <link rel="preload" as="style" href="l after" />
+          <link rel="modulepreload" href="lm after" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="" />
+          <script async="" src="i after" />
+          <script type="module" async="" src="m after" />
+          <script type="module" async="" src="m2 after" crossorigin="" />
+        </head>
+        <body />
+      </html>,
     );
-    expect(container.innerHTML).toBe('<p>hello world</p>');
+    expect(getMeaningfulChildren(container)).toEqual(<p>hello world</p>);
   });
 
-  it('should support ReactDOM.preload when rendering in Fizz', async () => {
+  it('should support float methods when rendering in Fizz', async () => {
     function Component() {
       return <p>hello world</p>;
     }
@@ -1204,9 +1308,25 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent() {
-      ReactDOM.preload('before', {as: 'style'});
+      FlightReactDOM.prefetchDNS('d before');
+      FlightReactDOM.preconnect('c before');
+      FlightReactDOM.preconnect('c2 before', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('l before', {as: 'style'});
+      FlightReactDOM.preloadModule('lm before');
+      FlightReactDOM.preloadModule('lm2 before', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preinit('i before', {as: 'script'});
+      FlightReactDOM.preinitModule('m before');
+      FlightReactDOM.preinitModule('m2 before', {crossOrigin: 'anonymous'});
       await 1;
-      ReactDOM.preload('after', {as: 'style'});
+      FlightReactDOM.prefetchDNS('d after');
+      FlightReactDOM.preconnect('c after');
+      FlightReactDOM.preconnect('c2 after', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('l after', {as: 'style'});
+      FlightReactDOM.preloadModule('lm after');
+      FlightReactDOM.preloadModule('lm2 after', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preinit('i after', {as: 'script'});
+      FlightReactDOM.preinitModule('m after');
+      FlightReactDOM.preinitModule('m2 after', {crossOrigin: 'anonymous'});
       return <ClientComponent />;
     }
 
@@ -1258,9 +1378,33 @@ describe('ReactFlightDOM', () => {
       content += decoder.decode(value, {stream: true});
     }
 
-    expect(content).toEqual(
-      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before"/>' +
-        '<link rel="preload" as="style" href="after"/></head><body><p>hello world</p></body></html>',
+    const doc = new JSDOM(content).window.document;
+    expect(getMeaningfulChildren(doc)).toEqual(
+      <html>
+        <head>
+          <link rel="dns-prefetch" href="d before" />
+          <link rel="preconnect" href="c before" />
+          <link rel="preconnect" href="c2 before" crossorigin="" />
+          <link rel="dns-prefetch" href="d after" />
+          <link rel="preconnect" href="c after" />
+          <link rel="preconnect" href="c2 after" crossorigin="" />
+          <script async="" src="i before" />
+          <script type="module" async="" src="m before" />
+          <script type="module" async="" src="m2 before" crossorigin="" />
+          <script async="" src="i after" />
+          <script type="module" async="" src="m after" />
+          <script type="module" async="" src="m2 after" crossorigin="" />
+          <link rel="preload" as="style" href="l before" />
+          <link rel="modulepreload" href="lm before" />
+          <link rel="modulepreload" href="lm2 before" crossorigin="" />
+          <link rel="preload" as="style" href="l after" />
+          <link rel="modulepreload" href="lm after" />
+          <link rel="modulepreload" href="lm2 after" crossorigin="" />
+        </head>
+        <body>
+          <p>hello world</p>
+        </body>
+      </html>,
     );
   });
 
@@ -1272,16 +1416,16 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent1() {
-      ReactDOM.preload('before1', {as: 'style'});
+      FlightReactDOM.preload('before1', {as: 'style'});
       await 1;
-      ReactDOM.preload('after1', {as: 'style'});
+      FlightReactDOM.preload('after1', {as: 'style'});
       return <ClientComponent />;
     }
 
     async function ServerComponent2() {
-      ReactDOM.preload('before2', {as: 'style'});
+      FlightReactDOM.preload('before2', {as: 'style'});
       await 1;
-      ReactDOM.preload('after2', {as: 'style'});
+      FlightReactDOM.preload('after2', {as: 'style'});
       return <ClientComponent />;
     }
 
@@ -1355,12 +1499,12 @@ describe('ReactFlightDOM', () => {
     ]);
 
     expect(content1).toEqual(
-      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before1"/>' +
-        '<link rel="preload" as="style" href="after1"/></head><body><p>hello world</p></body></html>',
+      '<!DOCTYPE html><html><head><link rel="preload" href="before1" as="style"/>' +
+        '<link rel="preload" href="after1" as="style"/></head><body><p>hello world</p></body></html>',
     );
     expect(content2).toEqual(
-      '<!DOCTYPE html><html><head><link rel="preload" as="style" href="before2"/>' +
-        '<link rel="preload" as="style" href="after2"/></head><body><p>hello world</p></body></html>',
+      '<!DOCTYPE html><html><head><link rel="preload" href="before2" as="style"/>' +
+        '<link rel="preload" href="after2" as="style"/></head><body><p>hello world</p></body></html>',
     );
   });
 
@@ -1372,21 +1516,21 @@ describe('ReactFlightDOM', () => {
     const ClientComponent = clientExports(Component);
 
     async function ServerComponent() {
-      ReactDOM.prefetchDNS('dns');
-      ReactDOM.preconnect('preconnect');
-      ReactDOM.preload('load', {as: 'style'});
-      ReactDOM.preinit('init', {as: 'script'});
+      FlightReactDOM.prefetchDNS('dns');
+      FlightReactDOM.preconnect('preconnect');
+      FlightReactDOM.preload('load', {as: 'style'});
+      FlightReactDOM.preinit('init', {as: 'script'});
       // again but vary preconnect to demonstrate crossOrigin participates in the key
-      ReactDOM.prefetchDNS('dns');
-      ReactDOM.preconnect('preconnect', {crossOrigin: 'anonymous'});
-      ReactDOM.preload('load', {as: 'style'});
-      ReactDOM.preinit('init', {as: 'script'});
+      FlightReactDOM.prefetchDNS('dns');
+      FlightReactDOM.preconnect('preconnect', {crossOrigin: 'anonymous'});
+      FlightReactDOM.preload('load', {as: 'style'});
+      FlightReactDOM.preinit('init', {as: 'script'});
       await 1;
       // after an async point
-      ReactDOM.prefetchDNS('dns');
-      ReactDOM.preconnect('preconnect', {crossOrigin: 'use-credentials'});
-      ReactDOM.preload('load', {as: 'style'});
-      ReactDOM.preinit('init', {as: 'script'});
+      FlightReactDOM.prefetchDNS('dns');
+      FlightReactDOM.preconnect('preconnect', {crossOrigin: 'use-credentials'});
+      FlightReactDOM.preload('load', {as: 'style'});
+      FlightReactDOM.preinit('init', {as: 'script'});
       return <ClientComponent />;
     }
 
