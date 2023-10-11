@@ -9,6 +9,8 @@
 
 import {enableTaint, enableBinaryFlight} from 'shared/ReactFeatureFlags';
 
+import getPrototypeOf from 'shared/getPrototypeOf';
+
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import ReactServerSharedInternals from './ReactServerSharedInternals';
@@ -22,9 +24,7 @@ const {
 interface Reference {}
 
 // This is the shared constructor of all typed arrays.
-const TypedArrayConstructor = Object.getPrototypeOf(
-  Uint32Array.prototype,
-).constructor;
+const TypedArrayConstructor = getPrototypeOf(Uint32Array.prototype).constructor;
 
 const defaultMessage =
   'A tainted value was attempted to be serialized to a Client Component or Action closure. ' +
