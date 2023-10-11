@@ -1049,6 +1049,11 @@ function resolveModelToJSON(
       return (undefined: any);
     }
 
+    if (isArray(value)) {
+      // $FlowFixMe[incompatible-return]
+      return value;
+    }
+
     if (value instanceof Map) {
       return serializeMap(request, value);
     }
@@ -1108,11 +1113,6 @@ function resolveModelToJSON(
       if (value instanceof DataView) {
         return serializeTypedArray(request, 'V', value);
       }
-    }
-
-    if (isArray(value)) {
-      // $FlowFixMe[incompatible-return]
-      return value;
     }
 
     const iteratorFn = getIteratorFn(value);

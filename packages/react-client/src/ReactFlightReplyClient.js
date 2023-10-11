@@ -230,6 +230,10 @@ export function processReply(
         );
         return serializePromiseID(promiseId);
       }
+      if (isArray(value)) {
+        // $FlowFixMe[incompatible-return]
+        return value;
+      }
       // TODO: Should we the Object.prototype.toString.call() to test for cross-realm objects?
       if (value instanceof FormData) {
         if (formData === null) {
@@ -265,10 +269,6 @@ export function processReply(
         const setId = nextPartId++;
         formData.append(formFieldPrefix + setId, partJSON);
         return serializeSetID(setId);
-      }
-      if (isArray(value)) {
-        // $FlowFixMe[incompatible-return]
-        return value;
       }
       const iteratorFn = getIteratorFn(value);
       if (iteratorFn) {
