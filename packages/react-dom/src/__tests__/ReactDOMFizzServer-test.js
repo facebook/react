@@ -3624,6 +3624,32 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // bugfix: https://github.com/facebook/react/issues/27286 affecting enableCustomElementPropertySupport flag
+  it('can render custom elements with children on ther server', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <my-element>
+              <div>foo</div>
+            </my-element>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <my-element>
+            <div>foo</div>
+          </my-element>
+        </body>
+      </html>,
+    );
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};
