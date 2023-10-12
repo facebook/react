@@ -150,6 +150,7 @@ import {
 } from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
+import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -2688,12 +2689,6 @@ function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
     );
     markSkippedUpdateLanes(deferredLane);
 
-    // Set this to true to indicate that the rendered value is inconsistent
-    // from the latest value. The name "baseState" doesn't really match how we
-    // use it because we're reusing a state hook field instead of creating a
-    // new one.
-    hook.baseState = true;
-
     return initialValue;
   } else {
     hook.memoizedState = value;
@@ -2705,17 +2700,33 @@ function updateDeferredValueImpl<T>(
   hook: Hook,
   prevValue: T,
   value: T,
-  initialValue: ?T,
+  initialValue?: T,
 ): T {
-  // TODO: We should also check if this component is going from
-  // hidden -> visible. If so, it should use the initialValue arg.
+  if (is(value, prevValue)) {
+    // The incoming value is referentially identical to the currently rendered
+    // value, so we can bail out quickly.
+    return value;
+  } else {
+    // Received a new value that's different from the current value.
 
-  const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
-  if (shouldDeferValue) {
-    // This is an urgent update. If the value has changed, keep using the
-    // previous value and spawn a deferred render to update it later.
+    // Check if we're inside a hidden tree
+    if (isCurrentTreeHidden()) {
+      // Revealing a prerendered tree is considered the same as mounting new
+      // one, so we reuse the "mount" path in this case.
+      const resultValue = mountDeferredValueImpl(hook, value, initialValue);
+      // Unlike during an actual mount, we need to mark this as an update if
+      // the value changed.
+      if (!is(resultValue, prevValue)) {
+        markWorkInProgressReceivedUpdate();
+      }
+      return resultValue;
+    }
 
-    if (!is(value, prevValue)) {
+    const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
+    if (shouldDeferValue) {
+      // This is an urgent update. Since the value has changed, keep using the
+      // previous value and spawn a deferred render to update it later.
+
       // Schedule a deferred render
       const deferredLane = requestDeferredLane();
       currentlyRenderingFiber.lanes = mergeLanes(
@@ -2724,33 +2735,18 @@ function updateDeferredValueImpl<T>(
       );
       markSkippedUpdateLanes(deferredLane);
 
-      // Set this to true to indicate that the rendered value is inconsistent
-      // from the latest value. The name "baseState" doesn't really match how we
-      // use it because we're reusing a state hook field instead of creating a
-      // new one.
-      hook.baseState = true;
-    }
+      // Reuse the previous value. We do not need to mark this as an update,
+      // because we did not render a new value.
+      return prevValue;
+    } else {
+      // This is not an urgent update, so we can use the latest value regardless
+      // of what it is. No need to defer it.
 
-    // Reuse the previous value
-    return prevValue;
-  } else {
-    // This is not an urgent update, so we can use the latest value regardless
-    // of what it is. No need to defer it.
-
-    // However, if we're currently inside a spawned render, then we need to mark
-    // this as an update to prevent the fiber from bailing out.
-    //
-    // `baseState` is true when the current value is different from the rendered
-    // value. The name doesn't really match how we use it because we're reusing
-    // a state hook field instead of creating a new one.
-    if (hook.baseState) {
-      // Flip this back to false.
-      hook.baseState = false;
+      // Mark this as an update to prevent the fiber from bailing out.
       markWorkInProgressReceivedUpdate();
+      hook.memoizedState = value;
+      return value;
     }
-
-    hook.memoizedState = value;
-    return value;
   }
 }
 

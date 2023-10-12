@@ -616,4 +616,190 @@ describe('ReactDeferredValue', () => {
     assertLog([]);
     expect(root).toMatchRenderedOutput(<div>Final</div>);
   });
+
+  // @gate enableUseDeferredValueInitialArg
+  // @gate enableOffscreen
+  it('useDeferredValue can prerender the initial value inside a hidden tree', async () => {
+    function App({text}) {
+      const renderedText = useDeferredValue(text, `Preview [${text}]`);
+      return (
+        <div>
+          <Text text={renderedText} />
+        </div>
+      );
+    }
+
+    let revealContent;
+    function Container({children}) {
+      const [shouldShow, setState] = useState(false);
+      revealContent = () => setState(true);
+      return (
+        <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+          {children}
+        </Offscreen>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Prerender some content
+    await act(() => {
+      root.render(
+        <Container>
+          <App text="A" />
+        </Container>,
+      );
+    });
+    assertLog(['Preview [A]', 'A']);
+    expect(root).toMatchRenderedOutput(<div hidden={true}>A</div>);
+
+    await act(async () => {
+      // While the tree is still hidden, update the pre-rendered tree.
+      root.render(
+        <Container>
+          <App text="B" />
+        </Container>,
+      );
+      // We should switch to pre-rendering the new preview.
+      await waitForPaint(['Preview [B]']);
+      expect(root).toMatchRenderedOutput(<div hidden={true}>Preview [B]</div>);
+
+      // Before the prerender is complete, reveal the hidden tree. Because we
+      // consider revealing a hidden tree to be the same as mounting a new one,
+      // we should not skip the preview state.
+      revealContent();
+      // Because the preview state was already prerendered, we can reveal it
+      // without any addditional work.
+      await waitForPaint([]);
+      expect(root).toMatchRenderedOutput(<div>Preview [B]</div>);
+    });
+    // Finally, finish rendering the final value.
+    assertLog(['B']);
+    expect(root).toMatchRenderedOutput(<div>B</div>);
+  });
+
+  // @gate enableUseDeferredValueInitialArg
+  // @gate enableOffscreen
+  it(
+    'useDeferredValue skips the preview state when revealing a hidden tree ' +
+      'if the final value is referentially identical',
+    async () => {
+      function App({text}) {
+        const renderedText = useDeferredValue(text, `Preview [${text}]`);
+        return (
+          <div>
+            <Text text={renderedText} />
+          </div>
+        );
+      }
+
+      function Container({text, shouldShow}) {
+        return (
+          <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+            <App text={text} />
+          </Offscreen>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      // Prerender some content
+      await act(() => root.render(<Container text="A" shouldShow={false} />));
+      assertLog(['Preview [A]', 'A']);
+      expect(root).toMatchRenderedOutput(<div hidden={true}>A</div>);
+
+      // Reveal the prerendered tree. Because the final value is referentially
+      // equal to what was already prerendered, we can skip the preview state
+      // and go straight to the final one. The practical upshot of this is
+      // that we can completely prerender the final value without having to
+      // do additional rendering work when the tree is revealed.
+      await act(() => root.render(<Container text="A" shouldShow={true} />));
+      assertLog(['A']);
+      expect(root).toMatchRenderedOutput(<div>A</div>);
+    },
+  );
+
+  // @gate enableUseDeferredValueInitialArg
+  // @gate enableOffscreen
+  it(
+    'useDeferredValue does not skip the preview state when revealing a ' +
+      'hidden tree if the final value is different from the currently rendered one',
+    async () => {
+      function App({text}) {
+        const renderedText = useDeferredValue(text, `Preview [${text}]`);
+        return (
+          <div>
+            <Text text={renderedText} />
+          </div>
+        );
+      }
+
+      function Container({text, shouldShow}) {
+        return (
+          <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+            <App text={text} />
+          </Offscreen>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      // Prerender some content
+      await act(() => root.render(<Container text="A" shouldShow={false} />));
+      assertLog(['Preview [A]', 'A']);
+      expect(root).toMatchRenderedOutput(<div hidden={true}>A</div>);
+
+      // Reveal the prerendered tree. Because the final value is different from
+      // what was already prerendered, we can't bail out. Since we treat
+      // revealing a hidden tree the same as a new mount, show the preview state
+      // before switching to the final one.
+      await act(async () => {
+        root.render(<Container text="B" shouldShow={true} />);
+        // First commit the preview state
+        await waitForPaint(['Preview [B]']);
+        expect(root).toMatchRenderedOutput(<div>Preview [B]</div>);
+      });
+      // Then switch to the final state
+      assertLog(['B']);
+      expect(root).toMatchRenderedOutput(<div>B</div>);
+    },
+  );
+
+  // @gate enableOffscreen
+  it(
+    'useDeferredValue does not show "previous" value when revealing a hidden ' +
+      'tree (no initial value)',
+    async () => {
+      function App({text}) {
+        const renderedText = useDeferredValue(text);
+        return (
+          <div>
+            <Text text={renderedText} />
+          </div>
+        );
+      }
+
+      function Container({text, shouldShow}) {
+        return (
+          <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+            <App text={text} />
+          </Offscreen>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      // Prerender some content
+      await act(() => root.render(<Container text="A" shouldShow={false} />));
+      assertLog(['A']);
+      expect(root).toMatchRenderedOutput(<div hidden={true}>A</div>);
+
+      // Update the prerendered tree and reveal it at the same time. Even though
+      // this is a sync update, we should update B immediately rather than stay
+      // on the old value (A), because conceptually this is a new tree.
+      await act(() => root.render(<Container text="B" shouldShow={true} />));
+      assertLog(['B']);
+      expect(root).toMatchRenderedOutput(<div>B</div>);
+    },
+  );
 });
