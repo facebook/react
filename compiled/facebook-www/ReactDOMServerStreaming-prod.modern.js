@@ -1537,25 +1537,9 @@ function pushStartInstance(
         for (propKey$jscomp$9 in props)
           if (hasOwnProperty.call(props, propKey$jscomp$9)) {
             var propValue$jscomp$9 = props[propKey$jscomp$9];
-            if (
-              !(
-                null == propValue$jscomp$9 ||
-                (enableCustomElementPropertySupport &&
-                  ("function" === typeof propValue$jscomp$9 ||
-                    "object" === typeof propValue$jscomp$9)) ||
-                (enableCustomElementPropertySupport &&
-                  !1 === propValue$jscomp$9)
-              )
-            )
-              switch (
-                (enableCustomElementPropertySupport &&
-                  !0 === propValue$jscomp$9 &&
-                  (propValue$jscomp$9 = ""),
-                enableCustomElementPropertySupport &&
-                  "className" === propKey$jscomp$9 &&
-                  (propKey$jscomp$9 = "class"),
-                propKey$jscomp$9)
-              ) {
+            if (null != propValue$jscomp$9) {
+              var attributeName = propKey$jscomp$9;
+              switch (propKey$jscomp$9) {
                 case "children":
                   children$jscomp$7 = propValue$jscomp$9;
                   break;
@@ -1568,18 +1552,30 @@ function pushStartInstance(
                 case "suppressContentEditableWarning":
                 case "suppressHydrationWarning":
                   break;
+                case "className":
+                  enableCustomElementPropertySupport &&
+                    (attributeName = "class");
                 default:
-                  isAttributeNameSafe(propKey$jscomp$9) &&
+                  if (
+                    isAttributeNameSafe(propKey$jscomp$9) &&
                     "function" !== typeof propValue$jscomp$9 &&
-                    "symbol" !== typeof propValue$jscomp$9 &&
+                    "symbol" !== typeof propValue$jscomp$9
+                  ) {
+                    if (enableCustomElementPropertySupport)
+                      if (!1 === propValue$jscomp$9) continue;
+                      else if (!0 === propValue$jscomp$9)
+                        propValue$jscomp$9 = "";
+                      else if ("object" === typeof propValue$jscomp$9) continue;
                     target$jscomp$0.push(
                       " ",
-                      propKey$jscomp$9,
+                      attributeName,
                       '="',
                       escapeTextForBrowser(propValue$jscomp$9),
                       '"'
                     );
+                  }
               }
+            }
           }
         target$jscomp$0.push(">");
         pushInnerHTML(target$jscomp$0, innerHTML$jscomp$6, children$jscomp$7);

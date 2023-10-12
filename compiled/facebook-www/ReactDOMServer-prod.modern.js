@@ -1527,25 +1527,9 @@ function pushStartInstance(
         for (propKey$jscomp$9 in props)
           if (hasOwnProperty.call(props, propKey$jscomp$9)) {
             var propValue$jscomp$9 = props[propKey$jscomp$9];
-            if (
-              !(
-                null == propValue$jscomp$9 ||
-                (enableCustomElementPropertySupport &&
-                  ("function" === typeof propValue$jscomp$9 ||
-                    "object" === typeof propValue$jscomp$9)) ||
-                (enableCustomElementPropertySupport &&
-                  !1 === propValue$jscomp$9)
-              )
-            )
-              switch (
-                (enableCustomElementPropertySupport &&
-                  !0 === propValue$jscomp$9 &&
-                  (propValue$jscomp$9 = ""),
-                enableCustomElementPropertySupport &&
-                  "className" === propKey$jscomp$9 &&
-                  (propKey$jscomp$9 = "class"),
-                propKey$jscomp$9)
-              ) {
+            if (null != propValue$jscomp$9) {
+              var attributeName = propKey$jscomp$9;
+              switch (propKey$jscomp$9) {
                 case "children":
                   children$jscomp$7 = propValue$jscomp$9;
                   break;
@@ -1558,18 +1542,30 @@ function pushStartInstance(
                 case "suppressContentEditableWarning":
                 case "suppressHydrationWarning":
                   break;
+                case "className":
+                  enableCustomElementPropertySupport &&
+                    (attributeName = "class");
                 default:
-                  isAttributeNameSafe(propKey$jscomp$9) &&
+                  if (
+                    isAttributeNameSafe(propKey$jscomp$9) &&
                     "function" !== typeof propValue$jscomp$9 &&
-                    "symbol" !== typeof propValue$jscomp$9 &&
+                    "symbol" !== typeof propValue$jscomp$9
+                  ) {
+                    if (enableCustomElementPropertySupport)
+                      if (!1 === propValue$jscomp$9) continue;
+                      else if (!0 === propValue$jscomp$9)
+                        propValue$jscomp$9 = "";
+                      else if ("object" === typeof propValue$jscomp$9) continue;
                     target$jscomp$0.push(
                       " ",
-                      propKey$jscomp$9,
+                      attributeName,
                       '="',
                       escapeTextForBrowser(propValue$jscomp$9),
                       '"'
                     );
+                  }
               }
+            }
           }
         target$jscomp$0.push(">");
         pushInnerHTML(target$jscomp$0, innerHTML$jscomp$6, children$jscomp$7);
@@ -2291,16 +2287,16 @@ function hoistStylesheetDependency(stylesheet) {
 function createRenderState(resumableState, generateStaticMarkup) {
   var idPrefix = resumableState.idPrefix;
   resumableState = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1555 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1556 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1567 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1568 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1569 = new Set(),
-    JSCompiler_object_inline_styles_1570 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1571 = new Set(),
-    JSCompiler_object_inline_scripts_1572 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1573 = new Set(),
-    JSCompiler_object_inline_preloads_1574 = {
+  var JSCompiler_object_inline_preconnects_1568 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1569 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1570 = new Set(),
+    JSCompiler_object_inline_styles_1571 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1572 = new Set(),
+    JSCompiler_object_inline_scripts_1573 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1574 = new Set(),
+    JSCompiler_object_inline_preloads_1575 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2308,7 +2304,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
     };
   return {
     placeholderPrefix: resumableState,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1555,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1556,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2320,14 +2316,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     importMapChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1567,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1568,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1569,
-    styles: JSCompiler_object_inline_styles_1570,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1571,
-    scripts: JSCompiler_object_inline_scripts_1572,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1573,
-    preloads: JSCompiler_object_inline_preloads_1574,
+    preconnects: JSCompiler_object_inline_preconnects_1568,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1569,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1570,
+    styles: JSCompiler_object_inline_styles_1571,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1572,
+    scripts: JSCompiler_object_inline_scripts_1573,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1574,
+    preloads: JSCompiler_object_inline_preloads_1575,
     boundaryResources: null,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -4985,4 +4981,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-21a11200";
+exports.version = "18.3.0-www-modern-7f660f7a";

@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-modern-5fb559f6";
+var ReactVersion = "18.3.0-www-modern-70e823a6";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -4715,29 +4715,7 @@ function pushStartCustomElement(target, props, tag) {
         continue;
       }
 
-      if (
-        enableCustomElementPropertySupport &&
-        (typeof propValue === "function" || typeof propValue === "object")
-      ) {
-        // It is normal to render functions and objects on custom elements when
-        // client rendering, but when server rendering the output isn't useful,
-        // so skip it.
-        continue;
-      }
-
-      if (enableCustomElementPropertySupport && propValue === false) {
-        continue;
-      }
-
-      if (enableCustomElementPropertySupport && propValue === true) {
-        propValue = "";
-      }
-
-      if (enableCustomElementPropertySupport && propKey === "className") {
-        // className gets rendered as class on the client, so it should be
-        // rendered as class on the server.
-        propKey = "class";
-      }
+      var attributeName = propKey;
 
       switch (propKey) {
         case "children":
@@ -4757,15 +4735,34 @@ function pushStartCustomElement(target, props, tag) {
           // Ignored. These are built-in to React on the client.
           break;
 
+        case "className":
+          if (enableCustomElementPropertySupport) {
+            // className gets rendered as class on the client, so it should be
+            // rendered as class on the server.
+            attributeName = "class";
+          }
+
+        // intentional fallthrough
+
         default:
           if (
             isAttributeNameSafe(propKey) &&
             typeof propValue !== "function" &&
             typeof propValue !== "symbol"
           ) {
+            if (enableCustomElementPropertySupport) {
+              if (propValue === false) {
+                continue;
+              } else if (propValue === true) {
+                propValue = "";
+              } else if (typeof propValue === "object") {
+                continue;
+              }
+            }
+
             target.push(
               attributeSeparator,
-              stringToChunk(propKey),
+              stringToChunk(attributeName),
               attributeAssign,
               stringToChunk(escapeTextForBrowser(propValue)),
               attributeEnd
