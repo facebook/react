@@ -28,7 +28,7 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
 
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(3);
   const c_0 = $[0] !== props.a;
   let x;
   if (c_0) {
@@ -43,16 +43,7 @@ function Component(props) {
       }
       x.push(t0);
     } catch {
-      const c_3 = $[3] !== props.a;
-      let t1;
-      if (c_3) {
-        t1 = shallowCopy({ a: props.a });
-        $[3] = props.a;
-        $[4] = t1;
-      } else {
-        t1 = $[4];
-      }
-      x.push(t1);
+      x.push(shallowCopy({ a: props.a }));
     }
     $[0] = props.a;
     $[1] = x;

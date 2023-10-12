@@ -26,25 +26,19 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function hoisting() {
-  const $ = useMemoCache(2);
-  let t1;
+  const $ = useMemoCache(1);
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const foo = () => bar();
-    let t0;
-    if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-      t0 = () => 1;
-      $[1] = t0;
-    } else {
-      t0 = $[1];
-    }
-    const bar = t0;
 
-    t1 = foo();
-    $[0] = t1;
+    const bar = () => 1;
+
+    t0 = foo();
+    $[0] = t0;
   } else {
-    t1 = $[0];
+    t0 = $[0];
   }
-  return t1;
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

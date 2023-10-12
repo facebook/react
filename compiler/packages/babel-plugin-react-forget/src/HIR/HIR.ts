@@ -1002,10 +1002,12 @@ export function isMutableEffect(
 export type ReactiveScope = {
   id: ScopeId;
   range: MutableRange;
-  dependencies: Set<ReactiveScopeDependency>;
+  dependencies: ReactiveScopeDependencies;
   declarations: Map<IdentifierId, ReactiveScopeDeclaration>;
   reassignments: Set<Identifier>;
 };
+
+export type ReactiveScopeDependencies = Set<ReactiveScopeDependency>;
 
 export type ReactiveScopeDeclaration = {
   identifier: Identifier;

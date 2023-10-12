@@ -15,7 +15,9 @@ import {
   ReactiveInstruction,
   ReactiveScope,
   ReactiveScopeBlock,
+  ReactiveScopeDependencies,
   ReactiveScopeDependency,
+  ReactiveStatement,
   makeInstructionId,
 } from "../HIR";
 import { assertExhaustive } from "../Utils/utils";
@@ -23,6 +25,7 @@ import { printReactiveScopeSummary } from "./PrintReactiveFunction";
 import {
   ReactiveFunctionTransform,
   ReactiveFunctionVisitor,
+  Transformed,
   visitReactiveFunction,
 } from "./visitors";
 
@@ -31,10 +34,13 @@ import {
  * - Use fewer memo slots
  * - Reduce the number of comparisons and other memoization-related instructions
  *
- * This is achieved by merging consecutive reactive scopes when the two scopes
- * will always invalidate together. The idea is that if two scopes would always
- * invalidate together, it's more efficient to group the scopes together to save
- * on memoization overhead.
+ * The algorithm merges in two main cases: consecutive scopes that invalidate together
+ * or nested scopes that invalidate together
+ *
+ * ## Consecutive Scopes
+ *
+ * The idea is that if two consecutive scopes would always invalidate together,
+ * it's more efficient to group the scopes together to save on memoization overhead.
  *
  * This optimization is necessarily somewhat limited. First, we only merge
  * scopes that are in the same (reactive) block, ie we don't merge across
@@ -54,15 +60,25 @@ import {
  *   may not be beneficial if the outupts of A are not guaranteed to change if its input
  *   changes, but in practice this is generally the case.
  *
+ * ## Nested Scopes
+ *
+ * In this case, if an inner scope has the same dependencies as its parent, then we can
+ * flatten away the inner scope since it will always invalidate at the same time.
+ *
+ * Note that PropagateScopeDependencies propagates scope dependencies upwards. This ensures
+ * that parent scopes have the union of their own direct dependencies as well as those of
+ * their (transitive) children. As a result nested scopes may have the same or fewer
+ * dependencies than their parents, but not more dependencies. If they have fewer dependncies,
+ * it means that the inner scope does not always invalidate with the parent and we should not
+ * flatten. If they inner scope has the exact same dependencies, however, then it's always
+ * better to flatten.
  */
-export function mergeConsecutiveScopes(fn: ReactiveFunction): void {
+export function mergeReactiveScopesThatInvalidateTogether(
+  fn: ReactiveFunction
+): void {
   const lastUsageVisitor = new FindLastUsageVisitor();
   visitReactiveFunction(fn, lastUsageVisitor, undefined);
-  visitReactiveFunction(
-    fn,
-    new Transform(lastUsageVisitor.lastUsage),
-    undefined
-  );
+  visitReactiveFunction(fn, new Transform(lastUsageVisitor.lastUsage), null);
 }
 
 const DEBUG: boolean = false;
@@ -85,7 +101,7 @@ class FindLastUsageVisitor extends ReactiveFunctionVisitor<void> {
   }
 }
 
-class Transform extends ReactiveFunctionTransform<void> {
+class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | null> {
   lastUsage: Map<IdentifierId, InstructionId>;
 
   constructor(lastUsage: Map<IdentifierId, InstructionId>) {
@@ -93,7 +109,25 @@ class Transform extends ReactiveFunctionTransform<void> {
     this.lastUsage = lastUsage;
   }
 
-  override visitBlock(block: ReactiveBlock, state: void): void {
+  override transformScope(
+    scope: ReactiveScopeBlock,
+    state: ReactiveScopeDependencies | null
+  ): Transformed<ReactiveStatement> {
+    this.visitScope(scope, scope.scope.dependencies);
+    if (
+      state !== null &&
+      areEqualDependencies(state, scope.scope.dependencies)
+    ) {
+      return { kind: "replace-many", value: scope.instructions };
+    } else {
+      return { kind: "keep" };
+    }
+  }
+
+  override visitBlock(
+    block: ReactiveBlock,
+    state: ReactiveScopeDependencies | null
+  ): void {
     // Pass 1: visit nested blocks to potentially merge their scopes
     this.traverseBlock(block, state);
 

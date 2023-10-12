@@ -44,8 +44,8 @@ import {
   flattenScopesWithObjectMethods,
   inferReactiveScopeVariables,
   memoizeFbtOperandsInSameScope,
-  mergeConsecutiveScopes,
   mergeOverlappingReactiveScopes,
+  mergeReactiveScopesThatInvalidateTogether,
   promoteUsedTemporaries,
   propagateScopeDependencies,
   pruneAllReactiveScopes,
@@ -297,10 +297,10 @@ function* runWithEnvironment(
   });
 
   if (env.config.enableMergeConsecutiveScopes) {
-    mergeConsecutiveScopes(reactiveFunction);
+    mergeReactiveScopesThatInvalidateTogether(reactiveFunction);
     yield log({
       kind: "reactive",
-      name: "MergeConsecutiveScopes",
+      name: "MergeReactiveScopesThatInvalidateTogether",
       value: reactiveFunction,
     });
   }
