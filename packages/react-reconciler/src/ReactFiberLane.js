@@ -622,7 +622,11 @@ export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
   }
 }
 
-export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
+export function markRootSuspended(
+  root: FiberRoot,
+  suspendedLanes: Lanes,
+  spawnedLane: Lane,
+) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
 
@@ -637,13 +641,21 @@ export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
 
     lanes &= ~lane;
   }
+
+  if (spawnedLane !== NoLane) {
+    markSpawnedDeferredLane(root, spawnedLane, suspendedLanes);
+  }
 }
 
 export function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 
-export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
+export function markRootFinished(
+  root: FiberRoot,
+  remainingLanes: Lanes,
+  spawnedLane: Lane,
+) {
   const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
 
   root.pendingLanes = remainingLanes;
@@ -689,6 +701,37 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
 
     lanes &= ~lane;
   }
+
+  if (spawnedLane !== NoLane) {
+    markSpawnedDeferredLane(
+      root,
+      spawnedLane,
+      // This render finished successfully without suspending, so we don't need
+      // to entangle the spawned task with the parent task.
+      NoLanes,
+    );
+  }
+}
+
+function markSpawnedDeferredLane(
+  root: FiberRoot,
+  spawnedLane: Lane,
+  entangledLanes: Lanes,
+) {
+  // This render spawned a deferred task. Mark it as pending.
+  root.pendingLanes |= spawnedLane;
+  root.suspendedLanes &= ~spawnedLane;
+
+  // Entangle the spawned lane with the DeferredLane bit so that we know it
+  // was the result of another render. This lets us avoid a useDeferredValue
+  // waterfall — only the first level will defer.
+  const spawnedLaneIndex = laneToIndex(spawnedLane);
+  root.entangledLanes |= spawnedLane;
+  root.entanglements[spawnedLaneIndex] |=
+    DeferredLane |
+    // If the parent render task suspended, we must also entangle those lanes
+    // with the spawned task.
+    entangledLanes;
 }
 
 export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
