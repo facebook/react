@@ -726,19 +726,23 @@ describe('ReactDOMFiberAsync', () => {
       // Because it suspended, it remains on the current path
       expect(div.textContent).toBe('/path/a');
     });
+    assertLog(['Suspend! [/path/b]']);
 
     await act(async () => {
       resolvePromise();
 
-      // TODO: Since the transition previously suspended, there's no need for
-      // this transition to be rendered synchronously on susbequent attempts;
-      // if we fail to commit synchronously the first time, the scroll
-      // restoration state won't be restored anyway. We can improve this later.
+      // Since the transition previously suspended, there's no need for this
+      // transition to be rendered synchronously on susbequent attempts; if we
+      // fail to commit synchronously the first time, the scroll restoration
+      // state won't be restored anyway.
       //
-      // Once this is implemented, update this test to yield in between each
-      // child to prove that it's concurrent.
+      // Yield in between each child to prove that it's concurrent.
       await waitForMicrotasks();
-      assertLog(['Before', '/path/b', 'After']);
+      assertLog([]);
+
+      await waitFor(['Before']);
+      await waitFor(['/path/b']);
+      await waitFor(['After']);
     });
     assertLog([]);
     expect(div.textContent).toBe('/path/b');
