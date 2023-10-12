@@ -24,9 +24,8 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.a;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.a) {
     const item = { a: props.a };
     const items = [item];
     t0 = items.map((item_0) => item_0);

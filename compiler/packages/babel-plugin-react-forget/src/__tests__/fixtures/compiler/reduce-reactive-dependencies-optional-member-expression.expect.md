@@ -17,9 +17,8 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.items;
   let x;
-  if (c_0) {
+  if ($[0] !== props.items) {
     x = [];
     x.push(props.items?.length);
     x.push(props.items?.edges?.map?.(render)?.filter?.(Boolean) ?? []);

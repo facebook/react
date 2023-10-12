@@ -36,11 +36,10 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(a, b, c) {
   const $ = useMemoCache(18);
-  const c_0 = $[0] !== a;
   let t0;
   let d;
   let h;
-  if (c_0) {
+  if ($[0] !== a) {
     [d, t0, ...h] = a;
     $[0] = a;
     $[1] = t0;
@@ -52,10 +51,9 @@ function foo(a, b, c) {
     h = $[3];
   }
   const [t1] = t0;
-  const c_4 = $[4] !== t1;
   let t2;
   let g;
-  if (c_4) {
+  if ($[4] !== t1) {
     ({ e: t2, ...g } = t1);
     $[4] = t1;
     $[5] = t2;
@@ -67,10 +65,9 @@ function foo(a, b, c) {
   const { f } = t2;
   const { l: t51, p } = b;
   const { m: t3 } = t51;
-  const c_7 = $[7] !== t3;
   let t4;
   let o;
-  if (c_7) {
+  if ($[7] !== t3) {
     [t4, ...o] = t3;
     $[7] = t3;
     $[8] = t4;
@@ -80,15 +77,16 @@ function foo(a, b, c) {
     o = $[9];
   }
   const [n] = t4;
-  const c_10 = $[10] !== d;
-  const c_11 = $[11] !== f;
-  const c_12 = $[12] !== g;
-  const c_13 = $[13] !== h;
-  const c_14 = $[14] !== n;
-  const c_15 = $[15] !== o;
-  const c_16 = $[16] !== p;
   let t5;
-  if (c_10 || c_11 || c_12 || c_13 || c_14 || c_15 || c_16) {
+  if (
+    $[10] !== d ||
+    $[11] !== f ||
+    $[12] !== g ||
+    $[13] !== h ||
+    $[14] !== n ||
+    $[15] !== o ||
+    $[16] !== p
+  ) {
     t5 = [d, f, g, h, n, o, p];
     $[10] = d;
     $[11] = f;

@@ -26,9 +26,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 type Foo = { bar: string };
 function Component(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.bar;
   let y;
-  if (c_0) {
+  if ($[0] !== props.bar) {
     const x = { bar: props.bar };
     y = (x: Foo);
     y.bar = "hello";

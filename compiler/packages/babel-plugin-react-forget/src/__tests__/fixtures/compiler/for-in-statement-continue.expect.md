@@ -29,9 +29,8 @@ function Component(props) {
   const $ = useMemoCache(3);
   let x;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    const c_1 = $[1] !== props.value;
     let t0;
-    if (c_1) {
+    if ($[1] !== props.value) {
       t0 = { ...props.value };
       $[1] = props.value;
       $[2] = t0;

@@ -16,9 +16,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
   const item = useFragment(graphql`...`, props.item);
-  const c_0 = $[0] !== item.items;
   let t0;
-  if (c_0) {
+  if ($[0] !== item.items) {
     t0 = item.items?.map((item_0) => renderItem(item_0)) ?? [];
     $[0] = item.items;
     $[1] = t0;

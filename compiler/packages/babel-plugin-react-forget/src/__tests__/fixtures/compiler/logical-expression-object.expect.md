@@ -30,10 +30,8 @@ function component(props) {
 
   const a = props.a || (props.b && props.c && props.d);
   const b = (props.a && props.b && props.c) || props.d;
-  const c_0 = $[0] !== a;
-  const c_1 = $[1] !== b;
   let t0;
-  if (c_0 || c_1) {
+  if ($[0] !== a || $[1] !== b) {
     t0 = { a, b };
     $[0] = a;
     $[1] = b;

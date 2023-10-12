@@ -22,9 +22,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // @gating
 const ErrorView = isForgetEnabled_Fixtures()
   ? (error, _retry) => {
       const $ = useMemoCache(2);
-      const c_0 = $[0] !== error;
       let t0;
-      if (c_0) {
+      if ($[0] !== error) {
         t0 = <MessageBox error={error} />;
         $[0] = error;
         $[1] = t0;

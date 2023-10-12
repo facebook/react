@@ -25,9 +25,8 @@ function component(a, b) {
 import { unstable_useMemoCache as useMemoCache } from "react"; // @debug
 function component(a, b) {
   const $ = useMemoCache(5);
-  const c_0 = $[0] !== a;
   let t0;
-  if (c_0) {
+  if ($[0] !== a) {
     t0 = { a };
     $[0] = a;
     $[1] = t0;
@@ -36,10 +35,8 @@ function component(a, b) {
   }
   const z = t0;
   const y = b;
-  const c_2 = $[2] !== y;
-  const c_3 = $[3] !== z;
   let t1;
-  if (c_2 || c_3) {
+  if ($[2] !== y || $[3] !== z) {
     t1 = function () {
       if (y) {
         maybeMutate(z);

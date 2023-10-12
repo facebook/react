@@ -26,9 +26,8 @@ import * as React from "react";
 
 function Component(props) {
   const $ = useMemoCache(4);
-  const c_0 = $[0] !== props.value;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.value) {
     t0 = () => {
       console.log(props.value);
     };
@@ -38,9 +37,8 @@ function Component(props) {
     t0 = $[1];
   }
   const onClick = t0;
-  const c_2 = $[2] !== onClick;
   let t1;
-  if (c_2) {
+  if ($[2] !== onClick) {
     t1 = <div onClick={onClick} />;
     $[2] = onClick;
     $[3] = t1;

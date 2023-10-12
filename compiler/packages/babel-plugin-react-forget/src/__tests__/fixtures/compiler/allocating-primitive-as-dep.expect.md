@@ -23,9 +23,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // bar(props.b) i
 function AllocatingPrimitiveAsDep(props) {
   const $ = useMemoCache(2);
   const t0 = bar(props).b + 1;
-  const c_0 = $[0] !== t0;
   let t1;
-  if (c_0) {
+  if ($[0] !== t0) {
     t1 = foo(t0);
     $[0] = t0;
     $[1] = t1;

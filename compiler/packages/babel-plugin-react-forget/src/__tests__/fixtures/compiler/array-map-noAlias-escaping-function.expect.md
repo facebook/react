@@ -30,9 +30,8 @@ function Component(props) {
     t0 = $[0];
   }
   const f = t0;
-  const c_1 = $[1] !== props.items;
   let t1;
-  if (c_1) {
+  if ($[1] !== props.items) {
     t1 = [...props.items].map(f);
     $[1] = props.items;
     $[2] = t1;
@@ -40,9 +39,8 @@ function Component(props) {
     t1 = $[2];
   }
   const x = t1;
-  const c_3 = $[3] !== x;
   let t2;
-  if (c_3) {
+  if ($[3] !== x) {
     t2 = [x, f];
     $[3] = x;
     $[4] = t2;

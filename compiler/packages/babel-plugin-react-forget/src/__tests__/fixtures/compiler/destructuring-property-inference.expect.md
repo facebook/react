@@ -18,9 +18,8 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(5);
-  const c_0 = $[0] !== props.value;
   let x;
-  if (c_0) {
+  if ($[0] !== props.value) {
     x = [];
     x.push(props.value);
     $[0] = props.value;
@@ -30,10 +29,8 @@ function Component(props) {
   }
   const { length: y } = x;
   foo(y);
-  const c_2 = $[2] !== x;
-  const c_3 = $[3] !== y;
   let t0;
-  if (c_2 || c_3) {
+  if ($[2] !== x || $[3] !== y) {
     t0 = [x, y];
     $[2] = x;
     $[3] = y;

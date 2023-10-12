@@ -32,9 +32,8 @@ import { useNoAlias } from "shared-runtime";
 
 function Component(props) {
   const $ = useMemoCache(5);
-  const c_0 = $[0] !== props.a;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.a) {
     t0 = { a: props.a };
     $[0] = props.a;
     $[1] = t0;
@@ -49,10 +48,8 @@ function Component(props) {
     },
     [props.a]
   );
-  const c_2 = $[2] !== x;
-  const c_3 = $[3] !== item;
   let t1;
-  if (c_2 || c_3) {
+  if ($[2] !== x || $[3] !== item) {
     t1 = [x, item];
     $[2] = x;
     $[3] = item;

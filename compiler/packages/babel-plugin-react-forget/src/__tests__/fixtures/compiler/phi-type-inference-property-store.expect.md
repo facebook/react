@@ -41,10 +41,8 @@ function Component(props) {
     t0 = $[0];
   }
   const x = t0;
-  const c_1 = $[1] !== props;
-  const c_2 = $[2] !== x;
   let y;
-  if (c_1 || c_2) {
+  if ($[1] !== props || $[2] !== x) {
     y = undefined;
     if (props.cond) {
       y = {};
@@ -59,10 +57,8 @@ function Component(props) {
   } else {
     y = $[3];
   }
-  const c_4 = $[4] !== x;
-  const c_5 = $[5] !== y;
   let t1;
-  if (c_4 || c_5) {
+  if ($[4] !== x || $[5] !== y) {
     t1 = [x, y];
     $[4] = x;
     $[5] = y;

@@ -40,10 +40,8 @@ import { setProperty } from "shared-runtime";
 function useFoo(t27) {
   const $ = useMemoCache(3);
   const { o, branchCheck } = t27;
-  const c_0 = $[0] !== branchCheck;
-  const c_1 = $[1] !== o.value;
   let x;
-  if (c_0 || c_1) {
+  if ($[0] !== branchCheck || $[1] !== o.value) {
     x = {};
     if (branchCheck) {
       setProperty(x, o.value);

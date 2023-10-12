@@ -40,9 +40,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
  */
 function Component(props) {
   const $ = useMemoCache(7);
-  const c_0 = $[0] !== props.a;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.a) {
     t0 = compute(props.a);
     $[0] = props.a;
     $[1] = t0;
@@ -50,9 +49,8 @@ function Component(props) {
     t0 = $[1];
   }
   const a = t0;
-  const c_2 = $[2] !== props.b;
   let t1;
-  if (c_2) {
+  if ($[2] !== props.b) {
     t1 = compute(props.b);
     $[2] = props.b;
     $[3] = t1;
@@ -60,10 +58,8 @@ function Component(props) {
     t1 = $[3];
   }
   const b = t1;
-  const c_4 = $[4] !== a;
-  const c_5 = $[5] !== b;
   let t2;
-  if (c_4 || c_5) {
+  if ($[4] !== a || $[5] !== b) {
     t2 = <Foo a={a} b={b} />;
     $[4] = a;
     $[5] = b;

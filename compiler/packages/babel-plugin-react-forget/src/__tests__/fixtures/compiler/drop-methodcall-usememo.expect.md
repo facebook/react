@@ -29,9 +29,8 @@ import * as React from "react";
 function Component(props) {
   const $ = useMemoCache(2);
   let t42;
-  const c_0 = $[0] !== props.value;
   let x;
-  if (c_0) {
+  if ($[0] !== props.value) {
     x = [];
     x.push(props.value);
     $[0] = props.value;

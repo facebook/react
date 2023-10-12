@@ -22,9 +22,8 @@ import fbt from "fbt";
 
 function Component(props) {
   const $ = useMemoCache(4);
-  const c_0 = $[0] !== props.name;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.name) {
     t0 = fbt._(
       "Hello, {(key) name}!",
       [fbt._param("(key) name", capitalize(props.name))],
@@ -36,9 +35,8 @@ function Component(props) {
     t0 = $[1];
   }
   const text = t0;
-  const c_2 = $[2] !== text;
   let t1;
-  if (c_2) {
+  if ($[2] !== text) {
     t1 = <div>{text}</div>;
     $[2] = text;
     $[3] = t1;

@@ -17,9 +17,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // @compilationMo
 function useStateValue(props) {
   const $ = useMemoCache(2);
   const [state] = useState(null);
-  const c_0 = $[0] !== state;
   let t0;
-  if (c_0) {
+  if ($[0] !== state) {
     t0 = [state];
     $[0] = state;
     $[1] = t0;

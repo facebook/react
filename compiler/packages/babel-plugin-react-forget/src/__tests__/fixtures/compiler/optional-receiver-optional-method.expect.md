@@ -17,9 +17,8 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props;
   let t0;
-  if (c_0) {
+  if ($[0] !== props) {
     const x = makeOptionalObject(props);
     const y = makeObject(props);
     t0 = x?.optionalMethod?.(y.a, props.a, foo(y.b), bar(props.b));

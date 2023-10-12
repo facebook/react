@@ -39,19 +39,16 @@ function Component(props) {
     ref.current = true;
     foo.current = true;
   };
-  const c_0 = $[0] !== props.children;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.children) {
     t0 = React.cloneElement(props.children);
     $[0] = props.children;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const c_2 = $[2] !== onClick;
-  const c_3 = $[3] !== t0;
   let t1;
-  if (c_2 || c_3) {
+  if ($[2] !== onClick || $[3] !== t0) {
     t1 = <div onClick={onClick}>{t0}</div>;
     $[2] = onClick;
     $[3] = t0;

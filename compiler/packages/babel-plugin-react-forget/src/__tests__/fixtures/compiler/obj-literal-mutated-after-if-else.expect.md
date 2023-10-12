@@ -22,10 +22,8 @@ function foo(a, b, c, d) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(a, b, c, d) {
   const $ = useMemoCache(3);
-  const c_0 = $[0] !== b;
-  const c_1 = $[1] !== c;
   let x;
-  if (c_0 || c_1) {
+  if ($[0] !== b || $[1] !== c) {
     x = undefined;
     if (someVal) {
       x = { b };

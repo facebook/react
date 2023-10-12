@@ -34,9 +34,8 @@ export function Component(props) {
   if (props.items) {
     count = props.items.length;
   }
-  const c_0 = $[0] !== count;
   let t0;
-  if (c_0) {
+  if ($[0] !== count) {
     t0 = fbt._("for {count} experiences", [fbt._param("count", count)], {
       hk: "nmYpm",
     });
@@ -45,9 +44,8 @@ export function Component(props) {
   } else {
     t0 = $[1];
   }
-  const c_2 = $[2] !== t0;
   let t1;
-  if (c_2) {
+  if ($[2] !== t0) {
     t1 = <View>{t0}</View>;
     $[2] = t0;
     $[3] = t1;

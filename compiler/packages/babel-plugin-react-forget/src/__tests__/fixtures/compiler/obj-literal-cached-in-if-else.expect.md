@@ -23,9 +23,8 @@ function foo(a, b, c, d) {
   const $ = useMemoCache(4);
   let x = undefined;
   if (someVal) {
-    const c_0 = $[0] !== b;
     let t0;
-    if (c_0) {
+    if ($[0] !== b) {
       t0 = { b };
       $[0] = b;
       $[1] = t0;
@@ -34,9 +33,8 @@ function foo(a, b, c, d) {
     }
     x = t0;
   } else {
-    const c_2 = $[2] !== c;
     let t1;
-    if (c_2) {
+    if ($[2] !== c) {
       t1 = { c };
       $[2] = c;
       $[3] = t1;

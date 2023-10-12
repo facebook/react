@@ -53,9 +53,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // note: comments
 // emitted
 function foo(props) {
   const $ = useMemoCache(16);
-  const c_0 = $[0] !== props.a;
   let x;
-  if (c_0) {
+  if ($[0] !== props.a) {
     x = [];
     x.push(props.a);
     $[0] = props.a;
@@ -63,10 +62,8 @@ function foo(props) {
   } else {
     x = $[1];
   }
-  const c_2 = $[2] !== props.showHeader;
-  const c_3 = $[3] !== x;
   let t0;
-  if (c_2 || c_3) {
+  if ($[2] !== props.showHeader || $[3] !== x) {
     t0 = props.showHeader ? <div>{x}</div> : null;
     $[2] = props.showHeader;
     $[3] = x;
@@ -75,11 +72,8 @@ function foo(props) {
     t0 = $[4];
   }
   const header = t0;
-  const c_5 = $[5] !== x;
-  const c_6 = $[6] !== props.b;
-  const c_7 = $[7] !== props.c;
   let y;
-  if (c_5 || c_6 || c_7) {
+  if ($[5] !== x || $[6] !== props.b || $[7] !== props.c) {
     y = [x];
     x = [];
     y.push(props.b);
@@ -93,10 +87,8 @@ function foo(props) {
     y = $[8];
     x = $[9];
   }
-  const c_10 = $[10] !== x;
-  const c_11 = $[11] !== y;
   let t1;
-  if (c_10 || c_11) {
+  if ($[10] !== x || $[11] !== y) {
     t1 = (
       <div>
         {x}
@@ -110,10 +102,8 @@ function foo(props) {
     t1 = $[12];
   }
   const content = t1;
-  const c_13 = $[13] !== header;
-  const c_14 = $[14] !== content;
   let t2;
-  if (c_13 || c_14) {
+  if ($[13] !== header || $[14] !== content) {
     t2 = (
       <>
         {header}

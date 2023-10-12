@@ -33,9 +33,8 @@ function VideoTab() {
     t0 = $[0];
   }
   const x = t0;
-  const c_1 = $[1] !== x;
   let t1;
-  if (c_1) {
+  if ($[1] !== x) {
     t1 = <VideoList videos={x} />;
     $[1] = x;
     $[2] = t1;

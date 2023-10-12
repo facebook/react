@@ -48,18 +48,16 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
-  const c_1 = $[1] !== state;
   let t1;
-  if (c_1) {
+  if ($[1] !== state) {
     t1 = { component: "span", props: { children: [state] } };
     $[1] = state;
     $[2] = t1;
   } else {
     t1 = $[2];
   }
-  const c_3 = $[3] !== state;
   let t2;
-  if (c_3) {
+  if ($[3] !== state) {
     t2 = () => setState(state + 1);
     $[3] = state;
     $[4] = t2;
@@ -73,9 +71,8 @@ function Component(props) {
   } else {
     t3 = $[5];
   }
-  const c_6 = $[6] !== t2;
   let t4;
-  if (c_6) {
+  if ($[6] !== t2) {
     t4 = {
       component: "button",
       props: { "data-testid": "button", onClick: t2, children: t3 },
@@ -85,10 +82,8 @@ function Component(props) {
   } else {
     t4 = $[7];
   }
-  const c_8 = $[8] !== t1;
-  const c_9 = $[9] !== t4;
   let t5;
-  if (c_8 || c_9) {
+  if ($[8] !== t1 || $[9] !== t4) {
     t5 = [t0, t1, t4];
     $[8] = t1;
     $[9] = t4;

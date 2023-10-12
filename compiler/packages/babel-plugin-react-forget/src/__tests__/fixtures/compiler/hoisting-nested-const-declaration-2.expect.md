@@ -28,9 +28,8 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function hoisting(cond) {
   const $ = useMemoCache(3);
-  const c_0 = $[0] !== cond;
   let items;
-  if (c_0) {
+  if ($[0] !== cond) {
     items = [];
     if (cond) {
       const foo = () => {

@@ -54,14 +54,12 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // Some reactive 
 
 function TestReactiveDepsInCondScope(props) {
   const $ = useMemoCache(4);
-  const c_0 = $[0] !== props;
   let x;
-  if (c_0) {
+  if ($[0] !== props) {
     x = {};
     if (foo) {
-      const c_2 = $[2] !== props.a.b;
       let t0;
-      if (c_2) {
+      if ($[2] !== props.a.b) {
         t0 = bar(props.a.b);
         $[2] = props.a.b;
         $[3] = t0;

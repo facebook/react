@@ -17,9 +17,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 export default function Foo(t7) {
   const $ = useMemoCache(2);
   const { bar } = t7;
-  const c_0 = $[0] !== bar;
   let t0;
-  if (c_0) {
+  if ($[0] !== bar) {
     t0 = <Bar bar={bar} />;
     $[0] = bar;
     $[1] = t0;

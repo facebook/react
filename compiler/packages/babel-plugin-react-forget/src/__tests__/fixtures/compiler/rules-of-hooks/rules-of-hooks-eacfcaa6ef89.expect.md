@@ -19,9 +19,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // Valid because 
 const MemoizedFunction = memo(function (props) {
   const $ = useMemoCache(2);
   useHook();
-  const c_0 = $[0] !== props;
   let t0;
-  if (c_0) {
+  if ($[0] !== props) {
     t0 = <button {...props} />;
     $[0] = props;
     $[1] = t0;

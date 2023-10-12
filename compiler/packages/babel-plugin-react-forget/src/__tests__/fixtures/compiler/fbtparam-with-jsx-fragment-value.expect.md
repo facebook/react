@@ -28,9 +28,8 @@ import { identity } from "shared-runtime";
 
 function Component(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.text;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.text) {
     t0 = (
       <Foo
         value={fbt._(

@@ -31,11 +31,8 @@ import fbt from "fbt";
 function Component(t29) {
   const $ = useMemoCache(4);
   const { name, data, icon } = t29;
-  const c_0 = $[0] !== name;
-  const c_1 = $[1] !== icon;
-  const c_2 = $[2] !== data;
   let t0;
-  if (c_0 || c_1 || c_2) {
+  if ($[0] !== name || $[1] !== icon || $[2] !== data) {
     t0 = (
       <Text type="body4">
         {fbt._(

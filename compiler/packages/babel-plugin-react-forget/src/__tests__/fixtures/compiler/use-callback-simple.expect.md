@@ -18,9 +18,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function component() {
   const $ = useMemoCache(4);
   const [count, setCount] = useState(0);
-  const c_0 = $[0] !== count;
   let t0;
-  if (c_0) {
+  if ($[0] !== count) {
     t0 = () => setCount(count + 1);
     $[0] = count;
     $[1] = t0;
@@ -28,9 +27,8 @@ function component() {
     t0 = $[1];
   }
   const increment = t0;
-  const c_2 = $[2] !== increment;
   let t1;
-  if (c_2) {
+  if ($[2] !== increment) {
     t1 = <Foo onClick={increment} />;
     $[2] = increment;
     $[3] = t1;

@@ -24,10 +24,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // When a conditi
 // and promote it to an unconditional dependency.
 function TestPromoteUnconditionalAccessToDependency(props, other) {
   const $ = useMemoCache(3);
-  const c_0 = $[0] !== props.a;
-  const c_1 = $[1] !== other;
   let x;
-  if (c_0 || c_1) {
+  if ($[0] !== props.a || $[1] !== other) {
     x = {};
     x.a = props.a.a.a;
     if (foo(other)) {

@@ -24,9 +24,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(4);
   const id = useSelectedEntitytId();
-  const c_0 = $[0] !== id;
   let t0;
-  if (c_0) {
+  if ($[0] !== id) {
     t0 = () => {
       log(id);
     };
@@ -36,9 +35,8 @@ function Component(props) {
     t0 = $[1];
   }
   const onLoad = t0;
-  const c_2 = $[2] !== onLoad;
   let t1;
-  if (c_2) {
+  if ($[2] !== onLoad) {
     t1 = <Foo onLoad={onLoad} />;
     $[2] = onLoad;
     $[3] = t1;

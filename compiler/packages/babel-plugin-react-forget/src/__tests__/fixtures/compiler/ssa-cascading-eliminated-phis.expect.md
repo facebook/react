@@ -33,9 +33,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(3);
   let x = 0;
-  const c_0 = $[0] !== props;
   let values;
-  if (c_0) {
+  if ($[0] !== props) {
     values = [];
     const y = props.a || props.b;
     values.push(y);

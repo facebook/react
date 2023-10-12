@@ -30,9 +30,8 @@ function App(t23) {
 
   hasDeps ? null : [text];
   let t44;
-  const c_0 = $[0] !== text;
   let t0;
-  if (c_0) {
+  if ($[0] !== text) {
     t0 = text.toUpperCase();
     $[0] = text;
     $[1] = t0;

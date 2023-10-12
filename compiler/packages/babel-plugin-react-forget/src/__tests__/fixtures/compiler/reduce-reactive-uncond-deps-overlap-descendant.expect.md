@@ -27,9 +27,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // Test that we c
 // a dependency
 function TestOverlappingDescendantTracked(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.a;
   let x;
-  if (c_0) {
+  if ($[0] !== props.a) {
     x = {};
     x.b = props.a.b.c;
     x.c = props.a.b.c.x.y;

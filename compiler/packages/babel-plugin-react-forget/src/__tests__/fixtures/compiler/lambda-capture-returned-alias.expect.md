@@ -34,9 +34,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // Here, element 
 //    them to reads
 function CaptureNotMutate(props) {
   const $ = useMemoCache(5);
-  const c_0 = $[0] !== props.x;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.x) {
     t0 = foo(props.x);
     $[0] = props.x;
     $[1] = t0;
@@ -44,10 +43,8 @@ function CaptureNotMutate(props) {
     t0 = $[1];
   }
   const idx = t0;
-  const c_2 = $[2] !== props.el;
-  const c_3 = $[3] !== idx;
   let aliasedElement;
-  if (c_2 || c_3) {
+  if ($[2] !== props.el || $[3] !== idx) {
     const element = bar(props.el);
 
     const fn = function () {

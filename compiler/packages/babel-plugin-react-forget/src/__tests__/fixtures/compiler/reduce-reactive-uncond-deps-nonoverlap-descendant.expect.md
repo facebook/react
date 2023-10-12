@@ -27,11 +27,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // Test that we c
 // (not needed for correctness but for dependency granularity)
 function TestNonOverlappingDescendantTracked(props) {
   const $ = useMemoCache(4);
-  const c_0 = $[0] !== props.a.x.y;
-  const c_1 = $[1] !== props.a.c.x.y.z;
-  const c_2 = $[2] !== props.b;
   let x;
-  if (c_0 || c_1 || c_2) {
+  if ($[0] !== props.a.x.y || $[1] !== props.a.c.x.y.z || $[2] !== props.b) {
     x = {};
     x.a = props.a.x.y;
     x.b = props.b;

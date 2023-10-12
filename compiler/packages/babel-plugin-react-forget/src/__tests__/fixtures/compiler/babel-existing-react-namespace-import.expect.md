@@ -32,9 +32,8 @@ function Component(props) {
   let t39;
   t39 = calculateExpensiveNumber(x);
   const expensiveNumber = t39;
-  const c_0 = $[0] !== expensiveNumber;
   let t0;
-  if (c_0) {
+  if ($[0] !== expensiveNumber) {
     t0 = <div>{expensiveNumber}</div>;
     $[0] = expensiveNumber;
     $[1] = t0;

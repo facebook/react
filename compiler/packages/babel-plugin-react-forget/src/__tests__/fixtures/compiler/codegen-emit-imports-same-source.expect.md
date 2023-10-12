@@ -19,9 +19,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // @enableEmitFre
 function useFoo(props) {
   if (__DEV__) useRenderCounter("useFoo");
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.x;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.x) {
     t0 = foo(props.x);
     $[0] = props.x;
     $[1] = __DEV__ ? makeReadOnly(t0, "useFoo") : t0;

@@ -29,9 +29,8 @@ function mutate(x, y) {}
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(cond) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== cond;
   let a;
-  if (c_0) {
+  if ($[0] !== cond) {
     a = {};
     let b = {};
     let c = {};

@@ -19,9 +19,8 @@ function Foo(t17) {
   const $ = useMemoCache(4);
   const { a } = t17;
   const ref = useRef();
-  const c_0 = $[0] !== a;
   let t0;
-  if (c_0) {
+  if ($[0] !== a) {
     t0 = { a, val: ref.current };
     $[0] = a;
     $[1] = t0;
@@ -29,9 +28,8 @@ function Foo(t17) {
     t0 = $[1];
   }
   const x = t0;
-  const c_2 = $[2] !== x;
   let t1;
-  if (c_2) {
+  if ($[2] !== x) {
     t1 = <VideoList videos={x} />;
     $[2] = x;
     $[3] = t1;

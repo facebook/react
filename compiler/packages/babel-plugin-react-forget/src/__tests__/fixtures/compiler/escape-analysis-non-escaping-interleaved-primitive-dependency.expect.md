@@ -36,10 +36,8 @@ function Component(props) {
   const $ = useMemoCache(3);
 
   const a = props.a + props.b;
-  const c_0 = $[0] !== a;
-  const c_1 = $[1] !== props.c;
   let b;
-  if (c_0 || c_1) {
+  if ($[0] !== a || $[1] !== props.c) {
     b = [];
     const c = {};
     c.a = a;

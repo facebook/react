@@ -39,9 +39,8 @@ function Test() {
   const $ = useMemoCache(2);
   const { tab } = useFoo();
   const currentTab = tab === CONST_STRING0 ? CONST_STRING0 : CONST_STRING1;
-  const c_0 = $[0] !== currentTab;
   let t0;
-  if (c_0) {
+  if ($[0] !== currentTab) {
     t0 = <Text value={currentTab} />;
     $[0] = currentTab;
     $[1] = t0;

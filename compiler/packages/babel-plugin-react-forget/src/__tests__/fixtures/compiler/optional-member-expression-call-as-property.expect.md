@@ -23,10 +23,8 @@ function Component(props) {
     t0 = $[0];
   }
   const x = t0;
-  const c_1 = $[1] !== props;
-  const c_2 = $[2] !== x;
   let t1;
-  if (c_1 || c_2) {
+  if ($[1] !== props || $[2] !== x) {
     t1 = x?.[foo(props.value)];
     $[1] = props;
     $[2] = x;

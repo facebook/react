@@ -27,9 +27,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // Determine that
 // Ordering of access should not matter
 function TestDepsSubpathOrder2(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.a;
   let x;
-  if (c_0) {
+  if ($[0] !== props.a) {
     x = {};
     x.a = props.a;
     x.b = props.a.b;

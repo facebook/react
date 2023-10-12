@@ -25,9 +25,8 @@ import { CONST_STRING0 } from "shared-runtime";
 
 function t(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props;
   let t0;
-  if (c_0) {
+  if ($[0] !== props) {
     t0 = [, CONST_STRING0, props];
     $[0] = props;
     $[1] = t0;

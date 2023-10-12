@@ -16,9 +16,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a) {
   const $ = useMemoCache(4);
   let t24;
-  const c_0 = $[0] !== a;
   let t0;
-  if (c_0) {
+  if ($[0] !== a) {
     t0 = [a];
     $[0] = a;
     $[1] = t0;
@@ -27,9 +26,8 @@ function component(a) {
   }
   t24 = t0;
   const x = t24;
-  const c_2 = $[2] !== x;
   let t1;
-  if (c_2) {
+  if ($[2] !== x) {
     t1 = <Foo x={x} />;
     $[2] = x;
     $[3] = t1;

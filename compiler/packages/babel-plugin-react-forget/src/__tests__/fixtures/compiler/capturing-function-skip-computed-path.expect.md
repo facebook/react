@@ -21,9 +21,8 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function StoreLandingUnseenGiftModalContainer(a) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== a;
   let t0;
-  if (c_0) {
+  if ($[0] !== a) {
     const giftsSeen = { a };
     t0 = ((gift) => (gift.id ? giftsSeen[gift.id] : false))();
     $[0] = a;

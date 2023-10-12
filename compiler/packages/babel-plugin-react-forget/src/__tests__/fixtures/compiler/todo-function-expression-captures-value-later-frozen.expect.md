@@ -25,9 +25,8 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(4);
-  const c_0 = $[0] !== props.cond;
   let x;
-  if (c_0) {
+  if ($[0] !== props.cond) {
     x = {};
 
     const onChange = (e) => {
@@ -42,9 +41,8 @@ function Component(props) {
   } else {
     x = $[1];
   }
-  const c_2 = $[2] !== x;
   let t0;
-  if (c_2) {
+  if ($[2] !== x) {
     t0 = <Foo value={x} />;
     $[2] = x;
     $[3] = t0;

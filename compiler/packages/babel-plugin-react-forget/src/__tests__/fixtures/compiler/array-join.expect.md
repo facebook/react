@@ -28,9 +28,8 @@ function Component(props) {
     t0 = $[0];
     t1 = $[1];
   }
-  const c_2 = $[2] !== props.value;
   let t2;
-  if (c_2) {
+  if ($[2] !== props.value) {
     t2 = [t0, t1, props.value];
     $[2] = props.value;
     $[3] = t2;
@@ -47,10 +46,8 @@ function Component(props) {
   }
   const y = x.join(t3);
   foo(y);
-  const c_5 = $[5] !== x;
-  const c_6 = $[6] !== y;
   let t4;
-  if (c_5 || c_6) {
+  if ($[5] !== x || $[6] !== y) {
     t4 = [x, y];
     $[5] = x;
     $[6] = y;

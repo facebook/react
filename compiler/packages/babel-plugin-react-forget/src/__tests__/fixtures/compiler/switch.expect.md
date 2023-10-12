@@ -29,10 +29,9 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(8);
-  const c_0 = $[0] !== props;
   let x;
   let y;
-  if (c_0) {
+  if ($[0] !== props) {
     x = [];
     switch (props.p0) {
       case true: {
@@ -50,9 +49,8 @@ function Component(props) {
     x = $[1];
     y = $[2];
   }
-  const c_3 = $[3] !== x;
   let t0;
-  if (c_3) {
+  if ($[3] !== x) {
     t0 = <Component data={x} />;
     $[3] = x;
     $[4] = t0;
@@ -61,10 +59,8 @@ function Component(props) {
   }
   const child = t0;
   y.push(props.p4);
-  const c_5 = $[5] !== y;
-  const c_6 = $[6] !== child;
   let t1;
-  if (c_5 || c_6) {
+  if ($[5] !== y || $[6] !== child) {
     t1 = <Component data={y}>{child}</Component>;
     $[5] = y;
     $[6] = child;

@@ -18,9 +18,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 export default function foo(x, y) {
   const $ = useMemoCache(4);
   if (x) {
-    const c_0 = $[0] !== y;
     let t0;
-    if (c_0) {
+    if ($[0] !== y) {
       t0 = foo(false, y);
       $[0] = y;
       $[1] = t0;
@@ -31,9 +30,8 @@ export default function foo(x, y) {
   }
 
   const t1 = y * 10;
-  const c_2 = $[2] !== t1;
   let t2;
-  if (c_2) {
+  if ($[2] !== t1) {
     t2 = [t1];
     $[2] = t1;
     $[3] = t2;

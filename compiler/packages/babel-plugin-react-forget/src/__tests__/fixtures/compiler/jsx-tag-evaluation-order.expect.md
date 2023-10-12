@@ -39,9 +39,8 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
-  const c_1 = $[1] !== t1;
   let t2;
-  if (c_1) {
+  if ($[1] !== t1) {
     t2 = (
       <StaticText1>
         {t1}

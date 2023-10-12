@@ -33,9 +33,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(t26) {
   const $ = useMemoCache(2);
   const { items } = t26;
-  const c_0 = $[0] !== items;
   let t0;
-  if (c_0) {
+  if ($[0] !== items) {
     t0 =
       items.length > 0 ? (
         <Foo
@@ -59,9 +58,8 @@ function Component(t26) {
 function Foo(t7) {
   const $ = useMemoCache(2);
   const { item } = t7;
-  const c_0 = $[0] !== item.name;
   let t0;
-  if (c_0) {
+  if ($[0] !== item.name) {
     t0 = <div>{item.name}</div>;
     $[0] = item.name;
     $[1] = t0;

@@ -32,17 +32,15 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(8);
   const post = useFragment(graphql`...`, props.post);
-  const c_0 = $[0] !== post;
   let media;
   let onClick;
-  if (c_0) {
+  if ($[0] !== post) {
     const allUrls = [];
 
     const { media: t83, comments, urls } = post;
     media = t83;
-    const c_3 = $[3] !== comments.length;
     let t0;
-    if (c_3) {
+    if ($[3] !== comments.length) {
       t0 = (e) => {
         if (!comments.length) {
           return;
@@ -65,10 +63,8 @@ function Component(props) {
     media = $[1];
     onClick = $[2];
   }
-  const c_5 = $[5] !== media;
-  const c_6 = $[6] !== onClick;
   let t1;
-  if (c_5 || c_6) {
+  if ($[5] !== media || $[6] !== onClick) {
     t1 = <Media media={media} onClick={onClick} />;
     $[5] = media;
     $[6] = onClick;

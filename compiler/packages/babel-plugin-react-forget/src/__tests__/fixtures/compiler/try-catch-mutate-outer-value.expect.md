@@ -29,9 +29,8 @@ const { shallowCopy, throwErrorWithMessage } = require("shared-runtime");
 
 function Component(props) {
   const $ = useMemoCache(3);
-  const c_0 = $[0] !== props.a;
   let x;
-  if (c_0) {
+  if ($[0] !== props.a) {
     x = [];
     try {
       let t0;

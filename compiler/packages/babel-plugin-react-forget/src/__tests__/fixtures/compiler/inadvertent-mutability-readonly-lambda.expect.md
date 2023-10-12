@@ -35,9 +35,8 @@ function Component(props) {
   const onChange = t0;
 
   useOtherHook();
-  const c_1 = $[1] !== onChange;
   let x;
-  if (c_1) {
+  if ($[1] !== onChange) {
     x = {};
     foo(x, onChange);
     $[1] = onChange;

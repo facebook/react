@@ -19,9 +19,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // We should code
 function Component(props) {
   const $ = useMemoCache(2);
   const t0 = props.a?.b.c.d;
-  const c_0 = $[0] !== t0;
   let t1;
-  if (c_0) {
+  if ($[0] !== t0) {
     t1 = foo(t0);
     $[0] = t0;
     $[1] = t1;

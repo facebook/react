@@ -237,28 +237,17 @@ function codegenMemoBlockForReactiveScope(
 ): void {
   const cacheStoreStatements: Array<t.Statement> = [];
   const cacheLoadStatements: Array<t.Statement> = [];
-  const changeIdentifiers: Array<t.Identifier> = [];
+  const changeExpressions: Array<t.Expression> = [];
   for (const dep of scope.dependencies) {
     const index = cx.nextCacheIndex;
-    const changeIdentifier = t.identifier(`c_${index}`);
     const depValue = codegenDependency(cx, dep);
 
-    changeIdentifiers.push(changeIdentifier);
-    statements.push(
-      t.variableDeclaration("const", [
-        t.variableDeclarator(
-          changeIdentifier,
-          t.binaryExpression(
-            "!==",
-            t.memberExpression(
-              t.identifier("$"),
-              t.numericLiteral(index),
-              true
-            ),
-            depValue
-          )
-        ),
-      ])
+    changeExpressions.push(
+      t.binaryExpression(
+        "!==",
+        t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
+        depValue
+      )
     );
     cacheStoreStatements.push(
       t.expressionStatement(
@@ -336,7 +325,7 @@ function codegenMemoBlockForReactiveScope(
       )
     );
   }
-  let testCondition = (changeIdentifiers as Array<t.Expression>).reduce(
+  let testCondition = (changeExpressions as Array<t.Expression>).reduce(
     (acc: t.Expression | null, ident: t.Expression) => {
       if (acc == null) {
         return ident;

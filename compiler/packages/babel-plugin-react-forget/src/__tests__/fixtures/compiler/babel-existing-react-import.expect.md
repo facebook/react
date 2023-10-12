@@ -33,9 +33,8 @@ function Component(props) {
   const $ = useMemoCache(4);
   const [x] = useState(0);
   let t35;
-  const c_0 = $[0] !== x;
   let t0;
-  if (c_0) {
+  if ($[0] !== x) {
     t0 = calculateExpensiveNumber(x);
     $[0] = x;
     $[1] = t0;
@@ -44,9 +43,8 @@ function Component(props) {
   }
   t35 = t0;
   const expensiveNumber = t35;
-  const c_2 = $[2] !== expensiveNumber;
   let t1;
-  if (c_2) {
+  if ($[2] !== expensiveNumber) {
     t1 = <div>{expensiveNumber}</div>;
     $[2] = expensiveNumber;
     $[3] = t1;
@@ -60,9 +58,8 @@ function Component2(props) {
   const $ = useMemoCache(4);
   const [x] = useState(0);
   let t35;
-  const c_0 = $[0] !== x;
   let t0;
-  if (c_0) {
+  if ($[0] !== x) {
     t0 = calculateExpensiveNumber(x);
     $[0] = x;
     $[1] = t0;
@@ -71,9 +68,8 @@ function Component2(props) {
   }
   t35 = t0;
   const expensiveNumber = t35;
-  const c_2 = $[2] !== expensiveNumber;
   let t1;
-  if (c_2) {
+  if ($[2] !== expensiveNumber) {
     t1 = <div>{expensiveNumber}</div>;
     $[2] = expensiveNumber;
     $[3] = t1;

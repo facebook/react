@@ -23,10 +23,8 @@ function Component(props) {
     t0 = $[0];
   }
   const x = t0;
-  const c_1 = $[1] !== x.y;
-  const c_2 = $[2] !== props;
   let t1;
-  if (c_1 || c_2) {
+  if ($[1] !== x.y || $[2] !== props) {
     t1 = x.y?.[props.a?.[props.b?.[props.c]]];
     $[1] = x.y;
     $[2] = props;

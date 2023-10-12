@@ -22,9 +22,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function HomeDiscoStoreItemTileRating(props) {
   const $ = useMemoCache(3);
   const item = useFragment();
-  const c_0 = $[0] !== item;
   let count;
-  if (c_0) {
+  if ($[0] !== item) {
     count = 0;
     const aggregates = item?.aggregates || [];
     aggregates.forEach((aggregate) => {

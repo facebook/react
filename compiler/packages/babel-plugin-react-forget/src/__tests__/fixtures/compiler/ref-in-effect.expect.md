@@ -44,9 +44,8 @@ function Component(props) {
     t1 = $[1];
   }
   useEffect(t1);
-  const c_2 = $[2] !== onChange;
   let t2;
-  if (c_2) {
+  if ($[2] !== onChange) {
     t2 = <Foo onChange={onChange} />;
     $[2] = onChange;
     $[3] = t2;

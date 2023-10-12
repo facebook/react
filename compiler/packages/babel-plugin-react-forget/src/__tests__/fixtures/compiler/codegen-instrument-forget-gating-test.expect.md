@@ -30,9 +30,8 @@ const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       if (__DEV__) useRenderCounter("Bar");
       const $ = useMemoCache(2);
-      const c_0 = $[0] !== props.bar;
       let t0;
-      if (c_0) {
+      if ($[0] !== props.bar) {
         t0 = <div>{props.bar}</div>;
         $[0] = props.bar;
         $[1] = t0;
@@ -54,9 +53,8 @@ const Foo = isForgetEnabled_Fixtures()
   ? function Foo(props) {
       if (__DEV__) useRenderCounter("Foo");
       const $ = useMemoCache(2);
-      const c_0 = $[0] !== props.bar;
       let t0;
-      if (c_0) {
+      if ($[0] !== props.bar) {
         t0 = <Foo>{props.bar}</Foo>;
         $[0] = props.bar;
         $[1] = t0;

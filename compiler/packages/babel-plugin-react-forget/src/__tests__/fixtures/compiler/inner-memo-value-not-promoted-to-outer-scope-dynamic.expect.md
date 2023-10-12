@@ -27,12 +27,11 @@ function Component(props) {
   const $ = useMemoCache(15);
   const item = useFragment(FRAGMENT, props.item);
   useFreeze(item);
-  const c_0 = $[0] !== item;
   let t1;
   let T2;
   let t0;
   let T3;
-  if (c_0) {
+  if ($[0] !== item) {
     const count = new MaybeMutable(item);
 
     T3 = View;
@@ -55,20 +54,16 @@ function Component(props) {
     t0 = $[3];
     T3 = $[4];
   }
-  const c_6 = $[6] !== t1;
   let t4;
-  if (c_6) {
+  if ($[6] !== t1) {
     t4 = <span>{t1}</span>;
     $[6] = t1;
     $[7] = t4;
   } else {
     t4 = $[7];
   }
-  const c_8 = $[8] !== T2;
-  const c_9 = $[9] !== t0;
-  const c_10 = $[10] !== t4;
   let t5;
-  if (c_8 || c_9 || c_10) {
+  if ($[8] !== T2 || $[9] !== t0 || $[10] !== t4) {
     t5 = (
       <T2>
         {t0}
@@ -82,10 +77,8 @@ function Component(props) {
   } else {
     t5 = $[11];
   }
-  const c_12 = $[12] !== T3;
-  const c_13 = $[13] !== t5;
   let t6;
-  if (c_12 || c_13) {
+  if ($[12] !== T3 || $[13] !== t5) {
     t6 = <T3>{t5}</T3>;
     $[12] = T3;
     $[13] = t5;

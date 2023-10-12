@@ -38,9 +38,8 @@ function Foo(props) {
   } else {
     t0 = $[0];
   }
-  const c_1 = $[1] !== props.greeting;
   let t1;
-  if (c_1) {
+  if ($[1] !== props.greeting) {
     t1 = (
       <>
         Hello {props.greeting} {t0}

@@ -21,9 +21,8 @@ function Foo(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Foo(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.router.location;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.router.location) {
     t0 = (reason) => {
       log(props.router.location);
     };

@@ -37,10 +37,9 @@ function mayMutate() {}
 import { unstable_useMemoCache as useMemoCache } from "react";
 function ComponentA(props) {
   const $ = useMemoCache(6);
-  const c_0 = $[0] !== props;
   let a;
   let b;
-  if (c_0) {
+  if ($[0] !== props) {
     a = [];
     b = [];
     if (b) {
@@ -56,10 +55,8 @@ function ComponentA(props) {
     a = $[1];
     b = $[2];
   }
-  const c_3 = $[3] !== a;
-  const c_4 = $[4] !== b;
   let t0;
-  if (c_3 || c_4) {
+  if ($[3] !== a || $[4] !== b) {
     t0 = <Foo a={a} b={b} />;
     $[3] = a;
     $[4] = b;
@@ -72,10 +69,9 @@ function ComponentA(props) {
 
 function ComponentB(props) {
   const $ = useMemoCache(6);
-  const c_0 = $[0] !== props;
   let a;
   let b;
-  if (c_0) {
+  if ($[0] !== props) {
     a = [];
     b = [];
     if (mayMutate(b)) {
@@ -91,10 +87,8 @@ function ComponentB(props) {
     a = $[1];
     b = $[2];
   }
-  const c_3 = $[3] !== a;
-  const c_4 = $[4] !== b;
   let t0;
-  if (c_3 || c_4) {
+  if ($[3] !== a || $[4] !== b) {
     t0 = <Foo a={a} b={b} />;
     $[3] = a;
     $[4] = b;

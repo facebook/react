@@ -15,11 +15,8 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(4);
-  const c_0 = $[0] !== props.method;
-  const c_1 = $[1] !== props.a;
-  const c_2 = $[2] !== props.b;
   let t0;
-  if (c_0 || c_1 || c_2) {
+  if ($[0] !== props.method || $[1] !== props.a || $[2] !== props.b) {
     t0 = foo[props.method](...props.a, null, ...props.b);
     $[0] = props.method;
     $[1] = props.a;

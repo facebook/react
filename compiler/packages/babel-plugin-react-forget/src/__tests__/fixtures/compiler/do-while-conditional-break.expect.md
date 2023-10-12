@@ -21,9 +21,8 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props;
   let x;
-  if (c_0) {
+  if ($[0] !== props) {
     x = [0, 1, 2, 3];
     do {
       if (x === 0) {

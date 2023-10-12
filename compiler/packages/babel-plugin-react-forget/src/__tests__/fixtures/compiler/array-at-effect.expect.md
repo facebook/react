@@ -23,18 +23,16 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // arrayInstance.
 //  - mutate on lvalue
 function ArrayAtTest(props) {
   const $ = useMemoCache(9);
-  const c_0 = $[0] !== props.x;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.x) {
     t0 = foo(props.x);
     $[0] = props.x;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const c_2 = $[2] !== t0;
   let t1;
-  if (c_2) {
+  if ($[2] !== t0) {
     t1 = [t0];
     $[2] = t0;
     $[3] = t1;
@@ -42,13 +40,10 @@ function ArrayAtTest(props) {
     t1 = $[3];
   }
   const arr = t1;
-  const c_4 = $[4] !== props.y;
-  const c_5 = $[5] !== arr;
   let t3;
-  if (c_4 || c_5) {
-    const c_7 = $[7] !== props.y;
+  if ($[4] !== props.y || $[5] !== arr) {
     let t2;
-    if (c_7) {
+    if ($[7] !== props.y) {
       t2 = bar(props.y);
       $[7] = props.y;
       $[8] = t2;

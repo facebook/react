@@ -35,9 +35,8 @@ function Component(props) {
   const $ = useMemoCache(3);
   let t68;
   bb10: {
-    const c_0 = $[0] !== props;
     let y;
-    if (c_0) {
+    if ($[0] !== props) {
       y = [];
       if (props.cond) {
         y.push(props.a);

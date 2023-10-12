@@ -27,9 +27,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // @gating @compi
 export const Bar = isForgetEnabled_Fixtures()
   ? function Bar(props) {
       const $ = useMemoCache(2);
-      const c_0 = $[0] !== props.bar;
       let t0;
-      if (c_0) {
+      if ($[0] !== props.bar) {
         t0 = <div>{props.bar}</div>;
         $[0] = props.bar;
         $[1] = t0;
@@ -50,9 +49,8 @@ export function NoForget(props) {
 export const Foo = isForgetEnabled_Fixtures()
   ? function Foo(props) {
       const $ = useMemoCache(2);
-      const c_0 = $[0] !== props.bar;
       let t0;
-      if (c_0) {
+      if ($[0] !== props.bar) {
         t0 = <Foo>{props.bar}</Foo>;
         $[0] = props.bar;
         $[1] = t0;

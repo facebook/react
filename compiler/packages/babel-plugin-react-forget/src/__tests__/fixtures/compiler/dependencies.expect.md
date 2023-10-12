@@ -34,10 +34,8 @@ function foo(x, y, z) {
   const $ = useMemoCache(3);
   const items = [z];
   items.push(x);
-  const c_0 = $[0] !== x;
-  const c_1 = $[1] !== y;
   let items2;
-  if (c_0 || c_1) {
+  if ($[0] !== x || $[1] !== y) {
     items2 = [];
     if (x) {
       items2.push(y);

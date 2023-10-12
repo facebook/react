@@ -36,9 +36,8 @@ import { identity, sum } from "shared-runtime";
 // global object.
 function Component(props) {
   const $ = useMemoCache(4);
-  const c_0 = $[0] !== props.b;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.b) {
     t0 = identity(props.b);
     $[0] = props.b;
     $[1] = t0;
@@ -51,9 +50,8 @@ function Component(props) {
   const primitiveVal3 = globalThis.globalThis.NaN;
 
   sum(primitiveVal1, Infinity, primitiveVal3);
-  const c_2 = $[2] !== primitiveVal1;
   let t1;
-  if (c_2) {
+  if ($[2] !== primitiveVal1) {
     t1 = { primitiveVal1, primitiveVal2: Infinity, primitiveVal3 };
     $[2] = primitiveVal1;
     $[3] = t1;

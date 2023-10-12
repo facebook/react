@@ -38,9 +38,8 @@ function Component(props) {
   const x = t0;
   const y = useFreeze(x);
   foo(y, x);
-  const c_1 = $[1] !== y;
   let t1;
-  if (c_1) {
+  if ($[1] !== y) {
     t1 = (
       <Component>
         {x}

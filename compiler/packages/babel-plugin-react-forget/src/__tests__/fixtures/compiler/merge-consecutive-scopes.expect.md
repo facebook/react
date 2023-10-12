@@ -37,18 +37,16 @@ function Component() {
   } else {
     t0 = $[0];
   }
-  const c_1 = $[1] !== state;
   let t1;
-  if (c_1) {
+  if ($[1] !== state) {
     t1 = <span>{state}</span>;
     $[1] = state;
     $[2] = t1;
   } else {
     t1 = $[2];
   }
-  const c_3 = $[3] !== state;
   let t2;
-  if (c_3) {
+  if ($[3] !== state) {
     t2 = (
       <button data-testid="button" onClick={() => setState(state + 1)}>
         increment
@@ -59,10 +57,8 @@ function Component() {
   } else {
     t2 = $[4];
   }
-  const c_5 = $[5] !== t1;
-  const c_6 = $[6] !== t2;
   let t3;
-  if (c_5 || c_6) {
+  if ($[5] !== t1 || $[6] !== t2) {
     t3 = (
       <div>
         {t0}

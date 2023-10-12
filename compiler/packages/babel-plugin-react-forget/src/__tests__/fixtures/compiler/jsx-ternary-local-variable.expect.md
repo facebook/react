@@ -26,9 +26,8 @@ import { RenderPropAsChild, StaticText1, StaticText2 } from "shared-runtime";
 function Component(props) {
   const $ = useMemoCache(2);
   const Foo = props.showText1 ? StaticText1 : StaticText2;
-  const c_0 = $[0] !== Foo;
   let t0;
-  if (c_0) {
+  if ($[0] !== Foo) {
     t0 = <RenderPropAsChild items={[() => <Foo key="0" />]} />;
     $[0] = Foo;
     $[1] = t0;

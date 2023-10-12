@@ -16,9 +16,8 @@ async function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 async function Component(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.id;
   let x;
-  if (c_0) {
+  if ($[0] !== props.id) {
     x = [];
     await populateData(props.id, x);
     $[0] = props.id;

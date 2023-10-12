@@ -67,11 +67,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
  */
 function ComponentA(props) {
   const $ = useMemoCache(4);
-  const c_0 = $[0] !== props.a;
-  const c_1 = $[1] !== props.b;
-  const c_2 = $[2] !== props.d;
   let a_DEBUG;
-  if (c_0 || c_1 || c_2) {
+  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.d) {
     a_DEBUG = [];
     a_DEBUG.push(props.a);
     if (props.b) {
@@ -94,9 +91,8 @@ function ComponentA(props) {
  */
 function ComponentB(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props;
   let a;
-  if (c_0) {
+  if ($[0] !== props) {
     a = [];
     a.push(props.a);
     if (props.b) {
@@ -117,9 +113,8 @@ function ComponentB(props) {
  */
 function ComponentC(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props;
   let a;
-  if (c_0) {
+  if ($[0] !== props) {
     a = [];
     a.push(props.a);
     if (props.b) {
@@ -141,9 +136,8 @@ function ComponentC(props) {
  */
 function ComponentD(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props;
   let a;
-  if (c_0) {
+  if ($[0] !== props) {
     a = [];
     a.push(props.a);
     if (props.b) {

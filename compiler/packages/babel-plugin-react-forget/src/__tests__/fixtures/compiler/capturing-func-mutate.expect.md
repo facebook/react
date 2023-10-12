@@ -27,10 +27,8 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a, b) {
   const $ = useMemoCache(3);
-  const c_0 = $[0] !== a;
-  const c_1 = $[1] !== b;
   let z;
-  if (c_0 || c_1) {
+  if ($[0] !== a || $[1] !== b) {
     z = { a };
     const y = { b };
     const x = function () {

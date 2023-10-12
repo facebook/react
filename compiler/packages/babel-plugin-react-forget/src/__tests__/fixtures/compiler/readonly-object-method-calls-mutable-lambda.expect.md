@@ -45,9 +45,8 @@ function Component(props) {
   posts.push(t0);
   const count = posts.length;
   foo(count);
-  const c_1 = $[1] !== posts;
   let t1;
-  if (c_1) {
+  if ($[1] !== posts) {
     t1 = <>{posts}</>;
     $[1] = posts;
     $[2] = t1;

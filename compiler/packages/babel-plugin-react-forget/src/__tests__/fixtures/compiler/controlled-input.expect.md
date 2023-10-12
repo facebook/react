@@ -32,10 +32,8 @@ function component() {
     t0 = $[0];
   }
   const handler = t0;
-  const c_1 = $[1] !== handler;
-  const c_2 = $[2] !== x;
   let t1;
-  if (c_1 || c_2) {
+  if ($[1] !== handler || $[2] !== x) {
     t1 = <input onChange={handler} value={x} />;
     $[1] = handler;
     $[2] = x;

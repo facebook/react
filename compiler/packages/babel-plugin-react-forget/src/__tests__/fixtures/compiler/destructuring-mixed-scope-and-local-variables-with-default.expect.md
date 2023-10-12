@@ -58,17 +58,15 @@ function useFragment(_arg1, _arg2) {
 function Component(props) {
   const $ = useMemoCache(16);
   const post = useFragment(graphql`...`, props.post);
-  const c_0 = $[0] !== post;
   let media;
   let allUrls;
   let onClick;
-  if (c_0) {
+  if ($[0] !== post) {
     allUrls = [];
 
     const { media: t0, comments: t2, urls: t4 } = post;
-    const c_4 = $[4] !== t0;
     let t1;
-    if (c_4) {
+    if ($[4] !== t0) {
       t1 = t0 === undefined ? null : t0;
       $[4] = t0;
       $[5] = t1;
@@ -76,9 +74,8 @@ function Component(props) {
       t1 = $[5];
     }
     media = t1;
-    const c_6 = $[6] !== t2;
     let t3;
-    if (c_6) {
+    if ($[6] !== t2) {
       t3 = t2 === undefined ? [] : t2;
       $[6] = t2;
       $[7] = t3;
@@ -86,9 +83,8 @@ function Component(props) {
       t3 = $[7];
     }
     const comments = t3;
-    const c_8 = $[8] !== t4;
     let t5;
-    if (c_8) {
+    if ($[8] !== t4) {
       t5 = t4 === undefined ? [] : t4;
       $[8] = t4;
       $[9] = t5;
@@ -96,9 +92,8 @@ function Component(props) {
       t5 = $[9];
     }
     const urls = t5;
-    const c_10 = $[10] !== comments.length;
     let t6;
-    if (c_10) {
+    if ($[10] !== comments.length) {
       t6 = (e) => {
         if (!comments.length) {
           return;
@@ -123,11 +118,8 @@ function Component(props) {
     allUrls = $[2];
     onClick = $[3];
   }
-  const c_12 = $[12] !== media;
-  const c_13 = $[13] !== allUrls;
-  const c_14 = $[14] !== onClick;
   let t7;
-  if (c_12 || c_13 || c_14) {
+  if ($[12] !== media || $[13] !== allUrls || $[14] !== onClick) {
     t7 = <Stringify media={media} allUrls={allUrls} onClick={onClick} />;
     $[12] = media;
     $[13] = allUrls;

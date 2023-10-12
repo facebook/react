@@ -28,10 +28,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // When a conditi
 // ordering of accesses should not matter
 function TestConditionalSubpath1(props, other) {
   const $ = useMemoCache(3);
-  const c_0 = $[0] !== props.a;
-  const c_1 = $[1] !== other;
   let x;
-  if (c_0 || c_1) {
+  if ($[0] !== props.a || $[1] !== other) {
     x = {};
     x.b = props.a.b;
     if (foo(other)) {

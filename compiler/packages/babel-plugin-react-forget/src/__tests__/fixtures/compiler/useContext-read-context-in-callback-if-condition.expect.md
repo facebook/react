@@ -42,9 +42,8 @@ const FooContext = createContext({ current: true });
 function Component(props) {
   const $ = useMemoCache(6);
   const foo = useContext(FooContext);
-  const c_0 = $[0] !== foo.current;
   let t0;
-  if (c_0) {
+  if ($[0] !== foo.current) {
     t0 = () => {
       if (foo.current) {
         return {};
@@ -58,9 +57,8 @@ function Component(props) {
     t0 = $[1];
   }
   const getValue = t0;
-  const c_2 = $[2] !== getValue;
   let t1;
-  if (c_2) {
+  if ($[2] !== getValue) {
     t1 = getValue();
     $[2] = getValue;
     $[3] = t1;
@@ -68,9 +66,8 @@ function Component(props) {
     t1 = $[3];
   }
   const value = t1;
-  const c_4 = $[4] !== value;
   let t2;
-  if (c_4) {
+  if ($[4] !== value) {
     t2 = <Child value={value} />;
     $[4] = value;
     $[5] = t2;

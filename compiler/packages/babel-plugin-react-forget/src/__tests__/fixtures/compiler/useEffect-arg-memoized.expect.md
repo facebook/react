@@ -29,9 +29,8 @@ function Component(props) {
   const $ = useMemoCache(6);
   const dispatch = useDispatch();
   useFreeze(dispatch);
-  const c_0 = $[0] !== dispatch;
   let t0;
-  if (c_0) {
+  if ($[0] !== dispatch) {
     t0 = () => {
       dispatch({ kind: "update" });
     };
@@ -41,10 +40,9 @@ function Component(props) {
     t0 = $[1];
   }
   const onUpdate = t0;
-  const c_2 = $[2] !== onUpdate;
   let t1;
   let t2;
-  if (c_2) {
+  if ($[2] !== onUpdate) {
     t1 = () => {
       onUpdate();
     };

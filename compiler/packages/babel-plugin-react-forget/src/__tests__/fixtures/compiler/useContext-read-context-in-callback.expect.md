@@ -36,9 +36,8 @@ const FooContext = createContext({ current: null });
 function Component(props) {
   const $ = useMemoCache(5);
   const foo = useContext(FooContext);
-  const c_0 = $[0] !== foo.current;
   let t0;
-  if (c_0) {
+  if ($[0] !== foo.current) {
     t0 = () => {
       console.log(foo.current);
     };
@@ -48,10 +47,8 @@ function Component(props) {
     t0 = $[1];
   }
   const onClick = t0;
-  const c_2 = $[2] !== onClick;
-  const c_3 = $[3] !== props.children;
   let t1;
-  if (c_2 || c_3) {
+  if ($[2] !== onClick || $[3] !== props.children) {
     t1 = <div onClick={onClick}>{props.children}</div>;
     $[2] = onClick;
     $[3] = props.children;

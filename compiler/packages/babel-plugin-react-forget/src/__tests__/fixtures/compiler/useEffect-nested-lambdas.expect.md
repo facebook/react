@@ -36,9 +36,8 @@ function Component(props) {
   const item = useMutable(props.itemId);
   const dispatch = useDispatch();
   useFreeze(dispatch);
-  const c_0 = $[0] !== dispatch;
   let t0;
-  if (c_0) {
+  if ($[0] !== dispatch) {
     t0 = () => {
       dispatch(createExitAction());
     };

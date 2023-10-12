@@ -28,9 +28,8 @@ function Component(props) {
     graphql`fragment Component_user on User { ... }`,
     props.user
   );
-  const c_0 = $[0] !== user.timeline.posts.edges.nodes;
   let posts;
-  if (c_0) {
+  if ($[0] !== user.timeline.posts.edges.nodes) {
     posts = user.timeline.posts.edges.nodes.map((node) => <Post post={node} />);
     let t0;
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
@@ -47,9 +46,8 @@ function Component(props) {
   }
   const count = posts.length;
   foo(count);
-  const c_3 = $[3] !== posts;
   let t1;
-  if (c_3) {
+  if ($[3] !== posts) {
     t1 = <>{posts}</>;
     $[3] = posts;
     $[4] = t1;

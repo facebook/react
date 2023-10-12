@@ -21,9 +21,8 @@ function Foo(t20) {
   const { a } = t20;
   const ref = useRef();
   const val = ref.current;
-  const c_0 = $[0] !== a;
   let t0;
-  if (c_0) {
+  if ($[0] !== a) {
     t0 = { a, val };
     $[0] = a;
     $[1] = t0;
@@ -31,9 +30,8 @@ function Foo(t20) {
     t0 = $[1];
   }
   const x = t0;
-  const c_2 = $[2] !== x;
   let t1;
-  if (c_2) {
+  if ($[2] !== x) {
     t1 = <VideoList videos={x} />;
     $[2] = x;
     $[3] = t1;

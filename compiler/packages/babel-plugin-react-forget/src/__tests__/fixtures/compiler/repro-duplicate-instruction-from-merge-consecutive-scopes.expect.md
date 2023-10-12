@@ -38,9 +38,8 @@ function Component(id) {
     t0 = $[0];
   }
   const t1 = id ? true : false;
-  const c_1 = $[1] !== t1;
   let t2;
-  if (c_1) {
+  if ($[1] !== t1) {
     t2 = (
       <>
         {t0}

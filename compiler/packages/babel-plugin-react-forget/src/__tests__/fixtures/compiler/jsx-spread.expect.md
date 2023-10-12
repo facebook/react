@@ -18,19 +18,16 @@ function Component(props) {
   const $ = useMemoCache(5);
 
   const t0 = props.cond ? props.foo : props.bar;
-  const c_0 = $[0] !== t0;
   let t1;
-  if (c_0) {
+  if ($[0] !== t0) {
     t1 = { bar: t0 };
     $[0] = t0;
     $[1] = t1;
   } else {
     t1 = $[1];
   }
-  const c_2 = $[2] !== props;
-  const c_3 = $[3] !== t1;
   let t2;
-  if (c_2 || c_3) {
+  if ($[2] !== props || $[3] !== t1) {
     t2 = <Component {...props} {...t1} />;
     $[2] = props;
     $[3] = t1;

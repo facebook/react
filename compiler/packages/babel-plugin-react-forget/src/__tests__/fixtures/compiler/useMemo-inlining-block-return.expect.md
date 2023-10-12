@@ -28,9 +28,8 @@ function component(a, b) {
   let t31;
   bb7: {
     if (a) {
-      const c_0 = $[0] !== b;
       let t0;
-      if (c_0) {
+      if ($[0] !== b) {
         t0 = { b };
         $[0] = b;
         $[1] = t0;

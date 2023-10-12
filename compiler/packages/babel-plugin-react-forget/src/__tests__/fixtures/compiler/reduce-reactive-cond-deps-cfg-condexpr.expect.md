@@ -22,10 +22,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // props.a.b shou
 
 function TestCondDepInConditionalExpr(props, other) {
   const $ = useMemoCache(3);
-  const c_0 = $[0] !== other;
-  const c_1 = $[1] !== props.a.b;
   let t0;
-  if (c_0 || c_1) {
+  if ($[0] !== other || $[1] !== props.a.b) {
     t0 = foo(other) ? bar(props.a.b) : baz(props.a.b);
     $[0] = other;
     $[1] = props.a.b;

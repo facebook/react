@@ -23,9 +23,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function component(t26) {
   const $ = useMemoCache(7);
   const { mutator } = t26;
-  const c_0 = $[0] !== mutator;
   let t0;
-  if (c_0) {
+  if ($[0] !== mutator) {
     t0 = () => {
       mutator.poke();
     };
@@ -35,9 +34,8 @@ function component(t26) {
     t0 = $[1];
   }
   const poke = t0;
-  const c_2 = $[2] !== mutator.user;
   let t1;
-  if (c_2) {
+  if ($[2] !== mutator.user) {
     t1 = () => {
       mutator.user.hide();
     };
@@ -47,10 +45,8 @@ function component(t26) {
     t1 = $[3];
   }
   const hide = t1;
-  const c_4 = $[4] !== poke;
-  const c_5 = $[5] !== hide;
   let t2;
-  if (c_4 || c_5) {
+  if ($[4] !== poke || $[5] !== hide) {
     t2 = <Foo poke={poke} hide={hide} />;
     $[4] = poke;
     $[5] = hide;

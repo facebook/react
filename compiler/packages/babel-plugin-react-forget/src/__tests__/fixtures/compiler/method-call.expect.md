@@ -30,9 +30,8 @@ import { addOne, shallowCopy } from "shared-runtime";
 
 function foo(a, b, c) {
   const $ = useMemoCache(5);
-  const c_0 = $[0] !== a;
   let t0;
-  if (c_0) {
+  if ($[0] !== a) {
     t0 = shallowCopy(a);
     $[0] = a;
     $[1] = t0;
@@ -40,10 +39,8 @@ function foo(a, b, c) {
     t0 = $[1];
   }
   const x = t0;
-  const c_2 = $[2] !== x;
-  const c_3 = $[3] !== b;
   let t1;
-  if (c_2 || c_3) {
+  if ($[2] !== x || $[3] !== b) {
     t1 = x.foo(b);
     $[2] = x;
     $[3] = b;

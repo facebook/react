@@ -31,9 +31,8 @@ function Component(props) {
     t0 = $[0];
   }
   const mutate = t0;
-  const c_1 = $[1] !== props;
   let x;
-  if (c_1) {
+  if ($[1] !== props) {
     x = makeObject(props);
     mutate(x);
     $[1] = props;

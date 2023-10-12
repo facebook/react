@@ -24,9 +24,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // arrayInstance.
 //  - mutate on receiver
 function Component(props) {
   const $ = useMemoCache(8);
-  const c_0 = $[0] !== props.x;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.x) {
     t0 = foo(props.x);
     $[0] = props.x;
     $[1] = t0;
@@ -34,9 +33,8 @@ function Component(props) {
     t0 = $[1];
   }
   const x = t0;
-  const c_2 = $[2] !== props.y;
   let t1;
-  if (c_2) {
+  if ($[2] !== props.y) {
     t1 = { y: props.y };
     $[2] = props.y;
     $[3] = t1;
@@ -44,10 +42,8 @@ function Component(props) {
     t1 = $[3];
   }
   const y = t1;
-  const c_4 = $[4] !== x;
-  const c_5 = $[5] !== y;
   let arr;
-  if (c_4 || c_5) {
+  if ($[4] !== x || $[5] !== y) {
     arr = [];
     let t2;
     if ($[7] === Symbol.for("react.memo_cache_sentinel")) {

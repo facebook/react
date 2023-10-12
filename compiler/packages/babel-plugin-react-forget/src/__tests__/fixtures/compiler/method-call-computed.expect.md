@@ -24,9 +24,8 @@ function foo(a, b, c) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(a, b, c) {
   const $ = useMemoCache(8);
-  const c_0 = $[0] !== a;
   let t0;
-  if (c_0) {
+  if ($[0] !== a) {
     t0 = makeObject(a);
     $[0] = a;
     $[1] = t0;
@@ -34,9 +33,8 @@ function foo(a, b, c) {
     t0 = $[1];
   }
   const x = t0;
-  const c_2 = $[2] !== a;
   let t1;
-  if (c_2) {
+  if ($[2] !== a) {
     t1 = makeObject(a);
     $[2] = a;
     $[3] = t1;
@@ -44,11 +42,8 @@ function foo(a, b, c) {
     t1 = $[3];
   }
   const y = t1;
-  const c_4 = $[4] !== x;
-  const c_5 = $[5] !== y.method;
-  const c_6 = $[6] !== b;
   let t2;
-  if (c_4 || c_5 || c_6) {
+  if ($[4] !== x || $[5] !== y.method || $[6] !== b) {
     t2 = x[y.method](b);
     $[4] = x;
     $[5] = y.method;

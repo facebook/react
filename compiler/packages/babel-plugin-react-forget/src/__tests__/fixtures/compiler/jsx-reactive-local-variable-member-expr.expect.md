@@ -31,9 +31,8 @@ function Component(t13) {
   const { something } = t13;
 
   const Foo = something.StaticText1;
-  const c_0 = $[0] !== Foo;
   let t0;
-  if (c_0) {
+  if ($[0] !== Foo) {
     t0 = () => <Foo />;
     $[0] = Foo;
     $[1] = t0;

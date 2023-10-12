@@ -27,9 +27,8 @@ import fbt from "fbt";
 
 function Foo(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.value;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.value) {
     t0 = fbt._(
       { "0": "hello {value},", "1": "goodbye {value}," },
       [

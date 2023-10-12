@@ -20,10 +20,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(foo, ...t9) {
   const $ = useMemoCache(3);
   const bar = t9;
-  const c_0 = $[0] !== foo;
-  const c_1 = $[1] !== bar;
   let t0;
-  if (c_0 || c_1) {
+  if ($[0] !== foo || $[1] !== bar) {
     t0 = [foo, bar];
     $[0] = foo;
     $[1] = bar;

@@ -38,10 +38,8 @@ function Component(props) {
     t0 = $[0];
   }
   const onChange = t0;
-  const c_1 = $[1] !== x;
-  const c_2 = $[2] !== onChange;
   let t1;
-  if (c_1 || c_2) {
+  if ($[1] !== x || $[2] !== onChange) {
     t1 = <input value={x} onChange={onChange} />;
     $[1] = x;
     $[2] = onChange;

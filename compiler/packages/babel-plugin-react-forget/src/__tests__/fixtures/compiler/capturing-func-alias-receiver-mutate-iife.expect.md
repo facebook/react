@@ -30,9 +30,8 @@ const { mutate } = require("shared-runtime");
 
 function component(a) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== a;
   let y;
-  if (c_0) {
+  if ($[0] !== a) {
     const x = { a };
     y = {};
 

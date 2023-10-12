@@ -58,12 +58,9 @@ function Foo() {}
  */
 function Component(props) {
   const $ = useMemoCache(8);
-  const c_0 = $[0] !== props.a;
-  const c_1 = $[1] !== props.b;
-  const c_2 = $[2] !== props.c;
   let a;
   let b;
-  if (c_0 || c_1 || c_2) {
+  if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.c) {
     a = compute(props.a);
     b = compute(props.b);
     if (props.c) {
@@ -79,10 +76,8 @@ function Component(props) {
     a = $[3];
     b = $[4];
   }
-  const c_5 = $[5] !== a;
-  const c_6 = $[6] !== b;
   let t0;
-  if (c_5 || c_6) {
+  if ($[5] !== a || $[6] !== b) {
     t0 = <Foo a={a} b={b} />;
     $[5] = a;
     $[6] = b;

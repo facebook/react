@@ -27,10 +27,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // props.a.b shou
 
 function TestCondDepInNestedIfElse(props, other) {
   const $ = useMemoCache(3);
-  const c_0 = $[0] !== other;
-  const c_1 = $[1] !== props;
   let x;
-  if (c_0 || c_1) {
+  if ($[0] !== other || $[1] !== props) {
     x = {};
     if (foo(other)) {
       if (bar()) {

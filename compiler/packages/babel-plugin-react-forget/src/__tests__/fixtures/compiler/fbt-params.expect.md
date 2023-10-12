@@ -28,9 +28,8 @@ import fbt from "fbt";
 
 function Component(props) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== props.name;
   let t0;
-  if (c_0) {
+  if ($[0] !== props.name) {
     t0 = fbt._("Hello {user name}", [fbt._param("user name", props.name)], {
       hk: "2zEDKF",
     });

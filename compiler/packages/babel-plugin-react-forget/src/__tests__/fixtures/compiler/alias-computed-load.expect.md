@@ -19,9 +19,8 @@ function component(a) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component(a) {
   const $ = useMemoCache(2);
-  const c_0 = $[0] !== a;
   let x;
-  if (c_0) {
+  if ($[0] !== a) {
     x = { a };
     const y = {};
 

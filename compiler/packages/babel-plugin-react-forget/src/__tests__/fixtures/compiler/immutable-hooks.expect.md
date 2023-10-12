@@ -32,9 +32,8 @@ function Component(props) {
   const y = useFoo(x);
 
   bar(x, y);
-  const c_1 = $[1] !== y;
   let t1;
-  if (c_1) {
+  if ($[1] !== y) {
     t1 = [x, y];
     $[1] = y;
     $[2] = t1;

@@ -53,12 +53,10 @@ function maybeMutate(x) {}
 
 function Component(props) {
   const $ = useMemoCache(11);
-  const c_0 = $[0] !== props.component;
-  const c_1 = $[1] !== props.alternateComponent;
   let Tag;
   let T0;
   let t1;
-  if (c_0 || c_1) {
+  if ($[0] !== props.component || $[1] !== props.alternateComponent) {
     const maybeMutable = new MaybeMutable();
     Tag = props.component;
 
@@ -74,20 +72,16 @@ function Component(props) {
     T0 = $[3];
     t1 = $[4];
   }
-  const c_5 = $[5] !== Tag;
   let t2;
-  if (c_5) {
+  if ($[5] !== Tag) {
     t2 = <Tag />;
     $[5] = Tag;
     $[6] = t2;
   } else {
     t2 = $[6];
   }
-  const c_7 = $[7] !== T0;
-  const c_8 = $[8] !== t1;
-  const c_9 = $[9] !== t2;
   let t3;
-  if (c_7 || c_8 || c_9) {
+  if ($[7] !== T0 || $[8] !== t1 || $[9] !== t2) {
     t3 = (
       <T0>
         {t1}

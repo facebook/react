@@ -26,10 +26,8 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // When an uncond
 // ordering of accesses should not matter
 function TestConditionalSuperpath2(props, other) {
   const $ = useMemoCache(3);
-  const c_0 = $[0] !== other;
-  const c_1 = $[1] !== props.a;
   let x;
-  if (c_0 || c_1) {
+  if ($[0] !== other || $[1] !== props.a) {
     x = {};
     if (foo(other)) {
       x.b = props.a.b;
