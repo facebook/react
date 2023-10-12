@@ -210,6 +210,26 @@ export type EnvironmentConfig = {
    * https://github.com/babel/babel/pull/10917/files#diff-19b555d2f3904c206af406540d9df200b1e16befedb83ff39ebfcbd876f7fa8aL52-R56
    */
   bailoutOnHoleyArrays: boolean;
+
+  /**
+   * Enable emitting "change variables" which store the result of whether a particular
+   * reactive scope dependency has changed since the scope was last executed.
+   *
+   * Ex:
+   * ```
+   * const c_0 = $[0] !== input; // change variable
+   * let output;
+   * if (c_0) ...
+   * ```
+   *
+   * Defaults to false, where the comparison is inlined:
+   *
+   * ```
+   * let output;
+   * if ($[0] !== input) ...
+   * ```
+   */
+  enableChangeVariableCodegen: boolean;
 };
 
 export const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
@@ -225,6 +245,7 @@ export const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
   enableAssumeHooksFollowRulesOfReact: false,
   enableEmitFreeze: null,
   enableForest: false,
+  enableChangeVariableCodegen: false,
 
   validateFrozenLambdas: false,
   validateNoSetStateInRender: false,

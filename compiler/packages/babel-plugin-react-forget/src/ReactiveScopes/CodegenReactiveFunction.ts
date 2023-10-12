@@ -241,14 +241,23 @@ function codegenMemoBlockForReactiveScope(
   for (const dep of scope.dependencies) {
     const index = cx.nextCacheIndex;
     const depValue = codegenDependency(cx, dep);
-
-    changeExpressions.push(
-      t.binaryExpression(
-        "!==",
-        t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
-        depValue
-      )
+    const comparison = t.binaryExpression(
+      "!==",
+      t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
+      depValue
     );
+
+    if (cx.env.config.enableChangeVariableCodegen) {
+      const changeIdentifier = t.identifier(`c_${index}`);
+      statements.push(
+        t.variableDeclaration("const", [
+          t.variableDeclarator(changeIdentifier, comparison),
+        ])
+      );
+      changeExpressions.push(changeIdentifier);
+    } else {
+      changeExpressions.push(comparison);
+    }
     cacheStoreStatements.push(
       t.expressionStatement(
         t.assignmentExpression(
