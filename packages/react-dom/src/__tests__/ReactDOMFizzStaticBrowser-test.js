@@ -1126,4 +1126,65 @@ describe('ReactDOMFizzStaticBrowser', () => {
     // Client rendered
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
   });
+
+  // @gate enablePostpone
+  it('can suspend in a replayed component several layers deep', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    function Delay({children}) {
+      if (!prerendering) {
+        React.use(promise);
+      }
+      return children;
+    }
+
+    // This wrapper will cause us to do one destructive render past this.
+    function Outer({children}) {
+      return children;
+    }
+
+    function App() {
+      return (
+        <div>
+          <Outer>
+            <Delay>
+              <Suspense fallback="Loading...">
+                <Postpone />
+              </Suspense>
+            </Delay>
+          </Outer>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    await readIntoContainer(prerendered.prelude);
+
+    prerendering = false;
+
+    const resumedPromise = ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    await jest.runAllTimers();
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    await resolve();
+
+    await readIntoContainer(await resumedPromise);
+
+    expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
 });
