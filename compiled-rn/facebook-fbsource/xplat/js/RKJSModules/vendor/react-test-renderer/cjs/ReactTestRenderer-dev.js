@@ -24770,7 +24770,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-bb778528d-20231012";
+var ReactVersion = "18.3.0-canary-1b4ba7489-20231013";
 
 // Might add PROFILE later.
 
