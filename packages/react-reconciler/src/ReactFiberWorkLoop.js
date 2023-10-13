@@ -3010,9 +3010,9 @@ function commitRootImpl(
     // those scenarios otherwise. This won't catch recursive async updates,
     // though, which is why we check the flags above first.
     // Was the finished render the result of an update (not hydration)?
-    includesSomeLane(lanes, UpdateLanes) &&
-    // Did it schedule a sync update?
-    includesSomeLane(remainingLanes, SyncUpdateLanes)
+    (includesSomeLane(lanes, UpdateLanes) &&
+      // Did it schedule a sync update?
+      includesSomeLane(remainingLanes, SyncUpdateLanes))
   ) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();

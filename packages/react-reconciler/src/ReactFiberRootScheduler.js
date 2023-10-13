@@ -23,6 +23,8 @@ import {
   markRootEntangled,
   mergeLanes,
   claimNextTransitionLane,
+  includesSomeLane,
+  UpdateLanes,
 } from './ReactFiberLane';
 import {
   CommitContext,
@@ -232,6 +234,10 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy: boolean) {
           root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
         );
         if (includesSyncLane(nextLanes)) {
+          // Avoid triggering the warning on selective hydartion
+          if (!includesSomeLane(nextLanes, UpdateLanes)) {
+            nestedUpdatePasses = 0;
+          }
           // This root has pending sync work. Flush it now.
           try {
             didPerformSomeWork = true;
