@@ -2287,16 +2287,16 @@ function hoistStylesheetDependency(stylesheet) {
 function createRenderState(resumableState, generateStaticMarkup) {
   var idPrefix = resumableState.idPrefix;
   resumableState = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1569 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1570 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1581 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1582 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1583 = new Set(),
-    JSCompiler_object_inline_styles_1584 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1585 = new Set(),
-    JSCompiler_object_inline_scripts_1586 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1587 = new Set(),
-    JSCompiler_object_inline_preloads_1588 = {
+  var JSCompiler_object_inline_preconnects_1582 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1583 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1584 = new Set(),
+    JSCompiler_object_inline_styles_1585 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1586 = new Set(),
+    JSCompiler_object_inline_scripts_1587 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1588 = new Set(),
+    JSCompiler_object_inline_preloads_1589 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2304,7 +2304,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
     };
   return {
     placeholderPrefix: resumableState,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1569,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1570,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2316,14 +2316,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     importMapChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1581,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1582,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1583,
-    styles: JSCompiler_object_inline_styles_1584,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1585,
-    scripts: JSCompiler_object_inline_scripts_1586,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1587,
-    preloads: JSCompiler_object_inline_preloads_1588,
+    preconnects: JSCompiler_object_inline_preconnects_1582,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1583,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1584,
+    styles: JSCompiler_object_inline_styles_1585,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1586,
+    scripts: JSCompiler_object_inline_scripts_1587,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1588,
+    preloads: JSCompiler_object_inline_preloads_1589,
     boundaryResources: null,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -3700,22 +3700,24 @@ function renderNodeDestructiveImpl(
                       throw Error(formatProdErrorMessage(490, node[0], name));
                     name = node[2];
                     node = node[3];
+                    keyOrIndex = task.node;
                     task.replay = { nodes: name, slots: node, pendingTasks: 1 };
                     try {
+                      renderElement(
+                        request,
+                        task,
+                        key,
+                        prevThenableState,
+                        type,
+                        props,
+                        ref
+                      );
                       if (
-                        (renderElement(
-                          request,
-                          task,
-                          key,
-                          prevThenableState,
-                          type,
-                          props,
-                          ref
-                        ),
                         1 === task.replay.pendingTasks &&
-                          0 < task.replay.nodes.length)
+                        0 < task.replay.nodes.length
                       )
                         throw Error(formatProdErrorMessage(488));
+                      task.replay.pendingTasks--;
                     } catch (x) {
                       if (
                         "object" === typeof x &&
@@ -3723,22 +3725,25 @@ function renderNodeDestructiveImpl(
                         (x === SuspenseException ||
                           "function" === typeof x.then)
                       )
-                        throw x;
-                      props = void 0;
-                      var boundary = task.blockedBoundary;
-                      key = x;
-                      props = logRecoverableError(request, key);
+                        throw (
+                          (task.node === keyOrIndex && (task.replay = replay),
+                          x)
+                        );
+                      task.replay.pendingTasks--;
+                      key = request;
+                      request = task.blockedBoundary;
+                      prevThenableState = x;
+                      props = logRecoverableError(key, prevThenableState);
                       abortRemainingReplayNodes(
+                        key,
                         request,
-                        boundary,
                         name,
                         node,
-                        key,
+                        prevThenableState,
                         props
                       );
-                    } finally {
-                      task.replay.pendingTasks--, (task.replay = replay);
                     }
+                    task.replay = replay;
                   } else {
                     if (type !== REACT_SUSPENSE_TYPE)
                       throw Error(
@@ -3749,15 +3754,15 @@ function renderNodeDestructiveImpl(
                         )
                       );
                     b: {
-                      boundary = void 0;
+                      replay = void 0;
                       prevThenableState = node[5];
                       type = node[2];
-                      replay = node[3];
-                      ref = null === node[4] ? [] : node[4][2];
+                      ref = node[3];
+                      name = null === node[4] ? [] : node[4][2];
                       node = null === node[4] ? null : node[4][3];
-                      name = task.keyPath;
-                      keyOrIndex = task.replay;
-                      var parentBoundary = task.blockedBoundary,
+                      keyOrIndex = task.keyPath;
+                      var previousReplaySet = task.replay,
+                        parentBoundary = task.blockedBoundary,
                         content = props.children;
                       props = props.fallback;
                       var fallbackAbortSet = new Set(),
@@ -3770,7 +3775,7 @@ function renderNodeDestructiveImpl(
                       task.blockedBoundary = resumedBoundary;
                       task.replay = {
                         nodes: type,
-                        slots: replay,
+                        slots: ref,
                         pendingTasks: 1
                       };
                       request.renderState.boundaryResources =
@@ -3793,8 +3798,8 @@ function renderNodeDestructiveImpl(
                         }
                       } catch (error) {
                         (resumedBoundary.status = 4),
-                          (boundary = logRecoverableError(request, error)),
-                          (resumedBoundary.errorDigest = boundary),
+                          (replay = logRecoverableError(request, error)),
+                          (resumedBoundary.errorDigest = replay),
                           task.replay.pendingTasks--,
                           request.clientRenderedBoundaries.push(
                             resumedBoundary
@@ -3804,13 +3809,13 @@ function renderNodeDestructiveImpl(
                           ? parentBoundary.resources
                           : null),
                           (task.blockedBoundary = parentBoundary),
-                          (task.replay = keyOrIndex),
-                          (task.keyPath = name);
+                          (task.replay = previousReplaySet),
+                          (task.keyPath = keyOrIndex);
                       }
                       task = createReplayTask(
                         request,
                         null,
-                        { nodes: ref, slots: node, pendingTasks: 0 },
+                        { nodes: name, slots: node, pendingTasks: 0 },
                         props,
                         -1,
                         parentBoundary,
@@ -3941,11 +3946,10 @@ function renderChildrenArray(request, task, children, childIndex) {
         node = node[3];
         task.replay = { nodes: childIndex, slots: node, pendingTasks: 1 };
         try {
-          if (
-            (renderChildrenArray(request, task, children, -1),
-            1 === task.replay.pendingTasks && 0 < task.replay.nodes.length)
-          )
+          renderChildrenArray(request, task, children, -1);
+          if (1 === task.replay.pendingTasks && 0 < task.replay.nodes.length)
             throw Error(formatProdErrorMessage(488));
+          task.replay.pendingTasks--;
         } catch (x) {
           if (
             "object" === typeof x &&
@@ -3953,21 +3957,21 @@ function renderChildrenArray(request, task, children, childIndex) {
             (x === SuspenseException || "function" === typeof x.then)
           )
             throw x;
-          children = void 0;
+          task.replay.pendingTasks--;
+          children = request;
           var boundary = task.blockedBoundary,
             error = x;
-          children = logRecoverableError(request, error);
+          request = logRecoverableError(children, error);
           abortRemainingReplayNodes(
-            request,
+            children,
             boundary,
             childIndex,
             node,
             error,
-            children
+            request
           );
-        } finally {
-          task.replay.pendingTasks--, (task.replay = replay);
         }
+        task.replay = replay;
         replayNodes.splice(j, 1);
         break;
       }
@@ -3981,22 +3985,22 @@ function renderChildrenArray(request, task, children, childIndex) {
     null !== task.replay &&
     ((j = task.replay.slots), null !== j && "object" === typeof j)
   ) {
-    for (boundary = 0; boundary < replayNodes; boundary++)
-      (childIndex = children[boundary]),
-        (task.treeContext = pushTreeContext(replay, replayNodes, boundary)),
-        (node = j[boundary]),
-        "number" === typeof node
-          ? (resumeNode(request, task, node, childIndex, boundary),
-            delete j[boundary])
-          : renderNode(request, task, childIndex, boundary);
+    for (childIndex = 0; childIndex < replayNodes; childIndex++)
+      (node = children[childIndex]),
+        (task.treeContext = pushTreeContext(replay, replayNodes, childIndex)),
+        (boundary = j[childIndex]),
+        "number" === typeof boundary
+          ? (resumeNode(request, task, boundary, node, childIndex),
+            delete j[childIndex])
+          : renderNode(request, task, node, childIndex);
     task.treeContext = replay;
     task.keyPath = prevKeyPath;
     return;
   }
   for (j = 0; j < replayNodes; j++)
-    (boundary = children[j]),
+    (childIndex = children[j]),
       (task.treeContext = pushTreeContext(replay, replayNodes, j)),
-      renderNode(request, task, boundary, j);
+      renderNode(request, task, childIndex, j);
   task.treeContext = replay;
   task.keyPath = prevKeyPath;
 }
@@ -5046,4 +5050,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-d1253dd4";
+exports.version = "18.3.0-www-classic-1719e6f1";

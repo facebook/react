@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-c2645119";
+var ReactVersion = "18.3.0-www-classic-d0c392db";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -11437,6 +11437,7 @@ function replayElement(
 
       var childNodes = node[2];
       var childSlots = node[3];
+      var currentNode = task.node;
       task.replay = {
         nodes: childNodes,
         slots: childSlots,
@@ -11463,6 +11464,8 @@ function replayElement(
               "The tree doesn't match so React will fallback to client rendering."
           );
         }
+
+        task.replay.pendingTasks--;
       } catch (x) {
         if (
           typeof x === "object" &&
@@ -11470,18 +11473,24 @@ function replayElement(
           (x === SuspenseException || typeof x.then === "function")
         ) {
           // Suspend
+          if (task.node === currentNode) {
+            // This same element suspended so we need to pop the replay we just added.
+            task.replay = replay;
+          }
+
           throw x;
-        } // Unlike regular render, we don't terminate the siblings if we error
+        }
+
+        task.replay.pendingTasks--; // Unlike regular render, we don't terminate the siblings if we error
         // during a replay. That's because this component didn't actually error
         // in the original prerender. What's unable to complete is the child
         // replay nodes which might be Suspense boundaries which are able to
         // absorb the error and we can still continue with siblings.
 
         erroredReplay(request, task.blockedBoundary, x, childNodes, childSlots);
-      } finally {
-        task.replay.pendingTasks--;
-        task.replay = replay;
       }
+
+      task.replay = replay;
     } else {
       // Let's double check that the component type matches.
       if (type !== REACT_SUSPENSE_TYPE) {
@@ -11843,6 +11852,8 @@ function replayFragment(request, task, children, childIndex) {
             "The tree doesn't match so React will fallback to client rendering."
         );
       }
+
+      task.replay.pendingTasks--;
     } catch (x) {
       if (
         typeof x === "object" &&
@@ -11851,7 +11862,9 @@ function replayFragment(request, task, children, childIndex) {
       ) {
         // Suspend
         throw x;
-      } // Unlike regular render, we don't terminate the siblings if we error
+      }
+
+      task.replay.pendingTasks--; // Unlike regular render, we don't terminate the siblings if we error
       // during a replay. That's because this component didn't actually error
       // in the original prerender. What's unable to complete is the child
       // replay nodes which might be Suspense boundaries which are able to
@@ -11859,10 +11872,9 @@ function replayFragment(request, task, children, childIndex) {
       // This is an error, stash the component stack if it is null.
 
       erroredReplay(request, task.blockedBoundary, x, childNodes, childSlots);
-    } finally {
-      task.replay.pendingTasks--;
-      task.replay = replay;
-    } // We finished rendering this node, so now we can consume this
+    }
+
+    task.replay = replay; // We finished rendering this node, so now we can consume this
     // slot. This must happen after in case we rerender this task.
 
     replayNodes.splice(j, 1);
@@ -11902,7 +11914,7 @@ function renderChildrenArray(request, task, children, childIndex) {
         task.treeContext = pushTreeContext(prevTreeContext, totalChildren, i); // We need to use the non-destructive form so that we can safely pop back
         // up and render the sibling if something suspends.
 
-        var resumeSegmentID = resumeSlots[i];
+        var resumeSegmentID = resumeSlots[i]; // TODO: If this errors we should still continue with the next sibling.
 
         if (typeof resumeSegmentID === "number") {
           resumeNode(request, task, resumeSegmentID, node, i); // We finished rendering this node, so now we can consume this
