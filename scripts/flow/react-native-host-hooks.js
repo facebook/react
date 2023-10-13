@@ -134,7 +134,6 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   declare export var ReactNativeViewConfigRegistry: {
     customBubblingEventTypes: Object,
     customDirectEventTypes: Object,
-    eventTypes: Object,
 
     register: (name: string, callback: __ViewConfigGetter) => string,
     get: (name: string) => __ReactNativeBaseComponentViewConfig,
