@@ -802,7 +802,7 @@ const bundles = [
 
   /******* React Flight Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RECONCILER,
     entry: 'react-server/flight',
     global: 'ReactFlightServer',
@@ -813,7 +813,7 @@ const bundles = [
 
   /******* React Flight Client *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RECONCILER,
     entry: 'react-client/flight',
     global: 'ReactFlightClient',
