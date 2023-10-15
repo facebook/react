@@ -21,7 +21,8 @@ import type {
   Element,
   InspectedElement as InspectedElementFrontend,
   InspectedElementResponseType,
-} from 'react-devtools-shared/src/devtools/views/Components/types';
+  InspectedElementPath,
+} from 'react-devtools-shared/src/frontend/types';
 
 const Pending = 0;
 const Resolved = 1;
@@ -83,7 +84,7 @@ function createCacheSeed(
  */
 export function inspectElement(
   element: Element,
-  path: Array<string | number> | null,
+  path: InspectedElementPath | null,
   store: Store,
   bridge: FrontendBridge,
 ): InspectedElementFrontend | null {
@@ -123,12 +124,7 @@ export function inspectElement(
       return null;
     }
 
-    inspectElementMutableSource({
-      bridge,
-      element,
-      path,
-      rendererID: ((rendererID: any): number),
-    }).then(
+    inspectElementMutableSource(bridge, element, path, rendererID).then(
       ([inspectedElement]: [
         InspectedElementFrontend,
         InspectedElementResponseType,
@@ -151,6 +147,7 @@ export function inspectElement(
         wake();
       },
     );
+
     map.set(element, record);
   }
 
@@ -186,12 +183,13 @@ export function checkForUpdate({
     return;
   }
 
-  return inspectElementMutableSource({
+  return inspectElementMutableSource(
     bridge,
     element,
-    path: null,
+    null,
     rendererID,
-  }).then(
+    true,
+  ).then(
     ([inspectedElement, responseType]: [
       InspectedElementFrontend,
       InspectedElementResponseType,

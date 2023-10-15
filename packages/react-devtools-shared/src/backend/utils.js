@@ -12,7 +12,7 @@ import {compareVersions} from 'compare-versions';
 import {dehydrate} from '../hydration';
 import isArray from 'shared/isArray';
 
-import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {DehydratedData} from 'react-devtools-shared/src/frontend/types';
 
 // TODO: update this to the first React version that has a corresponding DevTools backend
 const FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER = '999.9.9';

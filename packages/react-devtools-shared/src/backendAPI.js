@@ -24,7 +24,8 @@ import type {
 import type {
   DehydratedData,
   InspectedElement as InspectedElementFrontend,
-} from 'react-devtools-shared/src/devtools/views/Components/types';
+} from 'react-devtools-shared/src/frontend/types';
+import type {InspectedElementPath} from 'react-devtools-shared/src/frontend/types';
 
 export function clearErrorsAndWarnings({
   bridge,
@@ -86,25 +87,21 @@ export function copyInspectedElementPath({
   });
 }
 
-export function inspectElement({
-  bridge,
-  forceFullData,
-  id,
-  path,
-  rendererID,
-}: {
+export function inspectElement(
   bridge: FrontendBridge,
   forceFullData: boolean,
   id: number,
-  path: Array<string | number> | null,
+  path: InspectedElementPath | null,
   rendererID: number,
-}): Promise<InspectedElementPayload> {
+  shouldListenToPauseEvents: boolean = false,
+): Promise<InspectedElementPayload> {
   const requestID = requestCounter++;
   const promise = getPromiseForRequestID<InspectedElementPayload>(
     requestID,
     'inspectedElement',
     bridge,
     `Timed out while inspecting element ${id}.`,
+    shouldListenToPauseEvents,
   );
 
   bridge.send('inspectElement', {
@@ -148,14 +145,27 @@ function getPromiseForRequestID<T>(
   eventType: $Keys<BackendEvents>,
   bridge: FrontendBridge,
   timeoutMessage: string,
+  shouldListenToPauseEvents: boolean = false,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const cleanup = () => {
       bridge.removeListener(eventType, onInspectedElement);
-      bridge.removeListener('shutdown', onDisconnect);
-      bridge.removeListener('pauseElementPolling', onDisconnect);
+      bridge.removeListener('shutdown', onShutdown);
+
+      if (shouldListenToPauseEvents) {
+        bridge.removeListener('pauseElementPolling', onDisconnect);
+      }
 
       clearTimeout(timeoutID);
+    };
+
+    const onShutdown = () => {
+      cleanup();
+      reject(
+        new Error(
+          'Failed to inspect element. Try again or restart React DevTools.',
+        ),
+      );
     };
 
     const onDisconnect = () => {
@@ -176,8 +186,11 @@ function getPromiseForRequestID<T>(
     };
 
     bridge.addListener(eventType, onInspectedElement);
-    bridge.addListener('shutdown', onDisconnect);
-    bridge.addListener('pauseElementPolling', onDisconnect);
+    bridge.addListener('shutdown', onShutdown);
+
+    if (shouldListenToPauseEvents) {
+      bridge.addListener('pauseElementPolling', onDisconnect);
+    }
 
     const timeoutID = setTimeout(onTimeout, TIMEOUT_DELAY);
   });
@@ -277,7 +290,7 @@ export function convertInspectedElementBackendToFrontend(
 
 export function hydrateHelper(
   dehydratedData: DehydratedData | null,
-  path?: Array<string | number>,
+  path: ?InspectedElementPath,
 ): Object | null {
   if (dehydratedData !== null) {
     const {cleaned, data, unserializable} = dehydratedData;

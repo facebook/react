@@ -38,8 +38,15 @@ import {logEvent} from 'react-devtools-shared/src/Logger';
 import styles from './InspectedElementView.css';
 
 import type {ContextMenuContextType} from '../context';
-import type {Element, InspectedElement, SerializedElement} from './types';
-import type {ElementType, HookNames} from 'react-devtools-shared/src/types';
+import type {
+  Element,
+  InspectedElement,
+  SerializedElement,
+} from 'react-devtools-shared/src/frontend/types';
+import type {
+  ElementType,
+  HookNames,
+} from 'react-devtools-shared/src/frontend/types';
 import type {ToggleParseHookNames} from './InspectedElementContext';
 
 export type CopyPath = (path: Array<string | number>) => void;

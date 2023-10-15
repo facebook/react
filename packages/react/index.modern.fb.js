@@ -21,7 +21,6 @@ export {
   createContext,
   createElement,
   createRef,
-  createServerContext,
   use,
   forwardRef,
   isValidElement,

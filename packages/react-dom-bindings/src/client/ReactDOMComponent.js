@@ -588,6 +588,15 @@ function setProp(
       }
       break;
     }
+    case 'onScrollEnd': {
+      if (value != null) {
+        if (__DEV__ && typeof value !== 'function') {
+          warnForInvalidEventListener(key, value);
+        }
+        listenToNonDelegatedEvent('scrollend', domElement);
+      }
+      break;
+    }
     case 'dangerouslySetInnerHTML': {
       if (value != null) {
         if (typeof value !== 'object' || !('__html' in value)) {
@@ -953,6 +962,15 @@ function setPropOnCustomElement(
           warnForInvalidEventListener(key, value);
         }
         listenToNonDelegatedEvent('scroll', domElement);
+      }
+      break;
+    }
+    case 'onScrollEnd': {
+      if (value != null) {
+        if (__DEV__ && typeof value !== 'function') {
+          warnForInvalidEventListener(key, value);
+        }
+        listenToNonDelegatedEvent('scrollend', domElement);
       }
       break;
     }
@@ -2813,6 +2831,10 @@ export function diffHydratedProperties(
 
   if (props.onScroll != null) {
     listenToNonDelegatedEvent('scroll', domElement);
+  }
+
+  if (props.onScrollEnd != null) {
+    listenToNonDelegatedEvent('scrollend', domElement);
   }
 
   if (props.onClick != null) {

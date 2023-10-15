@@ -17,7 +17,7 @@ import Icon from '../Icon';
 import {ModalDialogContext} from '../ModalDialog';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Toggle from '../Toggle';
-import {ElementTypeSuspense} from 'react-devtools-shared/src/types';
+import {ElementTypeSuspense} from 'react-devtools-shared/src/frontend/types';
 import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
@@ -26,7 +26,7 @@ import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
 
 import styles from './InspectedElement.css';
 
-import type {InspectedElement} from './types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 
 export type Props = {};
 

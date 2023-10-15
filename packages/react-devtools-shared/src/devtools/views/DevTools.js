@@ -46,11 +46,11 @@ import styles from './DevTools.css';
 
 import './root.css';
 
-import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {FetchFileWithCaching} from './Components/FetchFileWithCachingContext';
 import type {HookNamesModuleLoaderFunction} from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {BrowserTheme} from 'react-devtools-shared/src/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 
 export type TabID = 'components' | 'profiler';
 
