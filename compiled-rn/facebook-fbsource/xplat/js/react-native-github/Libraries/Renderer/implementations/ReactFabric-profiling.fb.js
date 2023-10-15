@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d7778311ad423998f61648d66880c391>>
+ * @generated SignedSource<<5482da67271d4d5287fd330fb848632a>>
  */
 
 
@@ -1507,44 +1507,30 @@ function getNextLanes(root, wipLanes) {
   var pendingLanes = root.pendingLanes;
   if (0 === pendingLanes) return 0;
   var nextLanes = 0,
-    suspendedLanes = root.suspendedLanes,
-    pingedLanes = root.pingedLanes,
-    nonIdlePendingLanes = pendingLanes & 268435455;
-  if (0 !== nonIdlePendingLanes) {
-    var nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
-    0 !== nonIdleUnblockedLanes
-      ? (nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes))
-      : ((pingedLanes &= nonIdlePendingLanes),
-        0 !== pingedLanes &&
-          (nextLanes = getHighestPriorityLanes(pingedLanes)));
-  } else
-    (nonIdlePendingLanes = pendingLanes & ~suspendedLanes),
-      0 !== nonIdlePendingLanes
-        ? (nextLanes = getHighestPriorityLanes(nonIdlePendingLanes))
-        : 0 !== pingedLanes &&
-          (nextLanes = getHighestPriorityLanes(pingedLanes));
-  if (0 === nextLanes) return 0;
-  if (
-    0 !== wipLanes &&
-    wipLanes !== nextLanes &&
-    0 === (wipLanes & suspendedLanes) &&
-    ((suspendedLanes = nextLanes & -nextLanes),
-    (pingedLanes = wipLanes & -wipLanes),
-    suspendedLanes >= pingedLanes ||
-      (32 === suspendedLanes && 0 !== (pingedLanes & 8388480)))
-  )
-    return wipLanes;
-  0 === (root.current.mode & 32) &&
-    0 !== (nextLanes & 8) &&
-    (nextLanes |= pendingLanes & 32);
-  wipLanes = root.entangledLanes;
-  if (0 !== wipLanes)
-    for (root = root.entanglements, wipLanes &= nextLanes; 0 < wipLanes; )
-      (pendingLanes = 31 - clz32(wipLanes)),
-        (suspendedLanes = 1 << pendingLanes),
-        (nextLanes |= root[pendingLanes]),
-        (wipLanes &= ~suspendedLanes);
-  return nextLanes;
+    suspendedLanes = root.suspendedLanes;
+  root = root.pingedLanes;
+  var nonIdlePendingLanes = pendingLanes & 268435455;
+  0 !== nonIdlePendingLanes
+    ? ((pendingLanes = nonIdlePendingLanes & ~suspendedLanes),
+      0 !== pendingLanes
+        ? (nextLanes = getHighestPriorityLanes(pendingLanes))
+        : ((root &= nonIdlePendingLanes),
+          0 !== root && (nextLanes = getHighestPriorityLanes(root))))
+    : ((pendingLanes &= ~suspendedLanes),
+      0 !== pendingLanes
+        ? (nextLanes = getHighestPriorityLanes(pendingLanes))
+        : 0 !== root && (nextLanes = getHighestPriorityLanes(root)));
+  return 0 === nextLanes
+    ? 0
+    : 0 !== wipLanes &&
+      wipLanes !== nextLanes &&
+      0 === (wipLanes & suspendedLanes) &&
+      ((suspendedLanes = nextLanes & -nextLanes),
+      (root = wipLanes & -wipLanes),
+      suspendedLanes >= root ||
+        (32 === suspendedLanes && 0 !== (root & 8388480)))
+    ? wipLanes
+    : nextLanes;
 }
 function computeExpirationTime(lane, currentTime) {
   switch (lane) {
@@ -3399,21 +3385,21 @@ function createChildReconciler(shouldTrackSideEffects) {
 var reconcileChildFibers = createChildReconciler(!0),
   mountChildFibers = createChildReconciler(!1),
   currentTreeHiddenStackCursor = createCursor(null),
-  prevRenderLanesStackCursor = createCursor(0);
+  prevEntangledRenderLanesCursor = createCursor(0);
 function pushHiddenContext(fiber, context) {
-  fiber = renderLanes;
-  push(prevRenderLanesStackCursor, fiber);
+  fiber = entangledRenderLanes;
+  push(prevEntangledRenderLanesCursor, fiber);
   push(currentTreeHiddenStackCursor, context);
-  renderLanes = fiber | context.baseLanes;
+  entangledRenderLanes = fiber | context.baseLanes;
 }
 function reuseHiddenContextOnStack() {
-  push(prevRenderLanesStackCursor, renderLanes);
+  push(prevEntangledRenderLanesCursor, entangledRenderLanes);
   push(currentTreeHiddenStackCursor, currentTreeHiddenStackCursor.current);
 }
 function popHiddenContext() {
-  renderLanes = prevRenderLanesStackCursor.current;
+  entangledRenderLanes = prevEntangledRenderLanesCursor.current;
   pop(currentTreeHiddenStackCursor);
-  pop(prevRenderLanesStackCursor);
+  pop(prevEntangledRenderLanesCursor);
 }
 var suspenseHandlerStackCursor = createCursor(null),
   shellBoundary = null;
@@ -3686,7 +3672,7 @@ function scheduleImmediateTask(cb) {
 }
 var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
   ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig,
-  renderLanes$1 = 0,
+  renderLanes = 0,
   currentlyRenderingFiber$1 = null,
   currentHook = null,
   workInProgressHook = null,
@@ -3715,7 +3701,7 @@ function renderWithHooks(
   secondArg,
   nextRenderLanes
 ) {
-  renderLanes$1 = nextRenderLanes;
+  renderLanes = nextRenderLanes;
   currentlyRenderingFiber$1 = workInProgress;
   workInProgress.memoizedState = null;
   workInProgress.updateQueue = null;
@@ -3740,7 +3726,7 @@ function renderWithHooks(
 function finishRenderingHooks() {
   ReactCurrentDispatcher$1.current = ContextOnlyDispatcher;
   var didRenderTooFewHooks = null !== currentHook && null !== currentHook.next;
-  renderLanes$1 = 0;
+  renderLanes = 0;
   workInProgressHook = currentHook = currentlyRenderingFiber$1 = null;
   didScheduleRenderPhaseUpdate = !1;
   thenableIndexCounter = 0;
@@ -3787,7 +3773,7 @@ function resetHooksOnUnwind(workInProgress) {
     }
     didScheduleRenderPhaseUpdate = !1;
   }
-  renderLanes$1 = 0;
+  renderLanes = 0;
   workInProgressHook = currentHook = currentlyRenderingFiber$1 = null;
   didScheduleRenderPhaseUpdateDuringThisPass = !1;
   thenableIndexCounter = 0;
@@ -3937,7 +3923,7 @@ function updateReducer(reducer) {
       if (
         updateLane !== update.lane
           ? (workInProgressRootRenderLanes & updateLane) === updateLane
-          : (renderLanes$1 & updateLane) === updateLane
+          : (renderLanes & updateLane) === updateLane
       )
         null !== newBaseQueueLast &&
           (newBaseQueueLast = newBaseQueueLast.next =
@@ -4039,7 +4025,7 @@ function updateSyncExternalStore(subscribe, getSnapshot) {
       throw Error(
         "Expected a work-in-progress root. This is a bug in React. Please file an issue."
       );
-    includesBlockingLane(subscribe, renderLanes$1) ||
+    includesBlockingLane(subscribe, renderLanes) ||
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
   }
   return nextSnapshot;
@@ -4200,7 +4186,7 @@ function mountDeferredValueImpl(hook, value, initialValue) {
     : (hook.memoizedState = value);
 }
 function updateDeferredValueImpl(hook, prevValue, value) {
-  if (0 === (renderLanes$1 & 42))
+  if (0 === (renderLanes & 42))
     return (
       hook.baseState && ((hook.baseState = !1), (didReceiveUpdate = !0)),
       (hook.memoizedState = value)
@@ -4432,7 +4418,7 @@ var HooksDispatcherOnMount = {
       throw Error(
         "Expected a work-in-progress root. This is a bug in React. Please file an issue."
       );
-    includesBlockingLane(root, renderLanes$1) ||
+    includesBlockingLane(root, workInProgressRootRenderLanes) ||
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     hook.memoizedState = nextSnapshot;
     root = { value: nextSnapshot, getSnapshot: getSnapshot };
@@ -7987,7 +7973,7 @@ var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   workInProgressSuspendedReason = 0,
   workInProgressThrownValue = null,
   workInProgressRootDidAttachPingListener = !1,
-  renderLanes = 0,
+  entangledRenderLanes = 0,
   workInProgressRootExitStatus = 0,
   workInProgressRootFatalError = null,
   workInProgressRootSkippedLanes = 0,
@@ -8286,8 +8272,8 @@ function prepareFreshStack(root, lanes) {
     ((root.cancelPendingCommit = null), timeoutHandle());
   resetWorkInProgressStack();
   workInProgressRoot = root;
-  workInProgress = root = createWorkInProgress(root.current, null);
-  workInProgressRootRenderLanes = renderLanes = lanes;
+  workInProgress = timeoutHandle = createWorkInProgress(root.current, null);
+  workInProgressRootRenderLanes = lanes;
   workInProgressSuspendedReason = 0;
   workInProgressThrownValue = null;
   workInProgressRootDidAttachPingListener = !1;
@@ -8299,8 +8285,22 @@ function prepareFreshStack(root, lanes) {
       0;
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
+  0 === (root.current.mode & 32) && 0 !== (lanes & 8) && (lanes |= lanes & 32);
+  var allEntangledLanes = root.entangledLanes;
+  if (0 !== allEntangledLanes)
+    for (
+      root = root.entanglements, allEntangledLanes &= lanes;
+      0 < allEntangledLanes;
+
+    ) {
+      var index$3 = 31 - clz32(allEntangledLanes),
+        lane = 1 << index$3;
+      lanes |= root[index$3];
+      allEntangledLanes &= ~lane;
+    }
+  entangledRenderLanes = lanes;
   finishQueueingConcurrentUpdates();
-  return root;
+  return timeoutHandle;
 }
 function handleThrow(root, thrownValue) {
   currentlyRenderingFiber$1 = null;
@@ -8564,9 +8564,9 @@ function performUnitOfWork(unitOfWork) {
   var current = unitOfWork.alternate;
   0 !== (unitOfWork.mode & 2)
     ? (startProfilerTimer(unitOfWork),
-      (current = beginWork(current, unitOfWork, renderLanes)),
+      (current = beginWork(current, unitOfWork, entangledRenderLanes)),
       stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0))
-    : (current = beginWork(current, unitOfWork, renderLanes));
+    : (current = beginWork(current, unitOfWork, entangledRenderLanes));
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
   null === current
     ? completeUnitOfWork(unitOfWork)
@@ -8622,8 +8622,8 @@ function replaySuspendedUnitOfWork(unitOfWork) {
     default:
       unwindInterruptedWork(current, unitOfWork),
         (unitOfWork = workInProgress =
-          resetWorkInProgress(unitOfWork, renderLanes)),
-        (current = beginWork(current, unitOfWork, renderLanes));
+          resetWorkInProgress(unitOfWork, entangledRenderLanes)),
+        (current = beginWork(current, unitOfWork, entangledRenderLanes));
   }
   isProfilingMode && stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, !0);
   unitOfWork.memoizedProps = unitOfWork.pendingProps;
@@ -8833,9 +8833,9 @@ function completeUnitOfWork(unitOfWork) {
     var current = completedWork.alternate;
     unitOfWork = completedWork.return;
     0 === (completedWork.mode & 2)
-      ? (current = completeWork(current, completedWork, renderLanes))
+      ? (current = completeWork(current, completedWork, entangledRenderLanes))
       : (startProfilerTimer(completedWork),
-        (current = completeWork(current, completedWork, renderLanes)),
+        (current = completeWork(current, completedWork, entangledRenderLanes)),
         stopProfilerTimerIfRunningAndRecordDelta(completedWork, !1));
     if (null !== current) {
       workInProgress = current;
@@ -10171,10 +10171,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1110 = {
+  devToolsConfig$jscomp$inline_1122 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-9fff8faa",
+    version: "18.3.0-canary-b8835c8a",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10204,10 +10204,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1110.bundleType,
-  version: devToolsConfig$jscomp$inline_1110.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1110.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1110.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1122.bundleType,
+  version: devToolsConfig$jscomp$inline_1122.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1122.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1122.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10223,14 +10223,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1110.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1122.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-9fff8faa"
+  reconcilerVersion: "18.3.0-canary-b8835c8a"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
