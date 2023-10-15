@@ -16,6 +16,8 @@ let ReactDOMClient;
 let Scheduler;
 let act;
 let waitForAll;
+let waitFor;
+let waitForMicrotasks;
 let assertLog;
 
 const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
@@ -36,6 +38,8 @@ describe('ReactDOMFiberAsync', () => {
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
+    waitFor = InternalTestUtils.waitFor;
+    waitForMicrotasks = InternalTestUtils.waitForMicrotasks;
     assertLog = InternalTestUtils.assertLog;
 
     document.body.appendChild(container);
@@ -653,52 +657,94 @@ describe('ReactDOMFiberAsync', () => {
     });
   });
 
-  it('transition lane in popState should yield if it suspends', async () => {
-    const never = {then() {}};
-    let _setText;
+  it('transition lane in popState should be allowed to suspend', async () => {
+    let resolvePromise;
+    const promise = new Promise(res => {
+      resolvePromise = res;
+    });
+
+    function Text({text}) {
+      Scheduler.log(text);
+      return text;
+    }
 
     function App() {
-      const [shouldSuspend, setShouldSuspend] = React.useState(false);
-      const [text, setText] = React.useState('0');
-      _setText = setText;
-      if (shouldSuspend) {
-        Scheduler.log('Suspend!');
-        throw never;
+      const [pathname, setPathname] = React.useState('/path/a');
+
+      if (pathname !== '/path/a') {
+        try {
+          React.use(promise);
+        } catch (e) {
+          Scheduler.log(`Suspend! [${pathname}]`);
+          throw e;
+        }
       }
-      function onPopstate() {
-        React.startTransition(() => {
-          setShouldSuspend(val => !val);
-        });
-      }
+
       React.useEffect(() => {
+        function onPopstate() {
+          React.startTransition(() => {
+            setPathname('/path/b');
+          });
+        }
         window.addEventListener('popstate', onPopstate);
         return () => window.removeEventListener('popstate', onPopstate);
       }, []);
-      Scheduler.log(`Child:${shouldSuspend}/${text}`);
-      return text;
+
+      return (
+        <>
+          <Text text="Before" />
+          <div>
+            <Text text={pathname} />
+          </div>
+          <Text text="After" />
+        </>
+      );
     }
 
     const root = ReactDOMClient.createRoot(container);
     await act(async () => {
       root.render(<App />);
     });
-    assertLog(['Child:false/0']);
+    assertLog(['Before', '/path/a', 'After']);
 
-    await act(() => {
+    const div = container.getElementsByTagName('div')[0];
+    expect(div.textContent).toBe('/path/a');
+
+    // Simulate a popstate event
+    await act(async () => {
       const popStateEvent = new Event('popstate');
+
+      // Simulate a popstate event
       window.event = popStateEvent;
       window.dispatchEvent(popStateEvent);
-      queueMicrotask(() => {
-        window.event = undefined;
-      });
+      await waitForMicrotasks();
+      window.event = undefined;
+
+      // The transition lane should have been attempted synchronously (in
+      // a microtask)
+      assertLog(['Suspend! [/path/b]']);
+      // Because it suspended, it remains on the current path
+      expect(div.textContent).toBe('/path/a');
     });
-    assertLog(['Suspend!']);
+    assertLog(['Suspend! [/path/b]']);
 
     await act(async () => {
-      _setText('1');
-    });
-    assertLog(['Child:false/1', 'Suspend!']);
+      resolvePromise();
 
-    root.unmount();
+      // Since the transition previously suspended, there's no need for this
+      // transition to be rendered synchronously on susbequent attempts; if we
+      // fail to commit synchronously the first time, the scroll restoration
+      // state won't be restored anyway.
+      //
+      // Yield in between each child to prove that it's concurrent.
+      await waitForMicrotasks();
+      assertLog([]);
+
+      await waitFor(['Before']);
+      await waitFor(['/path/b']);
+      await waitFor(['After']);
+    });
+    assertLog([]);
+    expect(div.textContent).toBe('/path/b');
   });
 });

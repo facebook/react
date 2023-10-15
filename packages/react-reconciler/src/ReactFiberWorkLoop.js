@@ -141,11 +141,12 @@ import {
   includesBlockingLane,
   includesExpiredLane,
   getNextLanes,
+  getEntangledLanes,
   getLanesToRetrySynchronouslyOnError,
   markRootUpdated,
   markRootSuspended as markRootSuspended_dontCallThisOneDirectly,
   markRootPinged,
-  markRootEntangled,
+  upgradePendingLanesToSync,
   markRootFinished,
   addFiberToLanesMap,
   movePendingFibersToMemoized,
@@ -349,8 +350,8 @@ let workInProgressRootDidAttachPingListener: boolean = false;
 // HiddenContext module.
 //
 // Most things in the work loop should deal with workInProgressRootRenderLanes.
-// Most things in begin/complete phases should deal with renderLanes.
-export let renderLanes: Lanes = NoLanes;
+// Most things in begin/complete phases should deal with entangledRenderLanes.
+export let entangledRenderLanes: Lanes = NoLanes;
 
 // Whether to root completed, errored, suspended, etc.
 let workInProgressRootExitStatus: RootExitStatus = RootInProgress;
@@ -1335,7 +1336,7 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
 
 export function flushRoot(root: FiberRoot, lanes: Lanes) {
   if (lanes !== NoLanes) {
-    markRootEntangled(root, mergeLanes(lanes, SyncLane));
+    upgradePendingLanesToSync(root, lanes);
     ensureRootIsScheduled(root);
     if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
       resetRenderTimer();
@@ -1471,12 +1472,12 @@ export function isInvalidExecutionContextForEventFunction(): boolean {
 // hidden subtree. The stack logic is managed there because that's the only
 // place that ever modifies it. Which module it lives in doesn't matter for
 // performance because this function will get inlined regardless
-export function setRenderLanes(subtreeRenderLanes: Lanes) {
-  renderLanes = subtreeRenderLanes;
+export function setEntangledRenderLanes(newEntangledRenderLanes: Lanes) {
+  entangledRenderLanes = newEntangledRenderLanes;
 }
 
-export function getRenderLanes(): Lanes {
-  return renderLanes;
+export function getEntangledRenderLanes(): Lanes {
+  return entangledRenderLanes;
 }
 
 function resetWorkInProgressStack() {
@@ -1526,7 +1527,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRoot = root;
   const rootWorkInProgress = createWorkInProgress(root.current, null);
   workInProgress = rootWorkInProgress;
-  workInProgressRootRenderLanes = renderLanes = lanes;
+  workInProgressRootRenderLanes = lanes;
   workInProgressSuspendedReason = NotSuspended;
   workInProgressThrownValue = null;
   workInProgressRootDidAttachPingListener = false;
@@ -1538,6 +1539,15 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes): Fiber {
   workInProgressRootPingedLanes = NoLanes;
   workInProgressRootConcurrentErrors = null;
   workInProgressRootRecoverableErrors = null;
+
+  // Get the lanes that are entangled with whatever we're about to render. We
+  // track these separately so we can distinguish the priority of the render
+  // task from the priority of the lanes it is entangled with. For example, a
+  // transition may not be allowed to finish unless it includes the Sync lane,
+  // which is currently suspended. We should be able to render the Transition
+  // and Sync lane in the same batch, but at Transition priority, because the
+  // Sync lane already suspended.
+  entangledRenderLanes = getEntangledLanes(root, lanes);
 
   finishQueueingConcurrentUpdates();
 
@@ -2249,10 +2259,10 @@ function performUnitOfWork(unitOfWork: Fiber): void {
   let next;
   if (enableProfilerTimer && (unitOfWork.mode & ProfileMode) !== NoMode) {
     startProfilerTimer(unitOfWork);
-    next = beginWork(current, unitOfWork, renderLanes);
+    next = beginWork(current, unitOfWork, entangledRenderLanes);
     stopProfilerTimerIfRunningAndRecordDelta(unitOfWork, true);
   } else {
-    next = beginWork(current, unitOfWork, renderLanes);
+    next = beginWork(current, unitOfWork, entangledRenderLanes);
   }
 
   resetCurrentDebugFiberInDEV();
@@ -2359,9 +2369,9 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
       unwindInterruptedWork(current, unitOfWork, workInProgressRootRenderLanes);
       unitOfWork = workInProgress = resetWorkInProgress(
         unitOfWork,
-        renderLanes,
+        entangledRenderLanes,
       );
-      next = beginWork(current, unitOfWork, renderLanes);
+      next = beginWork(current, unitOfWork, entangledRenderLanes);
       break;
     }
   }
@@ -2471,10 +2481,10 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
     setCurrentDebugFiberInDEV(completedWork);
     let next;
     if (!enableProfilerTimer || (completedWork.mode & ProfileMode) === NoMode) {
-      next = completeWork(current, completedWork, renderLanes);
+      next = completeWork(current, completedWork, entangledRenderLanes);
     } else {
       startProfilerTimer(completedWork);
-      next = completeWork(current, completedWork, renderLanes);
+      next = completeWork(current, completedWork, entangledRenderLanes);
       // Update render duration assuming we didn't error.
       stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
     }
@@ -2516,7 +2526,7 @@ function unwindUnitOfWork(unitOfWork: Fiber): void {
     // This fiber did not complete because something threw. Pop values off
     // the stack without entering the complete phase. If this is a boundary,
     // capture values if possible.
-    const next = unwindWork(current, incompleteWork, renderLanes);
+    const next = unwindWork(current, incompleteWork, entangledRenderLanes);
 
     // Because this fiber did not complete, don't reset its lanes.
 
