@@ -1,7 +1,5 @@
 /* global chrome */
 
-import {IS_FIREFOX} from '../utils';
-
 // Firefox doesn't support ExecutionWorld.MAIN yet
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1736575
 function executeScriptForFirefoxInMainWorld({target, files}) {
@@ -46,7 +44,7 @@ export function executeScriptInIsolatedWorld({target, files}) {
 }
 
 export function executeScriptInMainWorld({target, files}) {
-  if (IS_FIREFOX) {
+  if (__IS_FIREFOX__) {
     return executeScriptForFirefoxInMainWorld({target, files});
   }
 
