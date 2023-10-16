@@ -441,6 +441,14 @@ module.exports = {
         TaskController: 'readonly',
       },
     },
+    {
+      files: ['packages/react-devtools-extensions/**/*.js'],
+      globals: {
+        __IS_CHROME__: 'readonly',
+        __IS_FIREFOX__: 'readonly',
+        __IS_EDGE__: 'readonly',
+      },
+    },
   ],
 
   env: {

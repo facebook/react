@@ -25,7 +25,7 @@ import {
   ElementTypeSuspenseList,
   ElementTypeTracingMarker,
   StrictMode,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {
   deletePathInObject,
   getDisplayName,
@@ -121,7 +121,7 @@ import type {
   ComponentFilter,
   ElementType,
   Plugins,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => symbol | number;

@@ -111,9 +111,12 @@ import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactServerSharedInternals from './ReactServerSharedInternals';
 import isArray from 'shared/isArray';
+import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
+
+const ObjectPrototype = Object.prototype;
 
 type JSONValue =
   | string
@@ -1046,6 +1049,11 @@ function resolveModelToJSON(
       return (undefined: any);
     }
 
+    if (isArray(value)) {
+      // $FlowFixMe[incompatible-return]
+      return value;
+    }
+
     if (value instanceof Map) {
       return serializeMap(request, value);
     }
@@ -1107,39 +1115,45 @@ function resolveModelToJSON(
       }
     }
 
-    if (!isArray(value)) {
-      const iteratorFn = getIteratorFn(value);
-      if (iteratorFn) {
-        return Array.from((value: any));
-      }
+    const iteratorFn = getIteratorFn(value);
+    if (iteratorFn) {
+      return Array.from((value: any));
     }
 
+    // Verify that this is a simple plain object.
+    const proto = getPrototypeOf(value);
+    if (
+      proto !== ObjectPrototype &&
+      (proto === null || getPrototypeOf(proto) !== null)
+    ) {
+      throw new Error(
+        'Only plain objects, and a few built-ins, can be passed to Client Components ' +
+          'from Server Components. Classes or null prototypes are not supported.',
+      );
+    }
     if (__DEV__) {
-      if (value !== null && !isArray(value)) {
-        // Verify that this is a simple plain object.
-        if (objectName(value) !== 'Object') {
+      if (objectName(value) !== 'Object') {
+        console.error(
+          'Only plain objects can be passed to Client Components from Server Components. ' +
+            '%s objects are not supported.%s',
+          objectName(value),
+          describeObjectForErrorMessage(parent, key),
+        );
+      } else if (!isSimpleObject(value)) {
+        console.error(
+          'Only plain objects can be passed to Client Components from Server Components. ' +
+            'Classes or other objects with methods are not supported.%s',
+          describeObjectForErrorMessage(parent, key),
+        );
+      } else if (Object.getOwnPropertySymbols) {
+        const symbols = Object.getOwnPropertySymbols(value);
+        if (symbols.length > 0) {
           console.error(
             'Only plain objects can be passed to Client Components from Server Components. ' +
-              '%s objects are not supported.%s',
-            objectName(value),
+              'Objects with symbol properties like %s are not supported.%s',
+            symbols[0].description,
             describeObjectForErrorMessage(parent, key),
           );
-        } else if (!isSimpleObject(value)) {
-          console.error(
-            'Only plain objects can be passed to Client Components from Server Components. ' +
-              'Classes or other objects with methods are not supported.%s',
-            describeObjectForErrorMessage(parent, key),
-          );
-        } else if (Object.getOwnPropertySymbols) {
-          const symbols = Object.getOwnPropertySymbols(value);
-          if (symbols.length > 0) {
-            console.error(
-              'Only plain objects can be passed to Client Components from Server Components. ' +
-                'Objects with symbol properties like %s are not supported.%s',
-              symbols[0].description,
-              describeObjectForErrorMessage(parent, key),
-            );
-          }
         }
       }
     }

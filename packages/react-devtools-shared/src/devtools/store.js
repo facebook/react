@@ -21,7 +21,7 @@ import {
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import {ElementTypeRoot} from '../types';
+import {ElementTypeRoot} from '../frontend/types';
 import {
   getSavedComponentFilters,
   setSavedComponentFilters,
@@ -37,10 +37,13 @@ import {
   BRIDGE_PROTOCOL,
   currentBridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
-import {StrictMode} from 'react-devtools-shared/src/types';
+import {StrictMode} from 'react-devtools-shared/src/frontend/types';
 
-import type {Element} from './views/Components/types';
-import type {ComponentFilter, ElementType} from '../types';
+import type {
+  Element,
+  ComponentFilter,
+  ElementType,
+} from 'react-devtools-shared/src/frontend/types';
 import type {
   FrontendBridge,
   BridgeProtocol,

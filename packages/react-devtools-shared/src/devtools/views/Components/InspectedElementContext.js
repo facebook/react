@@ -37,12 +37,12 @@ import FetchFileWithCachingContext from 'react-devtools-shared/src/devtools/view
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 
-import type {HookNames} from 'react-devtools-shared/src/types';
+import type {HookNames} from 'react-devtools-shared/src/frontend/types';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Element,
   InspectedElement,
-} from 'react-devtools-shared/src/devtools/views/Components/types';
+} from 'react-devtools-shared/src/frontend/types';
 
 type Path = Array<string | number>;
 type InspectPathFunction = (path: Path) => void;

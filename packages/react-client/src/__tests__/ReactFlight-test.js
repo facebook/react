@@ -988,19 +988,21 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient.read(transport);
   });
 
-  it('should warn in DEV if a class instance is passed to a host component', () => {
+  it('should error if a class instance is passed to a host component', () => {
     class Foo {
       method() {}
     }
-    expect(() => {
-      const transport = ReactNoopFlightServer.render(
-        <input value={new Foo()} />,
-      );
-      ReactNoopFlightClient.read(transport);
-    }).toErrorDev(
-      'Only plain objects can be passed to Client Components from Server Components. ',
-      {withoutStack: true},
-    );
+    const errors = [];
+    ReactNoopFlightServer.render(<input value={new Foo()} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual([
+      'Only plain objects, and a few built-ins, can be passed to Client Components ' +
+        'from Server Components. Classes or null prototypes are not supported.',
+    ]);
   });
 
   it('should warn in DEV if a a client reference is passed to useContext()', () => {

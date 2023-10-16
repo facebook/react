@@ -573,9 +573,7 @@ describe('ReactHooksInspectionIntegration', () => {
 
   it('should support useDeferredValue hook', () => {
     function Foo(props) {
-      React.useDeferredValue('abc', {
-        timeoutMs: 500,
-      });
+      React.useDeferredValue('abc');
       const memoizedValue = React.useMemo(() => 1, []);
       React.useMemo(() => 2, []);
       return <div>{memoizedValue}</div>;

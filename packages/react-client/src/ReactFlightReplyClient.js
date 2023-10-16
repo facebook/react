@@ -29,6 +29,9 @@ import {
 } from 'shared/ReactSerializationErrors';
 
 import isArray from 'shared/isArray';
+import getPrototypeOf from 'shared/getPrototypeOf';
+
+const ObjectPrototype = Object.prototype;
 
 import {usedWithSSR} from './ReactFlightClientConfig';
 
@@ -227,6 +230,10 @@ export function processReply(
         );
         return serializePromiseID(promiseId);
       }
+      if (isArray(value)) {
+        // $FlowFixMe[incompatible-return]
+        return value;
+      }
       // TODO: Should we the Object.prototype.toString.call() to test for cross-realm objects?
       if (value instanceof FormData) {
         if (formData === null) {
@@ -263,54 +270,60 @@ export function processReply(
         formData.append(formFieldPrefix + setId, partJSON);
         return serializeSetID(setId);
       }
-      if (!isArray(value)) {
-        const iteratorFn = getIteratorFn(value);
-        if (iteratorFn) {
-          return Array.from((value: any));
-        }
+      const iteratorFn = getIteratorFn(value);
+      if (iteratorFn) {
+        return Array.from((value: any));
       }
 
+      // Verify that this is a simple plain object.
+      const proto = getPrototypeOf(value);
+      if (
+        proto !== ObjectPrototype &&
+        (proto === null || getPrototypeOf(proto) !== null)
+      ) {
+        throw new Error(
+          'Only plain objects, and a few built-ins, can be passed to Server Actions. ' +
+            'Classes or null prototypes are not supported.',
+        );
+      }
       if (__DEV__) {
-        if (value !== null && !isArray(value)) {
-          // Verify that this is a simple plain object.
-          if ((value: any).$$typeof === REACT_ELEMENT_TYPE) {
-            console.error(
-              'React Element cannot be passed to Server Functions from the Client.%s',
-              describeObjectForErrorMessage(parent, key),
-            );
-          } else if ((value: any).$$typeof === REACT_LAZY_TYPE) {
-            console.error(
-              'React Lazy cannot be passed to Server Functions from the Client.%s',
-              describeObjectForErrorMessage(parent, key),
-            );
-          } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
-            console.error(
-              'React Context Providers cannot be passed to Server Functions from the Client.%s',
-              describeObjectForErrorMessage(parent, key),
-            );
-          } else if (objectName(value) !== 'Object') {
+        if ((value: any).$$typeof === REACT_ELEMENT_TYPE) {
+          console.error(
+            'React Element cannot be passed to Server Functions from the Client.%s',
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else if ((value: any).$$typeof === REACT_LAZY_TYPE) {
+          console.error(
+            'React Lazy cannot be passed to Server Functions from the Client.%s',
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
+          console.error(
+            'React Context Providers cannot be passed to Server Functions from the Client.%s',
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else if (objectName(value) !== 'Object') {
+          console.error(
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              '%s objects are not supported.%s',
+            objectName(value),
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else if (!isSimpleObject(value)) {
+          console.error(
+            'Only plain objects can be passed to Client Components from Server Components. ' +
+              'Classes or other objects with methods are not supported.%s',
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else if (Object.getOwnPropertySymbols) {
+          const symbols = Object.getOwnPropertySymbols(value);
+          if (symbols.length > 0) {
             console.error(
               'Only plain objects can be passed to Client Components from Server Components. ' +
-                '%s objects are not supported.%s',
-              objectName(value),
+                'Objects with symbol properties like %s are not supported.%s',
+              symbols[0].description,
               describeObjectForErrorMessage(parent, key),
             );
-          } else if (!isSimpleObject(value)) {
-            console.error(
-              'Only plain objects can be passed to Client Components from Server Components. ' +
-                'Classes or other objects with methods are not supported.%s',
-              describeObjectForErrorMessage(parent, key),
-            );
-          } else if (Object.getOwnPropertySymbols) {
-            const symbols = Object.getOwnPropertySymbols(value);
-            if (symbols.length > 0) {
-              console.error(
-                'Only plain objects can be passed to Client Components from Server Components. ' +
-                  'Objects with symbol properties like %s are not supported.%s',
-                symbols[0].description,
-                describeObjectForErrorMessage(parent, key),
-              );
-            }
           }
         }
       }

@@ -124,6 +124,10 @@ export const alwaysThrottleRetries = true;
 
 export const useMicrotasksForSchedulingInFabric = false;
 
+export const passChildrenWhenCloningPersistedNodes = false;
+
+export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
@@ -222,7 +226,7 @@ export const enableDebugTracing = false;
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableServerContext = true;
+export const enableServerContext = __EXPERIMENTAL__;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;

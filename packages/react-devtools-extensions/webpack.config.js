@@ -90,7 +90,10 @@ module.exports = {
     minimizer: [
       new TerserPlugin({
         terserOptions: {
-          compress: false,
+          compress: {
+            unused: true,
+            dead_code: true,
+          },
           mangle: {
             keep_fnames: true,
           },
@@ -113,6 +116,9 @@ module.exports = {
       __EXTENSION__: true,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
+      __IS_CHROME__: IS_CHROME,
+      __IS_FIREFOX__: IS_FIREFOX,
+      __IS_EDGE__: IS_EDGE,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,
@@ -125,9 +131,6 @@ module.exports = {
       'process.env.LIGHT_MODE_DIMMED_WARNING_COLOR': `"${LIGHT_MODE_DIMMED_WARNING_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_ERROR_COLOR': `"${LIGHT_MODE_DIMMED_ERROR_COLOR}"`,
       'process.env.LIGHT_MODE_DIMMED_LOG_COLOR': `"${LIGHT_MODE_DIMMED_LOG_COLOR}"`,
-      'process.env.IS_CHROME': IS_CHROME,
-      'process.env.IS_FIREFOX': IS_FIREFOX,
-      'process.env.IS_EDGE': IS_EDGE,
     }),
   ],
   module: {

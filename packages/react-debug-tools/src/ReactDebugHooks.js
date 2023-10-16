@@ -306,7 +306,7 @@ function useTransition(): [
   return [false, callback => {}];
 }
 
-function useDeferredValue<T>(value: T): T {
+function useDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = nextHook();
   hookLog.push({
     primitive: 'DeferredValue',
