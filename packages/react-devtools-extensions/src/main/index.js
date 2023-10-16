@@ -5,7 +5,7 @@ import {flushSync} from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
-import {IS_CHROME, IS_EDGE, getBrowserTheme, IS_FIREFOX} from '../utils';
+import {getBrowserTheme} from '../utils';
 import {
   localStorageGetItem,
   localStorageSetItem,
@@ -93,10 +93,10 @@ function createBridgeAndStore() {
 
   store = new Store(bridge, {
     isProfiling,
-    supportsReloadAndProfile: IS_CHROME || IS_EDGE,
+    supportsReloadAndProfile: __IS_CHROME__ || __IS_EDGE__,
     supportsProfiling,
     // At this time, the timeline can only parse Chrome performance profiles.
-    supportsTimeline: IS_CHROME,
+    supportsTimeline: __IS_CHROME__,
     supportsTraceUpdates: true,
   });
 
@@ -218,8 +218,8 @@ function createComponentsPanel() {
   }
 
   chrome.devtools.panels.create(
-    IS_CHROME || IS_EDGE ? '⚛️ Components' : 'Components',
-    IS_EDGE ? 'icons/production.svg' : '',
+    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Components' : 'Components',
+    __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
       componentsPanel = createdPanel;
@@ -257,8 +257,8 @@ function createProfilerPanel() {
   }
 
   chrome.devtools.panels.create(
-    IS_CHROME || IS_EDGE ? '⚛️ Profiler' : 'Profiler',
-    IS_EDGE ? 'icons/production.svg' : '',
+    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Profiler' : 'Profiler',
+    __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
       profilerPanel = createdPanel;
@@ -444,7 +444,7 @@ const debouncedOnNavigatedListener = debounce(() => {
 chrome.devtools.network.onNavigated.addListener(debouncedOnNavigatedListener);
 
 // Should be emitted when browser DevTools are closed
-if (IS_FIREFOX) {
+if (__IS_FIREFOX__) {
   // For some reason Firefox doesn't emit onBeforeUnload event
   window.addEventListener('unload', performFullCleanup);
 } else {

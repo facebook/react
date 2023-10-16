@@ -20,8 +20,7 @@ import {
   getNextLanes,
   includesSyncLane,
   markStarvedLanesAsExpired,
-  markRootEntangled,
-  mergeLanes,
+  upgradePendingLaneToSync,
   claimNextTransitionLane,
 } from './ReactFiberLane';
 import {
@@ -250,7 +249,10 @@ function processRootScheduleInMicrotask() {
       currentEventTransitionLane !== NoLane &&
       shouldAttemptEagerTransition()
     ) {
-      markRootEntangled(root, mergeLanes(currentEventTransitionLane, SyncLane));
+      // A transition was scheduled during an event, but we're going to try to
+      // render it synchronously anyway. We do this during a popstate event to
+      // preserve the scroll position of the previous page.
+      upgradePendingLaneToSync(root, currentEventTransitionLane);
     }
 
     const nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);

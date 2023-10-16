@@ -39,6 +39,7 @@ export const NoLane: Lane = /*                          */ 0b0000000000000000000
 
 export const SyncHydrationLane: Lane = /*               */ 0b0000000000000000000000000000001;
 export const SyncLane: Lane = /*                        */ 0b0000000000000000000000000000010;
+export const SyncLaneIndex: number = 1;
 
 export const InputContinuousHydrationLane: Lane = /*    */ 0b0000000000000000000000000000100;
 export const InputContinuousLane: Lane = /*             */ 0b0000000000000000000000000001000;
@@ -274,17 +275,23 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     }
   }
 
+  return nextLanes;
+}
+
+export function getEntangledLanes(root: FiberRoot, renderLanes: Lanes): Lanes {
+  let entangledLanes = renderLanes;
+
   if (
     allowConcurrentByDefault &&
     (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
   ) {
     // Do nothing, use the lanes as they were assigned.
-  } else if ((nextLanes & InputContinuousLane) !== NoLanes) {
+  } else if ((entangledLanes & InputContinuousLane) !== NoLanes) {
     // When updates are sync by default, we entangle continuous priority updates
     // and default updates, so they render in the same batch. The only reason
     // they use separate lanes is because continuous updates should interrupt
     // transitions, but default updates should not.
-    nextLanes |= pendingLanes & DefaultLane;
+    entangledLanes |= entangledLanes & DefaultLane;
   }
 
   // Check for entangled lanes and add them to the batch.
@@ -309,21 +316,21 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // For those exceptions where entanglement is semantically important,
   // we should ensure that there is no partial work at the
   // time we apply the entanglement.
-  const entangledLanes = root.entangledLanes;
-  if (entangledLanes !== NoLanes) {
+  const allEntangledLanes = root.entangledLanes;
+  if (allEntangledLanes !== NoLanes) {
     const entanglements = root.entanglements;
-    let lanes = nextLanes & entangledLanes;
+    let lanes = entangledLanes & allEntangledLanes;
     while (lanes > 0) {
       const index = pickArbitraryLaneIndex(lanes);
       const lane = 1 << index;
 
-      nextLanes |= entanglements[index];
+      entangledLanes |= entanglements[index];
 
       lanes &= ~lane;
     }
   }
 
-  return nextLanes;
+  return entangledLanes;
 }
 
 function computeExpirationTime(lane: Lane, currentTime: number) {
@@ -404,6 +411,7 @@ export function markStarvedLanesAsExpired(
   // Iterate through the pending lanes and check if we've reached their
   // expiration time. If so, we'll assume the update is being starved and mark
   // it as expired to force it to finish.
+  // TODO: We should be able to replace this with upgradePendingLanesToSync
   //
   // We exclude retry lanes because those must always be time sliced, in order
   // to unwrap uncached promises.
@@ -704,6 +712,34 @@ export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
     ) {
       entanglements[index] |= entangledLanes;
     }
+    lanes &= ~lane;
+  }
+}
+
+export function upgradePendingLaneToSync(root: FiberRoot, lane: Lane) {
+  // Since we're upgrading the priority of the given lane, there is now pending
+  // sync work.
+  root.pendingLanes |= SyncLane;
+
+  // Entangle the sync lane with the lane we're upgrading. This means SyncLane
+  // will not be allowed to finish without also finishing the given lane.
+  root.entangledLanes |= SyncLane;
+  root.entanglements[SyncLaneIndex] |= lane;
+}
+
+export function upgradePendingLanesToSync(
+  root: FiberRoot,
+  lanesToUpgrade: Lanes,
+) {
+  // Same as upgradePendingLaneToSync but accepts multiple lanes, so it's a
+  // bit slower.
+  root.pendingLanes |= SyncLane;
+  root.entangledLanes |= SyncLane;
+  let lanes = lanesToUpgrade;
+  while (lanes) {
+    const index = pickArbitraryLaneIndex(lanes);
+    const lane = 1 << index;
+    root.entanglements[SyncLaneIndex] |= lane;
     lanes &= ~lane;
   }
 }
