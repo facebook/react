@@ -1132,7 +1132,6 @@ describe('ReactDOMServer', () => {
       expect(output).toBe(`<my-custom-element foo="5"></my-custom-element>`);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('Object properties should not be server rendered for custom elements', () => {
       const output = ReactDOMServer.renderToString(
         <my-custom-element foo={{foo: 'bar'}} />,
@@ -1140,7 +1139,6 @@ describe('ReactDOMServer', () => {
       expect(output).toBe(`<my-custom-element></my-custom-element>`);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('Array properties should not be server rendered for custom elements', () => {
       const output = ReactDOMServer.renderToString(
         <my-custom-element foo={['foo', 'bar']} />,

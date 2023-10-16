@@ -9,10 +9,7 @@ import {ATTRIBUTE_NAME_CHAR} from './isAttributeNameSafe';
 import isCustomElement from './isCustomElement';
 import possibleStandardNames from './possibleStandardNames';
 import hasOwnProperty from 'shared/hasOwnProperty';
-import {
-  enableCustomElementPropertySupport,
-  enableFormActions,
-} from 'shared/ReactFeatureFlags';
+import {enableFormActions} from 'shared/ReactFeatureFlags';
 
 const warnedProperties = {};
 const EVENT_NAME_REGEX = /^on./;
@@ -190,10 +187,9 @@ function validateProperty(tagName, name, value, eventRegistry) {
         return true;
       }
       case 'innerText': // Properties
-      case 'textContent':
-        if (enableCustomElementPropertySupport) {
-          return true;
-        }
+      case 'textContent': {
+        return true;
+      }
     }
 
     switch (typeof value) {

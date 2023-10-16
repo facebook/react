@@ -2776,13 +2776,9 @@ describe('ReactDOMComponent', () => {
       const container = document.createElement('div');
       ReactDOM.render(<some-custom-element foo={true} />, container);
       const node = container.firstChild;
-      expect(node.getAttribute('foo')).toBe(
-        ReactFeatureFlags.enableCustomElementPropertySupport ? '' : 'true',
-      );
+      expect(node.getAttribute('foo')).toBe('');
       ReactDOM.render(<some-custom-element foo={false} />, container);
-      expect(node.getAttribute('foo')).toBe(
-        ReactFeatureFlags.enableCustomElementPropertySupport ? null : 'false',
-      );
+      expect(node.getAttribute('foo')).toBe(null);
       ReactDOM.render(<some-custom-element />, container);
       expect(node.hasAttribute('foo')).toBe(false);
       ReactDOM.render(<some-custom-element foo={true} />, container);

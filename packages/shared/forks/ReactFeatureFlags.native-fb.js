@@ -74,7 +74,6 @@ export const enableLegacyHidden = true;
 export const forceConcurrentByDefaultForTesting = false;
 export const enableUnifiedSyncLane = false;
 export const allowConcurrentByDefault = true;
-export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 export const enableServerContext = false;

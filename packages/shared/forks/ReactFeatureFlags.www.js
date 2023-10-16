@@ -25,7 +25,6 @@ export const {
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
   enableTransitionTracing,
-  enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
   enableAsyncActions,
   alwaysThrottleRetries,

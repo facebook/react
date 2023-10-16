@@ -184,12 +184,6 @@ export const disableIEWorkarounds = __EXPERIMENTAL__;
 // request for certain browsers.
 export const enableFilterEmptyStringAttributesDOM = __EXPERIMENTAL__;
 
-// Changes the behavior for rendering custom elements in both server rendering
-// and client rendering, mostly to allow JSX attributes to apply to the custom
-// element's object properties instead of only HTML attributes.
-// https://github.com/facebook/react/issues/11347
-export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
-
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
 
