@@ -97,6 +97,7 @@ import {
   Visibility,
   ShouldSuspendCommit,
   MaySuspendCommit,
+  Effect,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {
@@ -1062,7 +1063,7 @@ function commitLayoutEffectOnFiber(
         finishedWork,
         committedLanes,
       );
-      if (flags & Update) {
+      if (flags & Effect) {
         commitHookLayoutEffects(finishedWork, HookLayout | HookHasEffect);
       }
       break;
@@ -2525,7 +2526,7 @@ function recursivelyTraverseMutationEffects(
   }
 
   const prevDebugFiber = getCurrentDebugFiberInDEV();
-  if (parentFiber.subtreeFlags & MutationMask) {
+  if (parentFiber.subtreeFlags & (MutationMask | Effect)) {
     let child = parentFiber.child;
     while (child !== null) {
       setCurrentDebugFiberInDEV(child);

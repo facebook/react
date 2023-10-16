@@ -273,6 +273,46 @@ describe('ReactFabric', () => {
     expect(nativeFabricUIManager.completeRoot).toBeCalled();
   });
 
+  it('should not clone nodes when layout effects are used', async () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    const ComponentWithEffect = () => {
+      // Same thing happens with `ref` and `useImperativeHandle`
+      React.useLayoutEffect(() => {});
+      return null;
+    };
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithEffect />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.completeRoot).toBeCalled();
+    jest.clearAllMocks();
+
+    await act(() =>
+      ReactFabric.render(
+        <View>
+          <ComponentWithEffect />
+        </View>,
+        11,
+      ),
+    );
+    expect(nativeFabricUIManager.cloneNode).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewChildren).not.toBeCalled();
+    expect(nativeFabricUIManager.cloneNodeWithNewProps).not.toBeCalled();
+    expect(
+      nativeFabricUIManager.cloneNodeWithNewChildrenAndProps,
+    ).not.toBeCalled();
+    expect(nativeFabricUIManager.completeRoot).not.toBeCalled();
+  });
+
   it('should call dispatchCommand for native refs', async () => {
     const View = createReactNativeComponentClass('RCTView', () => ({
       validAttributes: {foo: true},

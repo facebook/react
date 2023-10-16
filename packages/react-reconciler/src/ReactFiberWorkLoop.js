@@ -124,6 +124,7 @@ import {
   Visibility,
   MountPassiveDev,
   MountLayoutDev,
+  Effect,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -2745,11 +2746,19 @@ function commitRootImpl(
   // Reconsider whether this is necessary.
   const subtreeHasEffects =
     (finishedWork.subtreeFlags &
-      (BeforeMutationMask | MutationMask | LayoutMask | PassiveMask)) !==
+      (BeforeMutationMask |
+        MutationMask |
+        Effect |
+        LayoutMask |
+        PassiveMask)) !==
     NoFlags;
   const rootHasEffect =
     (finishedWork.flags &
-      (BeforeMutationMask | MutationMask | LayoutMask | PassiveMask)) !==
+      (BeforeMutationMask |
+        MutationMask |
+        Effect |
+        LayoutMask |
+        PassiveMask)) !==
     NoFlags;
 
   if (subtreeHasEffects || rootHasEffect) {

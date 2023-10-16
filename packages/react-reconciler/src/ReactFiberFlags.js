@@ -19,7 +19,24 @@ export const DidCapture = /*                   */ 0b0000000000000000000010000000
 export const Hydrating = /*                    */ 0b0000000000000001000000000000;
 
 // You can change the rest (and add more).
-export const Update = /*                       */ 0b0000000000000000000000000100;
+
+/**
+ * Work needs to be performed on host components, such as updating props.
+ */
+export const HostComponentUpdate = /*          */ 0b0000000000000000000000000100;
+
+/**
+ * Indicates presence of effects (e.g. InsertionEffect, LayoutEffect)
+ */
+export const Effect = /*                      */ 0b10000000000000000000000000000;
+
+/**
+ * One of the two flags.
+ *
+ * @deprecated Should use the more specific flag to allow us to bail out in more cases.
+ */
+export const Update = HostComponentUpdate | Effect;
+
 /* Skipped value:                                 0b0000000000000000000000001000; */
 
 export const ChildDeletion = /*                */ 0b0000000000000000000000010000;
@@ -33,6 +50,9 @@ export const Snapshot = /*                     */ 0b0000000000000000010000000000
 export const Passive = /*                      */ 0b0000000000000000100000000000;
 /* Used by Hydrating:                             0b0000000000000001000000000000; */
 
+/**
+ * Set when the visibility state of Activity/LegacyHidden changed.
+ */
 export const Visibility = /*                   */ 0b0000000000000010000000000000;
 export const StoreConsistency = /*             */ 0b0000000000000100000000000000;
 
@@ -89,7 +109,7 @@ export const BeforeMutationMask: number =
 
 export const MutationMask =
   Placement |
-  Update |
+  HostComponentUpdate |
   ChildDeletion |
   ContentReset |
   Ref |
