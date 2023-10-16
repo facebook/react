@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-modern-872bdfba";
+var ReactVersion = "18.3.0-www-modern-8a5fff1f";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -460,7 +460,7 @@ function checkKeyStringCoercion(value) {
     if (willCoercionThrow(value)) {
       error(
         "The provided key is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         typeName(value)
       );
 

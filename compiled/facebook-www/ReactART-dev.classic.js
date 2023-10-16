@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-classic-69d5173c";
+var ReactVersion = "18.3.0-www-classic-4668f682";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -5340,7 +5340,7 @@ function checkPropStringCoercion(value, propName) {
     if (willCoercionThrow(value)) {
       error(
         "The provided `%s` prop is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         propName,
         typeName(value)
       );

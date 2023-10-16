@@ -2133,7 +2133,7 @@ function checkAttributeStringCoercion(value, attributeName) {
     if (willCoercionThrow(value)) {
       error(
         "The provided `%s` attribute is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         attributeName,
         typeName(value)
       );
@@ -2147,7 +2147,7 @@ function checkKeyStringCoercion(value) {
     if (willCoercionThrow(value)) {
       error(
         "The provided key is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         typeName(value)
       );
 
@@ -2160,7 +2160,7 @@ function checkPropStringCoercion(value, propName) {
     if (willCoercionThrow(value)) {
       error(
         "The provided `%s` prop is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         propName,
         typeName(value)
       );
@@ -2174,7 +2174,7 @@ function checkCSSPropertyStringCoercion(value, propName) {
     if (willCoercionThrow(value)) {
       error(
         "The provided `%s` CSS property is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         propName,
         typeName(value)
       );
@@ -2188,7 +2188,7 @@ function checkHtmlStringCoercion(value) {
     if (willCoercionThrow(value)) {
       error(
         "The provided HTML markup uses a value of unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         typeName(value)
       );
 
@@ -2202,7 +2202,7 @@ function checkFormFieldValueStringCoercion(value) {
       error(
         "Form field values (value, checked, defaultValue, or defaultChecked props)" +
           " must be strings, not %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         typeName(value)
       );
 
@@ -33916,7 +33916,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-527c0eab";
+var ReactVersion = "18.3.0-www-modern-a17326c6";
 
 function createPortal$1(
   children,

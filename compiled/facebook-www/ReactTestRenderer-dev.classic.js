@@ -4354,7 +4354,7 @@ function checkPropStringCoercion(value, propName) {
     if (willCoercionThrow(value)) {
       error(
         "The provided `%s` prop is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         propName,
         typeName(value)
       );
@@ -25183,7 +25183,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-c9d845f9";
+var ReactVersion = "18.3.0-www-classic-1a677f82";
 
 // Might add PROFILE later.
 

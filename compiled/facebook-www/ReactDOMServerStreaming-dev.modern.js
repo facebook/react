@@ -283,7 +283,7 @@ function checkAttributeStringCoercion(value, attributeName) {
     if (willCoercionThrow(value)) {
       error(
         "The provided `%s` attribute is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         attributeName,
         typeName(value)
       );
@@ -297,7 +297,7 @@ function checkCSSPropertyStringCoercion(value, propName) {
     if (willCoercionThrow(value)) {
       error(
         "The provided `%s` CSS property is an unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         propName,
         typeName(value)
       );
@@ -311,7 +311,7 @@ function checkHtmlStringCoercion(value) {
     if (willCoercionThrow(value)) {
       error(
         "The provided HTML markup uses a value of unsupported type %s." +
-          " This value must be coerced to a string before before using it here.",
+          " This value must be coerced to a string before using it here.",
         typeName(value)
       );
 
