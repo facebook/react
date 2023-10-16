@@ -16,7 +16,7 @@ import MonacoEditor, { DiffEditor } from "@monaco-editor/react";
 import { type CompilerError } from "babel-plugin-react-forget";
 import prettier from "prettier";
 import prettierParserBabel from "prettier/parser-babel";
-import { memo, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { type Store } from "../../lib/stores";
 import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
@@ -182,6 +182,11 @@ function Output({ store, compilerOutput }: Props) {
     () => tabify(store.source, compilerOutput),
     [store.source, compilerOutput]
   );
+  const consoleLogError = useCallback(() => {
+    if (compilerOutput.kind === "err") {
+      console.error(compilerOutput.error);
+    }
+  }, [compilerOutput]);
 
   return (
     <>
@@ -203,7 +208,13 @@ function Output({ store, compilerOutput }: Props) {
             className="p-4 basis-full text-red-600 overflow-y-scroll whitespace-pre-wrap"
             style={{ width: "calc(100vw - 650px)", height: "150px" }}
           >
-            <code>{compilerOutput.error.toString()}</code>
+            <button
+              className="text-left"
+              title="Log error to console"
+              onClick={() => consoleLogError()}
+            >
+              <code>{compilerOutput.error.toString()}</code>
+            </button>
           </pre>
         </div>
       ) : null}
