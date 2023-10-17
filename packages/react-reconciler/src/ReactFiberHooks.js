@@ -61,16 +61,17 @@ import {
   NoLane,
   SyncLane,
   OffscreenLane,
+  DeferredLane,
   NoLanes,
   isSubsetOfLanes,
   includesBlockingLane,
   includesOnlyNonUrgentLanes,
-  claimNextTransitionLane,
   mergeLanes,
   removeLanes,
   intersectLanes,
   isTransitionLane,
   markRootEntangled,
+  includesSomeLane,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -101,6 +102,7 @@ import {
   getWorkInProgressRootRenderLanes,
   scheduleUpdateOnFiber,
   requestUpdateLane,
+  requestDeferredLane,
   markSkippedUpdateLanes,
   isInvalidExecutionContextForEventFunction,
 } from './ReactFiberWorkLoop';
@@ -2665,16 +2667,21 @@ function rerenderDeferredValue<T>(value: T, initialValue?: T): T {
 }
 
 function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
-  if (enableUseDeferredValueInitialArg && initialValue !== undefined) {
+  if (
+    enableUseDeferredValueInitialArg &&
     // When `initialValue` is provided, we defer the initial render even if the
     // current render is not synchronous.
-    // TODO: However, to avoid waterfalls, we should not defer if this render
-    // was itself spawned by an earlier useDeferredValue. Plan is to add a
-    // Deferred lane to track this.
+    initialValue !== undefined &&
+    // However, to avoid waterfalls, we do not defer if this render
+    // was itself spawned by an earlier useDeferredValue. Check if DeferredLane
+    // is part of the render lanes.
+    !includesSomeLane(renderLanes, DeferredLane)
+  ) {
+    // Render with the initial value
     hook.memoizedState = initialValue;
 
-    // Schedule a deferred render
-    const deferredLane = claimNextTransitionLane();
+    // Schedule a deferred render to switch to the final value.
+    const deferredLane = requestDeferredLane();
     currentlyRenderingFiber.lanes = mergeLanes(
       currentlyRenderingFiber.lanes,
       deferredLane,
@@ -2710,7 +2717,7 @@ function updateDeferredValueImpl<T>(
 
     if (!is(value, prevValue)) {
       // Schedule a deferred render
-      const deferredLane = claimNextTransitionLane();
+      const deferredLane = requestDeferredLane();
       currentlyRenderingFiber.lanes = mergeLanes(
         currentlyRenderingFiber.lanes,
         deferredLane,
