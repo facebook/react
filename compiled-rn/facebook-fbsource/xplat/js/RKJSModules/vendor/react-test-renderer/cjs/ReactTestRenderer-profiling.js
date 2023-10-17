@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<efc6d41dec65b2187ec52681d760c9b7>>
+ * @generated SignedSource<<c3d1140631a9ffbb19f029e3ecdb90fc>>
  */
 
 "use strict";
@@ -2869,21 +2869,23 @@ function updateMemo(nextCreate, deps) {
   return nextCreate;
 }
 function updateDeferredValueImpl(hook, prevValue, value) {
-  if (0 === (renderLanes & 42))
+  if (objectIs(value, prevValue)) return value;
+  if (null !== currentTreeHiddenStackCursor.current)
     return (
-      hook.baseState && ((hook.baseState = !1), (didReceiveUpdate = !0)),
-      (hook.memoizedState = value)
+      (hook.memoizedState = value),
+      objectIs(value, prevValue) || (didReceiveUpdate = !0),
+      value
     );
-  objectIs(value, prevValue) ||
-    (0 === workInProgressDeferredLane &&
-      (workInProgressDeferredLane =
-        0 !== (workInProgressRootRenderLanes & 536870912)
-          ? 536870912
-          : requestTransitionLane()),
-    (value = workInProgressDeferredLane),
-    (currentlyRenderingFiber$1.lanes |= value),
-    (workInProgressRootSkippedLanes |= value),
-    (hook.baseState = !0));
+  if (0 === (renderLanes & 42))
+    return (didReceiveUpdate = !0), (hook.memoizedState = value);
+  0 === workInProgressDeferredLane &&
+    (workInProgressDeferredLane =
+      0 !== (workInProgressRootRenderLanes & 536870912)
+        ? 536870912
+        : requestTransitionLane());
+  hook = workInProgressDeferredLane;
+  currentlyRenderingFiber$1.lanes |= hook;
+  workInProgressRootSkippedLanes |= hook;
   return prevValue;
 }
 function startTransition(fiber, queue, pendingState, finishedState, callback) {
@@ -9441,19 +9443,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1067 = {
+var devToolsConfig$jscomp$inline_1073 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-b2a68a65c-20231017",
+  version: "18.3.0-canary-75c1bd7ee-20231017",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1259 = {
-  bundleType: devToolsConfig$jscomp$inline_1067.bundleType,
-  version: devToolsConfig$jscomp$inline_1067.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1067.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1067.rendererConfig,
+var internals$jscomp$inline_1265 = {
+  bundleType: devToolsConfig$jscomp$inline_1073.bundleType,
+  version: devToolsConfig$jscomp$inline_1073.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1073.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1073.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9470,26 +9472,26 @@ var internals$jscomp$inline_1259 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1067.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1073.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-b2a68a65c-20231017"
+  reconcilerVersion: "18.3.0-canary-75c1bd7ee-20231017"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1260 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1266 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1260.isDisabled &&
-    hook$jscomp$inline_1260.supportsFiber
+    !hook$jscomp$inline_1266.isDisabled &&
+    hook$jscomp$inline_1266.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1260.inject(
-        internals$jscomp$inline_1259
+      (rendererID = hook$jscomp$inline_1266.inject(
+        internals$jscomp$inline_1265
       )),
-        (injectedHook = hook$jscomp$inline_1260);
+        (injectedHook = hook$jscomp$inline_1266);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
