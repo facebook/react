@@ -3976,24 +3976,25 @@ function mountDeferredValueImpl(hook, value, initialValue) {
     void 0 !== initialValue &&
     0 === (renderLanes & 1073741824)
     ? ((hook.memoizedState = initialValue),
-      (value = requestDeferredLane()),
-      (currentlyRenderingFiber$1.lanes |= value),
-      (workInProgressRootSkippedLanes |= value),
-      (hook.baseState = !0),
+      (hook = requestDeferredLane()),
+      (currentlyRenderingFiber$1.lanes |= hook),
+      (workInProgressRootSkippedLanes |= hook),
       initialValue)
     : (hook.memoizedState = value);
 }
-function updateDeferredValueImpl(hook, prevValue, value) {
-  if (0 === (renderLanes & 42))
+function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
+  if (objectIs(value, prevValue)) return value;
+  if (null !== currentTreeHiddenStackCursor.current)
     return (
-      hook.baseState && ((hook.baseState = !1), (didReceiveUpdate = !0)),
-      (hook.memoizedState = value)
+      (hook = mountDeferredValueImpl(hook, value, initialValue)),
+      objectIs(hook, prevValue) || (didReceiveUpdate = !0),
+      hook
     );
-  objectIs(value, prevValue) ||
-    ((value = requestDeferredLane()),
-    (currentlyRenderingFiber$1.lanes |= value),
-    (workInProgressRootSkippedLanes |= value),
-    (hook.baseState = !0));
+  if (0 === (renderLanes & 42))
+    return (didReceiveUpdate = !0), (hook.memoizedState = value);
+  hook = requestDeferredLane();
+  currentlyRenderingFiber$1.lanes |= hook;
+  workInProgressRootSkippedLanes |= hook;
   return prevValue;
 }
 function startTransition(
@@ -4389,9 +4390,14 @@ var HooksDispatcherOnUpdate = {
     return updateReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
-    return updateDeferredValueImpl(hook, currentHook.memoizedState, value);
+    return updateDeferredValueImpl(
+      hook,
+      currentHook.memoizedState,
+      value,
+      initialValue
+    );
   },
   useTransition: function () {
     var booleanOrThenable = updateReducer(basicStateReducer)[0],
@@ -4431,7 +4437,12 @@ var HooksDispatcherOnRerender = {
     var hook = updateWorkInProgressHook();
     return null === currentHook
       ? mountDeferredValueImpl(hook, value, initialValue)
-      : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
+      : updateDeferredValueImpl(
+          hook,
+          currentHook.memoizedState,
+          value,
+          initialValue
+        );
   },
   useTransition: function () {
     var booleanOrThenable = rerenderReducer(basicStateReducer)[0],
@@ -12859,14 +12870,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$347;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1557 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1557) {
-      var element$jscomp$inline_1558 = document.createElement("div");
-      element$jscomp$inline_1558.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1557 =
-        "function" === typeof element$jscomp$inline_1558.oninput;
+    var isSupported$jscomp$inline_1558 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1558) {
+      var element$jscomp$inline_1559 = document.createElement("div");
+      element$jscomp$inline_1559.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1558 =
+        "function" === typeof element$jscomp$inline_1559.oninput;
     }
-    JSCompiler_inline_result$jscomp$347 = isSupported$jscomp$inline_1557;
+    JSCompiler_inline_result$jscomp$347 = isSupported$jscomp$inline_1558;
   } else JSCompiler_inline_result$jscomp$347 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$347 &&
@@ -13178,20 +13189,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1598 = 0;
-  i$jscomp$inline_1598 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1598++
+  var i$jscomp$inline_1599 = 0;
+  i$jscomp$inline_1599 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1599++
 ) {
-  var eventName$jscomp$inline_1599 =
-      simpleEventPluginEvents[i$jscomp$inline_1598],
-    domEventName$jscomp$inline_1600 =
-      eventName$jscomp$inline_1599.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1601 =
-      eventName$jscomp$inline_1599[0].toUpperCase() +
-      eventName$jscomp$inline_1599.slice(1);
+  var eventName$jscomp$inline_1600 =
+      simpleEventPluginEvents[i$jscomp$inline_1599],
+    domEventName$jscomp$inline_1601 =
+      eventName$jscomp$inline_1600.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1602 =
+      eventName$jscomp$inline_1600[0].toUpperCase() +
+      eventName$jscomp$inline_1600.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1600,
-    "on" + capitalizedEvent$jscomp$inline_1601
+    domEventName$jscomp$inline_1601,
+    "on" + capitalizedEvent$jscomp$inline_1602
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16788,17 +16799,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1824 = {
+var devToolsConfig$jscomp$inline_1825 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-8c719f5e",
+  version: "18.3.0-www-classic-08b720b1",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2175 = {
-  bundleType: devToolsConfig$jscomp$inline_1824.bundleType,
-  version: devToolsConfig$jscomp$inline_1824.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1824.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1824.rendererConfig,
+var internals$jscomp$inline_2176 = {
+  bundleType: devToolsConfig$jscomp$inline_1825.bundleType,
+  version: devToolsConfig$jscomp$inline_1825.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1825.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1825.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16814,26 +16825,26 @@ var internals$jscomp$inline_2175 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1824.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1825.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-8c719f5e"
+  reconcilerVersion: "18.3.0-www-classic-08b720b1"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2176 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2177 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2176.isDisabled &&
-    hook$jscomp$inline_2176.supportsFiber
+    !hook$jscomp$inline_2177.isDisabled &&
+    hook$jscomp$inline_2177.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2176.inject(
-        internals$jscomp$inline_2175
+      (rendererID = hook$jscomp$inline_2177.inject(
+        internals$jscomp$inline_2176
       )),
-        (injectedHook = hook$jscomp$inline_2176);
+        (injectedHook = hook$jscomp$inline_2177);
     } catch (err) {}
 }
 assign(Internals, {
@@ -17309,4 +17320,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-8c719f5e";
+exports.version = "18.3.0-www-classic-08b720b1";

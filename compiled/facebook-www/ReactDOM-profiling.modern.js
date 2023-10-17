@@ -3934,24 +3934,25 @@ function mountDeferredValueImpl(hook, value, initialValue) {
     void 0 !== initialValue &&
     0 === (renderLanes & 1073741824)
     ? ((hook.memoizedState = initialValue),
-      (value = requestDeferredLane()),
-      (currentlyRenderingFiber$1.lanes |= value),
-      (workInProgressRootSkippedLanes |= value),
-      (hook.baseState = !0),
+      (hook = requestDeferredLane()),
+      (currentlyRenderingFiber$1.lanes |= hook),
+      (workInProgressRootSkippedLanes |= hook),
       initialValue)
     : (hook.memoizedState = value);
 }
-function updateDeferredValueImpl(hook, prevValue, value) {
-  if (0 === (renderLanes & 42))
+function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
+  if (objectIs(value, prevValue)) return value;
+  if (null !== currentTreeHiddenStackCursor.current)
     return (
-      hook.baseState && ((hook.baseState = !1), (didReceiveUpdate = !0)),
-      (hook.memoizedState = value)
+      (hook = mountDeferredValueImpl(hook, value, initialValue)),
+      objectIs(hook, prevValue) || (didReceiveUpdate = !0),
+      hook
     );
-  objectIs(value, prevValue) ||
-    ((value = requestDeferredLane()),
-    (currentlyRenderingFiber$1.lanes |= value),
-    (workInProgressRootSkippedLanes |= value),
-    (hook.baseState = !0));
+  if (0 === (renderLanes & 42))
+    return (didReceiveUpdate = !0), (hook.memoizedState = value);
+  hook = requestDeferredLane();
+  currentlyRenderingFiber$1.lanes |= hook;
+  workInProgressRootSkippedLanes |= hook;
   return prevValue;
 }
 function startTransition(
@@ -4350,9 +4351,14 @@ var HooksDispatcherOnUpdate = {
     return updateReducer(basicStateReducer);
   },
   useDebugValue: mountDebugValue,
-  useDeferredValue: function (value) {
+  useDeferredValue: function (value, initialValue) {
     var hook = updateWorkInProgressHook();
-    return updateDeferredValueImpl(hook, currentHook.memoizedState, value);
+    return updateDeferredValueImpl(
+      hook,
+      currentHook.memoizedState,
+      value,
+      initialValue
+    );
   },
   useTransition: function () {
     var booleanOrThenable = updateReducer(basicStateReducer)[0],
@@ -4392,7 +4398,12 @@ var HooksDispatcherOnRerender = {
     var hook = updateWorkInProgressHook();
     return null === currentHook
       ? mountDeferredValueImpl(hook, value, initialValue)
-      : updateDeferredValueImpl(hook, currentHook.memoizedState, value);
+      : updateDeferredValueImpl(
+          hook,
+          currentHook.memoizedState,
+          value,
+          initialValue
+        );
   },
   useTransition: function () {
     var booleanOrThenable = rerenderReducer(basicStateReducer)[0],
@@ -13601,14 +13612,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$364;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1612 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1612) {
-      var element$jscomp$inline_1613 = document.createElement("div");
-      element$jscomp$inline_1613.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1612 =
-        "function" === typeof element$jscomp$inline_1613.oninput;
+    var isSupported$jscomp$inline_1613 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1613) {
+      var element$jscomp$inline_1614 = document.createElement("div");
+      element$jscomp$inline_1614.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1613 =
+        "function" === typeof element$jscomp$inline_1614.oninput;
     }
-    JSCompiler_inline_result$jscomp$364 = isSupported$jscomp$inline_1612;
+    JSCompiler_inline_result$jscomp$364 = isSupported$jscomp$inline_1613;
   } else JSCompiler_inline_result$jscomp$364 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$364 &&
@@ -13920,20 +13931,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1653 = 0;
-  i$jscomp$inline_1653 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1653++
+  var i$jscomp$inline_1654 = 0;
+  i$jscomp$inline_1654 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1654++
 ) {
-  var eventName$jscomp$inline_1654 =
-      simpleEventPluginEvents[i$jscomp$inline_1653],
-    domEventName$jscomp$inline_1655 =
-      eventName$jscomp$inline_1654.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1656 =
-      eventName$jscomp$inline_1654[0].toUpperCase() +
-      eventName$jscomp$inline_1654.slice(1);
+  var eventName$jscomp$inline_1655 =
+      simpleEventPluginEvents[i$jscomp$inline_1654],
+    domEventName$jscomp$inline_1656 =
+      eventName$jscomp$inline_1655.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1657 =
+      eventName$jscomp$inline_1655[0].toUpperCase() +
+      eventName$jscomp$inline_1655.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1655,
-    "on" + capitalizedEvent$jscomp$inline_1656
+    domEventName$jscomp$inline_1656,
+    "on" + capitalizedEvent$jscomp$inline_1657
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16755,10 +16766,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1839 = {
+var devToolsConfig$jscomp$inline_1840 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-e1100111",
+  version: "18.3.0-www-modern-3c8736cc",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16776,10 +16787,10 @@ var devToolsConfig$jscomp$inline_1839 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1839.bundleType,
-  version: devToolsConfig$jscomp$inline_1839.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1839.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1839.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1840.bundleType,
+  version: devToolsConfig$jscomp$inline_1840.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1840.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1840.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16796,14 +16807,14 @@ var devToolsConfig$jscomp$inline_1839 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1839.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1840.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-e1100111"
+  reconcilerVersion: "18.3.0-www-modern-3c8736cc"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17055,7 +17066,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-e1100111";
+exports.version = "18.3.0-www-modern-3c8736cc";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
