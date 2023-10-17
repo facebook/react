@@ -1,0 +1,78 @@
+
+## Input
+
+```javascript
+function Component(props) {
+  let x = 0;
+
+  let value = null;
+  loop: for (let i = 0; i < 10; i++) {
+    switch (value) {
+      case true: {
+        x = 1;
+        break loop;
+      }
+      case false: {
+        x = 2;
+        break loop;
+      }
+    }
+
+    value = props.value;
+  }
+
+  // The values assigned to `x` are non-reactive, but the value of `x`
+  // depends on the "control" variable `value` used as the switch test
+  // condition. That variable is initially null on the first iteration
+  // of the loop, but is later set to `props.value` which is reactive.
+  // Therefore x should be treated as reactive.
+  return [x];
+}
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ cond: true }],
+};
+
+```
+
+## Code
+
+```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+function Component(props) {
+  const $ = useMemoCache(1);
+  let x = 0;
+
+  let value = null;
+  for (let i = 0; i < 10; i++) {
+    switch (value) {
+      case true: {
+        x = 1;
+        break;
+      }
+      case false: {
+        x = 2;
+        break;
+      }
+    }
+
+    value = props.value;
+  }
+  let t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = [x];
+    $[0] = t0;
+  } else {
+    t0 = $[0];
+  }
+  return t0;
+}
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ cond: true }],
+};
+
+```
+      

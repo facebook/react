@@ -416,6 +416,8 @@ const skipFilter = new Set([
   "readonly-object-method-calls",
   "readonly-object-method-calls-mutable-lambda",
 
+  "bug.reactive-control-dependency-do-while-test",
+
   // TODO: 🌲
   "forest-basic",
 
