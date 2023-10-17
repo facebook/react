@@ -15,6 +15,7 @@ import {
   enableBinaryFlight,
   enablePostpone,
   enableTaint,
+  enableServerContext,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -581,28 +582,31 @@ function attemptResolveElement(
         );
       }
       case REACT_PROVIDER_TYPE: {
-        pushProvider(type._context, props.value);
-        if (__DEV__) {
-          const extraKeys = Object.keys(props).filter(value => {
-            if (value === 'children' || value === 'value') {
-              return false;
+        if (enableServerContext) {
+          pushProvider(type._context, props.value);
+          if (__DEV__) {
+            const extraKeys = Object.keys(props).filter(value => {
+              if (value === 'children' || value === 'value') {
+                return false;
+              }
+              return true;
+            });
+            if (extraKeys.length !== 0) {
+              console.error(
+                'ServerContext can only have a value prop and children. Found: %s',
+                JSON.stringify(extraKeys),
+              );
             }
-            return true;
-          });
-          if (extraKeys.length !== 0) {
-            console.error(
-              'ServerContext can only have a value prop and children. Found: %s',
-              JSON.stringify(extraKeys),
-            );
           }
+          return [
+            REACT_ELEMENT_TYPE,
+            type,
+            key,
+            // Rely on __popProvider being serialized last to pop the provider.
+            {value: props.value, children: props.children, __pop: POP},
+          ];
         }
-        return [
-          REACT_ELEMENT_TYPE,
-          type,
-          key,
-          // Rely on __popProvider being serialized last to pop the provider.
-          {value: props.value, children: props.children, __pop: POP},
-        ];
+        // Fallthrough
       }
     }
   }
@@ -913,6 +917,7 @@ function resolveModelToJSON(
 
   if (__DEV__) {
     if (
+      enableServerContext &&
       parent[0] === REACT_ELEMENT_TYPE &&
       parent[1] &&
       (parent[1]: any).$$typeof === REACT_PROVIDER_TYPE &&
@@ -934,7 +939,7 @@ function resolveModelToJSON(
       (value: any).$$typeof === REACT_LAZY_TYPE)
   ) {
     if (__DEV__) {
-      if (isInsideContextValue) {
+      if (enableServerContext && isInsideContextValue) {
         console.error('React elements are not allowed in ServerContext');
       }
     }
@@ -1028,25 +1033,27 @@ function resolveModelToJSON(
       // or a Promise type. Either of which can be represented by a Promise.
       const promiseId = serializeThenable(request, (value: any));
       return serializePromiseID(promiseId);
-    } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
-      const providerKey = ((value: any): ReactProviderType<any>)._context
-        ._globalName;
-      const writtenProviders = request.writtenProviders;
-      let providerId = writtenProviders.get(key);
-      if (providerId === undefined) {
-        request.pendingChunks++;
-        providerId = request.nextChunkId++;
-        writtenProviders.set(providerKey, providerId);
-        emitProviderChunk(request, providerId, providerKey);
+    } else if (enableServerContext) {
+      if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
+        const providerKey = ((value: any): ReactProviderType<any>)._context
+          ._globalName;
+        const writtenProviders = request.writtenProviders;
+        let providerId = writtenProviders.get(key);
+        if (providerId === undefined) {
+          request.pendingChunks++;
+          providerId = request.nextChunkId++;
+          writtenProviders.set(providerKey, providerId);
+          emitProviderChunk(request, providerId, providerKey);
+        }
+        return serializeByValueID(providerId);
+      } else if (value === POP) {
+        popProvider();
+        if (__DEV__) {
+          insideContextProps = null;
+          isInsideContextValue = false;
+        }
+        return (undefined: any);
       }
-      return serializeByValueID(providerId);
-    } else if (value === POP) {
-      popProvider();
-      if (__DEV__) {
-        insideContextProps = null;
-        isInsideContextValue = false;
-      }
-      return (undefined: any);
     }
 
     if (isArray(value)) {
@@ -1703,7 +1710,7 @@ export function abort(request: Request, reason: mixed): void {
 function importServerContexts(
   contexts?: Array<[string, ServerContextJSONValue]>,
 ) {
-  if (contexts) {
+  if (enableServerContext && contexts) {
     const prevContext = getActiveContext();
     switchContext(rootContextSnapshot);
     for (let i = 0; i < contexts.length; i++) {
