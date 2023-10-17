@@ -1174,7 +1174,7 @@ var TransitionHydrationLane =
   64;
 var TransitionLanes =
   /*                       */
-  8388480;
+  4194176;
 var TransitionLane1 =
   /*                        */
   128;
@@ -1220,39 +1220,39 @@ var TransitionLane14 =
 var TransitionLane15 =
   /*                       */
   2097152;
-var TransitionLane16 =
-  /*                       */
-  4194304;
 var RetryLanes =
   /*                            */
-  125829120;
+  62914560;
 var RetryLane1 =
   /*                             */
-  8388608;
+  4194304;
 var RetryLane2 =
   /*                             */
-  16777216;
+  8388608;
 var RetryLane3 =
   /*                             */
-  33554432;
+  16777216;
 var RetryLane4 =
   /*                             */
-  67108864;
+  33554432;
 var SomeRetryLane = RetryLane1;
 var SelectiveHydrationLane =
   /*          */
-  134217728;
+  67108864;
 var NonIdleLanes =
   /*                          */
-  268435455;
+  134217727;
 var IdleHydrationLane =
   /*               */
-  268435456;
+  134217728;
 var IdleLane =
   /*                        */
-  536870912;
+  268435456;
 var OffscreenLane =
   /*                   */
+  536870912;
+var DeferredLane =
+  /*                    */
   1073741824; // Any lane that might schedule an update. This is used to detect infinite
 // update loops, so it doesn't include hydration lanes or retries.
 
@@ -1300,7 +1300,6 @@ function getHighestPriorityLanes(lanes) {
     case TransitionLane13:
     case TransitionLane14:
     case TransitionLane15:
-    case TransitionLane16:
       return lanes & TransitionLanes;
 
     case RetryLane1:
@@ -1320,6 +1319,11 @@ function getHighestPriorityLanes(lanes) {
 
     case OffscreenLane:
       return OffscreenLane;
+
+    case DeferredLane:
+      // This shouldn't be reachable because deferred work is always entangled
+      // with something else.
+      return NoLanes;
 
     default:
       {
@@ -1487,7 +1491,6 @@ function computeExpirationTime(lane, currentTime) {
     case TransitionLane13:
     case TransitionLane14:
     case TransitionLane15:
-    case TransitionLane16:
       return currentTime + 5000;
 
     case RetryLane1:
@@ -1505,6 +1508,7 @@ function computeExpirationTime(lane, currentTime) {
     case IdleHydrationLane:
     case IdleLane:
     case OffscreenLane:
+    case DeferredLane:
       // Anything idle priority or lower should never expire.
       return NoTimestamp;
 
@@ -1708,7 +1712,7 @@ function markRootUpdated(root, updateLane) {
     root.pingedLanes = NoLanes;
   }
 }
-function markRootSuspended$1(root, suspendedLanes) {
+function markRootSuspended$1(root, suspendedLanes, spawnedLane) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes; // The suspended lanes are no longer CPU-bound. Clear their expiration times.
 
@@ -1721,11 +1725,15 @@ function markRootSuspended$1(root, suspendedLanes) {
     expirationTimes[index] = NoTimestamp;
     lanes &= ~lane;
   }
+
+  if (spawnedLane !== NoLane) {
+    markSpawnedDeferredLane(root, spawnedLane, suspendedLanes);
+  }
 }
 function markRootPinged(root, pingedLanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
-function markRootFinished(root, remainingLanes) {
+function markRootFinished(root, remainingLanes, spawnedLane) {
   var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
   root.pendingLanes = remainingLanes; // Let's try everything again
 
@@ -1765,7 +1773,32 @@ function markRootFinished(root, remainingLanes) {
 
     lanes &= ~lane;
   }
+
+  if (spawnedLane !== NoLane) {
+    markSpawnedDeferredLane(
+      root,
+      spawnedLane, // This render finished successfully without suspending, so we don't need
+      // to entangle the spawned task with the parent task.
+      NoLanes
+    );
+  }
 }
+
+function markSpawnedDeferredLane(root, spawnedLane, entangledLanes) {
+  // This render spawned a deferred task. Mark it as pending.
+  root.pendingLanes |= spawnedLane;
+  root.suspendedLanes &= ~spawnedLane; // Entangle the spawned lane with the DeferredLane bit so that we know it
+  // was the result of another render. This lets us avoid a useDeferredValue
+  // waterfall — only the first level will defer.
+
+  var spawnedLaneIndex = laneToIndex(spawnedLane);
+  root.entangledLanes |= spawnedLane;
+  root.entanglements[spawnedLaneIndex] |=
+    DeferredLane | // If the parent render task suspended, we must also entangle those lanes
+    // with the spawned task.
+    entangledLanes;
+}
+
 function markRootEntangled(root, entangledLanes) {
   // In addition to entangling each of the given lanes with each other, we also
   // have to consider _transitive_ entanglements. For each lane that is already
@@ -1852,7 +1885,6 @@ function getBumpedLaneForHydration(root, renderLanes) {
       case TransitionLane13:
       case TransitionLane14:
       case TransitionLane15:
-      case TransitionLane16:
       case RetryLane1:
       case RetryLane2:
       case RetryLane3:
@@ -8817,15 +8849,18 @@ function rerenderDeferredValue(value, initialValue) {
 }
 
 function mountDeferredValueImpl(hook, value, initialValue) {
-  if (initialValue !== undefined) {
+  if (
     // When `initialValue` is provided, we defer the initial render even if the
     // current render is not synchronous.
-    // TODO: However, to avoid waterfalls, we should not defer if this render
-    // was itself spawned by an earlier useDeferredValue. Plan is to add a
-    // Deferred lane to track this.
-    hook.memoizedState = initialValue; // Schedule a deferred render
+    initialValue !== undefined && // However, to avoid waterfalls, we do not defer if this render
+    // was itself spawned by an earlier useDeferredValue. Check if DeferredLane
+    // is part of the render lanes.
+    !includesSomeLane(renderLanes, DeferredLane)
+  ) {
+    // Render with the initial value
+    hook.memoizedState = initialValue; // Schedule a deferred render to switch to the final value.
 
-    var deferredLane = claimNextTransitionLane();
+    var deferredLane = requestDeferredLane();
     currentlyRenderingFiber$1.lanes = mergeLanes(
       currentlyRenderingFiber$1.lanes,
       deferredLane
@@ -8853,7 +8888,7 @@ function updateDeferredValueImpl(hook, prevValue, value, initialValue) {
     // previous value and spawn a deferred render to update it later.
     if (!objectIs(value, prevValue)) {
       // Schedule a deferred render
-      var deferredLane = claimNextTransitionLane();
+      var deferredLane = requestDeferredLane();
       currentlyRenderingFiber$1.lanes = mergeLanes(
         currentlyRenderingFiber$1.lanes,
         deferredLane
@@ -21211,7 +21246,9 @@ var workInProgressRootSkippedLanes = NoLanes; // Lanes that were updated (in an 
 
 var workInProgressRootInterleavedUpdatedLanes = NoLanes; // Lanes that were updated during the render phase (*not* an interleaved event).
 
-var workInProgressRootPingedLanes = NoLanes; // Errors that are thrown during the render phase.
+var workInProgressRootPingedLanes = NoLanes; // If this lane scheduled deferred work, this is the lane of the deferred task.
+
+var workInProgressDeferredLane = NoLane; // Errors that are thrown during the render phase.
 
 var workInProgressRootConcurrentErrors = null; // These are errors that we recovered from without surfacing them to the UI.
 // We will log them once the tree commits.
@@ -21343,6 +21380,27 @@ function requestRetryLane(fiber) {
   return claimNextRetryLane();
 }
 
+function requestDeferredLane() {
+  if (workInProgressDeferredLane === NoLane) {
+    // If there are multiple useDeferredValue hooks in the same render, the
+    // tasks that they spawn should all be batched together, so they should all
+    // receive the same lane.
+    if (includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)) {
+      // There's only one OffscreenLane, so if it contains deferred work, we
+      // should just reschedule using the same lane.
+      // TODO: We also use OffscreenLane for hydration, on the basis that the
+      // initial HTML is the same as the hydrated UI, but since the deferred
+      // task will change the UI, it should be treated like an update. Use
+      // TransitionHydrationLane to trigger selective hydration.
+      workInProgressDeferredLane = OffscreenLane;
+    } else {
+      // Everything else is spawned as a transition.
+      workInProgressDeferredLane = requestTransitionLane();
+    }
+  }
+
+  return workInProgressDeferredLane;
+}
 function scheduleUpdateOnFiber(root, fiber, lane) {
   {
     if (isRunningInsertionEffect) {
@@ -21366,7 +21424,11 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
     // The incoming update might unblock the current render. Interrupt the
     // current attempt and restart from the top.
     prepareFreshStack(root, NoLanes);
-    markRootSuspended(root, workInProgressRootRenderLanes);
+    markRootSuspended(
+      root,
+      workInProgressRootRenderLanes,
+      workInProgressDeferredLane
+    );
   } // Mark that the root has a pending update.
 
   markRootUpdated(root, lane);
@@ -21401,7 +21463,11 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
         // effect of interrupting the current render and switching to the update.
         // TODO: Make sure this doesn't override pings that happen while we've
         // already started rendering.
-        markRootSuspended(root, workInProgressRootRenderLanes);
+        markRootSuspended(
+          root,
+          workInProgressRootRenderLanes,
+          workInProgressDeferredLane
+        );
       }
     }
 
@@ -21489,7 +21555,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         // The render unwound without completing the tree. This happens in special
         // cases where need to exit the current render without producing a
         // consistent tree or committing.
-        markRootSuspended(root, lanes);
+        markRootSuspended(root, lanes, NoLane);
       } else {
         // The render completed.
         // Check if this render may have yielded to a concurrent event, and if so,
@@ -21534,7 +21600,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
         if (exitStatus === RootFatalErrored) {
           var fatalError = workInProgressRootFatalError;
           prepareFreshStack(root, NoLanes);
-          markRootSuspended(root, lanes);
+          markRootSuspended(root, lanes, NoLane);
           ensureRootIsScheduled(root);
           throw fatalError;
         } // We now have a consistent tree. The next step is either to commit it,
@@ -21654,7 +21720,7 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
-        markRootSuspended(root, lanes);
+        markRootSuspended(root, lanes, workInProgressDeferredLane);
         return;
       } // Commit the placeholder.
 
@@ -21677,7 +21743,8 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
     commitRoot(
       root,
       workInProgressRootRecoverableErrors,
-      workInProgressTransitions
+      workInProgressTransitions,
+      workInProgressDeferredLane
     );
   } else {
     if (includesOnlyRetries(lanes) && alwaysThrottleRetries) {
@@ -21687,7 +21754,7 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
         globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now$1(); // Don't bother with a very short suspense time.
 
       if (msUntilTimeout > 10) {
-        markRootSuspended(root, lanes);
+        markRootSuspended(root, lanes, workInProgressDeferredLane);
         var nextLanes = getNextLanes(root, NoLanes);
 
         if (nextLanes !== NoLanes) {
@@ -21707,7 +21774,8 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
             finishedWork,
             workInProgressRootRecoverableErrors,
             workInProgressTransitions,
-            lanes
+            lanes,
+            workInProgressDeferredLane
           ),
           msUntilTimeout
         );
@@ -21720,7 +21788,8 @@ function finishConcurrentRender(root, exitStatus, finishedWork, lanes) {
       finishedWork,
       workInProgressRootRecoverableErrors,
       workInProgressTransitions,
-      lanes
+      lanes,
+      workInProgressDeferredLane
     );
   }
 }
@@ -21730,7 +21799,8 @@ function commitRootWhenReady(
   finishedWork,
   recoverableErrors,
   transitions,
-  lanes
+  lanes,
+  spawnedLane
 ) {
   // TODO: Combine retry throttling with Suspensey commits. Right now they run
   // one after the other.
@@ -21755,12 +21825,12 @@ function commitRootWhenReady(
       root.cancelPendingCommit = schedulePendingCommit(
         commitRoot.bind(null, root, recoverableErrors, transitions)
       );
-      markRootSuspended(root, lanes);
+      markRootSuspended(root, lanes, spawnedLane);
       return;
     }
   } // Otherwise, commit immediately.
 
-  commitRoot(root, recoverableErrors, transitions);
+  commitRoot(root, recoverableErrors, transitions, spawnedLane);
 }
 
 function isRenderConsistentWithExternalStores(finishedWork) {
@@ -21825,7 +21895,7 @@ function isRenderConsistentWithExternalStores(finishedWork) {
   return true;
 }
 
-function markRootSuspended(root, suspendedLanes) {
+function markRootSuspended(root, suspendedLanes, spawnedLane) {
   // When suspending, we should always exclude lanes that were pinged or (more
   // rarely, since we try to avoid it) updated during the render phase.
   // TODO: Lol maybe there's a better way to factor this besides this
@@ -21835,7 +21905,7 @@ function markRootSuspended(root, suspendedLanes) {
     suspendedLanes,
     workInProgressRootInterleavedUpdatedLanes
   );
-  markRootSuspended$1(root, suspendedLanes);
+  markRootSuspended$1(root, suspendedLanes, spawnedLane);
 } // This is the entry point for synchronous tasks that don't go
 // through Scheduler
 
@@ -21887,7 +21957,7 @@ function performSyncWorkOnRoot(root, lanes) {
   if (exitStatus === RootFatalErrored) {
     var fatalError = workInProgressRootFatalError;
     prepareFreshStack(root, NoLanes);
-    markRootSuspended(root, lanes);
+    markRootSuspended(root, lanes, NoLane);
     ensureRootIsScheduled(root);
     throw fatalError;
   }
@@ -21896,7 +21966,7 @@ function performSyncWorkOnRoot(root, lanes) {
     // The render unwound without completing the tree. This happens in special
     // cases where need to exit the current render without producing a
     // consistent tree or committing.
-    markRootSuspended(root, lanes);
+    markRootSuspended(root, lanes, NoLane);
     ensureRootIsScheduled(root);
     return null;
   } // We now have a consistent tree. Because this is a sync render, we
@@ -21908,7 +21978,8 @@ function performSyncWorkOnRoot(root, lanes) {
   commitRoot(
     root,
     workInProgressRootRecoverableErrors,
-    workInProgressTransitions
+    workInProgressTransitions,
+    workInProgressDeferredLane
   ); // Before exiting, make sure there's a callback scheduled for the next
   // pending level.
 
@@ -22047,6 +22118,7 @@ function prepareFreshStack(root, lanes) {
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootInterleavedUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
+  workInProgressDeferredLane = NoLane;
   workInProgressRootConcurrentErrors = null;
   workInProgressRootRecoverableErrors = null; // Get the lanes that are entangled with whatever we're about to render. We
   // track these separately so we can distinguish the priority of the render
@@ -22261,9 +22333,9 @@ function renderDidSuspendDelayIfPossible() {
   // this render.
 
   if (
-    workInProgressRoot !== null &&
     (includesNonIdleWork(workInProgressRootSkippedLanes) ||
-      includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes))
+      includesNonIdleWork(workInProgressRootInterleavedUpdatedLanes)) &&
+    workInProgressRoot !== null
   ) {
     // Mark the current render as suspended so that we switch to working on
     // the updates that were skipped. Usually we only suspend at the end of
@@ -22274,8 +22346,11 @@ function renderDidSuspendDelayIfPossible() {
     // pinged or updated while we were rendering.
     // TODO: Consider unwinding immediately, using the
     // SuspendedOnHydration mechanism.
-    // $FlowFixMe[incompatible-call] need null check workInProgressRoot
-    markRootSuspended(workInProgressRoot, workInProgressRootRenderLanes);
+    markRootSuspended(
+      workInProgressRoot,
+      workInProgressRootRenderLanes,
+      workInProgressDeferredLane
+    );
   }
 }
 function renderDidError(error) {
@@ -22976,7 +23051,7 @@ function unwindUnitOfWork(unitOfWork) {
   workInProgress = null;
 }
 
-function commitRoot(root, recoverableErrors, transitions) {
+function commitRoot(root, recoverableErrors, transitions, spawnedLane) {
   // TODO: This no longer makes any sense. We already wrap the mutation and
   // layout phases. Should be able to remove.
   var previousUpdateLanePriority = getCurrentUpdatePriority();
@@ -22989,7 +23064,8 @@ function commitRoot(root, recoverableErrors, transitions) {
       root,
       recoverableErrors,
       transitions,
-      previousUpdateLanePriority
+      previousUpdateLanePriority,
+      spawnedLane
     );
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
@@ -23003,7 +23079,8 @@ function commitRootImpl(
   root,
   recoverableErrors,
   transitions,
-  renderPriorityLevel
+  renderPriorityLevel,
+  spawnedLane
 ) {
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
@@ -23058,7 +23135,7 @@ function commitRootImpl(
 
   var concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
   remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
-  markRootFinished(root, remainingLanes);
+  markRootFinished(root, remainingLanes, spawnedLane);
 
   if (root === workInProgressRoot) {
     // We can reset these now that they are finished.
@@ -25183,7 +25260,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-1a677f82";
+var ReactVersion = "18.3.0-www-classic-703d13e3";
 
 // Might add PROFILE later.
 
