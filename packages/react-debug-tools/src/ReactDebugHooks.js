@@ -48,19 +48,9 @@ type Dispatch<A> = A => void;
 
 let primitiveStackCache: null | Map<string, Array<any>> = null;
 
-type MemoCache = {
-  data: Array<Array<any>>,
-  index: number,
-};
-
-type FunctionComponentUpdateQueue = {
-  memoCache?: MemoCache | null,
-};
-
 type Hook = {
   memoizedState: any,
   next: Hook | null,
-  updateQueue: FunctionComponentUpdateQueue | null,
 };
 
 function getPrimitiveStackCache(): Map<string, Array<any>> {
@@ -327,36 +317,11 @@ function useId(): string {
   return id;
 }
 
+// useMemoCache is an implementation detail of Forget's memoization
+// it should not be called directly in user-generated code
+// we keep it as a stub for dispatcher
 function useMemoCache(size: number): Array<any> {
-  const hook = nextHook();
-  let memoCache: MemoCache;
-  if (
-    hook !== null &&
-    hook.updateQueue !== null &&
-    hook.updateQueue.memoCache != null
-  ) {
-    memoCache = hook.updateQueue.memoCache;
-  } else {
-    memoCache = {
-      data: [],
-      index: 0,
-    };
-  }
-
-  let data = memoCache.data[memoCache.index];
-  if (data === undefined) {
-    const MEMO_CACHE_SENTINEL = Symbol.for('react.memo_cache_sentinel');
-    data = new Array(size);
-    for (let i = 0; i < size; i++) {
-      data[i] = MEMO_CACHE_SENTINEL;
-    }
-  }
-  hookLog.push({
-    primitive: 'MemoCache',
-    stackError: new Error(),
-    value: data,
-  });
-  return data;
+  return [];
 }
 
 const Dispatcher: DispatcherType = {
@@ -725,7 +690,7 @@ export function inspectHooks<Props>(
   renderFunction: Props => React$Node,
   props: Props,
   currentDispatcher: ?CurrentDispatcherRef,
-  includeHooksSource?: boolean = false,
+  includeHooksSource: boolean = false,
 ): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -816,7 +781,7 @@ function resolveDefaultProps(Component: any, baseProps: any) {
 export function inspectHooksOfFiber(
   fiber: Fiber,
   currentDispatcher: ?CurrentDispatcherRef,
-  includeHooksSource?: boolean = false,
+  includeHooksSource: boolean = false,
 ): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
