@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-c2fb22b9";
+var ReactVersion = "18.3.0-www-classic-89c1183f";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -13209,7 +13209,10 @@ function flushCompletedQueues(request, destination) {
         }
       } // We're done.
 
-      close(destination);
+      close(destination); // We need to stop flowing now because we do not want any async contexts which might call
+      // float methods to initiate any flushes after this point
+
+      stopFlowing(request);
     }
   }
 }
@@ -13231,10 +13234,17 @@ function enqueueFlush(request) {
     // happen when we start flowing again
     request.destination !== null
   ) {
-    var destination = request.destination;
     request.flushScheduled = true;
     scheduleWork(function () {
-      return flushCompletedQueues(request, destination);
+      // We need to existence check destination again here because it might go away
+      // in between the enqueueFlush call and the work execution
+      var destination = request.destination;
+
+      if (destination) {
+        flushCompletedQueues(request, destination);
+      } else {
+        request.flushScheduled = false;
+      }
     });
   }
 }
@@ -13264,6 +13274,9 @@ function startFlowing(request, destination) {
     fatalError(request, error);
   }
 }
+function stopFlowing(request) {
+  request.destination = null;
+} // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 
 function abort(request, reason) {
   try {

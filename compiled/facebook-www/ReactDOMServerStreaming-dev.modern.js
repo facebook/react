@@ -12838,7 +12838,10 @@ function flushCompletedQueues(request, destination) {
         }
       } // We're done.
 
-      close(destination);
+      close(destination); // We need to stop flowing now because we do not want any async contexts which might call
+      // float methods to initiate any flushes after this point
+
+      stopFlowing(request);
     }
   }
 }
@@ -12883,6 +12886,9 @@ function startFlowing(request, destination) {
     fatalError(request, error);
   }
 }
+function stopFlowing(request) {
+  request.destination = null;
+} // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 
 function abort(request, reason) {
   try {

@@ -4643,16 +4643,17 @@ function flushCompletedQueues(request, destination) {
       0 === request.clientRenderedBoundaries.length &&
       0 === request.completedBoundaries.length &&
       ((request.flushScheduled = !1),
-      (request = request.resumableState),
-      request.hasBody &&
+      (i = request.resumableState),
+      i.hasBody &&
         (writeChunk(destination, "</"),
         writeChunk(destination, "body"),
         writeChunk(destination, ">")),
-      request.hasHtml &&
+      i.hasHtml &&
         (writeChunk(destination, "</"),
         writeChunk(destination, "html"),
         writeChunk(destination, ">")),
-      (destination.done = !0));
+      (destination.done = !0),
+      (request.destination = null));
   }
 }
 function enqueueFlush(request) {

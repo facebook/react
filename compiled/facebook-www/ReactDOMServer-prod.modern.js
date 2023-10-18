@@ -2287,16 +2287,16 @@ function hoistStylesheetDependency(stylesheet) {
 function createRenderState(resumableState, generateStaticMarkup) {
   var idPrefix = resumableState.idPrefix;
   resumableState = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1557 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1561 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1569 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1570 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1571 = new Set(),
-    JSCompiler_object_inline_styles_1572 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1573 = new Set(),
-    JSCompiler_object_inline_scripts_1574 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1575 = new Set(),
-    JSCompiler_object_inline_preloads_1576 = {
+  var JSCompiler_object_inline_preconnects_1573 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1574 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1575 = new Set(),
+    JSCompiler_object_inline_styles_1576 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1577 = new Set(),
+    JSCompiler_object_inline_scripts_1578 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1579 = new Set(),
+    JSCompiler_object_inline_preloads_1580 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2304,7 +2304,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
     };
   return {
     placeholderPrefix: resumableState,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1557,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1561,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2316,14 +2316,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     importMapChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1569,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1570,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1571,
-    styles: JSCompiler_object_inline_styles_1572,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1573,
-    scripts: JSCompiler_object_inline_scripts_1574,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1575,
-    preloads: JSCompiler_object_inline_preloads_1576,
+    preconnects: JSCompiler_object_inline_preconnects_1573,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1574,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1575,
+    styles: JSCompiler_object_inline_styles_1576,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1577,
+    scripts: JSCompiler_object_inline_scripts_1578,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1579,
+    preloads: JSCompiler_object_inline_preloads_1580,
     boundaryResources: null,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -4865,16 +4865,17 @@ function flushCompletedQueues(request, destination) {
       0 === request.clientRenderedBoundaries.length &&
       0 === request.completedBoundaries.length &&
       ((request.flushScheduled = !1),
-      (request = request.resumableState),
-      request.hasBody &&
+      (i = request.resumableState),
+      i.hasBody &&
         (destination.push("</"),
         destination.push("body"),
         destination.push(">")),
-      request.hasHtml &&
+      i.hasHtml &&
         (destination.push("</"),
         destination.push("html"),
         destination.push(">")),
-      destination.push(null));
+      destination.push(null),
+      (request.destination = null));
   }
 }
 function enqueueFlush(request) {
@@ -4883,9 +4884,11 @@ function enqueueFlush(request) {
     0 === request.pingedTasks.length &&
     null !== request.destination
   ) {
-    var destination = request.destination;
     request.flushScheduled = !0;
-    flushCompletedQueues(request, destination);
+    var destination = request.destination;
+    destination
+      ? flushCompletedQueues(request, destination)
+      : (request.flushScheduled = !1);
   }
 }
 function abort(request, reason) {
@@ -4985,4 +4988,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-4a0e1ba5";
+exports.version = "18.3.0-www-modern-75350665";
