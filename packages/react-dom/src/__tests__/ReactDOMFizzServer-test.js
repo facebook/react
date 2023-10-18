@@ -3650,6 +3650,46 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // https://github.com/facebook/react/issues/27540
+  // This test is not actually asserting much because there is possibly a bug in the closeing logic for the
+  // Node implementation of Fizz. The close leads to an abort which sets the destination to null before the Float
+  // method has an opportunity to schedule a write. We should fix this probably and once we do this test will start
+  // to fail if the underyling issue of writing after stream completion isn't fixed
+  it('does not try to write to the stream after it has been closed', async () => {
+    async function preloadLate() {
+      await 1;
+      ReactDOM.preconnect('foo');
+    }
+
+    function Preload() {
+      preloadLate();
+      return null;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <main>hello</main>
+            <Preload />
+          </body>
+        </html>
+      );
+    }
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <main>hello</main>
+        </body>
+      </html>,
+    );
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};

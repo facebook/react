@@ -3986,6 +3986,9 @@ function flushCompletedQueues(
       }
       // We're done.
       close(destination);
+      // We need to stop flowing now because we do not want any async contexts which might call
+      // float methods to initiate any flushes after this point
+      stopFlowing(request);
     } else {
       completeWriting(destination);
       flushBuffered(destination);
@@ -4011,9 +4014,17 @@ function enqueueFlush(request: Request): void {
     // happen when we start flowing again
     request.destination !== null
   ) {
-    const destination = request.destination;
     request.flushScheduled = true;
-    scheduleWork(() => flushCompletedQueues(request, destination));
+    scheduleWork(() => {
+      // We need to existence check destination again here because it might go away
+      // in between the enqueueFlush call and the work execution
+      const destination = request.destination;
+      if (destination) {
+        flushCompletedQueues(request, destination);
+      } else {
+        request.flushScheduled = false;
+      }
+    });
   }
 }
 
