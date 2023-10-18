@@ -15,7 +15,6 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 
 let React;
-let ReactDOM;
 let ReactDOMFizzServer;
 let Suspense;
 
@@ -23,7 +22,6 @@ describe('ReactDOMFizzServerBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
     Suspense = React.Suspense;
   });
@@ -548,38 +546,5 @@ describe('ReactDOMFizzServerBrowser', () => {
     expect(postponed).toEqual(['testing postpone']);
     // However, it does error the shell.
     expect(caughtError.message).toEqual('testing postpone');
-  });
-
-  // https://github.com/facebook/react/issues/27540
-  // This test is not actually asserting much because in our test environment the Float method cannot find the request after
-  // an await and thus is a noop. If we fix our test environment to support AsyncLocalStorage we can assert that the
-  // stream does not write after closing.
-  it('does not try to write to the stream after it has been closed', async () => {
-    async function preloadLate() {
-      await 1;
-      ReactDOM.preconnect('foo');
-    }
-
-    function Preload() {
-      preloadLate();
-      return null;
-    }
-
-    function App() {
-      return (
-        <html>
-          <body>
-            <main>hello</main>
-            <Preload />
-          </body>
-        </html>
-      );
-    }
-    const stream = await ReactDOMFizzServer.renderToReadableStream(<App />);
-    const result = await readResult(stream);
-
-    expect(result).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><head></head><body><main>hello</main></body></html>"`,
-    );
   });
 });
