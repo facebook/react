@@ -2150,7 +2150,7 @@ function renderNodeDestructiveImpl(
   if (typeof node === 'object' && node !== null) {
     switch ((node: any).$$typeof) {
       case REACT_ELEMENT_TYPE: {
-        const element: React$Element<any> = (node: any);
+        const element: any = node;
         const type = element.type;
         const key = element.key;
         const props = element.props;
