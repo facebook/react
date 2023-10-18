@@ -4,6 +4,16 @@
 
 ---
 
+### 4.28.5
+October 18, 2023
+
+#### Bugfixes
+* fix[devtools/useMemoCache]: add stub for useMemoCache in ReactDebugHook ([hoxyq](https://github.com/hoxyq) in [#27472](https://github.com/facebook/react/pull/27472))
+* refactor[react-devtools-extensions]: use globals to eliminate dead code ([hoxyq](https://github.com/hoxyq) in [#27516](https://github.com/facebook/react/pull/27516))
+* fix[devtools/inspectElement]: dont pause initial inspectElement call when user switches tabs ([hoxyq](https://github.com/hoxyq) in [#27488](https://github.com/facebook/react/pull/27488))
+
+---
+
 ### 4.28.4
 September 25, 2023
 
