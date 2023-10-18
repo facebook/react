@@ -181,6 +181,8 @@ type Task = {
   thenableState: ThenableState | null,
 };
 
+interface Reference {}
+
 export type Request = {
   status: 0 | 1 | 2,
   flushScheduled: boolean,
@@ -201,6 +203,7 @@ export type Request = {
   writtenClientReferences: Map<ClientReferenceKey, number>,
   writtenServerReferences: Map<ServerReference<any>, number>,
   writtenProviders: Map<string, number>,
+  writtenObjects: WeakMap<Reference, number>, // -1 means "seen" but not outlined.
   identifierPrefix: string,
   identifierCount: number,
   taintCleanupQueue: Array<string | bigint>,
@@ -299,6 +302,7 @@ export function createRequest(
     writtenClientReferences: new Map(),
     writtenServerReferences: new Map(),
     writtenProviders: new Map(),
+    writtenObjects: new WeakMap(),
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
     taintCleanupQueue: cleanupQueue,
@@ -763,10 +767,14 @@ function serializeClientReference(
 
 function outlineModel(request: Request, value: any): number {
   request.pendingChunks++;
-  const outlinedId = request.nextChunkId++;
-  // We assume that this object doesn't suspend, but a child might.
-  emitModelChunk(request, outlinedId, value);
-  return outlinedId;
+  const newTask = createTask(
+    request,
+    value,
+    getActiveContext(),
+    request.abortableTasks,
+  );
+  retryTask(request, newTask);
+  return newTask.id;
 }
 
 function serializeServerReference(
@@ -864,6 +872,7 @@ function escapeStringValue(value: string): string {
 
 let insideContextProps = null;
 let isInsideContextValue = false;
+let modelRoot: null | ReactClientValue = false;
 
 function resolveModelToJSON(
   request: Request,
@@ -947,6 +956,28 @@ function resolveModelToJSON(
     try {
       switch ((value: any).$$typeof) {
         case REACT_ELEMENT_TYPE: {
+          const writtenObjects = request.writtenObjects;
+          const existingId = writtenObjects.get(value);
+          if (existingId !== undefined) {
+            if (existingId === -1) {
+              // Seen but not yet outlined.
+              const newId = outlineModel(request, value);
+              return serializeByValueID(newId);
+            } else if (modelRoot === value) {
+              // This is the ID we're currently emitting so we need to write it
+              // once but if we discover it again, we refer to it by id.
+              modelRoot = null;
+            } else {
+              // We've already emitted this as an outlined object, so we can
+              // just refer to that by its existing ID.
+              return serializeByValueID(existingId);
+            }
+          } else {
+            // This is the first time we've seen this object. We may never see it again
+            // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
+            writtenObjects.set(value, -1);
+          }
+
           // TODO: Concatenate keys of parents onto children.
           const element: React$Element<any> = (value: any);
           // Attempt to render the Server Component.
@@ -1027,13 +1058,30 @@ function resolveModelToJSON(
     }
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
-      // $FlowFixMe[method-unbinding]
-    } else if (typeof value.then === 'function') {
+    }
+
+    const writtenObjects = request.writtenObjects;
+    const existingId = writtenObjects.get(value);
+    // $FlowFixMe[method-unbinding]
+    if (typeof value.then === 'function') {
+      if (existingId !== undefined) {
+        if (modelRoot === value) {
+          // This is the ID we're currently emitting so we need to write it
+          // once but if we discover it again, we refer to it by id.
+          modelRoot = null;
+        } else {
+          // We've seen this promise before, so we can just refer to the same result.
+          return serializePromiseID(existingId);
+        }
+      }
       // We assume that any object with a .then property is a "Thenable" type,
       // or a Promise type. Either of which can be represented by a Promise.
       const promiseId = serializeThenable(request, (value: any));
+      writtenObjects.set(value, promiseId);
       return serializePromiseID(promiseId);
-    } else if (enableServerContext) {
+    }
+
+    if (enableServerContext) {
       if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
         const providerKey = ((value: any): ReactProviderType<any>)._context
           ._globalName;
@@ -1054,6 +1102,26 @@ function resolveModelToJSON(
         }
         return (undefined: any);
       }
+    }
+
+    if (existingId !== undefined) {
+      if (existingId === -1) {
+        // Seen but not yet outlined.
+        const newId = outlineModel(request, value);
+        return serializeByValueID(newId);
+      } else if (modelRoot === value) {
+        // This is the ID we're currently emitting so we need to write it
+        // once but if we discover it again, we refer to it by id.
+        modelRoot = null;
+      } else {
+        // We've already emitted this as an outlined object, so we can
+        // just refer to that by its existing ID.
+        return serializeByValueID(existingId);
+      }
+    } else {
+      // This is the first time we've seen this object. We may never see it again
+      // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
+      writtenObjects.set(value, -1);
     }
 
     if (isArray(value)) {
@@ -1408,6 +1476,10 @@ function emitModelChunk(
   id: number,
   model: ReactClientValue,
 ): void {
+  // Track the root so we know that we have to emit this object even though it
+  // already has an ID. This is needed because we might see this object twice
+  // in the same toJSON if it is cyclic.
+  modelRoot = model;
   // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(model, request.toJSON);
   const row = id.toString(16) + ':' + json + '\n';
@@ -1429,6 +1501,8 @@ function retryTask(request: Request, task: Task): void {
       value !== null &&
       (value: any).$$typeof === REACT_ELEMENT_TYPE
     ) {
+      request.writtenObjects.set(value, task.id);
+
       // TODO: Concatenate keys of parents onto children.
       const element: React$Element<any> = (value: any);
 
@@ -1461,6 +1535,7 @@ function retryTask(request: Request, task: Task): void {
         value !== null &&
         (value: any).$$typeof === REACT_ELEMENT_TYPE
       ) {
+        request.writtenObjects.set(value, task.id);
         // TODO: Concatenate keys of parents onto children.
         const nextElement: React$Element<any> = (value: any);
         task.model = value;
@@ -1473,6 +1548,11 @@ function retryTask(request: Request, task: Task): void {
           null,
         );
       }
+    }
+
+    // Track that this object is outlined and has an id.
+    if (typeof value === 'object' && value !== null) {
+      request.writtenObjects.set(value, task.id);
     }
 
     emitModelChunk(request, task.id, value);

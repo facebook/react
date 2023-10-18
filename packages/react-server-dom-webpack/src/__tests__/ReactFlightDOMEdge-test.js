@@ -183,6 +183,65 @@ describe('ReactFlightDOMEdge', () => {
     expect(result.text2).toBe(testString2);
   });
 
+  it('should encode repeated objects in a compact format by deduping', async () => {
+    const obj = {
+      this: {is: 'a large objected'},
+      with: {many: 'properties in it'},
+    };
+    const props = {
+      items: new Array(30).fill(obj),
+    };
+    const stream = ReactServerDOMServer.renderToReadableStream(props);
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const serializedContent = await readResult(stream1);
+    expect(serializedContent.length).toBeLessThan(400);
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+    // Should still match the result when parsed
+    expect(result).toEqual(props);
+    expect(result.items[5]).toBe(result.items[10]); // two random items are the same instance
+    // TODO: items[0] is not the same as the others in this case
+  });
+
+  it('should execute repeated server components only once', async () => {
+    const str = 'this is a long return value';
+    let timesRendered = 0;
+    function ServerComponent() {
+      timesRendered++;
+      return str;
+    }
+    const element = <ServerComponent />;
+    const children = new Array(30).fill(element);
+    const resolvedChildren = new Array(30).fill(str);
+    const stream = ReactServerDOMServer.renderToReadableStream(children);
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const serializedContent = await readResult(stream1);
+    expect(serializedContent.length).toBeLessThan(400);
+    expect(timesRendered).toBeLessThan(5);
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+    // Should still match the result when parsed
+    expect(result).toEqual(resolvedChildren);
+  });
+
   // @gate enableBinaryFlight
   it('should be able to serialize any kind of typed array', async () => {
     const buffer = new Uint8Array([
