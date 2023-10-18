@@ -1,6 +1,6 @@
 {
   "name": "react-devtools-inline",
-  "version": "4.28.4",
+  "version": "4.28.5",
   "description": "Embed react-devtools within a website",
   "license": "MIT",
   "main": "./dist/backend.js",
