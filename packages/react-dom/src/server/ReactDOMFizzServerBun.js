@@ -70,7 +70,7 @@ function renderToReadableStream(
           },
           cancel: (reason): ?Promise<void> => {
             stopFlowing(request);
-            abort(request);
+            abort(request, reason);
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
