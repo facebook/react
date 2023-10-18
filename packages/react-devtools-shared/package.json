@@ -14,7 +14,7 @@
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-flow": "^7.10.4",
     "@babel/runtime": "^7.11.2",
-    "@babel/traverse": "^7.12.5",
+    "@babel/traverse": "^7.23.2",
     "@reach/menu-button": "^0.16.1",
     "@reach/tooltip": "^0.16.0",
     "clipboard-js": "^0.3.6",
