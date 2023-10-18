@@ -374,12 +374,13 @@ describe('ReactFlight', () => {
   });
 
   it('can transport Map', async () => {
-    function ComponentClient({prop}) {
+    function ComponentClient({prop, selected}) {
       return `
         map: ${prop instanceof Map}
         size: ${prop.size}
         greet: ${prop.get('hi').greet}
         content: ${JSON.stringify(Array.from(prop))}
+        selected: ${prop.get(selected)}
       `;
     }
     const Component = clientReference(ComponentClient);
@@ -389,7 +390,7 @@ describe('ReactFlight', () => {
       ['hi', {greet: 'world'}],
       [objKey, 123],
     ]);
-    const model = <Component prop={map} />;
+    const model = <Component prop={map} selected={objKey} />;
 
     const transport = ReactNoopFlightServer.render(model);
 
@@ -402,23 +403,25 @@ describe('ReactFlight', () => {
         size: 2
         greet: world
         content: [["hi",{"greet":"world"}],[{"obj":"key"},123]]
+        selected: 123
       `);
   });
 
   it('can transport Set', async () => {
-    function ComponentClient({prop}) {
+    function ComponentClient({prop, selected}) {
       return `
         set: ${prop instanceof Set}
         size: ${prop.size}
         hi: ${prop.has('hi')}
         content: ${JSON.stringify(Array.from(prop))}
+        selected: ${prop.has(selected)}
       `;
     }
     const Component = clientReference(ComponentClient);
 
     const objKey = {obj: 'key'};
     const set = new Set(['hi', objKey]);
-    const model = <Component prop={set} />;
+    const model = <Component prop={set} selected={objKey} />;
 
     const transport = ReactNoopFlightServer.render(model);
 
@@ -431,6 +434,7 @@ describe('ReactFlight', () => {
         size: 2
         hi: true
         content: ["hi",{"obj":"key"}]
+        selected: true
       `);
   });
 

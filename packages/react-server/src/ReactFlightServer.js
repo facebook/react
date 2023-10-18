@@ -822,12 +822,36 @@ function serializeMap(
   request: Request,
   map: Map<ReactClientValue, ReactClientValue>,
 ): string {
-  const id = outlineModel(request, Array.from(map));
+  const entries = Array.from(map);
+  for (let i = 0; i < entries.length; i++) {
+    const key = entries[i][0];
+    if (typeof key === 'object' && key !== null) {
+      const writtenObjects = request.writtenObjects;
+      const existingId = writtenObjects.get(key);
+      if (existingId === undefined) {
+        // Mark all object keys as seen so that they're always outlined.
+        writtenObjects.set(key, -1);
+      }
+    }
+  }
+  const id = outlineModel(request, entries);
   return '$Q' + id.toString(16);
 }
 
 function serializeSet(request: Request, set: Set<ReactClientValue>): string {
-  const id = outlineModel(request, Array.from(set));
+  const entries = Array.from(set);
+  for (let i = 0; i < entries.length; i++) {
+    const key = entries[i];
+    if (typeof key === 'object' && key !== null) {
+      const writtenObjects = request.writtenObjects;
+      const existingId = writtenObjects.get(key);
+      if (existingId === undefined) {
+        // Mark all object keys as seen so that they're always outlined.
+        writtenObjects.set(key, -1);
+      }
+    }
+  }
+  const id = outlineModel(request, entries);
   return '$W' + id.toString(16);
 }
 
