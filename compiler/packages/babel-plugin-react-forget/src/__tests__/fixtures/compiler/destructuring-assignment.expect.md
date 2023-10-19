@@ -35,15 +35,20 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(a, b, c) {
   const $ = useMemoCache(5);
-
-  const [d, t46] = a;
-  const [t48] = t46;
-  const { e: t50 } = t48;
-  const { f: g } = t50;
-  const { l: t55, o } = b;
-  const { m: t58 } = t55;
-  const [t60] = t58;
-  const [n] = t60;
+  let d;
+  let g;
+  let n;
+  let o;
+  const [t49, t50] = a;
+  d = t49;
+  const [t54] = t50;
+  const { e: t56 } = t54;
+  ({ f: g } = t56);
+  const { l: t61, o: t62 } = b;
+  const { m: t64 } = t61;
+  const [t66] = t64;
+  [n] = t66;
+  o = t62;
   let t0;
   if ($[0] !== d || $[1] !== g || $[2] !== n || $[3] !== o) {
     t0 = { d, g, n, o };

@@ -38,7 +38,7 @@ const GLOBAL = 42;
 function Component(t14) {
   const $ = useMemoCache(1);
   const { value } = t14;
-  let x = undefined;
+  let x;
   bb1: switch (GLOBAL) {
     case value: {
       x = 1;

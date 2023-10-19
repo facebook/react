@@ -21,7 +21,7 @@ function foo(a, b, c, d) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(a, b, c, d) {
   const $ = useMemoCache(4);
-  let x = undefined;
+  let x;
   if (someVal) {
     let t0;
     if ($[0] !== b) {

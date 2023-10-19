@@ -35,7 +35,9 @@ function hoisting() {
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const qux = () => {
-      const result = foo();
+      let result;
+
+      result = foo();
       return result;
     };
 

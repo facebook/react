@@ -9,11 +9,8 @@ import { CompilerError } from "../CompilerError";
 import {
   BasicBlock,
   BlockId,
-  Effect,
-  GeneratedSource,
   HIRFunction,
   Identifier,
-  Instruction,
   InstructionKind,
   LValue,
   LValuePattern,
@@ -420,88 +417,13 @@ export function leaveSSA(fn: HIRFunction): void {
         suggestions: null,
       });
       const declaration = declarations.get(phi.id.name);
-      if (declaration === undefined) {
-        let initValue: Place;
-        if (initOperand === null) {
-          initValue = {
-            effect: Effect.Read,
-            kind: "Identifier",
-            loc: GeneratedSource,
-            identifier: {
-              id: fn.env.nextIdentifierId,
-              name: null,
-              mutableRange: {
-                // TODO: this is technically the wrong start range; we do this because the instruction to create the
-                // undefined and the instruction to store it to the identifier share an InstructionId, which makes
-                // this value otherwise appear mutable when stored. All that matters is that the range end prior
-                // to the StoreLocal's instruction id, so we decrement by one.
-                start: makeInstructionId(block.terminal.id - 1),
-                end: makeInstructionId(block.terminal.id),
-              },
-              scope: null,
-              type: { kind: "Primitive" },
-            },
-          };
-          block.instructions.push({
-            id: block.terminal.id,
-            lvalue: { ...initValue, effect: Effect.ConditionallyMutate },
-            value: {
-              kind: "Primitive",
-              // TODO: consider leaving the variable uninitialized rather than explicitly undefined.
-              value: undefined,
-              loc: GeneratedSource,
-            },
-            loc: GeneratedSource,
-          });
-        } else {
-          initValue = {
-            kind: "Identifier",
-            identifier: initOperand,
-            effect: Effect.Capture,
-            loc: GeneratedSource,
-          };
-        }
-        const lvalue: LValue = {
-          place: {
-            kind: "Identifier",
-            identifier: phi.id,
-            effect: Effect.ConditionallyMutate,
-            loc: GeneratedSource,
-          },
-          kind: InstructionKind.Let,
-        };
-        const instr: Instruction = {
-          // NOTE: reuse the terminal id since these lets must be scoped with the terminal anyway.
-          // the mutable range of this canonical id must by definition span from the binding (before
-          // the if) to the phi, so it's safe to reuse the terminal's id.
-          id: block.terminal.id,
-          lvalue: {
-            kind: "Identifier",
-            identifier: {
-              id: fn.env.nextIdentifierId,
-              mutableRange: {
-                start: block.terminal.id,
-                end: makeInstructionId(block.terminal.id + 1),
-              },
-              name: null,
-              scope: null,
-              type: phi.id.type,
-            },
-            effect: Effect.ConditionallyMutate,
-            loc: GeneratedSource,
-          },
-          value: {
-            kind: "StoreLocal",
-            lvalue,
-            value: initValue,
-            loc: GeneratedSource,
-          },
-          loc: GeneratedSource,
-        };
-        block.instructions.push(instr);
-        declarations.set(phi.id.name, { lvalue, place: lvalue.place });
-        phi.id.mutableRange.start = terminal.id;
-      } else if (isPhiMutatedAfterCreation) {
+      CompilerError.invariant(declaration != null, {
+        loc: null,
+        reason: "Expected a declaration for all variables",
+        description: null,
+        suggestions: null,
+      });
+      if (isPhiMutatedAfterCreation) {
         // The declaration is not guaranteed to flow into the phi, for example in the case of a variable
         // that is reassigned in all control flow paths to a given phi. The original declaration's range
         // has to be extended in this case (if the phi is later mutated) since we are reusing the original
@@ -511,6 +433,7 @@ export function leaveSSA(fn: HIRFunction): void {
         // not prune. Otherwise, the declaration would have been pruned and we'd synthesize a new one.
         declaration.place.identifier.mutableRange.end = phi.id.mutableRange.end;
       }
+      rewrites.set(phi.id, declaration.place.identifier);
     }
 
     // Similar logic for rewrite phis that occur in loops, except that instead of a new let binding

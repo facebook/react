@@ -3,15 +3,15 @@
 
 ```javascript
 function Component(props) {
-  let x = 0;
-  props.cond ? (x = 1) : (x = 2);
-  return x;
+  let i = 0;
+  i++;
+  i = props.i;
+  return i;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ i: 42 }],
 };
 
 ```
@@ -20,15 +20,15 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function Component(props) {
-  let x;
-  props.cond ? (x = 1) : (x = 2);
-  return x;
+  let i;
+
+  i = props.i;
+  return i;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [{ i: 42 }],
 };
 
 ```

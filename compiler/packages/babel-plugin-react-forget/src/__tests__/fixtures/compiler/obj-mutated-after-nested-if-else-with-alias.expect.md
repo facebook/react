@@ -33,9 +33,8 @@ function foo(a, b, c, d) {
   someObj();
   let x;
   if ($[0] !== a || $[1] !== b) {
-    x = undefined;
     if (a) {
-      let z = undefined;
+      let z;
       if (b) {
         const w = someObj();
         z = w;

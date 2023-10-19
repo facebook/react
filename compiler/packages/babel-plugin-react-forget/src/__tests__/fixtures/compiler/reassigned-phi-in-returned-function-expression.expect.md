@@ -25,7 +25,7 @@ function Component(props) {
   let t0;
   if ($[0] !== props.str) {
     t0 = () => {
-      let str = undefined;
+      let str;
       if (arguments.length) {
         str = arguments[0];
       } else {

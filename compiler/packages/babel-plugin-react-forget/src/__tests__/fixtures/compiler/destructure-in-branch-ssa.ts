@@ -1,7 +1,3 @@
-
-## Input
-
-```javascript
 function useFoo(props: {
   x?: string;
   y?: string;
@@ -24,18 +20,7 @@ function useFoo(props: {
   };
 }
 
-export const FIXTURE_ENTRYPONT = {
+export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
   params: [{ x: "hello", y: "world", doDestructure: true }],
 };
-
-```
-
-
-## Error
-
-```
-[ReactForget] Invariant: Expected consistent kind for destructuring. Other places were 'Reassign' but 'store z$44' is const (12:12)
-```
-          
-      

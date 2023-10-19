@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function foo(a, b) {
-  let x = undefined;
+  let x;
   if (a) {
     x = 1;
   } else {

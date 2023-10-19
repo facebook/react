@@ -3204,11 +3204,19 @@ function lowerAssignment(
       }
     }
     case "ArrayPattern": {
-      // TODO
       const lvalue = lvaluePath as NodePath<t.ArrayPattern>;
       const elements = lvalue.get("elements");
       const items: ArrayPattern["items"] = [];
       const followups: Array<{ place: Place; path: NodePath<t.LVal> }> = [];
+      // A given destructuring statement must contain all declarations or all
+      // reassignments. This is enforced by the parser, but we rewrite nested
+      // destructuring into assignment to a temporary. Therefore, if we see
+      // any reassignments that are nested destructuring we fall back to
+      // using temporaries for all variables, and emitting the actual reassignments
+      // in follow-up statements
+      const forceTemporaries =
+        kind === InstructionKind.Reassign &&
+        elements.some((element) => !element.isIdentifier());
       for (let i = 0; i < elements.length; i++) {
         const element = elements[i];
         if (element.node == null) {
@@ -3228,7 +3236,7 @@ function lowerAssignment(
         }
         if (element.isRestElement()) {
           const argument = element.get("argument");
-          if (argument.isIdentifier()) {
+          if (argument.isIdentifier() && !forceTemporaries) {
             const identifier = lowerIdentifierForAssignment(
               builder,
               element.node.loc ?? GeneratedSource,
@@ -3253,7 +3261,7 @@ function lowerAssignment(
             });
             followups.push({ place: temp, path: argument as NodePath<t.LVal> }); // TODO remove type cast
           }
-        } else if (element.isIdentifier()) {
+        } else if (element.isIdentifier() && !forceTemporaries) {
           const identifier = lowerIdentifierForAssignment(
             builder,
             element.node.loc ?? GeneratedSource,
@@ -3295,6 +3303,20 @@ function lowerAssignment(
       const propertiesPaths = lvalue.get("properties");
       const properties: ObjectPattern["properties"] = [];
       const followups: Array<{ place: Place; path: NodePath<t.LVal> }> = [];
+      // A given destructuring statement must contain all declarations or all
+      // reassignments. This is enforced by the parser, but we rewrite nested
+      // destructuring into assignment to a temporary. Therefore, if we see
+      // any reassignments that are nested destructuring we fall back to
+      // using temporaries for all variables, and emitting the actual reassignments
+      // in follow-up statements
+      const forceTemporaries =
+        kind === InstructionKind.Reassign &&
+        propertiesPaths.some(
+          (property) =>
+            property.isRestElement() ||
+            (property.isObjectProperty() &&
+              !property.get("value").isIdentifier())
+        );
       for (let i = 0; i < propertiesPaths.length; i++) {
         const property = propertiesPaths[i];
         if (property.isRestElement()) {
@@ -3308,19 +3330,31 @@ function lowerAssignment(
             });
             continue;
           }
-          const identifier = lowerIdentifierForAssignment(
-            builder,
-            property.node.loc ?? GeneratedSource,
-            kind,
-            argument
-          );
-          if (identifier === null) {
-            continue;
+          if (forceTemporaries) {
+            const temp = buildTemporaryPlace(
+              builder,
+              property.node.loc ?? GeneratedSource
+            );
+            properties.push({
+              kind: "Spread",
+              place: { ...temp },
+            });
+            followups.push({ place: temp, path: argument as NodePath<t.LVal> }); // TODO remove type cast
+          } else {
+            const identifier = lowerIdentifierForAssignment(
+              builder,
+              property.node.loc ?? GeneratedSource,
+              kind,
+              argument
+            );
+            if (identifier === null) {
+              continue;
+            }
+            properties.push({
+              kind: "Spread",
+              place: identifier,
+            });
           }
-          properties.push({
-            kind: "Spread",
-            place: identifier,
-          });
         } else {
           // TODO: this should always be true given the if/else
           if (!property.isObjectProperty()) {
@@ -3355,7 +3389,7 @@ function lowerAssignment(
             });
             continue;
           }
-          if (element.isIdentifier()) {
+          if (element.isIdentifier() && !forceTemporaries) {
             const identifier = lowerIdentifierForAssignment(
               builder,
               element.node.loc ?? GeneratedSource,

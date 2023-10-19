@@ -51,7 +51,7 @@ function getNativeLogFunction(level) {
   let t0;
   if ($[0] !== level) {
     t0 = function () {
-      let str = undefined;
+      let str;
       if (arguments.length === 1 && typeof arguments[0] === "string") {
         str = arguments[0];
       } else {

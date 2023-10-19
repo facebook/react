@@ -10,7 +10,9 @@ import {
   BlockId,
   HIRFunction,
   Identifier,
+  IdentifierId,
   Instruction,
+  InstructionKind,
   InstructionValue,
   ObjectPattern,
 } from "../HIR";
@@ -48,7 +50,7 @@ export function deadCodeElimination(fn: HIRFunction): void {
       for (let i = block.instructions.length - 1; i >= 0; i--) {
         const instr = block.instructions[i]!;
         if (
-          !state.used(instr.lvalue.identifier) &&
+          !state.isIdOrNameUsed(instr.lvalue.identifier) &&
           pruneableValue(instr.value, state) &&
           // Can't prune the last value of a value block, that's its value!
           !(block.kind !== "block" && i === block.instructions.length - 1)
@@ -56,10 +58,20 @@ export function deadCodeElimination(fn: HIRFunction): void {
           continue;
         }
         state.reference(instr.lvalue.identifier);
+
+        // For the last value of a value block, if it's not pruneable we can't
+        // rewrite it. This is necessary to preserve unused value blocks
+        if (block.kind !== "block" && i === block.instructions.length - 1) {
+          for (const place of eachInstructionValueOperand(instr.value)) {
+            state.reference(place.identifier);
+          }
+          continue;
+        }
+        // Otherwise rewrite instructions to remove unused parts of them
         visitInstruction(instr, state);
       }
       for (const phi of block.phis) {
-        if (state.used(phi.id)) {
+        if (state.isIdOrNameUsed(phi.id)) {
           for (const [_pred, operand] of phi.operands) {
             state.reference(operand);
           }
@@ -69,25 +81,42 @@ export function deadCodeElimination(fn: HIRFunction): void {
   } while (state.count > size && hasLoop);
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
-      if (!state.used(phi.id)) {
+      if (!state.isIdOrNameUsed(phi.id)) {
         block.phis.delete(phi);
       }
     }
     retainWhere(block.instructions, (instr) =>
-      state.used(instr.lvalue.identifier)
+      state.isIdOrNameUsed(instr.lvalue.identifier)
     );
   }
 }
 
 class State {
-  identifiers: Set<Identifier> = new Set();
+  named: Set<string> = new Set();
+  identifiers: Set<IdentifierId> = new Set();
 
+  // Mark the identifier as being referenced (not dead code)
   reference(identifier: Identifier): void {
-    this.identifiers.add(identifier);
+    this.identifiers.add(identifier.id);
+    if (identifier.name !== null) {
+      this.named.add(identifier.name);
+    }
   }
 
-  used(identifier: Identifier): boolean {
-    return this.identifiers.has(identifier);
+  // Check if any version of the given identifier is used somewhere.
+  // This checks both for usage of this specific identifer id (ssa id)
+  // and (for named identifiers) for any usages of that identifier name.
+  isIdOrNameUsed(identifier: Identifier): boolean {
+    return (
+      this.identifiers.has(identifier.id) ||
+      (identifier.name !== null && this.named.has(identifier.name))
+    );
+  }
+
+  // Like `used()`, but only checks for usages of this specific identifier id
+  // (ssa id).
+  isIdUsed(identifier: Identifier): boolean {
+    return this.identifiers.has(identifier.id);
   }
 
   get count(): number {
@@ -110,12 +139,12 @@ function visitInstruction(instr: Instruction, state: State): void {
         for (let i = originalItems.length - 1; i >= 0; i--) {
           const item = originalItems[i];
           if (item.kind === "Identifier") {
-            if (state.used(item.identifier)) {
+            if (state.isIdOrNameUsed(item.identifier)) {
               nextItems = originalItems.slice(0, i + 1);
               break;
             }
           } else if (item.kind === "Spread") {
-            if (state.used(item.place.identifier)) {
+            if (state.isIdOrNameUsed(item.place.identifier)) {
               nextItems = originalItems.slice(0, i + 1);
               break;
             }
@@ -135,12 +164,12 @@ function visitInstruction(instr: Instruction, state: State): void {
         let nextProperties: ObjectPattern["properties"] | null = null;
         for (const property of instr.value.lvalue.pattern.properties) {
           if (property.kind === "ObjectProperty") {
-            if (state.used(property.place.identifier)) {
+            if (state.isIdOrNameUsed(property.place.identifier)) {
               nextProperties ??= [];
               nextProperties.push(property);
             }
           } else {
-            if (state.used(property.place.identifier)) {
+            if (state.isIdOrNameUsed(property.place.identifier)) {
               nextProperties = null;
               break;
             }
@@ -160,6 +189,25 @@ function visitInstruction(instr: Instruction, state: State): void {
         );
       }
     }
+  } else if (instr.value.kind === "StoreLocal") {
+    if (
+      instr.value.lvalue.kind !== InstructionKind.Reassign &&
+      !state.isIdUsed(instr.value.lvalue.place.identifier)
+    ) {
+      // This is a const/let declaration where the variable is accessed later,
+      // but where the value is always overwritten before being read. Ie the
+      // initializer value is never read. We rewrite to a DeclareLocal so
+      // that the initializer value can be DCE'd
+      instr.value = {
+        kind: "DeclareLocal",
+        lvalue: instr.value.lvalue,
+        loc: instr.value.loc,
+      };
+    } else {
+      // Else we mark the initializer as referenced, since the variable itself is
+      // referenced
+      state.reference(instr.value.value.identifier);
+    }
   } else {
     for (const operand of eachInstructionValueOperand(instr.value)) {
       state.reference(operand.identifier);
@@ -174,26 +222,40 @@ function visitInstruction(instr: Instruction, state: State): void {
 function pruneableValue(value: InstructionValue, state: State): boolean {
   switch (value.kind) {
     case "DeclareLocal": {
-      return !state.used(value.lvalue.place.identifier);
+      // Declarations are pruneable only if the named variable is never read later
+      return !state.isIdOrNameUsed(value.lvalue.place.identifier);
     }
     case "StoreLocal": {
-      // Stores are pruneable only if the identifier being stored to is never read later
-      return !state.used(value.lvalue.place.identifier);
+      if (value.lvalue.kind === InstructionKind.Reassign) {
+        // Reassignments can be pruned if the specific instance being assigned is never read
+        return !state.isIdUsed(value.lvalue.place.identifier);
+      }
+      // Declarations are pruneable only if the named variable is never read later
+      return !state.isIdOrNameUsed(value.lvalue.place.identifier);
     }
     case "Destructure": {
-      // Destructure is pruneable only if none of the identifiers are read from later
-      // TODO: as an optimization, prune unused properties where safe
+      let isIdOrNameUsed = false;
+      let isIdUsed = false;
       for (const place of eachPatternOperand(value.lvalue.pattern)) {
-        if (state.used(place.identifier)) {
-          return false;
+        if (state.isIdUsed(place.identifier)) {
+          isIdOrNameUsed = true;
+          isIdUsed = true;
+        } else if (state.isIdOrNameUsed(place.identifier)) {
+          isIdOrNameUsed = true;
         }
       }
-      return true;
+      if (value.lvalue.kind === InstructionKind.Reassign) {
+        // Reassignments can be pruned if the specific instance being assigned is never read
+        return !isIdUsed;
+      } else {
+        // Otherwise pruneable only if none of the identifiers are read from later
+        return !isIdOrNameUsed;
+      }
     }
     case "PostfixUpdate":
     case "PrefixUpdate": {
-      // Updates are pruneable only if the identifier being stored to is never read later
-      return !state.used(value.lvalue.identifier);
+      // Updates are pruneable if the specific instance instance being assigned is never read
+      return !state.isIdUsed(value.lvalue.identifier);
     }
     case "Debugger": {
       // explicitly retain debugger statements to not break debugging workflows

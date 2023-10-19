@@ -1,4 +1,3 @@
-// @debug
 function Component(props) {
   const x = {};
   let y;

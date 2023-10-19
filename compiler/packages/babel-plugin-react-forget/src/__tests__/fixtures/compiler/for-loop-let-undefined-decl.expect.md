@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 function useFoo() {
   for (let i = 0; i <= 5; i++) {
-    let color = undefined;
+    let color;
     if (isSelected) {
       color = isCurrent ? "#FFCC22" : "#FF5050";
     } else {

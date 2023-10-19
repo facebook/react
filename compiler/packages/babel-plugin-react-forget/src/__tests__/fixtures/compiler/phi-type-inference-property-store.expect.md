@@ -43,7 +43,6 @@ function Component(props) {
   const x = t0;
   let y;
   if ($[1] !== props || $[2] !== x) {
-    y = undefined;
     if (props.cond) {
       y = {};
     } else {

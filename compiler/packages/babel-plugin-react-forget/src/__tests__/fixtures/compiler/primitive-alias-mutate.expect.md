@@ -20,7 +20,7 @@ function component(a) {
 
 ```javascript
 function component(a) {
-  let x = undefined;
+  let x;
   if (a) {
     x = "bar";
   } else {

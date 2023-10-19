@@ -30,7 +30,7 @@ function Component(props) {
   const $ = useMemoCache(1);
   const cond = props.cond;
   const x = props.x;
-  let a = undefined;
+  let a;
   if (cond) {
     a = x;
   } else {

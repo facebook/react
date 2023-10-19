@@ -33,10 +33,9 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(1);
-
+  let x;
   let i = 0;
   do {
-    let x = undefined;
     if (i > 10) {
       x = 10;
     } else {

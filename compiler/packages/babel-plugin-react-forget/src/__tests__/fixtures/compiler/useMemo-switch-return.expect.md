@@ -36,7 +36,7 @@ export const FIXTURE_ENTRYPOINT = {
 function Component(props) {
   let t49;
   bb11: {
-    let y = undefined;
+    let y;
     bb2: switch (props.switch) {
       case "foo": {
         t49 = "foo";

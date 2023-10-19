@@ -22,18 +22,21 @@ function foo() {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function mutate() {}
 function foo() {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(2);
+  let a;
   let c;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     let b = {};
     c = {};
-    const a = b;
+    a = b;
     b = c;
     c = a;
     mutate(a, b);
     $[0] = c;
+    $[1] = a;
   } else {
     c = $[0];
+    a = $[1];
   }
   return c;
 }

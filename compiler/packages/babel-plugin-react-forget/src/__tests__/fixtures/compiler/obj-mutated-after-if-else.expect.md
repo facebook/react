@@ -25,7 +25,6 @@ function foo(a, b, c, d) {
   someObj();
   let x;
   if ($[0] !== a) {
-    x = undefined;
     if (a) {
       x = someObj();
     } else {

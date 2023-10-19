@@ -24,6 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component() {
   const $ = useMemoCache(1);
+  let x;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = function x() {};
@@ -31,7 +32,7 @@ function component() {
   } else {
     t0 = $[0];
   }
-  const x = t0;
+  x = t0;
   return x;
 }
 

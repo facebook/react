@@ -24,7 +24,6 @@ function foo(a, b, c, d) {
   const $ = useMemoCache(3);
   let x;
   if ($[0] !== b || $[1] !== c) {
-    x = undefined;
     if (someVal) {
       x = { b };
     } else {

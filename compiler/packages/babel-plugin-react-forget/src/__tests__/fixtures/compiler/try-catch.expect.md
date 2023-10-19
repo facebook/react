@@ -29,7 +29,7 @@ const { throwErrorWithMessage } = require("shared-runtime");
 
 function Component(props) {
   const $ = useMemoCache(1);
-  let x = undefined;
+  let x;
   try {
     let t0;
     if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

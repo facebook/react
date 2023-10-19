@@ -12,7 +12,7 @@ function useFoo(setOne: boolean) {
   return { x, y, z };
 }
 
-export const FIXTURE_ENTRYPONT = {
+export const FIXTURE_ENTRYPOINT = {
   fn: useFoo,
   params: [true],
 };
