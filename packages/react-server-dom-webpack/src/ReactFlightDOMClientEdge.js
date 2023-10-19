@@ -11,6 +11,8 @@ import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 
+import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
+
 import type {
   SSRModuleMap,
   ModuleLoading,
@@ -29,7 +31,10 @@ import {
   close,
 } from 'react-client/src/ReactFlightClient';
 
-import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
+import {
+  processReply,
+  createServerReference as createServerReferenceImpl,
+} from 'react-client/src/ReactFlightReplyClient';
 
 function noServerCall() {
   throw new Error(
@@ -112,4 +117,14 @@ function createFromFetch<T>(
   return getRoot(response);
 }
 
-export {createFromFetch, createFromReadableStream};
+function encodeReply(
+  value: ReactServerValue,
+): Promise<
+  string | URLSearchParams | FormData,
+> /* We don't use URLSearchParams yet but maybe */ {
+  return new Promise((resolve, reject) => {
+    processReply(value, '', resolve, reject);
+  });
+}
+
+export {createFromFetch, createFromReadableStream, encodeReply};
