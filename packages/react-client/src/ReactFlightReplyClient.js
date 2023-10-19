@@ -304,14 +304,14 @@ export function processReply(
           );
         } else if (objectName(value) !== 'Object') {
           console.error(
-            'Only plain objects can be passed to Client Components from Server Components. ' +
+            'Only plain objects can be passed to Server Functions from the Client. ' +
               '%s objects are not supported.%s',
             objectName(value),
             describeObjectForErrorMessage(parent, key),
           );
         } else if (!isSimpleObject(value)) {
           console.error(
-            'Only plain objects can be passed to Client Components from Server Components. ' +
+            'Only plain objects can be passed to Server Functions from the Client. ' +
               'Classes or other objects with methods are not supported.%s',
             describeObjectForErrorMessage(parent, key),
           );
@@ -319,7 +319,7 @@ export function processReply(
           const symbols = Object.getOwnPropertySymbols(value);
           if (symbols.length > 0) {
             console.error(
-              'Only plain objects can be passed to Client Components from Server Components. ' +
+              'Only plain objects can be passed to Server Functions from the Client. ' +
                 'Objects with symbol properties like %s are not supported.%s',
               symbols[0].description,
               describeObjectForErrorMessage(parent, key),
