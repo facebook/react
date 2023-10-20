@@ -583,8 +583,29 @@ export function getCurrentEventPriority(): EventPriority {
   return getEventPriority(currentEvent.type);
 }
 
+let currentPopstateTransitionEvent: Event | null = null;
 export function shouldAttemptEagerTransition(): boolean {
-  return window.event && window.event.type === 'popstate';
+  const event = window.event;
+  if (event && event.type === 'popstate') {
+    // This is a popstate event. Attempt to render any transition during this
+    // event synchronously. Unless we already attempted during this event.
+    if (event === currentPopstateTransitionEvent) {
+      // We already attempted to render this popstate transition synchronously.
+      // Any subsequent attempts must have happened as the result of a derived
+      // update, like startTransition inside useEffect, or useDV. Switch back to
+      // the default behavior for all remaining transitions during the current
+      // popstate event.
+      return false;
+    } else {
+      // Cache the current event in case a derived transition is scheduled.
+      // (Refer to previous branch.)
+      currentPopstateTransitionEvent = event;
+      return true;
+    }
+  }
+  // We're not inside a popstate event.
+  currentPopstateTransitionEvent = null;
+  return false;
 }
 
 export const isPrimaryRenderer = true;
