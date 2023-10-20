@@ -743,7 +743,7 @@ function pushTitleImpl(target, props) {
     void 0 !== props &&
     target.push(escapeTextForBrowser("" + props));
   pushInnerHTML(target, innerHTML, children);
-  target.push("</", "title", ">");
+  target.push(endChunkForTag("title"));
   return null;
 }
 function pushScriptImpl(target, props) {
@@ -769,7 +769,7 @@ function pushScriptImpl(target, props) {
   target.push(">");
   pushInnerHTML(target, innerHTML, children);
   "string" === typeof children && target.push(escapeTextForBrowser(children));
-  target.push("</", "script", ">");
+  target.push(endChunkForTag("script"));
   return null;
 }
 function pushStartGenericElement(target, props, tag) {
@@ -1291,7 +1291,7 @@ function pushStartInstance(
           void 0 !== child &&
           target$jscomp$0.push(escapeTextForBrowser("" + child));
         pushInnerHTML(target$jscomp$0, innerHTML$jscomp$3, children$jscomp$4);
-        target$jscomp$0.push("</", "style", ">");
+        target$jscomp$0.push(endChunkForTag("style"));
         var JSCompiler_inline_result$jscomp$3 = null;
       } else {
         var styleQueue = renderState.styles.get(precedence);
@@ -1583,6 +1583,12 @@ function pushStartInstance(
       }
   }
   return pushStartGenericElement(target$jscomp$0, props, type);
+}
+var endTagCache = new Map();
+function endChunkForTag(tag) {
+  var chunk = endTagCache.get(tag);
+  void 0 === chunk && ((chunk = "</" + tag + ">"), endTagCache.set(tag, chunk));
+  return chunk;
 }
 function writeBootstrap(destination, renderState) {
   renderState = renderState.bootstrapChunks;
@@ -3278,7 +3284,7 @@ function renderElement(
               break a;
             }
         }
-        task.push("</", type, ">");
+        task.push(endChunkForTag(type));
       }
       prevThenableState.lastPushedText = !1;
     }
@@ -4460,9 +4466,7 @@ function flushCompletedQueues(request, destination) {
         hoistableChunks.length = 0;
         htmlChunks &&
           null === headChunks &&
-          (writeChunk(destination, "</"),
-          writeChunk(destination, "head"),
-          writeChunk(destination, ">"));
+          writeChunk(destination, endChunkForTag("head"));
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
         writeBootstrap(destination, request.renderState);
@@ -4644,14 +4648,8 @@ function flushCompletedQueues(request, destination) {
       0 === request.completedBoundaries.length &&
       ((request.flushScheduled = !1),
       (i = request.resumableState),
-      i.hasBody &&
-        (writeChunk(destination, "</"),
-        writeChunk(destination, "body"),
-        writeChunk(destination, ">")),
-      i.hasHtml &&
-        (writeChunk(destination, "</"),
-        writeChunk(destination, "html"),
-        writeChunk(destination, ">")),
+      i.hasBody && writeChunk(destination, endChunkForTag("body")),
+      i.hasHtml && writeChunk(destination, endChunkForTag("html")),
       (destination.done = !0),
       (request.destination = null));
   }

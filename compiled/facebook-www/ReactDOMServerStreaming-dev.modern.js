@@ -4159,7 +4159,7 @@ function pushStyleImpl(target, props) {
   }
 
   pushInnerHTML(target, innerHTML, children);
-  target.push(endTag1, stringToChunk("style"), endTag2);
+  target.push(endChunkForTag("style"));
   return null;
 }
 
@@ -4475,7 +4475,7 @@ function pushTitleImpl(target, props) {
   }
 
   pushInnerHTML(target, innerHTML, children);
-  target.push(endTag1, stringToChunk("title"), endTag2);
+  target.push(endChunkForTag("title"));
   return null;
 }
 
@@ -4648,7 +4648,7 @@ function pushScriptImpl(target, props) {
     target.push(stringToChunk(encodeHTMLTextNode(children)));
   }
 
-  target.push(endTag1, stringToChunk("script"), endTag2);
+  target.push(endChunkForTag("script"));
   return null;
 }
 
@@ -5074,8 +5074,19 @@ function pushStartInstance(
 
   return pushStartGenericElement(target, props, type);
 }
-var endTag1 = stringToPrecomputedChunk("</");
-var endTag2 = stringToPrecomputedChunk(">");
+var endTagCache = new Map();
+
+function endChunkForTag(tag) {
+  var chunk = endTagCache.get(tag);
+
+  if (chunk === undefined) {
+    chunk = stringToPrecomputedChunk("</" + tag + ">");
+    endTagCache.set(tag, chunk);
+  }
+
+  return chunk;
+}
+
 function pushEndInstance(target, type, props, resumableState, formatContext) {
   switch (type) {
     // When float is on we expect title and script tags to always be pushed in
@@ -5130,7 +5141,7 @@ function pushEndInstance(target, type, props, resumableState, formatContext) {
       break;
   }
 
-  target.push(endTag1, stringToChunk(type), endTag2);
+  target.push(endChunkForTag(type));
 }
 
 function writeBootstrap(destination, renderState) {
@@ -6046,9 +6057,7 @@ function writePreamble(
     // if the main content contained the </head> it would also have provided a
     // <head>. This means that all the content inside <html> is either <body> or
     // invalid HTML
-    writeChunk(destination, endTag1);
-    writeChunk(destination, stringToChunk("head"));
-    writeChunk(destination, endTag2);
+    writeChunk(destination, endChunkForTag("head"));
   }
 } // We don't bother reporting backpressure at the moment because we expect to
 // flush the entire preamble in a single pass. This probably should be modified
@@ -6105,15 +6114,11 @@ function writeHoistables(destination, resumableState, renderState) {
 }
 function writePostamble(destination, resumableState) {
   if (resumableState.hasBody) {
-    writeChunk(destination, endTag1);
-    writeChunk(destination, stringToChunk("body"));
-    writeChunk(destination, endTag2);
+    writeChunk(destination, endChunkForTag("body"));
   }
 
   if (resumableState.hasHtml) {
-    writeChunk(destination, endTag1);
-    writeChunk(destination, stringToChunk("html"));
-    writeChunk(destination, endTag2);
+    writeChunk(destination, endChunkForTag("html"));
   }
 }
 var arrayFirstOpenBracket = stringToPrecomputedChunk("[");

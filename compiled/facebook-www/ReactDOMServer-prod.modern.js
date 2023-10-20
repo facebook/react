@@ -746,7 +746,7 @@ function pushTitleImpl(target, props) {
     void 0 !== props &&
     target.push(escapeTextForBrowser("" + props));
   pushInnerHTML(target, innerHTML, children);
-  target.push("</", "title", ">");
+  target.push(endChunkForTag("title"));
   return null;
 }
 function pushScriptImpl(target, props) {
@@ -772,7 +772,7 @@ function pushScriptImpl(target, props) {
   target.push(">");
   pushInnerHTML(target, innerHTML, children);
   "string" === typeof children && target.push(escapeTextForBrowser(children));
-  target.push("</", "script", ">");
+  target.push(endChunkForTag("script"));
   return null;
 }
 function pushStartGenericElement(target, props, tag) {
@@ -1286,7 +1286,7 @@ function pushStartInstance(
           void 0 !== child &&
           target$jscomp$0.push(escapeTextForBrowser("" + child));
         pushInnerHTML(target$jscomp$0, innerHTML$jscomp$3, children$jscomp$4);
-        target$jscomp$0.push("</", "style", ">");
+        target$jscomp$0.push(endChunkForTag("style"));
         var JSCompiler_inline_result$jscomp$3 = null;
       } else {
         var styleQueue = renderState.styles.get(precedence);
@@ -1573,6 +1573,12 @@ function pushStartInstance(
       }
   }
   return pushStartGenericElement(target$jscomp$0, props, type);
+}
+var endTagCache = new Map();
+function endChunkForTag(tag) {
+  var chunk = endTagCache.get(tag);
+  void 0 === chunk && ((chunk = "</" + tag + ">"), endTagCache.set(tag, chunk));
+  return chunk;
 }
 function writeBootstrap(destination, renderState) {
   renderState = renderState.bootstrapChunks;
@@ -2287,16 +2293,16 @@ function hoistStylesheetDependency(stylesheet) {
 function createRenderState(resumableState, generateStaticMarkup) {
   var idPrefix = resumableState.idPrefix;
   resumableState = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1561 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1528 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1573 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1574 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1575 = new Set(),
-    JSCompiler_object_inline_styles_1576 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1577 = new Set(),
-    JSCompiler_object_inline_scripts_1578 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1579 = new Set(),
-    JSCompiler_object_inline_preloads_1580 = {
+  var JSCompiler_object_inline_preconnects_1540 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1541 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1542 = new Set(),
+    JSCompiler_object_inline_styles_1543 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1544 = new Set(),
+    JSCompiler_object_inline_scripts_1545 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1546 = new Set(),
+    JSCompiler_object_inline_preloads_1547 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2304,7 +2310,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
     };
   return {
     placeholderPrefix: resumableState,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1561,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1528,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2316,14 +2322,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     importMapChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1573,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1574,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1575,
-    styles: JSCompiler_object_inline_styles_1576,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1577,
-    scripts: JSCompiler_object_inline_scripts_1578,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1579,
-    preloads: JSCompiler_object_inline_preloads_1580,
+    preconnects: JSCompiler_object_inline_preconnects_1540,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1541,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1542,
+    styles: JSCompiler_object_inline_styles_1543,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1544,
+    scripts: JSCompiler_object_inline_scripts_1545,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1546,
+    preloads: JSCompiler_object_inline_preloads_1547,
     boundaryResources: null,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -3341,7 +3347,7 @@ function renderElement(
               break a;
             }
         }
-        task.push("</", type, ">");
+        task.push(endChunkForTag(type));
       }
       prevThenableState.lastPushedText = !1;
     }
@@ -4680,11 +4686,10 @@ function flushCompletedQueues(request, destination) {
         )
           destination.push(hoistableChunks[_renderState$external]);
         hoistableChunks.length = 0;
-        htmlChunks &&
-          null === headChunks &&
-          (destination.push("</"),
-          destination.push("head"),
-          destination.push(">"));
+        if (htmlChunks && null === headChunks) {
+          var chunk$jscomp$0 = endChunkForTag("head");
+          destination.push(chunk$jscomp$0);
+        }
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
         writeBootstrap(destination, request.renderState);
@@ -4747,43 +4752,43 @@ function flushCompletedQueues(request, destination) {
             : renderState$jscomp$0.push('$RX("'))
         : renderState$jscomp$0.push('<template data-rxi="" data-bid="');
       renderState$jscomp$0.push(renderState$jscomp$1.boundaryPrefix);
-      var chunk$jscomp$0 = id.toString(16);
-      renderState$jscomp$0.push(chunk$jscomp$0);
+      var chunk$jscomp$1 = id.toString(16);
+      renderState$jscomp$0.push(chunk$jscomp$1);
       scriptFormat && renderState$jscomp$0.push('"');
       if (errorDigest || errorMessage || errorComponentStack)
         if (scriptFormat) {
           renderState$jscomp$0.push(",");
-          var chunk$jscomp$1 = escapeJSStringsForInstructionScripts(
+          var chunk$jscomp$2 = escapeJSStringsForInstructionScripts(
             errorDigest || ""
           );
-          renderState$jscomp$0.push(chunk$jscomp$1);
+          renderState$jscomp$0.push(chunk$jscomp$2);
         } else {
           renderState$jscomp$0.push('" data-dgst="');
-          var chunk$jscomp$2 = escapeTextForBrowser(errorDigest || "");
-          renderState$jscomp$0.push(chunk$jscomp$2);
+          var chunk$jscomp$3 = escapeTextForBrowser(errorDigest || "");
+          renderState$jscomp$0.push(chunk$jscomp$3);
         }
       if (errorMessage || errorComponentStack)
         if (scriptFormat) {
           renderState$jscomp$0.push(",");
-          var chunk$jscomp$3 = escapeJSStringsForInstructionScripts(
+          var chunk$jscomp$4 = escapeJSStringsForInstructionScripts(
             errorMessage || ""
           );
-          renderState$jscomp$0.push(chunk$jscomp$3);
+          renderState$jscomp$0.push(chunk$jscomp$4);
         } else {
           renderState$jscomp$0.push('" data-msg="');
-          var chunk$jscomp$4 = escapeTextForBrowser(errorMessage || "");
-          renderState$jscomp$0.push(chunk$jscomp$4);
+          var chunk$jscomp$5 = escapeTextForBrowser(errorMessage || "");
+          renderState$jscomp$0.push(chunk$jscomp$5);
         }
       if (errorComponentStack)
         if (scriptFormat) {
           renderState$jscomp$0.push(",");
-          var chunk$jscomp$5 =
+          var chunk$jscomp$6 =
             escapeJSStringsForInstructionScripts(errorComponentStack);
-          renderState$jscomp$0.push(chunk$jscomp$5);
+          renderState$jscomp$0.push(chunk$jscomp$6);
         } else {
           renderState$jscomp$0.push('" data-stck="');
-          var chunk$jscomp$6 = escapeTextForBrowser(errorComponentStack);
-          renderState$jscomp$0.push(chunk$jscomp$6);
+          var chunk$jscomp$7 = escapeTextForBrowser(errorComponentStack);
+          renderState$jscomp$0.push(chunk$jscomp$7);
         }
       if (
         scriptFormat
@@ -4867,13 +4872,9 @@ function flushCompletedQueues(request, destination) {
       ((request.flushScheduled = !1),
       (i = request.resumableState),
       i.hasBody &&
-        (destination.push("</"),
-        destination.push("body"),
-        destination.push(">")),
-      i.hasHtml &&
-        (destination.push("</"),
-        destination.push("html"),
-        destination.push(">")),
+        ((partialBoundaries = endChunkForTag("body")),
+        destination.push(partialBoundaries)),
+      i.hasHtml && ((i = endChunkForTag("html")), destination.push(i)),
       destination.push(null),
       (request.destination = null));
   }
@@ -4988,4 +4989,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-75350665";
+exports.version = "18.3.0-www-modern-27dfd1a3";
