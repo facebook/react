@@ -7744,7 +7744,7 @@ const testsTypescript = {
           const [foo, setFoo] = useState<{ bar: { b: number } }>({ bar: { b: 42 } });
 
           useEffect(() => {
-              const square = (x: typeof foo.bar.b) => x * x;
+            const square = (x: typeof foo.bar.b) => x * x;
             setFoo((previous) => ({ ...previous, bar: { b: square(previous.bar.b) } }));
           }, []);
         }
