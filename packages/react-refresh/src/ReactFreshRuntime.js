@@ -633,6 +633,7 @@ export function _getMountedRootCount(): number {
 // _s(
 //   Hello,
 //   'useState{[foo, setFoo]}(0)',
+//   forceReset, /* Flag to force re-mount */
 //   () => [useCustomHook], /* Lazy to avoid triggering inline requires */
 // );
 export function createSignatureFunctionForTransform(): <T>(
