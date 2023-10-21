@@ -3508,12 +3508,15 @@ export function performWork(request: Request): void {
   let prevCacheDispatcher;
   if (enableCache) {
     try {
+      if (ReactCurrentCache === undefined) {
+        throw new Error(
+            'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.',
+          );
+      }
       prevCacheDispatcher = ReactCurrentCache.current;
       ReactCurrentCache.current = DefaultCacheDispatcher;
     } catch (err) {
-      throw new Error(
-        'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.',
-      );
+        throw err;
     }
   }
 
