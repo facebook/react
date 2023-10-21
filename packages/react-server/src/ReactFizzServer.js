@@ -3507,8 +3507,14 @@ export function performWork(request: Request): void {
   ReactCurrentDispatcher.current = HooksDispatcher;
   let prevCacheDispatcher;
   if (enableCache) {
-    prevCacheDispatcher = ReactCurrentCache.current;
-    ReactCurrentCache.current = DefaultCacheDispatcher;
+    if (ReactCurrentCache !== null) {
+      prevCacheDispatcher = ReactCurrentCache.current;
+      ReactCurrentCache.current = DefaultCacheDispatcher;
+    } else {
+      throw new Error(
+        'The "react" package in this environment is not configured correctly. The "react-server" condition must be enabled in any environment that runs React Server Components.',
+      );
+    }
   }
 
   const prevRequest = currentRequest;
