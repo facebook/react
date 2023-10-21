@@ -2509,7 +2509,7 @@ function pushStyleImpl(
     target.push(stringToChunk(escapeTextForBrowser('' + child)));
   }
   pushInnerHTML(target, innerHTML, children);
-  target.push(endTag1, stringToChunk('style'), endTag2);
+  target.push(endChunkForTag('style'));
   return null;
 }
 
@@ -2824,7 +2824,7 @@ function pushTitleImpl(
     target.push(stringToChunk(escapeTextForBrowser('' + child)));
   }
   pushInnerHTML(target, innerHTML, children);
-  target.push(endTag1, stringToChunk('title'), endTag2);
+  target.push(endChunkForTag('title'));
   return null;
 }
 
@@ -3081,7 +3081,7 @@ function pushScriptImpl(
   if (typeof children === 'string') {
     target.push(stringToChunk(encodeHTMLTextNode(children)));
   }
-  target.push(endTag1, stringToChunk('script'), endTag2);
+  target.push(endChunkForTag('script'));
   return null;
 }
 
@@ -3484,8 +3484,15 @@ export function pushStartInstance(
   return pushStartGenericElement(target, props, type);
 }
 
-const endTag1 = stringToPrecomputedChunk('</');
-const endTag2 = stringToPrecomputedChunk('>');
+const endTagCache = new Map<string, PrecomputedChunk>();
+function endChunkForTag(tag: string): PrecomputedChunk {
+  let chunk = endTagCache.get(tag);
+  if (chunk === undefined) {
+    chunk = stringToPrecomputedChunk('</' + tag + '>');
+    endTagCache.set(tag, chunk);
+  }
+  return chunk;
+}
 
 export function pushEndInstance(
   target: Array<Chunk | PrecomputedChunk>,
@@ -3547,7 +3554,7 @@ export function pushEndInstance(
       }
       break;
   }
-  target.push(endTag1, stringToChunk(type), endTag2);
+  target.push(endChunkForTag(type));
 }
 
 function writeBootstrap(
@@ -4502,9 +4509,7 @@ export function writePreamble(
     // if the main content contained the </head> it would also have provided a
     // <head>. This means that all the content inside <html> is either <body> or
     // invalid HTML
-    writeChunk(destination, endTag1);
-    writeChunk(destination, stringToChunk('head'));
-    writeChunk(destination, endTag2);
+    writeChunk(destination, endChunkForTag('head'));
   }
 }
 
@@ -4577,14 +4582,10 @@ export function writePostamble(
   resumableState: ResumableState,
 ): void {
   if (resumableState.hasBody) {
-    writeChunk(destination, endTag1);
-    writeChunk(destination, stringToChunk('body'));
-    writeChunk(destination, endTag2);
+    writeChunk(destination, endChunkForTag('body'));
   }
   if (resumableState.hasHtml) {
-    writeChunk(destination, endTag1);
-    writeChunk(destination, stringToChunk('html'));
-    writeChunk(destination, endTag2);
+    writeChunk(destination, endChunkForTag('html'));
   }
 }
 
