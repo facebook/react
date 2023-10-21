@@ -3253,11 +3253,7 @@ function processRootScheduleInMicrotask() {
 
   ) {
     var next = root.next;
-    if (
-      0 !== currentEventTransitionLane &&
-      window.event &&
-      "popstate" === window.event.type
-    ) {
+    if (0 !== currentEventTransitionLane && shouldAttemptEagerTransition()) {
       var root$jscomp$0 = root,
         lane = currentEventTransitionLane;
       root$jscomp$0.pendingLanes |= 2;
@@ -15477,6 +15473,17 @@ function shouldSetTextContent(type, props) {
       null != props.dangerouslySetInnerHTML.__html)
   );
 }
+var currentPopstateTransitionEvent = null;
+function shouldAttemptEagerTransition() {
+  var event = window.event;
+  if (event && "popstate" === event.type) {
+    if (event === currentPopstateTransitionEvent) return !1;
+    currentPopstateTransitionEvent = event;
+    return !0;
+  }
+  currentPopstateTransitionEvent = null;
+  return !1;
+}
 var scheduleTimeout = "function" === typeof setTimeout ? setTimeout : void 0,
   cancelTimeout = "function" === typeof clearTimeout ? clearTimeout : void 0,
   localPromise = "function" === typeof Promise ? Promise : void 0,
@@ -17249,7 +17256,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1881 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-60bcbdf9",
+  version: "18.3.0-www-classic-0f5bdde1",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17293,7 +17300,7 @@ var devToolsConfig$jscomp$inline_1881 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-60bcbdf9"
+  reconcilerVersion: "18.3.0-www-classic-0f5bdde1"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17617,7 +17624,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-60bcbdf9";
+exports.version = "18.3.0-www-classic-0f5bdde1";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

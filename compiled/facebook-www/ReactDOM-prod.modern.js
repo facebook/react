@@ -3003,11 +3003,7 @@ function processRootScheduleInMicrotask() {
 
   ) {
     var next = root.next;
-    if (
-      0 !== currentEventTransitionLane &&
-      window.event &&
-      "popstate" === window.event.type
-    ) {
+    if (0 !== currentEventTransitionLane && shouldAttemptEagerTransition()) {
       var root$jscomp$0 = root,
         lane = currentEventTransitionLane;
       root$jscomp$0.pendingLanes |= 2;
@@ -14944,6 +14940,17 @@ function shouldSetTextContent(type, props) {
       null != props.dangerouslySetInnerHTML.__html)
   );
 }
+var currentPopstateTransitionEvent = null;
+function shouldAttemptEagerTransition() {
+  var event = window.event;
+  if (event && "popstate" === event.type) {
+    if (event === currentPopstateTransitionEvent) return !1;
+    currentPopstateTransitionEvent = event;
+    return !0;
+  }
+  currentPopstateTransitionEvent = null;
+  return !1;
+}
 var scheduleTimeout = "function" === typeof setTimeout ? setTimeout : void 0,
   cancelTimeout = "function" === typeof clearTimeout ? clearTimeout : void 0,
   localPromise = "function" === typeof Promise ? Promise : void 0,
@@ -15999,7 +16006,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1755 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-b72d3d1b",
+  version: "18.3.0-www-modern-d4fb2ac8",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2106 = {
@@ -16030,7 +16037,7 @@ var internals$jscomp$inline_2106 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-b72d3d1b"
+  reconcilerVersion: "18.3.0-www-modern-d4fb2ac8"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2107 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16295,4 +16302,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-b72d3d1b";
+exports.version = "18.3.0-www-modern-d4fb2ac8";

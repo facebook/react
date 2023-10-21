@@ -34767,7 +34767,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-2a0db555";
+var ReactVersion = "18.3.0-www-classic-0c4709ef";
 
 function createPortal$1(
   children,
@@ -42625,8 +42625,30 @@ function getCurrentEventPriority() {
 
   return getEventPriority(currentEvent.type);
 }
+var currentPopstateTransitionEvent = null;
 function shouldAttemptEagerTransition() {
-  return window.event && window.event.type === "popstate";
+  var event = window.event;
+
+  if (event && event.type === "popstate") {
+    // This is a popstate event. Attempt to render any transition during this
+    // event synchronously. Unless we already attempted during this event.
+    if (event === currentPopstateTransitionEvent) {
+      // We already attempted to render this popstate transition synchronously.
+      // Any subsequent attempts must have happened as the result of a derived
+      // update, like startTransition inside useEffect, or useDV. Switch back to
+      // the default behavior for all remaining transitions during the current
+      // popstate event.
+      return false;
+    } else {
+      // Cache the current event in case a derived transition is scheduled.
+      // (Refer to previous branch.)
+      currentPopstateTransitionEvent = event;
+      return true;
+    }
+  } // We're not inside a popstate event.
+
+  currentPopstateTransitionEvent = null;
+  return false;
 }
 // if a component just imports ReactDOM (e.g. for findDOMNode).
 // Some environments might not have setTimeout or clearTimeout.
