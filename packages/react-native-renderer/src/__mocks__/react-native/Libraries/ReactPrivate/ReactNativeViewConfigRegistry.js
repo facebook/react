@@ -9,7 +9,6 @@
 
 'use strict';
 
-// maybe
 import type {ViewConfig} from './ReactNativeTypes';
 
 // Event configs
