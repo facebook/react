@@ -28,7 +28,10 @@ import type {
   HintModel,
 } from 'react-server/src/ReactFlightServerConfig';
 
-import type {CallServerCallback} from './ReactFlightReplyClient';
+import type {
+  CallServerCallback,
+  EncodeFormActionCallback,
+} from './ReactFlightReplyClient';
 
 import type {Postpone} from 'react/src/ReactPostpone';
 
@@ -53,7 +56,7 @@ import {
   REACT_POSTPONE_TYPE,
 } from 'shared/ReactSymbols';
 
-export type {CallServerCallback};
+export type {CallServerCallback, EncodeFormActionCallback};
 
 type UninitializedModel = string;
 
@@ -206,6 +209,7 @@ export type Response = {
   _bundlerConfig: SSRModuleMap,
   _moduleLoading: ModuleLoading,
   _callServer: CallServerCallback,
+  _encodeFormAction: void | EncodeFormActionCallback,
   _nonce: ?string,
   _chunks: Map<number, SomeChunk<any>>,
   _fromJSON: (key: string, value: JSONValue) => any,
@@ -592,7 +596,7 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
       },
     );
   };
-  registerServerReference(proxy, metaData);
+  registerServerReference(proxy, metaData, response._encodeFormAction);
   return proxy;
 }
 
@@ -785,6 +789,7 @@ export function createResponse(
   bundlerConfig: SSRModuleMap,
   moduleLoading: ModuleLoading,
   callServer: void | CallServerCallback,
+  encodeFormAction: void | EncodeFormActionCallback,
   nonce: void | string,
 ): Response {
   const chunks: Map<number, SomeChunk<any>> = new Map();
@@ -792,6 +797,7 @@ export function createResponse(
     _bundlerConfig: bundlerConfig,
     _moduleLoading: moduleLoading,
     _callServer: callServer !== undefined ? callServer : missingCall,
+    _encodeFormAction: encodeFormAction,
     _nonce: nonce,
     _chunks: chunks,
     _stringDecoder: createStringDecoder(),

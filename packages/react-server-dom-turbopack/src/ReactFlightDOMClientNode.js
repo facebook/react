@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes.js';
+import type {Thenable, ReactCustomFormAction} from 'shared/ReactTypes.js';
 
 import type {Response} from 'react-client/src/ReactFlightClient';
 
@@ -40,9 +40,6 @@ function noServerCall() {
       'to pass data to Client Components instead.',
   );
 }
-export type Options = {
-  nonce?: string,
-};
 
 export function createServerReference<A: Iterable<any>, T>(
   id: any,
@@ -50,6 +47,16 @@ export function createServerReference<A: Iterable<any>, T>(
 ): (...A) => Promise<T> {
   return createServerReferenceImpl(id, noServerCall);
 }
+
+type EncodeFormActionCallback = <A>(
+  id: any,
+  args: Promise<A>,
+) => ReactCustomFormAction;
+
+export type Options = {
+  nonce?: string,
+  encodeFormAction?: EncodeFormActionCallback,
+};
 
 function createFromNodeStream<T>(
   stream: Readable,
@@ -60,6 +67,7 @@ function createFromNodeStream<T>(
     ssrManifest.moduleMap,
     ssrManifest.moduleLoading,
     noServerCall,
+    options ? options.encodeFormAction : undefined,
     options && typeof options.nonce === 'string' ? options.nonce : undefined,
   );
   stream.on('data', chunk => {
