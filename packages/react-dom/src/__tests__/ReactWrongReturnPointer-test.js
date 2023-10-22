@@ -29,7 +29,7 @@ beforeEach(() => {
 
   Suspense = React.Suspense;
   if (gate(flags => flags.enableSuspenseList)) {
-    SuspenseList = React.SuspenseList;
+    SuspenseList = React.unstable_SuspenseList;
   }
 
   getCacheForType = React.unstable_getCacheForType;

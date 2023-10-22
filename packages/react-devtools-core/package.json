@@ -1,6 +1,6 @@
 {
   "name": "react-devtools-core",
-  "version": "4.27.8",
+  "version": "4.28.5",
   "description": "Use react-devtools outside of the browser",
   "license": "MIT",
   "main": "./dist/backend.js",
@@ -29,6 +29,10 @@
     "ws": "^7"
   },
   "devDependencies": {
-    "cross-env": "^3.1.4"
+    "cross-env": "^3.1.4",
+    "process": "0.11.10",
+    "webpack": "^5.82.1",
+    "webpack-cli": "^5.1.1",
+    "workerize-loader": "^2.0.2"
   }
 }

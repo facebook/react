@@ -16,6 +16,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -25,13 +26,23 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
-import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+import {
+  decodeAction,
+  decodeFormState,
+} from 'react-server/src/ReactFlightActionServer';
+
+export {
+  registerServerReference,
+  registerClientReference,
+  createClientModuleProxy,
+} from './ReactFlightWebpackReferences';
 
 type Options = {
   identifierPrefix?: string,
   signal?: AbortSignal,
   context?: Array<[string, ServerContextJSONValue]>,
   onError?: (error: mixed) => void,
+  onPostpone?: (reason: string) => void,
 };
 
 function renderToReadableStream(
@@ -45,6 +56,7 @@ function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
   );
   if (options && options.signal) {
     const signal = options.signal;
@@ -67,7 +79,10 @@ function renderToReadableStream(
       pull: (controller): ?Promise<void> => {
         startFlowing(request, controller);
       },
-      cancel: (reason): ?Promise<void> => {},
+      cancel: (reason): ?Promise<void> => {
+        stopFlowing(request);
+        abort(request, reason);
+      },
     },
     // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
     {highWaterMark: 0},
@@ -89,4 +104,4 @@ function decodeReply<T>(
   return getRoot(response);
 }
 
-export {renderToReadableStream, decodeReply, decodeAction};
+export {renderToReadableStream, decodeReply, decodeAction, decodeFormState};

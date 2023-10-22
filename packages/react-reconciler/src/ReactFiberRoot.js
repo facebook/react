@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {
   FiberRoot,
   SuspenseHydrationCallbacks,
@@ -17,7 +17,7 @@ import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {Container} from './ReactFiberConfig';
 
-import {noTimeout, supportsHydration} from './ReactFiberConfig';
+import {noTimeout} from './ReactFiberConfig';
 import {createHostRootFiber} from './ReactFiber';
 import {
   NoLane,
@@ -52,6 +52,7 @@ function FiberRootNode(
   hydrate: any,
   identifierPrefix: any,
   onRecoverableError: any,
+  formState: ReactFormState<any, any> | null,
 ) {
   this.tag = tag;
   this.containerInfo = containerInfo;
@@ -72,9 +73,9 @@ function FiberRootNode(
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
   this.expiredLanes = NoLanes;
-  this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
   this.errorRecoveryDisabledLanes = NoLanes;
+  this.shellSuspendCounter = 0;
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
@@ -89,13 +90,11 @@ function FiberRootNode(
     this.pooledCacheLanes = NoLanes;
   }
 
-  if (supportsHydration) {
-    this.mutableSourceEagerHydrationData = null;
-  }
-
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
   }
+
+  this.formState = formState;
 
   this.incompleteTransitions = new Map();
   if (enableTransitionTracing) {
@@ -146,6 +145,7 @@ export function createFiberRoot(
   identifierPrefix: string,
   onRecoverableError: null | ((error: mixed) => void),
   transitionCallbacks: null | TransitionTracingCallbacks,
+  formState: ReactFormState<any, any> | null,
 ): FiberRoot {
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   const root: FiberRoot = (new FiberRootNode(
@@ -154,6 +154,7 @@ export function createFiberRoot(
     hydrate,
     identifierPrefix,
     onRecoverableError,
+    formState,
   ): any);
   if (enableSuspenseCallback) {
     root.hydrationCallbacks = hydrationCallbacks;

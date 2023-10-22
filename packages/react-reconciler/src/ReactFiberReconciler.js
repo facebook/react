@@ -21,7 +21,7 @@ import type {
   PublicInstance,
   RendererInspectionConfig,
 } from './ReactFiberConfig';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
@@ -97,7 +97,6 @@ import {
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading';
 import ReactVersion from 'shared/ReactVersion';
-export {registerMutableSourceForHydration} from './ReactMutableSource';
 export {createPortal} from './ReactPortal';
 export {
   createComponentSelector,
@@ -266,6 +265,7 @@ export function createContainer(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    null,
   );
 }
 
@@ -281,6 +281,7 @@ export function createHydrationContainer(
   identifierPrefix: string,
   onRecoverableError: (error: mixed) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
+  formState: ReactFormState<any, any> | null,
 ): OpaqueRoot {
   const hydrate = true;
   const root = createFiberRoot(
@@ -294,6 +295,7 @@ export function createHydrationContainer(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    formState,
   );
 
   // TODO: Move this to FiberRoot constructor

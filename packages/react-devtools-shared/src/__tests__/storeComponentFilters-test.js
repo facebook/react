@@ -36,7 +36,7 @@ describe('Store component filters', () => {
     store.recordChangeDescriptions = true;
 
     React = require('react');
-    Types = require('react-devtools-shared/src/types');
+    Types = require('react-devtools-shared/src/frontend/types');
     utils = require('./utils');
 
     legacyRender = utils.legacyRender;
