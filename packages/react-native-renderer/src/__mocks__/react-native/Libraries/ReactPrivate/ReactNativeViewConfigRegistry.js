@@ -9,7 +9,8 @@
 
 'use strict';
 
-import {type ViewConfig} from './ReactNativeTypes';
+// maybe
+import type {ViewConfig} from './ReactNativeTypes';
 
 // Event configs
 export const customBubblingEventTypes = {};
