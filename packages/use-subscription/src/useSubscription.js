@@ -15,16 +15,20 @@ import {useSyncExternalStore} from 'use-sync-external-store/shim';
 // the parameters passed to this hook should be memoized in some way–
 // either by wrapping the entire params object with useMemo()
 // or by wrapping the individual callbacks with useCallback().
-export function useSubscription<Value>({
+/**
+ * A hook that subscribes to a value and returns the current value of the subscription.
+ * @param {Object} options - An object containing the getCurrentValue and subscribe functions.
+ * @param {Function} options.getCurrentValue - A function that synchronously returns the current value of the subscription.
+ * @param {Function} options.subscribe - A function that is passed an event handler to attach to the subscription. It should return an unsubscribe function that removes the handler.
+ * @returns {*} - The current value of the subscription.
+ */
+export function useSubscription({
   // (Synchronously) returns the current value of our subscription.
   getCurrentValue,
 
   // This function is passed an event handler to attach to the subscription.
   // It should return an unsubscribe function that removes the handler.
   subscribe,
-}: {
-  getCurrentValue: () => Value,
-  subscribe: (callback: Function) => () => void,
-}): Value {
+}) {
   return useSyncExternalStore(subscribe, getCurrentValue);
 }
