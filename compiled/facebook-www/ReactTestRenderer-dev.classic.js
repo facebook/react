@@ -8330,7 +8330,7 @@ function dispatchFormState(fiber, actionQueue, setState, payload) {
       payload: payload,
       next: first
     };
-    last.next = _newLast;
+    actionQueue.pending = last.next = _newLast;
   }
 }
 
@@ -25267,7 +25267,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-252d6948";
+var ReactVersion = "18.3.0-www-classic-5fd0277f";
 
 // Might add PROFILE later.
 
