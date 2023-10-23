@@ -90,7 +90,7 @@ describe('ReactDOMForm', () => {
       const thenable = record.value;
       record.status = 'resolved';
       record.value = text;
-      thenable.pings.forEach(t => t());
+      thenable.pings.forEach(t => t(text));
     }
   }
 
@@ -1080,6 +1080,35 @@ describe('ReactDOMForm', () => {
       root.render(<App />);
       await waitForThrow('Cannot update form state while rendering.');
     });
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  test('queues multiple actions and runs them in order', async () => {
+    let action;
+    function App() {
+      const [state, dispatch] = useFormState(
+        async (s, a) => await getText(a),
+        'A',
+      );
+      action = dispatch;
+      return <Text text={state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App />));
+    assertLog(['A']);
+
+    await act(() => action('B'));
+    await act(() => action('C'));
+    await act(() => action('D'));
+
+    await act(() => resolveText('B'));
+    await act(() => resolveText('C'));
+    await act(() => resolveText('D'));
+
+    assertLog(['D']);
+    expect(container.textContent).toBe('D');
   });
 
   // @gate enableFormActions
