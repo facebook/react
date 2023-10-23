@@ -500,7 +500,9 @@ function markSpawnedDeferredLane(root, spawnedLane, entangledLanes) {
   var spawnedLaneIndex = 31 - clz32(spawnedLane);
   root.entangledLanes |= spawnedLane;
   root.entanglements[spawnedLaneIndex] =
-    root.entanglements[spawnedLaneIndex] | 1073741824 | entangledLanes;
+    root.entanglements[spawnedLaneIndex] |
+    1073741824 |
+    (entangledLanes & 4194218);
 }
 function markRootEntangled(root, entangledLanes) {
   var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
@@ -10293,9 +10295,9 @@ function requestUpdateLane(fiber) {
 function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
     (workInProgressDeferredLane =
-      0 !== (workInProgressRootRenderLanes & 536870912)
-        ? 536870912
-        : requestTransitionLane());
+      0 === (workInProgressRootRenderLanes & 536870912) || isHydrating
+        ? requestTransitionLane()
+        : 536870912);
   return workInProgressDeferredLane;
 }
 function scheduleUpdateOnFiber(root, fiber, lane) {
@@ -16776,7 +16778,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1840 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-88285787",
+  version: "18.3.0-www-modern-ca7f5004",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16821,7 +16823,7 @@ var devToolsConfig$jscomp$inline_1840 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-88285787"
+  reconcilerVersion: "18.3.0-www-modern-ca7f5004"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17073,7 +17075,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-88285787";
+exports.version = "18.3.0-www-modern-ca7f5004";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (

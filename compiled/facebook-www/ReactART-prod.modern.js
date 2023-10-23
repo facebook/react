@@ -467,7 +467,9 @@ function markSpawnedDeferredLane(root, spawnedLane, entangledLanes) {
   var spawnedLaneIndex = 31 - clz32(spawnedLane);
   root.entangledLanes |= spawnedLane;
   root.entanglements[spawnedLaneIndex] =
-    root.entanglements[spawnedLaneIndex] | 1073741824 | entangledLanes;
+    root.entanglements[spawnedLaneIndex] |
+    1073741824 |
+    (entangledLanes & 4194218);
 }
 function markRootEntangled(root, entangledLanes) {
   var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
@@ -9848,7 +9850,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-27dfd1a3",
+    version: "18.3.0-www-modern-5b0eeab3",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1302 = {
@@ -9879,7 +9881,7 @@ var internals$jscomp$inline_1302 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-27dfd1a3"
+  reconcilerVersion: "18.3.0-www-modern-5b0eeab3"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1303 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
