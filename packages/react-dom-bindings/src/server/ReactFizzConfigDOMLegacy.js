@@ -158,6 +158,7 @@ export {
   hoistResources,
   setCurrentlyRenderingBoundaryResourcesTarget,
   prepareHostDispatcher,
+  resetResumableState,
 } from './ReactFizzConfigDOM';
 
 import escapeTextForBrowser from './escapeTextForBrowser';

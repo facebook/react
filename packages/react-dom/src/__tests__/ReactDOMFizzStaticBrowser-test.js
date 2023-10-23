@@ -1187,4 +1187,133 @@ describe('ReactDOMFizzStaticBrowser', () => {
 
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
   });
+
+  // @gate enablePostpone
+  it('emits an empty prelude and resumes at the root if we postpone in the shell', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function App() {
+      return (
+        <html lang="en">
+          <body>
+            <link rel="stylesheet" href="my-style" precedence="high" />
+            <Postpone />
+          </body>
+        </html>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    expect(await readContent(prerendered.prelude)).toBe('');
+
+    const content = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    expect(await readContent(content)).toBe(
+      '<!DOCTYPE html><html lang="en"><head>' +
+        '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
+        '</head><body>Hello</body></html>',
+    );
+  });
+
+  // @gate enablePostpone
+  it('emits an empty prelude if we have not rendered html or head tags yet', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return (
+        <html lang="en">
+          <body>Hello</body>
+        </html>
+      );
+    }
+
+    function App() {
+      return (
+        <>
+          <link rel="stylesheet" href="my-style" precedence="high" />
+          <Postpone />
+        </>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    expect(await readContent(prerendered.prelude)).toBe('');
+
+    const content = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    expect(await readContent(content)).toBe(
+      '<!DOCTYPE html><html lang="en"><head>' +
+        '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
+        '</head><body>Hello</body></html>',
+    );
+  });
+
+  // @gate enablePostpone
+  it('emits an empty prelude if a postpone in a promise in the shell', async () => {
+    let prerendering = true;
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    const Lazy = React.lazy(async () => {
+      await 0;
+      return {default: Postpone};
+    });
+
+    function App() {
+      return (
+        <html>
+          <link rel="stylesheet" href="my-style" precedence="high" />
+          <body>
+            <div>
+              <Lazy />
+            </div>
+          </body>
+        </html>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    expect(await readContent(prerendered.prelude)).toBe('');
+
+    const content = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    expect(await readContent(content)).toBe(
+      '<!DOCTYPE html><html><head>' +
+        '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
+        '</head><body><div>Hello</div></body></html>',
+    );
+  });
 });

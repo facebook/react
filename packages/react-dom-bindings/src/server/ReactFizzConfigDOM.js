@@ -576,6 +576,29 @@ export function createResumableState(
   };
 }
 
+export function resetResumableState(
+  resumableState: ResumableState,
+  renderState: RenderState,
+): void {
+  // Resets the resumable state based on what didn't manage to fully flush in the render state.
+  // This currently assumes nothing was flushed.
+  resumableState.nextFormID = 0;
+  resumableState.hasBody = false;
+  resumableState.hasHtml = false;
+  resumableState.unknownResources = {};
+  resumableState.dnsResources = {};
+  resumableState.connectResources = {
+    default: {},
+    anonymous: {},
+    credentials: {},
+  };
+  resumableState.imageResources = {};
+  resumableState.styleResources = {};
+  resumableState.scriptResources = {};
+  resumableState.moduleUnknownResources = {};
+  resumableState.moduleScriptResources = {};
+}
+
 // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
