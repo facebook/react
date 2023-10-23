@@ -730,8 +730,10 @@ function markSpawnedDeferredLane(
   root.entanglements[spawnedLaneIndex] |=
     DeferredLane |
     // If the parent render task suspended, we must also entangle those lanes
-    // with the spawned task.
-    entangledLanes;
+    // with the spawned task, so that the deferred task includes all the same
+    // updates that the parent task did. We can exclude any lane that is not
+    // used for updates (e.g. Offscreen).
+    (entangledLanes & UpdateLanes);
 }
 
 export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {

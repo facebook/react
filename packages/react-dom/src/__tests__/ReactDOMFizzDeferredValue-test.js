@@ -9,7 +9,10 @@
 
 'use strict';
 
-import {insertNodesAndExecuteScripts} from '../test-utils/FizzTestUtils';
+import {
+  insertNodesAndExecuteScripts,
+  getVisibleChildren,
+} from '../test-utils/FizzTestUtils';
 
 // Polyfills for test environment
 global.ReadableStream =
@@ -17,20 +20,28 @@ global.ReadableStream =
 global.TextEncoder = require('util').TextEncoder;
 
 let act;
+let assertLog;
+let waitForPaint;
 let container;
 let React;
+let Scheduler;
 let ReactDOMServer;
 let ReactDOMClient;
 let useDeferredValue;
+let Suspense;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    Scheduler = require('scheduler');
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');
-    useDeferredValue = require('react').useDeferredValue;
+    useDeferredValue = React.useDeferredValue;
+    Suspense = React.Suspense;
     act = require('internal-test-utils').act;
+    assertLog = require('internal-test-utils').assertLog;
+    waitForPaint = require('internal-test-utils').waitForPaint;
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -54,6 +65,11 @@ describe('ReactDOMFizzForm', () => {
     insertNodesAndExecuteScripts(temp, container, null);
   }
 
+  function Text({text}) {
+    Scheduler.log(text);
+    return text;
+  }
+
   // @gate enableUseDeferredValueInitialArg
   it('returns initialValue argument, if provided', async () => {
     function App() {
@@ -68,4 +84,106 @@ describe('ReactDOMFizzForm', () => {
     await act(() => ReactDOMClient.hydrateRoot(container, <App />));
     expect(container.textContent).toEqual('Final');
   });
+
+  // @gate enableUseDeferredValueInitialArg
+  it(
+    'useDeferredValue during hydration has higher priority than remaining ' +
+      'incremental hydration',
+    async () => {
+      function B() {
+        const text = useDeferredValue('B [Final]', 'B [Initial]');
+        return <Text text={text} />;
+      }
+
+      function App() {
+        return (
+          <div>
+            <span>
+              <Text text="A" />
+            </span>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <span>
+                <B />
+              </span>
+              <div>
+                <Suspense fallback={<Text text="Loading..." />}>
+                  <span id="C" ref={cRef}>
+                    <Text text="C" />
+                  </span>
+                </Suspense>
+              </div>
+            </Suspense>
+          </div>
+        );
+      }
+
+      const cRef = React.createRef();
+
+      // The server renders using the "initial" value for B.
+      const stream = await ReactDOMServer.renderToReadableStream(<App />);
+      await readIntoContainer(stream);
+      assertLog(['A', 'B [Initial]', 'C']);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <span>A</span>
+          <span>B [Initial]</span>
+          <div>
+            <span id="C">C</span>
+          </div>
+        </div>,
+      );
+
+      const serverRenderedC = document.getElementById('C');
+
+      // On the client, we first hydrate the initial value, then upgrade
+      // to final.
+      await act(async () => {
+        ReactDOMClient.hydrateRoot(container, <App />);
+
+        // First the outermost Suspense boundary hydrates.
+        await waitForPaint(['A']);
+        expect(cRef.current).toBe(null);
+
+        // Then the next level hydrates. This level includes a useDeferredValue,
+        // so we should prioritize upgrading it before we proceed to hydrating
+        // additional levels.
+        await waitForPaint(['B [Initial]']);
+        expect(getVisibleChildren(container)).toEqual(
+          <div>
+            <span>A</span>
+            <span>B [Initial]</span>
+            <div>
+              <span id="C">C</span>
+            </div>
+          </div>,
+        );
+        expect(cRef.current).toBe(null);
+
+        // This paint should only update B. C should still be dehydrated.
+        await waitForPaint(['B [Final]']);
+        expect(getVisibleChildren(container)).toEqual(
+          <div>
+            <span>A</span>
+            <span>B [Final]</span>
+            <div>
+              <span id="C">C</span>
+            </div>
+          </div>,
+        );
+        expect(cRef.current).toBe(null);
+      });
+      // Finally we can hydrate C
+      assertLog(['C']);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <span>A</span>
+          <span>B [Final]</span>
+          <div>
+            <span id="C">C</span>
+          </div>
+        </div>,
+      );
+      expect(cRef.current).toBe(serverRenderedC);
+    },
+  );
 });
