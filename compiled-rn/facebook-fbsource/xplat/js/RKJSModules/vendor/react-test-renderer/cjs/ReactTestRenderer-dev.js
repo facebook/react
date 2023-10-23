@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4aba8405b48af51650328aaea1ae0e6d>>
+ * @generated SignedSource<<cbd8ea0713685000d0b28083e1b0ef92>>
  */
 
 'use strict';
@@ -8054,7 +8054,7 @@ function dispatchFormState(fiber, actionQueue, setState, payload) {
       payload: payload,
       next: first
     };
-    last.next = _newLast;
+    actionQueue.pending = last.next = _newLast;
   }
 }
 
@@ -24887,7 +24887,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-05fbd1aab-20231023";
+var ReactVersion = "18.3.0-canary-b8e47d988-20231023";
 
 // Might add PROFILE later.
 

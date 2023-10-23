@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<55d6fdb51293e0bfc3d0f87e833cd9af>>
+ * @generated SignedSource<<a02b9b5dea9f5b94464f6051b23b425e>>
  */
 
 "use strict";
@@ -2714,7 +2714,8 @@ function dispatchFormState(fiber, actionQueue, setState, payload) {
     ? ((fiber = { payload: payload, next: null }),
       (fiber.next = actionQueue.pending = fiber),
       runFormStateAction(actionQueue, setState, payload))
-    : (fiber.next = { payload: payload, next: fiber.next });
+    : (actionQueue.pending = fiber.next =
+        { payload: payload, next: fiber.next });
 }
 function runFormStateAction(actionQueue, setState, payload) {
   var action = actionQueue.action,
@@ -9450,7 +9451,7 @@ var devToolsConfig$jscomp$inline_1074 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-05fbd1aab-20231023",
+  version: "18.3.0-canary-b8e47d988-20231023",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1266 = {
@@ -9481,7 +9482,7 @@ var internals$jscomp$inline_1266 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-05fbd1aab-20231023"
+  reconcilerVersion: "18.3.0-canary-b8e47d988-20231023"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1267 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
