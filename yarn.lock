@@ -7866,22 +7866,22 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.7.tgz#609f39207cb614b89d0765b477cb2d437fbf9787"
   integrity sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==
 
-flow-bin@^0.217.0:
-  version "0.217.0"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.217.0.tgz#c255b4d8d815520d396416c2f712ab849d61f467"
-  integrity sha512-AbbDE6QUpR+jpY9ejNROAk0P5D/2PxJzjU4D5vfmMwtS+QjjPjzfZGuatEJIn2k4PTZ2agbncaCtyHGO0AvG7A==
+flow-bin@^0.219.0:
+  version "0.219.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.219.0.tgz#193ae6551e4eccad7435b2ec0cfa455a40f38889"
+  integrity sha512-nX1hLdYI+mRaO5hG4acjwMni9K3KqQzt3v0pDPHKGu1lEvxEPbL3GxruFbaq8dhKR3Ntk13ptsf2krYubZ1nCw==
 
-flow-parser@^0.217.0:
-  version "0.217.0"
-  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.217.0.tgz#0e6bed214151fa3240dc9fd83ac8a9e050e523c5"
-  integrity sha512-hEa5n0dta1RcaDwJDWbnyelw07PK7+Vx0f9kDht28JOt2hXgKdKGaT3wM45euWV2DxOXtzDSTaUgGSD/FPvC2Q==
+flow-parser@^0.219.0:
+  version "0.219.0"
+  resolved "https://registry.yarnpkg.com/flow-parser/-/flow-parser-0.219.0.tgz#c8021c080d67a16eea9ee1d1e31c40d1a22bb2fb"
+  integrity sha512-f1RKw+2QW4HCwCQ7qw8fTrlWmQnPIHmWDYbrMhXSSAuDbQbncY63I3Y/vwgimChGF2PT4qtXusu04R3wtCh4hw==
 
-flow-remove-types@^2.217.0:
-  version "2.217.0"
-  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.217.0.tgz#b09084445b2cd929330638d7b8f1aacaa288c43a"
-  integrity sha512-4NbzbbseCAnPERMhPt7cwlRjynXda/fatzHCWCRBsnGO43oqSG5PqzZKEBJXngCJuVS8M5YQrw3ad3psPTEfCQ==
+flow-remove-types@^2.219.0:
+  version "2.219.0"
+  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.219.0.tgz#f349f7785e8c718b256bb8ecb1696d68675e2e86"
+  integrity sha512-wbY4WG+jve9pY0GsG8r5R+Wdo0PQ/HyQi/Gr8p8QIQxNyfYrRtCWICQ1kcGw60+1ufm+yKBw8bIUTv+4LYLjtA==
   dependencies:
-    flow-parser "^0.217.0"
+    flow-parser "^0.219.0"
     pirates "^3.0.2"
     vlq "^0.2.1"
 
@@ -8611,26 +8611,26 @@ has@^1.0.1, has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-hermes-eslint@^0.15.1:
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.15.1.tgz#c5919a6fdbd151febc3d5ed8ff17e5433913528c"
-  integrity sha512-ArfT3oASsYOkCa29GOw34GR+kpHXqrhhYgXDadK3daJBejrMPbGlUbBTzTlGBuz1CGLxxdC5lwwv3OegPJzfDA==
+hermes-eslint@^0.17.0:
+  version "0.17.0"
+  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.17.0.tgz#c1bbf5e2fbf04b94539d02773421a7899b438479"
+  integrity sha512-SecdcgQyl3ubjl7guk6jNt5BoWtHBPXu7VqfAsZUEM0r0s897/QS5FjHFIXBMGSeqQnfun+QGBGoCQjx8NRWxg==
   dependencies:
     esrecurse "^4.3.0"
-    hermes-estree "0.15.1"
-    hermes-parser "0.15.1"
+    hermes-estree "0.17.0"
+    hermes-parser "0.17.0"
 
-hermes-estree@0.15.1:
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.15.1.tgz#d06d4ddf87e91857b0130a083a9d7696d7aec61f"
-  integrity sha512-XrQH+GATG/8DYbzlrVs6Vf/EDxLhYEHXvzt/Xve4b/NXXpsNLDN8bdBEKp5z0XeOMoL1XMEexxIIf1a5bH6kYA==
+hermes-estree@0.17.0:
+  version "0.17.0"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.17.0.tgz#4b1b0d8131826178f0af79a317ceaca3723e9012"
+  integrity sha512-bW9+bMZqnro+0+l6dUqTJW0VaNUvs4HRHh/J7VotTGnMmhBFRIcJz6ZxrRE7xIXmK7S5bJE9qrEooSiig4N70g==
 
-hermes-parser@0.15.1, hermes-parser@^0.15.1:
-  version "0.15.1"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.15.1.tgz#f02587be85228b22841d50f6839ae42a308e5100"
-  integrity sha512-38Re105dr4UZ0/EPRApWxtIOWWynQpdOYWO+7nFO8ADd2mXdaHKMCFAxIjkqACa1GLrAtrXqqaJdUYHi/QUbkA==
+hermes-parser@0.17.0, hermes-parser@^0.17.0:
+  version "0.17.0"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.17.0.tgz#722bb8079b9081a0de4902b770d5d45dbeb380bd"
+  integrity sha512-2fmppmZheY1UU071EMKAzXfuUCiDXF3fmzKLuN1XmE3+njIFs3CAeKP88+FtNBUpS6pEMJv6lPXCaJGqGsrURQ==
   dependencies:
-    hermes-estree "0.15.1"
+    hermes-estree "0.17.0"
 
 homedir-polyfill@^1.0.0, homedir-polyfill@^1.0.1:
   version "1.0.3"
