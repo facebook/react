@@ -9,7 +9,10 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
-import type {PostponedState} from 'react-server/src/ReactFizzServer';
+import type {
+  PostponedState,
+  HeadersDescriptor,
+} from 'react-server/src/ReactFizzServer';
 import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import {Writable, Readable} from 'stream';
@@ -42,6 +45,7 @@ type Options = {
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
+  onHeaders?: (headers: HeadersDescriptor) => void,
 };
 
 type StaticResult = {
@@ -110,6 +114,7 @@ function prerenderToNodeStream(
       undefined,
       onFatalError,
       options ? options.onPostpone : undefined,
+      options ? options.onHeaders : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;

@@ -353,6 +353,10 @@ function defaultErrorHandler(error: mixed) {
 
 function noop(): void {}
 
+export type HeadersDescriptor = {
+  Link: string,
+};
+
 export function createRequest(
   children: ReactNodeList,
   resumableState: ResumableState,
@@ -366,6 +370,7 @@ export function createRequest(
   onFatalError: void | ((error: mixed) => void),
   onPostpone: void | ((reason: string) => void),
   formState: void | null | ReactFormState<any, any>,
+  onHeaders: void | ((headers: HeadersDescriptor) => void),
 ): Request {
   prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
@@ -442,6 +447,7 @@ export function createPrerenderRequest(
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
   onPostpone: void | ((reason: string) => void),
+  onHeaders: void | ((headers: HeadersDescriptor) => void),
 ): Request {
   const request = createRequest(
     children,
@@ -455,6 +461,8 @@ export function createPrerenderRequest(
     onShellError,
     onFatalError,
     onPostpone,
+    undefined,
+    onHeaders,
   );
   // Start tracking postponed holes during this render.
   request.trackedPostpones = {

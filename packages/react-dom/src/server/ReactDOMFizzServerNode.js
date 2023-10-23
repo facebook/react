@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {Request, PostponedState} from 'react-server/src/ReactFizzServer';
+import type {
+  Request,
+  PostponedState,
+  HeadersDescriptor,
+} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
@@ -60,6 +64,7 @@ type Options = {
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
   formState?: ReactFormState<any, any> | null,
+  onHeaders?: (headers: HeadersDescriptor) => void,
 };
 
 type ResumeOptions = {
@@ -104,6 +109,7 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     undefined,
     options ? options.onPostpone : undefined,
     options ? options.formState : undefined,
+    options ? options.onHeaders : undefined,
   );
 }
 
