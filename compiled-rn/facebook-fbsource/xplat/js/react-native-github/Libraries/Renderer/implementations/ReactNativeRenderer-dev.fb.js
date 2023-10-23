@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7761533a90172f142b7160c8a395139f>>
+ * @generated SignedSource<<3f8b7e5d6e0a296d53dbbc1071571ee7>>
  */
 
 'use strict';
@@ -5467,8 +5467,10 @@ function markSpawnedDeferredLane(root, spawnedLane, entangledLanes) {
   root.entangledLanes |= spawnedLane;
   root.entanglements[spawnedLaneIndex] |=
     DeferredLane | // If the parent render task suspended, we must also entangle those lanes
-    // with the spawned task.
-    entangledLanes;
+    // with the spawned task, so that the deferred task includes all the same
+    // updates that the parent task did. We can exclude any lane that is not
+    // used for updates (e.g. Offscreen).
+    (entangledLanes & UpdateLanes);
 }
 
 function markRootEntangled(root, entangledLanes) {
@@ -23611,13 +23613,20 @@ function requestDeferredLane() {
     // If there are multiple useDeferredValue hooks in the same render, the
     // tasks that they spawn should all be batched together, so they should all
     // receive the same lane.
-    if (includesSomeLane(workInProgressRootRenderLanes, OffscreenLane)) {
+    // Check the priority of the current render to decide the priority of the
+    // deferred task.
+    // OffscreenLane is used for prerendering, but we also use OffscreenLane
+    // for incremental hydration. It's given the lowest priority because the
+    // initial HTML is the same as the final UI. But useDeferredValue during
+    // hydration is an exception — we need to upgrade the UI to the final
+    // value. So if we're currently hydrating, we treat it like a transition.
+    var isPrerendering =
+      includesSomeLane(workInProgressRootRenderLanes, OffscreenLane) &&
+      !getIsHydrating();
+
+    if (isPrerendering) {
       // There's only one OffscreenLane, so if it contains deferred work, we
       // should just reschedule using the same lane.
-      // TODO: We also use OffscreenLane for hydration, on the basis that the
-      // initial HTML is the same as the hydrated UI, but since the deferred
-      // task will change the UI, it should be treated like an update. Use
-      // TransitionHydrationLane to trigger selective hydration.
       workInProgressDeferredLane = OffscreenLane;
     } else {
       // Everything else is spawned as a transition.
@@ -27681,7 +27690,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-9a620f58";
+var ReactVersion = "18.3.0-canary-a9bf5e61";
 
 function createPortal$1(
   children,

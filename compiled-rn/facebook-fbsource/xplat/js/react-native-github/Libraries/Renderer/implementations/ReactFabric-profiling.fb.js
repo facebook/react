@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4c458b1ffae67751c0467a6058d6e4f2>>
+ * @generated SignedSource<<933803924ed19507fb33fd09fca6dd3c>>
  */
 
 
@@ -1638,7 +1638,9 @@ function markSpawnedDeferredLane(root, spawnedLane, entangledLanes) {
   var spawnedLaneIndex = 31 - clz32(spawnedLane);
   root.entangledLanes |= spawnedLane;
   root.entanglements[spawnedLaneIndex] =
-    root.entanglements[spawnedLaneIndex] | 1073741824 | entangledLanes;
+    root.entanglements[spawnedLaneIndex] |
+    1073741824 |
+    (entangledLanes & 4194218);
 }
 function markRootEntangled(root, entangledLanes) {
   var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
@@ -10242,7 +10244,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1126 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-0539669f",
+    version: "18.3.0-canary-8ec7f1ee",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10298,7 +10300,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-0539669f"
+  reconcilerVersion: "18.3.0-canary-8ec7f1ee"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<66a3ab08e21262224c99cef051dda83e>>
+ * @generated SignedSource<<e31a0fac45863f3f63abd21e7dea9758>>
  */
 
 
@@ -2009,7 +2009,9 @@ function markSpawnedDeferredLane(root, spawnedLane, entangledLanes) {
   var spawnedLaneIndex = 31 - clz32(spawnedLane);
   root.entangledLanes |= spawnedLane;
   root.entanglements[spawnedLaneIndex] =
-    root.entanglements[spawnedLaneIndex] | 1073741824 | entangledLanes;
+    root.entanglements[spawnedLaneIndex] |
+    1073741824 |
+    (entangledLanes & 4194218);
 }
 function markRootEntangled(root, entangledLanes) {
   var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
@@ -10460,7 +10462,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1189 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-2a28451e",
+    version: "18.3.0-canary-d6cf2528",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10516,7 +10518,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-2a28451e"
+  reconcilerVersion: "18.3.0-canary-d6cf2528"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

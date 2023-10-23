@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c3d1140631a9ffbb19f029e3ecdb90fc>>
+ * @generated SignedSource<<55d6fdb51293e0bfc3d0f87e833cd9af>>
  */
 
 "use strict";
@@ -503,7 +503,9 @@ function markSpawnedDeferredLane(root, spawnedLane, entangledLanes) {
   var spawnedLaneIndex = 31 - clz32(spawnedLane);
   root.entangledLanes |= spawnedLane;
   root.entanglements[spawnedLaneIndex] =
-    root.entanglements[spawnedLaneIndex] | 1073741824 | entangledLanes;
+    root.entanglements[spawnedLaneIndex] |
+    1073741824 |
+    (entangledLanes & 4194218);
 }
 function markRootEntangled(root, entangledLanes) {
   var rootEntangledLanes = (root.entangledLanes |= entangledLanes);
@@ -9443,19 +9445,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1073 = {
+var devToolsConfig$jscomp$inline_1074 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-6db7f4209-20231021",
+  version: "18.3.0-canary-779d59374-20231023",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1265 = {
-  bundleType: devToolsConfig$jscomp$inline_1073.bundleType,
-  version: devToolsConfig$jscomp$inline_1073.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1073.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1073.rendererConfig,
+var internals$jscomp$inline_1266 = {
+  bundleType: devToolsConfig$jscomp$inline_1074.bundleType,
+  version: devToolsConfig$jscomp$inline_1074.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1074.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1074.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9472,26 +9474,26 @@ var internals$jscomp$inline_1265 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1073.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1074.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-6db7f4209-20231021"
+  reconcilerVersion: "18.3.0-canary-779d59374-20231023"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1266 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1267 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1266.isDisabled &&
-    hook$jscomp$inline_1266.supportsFiber
+    !hook$jscomp$inline_1267.isDisabled &&
+    hook$jscomp$inline_1267.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1266.inject(
-        internals$jscomp$inline_1265
+      (rendererID = hook$jscomp$inline_1267.inject(
+        internals$jscomp$inline_1266
       )),
-        (injectedHook = hook$jscomp$inline_1266);
+        (injectedHook = hook$jscomp$inline_1267);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
