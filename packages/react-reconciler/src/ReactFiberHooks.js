@@ -1915,7 +1915,7 @@ function dispatchFormState<S, P>(
       payload,
       next: first,
     };
-    last.next = newLast;
+    actionQueue.pending = last.next = newLast;
   }
 }
 
