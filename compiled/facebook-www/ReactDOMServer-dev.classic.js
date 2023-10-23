@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-3ac6c75e";
+var ReactVersion = "18.3.0-www-classic-38d7e1a0";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -2318,7 +2318,7 @@ function createResumableState(identifierPrefix, externalRuntimeConfig) {
     moduleUnknownResources: {},
     moduleScriptResources: {}
   };
-} // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
+}
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
 
@@ -13094,7 +13094,10 @@ function flushCompletedQueues(request, destination) {
     var completedRootSegment = request.completedRootSegment;
 
     if (completedRootSegment !== null) {
-      if (request.pendingRootTasks === 0) {
+      if (completedRootSegment.status === POSTPONED) {
+        // We postponed the root, so we write nothing.
+        return;
+      } else if (request.pendingRootTasks === 0) {
         if (enableFloat) {
           writePreamble(
             destination,

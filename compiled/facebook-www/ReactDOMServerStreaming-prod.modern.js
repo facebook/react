@@ -4370,7 +4370,7 @@ function flushCompletedQueues(request, destination) {
     var i,
       completedRootSegment = request.completedRootSegment;
     if (null !== completedRootSegment)
-      if (0 === request.pendingRootTasks) {
+      if (5 !== completedRootSegment.status && 0 === request.pendingRootTasks) {
         var renderState = request.renderState;
         if (
           (0 !== request.allPendingTasks ||
