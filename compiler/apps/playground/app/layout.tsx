@@ -12,6 +12,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  "use no forget";
   return (
     <html lang="en">
       <head>
