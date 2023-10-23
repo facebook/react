@@ -1113,29 +1113,179 @@ describe('ReactDOMForm', () => {
 
   // @gate enableFormActions
   // @gate enableAsyncActions
-  test('useFormState: warns if action is not async', async () => {
-    let dispatch;
+  test('useFormState: works if action is sync', async () => {
+    let increment;
+    function App({stepSize}) {
+      const [state, dispatch] = useFormState(prevState => {
+        return prevState + stepSize;
+      }, 0);
+      increment = dispatch;
+      return <Text text={state} />;
+    }
+
+    // Initial render
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => root.render(<App stepSize={1} />));
+    assertLog([0]);
+
+    // Perform an action. This will increase the state by 1, as defined by the
+    // stepSize prop.
+    await act(() => increment());
+    assertLog([1]);
+
+    // Now increase the stepSize prop to 10. Subsequent steps will increase
+    // by this amount.
+    await act(() => root.render(<App stepSize={10} />));
+    assertLog([1]);
+
+    // Increment again. The state should increase by 10.
+    await act(() => increment());
+    assertLog([11]);
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  test('useFormState: can mix sync and async actions', async () => {
+    let action;
     function App() {
-      const [state, _dispatch] = useFormState(() => {}, 0);
-      dispatch = _dispatch;
+      const [state, dispatch] = useFormState((s, a) => a, 'A');
+      action = dispatch;
       return <Text text={state} />;
     }
 
     const root = ReactDOMClient.createRoot(container);
-    await act(async () => {
-      root.render(<App />);
-    });
-    assertLog([0]);
+    await act(() => root.render(<App />));
+    assertLog(['A']);
 
-    expect(() => {
-      // This throws because React expects the action to return a promise.
-      expect(() => dispatch()).toThrow('Cannot read properties of undefined');
-    }).toErrorDev(
-      [
-        // In dev we also log a warning.
-        'The action passed to useFormState must be an async function',
-      ],
-      {withoutStack: true},
+    await act(() => action(getText('B')));
+    await act(() => action('C'));
+    await act(() => action(getText('D')));
+    await act(() => action('E'));
+
+    await act(() => resolveText('B'));
+    await act(() => resolveText('D'));
+    assertLog(['E']);
+    expect(container.textContent).toBe('E');
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  test('useFormState: error handling (sync action)', async () => {
+    let resetErrorBoundary;
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        resetErrorBoundary = () => this.setState({error: null});
+        if (this.state.error !== null) {
+          return <Text text={'Caught an error: ' + this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    let action;
+    function App() {
+      const [state, dispatch] = useFormState((s, a) => {
+        if (a.endsWith('!')) {
+          throw new Error(a);
+        }
+        return a;
+      }, 'A');
+      action = dispatch;
+      return <Text text={state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() =>
+      root.render(
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>,
+      ),
     );
+    assertLog(['A']);
+
+    await act(() => action('Oops!'));
+    assertLog(['Caught an error: Oops!', 'Caught an error: Oops!']);
+    expect(container.textContent).toBe('Caught an error: Oops!');
+
+    // Reset the error boundary
+    await act(() => resetErrorBoundary());
+    assertLog(['A']);
+
+    // Trigger an error again, but this time, perform another action that
+    // overrides the first one and fixes the error
+    await act(() => {
+      action('Oops!');
+      action('B');
+    });
+    assertLog(['B']);
+    expect(container.textContent).toBe('B');
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  test('useFormState: error handling (async action)', async () => {
+    let resetErrorBoundary;
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        return {error};
+      }
+      render() {
+        resetErrorBoundary = () => this.setState({error: null});
+        if (this.state.error !== null) {
+          return <Text text={'Caught an error: ' + this.state.error.message} />;
+        }
+        return this.props.children;
+      }
+    }
+
+    let action;
+    function App() {
+      const [state, dispatch] = useFormState(async (s, a) => {
+        const text = await getText(a);
+        if (text.endsWith('!')) {
+          throw new Error(text);
+        }
+        return text;
+      }, 'A');
+      action = dispatch;
+      return <Text text={state} />;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() =>
+      root.render(
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>,
+      ),
+    );
+    assertLog(['A']);
+
+    await act(() => action('Oops!'));
+    assertLog([]);
+    await act(() => resolveText('Oops!'));
+    assertLog(['Caught an error: Oops!', 'Caught an error: Oops!']);
+    expect(container.textContent).toBe('Caught an error: Oops!');
+
+    // Reset the error boundary
+    await act(() => resetErrorBoundary());
+    assertLog(['A']);
+
+    // Trigger an error again, but this time, perform another action that
+    // overrides the first one and fixes the error
+    await act(() => {
+      action('Oops!');
+      action('B');
+    });
+    assertLog([]);
+    await act(() => resolveText('B'));
+    assertLog(['B']);
+    expect(container.textContent).toBe('B');
   });
 });

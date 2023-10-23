@@ -1891,7 +1891,7 @@ type FormStateActionQueueNode<P> = {
 function dispatchFormState<S, P>(
   fiber: Fiber,
   actionQueue: FormStateActionQueue<S, P>,
-  setState: Dispatch<Thenable<S>>,
+  setState: Dispatch<S | Thenable<S>>,
   payload: P,
 ): void {
   if (isRenderPhaseUpdate(fiber)) {
@@ -1921,7 +1921,7 @@ function dispatchFormState<S, P>(
 
 function runFormStateAction<S, P>(
   actionQueue: FormStateActionQueue<S, P>,
-  setState: Dispatch<Thenable<S>>,
+  setState: Dispatch<S | Thenable<S>>,
   payload: P,
 ) {
   const action = actionQueue.action;
@@ -1935,39 +1935,49 @@ function runFormStateAction<S, P>(
     ReactCurrentBatchConfig.transition._updatedFibers = new Set();
   }
   try {
-    const promise = action(prevState, payload);
+    const returnValue = action(prevState, payload);
+    if (
+      returnValue !== null &&
+      typeof returnValue === 'object' &&
+      // $FlowFixMe[method-unbinding]
+      typeof returnValue.then === 'function'
+    ) {
+      const thenable = ((returnValue: any): Thenable<S>);
 
-    if (__DEV__) {
-      if (
-        promise === null ||
-        typeof promise !== 'object' ||
-        typeof (promise: any).then !== 'function'
-      ) {
-        console.error(
-          'The action passed to useFormState must be an async function.',
-        );
-      }
+      // Attach a listener to read the return state of the action. As soon as this
+      // resolves, we can run the next action in the sequence.
+      thenable.then(
+        (nextState: S) => {
+          actionQueue.state = nextState;
+          finishRunningFormStateAction(actionQueue, setState);
+        },
+        () => finishRunningFormStateAction(actionQueue, setState),
+      );
+
+      const entangledResult = requestAsyncActionContext<S>(thenable, null);
+      setState(entangledResult);
+    } else {
+      // This is either `finishedState` or a thenable that resolves to
+      // `finishedState`, depending on whether we're inside an async
+      // action scope.
+      const entangledResult = requestSyncActionContext<S>(returnValue, null);
+      setState(entangledResult);
+
+      const nextState = ((returnValue: any): S);
+      actionQueue.state = nextState;
+      finishRunningFormStateAction(actionQueue, setState);
     }
-
-    // Attach a listener to read the return state of the action. As soon as this
-    // resolves, we can run the next action in the sequence.
-    promise.then(
-      (nextState: S) => {
-        actionQueue.state = nextState;
-        finishRunningFormStateAction(actionQueue, setState);
-      },
-      () => finishRunningFormStateAction(actionQueue, setState),
-    );
-
-    // Create a thenable that resolves once the current async action scope has
-    // finished. Then stash that thenable in state. We'll unwrap it with the
-    // `use` algorithm during render. This is the same logic used
-    // by startTransition.
-    const entangledThenable: Thenable<S> = requestAsyncActionContext(
-      promise,
-      null,
-    );
-    setState(entangledThenable);
+  } catch (error) {
+    // This is a trick to get the `useFormState` hook to rethrow the error.
+    // When it unwraps the thenable with the `use` algorithm, the error
+    // will be thrown.
+    const rejectedThenable: RejectedThenable<S> = {
+      then() {},
+      status: 'rejected',
+      reason: error,
+    };
+    setState(rejectedThenable);
+    finishRunningFormStateAction(actionQueue, setState);
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
 
@@ -1989,7 +1999,7 @@ function runFormStateAction<S, P>(
 
 function finishRunningFormStateAction<S, P>(
   actionQueue: FormStateActionQueue<S, P>,
-  setState: Dispatch<Thenable<S>>,
+  setState: Dispatch<S | Thenable<S>>,
 ) {
   // The action finished running. Pop it from the queue and run the next pending
   // action, if there are any.
@@ -2035,25 +2045,20 @@ function mountFormState<S, P>(
       }
     }
   }
-  const initialStateThenable: Thenable<S> = {
-    status: 'fulfilled',
-    value: initialState,
-    then() {},
-  };
 
   // State hook. The state is stored in a thenable which is then unwrapped by
   // the `use` algorithm during render.
   const stateHook = mountWorkInProgressHook();
-  stateHook.memoizedState = stateHook.baseState = initialStateThenable;
-  const stateQueue: UpdateQueue<Thenable<S>, Thenable<S>> = {
+  stateHook.memoizedState = stateHook.baseState = initialState;
+  const stateQueue: UpdateQueue<S | Thenable<S>, S | Thenable<S>> = {
     pending: null,
     lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: formStateReducer,
-    lastRenderedState: initialStateThenable,
+    lastRenderedState: initialState,
   };
   stateHook.queue = stateQueue;
-  const setState: Dispatch<Thenable<S>> = (dispatchSetState.bind(
+  const setState: Dispatch<S | Thenable<S>> = (dispatchSetState.bind(
     null,
     currentlyRenderingFiber,
     stateQueue,
@@ -2111,14 +2116,20 @@ function updateFormStateImpl<S, P>(
   initialState: S,
   permalink?: string,
 ): [S, (P) => void] {
-  const [thenable] = updateReducerImpl<Thenable<S>, Thenable<S>>(
+  const [actionResult] = updateReducerImpl<S | Thenable<S>, S | Thenable<S>>(
     stateHook,
     currentStateHook,
     formStateReducer,
   );
 
   // This will suspend until the action finishes.
-  const state = useThenable(thenable);
+  const state: S =
+    typeof actionResult === 'object' &&
+    actionResult !== null &&
+    // $FlowFixMe[method-unbinding]
+    typeof actionResult.then === 'function'
+      ? useThenable(((actionResult: any): Thenable<S>))
+      : (actionResult: any);
 
   const actionQueueHook = updateWorkInProgressHook();
   const actionQueue = actionQueueHook.queue;
@@ -2173,8 +2184,7 @@ function rerenderFormState<S, P>(
   }
 
   // This is a mount. No updates to process.
-  const thenable: Thenable<S> = stateHook.memoizedState;
-  const state = useThenable(thenable);
+  const state: S = stateHook.memoizedState;
 
   const actionQueueHook = updateWorkInProgressHook();
   const actionQueue = actionQueueHook.queue;
