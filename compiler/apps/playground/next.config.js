@@ -16,6 +16,12 @@ const nextConfig = {
 
     return config;
   },
+  // These aren't used by the playground, but turning it on forces nextjs to use
+  // experimental react which has the useMemoCache hook.
+  experimental: {
+    serverActions: true,
+    ppr: true,
+  },
 };
 
 module.exports = nextConfig;
