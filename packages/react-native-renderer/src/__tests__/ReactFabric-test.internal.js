@@ -528,14 +528,13 @@ describe('ReactFabric', () => {
     }));
 
     const snapshots = [];
-    nativeFabricUIManager.completeRoot.mockImplementation(function (
-      rootTag,
-      newChildSet,
-    ) {
-      snapshots.push(
-        nativeFabricUIManager.__dumpChildSetForJestTestsOnly(newChildSet),
-      );
-    });
+    nativeFabricUIManager.completeRoot.mockImplementation(
+      function (rootTag, newChildSet) {
+        snapshots.push(
+          nativeFabricUIManager.__dumpChildSetForJestTestsOnly(newChildSet),
+        );
+      },
+    );
 
     await act(() => {
       ReactFabric.render(

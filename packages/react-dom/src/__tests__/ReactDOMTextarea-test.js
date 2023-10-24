@@ -137,24 +137,24 @@ describe('ReactDOMTextarea', () => {
 
     let counter = 0;
     const originalCreateElement = document.createElement;
-    spyOnDevAndProd(document, 'createElement').mockImplementation(function (
-      type,
-    ) {
-      const el = originalCreateElement.apply(this, arguments);
-      let value = '';
-      if (type === 'textarea') {
-        Object.defineProperty(el, 'value', {
-          get: function () {
-            return value;
-          },
-          set: function (val) {
-            value = String(val);
-            counter++;
-          },
-        });
-      }
-      return el;
-    });
+    spyOnDevAndProd(document, 'createElement').mockImplementation(
+      function (type) {
+        const el = originalCreateElement.apply(this, arguments);
+        let value = '';
+        if (type === 'textarea') {
+          Object.defineProperty(el, 'value', {
+            get: function () {
+              return value;
+            },
+            set: function (val) {
+              value = String(val);
+              counter++;
+            },
+          });
+        }
+        return el;
+      },
+    );
 
     ReactDOM.render(<textarea value="" readOnly={true} />, container);
 
