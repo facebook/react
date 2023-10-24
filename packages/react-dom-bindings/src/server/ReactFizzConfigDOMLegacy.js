@@ -8,10 +8,12 @@
  */
 
 import type {
+  RenderState as BaseRenderState,
   ResumableState,
   BoundaryResources,
   StyleQueue,
   Resource,
+  HeadersDescriptor,
 } from './ReactFizzConfigDOM';
 
 import {
@@ -46,6 +48,14 @@ export type RenderState = {
   headChunks: null | Array<Chunk | PrecomputedChunk>,
   externalRuntimeScript: null | any,
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
+  onHeaders: void | ((headers: HeadersDescriptor) => void),
+  headers: null | {
+    preconnects: string,
+    fontPreloads: string,
+    highImagePreloads: string,
+    remainingCapacity: number,
+  },
+  resets: BaseRenderState['resets'],
   charsetChunks: Array<Chunk | PrecomputedChunk>,
   preconnectChunks: Array<Chunk | PrecomputedChunk>,
   importMapChunks: Array<Chunk | PrecomputedChunk>,
@@ -83,6 +93,7 @@ export function createRenderState(
     undefined,
     undefined,
     undefined,
+    undefined,
   );
   return {
     // Keep this in sync with ReactFizzConfigDOM
@@ -94,6 +105,9 @@ export function createRenderState(
     headChunks: renderState.headChunks,
     externalRuntimeScript: renderState.externalRuntimeScript,
     bootstrapChunks: renderState.bootstrapChunks,
+    onHeaders: renderState.onHeaders,
+    headers: renderState.headers,
+    resets: renderState.resets,
     charsetChunks: renderState.charsetChunks,
     preconnectChunks: renderState.preconnectChunks,
     importMapChunks: renderState.importMapChunks,
@@ -159,6 +173,7 @@ export {
   setCurrentlyRenderingBoundaryResourcesTarget,
   prepareHostDispatcher,
   resetResumableState,
+  emitEarlyPreloads,
 } from './ReactFizzConfigDOM';
 
 import escapeTextForBrowser from './escapeTextForBrowser';

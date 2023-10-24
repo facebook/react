@@ -7,14 +7,13 @@
  * @flow
  */
 
-import type {
-  Request,
-  PostponedState,
-  HeadersDescriptor,
-} from 'react-server/src/ReactFizzServer';
+import type {Request, PostponedState} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {
+  BootstrapScriptDescriptor,
+  HeadersDescriptor,
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
 import type {ImportMap} from '../shared/ReactDOMTypes';
 
@@ -27,6 +26,7 @@ import {
   startFlowing,
   stopFlowing,
   abort,
+  prepareForStartFlowingIfBeforeAllReady,
 } from 'react-server/src/ReactFizzServer';
 
 import {
@@ -65,6 +65,7 @@ type Options = {
   importMap?: ImportMap,
   formState?: ReactFormState<any, any> | null,
   onHeaders?: (headers: HeadersDescriptor) => void,
+  maxHeadersLength?: number,
 };
 
 type ResumeOptions = {
@@ -99,6 +100,8 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
       options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
       options ? options.importMap : undefined,
+      options ? options.onHeaders : undefined,
+      options ? options.maxHeadersLength : undefined,
     ),
     createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
@@ -109,7 +112,6 @@ function createRequestImpl(children: ReactNodeList, options: void | Options) {
     undefined,
     options ? options.onPostpone : undefined,
     options ? options.formState : undefined,
-    options ? options.onHeaders : undefined,
   );
 }
 
@@ -128,6 +130,7 @@ function renderToPipeableStream(
         );
       }
       hasStartedFlowing = true;
+      prepareForStartFlowingIfBeforeAllReady(request);
       startFlowing(request, destination);
       destination.on('drain', createDrainHandler(destination, request));
       destination.on(

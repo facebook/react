@@ -7,12 +7,12 @@
  * @flow
  */
 
-import type {
-  PostponedState,
-  HeadersDescriptor,
-} from 'react-server/src/ReactFizzServer';
+import type {PostponedState} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {
+  BootstrapScriptDescriptor,
+  HeadersDescriptor,
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import ReactVersion from 'shared/ReactVersion';
@@ -48,6 +48,7 @@ type Options = {
   importMap?: ImportMap,
   formState?: ReactFormState<any, any> | null,
   onHeaders?: (headers: Headers) => void,
+  maxHeadersLength?: number,
 };
 
 type ResumeOptions = {
@@ -125,6 +126,8 @@ function renderToReadableStream(
         options ? options.bootstrapModules : undefined,
         options ? options.unstable_externalRuntimeSrc : undefined,
         options ? options.importMap : undefined,
+        onHeadersImpl,
+        options ? options.maxHeadersLength : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -135,7 +138,6 @@ function renderToReadableStream(
       onFatalError,
       options ? options.onPostpone : undefined,
       options ? options.formState : undefined,
-      onHeadersImpl,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -204,7 +206,6 @@ function resume(
       onShellReady,
       onShellError,
       onFatalError,
-      undefined,
       options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {

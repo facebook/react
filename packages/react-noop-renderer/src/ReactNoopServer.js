@@ -271,6 +271,7 @@ const ReactNoopServer = ReactFizzServer({
   setCurrentlyRenderingBoundaryResourcesTarget(resources: BoundaryResources) {},
 
   prepareHostDispatcher() {},
+  emitEarlyPreloads() {},
 });
 
 type Options = {

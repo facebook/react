@@ -8,11 +8,11 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 import type {
-  PostponedState,
+  BootstrapScriptDescriptor,
   HeadersDescriptor,
-} from 'react-server/src/ReactFizzServer';
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {PostponedState} from 'react-server/src/ReactFizzServer';
 import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import ReactVersion from 'shared/ReactVersion';
@@ -45,6 +45,7 @@ type Options = {
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
   onHeaders?: (headers: Headers) => void,
+  maxHeadersLength?: number,
 };
 
 type StaticResult = {
@@ -104,6 +105,8 @@ function prerender(
         options ? options.bootstrapModules : undefined,
         options ? options.unstable_externalRuntimeSrc : undefined,
         options ? options.importMap : undefined,
+        onHeadersImpl,
+        options ? options.maxHeadersLength : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -113,7 +116,6 @@ function prerender(
       undefined,
       onFatalError,
       options ? options.onPostpone : undefined,
-      onHeadersImpl,
     );
     if (options && options.signal) {
       const signal = options.signal;
