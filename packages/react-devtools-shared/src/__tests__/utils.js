@@ -12,7 +12,7 @@ import typeof ReactTestRenderer from 'react-test-renderer';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/frontend/types';
 
 export function act(
   callback: Function,
@@ -86,7 +86,7 @@ export function createDisplayNameFilter(
   source: string,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   let isValid = true;
   try {
     new RegExp(source); // eslint-disable-line no-new
@@ -102,7 +102,7 @@ export function createDisplayNameFilter(
 }
 
 export function createHOCFilter(isEnabled: boolean = true) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   return {
     type: Types.ComponentFilterHOC,
     isEnabled,
@@ -114,7 +114,7 @@ export function createElementTypeFilter(
   elementType: ElementType,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   return {
     type: Types.ComponentFilterElementType,
     isEnabled,
@@ -126,7 +126,7 @@ export function createLocationFilter(
   source: string,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   let isValid = true;
   try {
     new RegExp(source); // eslint-disable-line no-new

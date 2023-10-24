@@ -142,6 +142,7 @@ function legacyCreateRootFromDOMContainer(
       noopOnRecoverableError,
       // TODO(luna) Support hydration later
       null,
+      null,
     );
     container._reactRootContainer = root;
     markContainerAsRoot(root.current, container);

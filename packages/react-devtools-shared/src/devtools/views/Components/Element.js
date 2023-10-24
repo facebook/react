@@ -20,7 +20,7 @@ import {useSubscription} from '../hooks';
 import {logEvent} from 'react-devtools-shared/src/Logger';
 
 import type {ItemData} from './Tree';
-import type {Element as ElementType} from './types';
+import type {Element as ElementType} from 'react-devtools-shared/src/frontend/types';
 
 import styles from './Element.css';
 import Icon from '../Icon';

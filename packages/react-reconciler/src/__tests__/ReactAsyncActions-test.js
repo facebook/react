@@ -19,7 +19,7 @@ describe('ReactAsyncActions', () => {
     assertLog = require('internal-test-utils').assertLog;
     useTransition = React.useTransition;
     useState = React.useState;
-    useOptimistic = React.experimental_useOptimistic;
+    useOptimistic = React.useOptimistic;
 
     textCache = new Map();
   });
@@ -819,6 +819,44 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
+  test('regression: useOptimistic during setState-in-render', async () => {
+    // This is a regression test for a very specific case where useOptimistic is
+    // the first hook in the component, it has a pending update, and a later
+    // hook schedules a local (setState-in-render) update. Don't sweat about
+    // deleting this test if the implementation details change.
+
+    let setOptimisticState;
+    let startTransition;
+    function App() {
+      const [optimisticState, _setOptimisticState] = useOptimistic(0);
+      setOptimisticState = _setOptimisticState;
+      const [, _startTransition] = useTransition();
+      startTransition = _startTransition;
+
+      const [derivedState, setDerivedState] = useState(0);
+      if (derivedState !== optimisticState) {
+        setDerivedState(optimisticState);
+      }
+
+      return <Text text={optimisticState} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    assertLog([0]);
+    expect(root).toMatchRenderedOutput('0');
+
+    await act(() => {
+      startTransition(async () => {
+        setOptimisticState(1);
+        await getText('Wait');
+      });
+    });
+    assertLog([1]);
+    expect(root).toMatchRenderedOutput('1');
+  });
+
+  // @gate enableAsyncActions
   test('useOptimistic accepts a custom reducer', async () => {
     let serverCart = ['A'];
 
@@ -1073,5 +1111,117 @@ describe('ReactAsyncActions', () => {
         <div>Optimistic count: 1</div>
       </>,
     );
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimistic can update repeatedly in the same async action', async () => {
+    let startTransition;
+    let setLoadingProgress;
+    let setText;
+    function App() {
+      const [, _startTransition] = useTransition();
+      const [text, _setText] = useState('A');
+      const [loadingProgress, _setLoadingProgress] = useOptimistic(0);
+      startTransition = _startTransition;
+      setText = _setText;
+      setLoadingProgress = _setLoadingProgress;
+
+      return (
+        <>
+          {loadingProgress !== 0 ? (
+            <div key="progress">
+              <Text text={`Loading... (${loadingProgress})`} />
+            </div>
+          ) : null}
+          <div key="real">
+            <Text text={text} />
+          </div>
+        </>
+      );
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    assertLog(['A']);
+    expect(root).toMatchRenderedOutput(<div>A</div>);
+
+    await act(async () => {
+      startTransition(async () => {
+        setLoadingProgress('25%');
+        await getText('Wait 1');
+        setLoadingProgress('75%');
+        await getText('Wait 2');
+        startTransition(() => setText('B'));
+      });
+    });
+    assertLog(['Loading... (25%)', 'A']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Loading... (25%)</div>
+        <div>A</div>
+      </>,
+    );
+
+    await act(() => resolveText('Wait 1'));
+    assertLog(['Loading... (75%)', 'A']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Loading... (75%)</div>
+        <div>A</div>
+      </>,
+    );
+
+    await act(() => resolveText('Wait 2'));
+    assertLog(['B']);
+    expect(root).toMatchRenderedOutput(<div>B</div>);
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimistic warns if outside of a transition', async () => {
+    let startTransition;
+    let setLoadingProgress;
+    let setText;
+    function App() {
+      const [, _startTransition] = useTransition();
+      const [text, _setText] = useState('A');
+      const [loadingProgress, _setLoadingProgress] = useOptimistic(0);
+      startTransition = _startTransition;
+      setText = _setText;
+      setLoadingProgress = _setLoadingProgress;
+
+      return (
+        <>
+          {loadingProgress !== 0 ? (
+            <div key="progress">
+              <Text text={`Loading... (${loadingProgress})`} />
+            </div>
+          ) : null}
+          <div key="real">
+            <Text text={text} />
+          </div>
+        </>
+      );
+    }
+
+    // Initial render
+    const root = ReactNoop.createRoot();
+    await act(() => root.render(<App />));
+    assertLog(['A']);
+    expect(root).toMatchRenderedOutput(<div>A</div>);
+
+    await expect(async () => {
+      await act(() => {
+        setLoadingProgress('25%');
+        startTransition(() => setText('B'));
+      });
+    }).toErrorDev(
+      'An optimistic state update occurred outside a transition or ' +
+        'action. To fix, move the update to an action, or wrap ' +
+        'with startTransition.',
+      {withoutStack: true},
+    );
+    assertLog(['Loading... (25%)', 'A', 'B']);
+    expect(root).toMatchRenderedOutput(<div>B</div>);
   });
 });
