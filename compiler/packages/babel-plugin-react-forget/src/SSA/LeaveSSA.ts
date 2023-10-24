@@ -322,7 +322,7 @@ export function leaveSSA(fn: HIRFunction): void {
               operand.mutableRange.end = phi.id.mutableRange.end;
             }
           }
-          return;
+          continue;
         }
         // Otherwise this is a temporary phi (logical or ternary) or occurs in a loop. In either
         // case we can't independently memoize any of the values: unify their ranges to span the
