@@ -13,6 +13,7 @@ import type {
   Usable,
   Thenable,
   RejectedThenable,
+  Awaited,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -1871,12 +1872,12 @@ function rerenderOptimistic<S, A>(
 type FormStateActionQueue<S, P> = {
   // This is the most recent state returned from an action. It's updated as
   // soon as the action finishes running.
-  state: S,
+  state: Awaited<S>,
   // A stable dispatch method, passed to the user.
   dispatch: Dispatch<P>,
   // This is the most recent action function that was rendered. It's updated
   // during the commit phase.
-  action: (S, P) => Promise<S>,
+  action: (Awaited<S>, P) => S,
   // This is a circular linked list of pending action payloads. It incudes the
   // action that is currently running.
   pending: FormStateActionQueueNode<P> | null,
@@ -1891,7 +1892,7 @@ type FormStateActionQueueNode<P> = {
 function dispatchFormState<S, P>(
   fiber: Fiber,
   actionQueue: FormStateActionQueue<S, P>,
-  setState: Dispatch<S | Thenable<S>>,
+  setState: Dispatch<S | Awaited<S>>,
   payload: P,
 ): void {
   if (isRenderPhaseUpdate(fiber)) {
@@ -1907,7 +1908,7 @@ function dispatchFormState<S, P>(
     };
     newLast.next = actionQueue.pending = newLast;
 
-    runFormStateAction(actionQueue, setState, payload);
+    runFormStateAction(actionQueue, (setState: any), payload);
   } else {
     // There's already an action running. Add to the queue.
     const first = last.next;
@@ -1921,7 +1922,7 @@ function dispatchFormState<S, P>(
 
 function runFormStateAction<S, P>(
   actionQueue: FormStateActionQueue<S, P>,
-  setState: Dispatch<S | Thenable<S>>,
+  setState: Dispatch<S | Awaited<S>>,
   payload: P,
 ) {
   const action = actionQueue.action;
@@ -1942,42 +1943,42 @@ function runFormStateAction<S, P>(
       // $FlowFixMe[method-unbinding]
       typeof returnValue.then === 'function'
     ) {
-      const thenable = ((returnValue: any): Thenable<S>);
+      const thenable = ((returnValue: any): Thenable<Awaited<S>>);
 
-      // Attach a listener to read the return state of the action. As soon as this
-      // resolves, we can run the next action in the sequence.
+      // Attach a listener to read the return state of the action. As soon as
+      // this resolves, we can run the next action in the sequence.
       thenable.then(
-        (nextState: S) => {
+        (nextState: Awaited<S>) => {
           actionQueue.state = nextState;
-          finishRunningFormStateAction(actionQueue, setState);
+          finishRunningFormStateAction(actionQueue, (setState: any));
         },
-        () => finishRunningFormStateAction(actionQueue, setState),
+        () => finishRunningFormStateAction(actionQueue, (setState: any)),
       );
 
       const entangledResult = requestAsyncActionContext<S>(thenable, null);
-      setState(entangledResult);
+      setState((entangledResult: any));
     } else {
-      // This is either `finishedState` or a thenable that resolves to
-      // `finishedState`, depending on whether we're inside an async
-      // action scope.
+      // This is either `returnValue` or a thenable that resolves to
+      // `returnValue`, depending on whether we're inside an async action scope.
       const entangledResult = requestSyncActionContext<S>(returnValue, null);
-      setState(entangledResult);
+      setState((entangledResult: any));
 
-      const nextState = ((returnValue: any): S);
+      const nextState = ((returnValue: any): Awaited<S>);
       actionQueue.state = nextState;
-      finishRunningFormStateAction(actionQueue, setState);
+      finishRunningFormStateAction(actionQueue, (setState: any));
     }
   } catch (error) {
     // This is a trick to get the `useFormState` hook to rethrow the error.
     // When it unwraps the thenable with the `use` algorithm, the error
     // will be thrown.
-    const rejectedThenable: RejectedThenable<S> = {
+    const rejectedThenable: S = ({
       then() {},
       status: 'rejected',
       reason: error,
-    };
+      // $FlowFixMe: Not sure why this doesn't work
+    }: RejectedThenable<Awaited<S>>);
     setState(rejectedThenable);
-    finishRunningFormStateAction(actionQueue, setState);
+    finishRunningFormStateAction(actionQueue, (setState: any));
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
 
@@ -1999,7 +2000,7 @@ function runFormStateAction<S, P>(
 
 function finishRunningFormStateAction<S, P>(
   actionQueue: FormStateActionQueue<S, P>,
-  setState: Dispatch<S | Thenable<S>>,
+  setState: Dispatch<S | Awaited<S>>,
 ) {
   // The action finished running. Pop it from the queue and run the next pending
   // action, if there are any.
@@ -2015,7 +2016,7 @@ function finishRunningFormStateAction<S, P>(
       last.next = next;
 
       // Run the next action.
-      runFormStateAction(actionQueue, setState, next.payload);
+      runFormStateAction(actionQueue, (setState: any), next.payload);
     }
   }
 }
@@ -2025,11 +2026,11 @@ function formStateReducer<S>(oldState: S, newState: S): S {
 }
 
 function mountFormState<S, P>(
-  action: (S, P) => Promise<S>,
-  initialStateProp: S,
+  action: (Awaited<S>, P) => S,
+  initialStateProp: Awaited<S>,
   permalink?: string,
-): [S, (P) => void] {
-  let initialState = initialStateProp;
+): [Awaited<S>, (P) => void] {
+  let initialState: Awaited<S> = initialStateProp;
   if (getIsHydrating()) {
     const root: FiberRoot = (getWorkInProgressRoot(): any);
     const ssrFormState = root.formState;
@@ -2050,18 +2051,20 @@ function mountFormState<S, P>(
   // the `use` algorithm during render.
   const stateHook = mountWorkInProgressHook();
   stateHook.memoizedState = stateHook.baseState = initialState;
-  const stateQueue: UpdateQueue<S | Thenable<S>, S | Thenable<S>> = {
+  // TODO: Typing this "correctly" results in recursion limit errors
+  // const stateQueue: UpdateQueue<S | Awaited<S>, S | Awaited<S>> = {
+  const stateQueue = {
     pending: null,
     lanes: NoLanes,
-    dispatch: null,
+    dispatch: (null: any),
     lastRenderedReducer: formStateReducer,
     lastRenderedState: initialState,
   };
   stateHook.queue = stateQueue;
-  const setState: Dispatch<S | Thenable<S>> = (dispatchSetState.bind(
+  const setState: Dispatch<S | Awaited<S>> = (dispatchSetState.bind(
     null,
     currentlyRenderingFiber,
-    stateQueue,
+    ((stateQueue: any): UpdateQueue<S | Awaited<S>, S | Awaited<S>>),
   ): any);
   stateQueue.dispatch = setState;
 
@@ -2077,7 +2080,7 @@ function mountFormState<S, P>(
     pending: null,
   };
   actionQueueHook.queue = actionQueue;
-  const dispatch = dispatchFormState.bind(
+  const dispatch = (dispatchFormState: any).bind(
     null,
     currentlyRenderingFiber,
     actionQueue,
@@ -2094,10 +2097,10 @@ function mountFormState<S, P>(
 }
 
 function updateFormState<S, P>(
-  action: (S, P) => Promise<S>,
-  initialState: S,
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
   permalink?: string,
-): [S, (P) => void] {
+): [Awaited<S>, (P) => void] {
   const stateHook = updateWorkInProgressHook();
   const currentStateHook = ((currentHook: any): Hook);
   return updateFormStateImpl(
@@ -2112,10 +2115,10 @@ function updateFormState<S, P>(
 function updateFormStateImpl<S, P>(
   stateHook: Hook,
   currentStateHook: Hook,
-  action: (S, P) => Promise<S>,
-  initialState: S,
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
   permalink?: string,
-): [S, (P) => void] {
+): [Awaited<S>, (P) => void] {
   const [actionResult] = updateReducerImpl<S | Thenable<S>, S | Thenable<S>>(
     stateHook,
     currentStateHook,
@@ -2123,12 +2126,12 @@ function updateFormStateImpl<S, P>(
   );
 
   // This will suspend until the action finishes.
-  const state: S =
+  const state: Awaited<S> =
     typeof actionResult === 'object' &&
     actionResult !== null &&
     // $FlowFixMe[method-unbinding]
     typeof actionResult.then === 'function'
-      ? useThenable(((actionResult: any): Thenable<S>))
+      ? useThenable(((actionResult: any): Thenable<Awaited<S>>))
       : (actionResult: any);
 
   const actionQueueHook = updateWorkInProgressHook();
@@ -2152,16 +2155,16 @@ function updateFormStateImpl<S, P>(
 
 function formStateActionEffect<S, P>(
   actionQueue: FormStateActionQueue<S, P>,
-  action: (S, P) => Promise<S>,
+  action: (Awaited<S>, P) => S,
 ): void {
   actionQueue.action = action;
 }
 
 function rerenderFormState<S, P>(
-  action: (S, P) => Promise<S>,
-  initialState: S,
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
   permalink?: string,
-): [S, (P) => void] {
+): [Awaited<S>, (P) => void] {
   // Unlike useState, useFormState doesn't support render phase updates.
   // Also unlike useState, we need to replay all pending updates again in case
   // the passthrough value changed.
@@ -2184,7 +2187,7 @@ function rerenderFormState<S, P>(
   }
 
   // This is a mount. No updates to process.
-  const state: S = stateHook.memoizedState;
+  const state: Awaited<S> = stateHook.memoizedState;
 
   const actionQueueHook = updateWorkInProgressHook();
   const actionQueue = actionQueueHook.queue;
@@ -3735,10 +3738,10 @@ if (__DEV__) {
       useHostTransitionStatus;
     (HooksDispatcherOnMountInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => Promise<S>,
-        initialState: S,
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
         permalink?: string,
-      ): [S, (P) => void] {
+      ): [Awaited<S>, (P) => void] {
         currentHookNameInDev = 'useFormState';
         mountHookTypesDev();
         return mountFormState(action, initialState, permalink);
@@ -3905,10 +3908,10 @@ if (__DEV__) {
       useHostTransitionStatus;
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => Promise<S>,
-        initialState: S,
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
         permalink?: string,
-      ): [S, (P) => void] {
+      ): [Awaited<S>, (P) => void] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
         return mountFormState(action, initialState, permalink);
@@ -4077,10 +4080,10 @@ if (__DEV__) {
       useHostTransitionStatus;
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => Promise<S>,
-        initialState: S,
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
         permalink?: string,
-      ): [S, (P) => void] {
+      ): [Awaited<S>, (P) => void] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
         return updateFormState(action, initialState, permalink);
@@ -4249,10 +4252,10 @@ if (__DEV__) {
       useHostTransitionStatus;
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => Promise<S>,
-        initialState: S,
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
         permalink?: string,
-      ): [S, (P) => void] {
+      ): [Awaited<S>, (P) => void] {
         currentHookNameInDev = 'useFormState';
         updateHookTypesDev();
         return rerenderFormState(action, initialState, permalink);
@@ -4442,10 +4445,10 @@ if (__DEV__) {
       useHostTransitionStatus;
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => Promise<S>,
-        initialState: S,
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
         permalink?: string,
-      ): [S, (P) => void] {
+      ): [Awaited<S>, (P) => void] {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         mountHookTypesDev();
@@ -4640,10 +4643,10 @@ if (__DEV__) {
       useHostTransitionStatus;
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => Promise<S>,
-        initialState: S,
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
         permalink?: string,
-      ): [S, (P) => void] {
+      ): [Awaited<S>, (P) => void] {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         updateHookTypesDev();
@@ -4838,10 +4841,10 @@ if (__DEV__) {
       useHostTransitionStatus;
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
       function useFormState<S, P>(
-        action: (S, P) => Promise<S>,
-        initialState: S,
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
         permalink?: string,
-      ): [S, (P) => void] {
+      ): [Awaited<S>, (P) => void] {
         currentHookNameInDev = 'useFormState';
         warnInvalidHookAccess();
         updateHookTypesDev();
