@@ -15478,7 +15478,7 @@ function preinitStyle(href, precedence, options) {
           getStylesheetSelectorFromKey(key)
         ))
       )
-        state.loading = 1;
+        state.loading = 0;
       else {
         href = assign(
           { rel: "stylesheet", href: href, "data-precedence": precedence },
@@ -15704,6 +15704,7 @@ function acquireResource(hoistableRoot, resource, props) {
         );
         if (instance$260)
           return (
+            (resource.state.loading |= 4),
             (resource.instance = instance$260),
             markNodeAsHoistable(instance$260),
             instance$260
@@ -15883,7 +15884,9 @@ function suspendResource(hoistableRoot, resource, props) {
   var state = suspendedState;
   if (
     "stylesheet" === resource.type &&
-    ("string" !== typeof props.media || !1 !== matchMedia(props.media).matches)
+    ("string" !== typeof props.media ||
+      !1 !== matchMedia(props.media).matches) &&
+    0 === (resource.state.loading & 4)
   ) {
     if (null === resource.instance) {
       var key = getStyleKey(props.href),
@@ -16811,7 +16814,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1825 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-273dc50b",
+  version: "18.3.0-www-classic-8d8af9ad",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2176 = {
@@ -16841,7 +16844,7 @@ var internals$jscomp$inline_2176 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-273dc50b"
+  reconcilerVersion: "18.3.0-www-classic-8d8af9ad"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2177 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17329,4 +17332,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-273dc50b";
+exports.version = "18.3.0-www-classic-8d8af9ad";

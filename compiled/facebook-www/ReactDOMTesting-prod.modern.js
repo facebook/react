@@ -15758,7 +15758,7 @@ function preinitStyle(href, precedence, options) {
           getStylesheetSelectorFromKey(key)
         ))
       )
-        state.loading = 1;
+        state.loading = 0;
       else {
         href = assign(
           { rel: "stylesheet", href: href, "data-precedence": precedence },
@@ -15984,6 +15984,7 @@ function acquireResource(hoistableRoot, resource, props) {
         );
         if (instance$264)
           return (
+            (resource.state.loading |= 4),
             (resource.instance = instance$264),
             markNodeAsHoistable(instance$264),
             instance$264
@@ -16163,7 +16164,9 @@ function suspendResource(hoistableRoot, resource, props) {
   var state = suspendedState;
   if (
     "stylesheet" === resource.type &&
-    ("string" !== typeof props.media || !1 !== matchMedia(props.media).matches)
+    ("string" !== typeof props.media ||
+      !1 !== matchMedia(props.media).matches) &&
+    0 === (resource.state.loading & 4)
   ) {
     if (null === resource.instance) {
       var key = getStyleKey(props.href),
@@ -16388,7 +16391,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1784 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-035cd9a2",
+  version: "18.3.0-www-modern-a09b3b42",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2140 = {
@@ -16419,7 +16422,7 @@ var internals$jscomp$inline_2140 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-035cd9a2"
+  reconcilerVersion: "18.3.0-www-modern-a09b3b42"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2141 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16835,4 +16838,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-035cd9a2";
+exports.version = "18.3.0-www-modern-a09b3b42";

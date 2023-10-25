@@ -34004,7 +34004,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-modern-b2fbd9ab";
+var ReactVersion = "18.3.0-www-modern-32f0b929";
 
 function createPortal$1(
   children,
@@ -43822,7 +43822,7 @@ function preinitStyle(href, precedence, options) {
     );
 
     if (instance) {
-      state.loading = Loaded;
+      state.loading = Loaded & Inserted;
     } else {
       // Construct a new instance and insert it
       var stylesheetProps = assign(
@@ -44231,6 +44231,7 @@ function acquireResource(hoistableRoot, resource, props) {
         );
 
         if (_instance) {
+          resource.state.loading |= Inserted;
           resource.instance = _instance;
           markNodeAsHoistable(_instance);
           return _instance;
@@ -44816,74 +44817,76 @@ function suspendResource(hoistableRoot, resource, props) {
       }
     }
 
-    if (resource.instance === null) {
-      var qualifiedProps = props;
-      var key = getStyleKey(qualifiedProps.href); // Attempt to hydrate instance from DOM
+    if ((resource.state.loading & Inserted) === NotLoaded) {
+      if (resource.instance === null) {
+        var qualifiedProps = props;
+        var key = getStyleKey(qualifiedProps.href); // Attempt to hydrate instance from DOM
 
-      var instance = hoistableRoot.querySelector(
-        getStylesheetSelectorFromKey(key)
-      );
+        var instance = hoistableRoot.querySelector(
+          getStylesheetSelectorFromKey(key)
+        );
 
-      if (instance) {
-        // If this instance has a loading state it came from the Fizz runtime.
-        // If there is not loading state it is assumed to have been server rendered
-        // as part of the preamble and therefore synchronously loaded. It could have
-        // errored however which we still do not yet have a means to detect. For now
-        // we assume it is loaded.
-        var maybeLoadingState = instance._p;
+        if (instance) {
+          // If this instance has a loading state it came from the Fizz runtime.
+          // If there is not loading state it is assumed to have been server rendered
+          // as part of the preamble and therefore synchronously loaded. It could have
+          // errored however which we still do not yet have a means to detect. For now
+          // we assume it is loaded.
+          var maybeLoadingState = instance._p;
 
-        if (
-          maybeLoadingState !== null &&
-          typeof maybeLoadingState === "object" && // $FlowFixMe[method-unbinding]
-          typeof maybeLoadingState.then === "function"
-        ) {
-          var loadingState = maybeLoadingState;
-          state.count++;
-          var ping = onUnsuspend.bind(state);
-          loadingState.then(ping, ping);
+          if (
+            maybeLoadingState !== null &&
+            typeof maybeLoadingState === "object" && // $FlowFixMe[method-unbinding]
+            typeof maybeLoadingState.then === "function"
+          ) {
+            var loadingState = maybeLoadingState;
+            state.count++;
+            var ping = onUnsuspend.bind(state);
+            loadingState.then(ping, ping);
+          }
+
+          resource.state.loading |= Inserted;
+          resource.instance = instance;
+          markNodeAsHoistable(instance);
+          return;
         }
 
-        resource.state.loading |= Inserted;
-        resource.instance = instance;
+        var ownerDocument = getDocumentFromRoot(hoistableRoot);
+        var stylesheetProps = stylesheetPropsFromRawProps(props);
+        var preloadProps = preloadPropsMap.get(key);
+
+        if (preloadProps) {
+          adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
+        } // Construct and insert a new instance
+
+        instance = ownerDocument.createElement("link");
         markNodeAsHoistable(instance);
-        return;
+        var linkInstance = instance; // This Promise is a loading state used by the Fizz runtime. We need this incase there is a race
+        // between this resource being rendered on the client and being rendered with a late completed boundary.
+
+        linkInstance._p = new Promise(function (resolve, reject) {
+          linkInstance.onload = resolve;
+          linkInstance.onerror = reject;
+        });
+        setInitialProperties(instance, "link", stylesheetProps);
+        resource.instance = instance;
       }
 
-      var ownerDocument = getDocumentFromRoot(hoistableRoot);
-      var stylesheetProps = stylesheetPropsFromRawProps(props);
-      var preloadProps = preloadPropsMap.get(key);
+      if (state.stylesheets === null) {
+        state.stylesheets = new Map();
+      }
 
-      if (preloadProps) {
-        adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
-      } // Construct and insert a new instance
+      state.stylesheets.set(resource, hoistableRoot);
+      var preloadEl = resource.state.preload;
 
-      instance = ownerDocument.createElement("link");
-      markNodeAsHoistable(instance);
-      var linkInstance = instance; // This Promise is a loading state used by the Fizz runtime. We need this incase there is a race
-      // between this resource being rendered on the client and being rendered with a late completed boundary.
+      if (preloadEl && (resource.state.loading & Settled) === NotLoaded) {
+        state.count++;
 
-      linkInstance._p = new Promise(function (resolve, reject) {
-        linkInstance.onload = resolve;
-        linkInstance.onerror = reject;
-      });
-      setInitialProperties(instance, "link", stylesheetProps);
-      resource.instance = instance;
-    }
+        var _ping = onUnsuspend.bind(state);
 
-    if (state.stylesheets === null) {
-      state.stylesheets = new Map();
-    }
-
-    state.stylesheets.set(resource, hoistableRoot);
-    var preloadEl = resource.state.preload;
-
-    if (preloadEl && (resource.state.loading & Settled) === NotLoaded) {
-      state.count++;
-
-      var _ping = onUnsuspend.bind(state);
-
-      preloadEl.addEventListener("load", _ping);
-      preloadEl.addEventListener("error", _ping);
+        preloadEl.addEventListener("load", _ping);
+        preloadEl.addEventListener("error", _ping);
+      }
     }
   }
 }

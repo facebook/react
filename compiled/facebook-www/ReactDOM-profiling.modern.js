@@ -16148,7 +16148,7 @@ function preinitStyle(href, precedence, options) {
           getStylesheetSelectorFromKey(key)
         ))
       )
-        state.loading = 1;
+        state.loading = 0;
       else {
         href = assign(
           { rel: "stylesheet", href: href, "data-precedence": precedence },
@@ -16374,6 +16374,7 @@ function acquireResource(hoistableRoot, resource, props) {
         );
         if (instance$284)
           return (
+            (resource.state.loading |= 4),
             (resource.instance = instance$284),
             markNodeAsHoistable(instance$284),
             instance$284
@@ -16553,7 +16554,9 @@ function suspendResource(hoistableRoot, resource, props) {
   var state = suspendedState;
   if (
     "stylesheet" === resource.type &&
-    ("string" !== typeof props.media || !1 !== matchMedia(props.media).matches)
+    ("string" !== typeof props.media ||
+      !1 !== matchMedia(props.media).matches) &&
+    0 === (resource.state.loading & 4)
   ) {
     if (null === resource.instance) {
       var key = getStyleKey(props.href),
@@ -16778,7 +16781,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1840 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-7d9d57c7",
+  version: "18.3.0-www-modern-75e3de0a",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16823,7 +16826,7 @@ var devToolsConfig$jscomp$inline_1840 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-7d9d57c7"
+  reconcilerVersion: "18.3.0-www-modern-75e3de0a"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17075,7 +17078,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-7d9d57c7";
+exports.version = "18.3.0-www-modern-75e3de0a";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
