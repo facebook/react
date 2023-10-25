@@ -23,5 +23,5 @@ jobs:
         working-directory: react
       - run: yarn install --frozen-lockfile
         working-directory: react
-      #- run: yarn test --ci
-      #  working-directory: react
+      - run: yarn test --ci
+        working-directory: react
