@@ -8,7 +8,6 @@
 import generate from "@babel/generator";
 import * as t from "@babel/types";
 import chalk from "chalk";
-import { format } from "prettier";
 import { HIR, HIRFunction, ReactiveFunction } from "../HIR/HIR";
 import { printFunction, printHIR } from "../HIR/PrintHIR";
 import { CodegenFunction, printReactiveFunction } from "../ReactiveScopes";
@@ -51,7 +50,7 @@ export function logCodegenFunction(step: string, fn: CodegenFunction): void {
         fn.async
       );
       const ast = generate(node);
-      printed = format(ast.code);
+      printed = ast.code;
     } catch (e) {
       console.log("Error formatting AST: " + e.message);
     }
