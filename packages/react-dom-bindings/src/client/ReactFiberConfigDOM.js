@@ -92,7 +92,6 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableFloat,
-  enableHostSingletons,
   enableTrustedTypesIntegration,
   enableFormActions,
   enableAsyncActions,
@@ -939,32 +938,18 @@ export function unhideTextInstance(
 }
 
 export function clearContainer(container: Container): void {
-  if (enableHostSingletons) {
-    const nodeType = container.nodeType;
-    if (nodeType === DOCUMENT_NODE) {
-      clearContainerSparingly(container);
-    } else if (nodeType === ELEMENT_NODE) {
-      switch (container.nodeName) {
-        case 'HEAD':
-        case 'HTML':
-        case 'BODY':
-          clearContainerSparingly(container);
-          return;
-        default: {
-          container.textContent = '';
-        }
-      }
-    }
-  } else {
-    if (container.nodeType === ELEMENT_NODE) {
-      // We have refined the container to Element type
-      const element: Element = (container: any);
-      element.textContent = '';
-    } else if (container.nodeType === DOCUMENT_NODE) {
-      // We have refined the container to Document type
-      const doc: Document = (container: any);
-      if (doc.documentElement) {
-        doc.removeChild(doc.documentElement);
+  const nodeType = container.nodeType;
+  if (nodeType === DOCUMENT_NODE) {
+    clearContainerSparingly(container);
+  } else if (nodeType === ELEMENT_NODE) {
+    switch (container.nodeName) {
+      case 'HEAD':
+      case 'HTML':
+      case 'BODY':
+        clearContainerSparingly(container);
+        return;
+      default: {
+        container.textContent = '';
       }
     }
   }
@@ -1053,7 +1038,7 @@ export function canHydrateInstance(
     const element: Element = (instance: any);
     const anyProps = (props: any);
     if (element.nodeName.toLowerCase() !== type.toLowerCase()) {
-      if (!inRootOrSingleton || !enableHostSingletons) {
+      if (!inRootOrSingleton) {
         // Usually we error for mismatched tags.
         if (
           enableFormActions &&
@@ -1067,7 +1052,7 @@ export function canHydrateInstance(
         }
       }
       // In root or singleton parents we skip past mismatched instances.
-    } else if (!inRootOrSingleton || !enableHostSingletons) {
+    } else if (!inRootOrSingleton) {
       // Match
       if (
         enableFormActions &&
@@ -1212,7 +1197,7 @@ export function canHydrateTextInstance(
     ) {
       // If we have extra hidden inputs, we don't mismatch. This allows us to
       // embed extra form data in the original form.
-    } else if (!inRootOrSingleton || !enableHostSingletons) {
+    } else if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -1230,7 +1215,7 @@ export function canHydrateSuspenseInstance(
   inRootOrSingleton: boolean,
 ): null | SuspenseInstance {
   while (instance.nodeType !== COMMENT_NODE) {
-    if (!inRootOrSingleton || !enableHostSingletons) {
+    if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -1292,7 +1277,7 @@ export function canHydrateFormStateMarker(
   inRootOrSingleton: boolean,
 ): null | FormStateMarkerInstance {
   while (instance.nodeType !== COMMENT_NODE) {
-    if (!inRootOrSingleton || !enableHostSingletons) {
+    if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -1501,9 +1486,7 @@ export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
   return (
-    (enableHostSingletons ||
-      (parentType !== 'head' && parentType !== 'body')) &&
-    (!enableFormActions || (parentType !== 'form' && parentType !== 'button'))
+    !enableFormActions || (parentType !== 'form' && parentType !== 'button')
   );
 }
 
