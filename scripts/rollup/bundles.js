@@ -574,6 +574,28 @@ const bundles = [
     externals: ['acorn'],
   },
 
+  /******* React Server DOM FB Server *******/
+  {
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-fb/src/ReactFlightDOMServerFB.js',
+    global: 'ReactFlightDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom'],
+  },
+
+  /******* React Server DOM FB Client *******/
+  {
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-fb/src/ReactFlightDOMClientFB.js',
+    global: 'ReactFlightDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom'],
+  },
+
   /******* React Suspense Test Utils *******/
   {
     bundleTypes: [NODE_ES2015],
