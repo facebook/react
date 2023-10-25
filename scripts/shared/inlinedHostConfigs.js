@@ -391,7 +391,11 @@ module.exports = [
   },
   {
     shortName: 'dom-fb',
-    entryPoints: ['react-server-dom-fb/src/ReactDOMServerFB.js'],
+    entryPoints: [
+      'react-server-dom-fb/src/ReactDOMServerFB.js',
+      'react-server-dom-fb/src/ReactFlightDOMClientFB.js',
+      'react-server-dom-fb/src/ReactFlightDOMServerFB.js',
+    ],
     paths: [
       'react-dom',
       'react-dom/src/ReactDOMSharedSubset.js',
