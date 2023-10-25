@@ -401,7 +401,7 @@ module.exports = [
     ],
     isFlowTyped: true,
     isServerSupported: true,
-    isFlightSupported: false,
+    isFlightSupported: true,
   },
   {
     shortName: 'native',
