@@ -398,6 +398,9 @@ module.exports = [
     ],
     paths: [
       'react-dom',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/src/server/react-dom-server.node',
       'react-dom/src/ReactDOMSharedSubset.js',
       'react-server-dom-fb/src/ReactFlightDOMClientFB.js',
       'react-server-dom-fb/src/ReactFlightDOMServerFB.js',
@@ -408,7 +411,6 @@ module.exports = [
     ],
     isFlowTyped: true,
     isServerSupported: true,
-    isFlightSupported: true,
   },
   {
     shortName: 'native',
