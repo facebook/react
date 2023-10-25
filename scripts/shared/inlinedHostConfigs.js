@@ -399,6 +399,9 @@ module.exports = [
     paths: [
       'react-dom',
       'react-dom/src/ReactDOMSharedSubset.js',
+      'react-server-dom-fb/src/ReactFlightDOMClientFB.js',
+      'react-server-dom-fb/src/ReactFlightDOMServerFB.js',
+      'react-server-dom-db/src/ReactFlightServerConfigFBBundler.js',
       'react-dom-bindings',
       'react-server-dom-fb',
       'shared/ReactDOMSharedInternals',
