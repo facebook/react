@@ -3476,7 +3476,13 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     const prevThenableState = task.thenableState;
     task.thenableState = null;
 
-    renderNodeDestructive(request, task, prevThenableState, task.node, -1);
+    renderNodeDestructive(
+      request,
+      task,
+      prevThenableState,
+      task.node,
+      task.childIndex,
+    );
 
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
       throw new Error(
