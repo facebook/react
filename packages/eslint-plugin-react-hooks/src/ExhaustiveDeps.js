@@ -32,6 +32,9 @@ export default {
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
+          checkAsyncFor: {
+            type: 'string',
+          },
         },
       },
     ],
@@ -51,9 +54,16 @@ export default {
         context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
 
+    const checkAsyncFor = new RegExp(
+      context.options && context.options[0] && context.options[0].checkAsyncFor
+        ? context.options[0].checkAsyncFor
+        : '.*',
+    );
+
     const options = {
       additionalHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
+      checkAsyncFor,
     };
 
     function reportProblem(problem) {
@@ -97,7 +107,11 @@ export default {
       reactiveHookName,
       isEffect,
     ) {
-      if (isEffect && node.async) {
+      if (
+        isEffect &&
+        node.async &&
+        options.checkAsyncFor.test(reactiveHookName)
+      ) {
         reportProblem({
           node: node,
           message:
@@ -1161,7 +1175,8 @@ export default {
       const callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
-      const declaredDependenciesNode = node.arguments[callbackIndex + 1];
+      const declaredDependenciesNode =
+        node.arguments[Math.max(callbackIndex + 1, node.arguments.length - 1)];
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
       // Check whether a callback is supplied. If there is no callback supplied
