@@ -4291,7 +4291,7 @@ function performWork(request$jscomp$2) {
                 task,
                 prevThenableState,
                 task.node,
-                -1
+                task.childIndex
               );
               if (
                 1 === task.replay.pendingTasks &&
@@ -5054,4 +5054,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-38c26c34";
+exports.version = "18.3.0-www-classic-bcc2173c";

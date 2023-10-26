@@ -4732,7 +4732,7 @@ exports.renderNextChunk = function (stream) {
                 task$jscomp$0,
                 prevThenableState,
                 task$jscomp$0.node,
-                -1
+                task$jscomp$0.childIndex
               );
               if (
                 1 === task$jscomp$0.replay.pendingTasks &&
