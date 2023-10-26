@@ -12,6 +12,15 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 } else {
   const errorMap = require('../error-codes/codes.json');
 
+  jest.mock('shared/ReactFeatureFlags', () => {
+    const actual = jest.requireActual('shared/ReactFeatureFlags');
+
+    // For now, too many tests depend on this flag, keep it disabled for now.
+    actual.disableLegacyReactDOMRenderAPIs = false;
+
+    return actual;
+  });
+
   // By default, jest.spyOn also calls the spied method.
   const spyOn = jest.spyOn;
   const noop = jest.fn;

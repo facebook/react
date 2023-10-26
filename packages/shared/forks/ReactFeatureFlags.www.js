@@ -103,6 +103,8 @@ export const enableComponentStackLocations = true;
 
 export const disableTextareaChildren = __EXPERIMENTAL__;
 
+export const disableLegacyReactDOMRenderAPIs = false;
+
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;

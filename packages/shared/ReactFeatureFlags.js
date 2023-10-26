@@ -199,6 +199,10 @@ export const enableCustomElementPropertySupport = __EXPERIMENTAL__;
 // Disables children for <textarea> elements
 export const disableTextareaChildren = false;
 
+// Removes legacy render API from react-dom, including render, hydrate, hydrate
+// and unmountComponentAtNode.
+export const disableLegacyReactDOMRenderAPIs = true;
+
 // -----------------------------------------------------------------------------
 // Debugging and DevTools
 // -----------------------------------------------------------------------------

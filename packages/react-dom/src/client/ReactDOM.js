@@ -170,15 +170,16 @@ export {
   batchedUpdates as unstable_batchedUpdates,
   flushSync,
   ReactVersion as version,
-  // Disabled behind disableLegacyReactDOMAPIs
   findDOMNode,
+  // Disabled behind disableLegacyReactDOMRenderAPIs
   hydrate,
+  // Disabled behind disableLegacyReactDOMRenderAPIs
   render,
+  // Disabled behind disableLegacyReactDOMRenderAPIs
   unmountComponentAtNode,
-  // exposeConcurrentModeAPIs
   createRoot,
   hydrateRoot,
-  // Disabled behind disableUnstableRenderSubtreeIntoContainer
+  // Disabled behind disableLegacyReactDOMRenderAPIs
   renderSubtreeIntoContainer as unstable_renderSubtreeIntoContainer,
   // enableCreateEventHandleAPI
   createEventHandle as unstable_createEventHandle,

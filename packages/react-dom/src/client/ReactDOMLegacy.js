@@ -43,6 +43,7 @@ import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
+import {disableLegacyReactDOMRenderAPIs} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -265,39 +266,46 @@ export function hydrate(
   container: Container,
   callback: ?Function,
 ): React$Component<any, any> | PublicInstance | null {
-  if (__DEV__) {
-    console.error(
-      'ReactDOM.hydrate is no longer supported in React 18. Use hydrateRoot ' +
-        'instead. Until you switch to the new API, your app will behave as ' +
-        "if it's running React 17. Learn " +
-        'more: https://reactjs.org/link/switch-to-createroot',
+  if (disableLegacyReactDOMRenderAPIs) {
+    throw new Error(
+      'ReactDOM.hydrate is no longer supported. Use hydrateRoot ' +
+        'instead. Learn more: https://reactjs.org/link/switch-to-createroot',
     );
-  }
-
-  if (!isValidContainerLegacy(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  if (__DEV__) {
-    const isModernRoot =
-      isContainerMarkedAsRoot(container) &&
-      container._reactRootContainer === undefined;
-    if (isModernRoot) {
+  } else {
+    if (__DEV__) {
       console.error(
-        'You are calling ReactDOM.hydrate() on a container that was previously ' +
-          'passed to ReactDOMClient.createRoot(). This is not supported. ' +
-          'Did you mean to call hydrateRoot(container, element)?',
+        'ReactDOM.hydrate is no longer supported in React 18. Use hydrateRoot ' +
+          'instead. Until you switch to the new API, your app will behave as ' +
+          "if it's running React 17. Learn " +
+          'more: https://reactjs.org/link/switch-to-createroot',
       );
     }
+
+    if (!isValidContainerLegacy(container)) {
+      throw new Error('Target container is not a DOM element.');
+    }
+
+    if (__DEV__) {
+      const isModernRoot =
+        isContainerMarkedAsRoot(container) &&
+        container._reactRootContainer === undefined;
+      if (isModernRoot) {
+        console.error(
+          'You are calling ReactDOM.hydrate() on a container that was previously ' +
+            'passed to ReactDOMClient.createRoot(). This is not supported. ' +
+            'Did you mean to call hydrateRoot(container, element)?',
+        );
+      }
+    }
+    // TODO: throw or warn if we couldn't hydrate?
+    return legacyRenderSubtreeIntoContainer(
+      null,
+      element,
+      container,
+      true,
+      callback,
+    );
   }
-  // TODO: throw or warn if we couldn't hydrate?
-  return legacyRenderSubtreeIntoContainer(
-    null,
-    element,
-    container,
-    true,
-    callback,
-  );
 }
 
 export function render(
@@ -305,38 +313,45 @@ export function render(
   container: Container,
   callback: ?Function,
 ): React$Component<any, any> | PublicInstance | null {
-  if (__DEV__) {
-    console.error(
-      'ReactDOM.render is no longer supported in React 18. Use createRoot ' +
-        'instead. Until you switch to the new API, your app will behave as ' +
-        "if it's running React 17. Learn " +
-        'more: https://reactjs.org/link/switch-to-createroot',
+  if (disableLegacyReactDOMRenderAPIs) {
+    throw new Error(
+      'ReactDOM.render is no longer supported. Use hydrateRoot instead. ' +
+        'Learn more: https://reactjs.org/link/switch-to-createroot',
     );
-  }
-
-  if (!isValidContainerLegacy(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  if (__DEV__) {
-    const isModernRoot =
-      isContainerMarkedAsRoot(container) &&
-      container._reactRootContainer === undefined;
-    if (isModernRoot) {
+  } else {
+    if (__DEV__) {
       console.error(
-        'You are calling ReactDOM.render() on a container that was previously ' +
-          'passed to ReactDOMClient.createRoot(). This is not supported. ' +
-          'Did you mean to call root.render(element)?',
+        'ReactDOM.render is no longer supported in React 18. Use createRoot ' +
+          'instead. Until you switch to the new API, your app will behave as ' +
+          "if it's running React 17. Learn " +
+          'more: https://reactjs.org/link/switch-to-createroot',
       );
     }
+
+    if (!isValidContainerLegacy(container)) {
+      throw new Error('Target container is not a DOM element.');
+    }
+
+    if (__DEV__) {
+      const isModernRoot =
+        isContainerMarkedAsRoot(container) &&
+        container._reactRootContainer === undefined;
+      if (isModernRoot) {
+        console.error(
+          'You are calling ReactDOM.render() on a container that was previously ' +
+            'passed to ReactDOMClient.createRoot(). This is not supported. ' +
+            'Did you mean to call root.render(element)?',
+        );
+      }
+    }
+    return legacyRenderSubtreeIntoContainer(
+      null,
+      element,
+      container,
+      false,
+      callback,
+    );
   }
-  return legacyRenderSubtreeIntoContainer(
-    null,
-    element,
-    container,
-    false,
-    callback,
-  );
 }
 
 export function unstable_renderSubtreeIntoContainer(
@@ -345,100 +360,116 @@ export function unstable_renderSubtreeIntoContainer(
   containerNode: Container,
   callback: ?Function,
 ): React$Component<any, any> | PublicInstance | null {
-  if (__DEV__) {
-    console.error(
-      'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported ' +
-        'in React 18. Consider using a portal instead. Until you switch to ' +
-        "the createRoot API, your app will behave as if it's running React " +
-        '17. Learn more: https://reactjs.org/link/switch-to-createroot',
+  if (disableLegacyReactDOMRenderAPIs) {
+    throw new Error(
+      'ReactDOM.unstable_renderSubtreeIntoContainer is no longer supported. ' +
+        'Use a portal instead. Learn more: ' +
+        'https://reactjs.org/link/switch-to-createroot',
+    );
+  } else {
+    if (__DEV__) {
+      console.error(
+        'ReactDOM.unstable_renderSubtreeIntoContainer() is no longer supported ' +
+          'in React 18. Consider using a portal instead. Until you switch to ' +
+          "the createRoot API, your app will behave as if it's running React " +
+          '17. Learn more: https://reactjs.org/link/switch-to-createroot',
+      );
+    }
+
+    if (!isValidContainerLegacy(containerNode)) {
+      throw new Error('Target container is not a DOM element.');
+    }
+
+    if (parentComponent == null || !hasInstance(parentComponent)) {
+      throw new Error('parentComponent must be a valid React Component');
+    }
+
+    return legacyRenderSubtreeIntoContainer(
+      parentComponent,
+      element,
+      containerNode,
+      false,
+      callback,
     );
   }
-
-  if (!isValidContainerLegacy(containerNode)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  if (parentComponent == null || !hasInstance(parentComponent)) {
-    throw new Error('parentComponent must be a valid React Component');
-  }
-
-  return legacyRenderSubtreeIntoContainer(
-    parentComponent,
-    element,
-    containerNode,
-    false,
-    callback,
-  );
 }
 
 export function unmountComponentAtNode(container: Container): boolean {
-  if (!isValidContainerLegacy(container)) {
+  if (disableLegacyReactDOMRenderAPIs) {
     throw new Error(
-      'unmountComponentAtNode(...): Target container is not a DOM element.',
+      'ReactDOM.unmountComponentAtNode is no longer supported. Did you mean ' +
+        'to call root.unmount()? Learn more: ' +
+        'https://reactjs.org/link/switch-to-createroot',
     );
-  }
-
-  if (__DEV__) {
-    const isModernRoot =
-      isContainerMarkedAsRoot(container) &&
-      container._reactRootContainer === undefined;
-    if (isModernRoot) {
-      console.error(
-        'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
-          'passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.unmount()?',
+  } else {
+    if (!isValidContainerLegacy(container)) {
+      throw new Error(
+        'unmountComponentAtNode(...): Target container is not a DOM element.',
       );
     }
-  }
 
-  if (container._reactRootContainer) {
     if (__DEV__) {
-      const rootEl = getReactRootElementInContainer(container);
-      const renderedByDifferentReact = rootEl && !getInstanceFromNode(rootEl);
-      if (renderedByDifferentReact) {
+      const isModernRoot =
+        isContainerMarkedAsRoot(container) &&
+        container._reactRootContainer === undefined;
+      if (isModernRoot) {
         console.error(
-          "unmountComponentAtNode(): The node you're attempting to unmount " +
-            'was rendered by another copy of React.',
+          'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
+            'passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.unmount()?',
         );
       }
     }
 
-    // Unmount should not be batched.
-    flushSync(() => {
-      legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
-        // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
-        container._reactRootContainer = null;
-        unmarkContainerAsRoot(container);
+    if (container._reactRootContainer) {
+      if (__DEV__) {
+        const rootEl = getReactRootElementInContainer(container);
+        const renderedByDifferentReact = rootEl && !getInstanceFromNode(rootEl);
+        if (renderedByDifferentReact) {
+          console.error(
+            "unmountComponentAtNode(): The node you're attempting to unmount " +
+              'was rendered by another copy of React.',
+          );
+        }
+      }
+
+      // Unmount should not be batched.
+      flushSync(() => {
+        legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
+          // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
+          container._reactRootContainer = null;
+          unmarkContainerAsRoot(container);
+        });
       });
-    });
-    // If you call unmountComponentAtNode twice in quick succession, you'll
-    // get `true` twice. That's probably fine?
-    return true;
-  } else {
-    if (__DEV__) {
-      const rootEl = getReactRootElementInContainer(container);
-      const hasNonRootReactChild = !!(rootEl && getInstanceFromNode(rootEl));
+      // If you call unmountComponentAtNode twice in quick succession, you'll
+      // get `true` twice. That's probably fine?
+      return true;
+    } else {
+      if (__DEV__) {
+        const rootEl = getReactRootElementInContainer(container);
+        const hasNonRootReactChild = !!(rootEl && getInstanceFromNode(rootEl));
 
-      // Check if the container itself is a React root node.
-      const isContainerReactRoot =
-        container.nodeType === ELEMENT_NODE &&
-        isValidContainerLegacy(container.parentNode) &&
-        // $FlowFixMe[prop-missing]
-        // $FlowFixMe[incompatible-use]
-        !!container.parentNode._reactRootContainer;
+        // Check if the container itself is a React root node.
+        const isContainerReactRoot =
+          container.nodeType === ELEMENT_NODE &&
+          isValidContainerLegacy(container.parentNode) &&
+          // $FlowFixMe[prop-missing]
+          // $FlowFixMe[incompatible-use]
+          !!container.parentNode._reactRootContainer;
 
-      if (hasNonRootReactChild) {
-        console.error(
-          "unmountComponentAtNode(): The node you're attempting to unmount " +
-            'was rendered by React and is not a top-level container. %s',
-          isContainerReactRoot
-            ? 'You may have accidentally passed in a React root node instead ' +
-                'of its container.'
-            : 'Instead, have the parent component update its state and ' +
-                'rerender in order to remove this component.',
-        );
+        if (hasNonRootReactChild) {
+          console.error(
+            "unmountComponentAtNode(): The node you're attempting to unmount " +
+              'was rendered by React and is not a top-level container. %s',
+            isContainerReactRoot
+              ? 'You may have accidentally passed in a React root node instead ' +
+                  'of its container.'
+              : 'Instead, have the parent component update its state and ' +
+                  'rerender in order to remove this component.',
+          );
+        }
       }
-    }
 
-    return false;
+      return false;
+    }
   }
 }
