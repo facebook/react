@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {StackFrame} from 'error-stack-parser';
 import type {ScrollState} from './view-base/utils/scrollState';
 
 // Source: https://github.com/facebook/flow/issues/4002#issuecomment-323612798
@@ -16,13 +17,6 @@ type Return_<R, F: (...args: Array<any>) => R> = R;
 export type Return<T> = Return_<mixed, T>;
 
 // Project types
-
-export type ErrorStackFrame = {
-  fileName: string,
-  lineNumber: number,
-  columnNumber: number,
-};
-
 export type Milliseconds = number;
 
 export type ReactLane = number;
@@ -193,7 +187,7 @@ export type ViewState = {
 
 export type InternalModuleSourceToRanges = Map<
   string,
-  Array<[ErrorStackFrame, ErrorStackFrame]>,
+  Array<[StackFrame, StackFrame]>,
 >;
 
 export type LaneToLabelMap = Map<ReactLane, string>;
@@ -224,7 +218,7 @@ export type TimelineDataExport = {
   duration: number,
   flamechart: Flamechart,
   internalModuleSourceToRanges: Array<
-    [string, Array<[ErrorStackFrame, ErrorStackFrame]>],
+    [string, Array<[StackFrame, StackFrame]>],
   >,
   laneToLabelKeyValueArray: Array<[ReactLane, string]>,
   laneToReactMeasureKeyValueArray: Array<[ReactLane, ReactMeasure[]]>,

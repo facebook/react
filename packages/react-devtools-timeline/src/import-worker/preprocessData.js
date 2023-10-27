@@ -7,13 +7,14 @@
  * @flow
  */
 
+import type {StackFrame} from 'error-stack-parser';
+
 import {
   importFromChromeTimeline,
   Flamechart as SpeedscopeFlamechart,
 } from '@elg/speedscope';
 import type {TimelineEvent} from '@elg/speedscope';
 import type {
-  ErrorStackFrame,
   BatchUID,
   Flamechart,
   Milliseconds,
@@ -50,7 +51,7 @@ type ProcessorState = {
   asyncProcessingPromises: Promise<any>[],
   batchUID: BatchUID,
   currentReactComponentMeasure: ReactComponentMeasure | null,
-  internalModuleCurrentStackFrame: ErrorStackFrame | null,
+  internalModuleCurrentStackFrame: StackFrame | null,
   internalModuleStackStringSet: Set<string>,
   measureStack: MeasureStackElement[],
   nativeEventStack: NativeEvent[],
@@ -764,17 +765,22 @@ function processTimelineEvent(
 
             state.internalModuleCurrentStackFrame = null;
 
-            const range = [parsedStackFrameStart, parsedStackFrameStop];
-            const ranges = currentProfilerData.internalModuleSourceToRanges.get(
-              parsedStackFrameStart.fileName,
-            );
-            if (ranges == null) {
-              currentProfilerData.internalModuleSourceToRanges.set(
-                parsedStackFrameStart.fileName,
-                [range],
-              );
-            } else {
-              ranges.push(range);
+            const startStackFrameFileName = parsedStackFrameStart.fileName;
+            if (startStackFrameFileName != null) {
+              const range = [parsedStackFrameStart, parsedStackFrameStop];
+              const ranges =
+                currentProfilerData.internalModuleSourceToRanges.get(
+                  startStackFrameFileName,
+                );
+
+              if (ranges == null) {
+                currentProfilerData.internalModuleSourceToRanges.set(
+                  startStackFrameFileName,
+                  [range],
+                );
+              } else {
+                ranges.push(range);
+              }
             }
           }
         }
@@ -995,7 +1001,7 @@ function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   return flamechart;
 }
 
-function parseStackFrame(stackFrame: string): ErrorStackFrame | null {
+function parseStackFrame(stackFrame: string): StackFrame | null {
   const error = new Error();
   error.stack = stackFrame;
 

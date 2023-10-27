@@ -16,6 +16,7 @@ import type {
   Fiber,
   Dispatcher as DispatcherType,
 } from 'react-reconciler/src/ReactInternalTypes';
+import type {StackFrame} from 'error-stack-parser';
 
 import ErrorStackParser from 'error-stack-parser';
 import assign from 'shared/assign';
@@ -46,51 +47,55 @@ type BasicStateAction<S> = (S => S) | S;
 
 type Dispatch<A> = A => void;
 
-let primitiveStackCache: null | Map<string, Array<any>> = null;
+let primitiveStackCache: null | Map<string, StackFrame[]> = null;
 
 type Hook = {
   memoizedState: any,
   next: Hook | null,
 };
 
-function getPrimitiveStackCache(): Map<string, Array<any>> {
+function getPrimitiveStackCache(): Map<string, StackFrame[]> {
+  if (primitiveStackCache !== null) {
+    return primitiveStackCache;
+  }
+
   // This initializes a cache of all primitive hooks so that the top
   // most stack frames added by calling the primitive hook can be removed.
-  if (primitiveStackCache === null) {
-    const cache = new Map<string, Array<any>>();
-    let readHookLog;
-    try {
-      // Use all hooks here to add them to the hook log.
-      Dispatcher.useContext(({_currentValue: null}: any));
-      Dispatcher.useState(null);
-      Dispatcher.useReducer((s: mixed, a: mixed) => s, null);
-      Dispatcher.useRef(null);
-      if (typeof Dispatcher.useCacheRefresh === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useCacheRefresh();
-      }
-      Dispatcher.useLayoutEffect(() => {});
-      Dispatcher.useInsertionEffect(() => {});
-      Dispatcher.useEffect(() => {});
-      Dispatcher.useImperativeHandle(undefined, () => null);
-      Dispatcher.useDebugValue(null);
-      Dispatcher.useCallback(() => {});
-      Dispatcher.useMemo(() => null);
-      if (typeof Dispatcher.useMemoCache === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useMemoCache(0);
-      }
-    } finally {
-      readHookLog = hookLog;
-      hookLog = [];
+  const cache = new Map<string, StackFrame[]>();
+  let readHookLog;
+  try {
+    // Use all hooks here to add them to the hook log.
+    Dispatcher.useContext(({_currentValue: null}: any));
+    Dispatcher.useState(null);
+    Dispatcher.useReducer((s: mixed, a: mixed) => s, null);
+    Dispatcher.useRef(null);
+    if (typeof Dispatcher.useCacheRefresh === 'function') {
+      // This type check is for Flow only.
+      Dispatcher.useCacheRefresh();
     }
-    for (let i = 0; i < readHookLog.length; i++) {
-      const hook = readHookLog[i];
-      cache.set(hook.primitive, ErrorStackParser.parse(hook.stackError));
+    Dispatcher.useLayoutEffect(() => {});
+    Dispatcher.useInsertionEffect(() => {});
+    Dispatcher.useEffect(() => {});
+    Dispatcher.useImperativeHandle(undefined, () => null);
+    Dispatcher.useDebugValue(null);
+    Dispatcher.useCallback(() => {});
+    Dispatcher.useMemo(() => null);
+    if (typeof Dispatcher.useMemoCache === 'function') {
+      // This type check is for Flow only.
+      Dispatcher.useMemoCache(0);
     }
-    primitiveStackCache = cache;
+  } finally {
+    readHookLog = hookLog;
+    hookLog = [];
   }
-  return primitiveStackCache;
+
+  for (let i = 0; i < readHookLog.length; i++) {
+    const hook = readHookLog[i];
+    cache.set(hook.primitive, ErrorStackParser.parse(hook.stackError));
+  }
+
+  primitiveStackCache = cache;
+  return cache;
 }
 
 let currentHook: null | Hook = null;
@@ -370,10 +375,10 @@ const DispatcherProxy =
 // Inspect
 
 export type HookSource = {
-  lineNumber: number | null,
-  columnNumber: number | null,
-  fileName: string | null,
-  functionName: string | null,
+  lineNumber?: number,
+  columnNumber?: number,
+  fileName?: string,
+  functionName?: string,
 };
 
 export type HooksNode = {
@@ -403,105 +408,169 @@ export type HooksTree = Array<HooksNode>;
 
 let mostLikelyAncestorIndex = 0;
 
-function findSharedIndex(hookStack: any, rootStack: any, rootIndex: number) {
-  const source = rootStack[rootIndex].source;
-  hookSearch: for (let i = 0; i < hookStack.length; i++) {
-    if (hookStack[i].source === source) {
+function findSharedIndex(
+  hookStack: StackFrame[],
+  rootStack: StackFrame[],
+  possibleRootStartIndex: number,
+) {
+  const source = rootStack[possibleRootStartIndex]?.source;
+
+  hookStackSearch: for (
+    let hookStackStartIndex = 0;
+    hookStackStartIndex < hookStack.length;
+    hookStackStartIndex++
+  ) {
+    if (hookStack[hookStackStartIndex].source === source) {
       // This looks like a match. Validate that the rest of both stack match up.
       for (
-        let a = rootIndex + 1, b = i + 1;
+        let a = possibleRootStartIndex + 1, b = hookStackStartIndex + 1;
         a < rootStack.length && b < hookStack.length;
         a++, b++
       ) {
-        if (hookStack[b].source !== rootStack[a].source) {
+        if (rootStack[a].source !== hookStack[b].source) {
           // If not, give up and try a different match.
-          continue hookSearch;
+          continue hookStackSearch;
         }
       }
-      return i;
+
+      return hookStackStartIndex;
     }
   }
+
   return -1;
 }
 
-function findCommonAncestorIndex(rootStack: any, hookStack: any) {
+function findCommonAncestorIndex(
+  rootStack: StackFrame[],
+  hookStack: StackFrame[],
+) {
   let rootIndex = findSharedIndex(
     hookStack,
     rootStack,
     mostLikelyAncestorIndex,
   );
+
   if (rootIndex !== -1) {
     return rootIndex;
   }
+
   // If the most likely one wasn't a hit, try any other frame to see if it is shared.
   // If that takes more than 5 frames, something probably went wrong.
   for (let i = 0; i < rootStack.length && i < 5; i++) {
+    if (i === mostLikelyAncestorIndex) {
+      // We've just checked it.
+      continue;
+    }
+
     rootIndex = findSharedIndex(hookStack, rootStack, i);
+
     if (rootIndex !== -1) {
       mostLikelyAncestorIndex = i;
       return rootIndex;
     }
   }
+
   return -1;
 }
 
-function isReactWrapper(functionName: any, primitiveName: string) {
-  if (!functionName) {
+function isReactWrapper(
+  hookStackEntry: StackFrame,
+  primitiveStackEntry: StackFrame,
+  primitiveName: string,
+) {
+  const {functionName: hookStackEntryFunctionName} = hookStackEntry;
+  if (!hookStackEntryFunctionName) {
     return false;
   }
+
   const expectedPrimitiveName = 'use' + primitiveName;
-  if (functionName.length < expectedPrimitiveName.length) {
+  if (hookStackEntryFunctionName.endsWith(expectedPrimitiveName)) {
+    return true;
+  }
+
+  const {functionName: primitiveStackEntryFunctionName} = primitiveStackEntry;
+  if (!primitiveStackEntryFunctionName) {
     return false;
   }
+
+  // https://v8.dev/docs/stack-trace-api#appendix%3A-stack-trace-format
+  // In some cases, current dispatcher can be substituted with DispatcherProxy, which is used for custom errors handling.
+  // Previously, this function (isReactWrapper) would just check if the function name of the hook stack entry ends with primitive hook name.
+  // This won't work with the same setup and sourcemaps present, because function name in this case gets correctly resolved to 'Proxy.Error'.
+  // Instead, we should parse primitive stack entry, because we don't use Proxy before parsing stack traces of a primitive call in `getPrimitiveStackCache`.
   return (
-    functionName.lastIndexOf(expectedPrimitiveName) ===
-    functionName.length - expectedPrimitiveName.length
+    primitiveStackEntryFunctionName.endsWith(expectedPrimitiveName) ||
+    primitiveStackEntryFunctionName.endsWith(`[as ${expectedPrimitiveName}]`)
   );
 }
 
-function findPrimitiveIndex(hookStack: any, hook: HookLogEntry) {
+function findPrimitiveIndex(
+  hookStack: StackFrame[],
+  hookLogEntry: HookLogEntry,
+) {
   const stackCache = getPrimitiveStackCache();
-  const primitiveStack = stackCache.get(hook.primitive);
+  const primitiveStack = stackCache.get(hookLogEntry.primitive);
+
   if (primitiveStack === undefined) {
     return -1;
   }
+
   for (let i = 0; i < primitiveStack.length && i < hookStack.length; i++) {
-    if (primitiveStack[i].source !== hookStack[i].source) {
-      // If the next two frames are functions called `useX` then we assume that they're part of the
-      // wrappers that the React packager or other packages adds around the dispatcher.
-      if (
-        i < hookStack.length - 1 &&
-        isReactWrapper(hookStack[i].functionName, hook.primitive)
-      ) {
-        i++;
-      }
-      if (
-        i < hookStack.length - 1 &&
-        isReactWrapper(hookStack[i].functionName, hook.primitive)
-      ) {
-        i++;
-      }
-      return i;
+    if (hookStack[i].source === primitiveStack[i].source) {
+      continue;
     }
+
+    // If the next two frames are functions called `useX` then we assume that they're part of the
+    // wrappers that the React packager or other packages adds around the dispatcher.
+    if (
+      i < hookStack.length - 1 &&
+      i < primitiveStack.length - 1 &&
+      isReactWrapper(hookStack[i], primitiveStack[i], hookLogEntry.primitive)
+    ) {
+      i++;
+    }
+
+    if (
+      i < hookStack.length - 1 &&
+      i < primitiveStack.length - 1 &&
+      isReactWrapper(hookStack[i], primitiveStack[i], hookLogEntry.primitive)
+    ) {
+      i++;
+    }
+
+    return i;
   }
+
   return -1;
 }
 
-function parseTrimmedStack(rootStack: any, hook: HookLogEntry) {
+function parseTrimmedStack(
+  rootStack: StackFrame[],
+  hookLogEntry: HookLogEntry,
+): StackFrame[] | null {
   // Get the stack trace between the primitive hook function and
   // the root function call. I.e. the stack frames of custom hooks.
-  const hookStack = ErrorStackParser.parse(hook.stackError);
-  const rootIndex = findCommonAncestorIndex(rootStack, hookStack);
-  const primitiveIndex = findPrimitiveIndex(hookStack, hook);
+  const hookStack = ErrorStackParser.parse(hookLogEntry.stackError);
+
+  const commonAncestorIndexForHookStackFrame = findCommonAncestorIndex(
+    rootStack,
+    hookStack,
+  );
+  const primitiveIndex = findPrimitiveIndex(hookStack, hookLogEntry);
+
   if (
-    rootIndex === -1 ||
+    commonAncestorIndexForHookStackFrame === -1 ||
     primitiveIndex === -1 ||
-    rootIndex - primitiveIndex < 2
+    commonAncestorIndexForHookStackFrame - primitiveIndex < 2
   ) {
     // Something went wrong. Give up.
     return null;
   }
-  return hookStack.slice(primitiveIndex, rootIndex - 1);
+
+  return hookStack.slice(
+    primitiveIndex,
+    commonAncestorIndexForHookStackFrame - 1,
+  );
 }
 
 function parseCustomHookName(functionName: void | string): string {
@@ -519,7 +588,7 @@ function parseCustomHookName(functionName: void | string): string {
 }
 
 function buildTree(
-  rootStack: any,
+  rootStack: StackFrame[],
   readHookLog: Array<HookLogEntry>,
   includeHooksSource: boolean,
 ): HooksTree {
@@ -528,9 +597,11 @@ function buildTree(
   let levelChildren = rootChildren;
   let nativeHookID = 0;
   const stackOfChildren = [];
+
   for (let i = 0; i < readHookLog.length; i++) {
-    const hook = readHookLog[i];
-    const stack = parseTrimmedStack(rootStack, hook);
+    const hookLogEntry = readHookLog[i];
+    const stack = parseTrimmedStack(rootStack, hookLogEntry);
+
     if (stack !== null) {
       // Note: The indices 0 <= n < length-1 will contain the names.
       // The indices 1 <= n < length will contain the source locations.
@@ -581,7 +652,7 @@ function buildTree(
       }
       prevStack = stack;
     }
-    const {primitive} = hook;
+    const {primitive} = hookLogEntry;
 
     // For now, the "id" of stateful hooks is just the stateful hook index.
     // Custom hooks have no ids, nor do non-stateful native hooks (e.g. Context, DebugValue).
@@ -596,26 +667,19 @@ function buildTree(
       id,
       isStateEditable,
       name: primitive,
-      value: hook.value,
+      value: hookLogEntry.value,
       subHooks: [],
     };
 
-    if (includeHooksSource) {
-      const hookSource: HookSource = {
-        lineNumber: null,
-        functionName: null,
-        fileName: null,
-        columnNumber: null,
-      };
-      if (stack && stack.length >= 1) {
-        const stackFrame = stack[0];
-        hookSource.lineNumber = stackFrame.lineNumber;
-        hookSource.functionName = stackFrame.functionName;
-        hookSource.fileName = stackFrame.fileName;
-        hookSource.columnNumber = stackFrame.columnNumber;
-      }
+    if (includeHooksSource && stack && stack.length >= 1) {
+      const stackFrame = stack[0];
 
-      levelChild.hookSource = hookSource;
+      levelChild.hookSource = {
+        lineNumber: stackFrame.lineNumber,
+        functionName: stackFrame.functionName,
+        fileName: stackFrame.fileName,
+        columnNumber: stackFrame.columnNumber,
+      };
     }
 
     levelChildren.push(levelChild);
@@ -673,7 +737,6 @@ function handleRenderFunctionError(error: any): void {
   // that the error is caused by user's code in renderFunction.
   // In this case, we should wrap the original error inside a custom error
   // so that devtools can give a clear message about it.
-  // $FlowFixMe[extra-arg]: Flow doesn't know about 2nd argument of Error constructor
   const wrapperError = new Error('Error rendering inspected component', {
     cause: error,
   });
@@ -702,6 +765,7 @@ export function inspectHooks<Props>(
   let readHookLog;
   currentDispatcher.current = DispatcherProxy;
   let ancestorStackError;
+
   try {
     ancestorStackError = new Error();
     renderFunction(props);
@@ -710,9 +774,10 @@ export function inspectHooks<Props>(
   } finally {
     readHookLog = hookLog;
     hookLog = [];
-    // $FlowFixMe[incompatible-use] found when upgrading Flow
     currentDispatcher.current = previousDispatcher;
   }
+
+  // $FlowFixMe[incompatible-call] ancestorStackError considered to be possible uninitialized
   const rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog, includeHooksSource);
 }
@@ -759,6 +824,8 @@ function inspectHooksOfForwardRef<Props, Ref>(
     hookLog = [];
     currentDispatcher.current = previousDispatcher;
   }
+
+  // $FlowFixMe[incompatible-call] ancestorStackError considered to be possible uninitialized
   const rootStack = ErrorStackParser.parse(ancestorStackError);
   return buildTree(rootStack, readHookLog, includeHooksSource);
 }
@@ -808,7 +875,7 @@ export function inspectHooksOfFiber(
   // Set up the current hook so that we can step through and read the
   // current state from them.
   currentHook = (fiber.memoizedState: Hook);
-  const contextMap = new Map<ReactContext<$FlowFixMe>, $FlowFixMe>();
+  const contextMap = new Map<ReactContext<any>, any>();
   try {
     setupContexts(contextMap, fiber);
     if (fiber.tag === ForwardRef) {

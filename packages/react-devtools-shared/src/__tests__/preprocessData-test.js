@@ -662,24 +662,7 @@ describe('Timeline profiler', () => {
             "componentMeasures": [],
             "duration": 0.016,
             "flamechart": [],
-            "internalModuleSourceToRanges": Map {
-              undefined => [
-                [
-                  {
-                    "columnNumber": 0,
-                    "functionName": "filtered",
-                    "lineNumber": 0,
-                    "source": "  at filtered (<anonymous>:0:0)",
-                  },
-                  {
-                    "columnNumber": 1,
-                    "functionName": "filtered",
-                    "lineNumber": 1,
-                    "source": "  at filtered (<anonymous>:1:1)",
-                  },
-                ],
-              ],
-            },
+            "internalModuleSourceToRanges": Map {},
             "laneToLabelMap": Map {
               0 => "Sync",
               1 => "InputContinuousHydration",
@@ -938,24 +921,7 @@ describe('Timeline profiler', () => {
             ],
             "duration": 0.04,
             "flamechart": [],
-            "internalModuleSourceToRanges": Map {
-              undefined => [
-                [
-                  {
-                    "columnNumber": 0,
-                    "functionName": "filtered",
-                    "lineNumber": 0,
-                    "source": "  at filtered (<anonymous>:0:0)",
-                  },
-                  {
-                    "columnNumber": 1,
-                    "functionName": "filtered",
-                    "lineNumber": 1,
-                    "source": "  at filtered (<anonymous>:1:1)",
-                  },
-                ],
-              ],
-            },
+            "internalModuleSourceToRanges": Map {},
             "laneToLabelMap": Map {
               0 => "Sync",
               1 => "InputContinuousHydration",

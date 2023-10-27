@@ -48,16 +48,26 @@ export function isInternalModule(
   const ranges = internalModuleSourceToRanges.get(scriptUrl);
   if (ranges != null) {
     for (let i = 0; i < ranges.length; i++) {
-      const [startStackFrame, stopStackFrame] = ranges[i];
+      const [
+        {lineNumber: startLineNumber, columnNumber: startColumnNumber},
+        {lineNumber: stopLineNumber, columnNumber: stopColumnNumber},
+      ] = ranges[i];
+
+      if (startLineNumber == null || stopLineNumber == null) {
+        return false;
+      }
 
       const isAfterStart =
-        locationLine > startStackFrame.lineNumber ||
-        (locationLine === startStackFrame.lineNumber &&
-          locationColumn >= startStackFrame.columnNumber);
+        locationLine > startLineNumber ||
+        (locationLine === startLineNumber &&
+          startColumnNumber != null &&
+          locationColumn >= startColumnNumber);
+
       const isBeforeStop =
-        locationLine < stopStackFrame.lineNumber ||
-        (locationLine === stopStackFrame.lineNumber &&
-          locationColumn <= stopStackFrame.columnNumber);
+        locationLine < stopLineNumber ||
+        (locationLine === stopLineNumber &&
+          stopColumnNumber != null &&
+          locationColumn <= stopColumnNumber);
 
       if (isAfterStart && isBeforeStop) {
         return true;

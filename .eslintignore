@@ -24,3 +24,5 @@ packages/react-devtools-shared/src/hooks/__tests__/__source__/__untransformed__/
 packages/react-devtools-shell/dist
 packages/react-devtools-timeline/dist
 packages/react-devtools-timeline/static
+
+flow-typed
