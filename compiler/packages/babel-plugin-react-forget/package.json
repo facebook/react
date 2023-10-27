@@ -8,7 +8,7 @@
     "src"
   ],
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "concurrently -g -n snap,sprout \"yarn snap:ci\" \"yarn sprout:ci\"",
     "jest": "tsc && ts-node \"$(yarn --silent which jest)\"",
     "snap": "node ../snap/dist/main.js",

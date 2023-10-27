@@ -16,8 +16,7 @@
     "target": "ES2015",
     // ideally turn off only during dev, or on a per-file basis
     "noUnusedLocals": false,
-    "sourceMap": true,
-    "composite": true
+    "composite": true,
   },
   "exclude": [
     "node_modules",
