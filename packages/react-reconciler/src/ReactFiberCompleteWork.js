@@ -38,10 +38,8 @@ import {
   enableCache,
   enableTransitionTracing,
   enableFloat,
-  diffInCommitPhase,
+  passChildrenWhenCloningPersistedNodes,
 } from 'shared/ReactFeatureFlags';
-
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 
 import {now} from './Scheduler';
 
@@ -99,7 +97,6 @@ import {
   resolveSingletonInstance,
   appendInitialChild,
   finalizeInitialChildren,
-  prepareUpdate,
   supportsMutation,
   supportsPersistence,
   supportsResources,
@@ -262,14 +259,13 @@ function appendAllChildren(
     // children to find all the terminal nodes.
     let node = workInProgress.child;
     while (node !== null) {
-      // eslint-disable-next-line no-labels
-      branches: if (node.tag === HostComponent) {
+      if (node.tag === HostComponent) {
         let instance = node.stateNode;
         if (needsVisibilityToggle && isHidden) {
           // This child is inside a timed out tree. Hide it.
           const props = node.memoizedProps;
           const type = node.type;
-          instance = cloneHiddenInstance(instance, type, props, node);
+          instance = cloneHiddenInstance(instance, type, props);
         }
         appendInitialChild(parent, instance);
       } else if (node.tag === HostText) {
@@ -277,7 +273,7 @@ function appendAllChildren(
         if (needsVisibilityToggle && isHidden) {
           // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
-          instance = cloneHiddenTextInstance(instance, text, node);
+          instance = cloneHiddenTextInstance(instance, text);
         }
         appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
@@ -294,7 +290,12 @@ function appendAllChildren(
         if (child !== null) {
           child.return = node;
         }
-        appendAllChildren(parent, node, true, true);
+        appendAllChildren(
+          parent,
+          node,
+          /* needsVisibilityToggle */ true,
+          /* isHidden */ true,
+        );
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -332,13 +333,13 @@ function appendAllChildrenToContainer(
     let node = workInProgress.child;
     while (node !== null) {
       // eslint-disable-next-line no-labels
-      branches: if (node.tag === HostComponent) {
+      if (node.tag === HostComponent) {
         let instance = node.stateNode;
         if (needsVisibilityToggle && isHidden) {
           // This child is inside a timed out tree. Hide it.
           const props = node.memoizedProps;
           const type = node.type;
-          instance = cloneHiddenInstance(instance, type, props, node);
+          instance = cloneHiddenInstance(instance, type, props);
         }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostText) {
@@ -346,7 +347,7 @@ function appendAllChildrenToContainer(
         if (needsVisibilityToggle && isHidden) {
           // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
-          instance = cloneHiddenTextInstance(instance, text, node);
+          instance = cloneHiddenTextInstance(instance, text);
         }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
@@ -368,8 +369,8 @@ function appendAllChildrenToContainer(
         appendAllChildrenToContainer(
           containerChildSet,
           node,
-          _needsVisibilityToggle,
-          true,
+          /* needsVisibilityToggle */ _needsVisibilityToggle,
+          /* isHidden */ true,
         );
       } else if (node.child !== null) {
         node.child.return = node;
@@ -394,6 +395,7 @@ function appendAllChildrenToContainer(
     }
   }
 }
+
 function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
   if (supportsPersistence) {
     const portalOrRoot: {
@@ -406,9 +408,14 @@ function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
       // No changes, just reuse the existing instance.
     } else {
       const container = portalOrRoot.containerInfo;
-      const newChildSet = createContainerChildSet(container);
+      const newChildSet = createContainerChildSet();
       // If children might have changed, we have to add them all to the set.
-      appendAllChildrenToContainer(newChildSet, workInProgress, false, false);
+      appendAllChildrenToContainer(
+        newChildSet,
+        workInProgress,
+        /* needsVisibilityToggle */ false,
+        /* isHidden */ false,
+      );
       portalOrRoot.pendingChildren = newChildSet;
       // Schedule an update on the container to swap out the container.
       markUpdate(workInProgress);
@@ -416,6 +423,7 @@ function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
     }
   }
 }
+
 function updateHostComponent(
   current: Fiber,
   workInProgress: Fiber,
@@ -433,33 +441,7 @@ function updateHostComponent(
       return;
     }
 
-    if (diffInCommitPhase) {
-      markUpdate(workInProgress);
-    } else {
-      // If we get updated because one of our children updated, we don't
-      // have newProps so we'll have to reuse them.
-      // TODO: Split the update API as separate for the props vs. children.
-      // Even better would be if children weren't special cased at all tho.
-      const instance: Instance = workInProgress.stateNode;
-      // TODO: Experiencing an error where oldProps is null. Suggests a host
-      // component is hitting the resume path. Figure out why. Possibly
-      // related to `hidden`.
-      const currentHostContext = getHostContext();
-      const updatePayload = prepareUpdate(
-        instance,
-        type,
-        oldProps,
-        newProps,
-        currentHostContext,
-      );
-      // TODO: Type this specific to this type of component.
-      workInProgress.updateQueue = (updatePayload: any);
-      // If the update payload indicates that there is a change or if there
-      // is a new ref we mark this as an update. All the work is done in commitWork.
-      if (updatePayload) {
-        markUpdate(workInProgress);
-      }
-    }
+    markUpdate(workInProgress);
   } else if (supportsPersistence) {
     const currentInstance = current.stateNode;
     const oldProps = current.memoizedProps;
@@ -472,43 +454,38 @@ function updateHostComponent(
       workInProgress.stateNode = currentInstance;
       return;
     }
-    const recyclableInstance: Instance = workInProgress.stateNode;
     const currentHostContext = getHostContext();
-    let updatePayload = null;
-    if (!diffInCommitPhase) {
-      if (oldProps !== newProps) {
-        updatePayload = prepareUpdate(
-          recyclableInstance,
-          type,
-          oldProps,
-          newProps,
-          currentHostContext,
-        );
-      }
-      if (childrenUnchanged && updatePayload === null) {
-        // No changes, just reuse the existing instance.
-        // Note that this might release a previous clone.
-        workInProgress.stateNode = currentInstance;
-        return;
-      }
+
+    let newChildSet = null;
+    if (!childrenUnchanged && passChildrenWhenCloningPersistedNodes) {
+      newChildSet = createContainerChildSet();
+      // If children might have changed, we have to add them all to the set.
+      appendAllChildrenToContainer(
+        newChildSet,
+        workInProgress,
+        /* needsVisibilityToggle */ false,
+        /* isHidden */ false,
+      );
     }
+
     const newInstance = cloneInstance(
       currentInstance,
-      updatePayload,
       type,
       oldProps,
       newProps,
-      workInProgress,
       childrenUnchanged,
-      recyclableInstance,
+      newChildSet,
     );
-    if (diffInCommitPhase && newInstance === currentInstance) {
+    if (newInstance === currentInstance) {
       // No changes, just reuse the existing instance.
       // Note that this might release a previous clone.
       workInProgress.stateNode = currentInstance;
       return;
     }
 
+    // Certain renderers require commit-time effects for initial mount.
+    // (eg DOM renderer supports auto-focus for certain elements).
+    // Make sure such renderers get scheduled for later work.
     if (
       finalizeInitialChildren(newInstance, type, newProps, currentHostContext)
     ) {
@@ -520,9 +497,14 @@ function updateHostComponent(
       // Even though we're not going to use it for anything.
       // Otherwise parents won't know that there are new children to propagate upwards.
       markUpdate(workInProgress);
-    } else {
+    } else if (!passChildrenWhenCloningPersistedNodes) {
       // If children might have changed, we have to add them all to the set.
-      appendAllChildren(newInstance, workInProgress, false, false);
+      appendAllChildren(
+        newInstance,
+        workInProgress,
+        /* needsVisibilityToggle */ false,
+        /* isHidden */ false,
+      );
     }
   }
 }
@@ -1038,7 +1020,6 @@ function completeWork(
       popRootTransition(workInProgress, fiberRoot, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
-      resetMutableSourceWorkInProgressVersions();
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;
         fiberRoot.pendingContext = null;
@@ -1161,7 +1142,7 @@ function completeWork(
           } else {
             // This is a Hoistable Instance
             // We may have props to update on the Hoistable instance.
-            if (diffInCommitPhase && supportsMutation) {
+            if (supportsMutation) {
               const oldProps = current.memoizedProps;
               if (oldProps !== newProps) {
                 markUpdate(workInProgress);
@@ -1198,7 +1179,7 @@ function completeWork(
         const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
         if (current !== null && workInProgress.stateNode != null) {
-          if (diffInCommitPhase && supportsMutation) {
+          if (supportsMutation) {
             const oldProps = current.memoizedProps;
             if (oldProps !== newProps) {
               markUpdate(workInProgress);
@@ -1299,13 +1280,7 @@ function completeWork(
         if (wasHydrated) {
           // TODO: Move this and createInstance step into the beginPhase
           // to consolidate.
-          if (
-            prepareToHydrateHostInstance(workInProgress, currentHostContext)
-          ) {
-            // If changes to the hydrated node need to be applied at the
-            // commit-phase we mark this as such.
-            markUpdate(workInProgress);
-          }
+          prepareToHydrateHostInstance(workInProgress, currentHostContext);
         } else {
           const rootContainerInstance = getRootHostContainer();
           const instance = createInstance(
@@ -1315,6 +1290,8 @@ function completeWork(
             currentHostContext,
             workInProgress,
           );
+          // TODO: For persistent renderers, we should pass children as part
+          // of the initial instance creation
           appendAllChildren(instance, workInProgress, false, false);
           workInProgress.stateNode = instance;
 

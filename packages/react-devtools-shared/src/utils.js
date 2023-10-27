@@ -41,20 +41,27 @@ import {
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
   LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from './constants';
-import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
+import {
+  ComponentFilterElementType,
+  ElementTypeHostComponent,
+} from './frontend/types';
 import {
   ElementTypeRoot,
   ElementTypeClass,
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
 import isArray from './isArray';
 
-import type {ComponentFilter, ElementType, BrowserTheme} from './types';
-import type {LRUCache} from 'react-devtools-shared/src/types';
+import type {
+  ComponentFilter,
+  ElementType,
+  BrowserTheme,
+} from './frontend/types';
+import type {LRUCache} from 'react-devtools-shared/src/frontend/types';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;

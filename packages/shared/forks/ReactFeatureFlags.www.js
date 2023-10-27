@@ -27,9 +27,11 @@ export const {
   enableTransitionTracing,
   enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
-  diffInCommitPhase,
   enableAsyncActions,
   alwaysThrottleRetries,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
+  disableSchedulerTimeoutInWorkLoop,
+  enableUseDeferredValueInitialArg,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -47,7 +49,6 @@ export const createRootStrictEffectsByDefault = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
-export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableCPUSuspense = true;
 export const enableFloat = true;
 export const enableUseMemoCacheHook = true;
@@ -74,6 +75,11 @@ export const enableFetchInstrumentation = false;
 
 export const enableFormActions = false;
 
+export const enableBinaryFlight = true;
+export const enableTaint = false;
+
+export const enablePostpone = false;
+
 export const disableJavaScriptURLs = true;
 
 // TODO: www currently relies on this feature. It's disabled in open source.
@@ -97,15 +103,15 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
-export const enableServerContext = true;
-
-// Some www surfaces are still using this. Remove once they have been migrated.
-export const enableUseMutableSource = true;
+export const enableServerContext = false;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
 
 export const forceConcurrentByDefaultForTesting = false;
+
+export const useMicrotasksForSchedulingInFabric = false;
+export const passChildrenWhenCloningPersistedNodes = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

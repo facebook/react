@@ -76,7 +76,7 @@ function runTestShell() {
     // Assume the test shell server failed to start.
     logError('Testing shell server failed to start');
     exitWithCode(1);
-  }, 30000);
+  }, 60 * 1000);
 
   logBright('Starting testing shell server');
 

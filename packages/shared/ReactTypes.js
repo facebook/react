@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-
 export type ReactNode =
   | React$Element<any>
   | ReactPortal
@@ -117,56 +115,6 @@ export type ReactScopeInstance = {
   getChildContextValues: <T>(context: ReactContext<T>) => Array<T>,
 };
 
-// Mutable source version can be anything (e.g. number, string, immutable data structure)
-// so long as it changes every time any part of the source changes.
-export type MutableSourceVersion = $NonMaybeType<mixed>;
-
-export type MutableSourceGetSnapshotFn<
-  Source: $NonMaybeType<mixed>,
-  Snapshot,
-> = (source: Source) => Snapshot;
-
-export type MutableSourceSubscribeFn<Source: $NonMaybeType<mixed>, Snapshot> = (
-  source: Source,
-  callback: (snapshot: Snapshot) => void,
-) => () => void;
-
-export type MutableSourceGetVersionFn = (
-  source: $NonMaybeType<mixed>,
-) => MutableSourceVersion;
-
-export type MutableSource<Source: $NonMaybeType<mixed>> = {
-  _source: Source,
-
-  _getVersion: MutableSourceGetVersionFn,
-
-  // Tracks the version of this source at the time it was most recently read.
-  // Used to determine if a source is safe to read from before it has been subscribed to.
-  // Version number is only used during mount,
-  // since the mechanism for determining safety after subscription is expiration time.
-  //
-  // As a workaround to support multiple concurrent renderers,
-  // we categorize some renderers as primary and others as secondary.
-  // We only expect there to be two concurrent renderers at most:
-  // React Native (primary) and Fabric (secondary);
-  // React DOM (primary) and React ART (secondary).
-  // Secondary renderers store their context values on separate fields.
-  // We use the same approach for Context.
-  _workInProgressVersionPrimary: null | MutableSourceVersion,
-  _workInProgressVersionSecondary: null | MutableSourceVersion,
-
-  // DEV only
-  // Used to detect multiple renderers using the same mutable source.
-  _currentPrimaryRenderer?: Object | null,
-  _currentSecondaryRenderer?: Object | null,
-
-  // DEV only
-  // Used to detect side effects that update a mutable source during render.
-  // See https://github.com/facebook/react/issues/19948
-  _currentlyRenderingFiber?: Fiber | null,
-  _initialVersionAsOfFirstRender?: MutableSourceVersion | null,
-};
-
 // The subset of a Thenable required by things thrown by Suspense.
 // This doesn't require a value to be passed to either handler.
 export interface Wakeable {
@@ -226,3 +174,13 @@ export type ReactCustomFormAction = {
   target?: string,
   data?: null | FormData,
 };
+
+// This is an opaque type returned by decodeFormState on the server, but it's
+// defined in this shared file because the same type is used by React on
+// the client.
+export type ReactFormState<S, ReferenceId> = [
+  S /* actual state value */,
+  string /* key path */,
+  ReferenceId /* Server Reference ID */,
+  number /* number of bound arguments */,
+];

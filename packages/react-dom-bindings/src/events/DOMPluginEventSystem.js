@@ -226,6 +226,7 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   'invalid',
   'load',
   'scroll',
+  'scrollend',
   'toggle',
   // In order to reduce bytes, we insert the above array of media events
   // into this Set. Note: the "error" event isn't an exclusive media event,

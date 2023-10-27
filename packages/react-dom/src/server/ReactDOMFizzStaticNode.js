@@ -9,21 +9,24 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {PostponedState} from 'react-server/src/ReactFizzServer';
+import type {ImportMap} from '../shared/ReactDOMTypes';
 
 import {Writable, Readable} from 'stream';
 
 import ReactVersion from 'shared/ReactVersion';
 
 import {
-  createRequest,
+  createPrerenderRequest,
   startWork,
   startFlowing,
   abort,
+  getPostponedState,
 } from 'react-server/src/ReactFizzServer';
 
 import {
-  createResources,
-  createResponseState,
+  createResumableState,
+  createRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -36,10 +39,13 @@ type Options = {
   progressiveChunkSize?: number,
   signal?: AbortSignal,
   onError?: (error: mixed) => ?string,
+  onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+  importMap?: ImportMap,
 };
 
 type StaticResult = {
+  postponed: null | PostponedState,
   prelude: Readable,
 };
 
@@ -59,7 +65,7 @@ function createFakeWritable(readable: any): Writable {
   }: any);
 }
 
-function prerenderToNodeStreams(
+function prerenderToNodeStream(
   children: ReactNodeList,
   options?: Options,
 ): Promise<StaticResult> {
@@ -75,22 +81,26 @@ function prerenderToNodeStreams(
       const writable = createFakeWritable(readable);
 
       const result = {
+        postponed: getPostponedState(request),
         prelude: readable,
       };
       resolve(result);
     }
-    const resources = createResources();
-    const request = createRequest(
+    const resumableState = createResumableState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+    );
+    const request = createPrerenderRequest(
       children,
-      resources,
-      createResponseState(
-        resources,
-        options ? options.identifierPrefix : undefined,
-        undefined,
+      resumableState,
+      createRenderState(
+        resumableState,
+        undefined, // nonce is not compatible with prerendered bootstrap scripts
         options ? options.bootstrapScriptContent : undefined,
         options ? options.bootstrapScripts : undefined,
         options ? options.bootstrapModules : undefined,
         options ? options.unstable_externalRuntimeSrc : undefined,
+        options ? options.importMap : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -99,6 +109,7 @@ function prerenderToNodeStreams(
       undefined,
       undefined,
       onFatalError,
+      options ? options.onPostpone : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -116,4 +127,4 @@ function prerenderToNodeStreams(
   });
 }
 
-export {prerenderToNodeStreams, ReactVersion as version};
+export {prerenderToNodeStream, ReactVersion as version};

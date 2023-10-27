@@ -39,6 +39,9 @@ export const SESSION_STORAGE_LAST_SELECTION_KEY =
 export const LOCAL_STORAGE_OPEN_IN_EDITOR_URL =
   'React::DevTools::openInEditorUrl';
 
+export const LOCAL_STORAGE_OPEN_IN_EDITOR_URL_PRESET =
+  'React::DevTools::openInEditorUrlPreset';
+
 export const LOCAL_STORAGE_PARSE_HOOK_NAMES_KEY =
   'React::DevTools::parseHookNames';
 
@@ -64,5 +67,8 @@ export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
 
 export const LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE =
   'React::DevTools::hideConsoleLogsInStrictMode';
+
+export const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
+  'React::DevTools::supportsProfiling';
 
 export const PROFILER_EXPORT_VERSION = 5;
