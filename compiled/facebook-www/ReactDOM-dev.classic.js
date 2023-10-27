@@ -34159,7 +34159,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-c09aff01";
+var ReactVersion = "18.3.0-www-classic-7b8a9a9d";
 
 function createPortal$1(
   children,
@@ -43312,7 +43312,7 @@ function preinitStyle(href, precedence, options) {
     );
 
     if (instance) {
-      state.loading = Loaded & Inserted;
+      state.loading = Loaded | Inserted;
     } else {
       // Construct a new instance and insert it
       var stylesheetProps = assign(
