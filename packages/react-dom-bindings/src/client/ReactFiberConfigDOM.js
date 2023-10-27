@@ -2337,7 +2337,7 @@ function preinitStyle(
       getStylesheetSelectorFromKey(key),
     );
     if (instance) {
-      state.loading = Loaded & Inserted;
+      state.loading = Loaded | Inserted;
     } else {
       // Construct a new instance and insert it
       const stylesheetProps = Object.assign(
