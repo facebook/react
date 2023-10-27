@@ -31,7 +31,6 @@
     "@babel/types": "^7.19.0",
     "chalk": "4",
     "invariant": "^2.2.4",
-    "prettier": "2.8.8",
     "pretty-format": "^24"
   },
   "devDependencies": {
@@ -60,6 +59,7 @@
     "hermes-parser": "^0.15.1",
     "jest": "^29.0.3",
     "jest-environment-jsdom": "^29.0.3",
+    "prettier": "2.8.8",
     "react": "^0.0.0-experimental-493f72b0a-20230727",
     "react-dom": "^0.0.0-experimental-493f72b0a-20230727",
     "rimraf": "^3.0.2",

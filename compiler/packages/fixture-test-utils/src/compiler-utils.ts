@@ -110,9 +110,12 @@ export function transformFixtureInput(
 
   return {
     ...result,
-    code: prettier.format(result.code, {
-      semi: true,
-      parser: language === "typescript" ? "babel-ts" : "flow",
-    }),
+    code:
+      result.code != null
+        ? prettier.format(result.code, {
+            semi: true,
+            parser: language === "typescript" ? "babel-ts" : "flow",
+          })
+        : result.code,
   };
 }

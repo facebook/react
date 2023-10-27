@@ -13,13 +13,13 @@ import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-
 import {
   COMPILER_PATH,
   PARSE_CONFIG_PRAGMA_PATH,
-  parseLanguage,
   TestFixture,
+  parseLanguage,
   transformFixtureInput,
 } from "fixture-test-utils";
 import fs from "fs/promises";
 import path from "path";
-import { doEval, EvaluatorResult } from "./runner-evaluator";
+import { EvaluatorResult, doEval } from "./runner-evaluator";
 
 const { runReactForgetBabelPlugin } = require(COMPILER_PATH) as {
   runReactForgetBabelPlugin: typeof RunReactForgetBabelPlugin;
@@ -132,6 +132,13 @@ function transformFixtureForget(
       return {
         type: "UnexpectedError",
         value: "Unexpected - no babel ast",
+      };
+    }
+
+    if (forgetResult.code == null) {
+      return {
+        type: "UnexpectedError",
+        value: "Unexpected - no code emitted",
       };
     }
 

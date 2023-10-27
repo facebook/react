@@ -88,12 +88,13 @@ export async function compile(
     // since console log order is non-deterministic
     const shouldLogPragma = input.split("\n")[0].includes("@debug");
     toggleLogging(isOnlyFixture && (shouldLogPragma || implicitDebugMode));
-    code = transformFixtureInput(
-      input,
-      basename,
-      runReactForgetBabelPlugin,
-      parseConfigPragma
-    ).code;
+    code =
+      transformFixtureInput(
+        input,
+        basename,
+        runReactForgetBabelPlugin,
+        parseConfigPragma
+      ).code ?? null;
   } catch (e) {
     e.message = e.message.replace(/\u001b[^m]*m/g, "");
     error = e;

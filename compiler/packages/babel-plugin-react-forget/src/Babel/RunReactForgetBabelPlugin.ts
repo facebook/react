@@ -10,15 +10,8 @@ import { transformFromAstSync } from "@babel/core";
 import * as BabelParser from "@babel/parser";
 import * as HermesParser from "hermes-parser";
 import invariant from "invariant";
-import prettier from "prettier";
 import type { PluginOptions } from "../Entrypoint";
 import ReactForgetBabelPlugin from "./BabelPlugin";
-
-type ReactForgetBabelPluginResult = {
-  ast: BabelCore.BabelFileResult["ast"];
-  code: string;
-  map: BabelCore.BabelFileResult["map"];
-};
 
 export function runReactForgetBabelPlugin(
   text: string,
@@ -26,7 +19,7 @@ export function runReactForgetBabelPlugin(
   language: "flow" | "typescript",
   options: PluginOptions | null,
   includeAst: boolean = false
-): ReactForgetBabelPluginResult {
+): BabelCore.BabelFileResult {
   let ast;
   if (language === "flow") {
     ast = HermesParser.parse(text, {
@@ -59,12 +52,5 @@ export function runReactForgetBabelPlugin(
     result?.code != null,
     `Expected BabelPluginReactForget to codegen successfully, got: ${result}`
   );
-  return {
-    ast: result.ast,
-    code: prettier.format(result.code, {
-      semi: true,
-      parser: language === "typescript" ? "babel-ts" : "flow",
-    }),
-    map: result.map,
-  };
+  return result;
 }
