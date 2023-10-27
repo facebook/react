@@ -104,6 +104,17 @@ const bundles = [
     externals: [],
   },
 
+  /******* Isomorphic Shared Subset for FB *******/
+  {
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
+    moduleType: ISOMORPHIC,
+    entry: 'react/src/ReactSharedSubset.js',
+    global: 'ReactSharedSubset',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: [],
+  },
+
   /******* React JSX Runtime *******/
   {
     bundleTypes: [
