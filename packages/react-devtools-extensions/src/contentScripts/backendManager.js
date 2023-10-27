@@ -62,7 +62,7 @@ function setup(hook: ?DevToolsHook) {
   });
 
   // Activate and remove from required all present backends, registered within the hook
-  hook.backends.forEach((_, backendVersion) => {
+  hook.backends?.forEach((_, backendVersion) => {
     requiredBackends.delete(backendVersion);
     activateBackend(backendVersion, hook);
   });
