@@ -3,6 +3,7 @@ import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from "bab
 import { CompilationMode } from "babel-plugin-react-forget/src/Entrypoint";
 import type { Effect, ValueKind } from "babel-plugin-react-forget/src/HIR";
 import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-forget/src/HIR/Environment";
+import prettier from "prettier";
 
 export function parseLanguage(source: string): "flow" | "typescript" {
   return source.indexOf("@flow") !== -1 ? "flow" : "typescript";
@@ -58,8 +59,7 @@ export function transformFixtureInput(
     };
   }
   const config = parseConfigPragmaFn(firstLine);
-
-  return pluginFn(
+  const result = pluginFn(
     input,
     basename,
     language,
@@ -107,4 +107,12 @@ export function transformFixtureInput(
     },
     includeAst
   );
+
+  return {
+    ...result,
+    code: prettier.format(result.code, {
+      semi: true,
+      parser: language === "typescript" ? "babel-ts" : "flow",
+    }),
+  };
 }
