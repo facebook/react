@@ -5,7 +5,7 @@ import json from "@rollup/plugin-json";
 import path from "path";
 import process from "process";
 
-const NO_INLINE = new Set(["@babel/generator", "@babel/types"]);
+const NO_INLINE = new Set(["@babel/types"]);
 
 export default {
   input: "src/index.ts",
