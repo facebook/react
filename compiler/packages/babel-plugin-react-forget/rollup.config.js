@@ -17,6 +17,7 @@ export default {
   },
   plugins: [
     typescript({
+      tsconfig: "./tsconfig.json",
       compilerOptions: {
         noEmit: true,
       },

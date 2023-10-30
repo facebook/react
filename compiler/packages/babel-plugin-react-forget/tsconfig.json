@@ -3,6 +3,8 @@
   "compilerOptions": {
     "moduleResolution": "nodenext",
     "declaration": true,
+    "declarationDir": "./dist",
+    "declarationMap": true,
     "rootDir": "src",
     "outDir": "dist",
     // https://github.com/microsoft/TypeScript/issues/30925
