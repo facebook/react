@@ -135,7 +135,6 @@ export function Text(props: {
   return React.createElement("div", null, props.value, props.children);
 }
 
-
 export function StaticText1(props: { children?: Array<React.ReactNode> }) {
   return React.createElement("div", null, "StaticText1", props.children);
 }
@@ -156,11 +155,7 @@ export function RenderPropAsChild(props: {
 }
 
 export function Stringify(props: any): React.ReactElement {
-  return React.createElement(
-    "div",
-    null,
-    toJSON(props),
-  );
+  return React.createElement("div", null, toJSON(props));
 }
 
 // helper functions

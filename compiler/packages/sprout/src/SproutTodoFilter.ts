@@ -462,6 +462,10 @@ const skipFilter = new Set([
   "fbt-preserve-jsxtext",
   "todo.useContext-mutate-context-in-callback",
   "loop-unused-let",
+
+
+  // Bug in Forget output
+  "todo-rename-source-variables",
 ]);
 
 export default skipFilter;
