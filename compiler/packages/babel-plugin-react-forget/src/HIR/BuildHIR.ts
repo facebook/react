@@ -3530,6 +3530,14 @@ function lowerAssignment(
   }
 }
 
+function isValidDependency(path: NodePath<t.MemberExpression>): boolean {
+  const parent: NodePath<t.Node> = path.parentPath;
+  return (
+    !path.node.computed &&
+    !(parent.isCallExpression() && parent.get("callee") === path)
+  );
+}
+
 function captureScopes({ from, to }: { from: Scope; to: Scope }): Set<Scope> {
   let scopes: Set<Scope> = new Set();
   while (from) {
@@ -3579,7 +3587,7 @@ function gatherCapturedDeps(
       | NodePath<t.JSXOpeningElement>
   ): void {
     // Base context variable to depend on
-    let baseIdentifier: NodePath<t.Identifier | t.JSXIdentifier>;
+    let baseIdentifier: NodePath<t.Identifier> | NodePath<t.JSXIdentifier>;
     // Base expression to depend on, which (for now) may contain non side-effectful
     // member expressions
     let dependency:
@@ -3604,31 +3612,36 @@ function gatherCapturedDeps(
       dependency = current;
     } else if (path.isMemberExpression()) {
       // Calculate baseIdentifier
-      let current: NodePath<Expression> = path;
-      while (current.isMemberExpression()) {
-        current = current.get("object");
+      let currentId: NodePath<Expression> = path;
+      while (currentId.isMemberExpression()) {
+        currentId = currentId.get("object");
       }
-      if (!current.isIdentifier()) {
+      if (!currentId.isIdentifier()) {
         return;
       }
-      baseIdentifier = current;
+      baseIdentifier = currentId;
 
       // Get the expression to depend on, which may involve PropertyLoads
       // for member expressions
-      current =
-        path.parent.type === "CallExpression" &&
-        path.parent.callee === path.node
-          ? path.get("object")
-          : path;
-      while (current.isMemberExpression() && current.node.computed) {
-        // computed nodes may contain side-effectful subexpressions
-        current = current.get("object");
+      let currentDep:
+        | NodePath<t.MemberExpression>
+        | NodePath<t.Identifier>
+        | NodePath<t.JSXIdentifier> = baseIdentifier;
+
+      while (true) {
+        const nextDep: null | NodePath<t.Node> = currentDep.parentPath;
+        if (
+          nextDep &&
+          nextDep.isMemberExpression() &&
+          isValidDependency(nextDep)
+        ) {
+          currentDep = nextDep;
+        } else {
+          break;
+        }
       }
-      invariant(
-        current.isMemberExpression() || current.isIdentifier(),
-        "Internal invariant broken in BuildHIR, unexpected type for capturedDep"
-      );
-      dependency = current;
+
+      dependency = currentDep;
     } else {
       baseIdentifier = path;
       dependency = path;

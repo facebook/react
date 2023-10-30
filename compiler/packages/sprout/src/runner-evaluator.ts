@@ -99,7 +99,9 @@ export function doEval(source: string): EvaluatorResult {
         ) {
           return {
             kind: "UnexpectedError",
-            value: 'FIXTURE_ENTRYPOINT not exported!',
+            value: 'FIXTURE_ENTRYPOINT not exported! Found {'
+              + Object.keys(exports).filter(e => e !== 'FIXTURE_ENTRYPOINT').toString()
+              + '}',
           };
         }
         const validationError = validateEntrypoint(exports.FIXTURE_ENTRYPOINT);

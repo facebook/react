@@ -9,7 +9,7 @@ function Foo() {
   return invoke(foo, 1);
 }
 
-export const FIXTURE_ENTRYPONT = {
+export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
   params: [{}],
 };
