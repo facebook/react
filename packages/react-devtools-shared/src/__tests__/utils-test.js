@@ -46,7 +46,7 @@ describe('utils', () => {
     });
 
     // @reactVersion >= 16.0
-    it('should return Anonymous for anonymous functions without a fallback', () => {
+    it('should retun Anonymous for anonymous functions without a fallback', () => {
       expect(getDisplayName(() => {})).toEqual('Anonymous');
     });
 
