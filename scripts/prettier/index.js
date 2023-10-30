@@ -13,6 +13,7 @@ const chalk = require('chalk');
 const glob = require('glob');
 const prettier = require('prettier');
 const fs = require('fs');
+const path = require('path');
 const listChangedFiles = require('../shared/listChangedFiles');
 const prettierConfigPath = require.resolve('../../.prettierrc');
 
@@ -24,14 +25,39 @@ const changedFiles = onlyChanged ? listChangedFiles() : null;
 let didWarn = false;
 let didError = false;
 
+const prettierIgnoreFilePath = path.join(
+  __dirname,
+  '..',
+  '..',
+  '.prettierignore'
+);
+const prettierIgnore = fs.readFileSync(prettierIgnoreFilePath, {
+  encoding: 'utf8',
+});
+const ignoredPathsListedInPrettierIgnore = prettierIgnore
+  .toString()
+  .replace(/\r\n/g, '\n')
+  .split('\n')
+  .filter(line => !!line && !line.startsWith('#'));
+
+const ignoredPathsListedInPrettierIgnoreInGlobFormat =
+  ignoredPathsListedInPrettierIgnore.map(ignoredPath => {
+    const existsAndDirectory =
+      fs.existsSync(ignoredPath) && fs.lstatSync(ignoredPath).isDirectory();
+
+    if (existsAndDirectory) {
+      return path.join(ignoredPath, '/**');
+    }
+
+    return ignoredPath;
+  });
+
 const files = glob
   .sync('**/*.js', {
     ignore: [
       '**/node_modules/**',
       '**/cjs/**',
-      '**/__compiled__/**',
-      '**/__untransformed__/**',
-      'packages/react-devtools-extensions/src/ErrorTesterCompiled.js',
+      ...ignoredPathsListedInPrettierIgnoreInGlobFormat,
     ],
   })
   .filter(f => !onlyChanged || changedFiles.has(f));
