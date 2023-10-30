@@ -9,10 +9,11 @@
  * Copyright (c) Facebook, Inc. and its affiliates.
  */
 
-import MonacoEditor, { type Monaco } from "@monaco-editor/react";
+import MonacoEditor, { type Monaco, loader } from "@monaco-editor/react";
 import { CompilerErrorDetail } from "babel-plugin-react-forget";
 import invariant from "invariant";
 import type { editor } from "monaco-editor";
+import * as monaco from "monaco-editor";
 import { useEffect, useState } from "react";
 import { renderForgetMarkers } from "../../lib/forgetMonacoDiagnostics";
 import { useStore, useStoreDispatch } from "../StoreContext";
@@ -20,6 +21,8 @@ import { monacoOptions } from "./monacoOptions";
 // TODO: Make TS recognize .d.ts files, in addition to loading them with webpack.
 // @ts-ignore
 import React$Types from "../../node_modules/@types/react/index.d.ts";
+
+loader.config({ monaco});
 
 type Props = {
   errors: CompilerErrorDetail[];

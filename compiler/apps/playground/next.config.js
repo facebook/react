@@ -5,15 +5,29 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
+
 const nextConfig = {
   reactStrictMode: true,
-  webpack: (config) => {
+  webpack: (config, options) => {
     // Load *.d.ts files as strings using https://webpack.js.org/guides/asset-modules/#source-assets.
     config.module.rules.push({
       test: /\.d\.ts/,
       type: "asset/source",
     });
 
+    // Monaco Editor
+    if (!options.isServer) {
+      config.plugins.push(
+        new MonacoWebpackPlugin({
+          languages: [
+            "typescript",
+            "javascript",
+          ],
+          filename: "static/[name].worker.js"
+        })
+      );
+    }
     return config;
   },
   // These aren't used by the playground, but turning it on forces nextjs to use
@@ -22,6 +36,7 @@ const nextConfig = {
     serverActions: true,
     ppr: true,
   },
+  transpilePackages: ["monaco-editor"],
 };
 
 module.exports = nextConfig;
