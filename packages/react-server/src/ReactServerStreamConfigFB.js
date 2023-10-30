@@ -19,7 +19,7 @@ export opaque type Chunk = string;
 export opaque type BinaryChunk = string;
 
 export function scheduleWork(callback: () => void) {
-  // We don't schedule work in this model, and instead expect performWork to always be called repeatedly.
+  callback();
 }
 
 export function flushBuffered(destination: Destination) {}
