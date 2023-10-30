@@ -12,23 +12,38 @@
 import {
   getVisibleChildren,
   insertNodesAndExecuteScripts,
+  withLoadingReadyState,
 } from '../test-utils/FizzTestUtils';
 
 // Polyfills for test environment
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
+global.TextDecoder = require('util').TextDecoder;
 
+let JSDOM;
+let Scheduler;
 let React;
 let ReactDOM;
 let ReactDOMFizzServer;
 let ReactDOMFizzStatic;
 let Suspense;
 let container;
+let textCache;
+let assertLog;
+
+let hasErrored;
+let fatalError;
+let buffer;
+let streamingContainer;
+let CSPnonce;
+let waitForMicrotasks;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
+    JSDOM = require('jsdom').JSDOM;
+    Scheduler = require('scheduler');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');
@@ -36,13 +51,157 @@ describe('ReactDOMFizzStaticBrowser', () => {
       ReactDOMFizzStatic = require('react-dom/static.browser');
     }
     Suspense = React.Suspense;
+    assertLog = require('internal-test-utils').assertLog;
+    waitForMicrotasks = require('internal-test-utils').waitForMicrotasks;
     container = document.createElement('div');
     document.body.appendChild(container);
+    textCache = new Map();
+
+    hasErrored = false;
+    buffer = '';
+    streamingContainer = null;
+    CSPnonce = null;
   });
 
   afterEach(() => {
     document.body.removeChild(container);
   });
+
+  const bodyStartMatch = /<body(?:>| .*?>)/;
+  const headStartMatch = /<head(?:>| .*?>)/;
+
+  // TODO: Move to FizzTestUtils?
+  async function act(callback) {
+    await callback();
+    // Await one turn around the event loop.
+    // This assumes that we'll flush everything we have so far.
+    await waitForMicrotasks();
+
+    if (hasErrored) {
+      throw fatalError;
+    }
+    // JSDOM doesn't support stream HTML parser so we need to give it a proper fragment.
+    // We also want to execute any scripts that are embedded.
+    // We assume that we have now received a proper fragment of HTML.
+    let bufferedContent = buffer;
+    buffer = '';
+
+    if (!bufferedContent) {
+      return;
+    }
+
+    await withLoadingReadyState(async () => {
+      const bodyMatch = bufferedContent.match(bodyStartMatch);
+      const headMatch = bufferedContent.match(headStartMatch);
+
+      if (streamingContainer === null) {
+        // This is the first streamed content. We decide here where to insert it. If we get <html>, <head>, or <body>
+        // we abandon the pre-built document and start from scratch. If we get anything else we assume it goes into the
+        // container. This is not really production behavior because you can't correctly stream into a deep div effectively
+        // but it's pragmatic for tests.
+
+        if (
+          bufferedContent.startsWith('<head>') ||
+          bufferedContent.startsWith('<head ') ||
+          bufferedContent.startsWith('<body>') ||
+          bufferedContent.startsWith('<body ')
+        ) {
+          // wrap in doctype to normalize the parsing process
+          bufferedContent = '<!DOCTYPE html><html>' + bufferedContent;
+        } else if (
+          bufferedContent.startsWith('<html>') ||
+          bufferedContent.startsWith('<html ')
+        ) {
+          throw new Error(
+            'Recieved <html> without a <!DOCTYPE html> which is almost certainly a bug in React',
+          );
+        }
+
+        if (bufferedContent.startsWith('<!DOCTYPE html>')) {
+          // we can just use the whole document
+          const tempDom = new JSDOM(bufferedContent);
+
+          // Wipe existing head and body content
+          document.head.innerHTML = '';
+          document.body.innerHTML = '';
+
+          // Copy the <html> attributes over
+          const tempHtmlNode = tempDom.window.document.documentElement;
+          for (let i = 0; i < tempHtmlNode.attributes.length; i++) {
+            const attr = tempHtmlNode.attributes[i];
+            document.documentElement.setAttribute(attr.name, attr.value);
+          }
+
+          if (headMatch) {
+            // We parsed a head open tag. we need to copy head attributes and insert future
+            // content into <head>
+            streamingContainer = document.head;
+            const tempHeadNode = tempDom.window.document.head;
+            for (let i = 0; i < tempHeadNode.attributes.length; i++) {
+              const attr = tempHeadNode.attributes[i];
+              document.head.setAttribute(attr.name, attr.value);
+            }
+            const source = document.createElement('head');
+            source.innerHTML = tempHeadNode.innerHTML;
+            await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+          }
+
+          if (bodyMatch) {
+            // We parsed a body open tag. we need to copy head attributes and insert future
+            // content into <body>
+            streamingContainer = document.body;
+            const tempBodyNode = tempDom.window.document.body;
+            for (let i = 0; i < tempBodyNode.attributes.length; i++) {
+              const attr = tempBodyNode.attributes[i];
+              document.body.setAttribute(attr.name, attr.value);
+            }
+            const source = document.createElement('body');
+            source.innerHTML = tempBodyNode.innerHTML;
+            await insertNodesAndExecuteScripts(source, document.body, CSPnonce);
+          }
+
+          if (!headMatch && !bodyMatch) {
+            throw new Error('expected <head> or <body> after <html>');
+          }
+        } else {
+          // we assume we are streaming into the default container'
+          streamingContainer = container;
+          const div = document.createElement('div');
+          div.innerHTML = bufferedContent;
+          await insertNodesAndExecuteScripts(div, container, CSPnonce);
+        }
+      } else if (streamingContainer === document.head) {
+        bufferedContent = '<!DOCTYPE html><html><head>' + bufferedContent;
+        const tempDom = new JSDOM(bufferedContent);
+
+        const tempHeadNode = tempDom.window.document.head;
+        const source = document.createElement('head');
+        source.innerHTML = tempHeadNode.innerHTML;
+        await insertNodesAndExecuteScripts(source, document.head, CSPnonce);
+
+        if (bodyMatch) {
+          streamingContainer = document.body;
+
+          const tempBodyNode = tempDom.window.document.body;
+          for (let i = 0; i < tempBodyNode.attributes.length; i++) {
+            const attr = tempBodyNode.attributes[i];
+            document.body.setAttribute(attr.name, attr.value);
+          }
+          const bodySource = document.createElement('body');
+          bodySource.innerHTML = tempBodyNode.innerHTML;
+          await insertNodesAndExecuteScripts(
+            bodySource,
+            document.body,
+            CSPnonce,
+          );
+        }
+      } else {
+        const div = document.createElement('div');
+        div.innerHTML = bufferedContent;
+        await insertNodesAndExecuteScripts(div, streamingContainer, CSPnonce);
+      }
+    }, document);
+  }
 
   const theError = new Error('This is an error');
   function Throw() {
@@ -95,6 +254,30 @@ describe('ReactDOMFizzStaticBrowser', () => {
     }
   }
 
+  function readContentIntoBuffer(stream) {
+    // Reads the stream into a buffer that is inserted into the container
+    // by `act`, to simulate receiving a streaming HTML response. Unlike
+    // readIntoContainer, it immediately returns — it does not block until the
+    // stream is finished.
+    const reader = stream.getReader();
+    async function go() {
+      while (true) {
+        try {
+          const {done, value} = await reader.read();
+          if (done) {
+            return null;
+          }
+          buffer += Buffer.from(value).toString('utf8');
+        } catch (error) {
+          hasErrored = true;
+          fatalError = error;
+          return null;
+        }
+      }
+    }
+    go();
+  }
+
   async function readIntoContainer(stream) {
     const reader = stream.getReader();
     let result = '';
@@ -108,6 +291,57 @@ describe('ReactDOMFizzStaticBrowser', () => {
     const temp = document.createElement('div');
     temp.innerHTML = result;
     await insertNodesAndExecuteScripts(temp, container, null);
+  }
+
+  function resolveText(text) {
+    const record = textCache.get(text);
+    if (record === undefined) {
+      const newRecord = {
+        status: 'resolved',
+        value: text,
+      };
+      textCache.set(text, newRecord);
+    } else if (record.status === 'pending') {
+      const thenable = record.value;
+      record.status = 'resolved';
+      record.value = text;
+      thenable.pings.forEach(t => t());
+    }
+  }
+
+  function readText(text) {
+    const record = textCache.get(text);
+    if (record !== undefined) {
+      switch (record.status) {
+        case 'pending':
+          Scheduler.log(`Suspend! [${text}]`);
+          throw record.value;
+        case 'rejected':
+          throw record.value;
+        case 'resolved':
+          return record.value;
+      }
+    } else {
+      Scheduler.log(`Suspend! [${text}]`);
+      const thenable = {
+        pings: [],
+        then(resolve) {
+          if (newRecord.status === 'pending') {
+            thenable.pings.push(resolve);
+          } else {
+            Promise.resolve().then(() => resolve(newRecord.value));
+          }
+        },
+      };
+
+      const newRecord = {
+        status: 'pending',
+        value: thenable,
+      };
+      textCache.set(text, newRecord);
+
+      throw thenable;
+    }
   }
 
   // @gate experimental
@@ -1316,4 +1550,146 @@ describe('ReactDOMFizzStaticBrowser', () => {
         '</head><body><div>Hello</div></body></html>',
     );
   });
+
+  // @gate enablePostpone
+  it(
+    'during a resume, loading prerendered data from cache should not block ' +
+      'sibling Suspense trees from rendering in parallel',
+    async () => {
+      let prerendering = true;
+
+      function DynamicText({text}) {
+        if (prerendering) {
+          React.unstable_postpone();
+        }
+        Scheduler.log(text);
+        return text;
+      }
+
+      function readTextAndLog(text) {
+        readText(text);
+        Scheduler.log(text);
+        return text;
+      }
+
+      function Toolbar() {
+        // This read is in the parent path of Toolbar content, so during the
+        // resume it will run again. During the resume, it should be cached, but
+        // reading from the cache may be async so it could still suspend,
+        // creating a waterfall. Because it's cached, it's no big deal, but
+        // regardless it shouldn't block unrelated siblings (MainContent)
+        // from rendering.
+        const toolbarText = readTextAndLog('Toolbar shell');
+
+        return (
+          <div>
+            {toolbarText}
+            <div>
+              <Suspense fallback="Loading dynamic toolbar content...">
+                <DynamicText text="Toolbar content" />
+              </Suspense>
+            </div>
+          </div>
+        );
+      }
+
+      function App() {
+        // Note that Toolbar and MainContent are in two completely separate
+        // Suspense trees. One should not block the other.
+        return (
+          <div>
+            <Suspense fallback="Loading static toolbar shell...">
+              <Toolbar />
+            </Suspense>
+            <div>
+              <Suspense fallback="Loading dynamic main content...">
+                <DynamicText text="Main content" />
+              </Suspense>
+            </div>
+          </div>
+        );
+      }
+
+      resolveText('Toolbar shell');
+      const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+      expect(prerendered.postponed).not.toBe(null);
+      // The static content rendered, but none of the dynamic content did
+      // because it was postponed.
+      assertLog(['Toolbar shell']);
+
+      prerendering = false;
+      // Reset the Suspense cache before starting the resume.
+      textCache = new Map();
+
+      // Resume rendering the dynamic content. The Toolbar shell is visible
+      // immediately because it was prerendered.
+      await act(async () => readContentIntoBuffer(prerendered.prelude));
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <div>
+            Toolbar shell
+            <div>Loading dynamic toolbar content...</div>
+          </div>
+          <div>Loading dynamic main content...</div>
+        </div>,
+      );
+
+      // FIXME: This is where the test fails — the `resume` call never resolves
+      // because it's blocked by the Toolbar shell suspending, despite the fact
+      // that the toolbar is wrapped in a Suspense boundary. The net effect is
+      // that the dynamic main content is blocked longer than it should be, even
+      // though it's in a sibling Suspense tree.
+      // >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+      // Start rendering the dynamic content.
+      const resumed = await ReactDOMFizzServer.resume(
+        <App />,
+        JSON.parse(JSON.stringify(prerendered.postponed)),
+      );
+
+      // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+      // I wrote the rest of the test assertions below based on my best
+      // understanding of what the behavior should be, though it might be slightly
+      // off since I wasn't able to actually run it.
+
+      await act(async () => {
+        readContentIntoBuffer(resumed);
+      });
+      assertLog([
+        // Because it's in the parent path, the Toolbar shell will be replayed.
+        // It should load quickly because it's cached, but reading from the
+        // cache may itself be async, so it may suspend again, which is what
+        // we're simulating here.
+        'Suspend! [Toolbar shell]',
+
+        // The toolbar content is blocked by the toolbar shell, but since the
+        // main content is in an unrelated sibling Suspense tree, we can render
+        // that immediately.
+        'Main content',
+      ]);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <div>
+            Toolbar shell
+            <div>Loading dynamic toolbar content...</div>
+          </div>
+          <div>Main content</div>
+        </div>,
+      );
+
+      // Finish loading the Toolbar shell from cache. This unblocks the dynamic
+      // toolbar content.
+      await act(() => resolveText('Toolbar shell'));
+      assertLog(['Toolbar shell', 'Toolbar content']);
+      expect(getVisibleChildren(container)).toEqual(
+        <div>
+          <div>
+            Toolbar shell
+            <div>Toolbar content</div>
+          </div>
+          <div>Main content</div>
+        </div>,
+      );
+    },
+  );
 });
