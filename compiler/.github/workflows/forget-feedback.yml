@@ -23,6 +23,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20.x
+      - run: yarn install --frozen-lockfile
+        working-directory: forget-feedback
       - run: npm ci
       - run: npx playwright install
       - run: npm run test:e2e
