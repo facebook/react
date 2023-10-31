@@ -93,6 +93,7 @@ async function executeScript(script: Element) {
         'You must set the current document to the global document to use script src in tests',
       );
     }
+
     try {
       // $FlowFixMe
       require(scriptSrc);
@@ -177,8 +178,8 @@ function getVisibleChildren(element: Element): React$Node {
   while (node) {
     if (node.nodeType === 1) {
       if (
-        node.tagName !== 'SCRIPT' &&
-        node.tagName !== 'script' &&
+        ((node.tagName !== 'SCRIPT' && node.tagName !== 'script') ||
+          node.hasAttribute('data-meaningful')) &&
         node.tagName !== 'TEMPLATE' &&
         node.tagName !== 'template' &&
         !node.hasAttribute('hidden') &&

@@ -75,7 +75,7 @@ export {
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
-  experimental_useOptimistic,
+  useOptimistic,
   useSyncExternalStore,
   useReducer,
   useRef,

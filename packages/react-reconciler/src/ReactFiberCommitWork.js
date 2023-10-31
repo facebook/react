@@ -54,7 +54,6 @@ import {
   enableFloat,
   enableLegacyHidden,
   enableHostSingletons,
-  diffInCommitPhase,
   alwaysThrottleRetries,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -1725,7 +1724,7 @@ function emptyPortalContainer(current: Fiber) {
     ...
   } = current.stateNode;
   const {containerInfo} = portal;
-  const emptyChildSet = createContainerChildSet(containerInfo);
+  const emptyChildSet = createContainerChildSet();
   replaceContainerChildren(containerInfo, emptyChildSet);
 }
 
@@ -2693,23 +2692,17 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
-            if (updatePayload !== null || diffInCommitPhase) {
-              try {
-                commitUpdate(
-                  finishedWork.stateNode,
-                  updatePayload,
-                  finishedWork.type,
-                  current.memoizedProps,
-                  finishedWork.memoizedProps,
-                  finishedWork,
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error,
-                );
-              }
+            try {
+              commitUpdate(
+                finishedWork.stateNode,
+                updatePayload,
+                finishedWork.type,
+                current.memoizedProps,
+                finishedWork.memoizedProps,
+                finishedWork,
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }
@@ -2777,23 +2770,17 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
-            if (updatePayload !== null || diffInCommitPhase) {
-              try {
-                commitUpdate(
-                  instance,
-                  updatePayload,
-                  type,
-                  oldProps,
-                  newProps,
-                  finishedWork,
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error,
-                );
-              }
+            try {
+              commitUpdate(
+                instance,
+                updatePayload,
+                type,
+                oldProps,
+                newProps,
+                finishedWork,
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }

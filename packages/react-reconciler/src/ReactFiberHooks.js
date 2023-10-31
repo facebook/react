@@ -41,6 +41,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   enableAsyncActions,
   enableFormActions,
+  enableUseDeferredValueInitialArg,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -60,16 +61,17 @@ import {
   NoLane,
   SyncLane,
   OffscreenLane,
+  DeferredLane,
   NoLanes,
   isSubsetOfLanes,
   includesBlockingLane,
   includesOnlyNonUrgentLanes,
-  claimNextTransitionLane,
   mergeLanes,
   removeLanes,
   intersectLanes,
   isTransitionLane,
   markRootEntangled,
+  includesSomeLane,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -100,6 +102,7 @@ import {
   getWorkInProgressRootRenderLanes,
   scheduleUpdateOnFiber,
   requestUpdateLane,
+  requestDeferredLane,
   markSkippedUpdateLanes,
   isInvalidExecutionContextForEventFunction,
 } from './ReactFiberWorkLoop';
@@ -111,7 +114,10 @@ import {
   markWorkInProgressReceivedUpdate,
   checkIfWorkInProgressReceivedUpdate,
 } from './ReactFiberBeginWork';
-import {getIsHydrating} from './ReactFiberHydrationContext';
+import {
+  getIsHydrating,
+  tryToClaimNextHydratableFormMarkerInstance,
+} from './ReactFiberHydrationContext';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {
   markStateUpdateScheduled,
@@ -140,9 +146,11 @@ import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 import {
   requestAsyncActionContext,
   requestSyncActionContext,
+  peekEntangledActionLane,
 } from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
+import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1520,7 +1528,8 @@ function mountSyncExternalStore<T>(
       );
     }
 
-    if (!includesBlockingLane(root, renderLanes)) {
+    const rootRenderLanes = getWorkInProgressRootRenderLanes();
+    if (!includesBlockingLane(root, rootRenderLanes)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
   }
@@ -1814,9 +1823,9 @@ function updateOptimisticImpl<S, A>(
   // as an argument. It's called a passthrough because if there are no pending
   // updates, it will be returned as-is.
   //
-  // Reset the base state and memoized state to the passthrough. Future
-  // updates will be applied on top of this.
-  hook.baseState = hook.memoizedState = passthrough;
+  // Reset the base state to the passthrough. Future updates will be applied
+  // on top of this.
+  hook.baseState = passthrough;
 
   // If a reducer is not provided, default to the same one used by useState.
   const resolvedReducer: (S, A) => S =
@@ -1850,9 +1859,9 @@ function rerenderOptimistic<S, A>(
 
   // This is a mount. No updates to process.
 
-  // Reset the base state and memoized state to the passthrough. Future
-  // updates will be applied on top of this.
-  hook.baseState = hook.memoizedState = passthrough;
+  // Reset the base state to the passthrough. Future updates will be applied
+  // on top of this.
+  hook.baseState = passthrough;
   const dispatch = hook.queue.dispatch;
   return [passthrough, dispatch];
 }
@@ -1906,7 +1915,7 @@ function dispatchFormState<S, P>(
       payload,
       next: first,
     };
-    last.next = newLast;
+    actionQueue.pending = last.next = newLast;
   }
 }
 
@@ -2007,22 +2016,41 @@ function formStateReducer<S>(oldState: S, newState: S): S {
 
 function mountFormState<S, P>(
   action: (S, P) => Promise<S>,
-  initialState: S,
+  initialStateProp: S,
   permalink?: string,
 ): [S, (P) => void] {
+  let initialState = initialStateProp;
+  if (getIsHydrating()) {
+    const root: FiberRoot = (getWorkInProgressRoot(): any);
+    const ssrFormState = root.formState;
+    // If a formState option was passed to the root, there are form state
+    // markers that we need to hydrate. These indicate whether the form state
+    // matches this hook instance.
+    if (ssrFormState !== null) {
+      const isMatching = tryToClaimNextHydratableFormMarkerInstance(
+        currentlyRenderingFiber,
+      );
+      if (isMatching) {
+        initialState = ssrFormState[0];
+      }
+    }
+  }
+  const initialStateThenable: Thenable<S> = {
+    status: 'fulfilled',
+    value: initialState,
+    then() {},
+  };
+
   // State hook. The state is stored in a thenable which is then unwrapped by
   // the `use` algorithm during render.
   const stateHook = mountWorkInProgressHook();
-  stateHook.memoizedState = stateHook.baseState = {
-    status: 'fulfilled',
-    value: initialState,
-  };
+  stateHook.memoizedState = stateHook.baseState = initialStateThenable;
   const stateQueue: UpdateQueue<Thenable<S>, Thenable<S>> = {
     pending: null,
     lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: formStateReducer,
-    lastRenderedState: (initialState: any),
+    lastRenderedState: initialStateThenable,
   };
   stateHook.queue = stateQueue;
   const setState: Dispatch<Thenable<S>> = (dispatchSetState.bind(
@@ -2145,7 +2173,8 @@ function rerenderFormState<S, P>(
   }
 
   // This is a mount. No updates to process.
-  const state = stateHook.memoizedState;
+  const thenable: Thenable<S> = stateHook.memoizedState;
+  const state = useThenable(thenable);
 
   const actionQueueHook = updateWorkInProgressHook();
   const actionQueue = actionQueueHook.queue;
@@ -2614,74 +2643,110 @@ function updateMemo<T>(
   return nextValue;
 }
 
-function mountDeferredValue<T>(value: T): T {
+function mountDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = mountWorkInProgressHook();
-  hook.memoizedState = value;
-  return value;
+  return mountDeferredValueImpl(hook, value, initialValue);
 }
 
-function updateDeferredValue<T>(value: T): T {
+function updateDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = updateWorkInProgressHook();
   const resolvedCurrentHook: Hook = (currentHook: any);
   const prevValue: T = resolvedCurrentHook.memoizedState;
-  return updateDeferredValueImpl(hook, prevValue, value);
+  return updateDeferredValueImpl(hook, prevValue, value, initialValue);
 }
 
-function rerenderDeferredValue<T>(value: T): T {
+function rerenderDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = updateWorkInProgressHook();
   if (currentHook === null) {
     // This is a rerender during a mount.
-    hook.memoizedState = value;
-    return value;
+    return mountDeferredValueImpl(hook, value, initialValue);
   } else {
     // This is a rerender during an update.
     const prevValue: T = currentHook.memoizedState;
-    return updateDeferredValueImpl(hook, prevValue, value);
+    return updateDeferredValueImpl(hook, prevValue, value, initialValue);
   }
 }
 
-function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
-  const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
-  if (shouldDeferValue) {
-    // This is an urgent update. If the value has changed, keep using the
-    // previous value and spawn a deferred render to update it later.
+function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
+  if (
+    enableUseDeferredValueInitialArg &&
+    // When `initialValue` is provided, we defer the initial render even if the
+    // current render is not synchronous.
+    initialValue !== undefined &&
+    // However, to avoid waterfalls, we do not defer if this render
+    // was itself spawned by an earlier useDeferredValue. Check if DeferredLane
+    // is part of the render lanes.
+    !includesSomeLane(renderLanes, DeferredLane)
+  ) {
+    // Render with the initial value
+    hook.memoizedState = initialValue;
 
-    if (!is(value, prevValue)) {
+    // Schedule a deferred render to switch to the final value.
+    const deferredLane = requestDeferredLane();
+    currentlyRenderingFiber.lanes = mergeLanes(
+      currentlyRenderingFiber.lanes,
+      deferredLane,
+    );
+    markSkippedUpdateLanes(deferredLane);
+
+    return initialValue;
+  } else {
+    hook.memoizedState = value;
+    return value;
+  }
+}
+
+function updateDeferredValueImpl<T>(
+  hook: Hook,
+  prevValue: T,
+  value: T,
+  initialValue?: T,
+): T {
+  if (is(value, prevValue)) {
+    // The incoming value is referentially identical to the currently rendered
+    // value, so we can bail out quickly.
+    return value;
+  } else {
+    // Received a new value that's different from the current value.
+
+    // Check if we're inside a hidden tree
+    if (isCurrentTreeHidden()) {
+      // Revealing a prerendered tree is considered the same as mounting new
+      // one, so we reuse the "mount" path in this case.
+      const resultValue = mountDeferredValueImpl(hook, value, initialValue);
+      // Unlike during an actual mount, we need to mark this as an update if
+      // the value changed.
+      if (!is(resultValue, prevValue)) {
+        markWorkInProgressReceivedUpdate();
+      }
+      return resultValue;
+    }
+
+    const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
+    if (shouldDeferValue) {
+      // This is an urgent update. Since the value has changed, keep using the
+      // previous value and spawn a deferred render to update it later.
+
       // Schedule a deferred render
-      const deferredLane = claimNextTransitionLane();
+      const deferredLane = requestDeferredLane();
       currentlyRenderingFiber.lanes = mergeLanes(
         currentlyRenderingFiber.lanes,
         deferredLane,
       );
       markSkippedUpdateLanes(deferredLane);
 
-      // Set this to true to indicate that the rendered value is inconsistent
-      // from the latest value. The name "baseState" doesn't really match how we
-      // use it because we're reusing a state hook field instead of creating a
-      // new one.
-      hook.baseState = true;
-    }
+      // Reuse the previous value. We do not need to mark this as an update,
+      // because we did not render a new value.
+      return prevValue;
+    } else {
+      // This is not an urgent update, so we can use the latest value regardless
+      // of what it is. No need to defer it.
 
-    // Reuse the previous value
-    return prevValue;
-  } else {
-    // This is not an urgent update, so we can use the latest value regardless
-    // of what it is. No need to defer it.
-
-    // However, if we're currently inside a spawned render, then we need to mark
-    // this as an update to prevent the fiber from bailing out.
-    //
-    // `baseState` is true when the current value is different from the rendered
-    // value. The name doesn't really match how we use it because we're reusing
-    // a state hook field instead of creating a new one.
-    if (hook.baseState) {
-      // Flip this back to false.
-      hook.baseState = false;
+      // Mark this as an update to prevent the fiber from bailing out.
       markWorkInProgressReceivedUpdate();
+      hook.memoizedState = value;
+      return value;
     }
-
-    hook.memoizedState = value;
-    return value;
   }
 }
 
@@ -2699,6 +2764,7 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactCurrentBatchConfig.transition;
+  const currentTransition: BatchConfigTransition = {};
 
   if (enableAsyncActions) {
     // We don't really need to use an optimistic update here, because we
@@ -2707,14 +2773,13 @@ function startTransition<S>(
     // optimistic update anyway to make it less likely the behavior accidentally
     // diverges; for example, both an optimistic update and this one should
     // share the same lane.
+    ReactCurrentBatchConfig.transition = currentTransition;
     dispatchOptimisticSetState(fiber, false, queue, pendingState);
   } else {
     ReactCurrentBatchConfig.transition = null;
     dispatchSetState(fiber, queue, pendingState);
+    ReactCurrentBatchConfig.transition = currentTransition;
   }
-
-  const currentTransition = (ReactCurrentBatchConfig.transition =
-    ({}: BatchConfigTransition));
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
@@ -3178,14 +3243,48 @@ function dispatchOptimisticSetState<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ): void {
+  if (__DEV__) {
+    if (ReactCurrentBatchConfig.transition === null) {
+      // An optimistic update occurred, but startTransition is not on the stack.
+      // There are two likely scenarios.
+
+      // One possibility is that the optimistic update is triggered by a regular
+      // event handler (e.g. `onSubmit`) instead of an action. This is a mistake
+      // and we will warn.
+
+      // The other possibility is the optimistic update is inside an async
+      // action, but after an `await`. In this case, we can make it "just work"
+      // by associating the optimistic update with the pending async action.
+
+      // Technically it's possible that the optimistic update is unrelated to
+      // the pending action, but we don't have a way of knowing this for sure
+      // because browsers currently do not provide a way to track async scope.
+      // (The AsyncContext proposal, if it lands, will solve this in the
+      // future.) However, this is no different than the problem of unrelated
+      // transitions being grouped together — it's not wrong per se, but it's
+      // not ideal.
+
+      // Once AsyncContext starts landing in browsers, we will provide better
+      // warnings in development for these cases.
+      if (peekEntangledActionLane() !== NoLane) {
+        // There is a pending async action. Don't warn.
+      } else {
+        // There's no pending async action. The most likely cause is that we're
+        // inside a regular event handler (e.g. onSubmit) instead of an action.
+        console.error(
+          'An optimistic state update occurred outside a transition or ' +
+            'action. To fix, move the update to an action, or wrap ' +
+            'with startTransition.',
+        );
+      }
+    }
+  }
+
   const update: Update<S, A> = {
     // An optimistic update commits synchronously.
     lane: SyncLane,
     // After committing, the optimistic update is "reverted" using the same
     // lane as the transition it's associated with.
-    //
-    // TODO: Warn if there's no transition/action associated with this
-    // optimistic update.
     revertLane: requestTransitionLane(),
     action,
     hasEagerState: false,
@@ -3575,10 +3674,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       mountHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -3744,10 +3843,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -3917,10 +4016,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return updateDeferredValue(value);
+      return updateDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4089,10 +4188,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return rerenderDeferredValue(value);
+      return rerenderDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4273,11 +4372,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4471,11 +4570,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateDeferredValue(value);
+      return updateDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4669,11 +4768,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderDeferredValue(value);
+      return rerenderDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';

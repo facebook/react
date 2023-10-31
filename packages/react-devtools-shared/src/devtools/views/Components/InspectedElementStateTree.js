@@ -9,7 +9,7 @@
 
 import {copy} from 'clipboard-js';
 import * as React from 'react';
-import {ElementTypeHostComponent} from 'react-devtools-shared/src/types';
+import {ElementTypeHostComponent} from 'react-devtools-shared/src/frontend/types';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
@@ -17,9 +17,9 @@ import {alphaSortEntries, serializeDataForCopy} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
 
-import type {InspectedElement} from './types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 type Props = {
   bridge: FrontendBridge,

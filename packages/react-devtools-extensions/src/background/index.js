@@ -2,12 +2,15 @@
 
 'use strict';
 
-import {IS_FIREFOX, EXTENSION_CONTAINED_VERSIONS} from '../utils';
-
 import './dynamicallyInjectContentScripts';
 import './tabsManager';
-import setExtensionIconAndPopup from './setExtensionIconAndPopup';
-import injectProxy from './injectProxy';
+
+import {
+  handleDevToolsPageMessage,
+  handleBackendManagerMessage,
+  handleReactDevToolsHookMessage,
+  handleFetchResourceContentScriptMessage,
+} from './messageHandlers';
 
 /*
   {
@@ -39,18 +42,6 @@ function registerExtensionPort(port, tabId) {
     ports[tabId].disconnectPipe?.();
 
     delete ports[tabId].extension;
-
-    const proxyPort = ports[tabId].proxy;
-    if (proxyPort) {
-      // Do not disconnect proxy port, we will inject this content script again
-      // If extension port has disconnected, it probably means that user did in-tab navigation
-      clearReconnectionTimeout(proxyPort);
-
-      proxyPort.postMessage({
-        source: 'react-devtools-service-worker',
-        stop: true,
-      });
-    }
   });
 }
 
@@ -59,36 +50,12 @@ function registerProxyPort(port, tabId) {
 
   // In case proxy port was disconnected from the other end, from content script
   // This can happen if content script was detached, when user does in-tab navigation
-  // Or if when we notify proxy port to stop reconnecting, when extension port dies
-  // This listener should never be called when we call port.shutdown() from this (background/index.js) script
+  // This listener should never be called when we call port.disconnect() from this (background/index.js) script
   port.onDisconnect.addListener(() => {
     ports[tabId].disconnectPipe?.();
 
     delete ports[tabId].proxy;
   });
-
-  port._reconnectionTimeoutId = setTimeout(
-    reconnectProxyPort,
-    25_000,
-    port,
-    tabId,
-  );
-}
-
-function clearReconnectionTimeout(port) {
-  if (port._reconnectionTimeoutId) {
-    clearTimeout(port._reconnectionTimeoutId);
-    delete port._reconnectionTimeoutId;
-  }
-}
-
-function reconnectProxyPort(port, tabId) {
-  // IMPORTANT: port.onDisconnect will only be emitted if disconnect() was called from the other end
-  // We need to do it manually here if we disconnect proxy port from service worker
-  ports[tabId].disconnectPipe?.();
-
-  // It should be reconnected automatically by proxy content script, look at proxy.js
-  port.disconnect();
 }
 
 function isNumeric(str: string): boolean {
@@ -97,45 +64,47 @@ function isNumeric(str: string): boolean {
 
 chrome.runtime.onConnect.addListener(port => {
   if (port.name === 'proxy') {
+    // Might not be present for restricted pages in Firefox
+    if (port.sender?.tab?.id == null) {
+      // Not disconnecting it, so it would not reconnect
+      return;
+    }
+
     // Proxy content script is executed in tab, so it should have it specified.
     const tabId = port.sender.tab.id;
+
+    if (ports[tabId]?.proxy) {
+      ports[tabId].disconnectPipe?.();
+      ports[tabId].proxy.disconnect();
+    }
 
     registerTab(tabId);
     registerProxyPort(port, tabId);
 
-    connectExtensionAndProxyPorts(
-      ports[tabId].extension,
-      ports[tabId].proxy,
-      tabId,
-    );
+    if (ports[tabId].extension) {
+      connectExtensionAndProxyPorts(
+        ports[tabId].extension,
+        ports[tabId].proxy,
+        tabId,
+      );
+    }
 
     return;
   }
 
   if (isNumeric(port.name)) {
-    // Extension port doesn't have tab id specified, because its sender is the extension.
+    // DevTools page port doesn't have tab id specified, because its sender is the extension.
     const tabId = +port.name;
-    const extensionPortAlreadyConnected = ports[tabId]?.extension != null;
-
-    // Handle the case when extension port was disconnected and we were not notified
-    if (extensionPortAlreadyConnected) {
-      ports[tabId].disconnectPipe?.();
-    }
 
     registerTab(tabId);
     registerExtensionPort(port, tabId);
 
-    if (extensionPortAlreadyConnected) {
-      const proxyPort = ports[tabId].proxy;
-
-      // Avoid re-injecting the content script, we might end up in a situation
-      // where we would have multiple proxy ports opened and trying to reconnect
-      if (proxyPort) {
-        clearReconnectionTimeout(proxyPort);
-        reconnectProxyPort(proxyPort, tabId);
-      }
-    } else {
-      injectProxy(tabId);
+    if (ports[tabId].proxy) {
+      connectExtensionAndProxyPorts(
+        ports[tabId].extension,
+        ports[tabId].proxy,
+        tabId,
+      );
     }
 
     return;
@@ -208,67 +177,38 @@ function connectExtensionAndProxyPorts(extensionPort, proxyPort, tabId) {
 }
 
 chrome.runtime.onMessage.addListener((message, sender) => {
-  const tab = sender.tab;
-  // sender.tab.id from content script points to the tab that injected the content script
-  if (tab) {
-    const id = tab.id;
-    // This is sent from the hook content script.
-    // It tells us a renderer has attached.
-    if (message.hasDetectedReact) {
-      setExtensionIconAndPopup(message.reactBuildType, id);
-    } else {
-      const extensionPort = ports[id]?.extension;
-
-      switch (message.payload?.type) {
-        case 'fetch-file-with-cache-complete':
-        case 'fetch-file-with-cache-error':
-          // Forward the result of fetch-in-page requests back to the extension.
-          extensionPort?.postMessage(message);
-          break;
-        // This is sent from the backend manager running on a page
-        case 'react-devtools-required-backends':
-          const backendsToDownload = [];
-          message.payload.versions.forEach(version => {
-            if (EXTENSION_CONTAINED_VERSIONS.includes(version)) {
-              if (!IS_FIREFOX) {
-                // equivalent logic for Firefox is in prepareInjection.js
-                chrome.scripting.executeScript({
-                  target: {tabId: id},
-                  files: [`/build/react_devtools_backend_${version}.js`],
-                  world: chrome.scripting.ExecutionWorld.MAIN,
-                });
-              }
-            } else {
-              backendsToDownload.push(version);
-            }
-          });
-
-          // Request the necessary backends in the extension DevTools UI
-          // TODO: handle this message in index.js to build the UI
-          extensionPort?.postMessage({
-            payload: {
-              type: 'react-devtools-additional-backends',
-              versions: backendsToDownload,
-            },
-          });
-          break;
-      }
+  switch (message?.source) {
+    case 'devtools-page': {
+      handleDevToolsPageMessage(message);
+      break;
+    }
+    case 'react-devtools-fetch-resource-content-script': {
+      handleFetchResourceContentScriptMessage(message);
+      break;
+    }
+    case 'react-devtools-backend-manager': {
+      handleBackendManagerMessage(message, sender);
+      break;
+    }
+    case 'react-devtools-hook': {
+      handleReactDevToolsHookMessage(message, sender);
     }
   }
+});
 
-  // This is sent from the devtools page when it is ready for injecting the backend
-  if (message?.payload?.type === 'react-devtools-inject-backend-manager') {
-    // sender.tab.id from devtools page may not exist, or point to the undocked devtools window
-    // so we use the payload to get the tab id
-    const tabId = message.payload.tabId;
+chrome.tabs.onActivated.addListener(({tabId: activeTabId}) => {
+  for (const registeredTabId in ports) {
+    if (
+      ports[registeredTabId].proxy != null &&
+      ports[registeredTabId].extension != null
+    ) {
+      const numericRegisteredTabId = +registeredTabId;
+      const event =
+        activeTabId === numericRegisteredTabId
+          ? 'resumeElementPolling'
+          : 'pauseElementPolling';
 
-    if (tabId && !IS_FIREFOX) {
-      // equivalent logic for Firefox is in prepareInjection.js
-      chrome.scripting.executeScript({
-        target: {tabId},
-        files: ['/build/backendManager.js'],
-        world: chrome.scripting.ExecutionWorld.MAIN,
-      });
+      ports[registeredTabId].extension.postMessage({event});
     }
   }
 });

@@ -90,16 +90,11 @@ const ReactNoopServer = ReactFizzServer({
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
 
-  UNINITIALIZED_SUSPENSE_BOUNDARY_ID: null,
-
-  assignSuspenseBoundaryID(): SuspenseInstance {
-    // The ID is a pointer to the boundary itself.
-    return {state: 'pending', children: []};
-  },
-
   getChildFormatContext(): null {
     return null;
   },
+
+  resetResumableState(): void {},
 
   pushTextInstance(
     target: Array<Uint8Array>,
@@ -304,7 +299,7 @@ function render(children: React$Element<any>, options?: Options): Destination {
     options ? options.onAllReady : undefined,
     options ? options.onShellReady : undefined,
   );
-  ReactNoopServer.startRender(request);
+  ReactNoopServer.startWork(request);
   ReactNoopServer.startFlowing(request, destination);
   return destination;
 }

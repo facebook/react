@@ -96,6 +96,7 @@ const simpleEventPluginEvents = [
   'touchStart',
   'volumeChange',
   'scroll',
+  'scrollEnd',
   'toggle',
   'touchMove',
   'waiting',

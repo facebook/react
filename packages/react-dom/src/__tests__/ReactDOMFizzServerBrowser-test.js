@@ -84,7 +84,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<link rel="preload" href="init.js" as="script" fetchPriority="low"/><link rel="modulepreload" href="init.mjs" fetchPriority="low"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
@@ -342,7 +342,8 @@ describe('ReactDOMFizzServerBrowser', () => {
     expect(isComplete).toBe(false);
 
     const reader = stream.getReader();
-    reader.cancel();
+    await reader.read();
+    await reader.cancel();
 
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
@@ -355,6 +356,10 @@ describe('ReactDOMFizzServerBrowser', () => {
 
     expect(rendered).toBe(false);
     expect(isComplete).toBe(true);
+
+    expect(errors).toEqual([
+      'The render was aborted by the server without a reason.',
+    ]);
   });
 
   it('should stream large contents that might overlow individual buffers', async () => {
@@ -500,7 +505,7 @@ describe('ReactDOMFizzServerBrowser', () => {
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<link rel="preload" href="init.js" as="script" fetchPriority="low" nonce="R4nd0m"/><link rel="modulepreload" href="init.mjs" fetchPriority="low" nonce="R4nd0m"/><div>hello world</div><script nonce="${nonce}">INIT();</script><script src="init.js" nonce="${nonce}" async=""></script><script type="module" src="init.mjs" nonce="${nonce}" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" nonce="R4nd0m" href="init.js"/><link rel="modulepreload" fetchPriority="low" nonce="R4nd0m" href="init.mjs"/><div>hello world</div><script nonce="${nonce}">INIT();</script><script src="init.js" nonce="${nonce}" async=""></script><script type="module" src="init.mjs" nonce="${nonce}" async=""></script>"`,
     );
   });
 

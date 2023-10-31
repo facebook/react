@@ -2,22 +2,38 @@
 
 'use strict';
 
+window.addEventListener('pageshow', function ({target}) {
+  // Firefox's behaviour for injecting this content script can be unpredictable
+  // While navigating the history, some content scripts might not be re-injected and still be alive
+  if (!window.__REACT_DEVTOOLS_PROXY_INJECTED__) {
+    window.__REACT_DEVTOOLS_PROXY_INJECTED__ = true;
+
+    connectPort();
+    sayHelloToBackendManager();
+
+    // The backend waits to install the global hook until notified by the content script.
+    // In the event of a page reload, the content script might be loaded before the backend manager is injected.
+    // Because of this we need to poll the backend manager until it has been initialized.
+    const intervalID = setInterval(() => {
+      if (backendInitialized) {
+        clearInterval(intervalID);
+      } else {
+        sayHelloToBackendManager();
+      }
+    }, 500);
+  }
+});
+
+window.addEventListener('pagehide', function ({target}) {
+  if (target !== window.document) {
+    return;
+  }
+
+  delete window.__REACT_DEVTOOLS_PROXY_INJECTED__;
+});
+
 let port = null;
 let backendInitialized: boolean = false;
-
-connectPort();
-sayHelloToBackendManager();
-
-// The backend waits to install the global hook until notified by the content script.
-// In the event of a page reload, the content script might be loaded before the backend manager is injected.
-// Because of this we need to poll the backend manager until it has been initialized.
-const intervalID = setInterval(() => {
-  if (backendInitialized) {
-    clearInterval(intervalID);
-  } else {
-    sayHelloToBackendManager();
-  }
-}, 500);
 
 function sayHelloToBackendManager() {
   window.postMessage(
@@ -30,18 +46,6 @@ function sayHelloToBackendManager() {
 }
 
 function handleMessageFromDevtools(message) {
-  if (message.source === 'react-devtools-service-worker' && message.stop) {
-    window.removeEventListener('message', handleMessageFromPage);
-
-    // Calling disconnect here should not emit onDisconnect event inside this script
-    // This port will not attempt to reconnect again
-    // It will connect only once this content script will be injected again
-    port?.disconnect();
-    port = null;
-
-    return;
-  }
-
   window.postMessage(
     {
       source: 'react-devtools-content-script',
@@ -52,19 +56,29 @@ function handleMessageFromDevtools(message) {
 }
 
 function handleMessageFromPage(event) {
-  if (event.source === window && event.data) {
+  if (event.source !== window || !event.data) {
+    return;
+  }
+
+  switch (event.data.source) {
     // This is a message from a bridge (initialized by a devtools backend)
-    if (event.data.source === 'react-devtools-bridge') {
+    case 'react-devtools-bridge': {
       backendInitialized = true;
 
       port.postMessage(event.data.payload);
+      break;
     }
 
-    // This is a message from the backend manager
-    if (event.data.source === 'react-devtools-backend-manager') {
+    // This is a message from the backend manager, which runs in ExecutionWorld.MAIN
+    // and can't use `chrome.runtime.sendMessage`
+    case 'react-devtools-backend-manager': {
+      const {source, payload} = event.data;
+
       chrome.runtime.sendMessage({
-        payload: event.data.payload,
+        source,
+        payload,
       });
+      break;
     }
   }
 }

@@ -24,8 +24,8 @@ import {
 import {TreeStateContext} from './TreeContext';
 import {BridgeContext, StoreContext} from '../context';
 import {
-  checkForUpdate,
   inspectElement,
+  startElementUpdatesPolling,
 } from 'react-devtools-shared/src/inspectedElementCache';
 import {
   clearHookNamesCache,
@@ -37,12 +37,12 @@ import FetchFileWithCachingContext from 'react-devtools-shared/src/devtools/view
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 
-import type {HookNames} from 'react-devtools-shared/src/types';
+import type {HookNames} from 'react-devtools-shared/src/frontend/types';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Element,
   InspectedElement,
-} from 'react-devtools-shared/src/devtools/views/Components/types';
+} from 'react-devtools-shared/src/frontend/types';
 
 type Path = Array<string | number>;
 type InspectPathFunction = (path: Path) => void;
@@ -58,8 +58,6 @@ type Context = {
 
 export const InspectedElementContext: ReactContext<Context> =
   createContext<Context>(((null: any): Context));
-
-const POLL_INTERVAL = 1000;
 
 export type Props = {
   children: ReactNodeList,
@@ -228,14 +226,21 @@ export function InspectedElementContextController({
   // Periodically poll the selected element for updates.
   useEffect(() => {
     if (element !== null && bridgeIsAlive) {
-      const checkForUpdateWrapper = () => {
-        checkForUpdate({bridge, element, refresh, store});
-        timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
-      };
-      let timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
+      const {abort, pause, resume} = startElementUpdatesPolling({
+        bridge,
+        element,
+        refresh,
+        store,
+      });
+
+      bridge.addListener('resumeElementPolling', resume);
+      bridge.addListener('pauseElementPolling', pause);
 
       return () => {
-        clearTimeout(timeoutID);
+        bridge.removeListener('resumeElementPolling', resume);
+        bridge.removeListener('pauseElementPolling', pause);
+
+        abort();
       };
     }
   }, [

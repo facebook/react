@@ -30,12 +30,7 @@ describe('InspectedElementContext', () => {
   ): Promise<Object> {
     const rendererID = ((store.getRendererIDForElement(id): any): number);
     const promise = backendAPI
-      .inspectElement({
-        bridge,
-        id,
-        path,
-        rendererID,
-      })
+      .inspectElement(bridge, false, id, path, rendererID)
       .then(data =>
         backendAPI.convertInspectedElementBackendToFrontend(data.value),
       );

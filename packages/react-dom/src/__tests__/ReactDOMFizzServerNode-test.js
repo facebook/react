@@ -98,7 +98,7 @@ describe('ReactDOMFizzServerNode', () => {
     pipe(writable);
     jest.runAllTimers();
     expect(output.result).toMatchInlineSnapshot(
-      `"<link rel="preload" href="init.js" as="script" fetchPriority="low"/><link rel="modulepreload" href="init.mjs" fetchPriority="low"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 

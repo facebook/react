@@ -13,7 +13,7 @@ import type {Request} from 'react-server/src/ReactFizzServer';
 
 import {
   createRequest,
-  startRender,
+  startWork,
   startFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
@@ -74,15 +74,11 @@ function renderToNodeStreamImpl(
   const resumableState = createResumableState(
     options ? options.identifierPrefix : undefined,
     undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
   );
   const request = createRequest(
     children,
     resumableState,
-    createRenderState(resumableState, undefined, false),
+    createRenderState(resumableState, false),
     createRootFormatContext(),
     Infinity,
     onError,
@@ -92,7 +88,7 @@ function renderToNodeStreamImpl(
     undefined,
   );
   destination.request = request;
-  startRender(request);
+  startWork(request);
   return destination;
 }
 

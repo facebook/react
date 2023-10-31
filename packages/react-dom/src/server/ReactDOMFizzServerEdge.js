@@ -8,7 +8,7 @@
  */
 
 import type {PostponedState} from 'react-server/src/ReactFizzServer';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 import type {ImportMap} from '../shared/ReactDOMTypes';
 
@@ -16,14 +16,17 @@ import ReactVersion from 'shared/ReactVersion';
 
 import {
   createRequest,
-  startRender,
+  resumeRequest,
+  startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
 
 import {
   createResumableState,
   createRenderState,
+  resumeRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -40,6 +43,7 @@ type Options = {
   onPostpone?: (reason: string) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
+  formState?: ReactFormState<any, any> | null,
 };
 
 type ResumeOptions = {
@@ -75,7 +79,8 @@ function renderToReadableStream(
             startFlowing(request, controller);
           },
           cancel: (reason): ?Promise<void> => {
-            abort(request);
+            stopFlowing(request);
+            abort(request, reason);
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
@@ -94,10 +99,6 @@ function renderToReadableStream(
     }
     const resumableState = createResumableState(
       options ? options.identifierPrefix : undefined,
-      options ? options.nonce : undefined,
-      options ? options.bootstrapScriptContent : undefined,
-      options ? options.bootstrapScripts : undefined,
-      options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     );
     const request = createRequest(
@@ -106,6 +107,10 @@ function renderToReadableStream(
       createRenderState(
         resumableState,
         options ? options.nonce : undefined,
+        options ? options.bootstrapScriptContent : undefined,
+        options ? options.bootstrapScripts : undefined,
+        options ? options.bootstrapModules : undefined,
+        options ? options.unstable_externalRuntimeSrc : undefined,
         options ? options.importMap : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
@@ -116,6 +121,7 @@ function renderToReadableStream(
       onShellError,
       onFatalError,
       options ? options.onPostpone : undefined,
+      options ? options.formState : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;
@@ -129,7 +135,7 @@ function renderToReadableStream(
         signal.addEventListener('abort', listener);
       }
     }
-    startRender(request);
+    startWork(request);
   });
 }
 
@@ -154,7 +160,8 @@ function resume(
             startFlowing(request, controller);
           },
           cancel: (reason): ?Promise<void> => {
-            abort(request);
+            stopFlowing(request);
+            abort(request, reason);
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
@@ -171,16 +178,13 @@ function resume(
       allReady.catch(() => {});
       reject(error);
     }
-    const request = createRequest(
+    const request = resumeRequest(
       children,
-      postponedState.resumableState,
-      createRenderState(
+      postponedState,
+      resumeRenderState(
         postponedState.resumableState,
         options ? options.nonce : undefined,
-        undefined, // importMap
       ),
-      postponedState.rootFormatContext,
-      postponedState.progressiveChunkSize,
       options ? options.onError : undefined,
       onAllReady,
       onShellReady,
@@ -200,7 +204,7 @@ function resume(
         signal.addEventListener('abort', listener);
       }
     }
-    startRender(request);
+    startWork(request);
   });
 }
 

@@ -13,7 +13,7 @@ import {
   ElementTypeRoot,
   ElementTypeHostComponent,
   ElementTypeOtherOrUnknown,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
 import {
   cleanForBridge,
@@ -50,7 +50,7 @@ import type {
 import type {
   ComponentFilter,
   ElementType,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import type {InspectedElement, SerializedElement} from '../types';
 
 export type InternalInstance = Object;

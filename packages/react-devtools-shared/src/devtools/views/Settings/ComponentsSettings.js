@@ -40,7 +40,7 @@ import {
   ElementTypeOtherOrUnknown,
   ElementTypeProfiler,
   ElementTypeSuspense,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {getDefaultOpenInEditorURL} from 'react-devtools-shared/src/utils';
 
 import styles from './SettingsShared.css';
@@ -52,7 +52,7 @@ import type {
   ElementType,
   ElementTypeComponentFilter,
   RegExpComponentFilter,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 
 const vscodeFilepath = 'vscode://file/{path}:{line}';
 
@@ -217,6 +217,10 @@ export default function ComponentsSettings(_: {}): React.Node {
       return cloned;
     });
   }, []);
+
+  const removeAllFilter = () => {
+    setComponentFilters([]);
+  };
 
   const toggleFilterIsEnabled = useCallback(
     (componentFilter: ComponentFilter, isEnabled: boolean) => {
@@ -434,11 +438,16 @@ export default function ComponentsSettings(_: {}): React.Node {
           ))}
         </tbody>
       </table>
-
-      <Button onClick={addFilter}>
+      <Button onClick={addFilter} title="Add filter">
         <ButtonIcon className={styles.ButtonIcon} type="add" />
         Add filter
       </Button>
+      {componentFilters.length > 0 && (
+        <Button onClick={removeAllFilter} title="Delete all filters">
+          <ButtonIcon className={styles.ButtonIcon} type="delete" />
+          Delete all filters
+        </Button>
+      )}
     </div>
   );
 }

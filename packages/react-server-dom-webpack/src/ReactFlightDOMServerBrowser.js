@@ -14,8 +14,9 @@ import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
 import {
   createRequest,
-  startRender,
+  startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -25,7 +26,10 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
-import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+import {
+  decodeAction,
+  decodeFormState,
+} from 'react-server/src/ReactFlightActionServer';
 
 export {
   registerServerReference,
@@ -70,12 +74,15 @@ function renderToReadableStream(
     {
       type: 'bytes',
       start: (controller): ?Promise<void> => {
-        startRender(request);
+        startWork(request);
       },
       pull: (controller): ?Promise<void> => {
         startFlowing(request, controller);
       },
-      cancel: (reason): ?Promise<void> => {},
+      cancel: (reason): ?Promise<void> => {
+        stopFlowing(request);
+        abort(request, reason);
+      },
     },
     // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
     {highWaterMark: 0},
@@ -97,4 +104,4 @@ function decodeReply<T>(
   return getRoot(response);
 }
 
-export {renderToReadableStream, decodeReply, decodeAction};
+export {renderToReadableStream, decodeReply, decodeAction, decodeFormState};

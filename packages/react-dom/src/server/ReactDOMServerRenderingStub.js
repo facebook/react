@@ -9,13 +9,15 @@
 
 export {
   preinit,
+  preinitModule,
   preload,
+  preloadModule,
   preconnect,
   prefetchDNS,
 } from '../shared/ReactDOMFloat';
 export {
-  useFormStatus as experimental_useFormStatus,
-  useFormState as experimental_useFormState,
+  useFormStatus,
+  useFormState,
 } from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
 export function createPortal() {

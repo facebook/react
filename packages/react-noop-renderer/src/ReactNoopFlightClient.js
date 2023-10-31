@@ -35,6 +35,7 @@ const {createResponse, processBinaryChunk, getRoot, close} = ReactFlightClient({
   resolveClientReference(bundlerConfig: null, idx: string) {
     return idx;
   },
+  prepareDestinationForModule(moduleLoading: null, metadata: string) {},
   preloadModule(idx: string) {},
   requireModule(idx: string) {
     return readModule(idx);

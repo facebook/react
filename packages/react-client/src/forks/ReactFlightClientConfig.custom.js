@@ -25,7 +25,8 @@
 
 declare var $$$config: any;
 
-export opaque type SSRManifest = mixed;
+export opaque type ModuleLoading = mixed;
+export opaque type SSRModuleMap = mixed;
 export opaque type ServerManifest = mixed;
 export opaque type ServerReferenceId = string;
 export opaque type ClientReferenceMetadata = mixed;
@@ -35,6 +36,8 @@ export const resolveServerReference = $$$config.resolveServerReference;
 export const preloadModule = $$$config.preloadModule;
 export const requireModule = $$$config.requireModule;
 export const dispatchHint = $$$config.dispatchHint;
+export const prepareDestinationForModule =
+  $$$config.prepareDestinationForModule;
 export const usedWithSSR = true;
 
 export opaque type Source = mixed;

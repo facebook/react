@@ -5,14 +5,13 @@ import {flushSync} from 'react-dom';
 import {createRoot} from 'react-dom/client';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
-import {IS_CHROME, IS_EDGE, getBrowserTheme, IS_FIREFOX} from '../utils';
+import {getBrowserTheme} from '../utils';
 import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {
-  __DEBUG__,
   LOCAL_STORAGE_SUPPORTS_PROFILING_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
@@ -22,57 +21,34 @@ import {
   setBrowserSelectionFromReact,
   setReactSelectionFromBrowser,
 } from './elementSelection';
+import {startReactPolling} from './reactPolling';
 import cloneStyleTags from './cloneStyleTags';
+import fetchFileWithCaching from './fetchFileWithCaching';
 import injectBackendManager from './injectBackendManager';
 import syncSavedPreferences from './syncSavedPreferences';
 import registerEventsLogger from './registerEventsLogger';
 import getProfilingFlags from './getProfilingFlags';
+import debounce from './debounce';
 import './requestAnimationFramePolyfill';
-
-function executeIfReactHasLoaded(callback) {
-  chrome.devtools.inspectedWindow.eval(
-    'window.__REACT_DEVTOOLS_GLOBAL_HOOK__ && window.__REACT_DEVTOOLS_GLOBAL_HOOK__.renderers.size > 0',
-    (pageHasReact, exceptionInfo) => {
-      if (exceptionInfo) {
-        const {code, description, isError, isException, value} = exceptionInfo;
-
-        if (isException) {
-          console.error(
-            `Received error while checking if react has loaded: ${value}`,
-          );
-          return;
-        }
-
-        if (isError) {
-          console.error(
-            `Received error with code ${code} while checking if react has loaded: ${description}`,
-          );
-          return;
-        }
-      }
-
-      if (pageHasReact) {
-        callback();
-      }
-    },
-  );
-}
 
 function createBridge() {
   bridge = new Bridge({
     listen(fn) {
-      const listener = message => fn(message);
+      const bridgeListener = message => fn(message);
       // Store the reference so that we unsubscribe from the same object.
       const portOnMessage = port.onMessage;
-      portOnMessage.addListener(listener);
+      portOnMessage.addListener(bridgeListener);
+
+      lastSubscribedBridgeListener = bridgeListener;
 
       return () => {
-        portOnMessage.removeListener(listener);
+        port?.onMessage.removeListener(bridgeListener);
+        lastSubscribedBridgeListener = null;
       };
     },
 
     send(event: string, payload: any, transferable?: Array<any>) {
-      port.postMessage({event, payload}, transferable);
+      port?.postMessage({event, payload}, transferable);
     },
   });
 
@@ -117,10 +93,10 @@ function createBridgeAndStore() {
 
   store = new Store(bridge, {
     isProfiling,
-    supportsReloadAndProfile: IS_CHROME || IS_EDGE,
+    supportsReloadAndProfile: __IS_CHROME__ || __IS_EDGE__,
     supportsProfiling,
     // At this time, the timeline can only parse Chrome performance profiles.
-    supportsTimeline: IS_CHROME,
+    supportsTimeline: __IS_CHROME__,
     supportsTraceUpdates: true,
   });
 
@@ -182,117 +158,6 @@ function createBridgeAndStore() {
     }
   };
 
-  let debugIDCounter = 0;
-
-  // For some reason in Firefox, chrome.runtime.sendMessage() from a content script
-  // never reaches the chrome.runtime.onMessage event listener.
-  let fetchFileWithCaching = null;
-  if (IS_CHROME) {
-    const fetchFromNetworkCache = (url, resolve, reject) => {
-      // Debug ID allows us to avoid re-logging (potentially long) URL strings below,
-      // while also still associating (potentially) interleaved logs with the original request.
-      let debugID = null;
-
-      if (__DEBUG__) {
-        debugID = debugIDCounter++;
-        console.log(`[main] fetchFromNetworkCache(${debugID})`, url);
-      }
-
-      chrome.devtools.network.getHAR(harLog => {
-        for (let i = 0; i < harLog.entries.length; i++) {
-          const entry = harLog.entries[i];
-          if (url === entry.request.url) {
-            if (__DEBUG__) {
-              console.log(
-                `[main] fetchFromNetworkCache(${debugID}) Found matching URL in HAR`,
-                url,
-              );
-            }
-
-            entry.getContent(content => {
-              if (content) {
-                if (__DEBUG__) {
-                  console.log(
-                    `[main] fetchFromNetworkCache(${debugID}) Content retrieved`,
-                  );
-                }
-
-                resolve(content);
-              } else {
-                if (__DEBUG__) {
-                  console.log(
-                    `[main] fetchFromNetworkCache(${debugID}) Invalid content returned by getContent()`,
-                    content,
-                  );
-                }
-
-                // Edge case where getContent() returned null; fall back to fetch.
-                fetchFromPage(url, resolve, reject);
-              }
-            });
-
-            return;
-          }
-        }
-
-        if (__DEBUG__) {
-          console.log(
-            `[main] fetchFromNetworkCache(${debugID}) No cached request found in getHAR()`,
-          );
-        }
-
-        // No matching URL found; fall back to fetch.
-        fetchFromPage(url, resolve, reject);
-      });
-    };
-
-    const fetchFromPage = (url, resolve, reject) => {
-      if (__DEBUG__) {
-        console.log('[main] fetchFromPage()', url);
-      }
-
-      function onPortMessage({payload, source}) {
-        if (source === 'react-devtools-content-script') {
-          switch (payload?.type) {
-            case 'fetch-file-with-cache-complete':
-              chrome.runtime.onMessage.removeListener(onPortMessage);
-              resolve(payload.value);
-              break;
-            case 'fetch-file-with-cache-error':
-              chrome.runtime.onMessage.removeListener(onPortMessage);
-              reject(payload.value);
-              break;
-          }
-        }
-      }
-
-      chrome.runtime.onMessage.addListener(onPortMessage);
-
-      chrome.devtools.inspectedWindow.eval(`
-              window.postMessage({
-                source: 'react-devtools-extension',
-                payload: {
-                  type: 'fetch-file-with-cache',
-                  url: "${url}",
-                },
-              });
-            `);
-    };
-
-    // Fetching files from the extension won't make use of the network cache
-    // for resources that have already been loaded by the page.
-    // This helper function allows the extension to request files to be fetched
-    // by the content script (running in the page) to increase the likelihood of a cache hit.
-    fetchFileWithCaching = url => {
-      return new Promise((resolve, reject) => {
-        // Try fetching from the Network cache first.
-        // If DevTools was opened after the page started loading, we may have missed some requests.
-        // So fall back to a fetch() from the page and hope we get a cached response that way.
-        fetchFromNetworkCache(url, resolve, reject);
-      });
-    };
-  }
-
   // TODO (Webpack 5) Hopefully we can remove this prop after the Webpack 5 migration.
   const hookNamesModuleLoaderFunction = () =>
     import(
@@ -341,6 +206,7 @@ function ensureInitialHTMLIsCleared(container) {
 function createComponentsPanel() {
   if (componentsPortalContainer) {
     // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(componentsPortalContainer);
     render('components');
 
     return;
@@ -352,15 +218,15 @@ function createComponentsPanel() {
   }
 
   chrome.devtools.panels.create(
-    IS_CHROME || IS_EDGE ? '⚛️ Components' : 'Components',
-    IS_EDGE ? 'icons/production.svg' : '',
+    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Components' : 'Components',
+    __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
       componentsPanel = createdPanel;
 
       createdPanel.onShown.addListener(portal => {
         componentsPortalContainer = portal.container;
-        if (componentsPortalContainer != null) {
+        if (componentsPortalContainer != null && render) {
           ensureInitialHTMLIsCleared(componentsPortalContainer);
 
           render('components');
@@ -379,6 +245,7 @@ function createComponentsPanel() {
 function createProfilerPanel() {
   if (profilerPortalContainer) {
     // Panel is created and user opened it at least once
+    ensureInitialHTMLIsCleared(profilerPortalContainer);
     render('profiler');
 
     return;
@@ -390,15 +257,15 @@ function createProfilerPanel() {
   }
 
   chrome.devtools.panels.create(
-    IS_CHROME || IS_EDGE ? '⚛️ Profiler' : 'Profiler',
-    IS_EDGE ? 'icons/production.svg' : '',
+    __IS_CHROME__ || __IS_EDGE__ ? '⚛️ Profiler' : 'Profiler',
+    __IS_EDGE__ ? 'icons/production.svg' : '',
     'panel.html',
     createdPanel => {
       profilerPanel = createdPanel;
 
       createdPanel.onShown.addListener(portal => {
         profilerPortalContainer = portal.container;
-        if (profilerPortalContainer != null) {
+        if (profilerPortalContainer != null && render) {
           ensureInitialHTMLIsCleared(profilerPortalContainer);
 
           render('profiler');
@@ -413,7 +280,7 @@ function createProfilerPanel() {
 
 function performInTabNavigationCleanup() {
   // Potentially, if react hasn't loaded yet and user performs in-tab navigation
-  clearReactPollingInterval();
+  clearReactPollingInstance();
 
   if (store !== null) {
     // Store profiling data, so it can be used later
@@ -446,14 +313,11 @@ function performInTabNavigationCleanup() {
   bridge = null;
   render = null;
   root = null;
-
-  port?.disconnect();
-  port = null;
 }
 
 function performFullCleanup() {
   // Potentially, if react hasn't loaded yet and user closed the browser DevTools
-  clearReactPollingInterval();
+  clearReactPollingInstance();
 
   if ((componentsPortalContainer || profilerPortalContainer) && root) {
     // This should also emit bridge.shutdown, but only if this root was mounted
@@ -476,22 +340,38 @@ function performFullCleanup() {
 }
 
 function connectExtensionPort() {
+  if (port) {
+    throw new Error('DevTools port was already connected');
+  }
+
   const tabId = chrome.devtools.inspectedWindow.tabId;
   port = chrome.runtime.connect({
     name: String(tabId),
   });
 
+  // If DevTools port was reconnected and Bridge was already created
+  // We should subscribe bridge to this port events
+  // This could happen if service worker dies and all ports are disconnected,
+  // but later user continues the session and Chrome reconnects all ports
+  // Bridge object is still in-memory, though
+  if (lastSubscribedBridgeListener) {
+    port.onMessage.addListener(lastSubscribedBridgeListener);
+  }
+
   // This port may be disconnected by Chrome at some point, this callback
   // will be executed only if this port was disconnected from the other end
   // so, when we call `port.disconnect()` from this script,
   // this should not trigger this callback and port reconnection
-  port.onDisconnect.addListener(connectExtensionPort);
+  port.onDisconnect.addListener(() => {
+    port = null;
+    connectExtensionPort();
+  });
 }
 
 function mountReactDevTools() {
-  registerEventsLogger();
+  reactPollingInstance = null;
 
-  connectExtensionPort();
+  registerEventsLogger();
 
   createBridgeAndStore();
 
@@ -501,27 +381,36 @@ function mountReactDevTools() {
   createProfilerPanel();
 }
 
-// TODO: display some disclaimer if user performs in-tab navigation to non-react application
-// when React DevTools panels are already opened, currently we will display just blank white block
-function mountReactDevToolsWhenReactHasLoaded() {
-  const checkIfReactHasLoaded = () => executeIfReactHasLoaded(onReactReady);
-
-  // Check to see if React has loaded in case React is added after page load
-  reactPollingIntervalId = setInterval(() => {
-    checkIfReactHasLoaded();
-  }, 500);
-
-  function onReactReady() {
-    clearReactPollingInterval();
-    mountReactDevTools();
-  }
-
-  checkIfReactHasLoaded();
+let reactPollingInstance = null;
+function clearReactPollingInstance() {
+  reactPollingInstance?.abort();
+  reactPollingInstance = null;
 }
 
-let reactPollingIntervalId = null;
+function showNoReactDisclaimer() {
+  if (componentsPortalContainer) {
+    componentsPortalContainer.innerHTML =
+      '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
+    delete componentsPortalContainer._hasInitialHTMLBeenCleared;
+  }
+
+  if (profilerPortalContainer) {
+    profilerPortalContainer.innerHTML =
+      '<h1 class="no-react-disclaimer">Looks like this page doesn\'t have React, or it hasn\'t been loaded yet.</h1>';
+    delete profilerPortalContainer._hasInitialHTMLBeenCleared;
+  }
+}
+
+function mountReactDevToolsWhenReactHasLoaded() {
+  reactPollingInstance = startReactPolling(
+    mountReactDevTools,
+    5, // ~5 seconds
+    showNoReactDisclaimer,
+  );
+}
 
 let bridge = null;
+let lastSubscribedBridgeListener = null;
 let store = null;
 
 let profilingData = null;
@@ -541,26 +430,28 @@ let port = null;
 // since global values stored on window get reset in this case.
 chrome.devtools.network.onNavigated.addListener(syncSavedPreferences);
 
-// Cleanup previous page state and remount everything
-chrome.devtools.network.onNavigated.addListener(() => {
-  clearReactPollingInterval();
-
+// In case when multiple navigation events emitted in a short period of time
+// This debounced callback primarily used to avoid mounting React DevTools multiple times, which results
+// into subscribing to the same events from Bridge and window multiple times
+// In this case, we will handle `operations` event twice or more and user will see
+// `Cannot add node "1" because a node with that id is already in the Store.`
+const debouncedOnNavigatedListener = debounce(() => {
   performInTabNavigationCleanup();
   mountReactDevToolsWhenReactHasLoaded();
-});
+}, 500);
+
+// Cleanup previous page state and remount everything
+chrome.devtools.network.onNavigated.addListener(debouncedOnNavigatedListener);
 
 // Should be emitted when browser DevTools are closed
-if (IS_FIREFOX) {
+if (__IS_FIREFOX__) {
   // For some reason Firefox doesn't emit onBeforeUnload event
   window.addEventListener('unload', performFullCleanup);
 } else {
   window.addEventListener('beforeunload', performFullCleanup);
 }
 
-function clearReactPollingInterval() {
-  clearInterval(reactPollingIntervalId);
-  reactPollingIntervalId = null;
-}
+connectExtensionPort();
 
 syncSavedPreferences();
 mountReactDevToolsWhenReactHasLoaded();
