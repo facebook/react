@@ -195,9 +195,11 @@ export const ObjectWithHooks = {
 const $empty = Symbol.for("react.memo_cache_sentinel");
 export function unstable_useMemoCache(size: number) {
   "use no forget";
-  const $ = new Array(size);
-  for (let ii = 0; ii < size; ii++) {
-    $[ii] = $empty;
-  }
-  return React.useRef($).current;
+  return React.useState(() => {
+    const $ = new Array(size);
+    for (let ii = 0; ii < size; ii++) {
+      $[ii] = $empty;
+    }
+    return $;
+  })[0];
 }
