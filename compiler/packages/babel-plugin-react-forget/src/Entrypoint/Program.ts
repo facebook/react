@@ -21,10 +21,11 @@ import {
   addImportsToProgram,
   findExistingImports,
   insertUseMemoCacheImportDeclaration,
+  insertUserspaceUseMemoCacheImportDeclaration,
   updateExistingReactImportDeclaration,
 } from "./Imports";
 import { addInstrumentForget } from "./Instrumentation";
-import { PluginOptions, parsePluginOptions } from "./Options";
+import { ExternalFunction, PluginOptions, parsePluginOptions } from "./Options";
 import { compileFn } from "./Pipeline";
 
 export type CompilerPass = {
@@ -325,18 +326,25 @@ export function compileProgram(
     // `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
     // `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
     if (didInsertUseMemoCache) {
-      if (hasExistingReactImport) {
-        const didUpdateImport = updateExistingReactImportDeclaration(program);
-        if (didUpdateImport === false) {
-          throw new Error(
-            "Expected an ImportDeclaration of react in order to update ImportSpecifiers with useMemoCache"
-          );
+      if (options.useMemoCacheSource === null) {
+        if (hasExistingReactImport) {
+          const didUpdateImport = updateExistingReactImportDeclaration(program);
+          if (didUpdateImport === false) {
+            throw new Error(
+              "Expected an ImportDeclaration of react in order to update ImportSpecifiers with useMemoCache"
+            );
+          }
+        } else {
+          insertUseMemoCacheImportDeclaration(program);
         }
-      } else {
-        insertUseMemoCacheImportDeclaration(program);
+      } else if (typeof options.useMemoCacheSource === "string") {
+        insertUserspaceUseMemoCacheImportDeclaration(
+          program,
+          options.useMemoCacheSource
+        );
       }
     }
-    const externalFunctions = [];
+    const externalFunctions: ExternalFunction[] = [];
     // TODO: check for duplicate import specifiers
     if (options.gating != null) {
       externalFunctions.push(options.gating);

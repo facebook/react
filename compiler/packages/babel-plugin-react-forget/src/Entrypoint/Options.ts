@@ -109,6 +109,17 @@ export type PluginOptions = {
    * ```
    */
   compilationMode: CompilationMode;
+
+  /**
+   * If specified, Forget will import `useMemoCache` from this module instead of React. Use this if
+   * you are for whatever reason unable to use an experimental version of React.
+   *
+   * ```
+   * // If specified:
+   * import {unstable_useMemoCache} from 'useMemoCache_DO_NOT_USE';
+   * ```
+   */
+  useMemoCacheSource: string | null;
 };
 
 export type CompilationMode =
@@ -156,6 +167,7 @@ export const defaultOptions: PluginOptions = {
   gating: null,
   instrumentForget: null,
   noEmit: false,
+  useMemoCacheSource: null,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

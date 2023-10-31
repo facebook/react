@@ -145,3 +145,21 @@ export function insertUseMemoCacheImportDeclaration(
     )
   );
 }
+
+export function insertUserspaceUseMemoCacheImportDeclaration(
+  program: NodePath<t.Program>,
+  moduleName: string
+): void {
+  program.unshiftContainer(
+    "body",
+    t.importDeclaration(
+      [
+        t.importSpecifier(
+          t.identifier("useMemoCache"),
+          t.identifier("unstable_useMemoCache")
+        ),
+      ],
+      t.stringLiteral(moduleName)
+    )
+  );
+}
