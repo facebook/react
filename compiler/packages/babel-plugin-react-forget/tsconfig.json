@@ -4,7 +4,7 @@
     "moduleResolution": "nodenext",
     "declaration": true,
     "declarationDir": "./dist",
-    "declarationMap": true,
+    "declarationMap": false,
     "rootDir": "src",
     "outDir": "dist",
     // https://github.com/microsoft/TypeScript/issues/30925
