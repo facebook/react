@@ -11,6 +11,7 @@
   "scripts": {
     "bundle:meta": "scripts/bundle-meta.sh",
     "bundle:oss": "scripts/bundle-oss.sh",
+    "copy-to-forget-feedback": "scripts/copy-to-forget-feedback.sh",
     "hash": "scripts/hash.sh",
     "start": "yarn workspace playground run start",
     "next": "yarn workspace playground run dev",
