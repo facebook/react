@@ -16,7 +16,6 @@ node_modules
 .watchmanconfig
 .watchman-cookie-*
 dist
-package-lock.json
 .vscode
 !packages/playground/.vscode
 .spr.yml
