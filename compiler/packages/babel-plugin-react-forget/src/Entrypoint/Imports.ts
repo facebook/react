@@ -3,7 +3,7 @@ import * as t from "@babel/types";
 import { CompilerError } from "../CompilerError";
 import { GeneratedSource } from "../HIR";
 import { getOrInsertDefault } from "../Utils/utils";
-import { ExternalFunction } from "./Options";
+import { ExternalFunction, PluginOptions } from "./Options";
 
 export function addImportsToProgram(
   path: NodePath<t.Program>,
@@ -129,24 +129,44 @@ export function updateExistingReactImportDeclaration(
   return didInsertUseMemoCache;
 }
 
-export function insertUseMemoCacheImportDeclaration(
-  program: NodePath<t.Program>
+export function updateUseMemoCacheImport(
+  program: NodePath<t.Program>,
+  options: PluginOptions
 ): void {
-  program.unshiftContainer(
-    "body",
-    t.importDeclaration(
-      [
-        t.importSpecifier(
-          t.identifier("useMemoCache"),
-          t.identifier("unstable_useMemoCache")
-        ),
-      ],
-      t.stringLiteral("react")
-    )
-  );
+  // If there isn't already an import of * as React, insert it so useMemoCache doesn't
+  // throw
+  const { didInsertUseMemoCache, hasExistingReactImport } =
+    findExistingImports(program);
+
+  // unstable_useMemoCache wasn't already imported, nothing to do
+  if (!didInsertUseMemoCache) {
+    return;
+  }
+
+  if (
+    options.useMemoCacheSource === "react" ||
+    options.useMemoCacheSource === null
+  ) {
+    // If Forget did successfully compile inject/update an import of
+    // `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
+    // `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
+    if (hasExistingReactImport) {
+      const didUpdateImport = updateExistingReactImportDeclaration(program);
+      if (didUpdateImport === false) {
+        throw new Error(
+          "Expected an ImportDeclaration of react in order to update ImportSpecifiers with useMemoCache"
+        );
+      }
+    } else {
+      addUseMemoCacheImportDeclaration(program, "react");
+    }
+  } else if (typeof options.useMemoCacheSource === "string") {
+    // import useMemoCache from userspace module
+    addUseMemoCacheImportDeclaration(program, options.useMemoCacheSource);
+  }
 }
 
-export function insertUserspaceUseMemoCacheImportDeclaration(
+function addUseMemoCacheImportDeclaration(
   program: NodePath<t.Program>,
   moduleName: string
 ): void {

@@ -17,13 +17,7 @@ import { CodegenFunction } from "../ReactiveScopes";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
 import { assertExhaustive } from "../Utils/utils";
 import { insertGatedFunctionDeclaration } from "./Gating";
-import {
-  addImportsToProgram,
-  findExistingImports,
-  insertUseMemoCacheImportDeclaration,
-  insertUserspaceUseMemoCacheImportDeclaration,
-  updateExistingReactImportDeclaration,
-} from "./Imports";
+import { addImportsToProgram, updateUseMemoCacheImport } from "./Imports";
 import { addInstrumentForget } from "./Instrumentation";
 import { ExternalFunction, PluginOptions, parsePluginOptions } from "./Options";
 import { compileFn } from "./Pipeline";
@@ -316,47 +310,23 @@ export function compileProgram(
     }
   );
 
-  // If there isn't already an import of * as React, insert it so useMemoCache doesn't
-  // throw
+  // Forget compiled the component, we need to update existing imports of unstable_useMemoCache
   if (hasForgetMutatedOriginalSource) {
-    const { didInsertUseMemoCache, hasExistingReactImport } =
-      findExistingImports(program);
-
-    // If Forget did successfully compile inject/update an import of
-    // `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
-    // `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
-    if (didInsertUseMemoCache) {
-      if (options.useMemoCacheSource === null) {
-        if (hasExistingReactImport) {
-          const didUpdateImport = updateExistingReactImportDeclaration(program);
-          if (didUpdateImport === false) {
-            throw new Error(
-              "Expected an ImportDeclaration of react in order to update ImportSpecifiers with useMemoCache"
-            );
-          }
-        } else {
-          insertUseMemoCacheImportDeclaration(program);
-        }
-      } else if (typeof options.useMemoCacheSource === "string") {
-        insertUserspaceUseMemoCacheImportDeclaration(
-          program,
-          options.useMemoCacheSource
-        );
-      }
-    }
-    const externalFunctions: ExternalFunction[] = [];
-    // TODO: check for duplicate import specifiers
-    if (options.gating != null) {
-      externalFunctions.push(options.gating);
-    }
-    if (options.instrumentForget != null) {
-      externalFunctions.push(options.instrumentForget);
-    }
-    if (options.environment?.enableEmitFreeze != null) {
-      externalFunctions.push(options.environment.enableEmitFreeze);
-    }
-    addImportsToProgram(program, externalFunctions);
+    updateUseMemoCacheImport(program, options);
   }
+
+  const externalFunctions: ExternalFunction[] = [];
+  // TODO: check for duplicate import specifiers
+  if (options.gating != null) {
+    externalFunctions.push(options.gating);
+  }
+  if (options.instrumentForget != null) {
+    externalFunctions.push(options.instrumentForget);
+  }
+  if (options.environment?.enableEmitFreeze != null) {
+    externalFunctions.push(options.environment.enableEmitFreeze);
+  }
+  addImportsToProgram(program, externalFunctions);
 }
 
 function shouldVisitNode(
