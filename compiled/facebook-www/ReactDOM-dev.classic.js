@@ -4784,7 +4784,12 @@ function isTagValidWithParent(tag, parentTag) {
   switch (parentTag) {
     // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
     case "select":
-      return tag === "option" || tag === "optgroup" || tag === "#text";
+      return (
+        tag === "hr" ||
+        tag === "option" ||
+        tag === "optgroup" ||
+        tag === "#text"
+      );
 
     case "optgroup":
       return tag === "option" || tag === "#text";
@@ -34159,7 +34164,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-7b8a9a9d";
+var ReactVersion = "18.3.0-www-classic-e9edf038";
 
 function createPortal$1(
   children,
