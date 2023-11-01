@@ -25,16 +25,18 @@ import {
   processReply,
   createServerReference,
 } from 'react-client/src/ReactFlightReplyClient';
+import type {SSRModuleMap} from './ReactFlightClientConfigFBBundler';
 
 type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
 
 export type Options = {
+  ssrModuleMap: SSRModuleMap,
   callServer?: CallServerCallback,
 };
 
 function createResponseFromOptions(options: void | Options) {
   return createResponse(
-    null,
+    options && options.ssrModuleMap,
     null,
     options && options.callServer ? options.callServer : undefined,
     undefined,
