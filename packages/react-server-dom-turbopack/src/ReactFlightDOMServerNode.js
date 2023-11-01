@@ -158,8 +158,9 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(turbopackMap, '', body);
+  const root = getRoot<T>(response);
   close(response);
-  return getRoot(response);
+  return root;
 }
 
 export {
