@@ -143,10 +143,7 @@ export function updateUseMemoCacheImport(
     return;
   }
 
-  if (
-    options.useMemoCacheSource === "react" ||
-    options.useMemoCacheSource === null
-  ) {
+  if (options.enableUseMemoCachePolyfill === false) {
     // If Forget did successfully compile inject/update an import of
     // `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
     // `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
@@ -160,9 +157,9 @@ export function updateUseMemoCacheImport(
     } else {
       addUseMemoCacheImportDeclaration(program, "react");
     }
-  } else if (typeof options.useMemoCacheSource === "string") {
+  } else {
     // import useMemoCache from userspace module
-    addUseMemoCacheImportDeclaration(program, options.useMemoCacheSource);
+    addUseMemoCacheImportDeclaration(program, "react-forget-runtime");
   }
 }
 

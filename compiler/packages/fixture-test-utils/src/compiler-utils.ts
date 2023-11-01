@@ -24,7 +24,7 @@ export function transformFixtureInput(
   let instrumentForget = null;
   let enableEmitFreeze = null;
   let compilationMode: CompilationMode = "all";
-  let useMemoCacheSource = null;
+  let enableUseMemoCachePolyfill = false;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -59,8 +59,8 @@ export function transformFixtureInput(
       importSpecifierName: "makeReadOnly",
     };
   }
-  if (firstLine.includes("@useMemoCacheSource")) {
-    useMemoCacheSource = "shared-runtime";
+  if (firstLine.includes("@enableUseMemoCachePolyfill")) {
+    enableUseMemoCachePolyfill = true;
   }
   const config = parseConfigPragmaFn(firstLine);
   const result = pluginFn(
@@ -108,7 +108,7 @@ export function transformFixtureInput(
       instrumentForget,
       panicThreshold: "ALL_ERRORS",
       noEmit: false,
-      useMemoCacheSource,
+      enableUseMemoCachePolyfill,
     },
     includeAst
   );

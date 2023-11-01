@@ -463,9 +463,11 @@ const skipFilter = new Set([
   "todo.useContext-mutate-context-in-callback",
   "loop-unused-let",
 
-
   // Bug in Forget output
   "todo-rename-source-variables",
+
+  // Tested e2e in forget-feedback repo
+  "userspace-use-memo-cache",
 ]);
 
 export default skipFilter;

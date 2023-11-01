@@ -1,4 +1,4 @@
-// @useMemoCacheSource
+// @enableUseMemoCachePolyfill
 function Component(props) {
   const [x, setX] = useState(1);
   let y;

@@ -111,15 +111,15 @@ export type PluginOptions = {
   compilationMode: CompilationMode;
 
   /**
-   * If specified, Forget will import `useMemoCache` from this module instead of React. Use this if
+   * If enabled, Forget will import `useMemoCache` from a polyfill instead of React. Use this if
    * you are for whatever reason unable to use an experimental version of React.
    *
    * ```
    * // If specified:
-   * import {unstable_useMemoCache} from 'useMemoCache_DO_NOT_USE';
+   * import {unstable_useMemoCache} from 'react-forget-runtime';
    * ```
    */
-  useMemoCacheSource: string | null;
+  enableUseMemoCachePolyfill: boolean;
 };
 
 export type CompilationMode =
@@ -167,7 +167,7 @@ export const defaultOptions: PluginOptions = {
   gating: null,
   instrumentForget: null,
   noEmit: false,
-  useMemoCacheSource: null,
+  enableUseMemoCachePolyfill: false,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

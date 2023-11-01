@@ -18,15 +18,19 @@ const {
 
 type MemoCache = Array<number | typeof $empty>;
 
-export const $empty = Symbol.for("react.memo_cache_sentinel");
-
+const $empty = Symbol.for("react.memo_cache_sentinel");
+/**
+ * DANGER: this hook is NEVER meant to be called directly!
+ **/
 export function unstable_useMemoCache(size: number) {
   "use no forget";
-  const $ = new Array(size);
-  for (let ii = 0; ii < size; ii++) {
-    $[ii] = $empty;
-  }
-  return useRef($).current;
+  return React.useState(() => {
+    const $ = new Array(size);
+    for (let ii = 0; ii < size; ii++) {
+      $[ii] = $empty;
+    }
+    return $;
+  })[0];
 }
 
 export function $read(memoCache: MemoCache, index: number) {
