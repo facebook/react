@@ -79,7 +79,9 @@ export function updateTextarea(
       // https://github.com/facebook/react/issues/19474
       if (
         node.defaultValue !== newValue &&
+        // $FlowFixMe[prop-missing]
         node.minLength === -1 &&
+        // $FlowFixMe[prop-missing]
         node.maxLength === -1
       ) {
         node.defaultValue = newValue;
