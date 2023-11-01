@@ -960,7 +960,7 @@ var ExhaustiveDeps = {
           return false;
         }
 
-        while (init.type === 'TSAsExpression') {
+        while (init.type === 'TSAsExpression' || init.type === 'AsExpression') {
           init = init.expression;
         } // Detect primitive constants
         // const foo = 42
@@ -2232,8 +2232,7 @@ function getConstructionExpressionType(node) {
       return null;
 
     case 'TypeCastExpression':
-      return getConstructionExpressionType(node.expression);
-
+    case 'AsExpression':
     case 'TSAsExpression':
       return getConstructionExpressionType(node.expression);
   }
