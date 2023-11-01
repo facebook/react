@@ -30,6 +30,7 @@ export opaque type ClientReferenceMetadata = [
 export opaque type ClientReference<T> = {
   specifier: string,
   name: string,
+  loadModule: () => Thenable<T>,
 };
 
 export function prepareDestinationForModule(
@@ -37,7 +38,7 @@ export function prepareDestinationForModule(
   nonce: ?string,
   metadata: ClientReferenceMetadata,
 ) {
-  throw new Error('not implemented');
+  return;
 }
 
 export function resolveClientReference<T>(
@@ -67,23 +68,29 @@ export function resolveServerReference<T>(
       'Attempted to load a Server Reference outside the hosted root.',
     );
   }
-  return {specifier: fullURL, name: exportName};
+  return {
+    specifier: fullURL,
+    name: exportName,
+    loadModule: () => {
+      // TODO: Implement
+      throw new Error('Load module is not implemented.');
+    },
+  };
 }
 
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 
 export function preloadModule<T>(
-  metadata: ClientReference<T>,
+  clientReference: ClientReference<T>,
 ): null | Thenable<any> {
-  const existingPromise = asyncModuleCache.get(metadata.specifier);
+  const existingPromise = asyncModuleCache.get(clientReference.specifier);
   if (existingPromise) {
     if (existingPromise.status === 'fulfilled') {
       return null;
     }
     return existingPromise;
   } else {
-    // $FlowFixMe[unsupported-syntax]
-    const modulePromise: Thenable<T> = import(metadata.specifier);
+    const modulePromise: Thenable<T> = clientReference.loadModule();
     modulePromise.then(
       value => {
         const fulfilledThenable: FulfilledThenable<mixed> =
@@ -97,7 +104,7 @@ export function preloadModule<T>(
         rejectedThenable.reason = reason;
       },
     );
-    asyncModuleCache.set(metadata.specifier, modulePromise);
+    asyncModuleCache.set(clientReference.specifier, modulePromise);
     return modulePromise;
   }
 }
