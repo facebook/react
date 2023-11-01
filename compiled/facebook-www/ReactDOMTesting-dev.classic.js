@@ -14661,12 +14661,12 @@ function startTransition(
         // This is either `finishedState` or a thenable that resolves to
         // `finishedState`, depending on whether we're inside an async
         // action scope.
-        var _entangledResult = requestSyncActionContext(
+        var _entangledResult2 = requestSyncActionContext(
           returnValue,
           finishedState
         );
 
-        dispatchSetState(fiber, queue, _entangledResult);
+        dispatchSetState(fiber, queue, _entangledResult2);
       }
     } else {
       // Async actions are not enabled.
@@ -34781,7 +34781,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-www-classic-91f20f7a";
+var ReactVersion = "18.3.0-www-classic-ec74cb13";
 
 function createPortal$1(
   children,

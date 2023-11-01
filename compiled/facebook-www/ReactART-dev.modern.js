@@ -69,7 +69,7 @@ function _assertThisInitialized(self) {
   return self;
 }
 
-var ReactVersion = "18.3.0-www-modern-8895715e";
+var ReactVersion = "18.3.0-www-modern-044f7cdc";
 
 var LegacyRoot = 0;
 var ConcurrentRoot = 1;
@@ -9717,12 +9717,12 @@ function startTransition(
         // This is either `finishedState` or a thenable that resolves to
         // `finishedState`, depending on whether we're inside an async
         // action scope.
-        var _entangledResult = requestSyncActionContext(
+        var _entangledResult2 = requestSyncActionContext(
           returnValue,
           finishedState
         );
 
-        dispatchSetState(fiber, queue, _entangledResult);
+        dispatchSetState(fiber, queue, _entangledResult2);
       }
     } else {
       // Async actions are not enabled.
