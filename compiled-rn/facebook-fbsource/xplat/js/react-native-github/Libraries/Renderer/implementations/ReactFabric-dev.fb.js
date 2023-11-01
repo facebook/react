@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2852b7818fac619ab3ec01b1e52fa49a>>
+ * @generated SignedSource<<88cce6608a8eb5d16fdbf38a6a841ea7>>
  */
 
 'use strict';
@@ -12183,7 +12183,7 @@ function startTransition(
   }
 
   try {
-    var returnValue, thenable, entangledResult, _entangledResult;
+    var returnValue, thenable, entangledResult, _entangledResult2;
     if (enableAsyncActions);
     else {
       // Async actions are not enabled.
@@ -27260,7 +27260,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-fa7a00a2";
+var ReactVersion = "18.3.0-canary-724e820d";
 
 function createPortal$1(
   children,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cbd8ea0713685000d0b28083e1b0ef92>>
+ * @generated SignedSource<<ae1a8bf6624e4c6f9e70730750430a22>>
  */
 
 'use strict';
@@ -8071,34 +8071,48 @@ function runFormStateAction(actionQueue, setState, payload) {
   }
 
   try {
-    var promise = action(prevState, payload);
+    var returnValue = action(prevState, payload);
 
-    if (true) {
-      if (
-        promise === null ||
-        typeof promise !== "object" ||
-        typeof promise.then !== "function"
-      ) {
-        error("The action passed to useFormState must be an async function.");
-      }
-    } // Attach a listener to read the return state of the action. As soon as this
-    // resolves, we can run the next action in the sequence.
+    if (
+      returnValue !== null &&
+      typeof returnValue === "object" && // $FlowFixMe[method-unbinding]
+      typeof returnValue.then === "function"
+    ) {
+      var thenable = returnValue; // Attach a listener to read the return state of the action. As soon as
+      // this resolves, we can run the next action in the sequence.
 
-    promise.then(
-      function (nextState) {
-        actionQueue.state = nextState;
-        finishRunningFormStateAction(actionQueue, setState);
-      },
-      function () {
-        return finishRunningFormStateAction(actionQueue, setState);
-      }
-    ); // Create a thenable that resolves once the current async action scope has
-    // finished. Then stash that thenable in state. We'll unwrap it with the
-    // `use` algorithm during render. This is the same logic used
-    // by startTransition.
+      thenable.then(
+        function (nextState) {
+          actionQueue.state = nextState;
+          finishRunningFormStateAction(actionQueue, setState);
+        },
+        function () {
+          return finishRunningFormStateAction(actionQueue, setState);
+        }
+      );
+      var entangledResult = requestAsyncActionContext(thenable, null);
+      setState(entangledResult);
+    } else {
+      // This is either `returnValue` or a thenable that resolves to
+      // `returnValue`, depending on whether we're inside an async action scope.
+      var _entangledResult = requestSyncActionContext(returnValue, null);
 
-    var entangledThenable = requestAsyncActionContext(promise, null);
-    setState(entangledThenable);
+      setState(_entangledResult);
+      var nextState = returnValue;
+      actionQueue.state = nextState;
+      finishRunningFormStateAction(actionQueue, setState);
+    }
+  } catch (error) {
+    // This is a trick to get the `useFormState` hook to rethrow the error.
+    // When it unwraps the thenable with the `use` algorithm, the error
+    // will be thrown.
+    var rejectedThenable = {
+      then: function () {},
+      status: "rejected",
+      reason: error // $FlowFixMe: Not sure why this doesn't work
+    };
+    setState(rejectedThenable);
+    finishRunningFormStateAction(actionQueue, setState);
   } finally {
     ReactCurrentBatchConfig$2.transition = prevTransition;
 
@@ -8147,22 +8161,18 @@ function formStateReducer(oldState, newState) {
 
 function mountFormState(action, initialStateProp, permalink) {
   var initialState = initialStateProp;
-
-  var initialStateThenable = {
-    status: "fulfilled",
-    value: initialState,
-    then: function () {}
-  }; // State hook. The state is stored in a thenable which is then unwrapped by
   // the `use` algorithm during render.
 
   var stateHook = mountWorkInProgressHook();
-  stateHook.memoizedState = stateHook.baseState = initialStateThenable;
+  stateHook.memoizedState = stateHook.baseState = initialState; // TODO: Typing this "correctly" results in recursion limit errors
+  // const stateQueue: UpdateQueue<S | Awaited<S>, S | Awaited<S>> = {
+
   var stateQueue = {
     pending: null,
     lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: formStateReducer,
-    lastRenderedState: initialStateThenable
+    lastRenderedState: initialState
   };
   stateHook.queue = stateQueue;
   var setState = dispatchSetState.bind(
@@ -8216,9 +8226,14 @@ function updateFormStateImpl(
       currentStateHook,
       formStateReducer
     ),
-    thenable = _updateReducerImpl[0]; // This will suspend until the action finishes.
+    actionResult = _updateReducerImpl[0]; // This will suspend until the action finishes.
 
-  var state = useThenable(thenable);
+  var state =
+    typeof actionResult === "object" &&
+    actionResult !== null && // $FlowFixMe[method-unbinding]
+    typeof actionResult.then === "function"
+      ? useThenable(actionResult)
+      : actionResult;
   var actionQueueHook = updateWorkInProgressHook();
   var actionQueue = actionQueueHook.queue;
   var dispatch = actionQueue.dispatch; // Check if a new action was passed. If so, update it in an effect.
@@ -8258,8 +8273,7 @@ function rerenderFormState(action, initialState, permalink) {
     return updateFormStateImpl(stateHook, currentStateHook, action);
   } // This is a mount. No updates to process.
 
-  var thenable = stateHook.memoizedState;
-  var state = useThenable(thenable);
+  var state = stateHook.memoizedState;
   var actionQueueHook = updateWorkInProgressHook();
   var actionQueue = actionQueueHook.queue;
   var dispatch = actionQueue.dispatch; // This may have changed during the rerender.
@@ -8686,12 +8700,12 @@ function startTransition(
         // This is either `finishedState` or a thenable that resolves to
         // `finishedState`, depending on whether we're inside an async
         // action scope.
-        var _entangledResult = requestSyncActionContext(
+        var _entangledResult2 = requestSyncActionContext(
           returnValue,
           finishedState
         );
 
-        dispatchSetState(fiber, queue, _entangledResult);
+        dispatchSetState(fiber, queue, _entangledResult2);
       }
     }
   } catch (error) {
@@ -24887,7 +24901,7 @@ function createFiberRoot(
   return root;
 }
 
-var ReactVersion = "18.3.0-canary-08a39539f-20231031";
+var ReactVersion = "18.3.0-canary-77c4ac2ce-20231031";
 
 // Might add PROFILE later.
 
