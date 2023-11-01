@@ -24,21 +24,21 @@
 
 'use strict';
 
-var assign = Object.assign;
-var PropTypes = require('prop-types');
-var React = require('react');
-var ReactART = require('react-art');
+let assign = Object.assign;
+let PropTypes = require('prop-types');
+let React = require('react');
+let ReactART = require('react-art');
 
-var createReactClass = require('create-react-class');
+let createReactClass = require('create-react-class');
 
-var Shape = ReactART.Shape;
-var Path = ReactART.Path;
+let Shape = ReactART.Shape;
+let Path = ReactART.Path;
 
 /**
  * Rectangle is a React component for drawing rectangles. Like other ReactART
  * components, it must be used in a <Surface>.
  */
-var Rectangle = createReactClass({
+let Rectangle = createReactClass({
   displayName: 'Rectangle',
 
   propTypes: {
@@ -52,20 +52,20 @@ var Rectangle = createReactClass({
   },
 
   render: function render() {
-    var width = this.props.width;
-    var height = this.props.height;
-    var radius = this.props.radius ? this.props.radius : 0;
+    let width = this.props.width;
+    let height = this.props.height;
+    let radius = this.props.radius ? this.props.radius : 0;
 
     // if unspecified, radius(Top|Bottom)(Left|Right) defaults to the radius
     // property
-    var tl = this.props.radiusTopLeft ? this.props.radiusTopLeft : radius;
-    var tr = this.props.radiusTopRight ? this.props.radiusTopRight : radius;
-    var br = this.props.radiusBottomRight
+    let tl = this.props.radiusTopLeft ? this.props.radiusTopLeft : radius;
+    let tr = this.props.radiusTopRight ? this.props.radiusTopRight : radius;
+    let br = this.props.radiusBottomRight
       ? this.props.radiusBottomRight
       : radius;
-    var bl = this.props.radiusBottomLeft ? this.props.radiusBottomLeft : radius;
+    let bl = this.props.radiusBottomLeft ? this.props.radiusBottomLeft : radius;
 
-    var path = Path();
+    let path = Path();
 
     // for negative width/height, offset the rectangle in the negative x/y
     // direction. for negative radius, just default to 0.
