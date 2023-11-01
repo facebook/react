@@ -177,7 +177,7 @@ export default {
         if (init == null) {
           return false;
         }
-        while (init.type === 'TSAsExpression') {
+        while (init.type === 'TSAsExpression' || init.type === 'AsExpression') {
           init = init.expression;
         }
         // Detect primitive constants
@@ -1525,7 +1525,7 @@ function getConstructionExpressionType(node) {
       }
       return null;
     case 'TypeCastExpression':
-      return getConstructionExpressionType(node.expression);
+    case 'AsExpression':
     case 'TSAsExpression':
       return getConstructionExpressionType(node.expression);
   }
