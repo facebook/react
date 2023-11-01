@@ -347,14 +347,14 @@ describe('ReactFlightDOMForm', () => {
   // @gate enableFormActions
   // @gate enableAsyncActions
   it("useFormState's dispatch binds the initial state to the provided action", async () => {
-    const serverAction = serverExports(async function action(
-      prevState,
-      formData,
-    ) {
-      return {
-        count: prevState.count + parseInt(formData.get('incrementAmount'), 10),
-      };
-    });
+    const serverAction = serverExports(
+      async function action(prevState, formData) {
+        return {
+          count:
+            prevState.count + parseInt(formData.get('incrementAmount'), 10),
+        };
+      },
+    );
 
     const initialState = {count: 1};
     function Client({action}) {
@@ -392,12 +392,11 @@ describe('ReactFlightDOMForm', () => {
   // @gate enableFormActions
   // @gate enableAsyncActions
   it('useFormState can reuse state during MPA form submission', async () => {
-    const serverAction = serverExports(async function action(
-      prevState,
-      formData,
-    ) {
-      return prevState + 1;
-    });
+    const serverAction = serverExports(
+      async function action(prevState, formData) {
+        return prevState + 1;
+      },
+    );
 
     function Form({action}) {
       const [count, dispatch] = useFormState(action, 1);
@@ -481,13 +480,11 @@ describe('ReactFlightDOMForm', () => {
     'useFormState preserves state if arity is the same, but different ' +
       'arguments are bound (i.e. inline closure)',
     async () => {
-      const serverAction = serverExports(async function action(
-        stepSize,
-        prevState,
-        formData,
-      ) {
-        return prevState + stepSize;
-      });
+      const serverAction = serverExports(
+        async function action(stepSize, prevState, formData) {
+          return prevState + stepSize;
+        },
+      );
 
       function Form({action}) {
         const [count, dispatch] = useFormState(action, 1);
@@ -597,19 +594,17 @@ describe('ReactFlightDOMForm', () => {
   it('useFormState does not reuse state if action signatures are different', async () => {
     // This is the same as the previous test, except instead of using bind to
     // configure the server action (i.e. a closure), it swaps the action.
-    const increaseBy1 = serverExports(async function action(
-      prevState,
-      formData,
-    ) {
-      return prevState + 1;
-    });
+    const increaseBy1 = serverExports(
+      async function action(prevState, formData) {
+        return prevState + 1;
+      },
+    );
 
-    const increaseBy5 = serverExports(async function action(
-      prevState,
-      formData,
-    ) {
-      return prevState + 5;
-    });
+    const increaseBy5 = serverExports(
+      async function action(prevState, formData) {
+        return prevState + 5;
+      },
+    );
 
     function Form({action}) {
       const [count, dispatch] = useFormState(action, 1);
@@ -680,12 +675,11 @@ describe('ReactFlightDOMForm', () => {
   // @gate enableFormActions
   // @gate enableAsyncActions
   it('when permalink is provided, useFormState compares that instead of the keypath', async () => {
-    const serverAction = serverExports(async function action(
-      prevState,
-      formData,
-    ) {
-      return prevState + 1;
-    });
+    const serverAction = serverExports(
+      async function action(prevState, formData) {
+        return prevState + 1;
+      },
+    );
 
     function Form({action, permalink}) {
       const [count, dispatch] = useFormState(action, 1, permalink);

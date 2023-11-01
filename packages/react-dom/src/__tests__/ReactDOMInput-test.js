@@ -2089,38 +2089,40 @@ describe('ReactDOMInput', () => {
   it('sets type, step, min, max before value always', () => {
     const log = [];
     const originalCreateElement = document.createElement;
-    spyOnDevAndProd(document, 'createElement').mockImplementation(function (
-      type,
-    ) {
-      const el = originalCreateElement.apply(this, arguments);
-      let value = '';
-      let typeProp = '';
+    spyOnDevAndProd(document, 'createElement').mockImplementation(
+      function (type) {
+        const el = originalCreateElement.apply(this, arguments);
+        let value = '';
+        let typeProp = '';
 
-      if (type === 'input') {
-        Object.defineProperty(el, 'type', {
-          get: function () {
-            return typeProp;
-          },
-          set: function (val) {
-            typeProp = String(val);
-            log.push('set property type');
-          },
-        });
-        Object.defineProperty(el, 'value', {
-          get: function () {
-            return value;
-          },
-          set: function (val) {
-            value = String(val);
-            log.push('set property value');
-          },
-        });
-        spyOnDevAndProd(el, 'setAttribute').mockImplementation(function (name) {
-          log.push('set attribute ' + name);
-        });
-      }
-      return el;
-    });
+        if (type === 'input') {
+          Object.defineProperty(el, 'type', {
+            get: function () {
+              return typeProp;
+            },
+            set: function (val) {
+              typeProp = String(val);
+              log.push('set property type');
+            },
+          });
+          Object.defineProperty(el, 'value', {
+            get: function () {
+              return value;
+            },
+            set: function (val) {
+              value = String(val);
+              log.push('set property value');
+            },
+          });
+          spyOnDevAndProd(el, 'setAttribute').mockImplementation(
+            function (name) {
+              log.push('set attribute ' + name);
+            },
+          );
+        }
+        return el;
+      },
+    );
 
     ReactDOM.render(
       <input
@@ -2174,71 +2176,70 @@ describe('ReactDOMInput', () => {
 
     const log = [];
     const originalCreateElement = document.createElement;
-    spyOnDevAndProd(document, 'createElement').mockImplementation(function (
-      type,
-    ) {
-      const el = originalCreateElement.apply(this, arguments);
-      const getDefaultValue = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        'defaultValue',
-      ).get;
-      const setDefaultValue = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        'defaultValue',
-      ).set;
-      const getValue = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        'value',
-      ).get;
-      const setValue = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        'value',
-      ).set;
-      const getType = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        'type',
-      ).get;
-      const setType = Object.getOwnPropertyDescriptor(
-        HTMLInputElement.prototype,
-        'type',
-      ).set;
-      if (type === 'input') {
-        Object.defineProperty(el, 'defaultValue', {
-          get: function () {
-            return getDefaultValue.call(this);
-          },
-          set: function (val) {
-            log.push(`node.defaultValue = ${strify(val)}`);
-            setDefaultValue.call(this, val);
-          },
-        });
-        Object.defineProperty(el, 'value', {
-          get: function () {
-            return getValue.call(this);
-          },
-          set: function (val) {
-            log.push(`node.value = ${strify(val)}`);
-            setValue.call(this, val);
-          },
-        });
-        Object.defineProperty(el, 'type', {
-          get: function () {
-            return getType.call(this);
-          },
-          set: function (val) {
-            log.push(`node.type = ${strify(val)}`);
-            setType.call(this, val);
-          },
-        });
-        spyOnDevAndProd(el, 'setAttribute').mockImplementation(function (
-          name,
-          val,
-        ) {
-          log.push(`node.setAttribute(${strify(name)}, ${strify(val)})`);
-        });
-      }
-      return el;
-    });
+    spyOnDevAndProd(document, 'createElement').mockImplementation(
+      function (type) {
+        const el = originalCreateElement.apply(this, arguments);
+        const getDefaultValue = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'defaultValue',
+        ).get;
+        const setDefaultValue = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'defaultValue',
+        ).set;
+        const getValue = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value',
+        ).get;
+        const setValue = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'value',
+        ).set;
+        const getType = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'type',
+        ).get;
+        const setType = Object.getOwnPropertyDescriptor(
+          HTMLInputElement.prototype,
+          'type',
+        ).set;
+        if (type === 'input') {
+          Object.defineProperty(el, 'defaultValue', {
+            get: function () {
+              return getDefaultValue.call(this);
+            },
+            set: function (val) {
+              log.push(`node.defaultValue = ${strify(val)}`);
+              setDefaultValue.call(this, val);
+            },
+          });
+          Object.defineProperty(el, 'value', {
+            get: function () {
+              return getValue.call(this);
+            },
+            set: function (val) {
+              log.push(`node.value = ${strify(val)}`);
+              setValue.call(this, val);
+            },
+          });
+          Object.defineProperty(el, 'type', {
+            get: function () {
+              return getType.call(this);
+            },
+            set: function (val) {
+              log.push(`node.type = ${strify(val)}`);
+              setType.call(this, val);
+            },
+          });
+          spyOnDevAndProd(el, 'setAttribute').mockImplementation(
+            function (name, val) {
+              log.push(`node.setAttribute(${strify(name)}, ${strify(val)})`);
+            },
+          );
+        }
+        return el;
+      },
+    );
 
     ReactDOM.render(<input type="date" defaultValue="1980-01-01" />, container);
 

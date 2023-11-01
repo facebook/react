@@ -22,8 +22,6 @@ const shouldWrite = mode === 'write' || mode === 'write-changed';
 const onlyChanged = mode === 'check-changed' || mode === 'write-changed';
 
 const changedFiles = onlyChanged ? listChangedFiles() : null;
-let didWarn = false;
-let didError = false;
 
 const prettierIgnoreFilePath = path.join(
   __dirname,
@@ -66,44 +64,56 @@ if (!files.length) {
   process.exit(0);
 }
 
-files.forEach(file => {
-  const options = prettier.resolveConfig.sync(file, {
-    config: prettierConfigPath,
-  });
-  try {
-    const input = fs.readFileSync(file, 'utf8');
-    if (shouldWrite) {
-      const output = prettier.format(input, options);
-      if (output !== input) {
-        fs.writeFileSync(file, output, 'utf8');
-      }
-    } else {
-      if (!prettier.check(input, options)) {
-        if (!didWarn) {
-          console.log(
-            '\n' +
-              chalk.red(
-                `  This project uses prettier to format all JavaScript code.\n`
-              ) +
-              chalk.dim(`    Please run `) +
-              chalk.reset('yarn prettier-all') +
-              chalk.dim(
-                ` and add changes to files listed below to your commit:`
-              ) +
-              `\n\n`
-          );
-          didWarn = true;
+async function main() {
+  let didWarn = false;
+  let didError = false;
+
+  await Promise.all(
+    files.map(async file => {
+      const options = await prettier.resolveConfig(file, {
+        config: prettierConfigPath,
+      });
+      try {
+        const input = fs.readFileSync(file, 'utf8');
+        if (shouldWrite) {
+          const output = await prettier.format(input, options);
+          if (output !== input) {
+            fs.writeFileSync(file, output, 'utf8');
+          }
+        } else {
+          const isFormatted = await prettier.check(input, options);
+          if (!isFormatted) {
+            if (!didWarn) {
+              console.log(
+                '\n' +
+                  chalk.red(
+                    `  This project uses prettier to format all JavaScript code.\n`
+                  ) +
+                  chalk.dim(`    Please run `) +
+                  chalk.reset('yarn prettier-all') +
+                  chalk.dim(
+                    ` and add changes to files listed below to your commit:`
+                  ) +
+                  `\n\n`
+              );
+              didWarn = true;
+            }
+            console.log(file);
+          }
         }
+      } catch (error) {
+        didError = true;
+        console.log('\n\n' + error.message);
         console.log(file);
       }
-    }
-  } catch (error) {
-    didError = true;
-    console.log('\n\n' + error.message);
-    console.log(file);
+    })
+  );
+  if (didWarn || didError) {
+    process.exit(1);
   }
-});
-
-if (didWarn || didError) {
-  process.exit(1);
 }
+
+main().catch(error => {
+  console.error(error);
+  process.exit(1);
+});
