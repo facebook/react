@@ -137,24 +137,24 @@ describe('ReactDOMTextarea', () => {
 
     let counter = 0;
     const originalCreateElement = document.createElement;
-    spyOnDevAndProd(document, 'createElement').mockImplementation(
-      function (type) {
-        const el = originalCreateElement.apply(this, arguments);
-        let value = '';
-        if (type === 'textarea') {
-          Object.defineProperty(el, 'value', {
-            get: function () {
-              return value;
-            },
-            set: function (val) {
-              value = String(val);
-              counter++;
-            },
-          });
-        }
-        return el;
-      },
-    );
+    spyOnDevAndProd(document, 'createElement').mockImplementation(function (
+      type,
+    ) {
+      const el = originalCreateElement.apply(this, arguments);
+      let value = '';
+      if (type === 'textarea') {
+        Object.defineProperty(el, 'value', {
+          get: function () {
+            return value;
+          },
+          set: function (val) {
+            value = String(val);
+            counter++;
+          },
+        });
+      }
+      return el;
+    });
 
     ReactDOM.render(<textarea value="" readOnly={true} />, container);
 
@@ -614,6 +614,32 @@ describe('ReactDOMTextarea', () => {
     Object.defineProperty(node, 'defaultValue', {get, set});
     instance.setState({count: 1});
     expect(set.mock.calls.length).toBe(0);
+  });
+
+  it('does not update defaultValue of DOM node if minLength or maxLength are set', () => {
+    const container = document.createElement('div');
+    let node;
+    ReactDOM.render(
+      <textarea
+        ref={n => (node = n)}
+        value="foo"
+        onChange={emptyFunction}
+        minLength={10}
+      />,
+      container,
+    );
+    expect(node.defaultValue).toBe('foo');
+
+    ReactDOM.render(
+      <textarea
+        ref={n => (node = n)}
+        value="food"
+        onChange={emptyFunction}
+        minLength={10}
+      />,
+      container,
+    );
+    expect(node.defaultValue).toBe('foo');
   });
 
   describe('When given a Symbol value', () => {
