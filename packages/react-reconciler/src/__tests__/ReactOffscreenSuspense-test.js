@@ -7,6 +7,7 @@ let Offscreen;
 let Suspense;
 let useState;
 let useEffect;
+let useLayoutEffect;
 let startTransition;
 let textCache;
 let waitFor;
@@ -26,6 +27,7 @@ describe('ReactOffscreen', () => {
     Suspense = React.Suspense;
     useState = React.useState;
     useEffect = React.useEffect;
+    useLayoutEffect = React.useLayoutEffect;
     startTransition = React.startTransition;
 
     const InternalTestUtils = require('internal-test-utils');
@@ -550,5 +552,63 @@ describe('ReactOffscreen', () => {
         <span>Sibling: 2</span>
       </>,
     );
+  });
+
+  it('unmounts/mounts layout effects when re-suspending', async () => {
+    function Child({children}) {
+      useLayoutEffect(() => {
+        Scheduler.log('Mount layout');
+        return () => {
+          Scheduler.log('Unmount layout');
+        };
+      }, []);
+      return <span>{children}</span>;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(
+        <Suspense fallback={<span>Loading</span>}>
+          <Child>
+            <AsyncText text="Initial content" />
+          </Child>
+        </Suspense>,
+      );
+    });
+    assertLog(['Suspend! [Initial content]']);
+    expect(root).toMatchRenderedOutput(<span>Loading</span>);
+
+    // Resolve suspense, layout effect is mounted.
+    await act(() => {
+      resolveText('Initial content');
+    });
+    assertLog(['Initial content', 'Mount layout']);
+    expect(root).toMatchRenderedOutput(<span>Initial content</span>);
+
+    // Re-suspend, the layout effect is unmounted and content is hidden.
+    await act(() => {
+      root.render(
+        <Suspense fallback={<span>Loading</span>}>
+          <Child>
+            <AsyncText text="Re-suspend" />
+          </Child>
+        </Suspense>,
+      );
+    });
+    assertLog(['Suspend! [Re-suspend]', 'Unmount layout']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span hidden={true}>Initial content</span>
+        <span>Loading</span>
+      </>,
+    );
+
+    // Resolve suspense again, layout effect is re-mounted.
+    await act(() => {
+      resolveText('Re-suspend');
+    });
+
+    assertLog(['Re-suspend', 'Mount layout']);
+    expect(root).toMatchRenderedOutput(<span>Re-suspend</span>);
   });
 });
