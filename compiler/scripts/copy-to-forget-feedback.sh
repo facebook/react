@@ -24,7 +24,7 @@ echo "Ensuring clean repo..."
 rm -rf ../forget-feedback/*
 
 echo "Copying files..."
-cd forget-feedback && cp -R `ls -A | grep -v "dist" | grep -v "node_modules" | grep -v "todo.md"` ../../forget-feedback
+cd forget-feedback && cp -R `ls -A | grep -v "node_modules" | grep -v "todo.md"` ../../forget-feedback
 
 cd ../
 
