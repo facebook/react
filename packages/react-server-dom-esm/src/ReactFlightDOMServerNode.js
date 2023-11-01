@@ -162,8 +162,9 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(moduleBasePath, '', body);
+  const root = getRoot(response);
   close(response);
-  return getRoot(response);
+  return root;
 }
 
 export {
