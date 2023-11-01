@@ -6,6 +6,9 @@
   "files": [
     "src"
   ],
+  "dependencies": {
+    "react": "^18.2.0"
+  },
   "scripts": {
     "build": "tsc",
     "test": "echo 'no tests'"
