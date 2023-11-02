@@ -14,13 +14,13 @@ import {
 } from "@heroicons/react/outline";
 import MonacoEditor, { DiffEditor } from "@monaco-editor/react";
 import { type CompilerError } from "babel-plugin-react-forget";
-import prettier from "prettier";
-import prettierParserBabel from "prettier/parser-babel";
-import { memo, useCallback, useMemo, useState } from "react";
+import parserBabel from "prettier/plugins/babel";
+import * as prettierPluginEstree from "prettier/plugins/estree";
+import * as prettier from "prettier/standalone";
+import { memo, useCallback, useEffect, useState } from "react";
 import { type Store } from "../../lib/stores";
 import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
-
 const MemoizedOutput = memo(Output);
 
 export default MemoizedOutput;
@@ -54,7 +54,7 @@ type Props = {
   compilerOutput: CompilerOutput;
 };
 
-function tabify(source: string, compilerOutput: CompilerOutput) {
+async function tabify(source: string, compilerOutput: CompilerOutput) {
   const tabs = new Map<string, React.ReactNode>();
   const reorderedTabs = new Map<string, React.ReactNode>();
   const concattedResults = new Map<string, string>();
@@ -106,7 +106,7 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
         output={text}
         diff={lastPassOutput ?? null}
         showInfoPanel={true}
-      ></TextTabContent>
+      ></TextTabContent>,
     );
     lastPassOutput = text;
   }
@@ -115,14 +115,14 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
     // Make a synthetic Program so we can have a single AST with all the top level
     // FunctionDeclarations
     const ast = t.program(topLevelFnDecls);
-    const { code, sourceMapUrl } = codegen(ast, source);
+    const { code, sourceMapUrl } = await codegen(ast, source);
     reorderedTabs.set(
       "JS",
       <TextTabContent
         output={code}
         diff={null}
         showInfoPanel={false}
-      ></TextTabContent>
+      ></TextTabContent>,
     );
     if (sourceMapUrl) {
       reorderedTabs.set(
@@ -133,7 +133,7 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
             className="w-full h-96"
             title="Generated Code"
           />
-        </>
+        </>,
       );
     }
   }
@@ -143,23 +143,23 @@ function tabify(source: string, compilerOutput: CompilerOutput) {
   return reorderedTabs;
 }
 
-function codegen(
+async function codegen(
   ast: t.Program,
-  source: string
-): { code: any; sourceMapUrl: string | null } {
+  source: string,
+): Promise<{ code: any; sourceMapUrl: string | null }> {
   const generated = generate(
     ast,
     { sourceMaps: true, sourceFileName: "input.js" },
-    source
+    source,
   );
   const sourceMapUrl = getSourceMapUrl(
     generated.code,
-    JSON.stringify(generated.map)
+    JSON.stringify(generated.map),
   );
-  const codegenOutput = prettier.format(generated.code, {
+  const codegenOutput = await prettier.format(generated.code, {
     semi: true,
     parser: "babel",
-    plugins: [prettierParserBabel],
+    plugins: [parserBabel, prettierPluginEstree],
   });
   return { code: codegenOutput, sourceMapUrl };
 }
@@ -172,16 +172,21 @@ function getSourceMapUrl(code: string, map: string): string | null {
   code = utf16ToUTF8(code);
   map = utf16ToUTF8(map);
   return `https://evanw.github.io/source-map-visualization/#${btoa(
-    `${code.length}\0${code}${map.length}\0${map}`
+    `${code.length}\0${code}${map.length}\0${map}`,
   )}`;
 }
 
 function Output({ store, compilerOutput }: Props) {
   const [tabsOpen, setTabsOpen] = useState<Set<string>>(() => new Set());
-  const tabs = useMemo(
-    () => tabify(store.source, compilerOutput),
-    [store.source, compilerOutput]
+  const [tabs, setTabs] = useState<Map<string, React.ReactNode>>(
+    () => new Map(),
   );
+  useEffect(() => {
+    tabify(store.source, compilerOutput).then((tabs) => {
+      setTabs(tabs);
+    });
+  }, [store.source, compilerOutput]);
+
   const consoleLogError = useCallback(() => {
     if (compilerOutput.kind === "err") {
       console.error(compilerOutput.error);
