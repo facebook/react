@@ -171,7 +171,6 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
 
   // Maps each scope (by its identifying member) to a ScopeId value
   const scopes: Map<Identifier, ReactiveScope> = new Map();
-  const scopeVariables: Map<ReactiveScope, Set<Identifier>> = new Map();
 
   /**
    * Iterate over all the identifiers and assign a unique ScopeId
@@ -201,13 +200,6 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
       );
     }
     identifier.scope = scope;
-
-    let vars = scopeVariables.get(scope);
-    if (vars === undefined) {
-      vars = new Set();
-      scopeVariables.set(scope, vars);
-    }
-    vars.add(identifier);
   });
 }
 
