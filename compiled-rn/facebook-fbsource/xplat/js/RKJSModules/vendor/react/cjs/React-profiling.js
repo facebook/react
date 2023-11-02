@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<291f930cb799e5fec85201032e4df618>>
+ * @generated SignedSource<<091eb71570b9a78d0a8b78f2b4396b5b>>
  */
 
 
@@ -495,10 +495,10 @@ exports.startTransition = function (scope) {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
 };
+exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
 exports.unstable_Cache = REACT_CACHE_TYPE;
 exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
-exports.unstable_Offscreen = REACT_OFFSCREEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_act = function () {
@@ -583,7 +583,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-a17467e7e-20231102";
+exports.version = "18.3.0-canary-ce2bc58a9-20231102";
 
           /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
 if (
