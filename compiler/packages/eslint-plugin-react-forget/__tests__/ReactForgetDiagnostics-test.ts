@@ -1,3 +1,10 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
 import BabelESLintParser from "@babel/eslint-parser";
 import { RuleTester as ESLintTester } from "eslint";
 import ReactForgetDiagnostics from "../src/rules/ReactForgetDiagnostics";
