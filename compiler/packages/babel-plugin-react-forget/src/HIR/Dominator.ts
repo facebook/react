@@ -98,7 +98,14 @@ export class Dominator<T> {
   }
 
   debug(): string {
-    return prettyFormat(this.#nodes);
+    const dominators = new Map();
+    for (const [key, value] of this.#nodes) {
+      dominators.set(`bb${key}`, `bb${value}`);
+    }
+    return prettyFormat({
+      entry: `bb${this.#entry}`,
+      dominators,
+    });
   }
 }
 

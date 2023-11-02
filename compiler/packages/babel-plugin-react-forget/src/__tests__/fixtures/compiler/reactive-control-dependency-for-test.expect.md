@@ -4,23 +4,23 @@
 ```javascript
 function Component(props) {
   let x;
-  for (let i = 0; i < 10; i += props.update) {
-    if (i > 0 && i % 2 === 0) {
-      x = 2;
+  for (let i = 0; i < props.test; i++) {
+    if (i > 10) {
+      x = 10;
     } else {
       x = 1;
     }
   }
   // The values assigned to `x` are non-reactive, but the value of `x`
-  // depends on the "control" variable `i`, whose possible values are
-  // affected by `props.update` which is reactive.
+  // depends on the "control" variable `i`, whose value is capped by
+  // `props.test` which is reactive.
   // Therefore x should be treated as reactive too.
   return [x];
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ update: 2 }],
+  params: [{ test: 12 }],
 };
 
 ```
@@ -30,28 +30,29 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(2);
   let x;
-  for (let i = 0; i < 10; i = i + props.update, i) {
-    if (i > 0 && i % 2 === 0) {
-      x = 2;
+  for (let i = 0; i < props.test; i++) {
+    if (i > 10) {
+      x = 10;
     } else {
       x = 1;
     }
   }
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== x) {
     t0 = [x];
-    $[0] = t0;
+    $[0] = x;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ update: 2 }],
+  params: [{ test: 12 }],
 };
 
 ```

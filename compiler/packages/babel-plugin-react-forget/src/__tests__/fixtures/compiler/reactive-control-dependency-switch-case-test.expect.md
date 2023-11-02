@@ -4,25 +4,28 @@
 ```javascript
 function Component(props) {
   let x;
-  let i = 0;
-  do {
-    if (i > 10) {
-      x = 10;
-    } else {
+  switch (props.cond) {
+    case true: {
       x = 1;
+      break;
     }
-    i++;
-  } while (i < props.test);
+    case false: {
+      x = 2;
+      break;
+    }
+    default: {
+      x = 3;
+    }
+  }
   // The values assigned to `x` are non-reactive, but the value of `x`
-  // depends on the "control" variable `i`, whose value is affected by
-  // `props.test` which is reactive.
+  // depends on the "control" value `props.cond` which is reactive.
   // Therefore x should be treated as reactive too.
   return [x];
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ test: 12 }],
+  params: [{ cond: true }],
 };
 
 ```
@@ -32,31 +35,35 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(2);
   let x;
-  let i = 0;
-  do {
-    if (i > 10) {
-      x = 10;
-    } else {
+  bb1: switch (props.cond) {
+    case true: {
       x = 1;
+      break bb1;
     }
-
-    i++;
-  } while (i < props.test);
+    case false: {
+      x = 2;
+      break bb1;
+    }
+    default: {
+      x = 3;
+    }
+  }
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== x) {
     t0 = [x];
-    $[0] = t0;
+    $[0] = x;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ test: 12 }],
+  params: [{ cond: true }],
 };
 
 ```

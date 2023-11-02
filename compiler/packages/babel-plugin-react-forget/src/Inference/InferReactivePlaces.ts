@@ -7,13 +7,16 @@
 
 import { CompilerError } from "..";
 import {
+  BlockId,
   Effect,
   HIRFunction,
   Identifier,
   IdentifierId,
   Place,
+  computePostDominatorTree,
   getHookKind,
 } from "../HIR";
+import { PostDominator } from "../HIR/Dominator";
 import {
   eachInstructionLValue,
   eachInstructionValueOperand,
@@ -88,14 +91,71 @@ export function inferReactivePlaces(fn: HIRFunction): void {
     reactiveIdentifiers.markReactive(place);
   }
 
+  const postDominators = computePostDominatorTree(fn, {
+    includeThrowsAsExitNode: false,
+  });
   const hasLoop = hasBackEdge(fn);
+  const postDominatorFrontierCache = new Map<BlockId, Set<BlockId>>();
   do {
     for (const [, block] of fn.body.blocks) {
       for (const phi of block.phis) {
+        if (reactiveIdentifiers.isReactiveIdentifier(phi.id)) {
+          // Already marked reactive on a previous pass
+          continue;
+        }
+        let isPhiReactive = false;
         for (const [, operand] of phi.operands) {
           if (reactiveIdentifiers.isReactiveIdentifier(operand)) {
-            reactiveIdentifiers.markReactiveIdentifier(phi.id);
+            isPhiReactive = true;
             break;
+          }
+        }
+        if (isPhiReactive) {
+          reactiveIdentifiers.markReactiveIdentifier(phi.id);
+        } else {
+          // check to see if it has a reactive control dependency
+          for (const [pred, _operand] of phi.operands) {
+            let controlBlocks = postDominatorFrontierCache.get(pred);
+            if (controlBlocks === undefined) {
+              controlBlocks = postDominatorFrontier(fn, postDominators, pred);
+              postDominatorFrontierCache.set(pred, controlBlocks);
+            }
+            control: for (const blockId of controlBlocks) {
+              const controlBlock = fn.body.blocks.get(blockId)!;
+              switch (controlBlock.terminal.kind) {
+                case "if":
+                case "branch": {
+                  if (
+                    reactiveIdentifiers.isReactive(controlBlock.terminal.test)
+                  ) {
+                    // control dependency is reactive
+                    reactiveIdentifiers.markReactiveIdentifier(phi.id);
+                    break control;
+                  }
+                  break;
+                }
+                case "switch": {
+                  if (
+                    reactiveIdentifiers.isReactive(controlBlock.terminal.test)
+                  ) {
+                    // control dependency is reactive
+                    reactiveIdentifiers.markReactiveIdentifier(phi.id);
+                    break control;
+                  }
+                  for (const case_ of controlBlock.terminal.cases) {
+                    if (
+                      case_.test !== null &&
+                      reactiveIdentifiers.isReactive(case_.test)
+                    ) {
+                      // control dependency is reactive
+                      reactiveIdentifiers.markReactiveIdentifier(phi.id);
+                      break control;
+                    }
+                  }
+                  break;
+                }
+              }
+            }
           }
         }
       }
@@ -165,6 +225,61 @@ export function inferReactivePlaces(fn: HIRFunction): void {
       }
     }
   } while (reactiveIdentifiers.snapshot() && hasLoop);
+}
+
+/**
+ * Computes the post-dominator frontier of @param block. These are immediate successors of nodes that
+ * post-dominate @param targetId and from which execution may not reach @param block. Intuitively, these
+ * are the earliest blocks from which execution branches such that it may or may not reach the target block.
+ */
+function postDominatorFrontier(
+  fn: HIRFunction,
+  postDominators: PostDominator<BlockId>,
+  targetId: BlockId
+): Set<BlockId> {
+  const visited = new Set<BlockId>();
+  const frontier = new Set<BlockId>();
+  const targetPostDominators = postDominatorsOf(fn, postDominators, targetId);
+  for (const blockId of [...targetPostDominators, targetId]) {
+    if (visited.has(blockId)) {
+      continue;
+    }
+    visited.add(blockId);
+    const block = fn.body.blocks.get(blockId)!;
+    for (const pred of block.preds) {
+      if (!targetPostDominators.has(pred)) {
+        // The predecessor does not always reach this block, we found an item on the frontier!
+        frontier.add(pred);
+      }
+    }
+  }
+  return frontier;
+}
+
+function postDominatorsOf(
+  fn: HIRFunction,
+  postDominators: PostDominator<BlockId>,
+  targetId: BlockId
+): Set<BlockId> {
+  const result = new Set<BlockId>();
+  const visited = new Set<BlockId>();
+  const queue = [targetId];
+  while (queue.length) {
+    const currentId = queue.shift()!;
+    if (visited.has(currentId)) {
+      continue;
+    }
+    visited.add(currentId);
+    const current = fn.body.blocks.get(currentId)!;
+    for (const pred of current.preds) {
+      const predPostDominator = postDominators.get(pred) ?? pred;
+      if (predPostDominator === targetId || result.has(predPostDominator)) {
+        result.add(pred);
+      }
+      queue.push(pred);
+    }
+  }
+  return result;
 }
 
 class ReactivityMap {

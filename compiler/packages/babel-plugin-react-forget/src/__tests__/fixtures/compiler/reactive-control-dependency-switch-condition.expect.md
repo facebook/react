@@ -36,7 +36,7 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 const GLOBAL = 42;
 
 function Component(t14) {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(2);
   const { value } = t14;
   let x;
   bb1: switch (GLOBAL) {
@@ -49,11 +49,12 @@ function Component(t14) {
     }
   }
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== x) {
     t0 = [x];
-    $[0] = t0;
+    $[0] = x;
+    $[1] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[1];
   }
   return t0;
 }

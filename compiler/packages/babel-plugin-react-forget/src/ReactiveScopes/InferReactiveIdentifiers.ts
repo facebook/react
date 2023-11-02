@@ -10,6 +10,8 @@ import { Environment } from "../HIR";
 import {
   Effect,
   IdentifierId,
+  InstructionId,
+  Place,
   ReactiveFunction,
   ReactiveInstruction,
   getHookKind,
@@ -35,6 +37,19 @@ class State {
 }
 
 class Visitor extends ReactiveFunctionVisitor<State> {
+  override visitLValue(
+    _id: InstructionId,
+    _lvalue: Place,
+    _state: State
+  ): void {
+    this.visitPlace(_id, _lvalue, _state);
+  }
+  override visitPlace(_id: InstructionId, _place: Place, _state: State): void {
+    if (_place.reactive) {
+      _state.reactivityMap.set(_place.identifier.id, _place.reactive);
+    }
+  }
+
   override visitInstruction(instr: ReactiveInstruction, state: State): void {
     this.traverseInstruction(instr, state);
     const lval = instr.lvalue;
