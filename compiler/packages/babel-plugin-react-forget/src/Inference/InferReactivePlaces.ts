@@ -22,6 +22,7 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
+import { hasBackEdge } from "../Optimization/DeadCodeElimination";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -94,6 +95,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
     includeThrowsAsExitNode: false,
   });
   const postDominatorFrontierCache = new Map<BlockId, Set<BlockId>>();
+  const hasLoop = hasBackEdge(fn);
   do {
     const identifierMapping = new Map<Identifier, Identifier>();
     for (const [, block] of fn.body.blocks) {
@@ -252,7 +254,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
         reactiveIdentifiers.isReactive(operand);
       }
     }
-  } while (reactiveIdentifiers.snapshot());
+  } while (reactiveIdentifiers.snapshot() && hasLoop);
 }
 
 /**
