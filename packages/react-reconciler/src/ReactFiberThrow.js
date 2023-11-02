@@ -12,7 +12,7 @@ import type {Lane, Lanes} from './ReactFiberLane';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactFiberClassUpdateQueue';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
+import type {OffscreenQueue} from './ReactFiberActivityComponent';
 import type {RetryQueue} from './ReactFiberSuspenseComponent';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';

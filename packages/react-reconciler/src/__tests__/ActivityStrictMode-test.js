@@ -4,7 +4,7 @@ let ReactNoop;
 let act;
 let log;
 
-describe('ReactOffscreenStrictMode', () => {
+describe('Activity StrictMode', () => {
   beforeEach(() => {
     jest.resetModules();
     log = [];

@@ -13,7 +13,7 @@ let waitFor;
 let waitForPaint;
 let assertLog;
 
-describe('ReactOffscreen', () => {
+describe('Activity Suspense', () => {
   beforeEach(() => {
     jest.resetModules();
 
