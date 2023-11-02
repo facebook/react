@@ -97,15 +97,9 @@ function runTask(priorityLevel, postTaskPriority, node, callback) {
     if (typeof result === "function") {
       // Assume this is a continuation
       var continuation = result;
-      var continuationController = new TaskController({
-        priority: postTaskPriority
-      });
       var continuationOptions = {
-        signal: continuationController.signal
-      }; // Update the original callback node's controller, since even though we're
-      // posting a new task, conceptually it's the same one.
-
-      node._controller = continuationController;
+        signal: node._controller.signal
+      };
       var nextTask = runTask.bind(
         null,
         priorityLevel,

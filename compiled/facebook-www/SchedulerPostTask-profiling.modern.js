@@ -23,18 +23,14 @@ function runTask(priorityLevel, postTaskPriority, node, callback) {
     currentPriorityLevel_DEPRECATED = priorityLevel;
     var result = callback(!1);
     if ("function" === typeof result) {
-      var continuationController = new TaskController({
-          priority: postTaskPriority
-        }),
-        continuationOptions = { signal: continuationController.signal };
-      node._controller = continuationController;
-      var nextTask = runTask.bind(
-        null,
-        priorityLevel,
-        postTaskPriority,
-        node,
-        result
-      );
+      var continuationOptions = { signal: node._controller.signal },
+        nextTask = runTask.bind(
+          null,
+          priorityLevel,
+          postTaskPriority,
+          node,
+          result
+        );
       void 0 !== scheduler.yield
         ? scheduler
             .yield(continuationOptions)
