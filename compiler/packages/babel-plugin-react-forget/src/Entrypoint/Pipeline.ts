@@ -24,6 +24,7 @@ import {
   analyseFunctions,
   dropManualMemoization,
   inferMutableRanges,
+  inferReactivePlaces,
   inferReferenceEffects,
   inlineImmediatelyInvokedFunctionExpressions,
 } from "../Inference";
@@ -192,6 +193,9 @@ function* runWithEnvironment(
       value: noSetStateInRenderResult.debug(),
     });
   }
+
+  inferReactivePlaces(hir);
+  yield log({ kind: "hir", name: "InferReactivePlaces", value: hir });
 
   leaveSSA(hir);
   yield log({ kind: "hir", name: "LeaveSSA", value: hir });
