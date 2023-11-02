@@ -316,13 +316,15 @@ export function compileProgram(
     }
   );
 
-  const error = checkFunctionReferencedBeforeDeclarationAtTopLevel(
-    program,
-    compiledFns.map(({ originalFn }) => originalFn)
-  );
-  if (error) {
-    handleError(pass, null, error);
-    return;
+  if (options.gating != null) {
+    const error = checkFunctionReferencedBeforeDeclarationAtTopLevel(
+      program,
+      compiledFns.map(({ originalFn }) => originalFn)
+    );
+    if (error) {
+      handleError(pass, null, error);
+      return;
+    }
   }
 
   for (const { originalFn: fn, compiledFn } of compiledFns) {
