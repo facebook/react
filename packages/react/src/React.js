@@ -134,7 +134,7 @@ export {
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as unstable_SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  REACT_OFFSCREEN_TYPE as unstable_Offscreen,
+  REACT_OFFSCREEN_TYPE as unstable_Activity,
   getCacheSignal as unstable_getCacheSignal,
   getCacheForType as unstable_getCacheForType,
   useCacheRefresh as unstable_useCacheRefresh,
