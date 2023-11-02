@@ -209,7 +209,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('mounts without layout effects when hidden', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -247,7 +247,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('mounts/unmounts layout effects when visibility changes (starting visible)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -293,7 +293,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="Child" />);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('nested offscreen does not call componentWillUnmount when hidden', async () => {
     // This is a bug that appeared during production test of <unstable_Activity />.
     // It is a very specific scenario with nested Offscreens. The inner offscreen
@@ -397,7 +397,7 @@ describe('ReactOffscreen', () => {
     assertLog(['child']);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('mounts/unmounts layout effects when visibility changes (starting hidden)', async () => {
     function Child({text}) {
       useLayoutEffect(() => {
@@ -444,7 +444,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true} prop="Child" />);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('hides children of offscreen after layout effects are destroyed', async () => {
     const root = ReactNoop.createRoot();
     function Child({text}) {
@@ -531,7 +531,7 @@ describe('ReactOffscreen', () => {
     assertLog(['Unmount layout']);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('hides new insertions into an already hidden tree', async () => {
     const root = ReactNoop.createRoot();
     await act(() => {
@@ -561,7 +561,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('hides updated nodes inside an already hidden tree', async () => {
     const root = ReactNoop.createRoot();
     await act(() => {
@@ -607,7 +607,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span>Hi</span>);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('revealing a hidden tree at high priority does not cause tearing', async () => {
     // When revealing an offscreen tree, we need to include updates that were
     // previously deferred because the tree was hidden, even if they are lower
@@ -741,7 +741,7 @@ describe('ReactOffscreen', () => {
     expect(areOuterAndInnerConsistent()).toBe(true);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('regression: Activity instance is sometimes null during setState', async () => {
     let setState;
     function Child() {
@@ -789,7 +789,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(null);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('class component setState callbacks do not fire until tree is visible', async () => {
     const root = ReactNoop.createRoot();
 
@@ -841,7 +841,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop="C" />);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('does not call componentDidUpdate when reappearing a hidden class component', async () => {
     class Child extends React.Component {
       componentDidMount() {
@@ -891,7 +891,7 @@ describe('ReactOffscreen', () => {
     assertLog(['componentDidMount']);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it(
     'when reusing old components (hidden -> visible), layout effects fire ' +
       'with same timing as if it were brand new',
@@ -944,7 +944,7 @@ describe('ReactOffscreen', () => {
     },
   );
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it(
     'when reusing old components (hidden -> visible), layout effects fire ' +
       'with same timing as if it were brand new (includes setState callback)',
@@ -1007,7 +1007,7 @@ describe('ReactOffscreen', () => {
     },
   );
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('defer passive effects when prerendering a new Activity tree', async () => {
     function Child({label}) {
       useEffect(() => {
@@ -1125,7 +1125,7 @@ describe('ReactOffscreen', () => {
     assertLog(['Shell', 'More']);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('passive effects are connected and disconnected when the visibility changes', async () => {
     function Child({step}) {
       useEffect(() => {
@@ -1182,7 +1182,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span prop={2} />);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('passive effects are unmounted on hide in the same order as during a deletion: parent before child', async () => {
     function Child({label}) {
       useEffect(() => {
@@ -1240,7 +1240,7 @@ describe('ReactOffscreen', () => {
   // Re-enable this test once we add this ability. For example, we'll likely add
   // either an option or a heuristic to mount passive effects inside a hidden
   // tree after a delay.
-  // @gate enableOffscreen
+  // @gate enableActivity
   it.skip("don't defer passive effects when prerendering in a tree whose effects are already connected", async () => {
     function Child({label}) {
       useEffect(() => {
@@ -1296,7 +1296,7 @@ describe('ReactOffscreen', () => {
     ]);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('does not mount effects when prerendering a nested Activity boundary', async () => {
     function Child({label}) {
       useEffect(() => {
@@ -1374,7 +1374,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('reveal an outer Activity boundary without revealing an inner one', async () => {
     function Child({label}) {
       useEffect(() => {
@@ -1441,7 +1441,7 @@ describe('ReactOffscreen', () => {
   });
 
   describe('manual interactivity', () => {
-    // @gate enableOffscreen
+    // @gate enableActivity
     it('should attach ref only for mode null', async () => {
       let offscreenRef;
 
@@ -1485,7 +1485,7 @@ describe('ReactOffscreen', () => {
       expect(offscreenRef.current).not.toBeNull();
     });
 
-    // @gate enableOffscreen
+    // @gate enableActivity
     it('should lower update priority for detached Activity', async () => {
       let updateChildState;
       let updateHighPriorityComponentState;
@@ -1595,7 +1595,7 @@ describe('ReactOffscreen', () => {
       });
     });
 
-    // @gate enableOffscreen
+    // @gate enableActivity
     it('defers detachment if called during commit', async () => {
       let updateChildState;
       let updateHighPriorityComponentState;
@@ -1702,7 +1702,7 @@ describe('ReactOffscreen', () => {
     });
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('should detach ref if Activity is unmounted', async () => {
     let offscreenRef;
 
@@ -1740,7 +1740,7 @@ describe('ReactOffscreen', () => {
     expect(offscreenRef.current).not.toBeNull();
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('should detach ref when parent Activity is hidden', async () => {
     let offscreenRef;
 
@@ -1775,7 +1775,7 @@ describe('ReactOffscreen', () => {
     expect(offscreenRef.current).toBeNull();
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('should change _current', async () => {
     let offscreenRef;
     const root = ReactNoop.createRoot();
@@ -1811,7 +1811,7 @@ describe('ReactOffscreen', () => {
     expect(offscreenRef.current._current === firstFiber).toBeFalsy();
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('does not mount tree until attach is called', async () => {
     let offscreenRef;
     let spanRef;
@@ -1879,7 +1879,7 @@ describe('ReactOffscreen', () => {
     assertLog([]);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('handles nested manual offscreens', async () => {
     let outerOffscreen;
     let innerOffscreen;
@@ -1970,7 +1970,7 @@ describe('ReactOffscreen', () => {
     assertLog(['unmount layout inner', 'unmount inner']);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('batches multiple attach and detach calls scheduled from an event handler', async () => {
     function Child() {
       useEffect(() => {
@@ -2024,7 +2024,7 @@ describe('ReactOffscreen', () => {
     assertLog([]);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('batches multiple attach and detach calls scheduled from an effect', async () => {
     function Child() {
       useEffect(() => {

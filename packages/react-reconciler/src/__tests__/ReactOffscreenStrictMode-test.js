@@ -31,7 +31,7 @@ describe('ReactOffscreenStrictMode', () => {
     return <span>label</span>;
   }
 
-  // @gate __DEV__ && enableOffscreen
+  // @gate __DEV__ && enableActivity
   it('should trigger strict effects when offscreen is visible', async () => {
     await act(() => {
       ReactNoop.render(
@@ -55,7 +55,7 @@ describe('ReactOffscreenStrictMode', () => {
     ]);
   });
 
-  // @gate __DEV__ && enableOffscreen && enableDO_NOT_USE_disableStrictPassiveEffect
+  // @gate __DEV__ && enableActivity && enableDO_NOT_USE_disableStrictPassiveEffect
   it('does not trigger strict effects when disableStrictPassiveEffect is presented on StrictMode', async () => {
     await act(() => {
       ReactNoop.render(
@@ -77,7 +77,7 @@ describe('ReactOffscreenStrictMode', () => {
     ]);
   });
 
-  // @gate __DEV__ && enableOffscreen && useModernStrictMode
+  // @gate __DEV__ && enableActivity && useModernStrictMode
   it('should not trigger strict effects when offscreen is hidden', async () => {
     await act(() => {
       ReactNoop.render(
@@ -176,7 +176,7 @@ describe('ReactOffscreenStrictMode', () => {
     });
   });
 
-  // @gate __DEV__ && enableOffscreen
+  // @gate __DEV__ && enableActivity
   it('should double invoke effects on unsuspended child', async () => {
     let shouldSuspend = true;
     let resolve;

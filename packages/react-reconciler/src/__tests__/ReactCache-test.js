@@ -1576,7 +1576,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   // @gate enableCache
   test('prerender a new cache boundary inside an Activity tree', async () => {
     function App({prerenderMore}) {

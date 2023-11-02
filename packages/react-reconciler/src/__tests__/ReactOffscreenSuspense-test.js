@@ -98,7 +98,7 @@ describe('ReactOffscreen', () => {
     return text;
   }
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   test('basic example of suspending inside hidden tree', async () => {
     const root = ReactNoop.createRoot();
 
@@ -233,7 +233,7 @@ describe('ReactOffscreen', () => {
     );
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   test("suspending inside currently visible tree that's switching to hidden", async () => {
     const root = ReactNoop.createRoot();
 
@@ -409,7 +409,7 @@ describe('ReactOffscreen', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>B1</span>);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   test('detect updates to a hidden tree during a concurrent event', async () => {
     // This is a pretty complex test case. It relates to how we detect if an
     // update is made to a hidden tree: when scheduling the update, we walk up

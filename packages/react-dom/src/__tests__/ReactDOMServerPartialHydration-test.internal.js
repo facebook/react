@@ -3151,7 +3151,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current.innerHTML).toBe('Hidden child');
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('a visible Activity component acts like a fragment', async () => {
     const ref = React.createRef();
 
@@ -3187,7 +3187,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('a hidden Activity component is skipped over during server rendering', async () => {
     const visibleRef = React.createRef();
 
