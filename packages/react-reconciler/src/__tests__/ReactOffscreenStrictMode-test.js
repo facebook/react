@@ -1,5 +1,5 @@
 let React;
-let Offscreen;
+let Activity;
 let ReactNoop;
 let act;
 let log;
@@ -10,7 +10,7 @@ describe('ReactOffscreenStrictMode', () => {
     log = [];
 
     React = require('react');
-    Offscreen = React.unstable_Offscreen;
+    Activity = React.unstable_Activity;
     ReactNoop = require('react-noop-renderer');
     act = require('internal-test-utils').act;
   });
@@ -36,9 +36,9 @@ describe('ReactOffscreenStrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Offscreen mode="visible">
+          <Activity mode="visible">
             <Component label="A" />
-          </Offscreen>
+          </Activity>
         </React.StrictMode>,
       );
     });
@@ -60,9 +60,9 @@ describe('ReactOffscreenStrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
-          <Offscreen>
+          <Activity>
             <Component label="A" />
-          </Offscreen>
+          </Activity>
         </React.StrictMode>,
       );
     });
@@ -82,9 +82,9 @@ describe('ReactOffscreenStrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Offscreen mode="hidden">
+          <Activity mode="hidden">
             <Component label="A" />
-          </Offscreen>
+          </Activity>
         </React.StrictMode>,
       );
     });
@@ -96,10 +96,10 @@ describe('ReactOffscreenStrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Offscreen mode="hidden">
+          <Activity mode="hidden">
             <Component label="A" />
             <Component label="B" />
-          </Offscreen>
+          </Activity>
         </React.StrictMode>,
       );
     });
@@ -111,9 +111,9 @@ describe('ReactOffscreenStrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Offscreen mode="visible">
+          <Activity mode="visible">
             <Component label="A" />
-          </Offscreen>
+          </Activity>
         </React.StrictMode>,
       );
     });
@@ -134,9 +134,9 @@ describe('ReactOffscreenStrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Offscreen mode="hidden">
+          <Activity mode="hidden">
             <Component label="A" />
-          </Offscreen>
+          </Activity>
         </React.StrictMode>,
       );
     });
@@ -218,9 +218,9 @@ describe('ReactOffscreenStrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Offscreen mode="visible">
+          <Activity mode="visible">
             <Parent />
-          </Offscreen>
+          </Activity>
         </React.StrictMode>,
       );
     });

@@ -16,7 +16,7 @@ let useDeferredValue;
 let useMemo;
 let useState;
 let Suspense;
-let Offscreen;
+let Activity;
 let assertLog;
 let waitForPaint;
 let textCache;
@@ -34,7 +34,7 @@ describe('ReactDeferredValue', () => {
     useMemo = React.useMemo;
     useState = React.useState;
     Suspense = React.Suspense;
-    Offscreen = React.unstable_Offscreen;
+    Activity = React.unstable_Activity;
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
@@ -585,9 +585,7 @@ describe('ReactDeferredValue', () => {
       const [shouldShow, setState] = useState(false);
       revealContent = () => setState(true);
       return (
-        <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
-          {children}
-        </Offscreen>
+        <Activity mode={shouldShow ? 'visible' : 'hidden'}>{children}</Activity>
       );
     }
 
@@ -634,9 +632,7 @@ describe('ReactDeferredValue', () => {
       const [shouldShow, setState] = useState(false);
       revealContent = () => setState(true);
       return (
-        <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
-          {children}
-        </Offscreen>
+        <Activity mode={shouldShow ? 'visible' : 'hidden'}>{children}</Activity>
       );
     }
 
@@ -695,9 +691,9 @@ describe('ReactDeferredValue', () => {
 
       function Container({text, shouldShow}) {
         return (
-          <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+          <Activity mode={shouldShow ? 'visible' : 'hidden'}>
             <App text={text} />
-          </Offscreen>
+          </Activity>
         );
       }
 
@@ -736,9 +732,9 @@ describe('ReactDeferredValue', () => {
 
       function Container({text, shouldShow}) {
         return (
-          <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+          <Activity mode={shouldShow ? 'visible' : 'hidden'}>
             <App text={text} />
-          </Offscreen>
+          </Activity>
         );
       }
 
@@ -781,9 +777,9 @@ describe('ReactDeferredValue', () => {
 
       function Container({text, shouldShow}) {
         return (
-          <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+          <Activity mode={shouldShow ? 'visible' : 'hidden'}>
             <App text={text} />
-          </Offscreen>
+          </Activity>
         );
       }
 

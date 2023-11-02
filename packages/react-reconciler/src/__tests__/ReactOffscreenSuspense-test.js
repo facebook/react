@@ -3,7 +3,7 @@ let ReactNoop;
 let Scheduler;
 let act;
 let LegacyHidden;
-let Offscreen;
+let Activity;
 let Suspense;
 let useState;
 let useEffect;
@@ -22,7 +22,7 @@ describe('ReactOffscreen', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     LegacyHidden = React.unstable_LegacyHidden;
-    Offscreen = React.unstable_Offscreen;
+    Activity = React.unstable_Activity;
     Suspense = React.Suspense;
     useState = React.useState;
     useEffect = React.useEffect;
@@ -108,11 +108,11 @@ describe('ReactOffscreen', () => {
           <span>
             <Text text="Visible" />
           </span>
-          <Offscreen mode="hidden">
+          <Activity mode="hidden">
             <span>
               <AsyncText text="Hidden" />
             </span>
-          </Offscreen>
+          </Activity>
         </Suspense>
       );
     }
@@ -159,7 +159,7 @@ describe('ReactOffscreen', () => {
       );
     }
 
-    // Unlike Offscreen, LegacyHidden never captures if something suspends
+    // Unlike Activity, LegacyHidden never captures if something suspends
     await act(() => {
       root.render(<App />);
     });
@@ -184,9 +184,9 @@ describe('ReactOffscreen', () => {
           <span>
             <Text text={open ? 'Open' : 'Closed'} />
           </span>
-          <Offscreen mode={open ? 'visible' : 'hidden'}>
+          <Activity mode={open ? 'visible' : 'hidden'}>
             <span>{children}</span>
-          </Offscreen>
+          </Activity>
         </Suspense>
       );
     }
@@ -243,9 +243,9 @@ describe('ReactOffscreen', () => {
           <span>
             <Text text={open ? 'Open' : 'Closed'} />
           </span>
-          <Offscreen mode={open ? 'visible' : 'hidden'}>
+          <Activity mode={open ? 'visible' : 'hidden'}>
             <span>{children}</span>
-          </Offscreen>
+          </Activity>
         </Suspense>
       );
     }
@@ -330,11 +330,11 @@ describe('ReactOffscreen', () => {
 
     function App({show}) {
       return (
-        <Offscreen mode={show ? 'visible' : 'hidden'}>
+        <Activity mode={show ? 'visible' : 'hidden'}>
           <span>
             <Child />
           </span>
-        </Offscreen>
+        </Activity>
       );
     }
 
@@ -368,11 +368,11 @@ describe('ReactOffscreen', () => {
 
     function App({show}) {
       return (
-        <Offscreen mode={show ? 'visible' : 'hidden'}>
+        <Activity mode={show ? 'visible' : 'hidden'}>
           <span>
             <Child />
           </span>
-        </Offscreen>
+        </Activity>
       );
     }
 
@@ -413,7 +413,7 @@ describe('ReactOffscreen', () => {
   test('detect updates to a hidden tree during a concurrent event', async () => {
     // This is a pretty complex test case. It relates to how we detect if an
     // update is made to a hidden tree: when scheduling the update, we walk up
-    // the fiber return path to see if any of the parents is a hidden Offscreen
+    // the fiber return path to see if any of the parents is a hidden Activity
     // component. This doesn't work if there's already a render in progress,
     // because the tree might be about to flip to hidden. To avoid a data race,
     // queue updates atomically: wait to queue the update until after the
@@ -443,11 +443,11 @@ describe('ReactOffscreen', () => {
       setOuter = _setOuter;
       return (
         <>
-          <Offscreen mode={show ? 'visible' : 'hidden'}>
+          <Activity mode={show ? 'visible' : 'hidden'}>
             <span>
               <Child outer={outer} />
             </span>
-          </Offscreen>
+          </Activity>
           <span>
             <Text text={'Outer: ' + outer} />
           </span>

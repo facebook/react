@@ -6,7 +6,7 @@ let Scheduler;
 let assertLog;
 let act;
 let Suspense;
-let Offscreen;
+let Activity;
 let useCacheRefresh;
 let startTransition;
 let useState;
@@ -27,7 +27,7 @@ describe('ReactCache', () => {
     act = require('internal-test-utils').act;
     Suspense = React.Suspense;
     cache = React.cache;
-    Offscreen = React.unstable_Offscreen;
+    Activity = React.unstable_Activity;
     getCacheSignal = React.unstable_getCacheSignal;
     useCacheRefresh = React.unstable_useCacheRefresh;
     startTransition = React.startTransition;
@@ -1578,10 +1578,10 @@ describe('ReactCache', () => {
 
   // @gate enableOffscreen
   // @gate enableCache
-  test('prerender a new cache boundary inside an Offscreen tree', async () => {
+  test('prerender a new cache boundary inside an Activity tree', async () => {
     function App({prerenderMore}) {
       return (
-        <Offscreen mode="hidden">
+        <Activity mode="hidden">
           <div>
             {prerenderMore ? (
               <Cache>
@@ -1589,7 +1589,7 @@ describe('ReactCache', () => {
               </Cache>
             ) : null}
           </div>
-        </Offscreen>
+        </Activity>
       );
     }
 
