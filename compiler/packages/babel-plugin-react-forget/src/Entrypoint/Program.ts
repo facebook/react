@@ -181,7 +181,7 @@ function insertNewFunctionDeclaration(
 function findEslintSuppressions(
   fileComments: Array<t.CommentBlock | t.CommentLine>
 ): CompilerError | null {
-  const violations = [];
+  const violations: Array<t.CommentBlock | t.CommentLine> = [];
 
   if (Array.isArray(fileComments)) {
     for (const comment of fileComments) {
