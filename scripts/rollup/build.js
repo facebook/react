@@ -400,12 +400,12 @@ function getPlugins(
       'react-debug-tools',
     ];
 
-    // Only generate sourcemaps for true "production" build artifacts
+    // Generate sourcemaps for true "production" build artifacts
     // that will be used by bundlers, such as `react-dom.production.min.js`.
-    // UMD and "profiling" builds are rarely used and not worth having sourcemaps.
+    // Also include profiling builds as well.
+    // UMD builds are rarely used and not worth having sourcemaps.
     const needsSourcemaps =
       needsMinifiedByClosure &&
-      !isProfiling &&
       !isUMDBundle &&
       !sourcemapPackageExcludes.includes(entry) &&
       !shouldStayReadable;
@@ -536,19 +536,44 @@ function getPlugins(
           // Use a path like `node_modules/react/cjs/react.production.min.js.map` for the sourcemap file
           const finalSourcemapPath = options.file.replace('.js', '.js.map');
           const finalSourcemapFilename = path.basename(finalSourcemapPath);
+          const outputFolder = path.dirname(options.file);
 
           // Read the sourcemap that Closure wrote to disk
           const sourcemapAfterClosure = JSON.parse(
             fs.readFileSync(finalSourcemapPath, 'utf8')
           );
 
+          // Represent the "original" bundle as a file with no `.min` in the name
           const filenameWithoutMin = filename.replace('.min', '');
+          // There's _one_ artifact where the incoming filename actually contains
+          // a folder name: "use-sync-external-store-shim/with-selector.production.js".
+          // The output path already has the right structure, but we need to strip this
+          // down to _just_ the JS filename.
+          const preMinifiedFilename = path.basename(filenameWithoutMin);
 
           // CC generated a file list that only contains the tempfile name.
           // Replace that with a more meaningful "source" name for this bundle
           // that represents "the bundled source before minification".
-          sourcemapAfterClosure.sources = [filenameWithoutMin];
+          sourcemapAfterClosure.sources = [preMinifiedFilename];
           sourcemapAfterClosure.file = filename;
+
+          // We'll write the pre-minified source to disk as a separate file.
+          // Because it sits on disk, there's no need to have it in the `sourcesContent` array.
+          // That also makes the file easier to read, and available for use by scripts.
+          // This should be the only file in the array.
+          const [preMinifiedBundleSource] =
+            sourcemapAfterClosure.sourcesContent;
+
+          // Remove this entirely - we're going to write the file to disk instead.
+          delete sourcemapAfterClosure.sourcesContent;
+
+          const preMinifiedBundlePath = path.join(
+            outputFolder,
+            preMinifiedFilename
+          );
+
+          // Write the original source to disk as a separate file
+          fs.writeFileSync(preMinifiedBundlePath, preMinifiedBundleSource);
 
           // Overwrite the Closure-generated file with the final combined sourcemap
           fs.writeFileSync(
