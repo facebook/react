@@ -226,6 +226,7 @@ function rewriteBlock(
         type: makeType(),
       },
       kind: "Identifier",
+      reactive: false,
       loc: terminal.loc,
     },
     value: {
@@ -265,6 +266,7 @@ function declareTemporary(
         type: makeType(),
       },
       kind: "Identifier",
+      reactive: false,
       loc: GeneratedSource,
     },
     value: {

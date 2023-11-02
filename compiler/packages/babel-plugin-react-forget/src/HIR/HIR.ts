@@ -877,6 +877,7 @@ export type Place = {
   kind: "Identifier";
   identifier: Identifier;
   effect: Effect;
+  reactive: boolean;
   loc: SourceLocation;
 };
 

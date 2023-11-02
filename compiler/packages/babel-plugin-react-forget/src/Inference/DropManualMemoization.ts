@@ -58,6 +58,7 @@ export function dropManualMemoization(func: HIRFunction): void {
                     kind: "Identifier",
                     identifier: fn.identifier,
                     effect: Effect.Unknown,
+                    reactive: false,
                     loc: instr.value.loc,
                   },
                   loc: instr.value.loc,
