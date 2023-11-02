@@ -498,10 +498,10 @@ exports.startTransition = function (scope, options) {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
 };
+exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
 exports.unstable_Cache = REACT_CACHE_TYPE;
 exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
-exports.unstable_Offscreen = REACT_OFFSCREEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
@@ -587,4 +587,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-846422de";
+exports.version = "18.3.0-www-classic-685ed7fa";

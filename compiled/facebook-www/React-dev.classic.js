@@ -27,7 +27,7 @@ if (
 }
           "use strict";
 
-var ReactVersion = "18.3.0-www-classic-cdb80134";
+var ReactVersion = "18.3.0-www-classic-0b25f4fa";
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -4078,10 +4078,10 @@ exports.jsxs = jsxs;
 exports.lazy = lazy;
 exports.memo = memo;
 exports.startTransition = startTransition;
+exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
 exports.unstable_Cache = REACT_CACHE_TYPE;
 exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
-exports.unstable_Offscreen = REACT_OFFSCREEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
