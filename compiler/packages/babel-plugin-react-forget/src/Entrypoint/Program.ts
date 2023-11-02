@@ -50,6 +50,16 @@ function isCriticalError(err: unknown): boolean {
   return !(err instanceof CompilerError) || err.isCritical();
 }
 
+type BabelFn =
+  | NodePath<t.FunctionDeclaration>
+  | NodePath<t.FunctionExpression>
+  | NodePath<t.ArrowFunctionExpression>;
+
+type CompileResult = {
+  originalFn: BabelFn;
+  compiledFn: CodegenFunction;
+};
+
 function handleError(
   pass: CompilerPass,
   fnLoc: t.SourceLocation | null,
@@ -95,9 +105,7 @@ function handleError(
  * Mutates the source AST to include a newly Forget-compiled function.
  */
 function insertNewFunctionDeclaration(
-  originalFn: NodePath<
-    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >,
+  originalFn: BabelFn,
   compiledFn: CodegenFunction,
   pass: CompilerPass
 ): void {
@@ -230,6 +238,7 @@ export function compileProgram(
   const lintError = findEslintSuppressions(pass.comments);
   let hasCriticalError = lintError != null;
   let hasForgetMutatedOriginalSource: boolean = false;
+  const compiledFns: CompileResult[] = [];
 
   const traverseFunction = (
     fn:
@@ -273,10 +282,7 @@ export function compileProgram(
     if (pass.opts.noEmit) {
       return;
     } else if (!hasCriticalError) {
-      // Only insert Forget-ified functions if we have not encountered a critical
-      // error elsewhere in the file, regardless of bailout mode.
-      insertNewFunctionDeclaration(fn, compiledFn, pass);
-      hasForgetMutatedOriginalSource = true;
+      compiledFns.push({ originalFn: fn, compiledFn });
     }
   };
 
@@ -309,6 +315,22 @@ export function compileProgram(
       filename: pass.filename ?? null,
     }
   );
+
+  const error = checkFunctionReferencedBeforeDeclarationAtTopLevel(
+    program,
+    compiledFns.map(({ originalFn }) => originalFn)
+  );
+  if (error) {
+    handleError(pass, null, error);
+    return;
+  }
+
+  for (const { originalFn: fn, compiledFn } of compiledFns) {
+    // Only insert Forget-ified functions if we have not encountered a critical
+    // error elsewhere in the file, regardless of bailout mode.
+    insertNewFunctionDeclaration(fn, compiledFn, pass);
+    hasForgetMutatedOriginalSource = true;
+  }
 
   // Forget compiled the component, we need to update existing imports of unstable_useMemoCache
   if (hasForgetMutatedOriginalSource) {
@@ -578,4 +600,64 @@ function getFunctionName(
   } else {
     return null;
   }
+}
+
+function checkFunctionReferencedBeforeDeclarationAtTopLevel(
+  program: NodePath<t.Program>,
+  fns: BabelFn[]
+): CompilerError | null {
+  const fnIds = new Set(
+    fns
+      .map((fn) => getFunctionName(fn))
+      .filter(
+        (name): name is NodePath<t.Identifier> => !!name && name.isIdentifier()
+      )
+      .map((name) => name.node)
+  );
+  const fnNames = new Map([...fnIds].map((id) => [id.name, id]));
+  const errors = new CompilerError();
+
+  program.traverse({
+    Identifier(id) {
+      const fn = fnNames.get(id.node.name);
+      if (fnIds.has(id.node) || !fn) {
+        return;
+      }
+
+      const scope = id.scope.getFunctionParent();
+      // A null scope means there's no function scope, which means we're at the
+      // top level scope.
+      if (
+        scope === null &&
+        id.node.loc &&
+        fn.loc &&
+        occursBefore(id.node.loc, fn.loc)
+      ) {
+        errors.pushErrorDetail(
+          new CompilerErrorDetail({
+            reason: `Encountered ${fn.name} used before declaration which breaks Forget's gating codegen due to hoisting`,
+            description:
+              "Rewrite the reference to not use hoisting to fix this issue",
+            loc: fn.loc ?? null,
+            suggestions: null,
+            severity: ErrorSeverity.InvalidConfig,
+          })
+        );
+      }
+    },
+  });
+
+  return errors.details.length > 0 ? errors : null;
+}
+
+function occursBefore(a: t.SourceLocation, b: t.SourceLocation): boolean {
+  if (a.start.line > b.start.line) {
+    return false;
+  }
+
+  if (a.start.line < b.start.line) {
+    return true;
+  }
+
+  return a.start.column < b.start.column;
 }
