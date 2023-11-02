@@ -23,6 +23,7 @@ import {
   eachTerminalOperand,
 } from "../HIR/visitors";
 import { hasBackEdge } from "../Optimization/DeadCodeElimination";
+import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -195,11 +196,13 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               case Effect.Store:
               case Effect.ConditionallyMutate:
               case Effect.Mutate: {
-                const resolvedId = identifierMapping.get(operand.identifier);
-                if (resolvedId !== undefined) {
-                  reactiveIdentifiers.markReactiveIdentifier(resolvedId);
+                if (isMutable(instruction, operand)) {
+                  const resolvedId = identifierMapping.get(operand.identifier);
+                  if (resolvedId !== undefined) {
+                    reactiveIdentifiers.markReactiveIdentifier(resolvedId);
+                  }
+                  reactiveIdentifiers.markReactive(operand);
                 }
-                reactiveIdentifiers.markReactive(operand);
                 break;
               }
               case Effect.Freeze:

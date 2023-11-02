@@ -212,7 +212,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
 }
 
 // Is the operand mutable at this given instruction
-function isMutable({ id }: Instruction, place: Place): boolean {
+export function isMutable({ id }: Instruction, place: Place): boolean {
   const range = place.identifier.mutableRange;
   return id >= range.start && id < range.end;
 }
