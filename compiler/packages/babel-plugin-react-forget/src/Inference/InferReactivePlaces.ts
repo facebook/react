@@ -22,7 +22,6 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
-import { hasBackEdge } from "../Optimization/DeadCodeElimination";
 import { assertExhaustive } from "../Utils/utils";
 
 /**
@@ -94,9 +93,9 @@ export function inferReactivePlaces(fn: HIRFunction): void {
   const postDominators = computePostDominatorTree(fn, {
     includeThrowsAsExitNode: false,
   });
-  const hasLoop = hasBackEdge(fn);
   const postDominatorFrontierCache = new Map<BlockId, Set<BlockId>>();
   do {
+    const identifierMapping = new Map<Identifier, Identifier>();
     for (const [, block] of fn.body.blocks) {
       for (const phi of block.phis) {
         if (reactiveIdentifiers.isReactiveIdentifier(phi.id)) {
@@ -194,6 +193,10 @@ export function inferReactivePlaces(fn: HIRFunction): void {
               case Effect.Store:
               case Effect.ConditionallyMutate:
               case Effect.Mutate: {
+                const resolvedId = identifierMapping.get(operand.identifier);
+                if (resolvedId !== undefined) {
+                  reactiveIdentifiers.markReactiveIdentifier(resolvedId);
+                }
                 reactiveIdentifiers.markReactive(operand);
                 break;
               }
@@ -219,12 +222,37 @@ export function inferReactivePlaces(fn: HIRFunction): void {
             }
           }
         }
+
+        switch (value.kind) {
+          case "LoadLocal": {
+            identifierMapping.set(
+              instruction.lvalue.identifier,
+              value.place.identifier
+            );
+            break;
+          }
+          case "PropertyLoad":
+          case "ComputedLoad": {
+            const resolvedId =
+              identifierMapping.get(value.object.identifier) ??
+              value.object.identifier;
+            identifierMapping.set(instruction.lvalue.identifier, resolvedId);
+            break;
+          }
+          case "LoadContext": {
+            identifierMapping.set(
+              instruction.lvalue.identifier,
+              value.place.identifier
+            );
+            break;
+          }
+        }
       }
       for (const operand of eachTerminalOperand(block.terminal)) {
         reactiveIdentifiers.isReactive(operand);
       }
     }
-  } while (reactiveIdentifiers.snapshot() && hasLoop);
+  } while (reactiveIdentifiers.snapshot());
 }
 
 /**

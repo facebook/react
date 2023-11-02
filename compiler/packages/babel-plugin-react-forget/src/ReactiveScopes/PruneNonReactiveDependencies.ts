@@ -11,7 +11,7 @@ import {
   ReactiveScopeBlock,
   isSetStateType,
 } from "../HIR";
-import { inferReactiveIdentifiers } from "./InferReactiveIdentifiers";
+import { collectReactiveIdentifiers } from "./CollectReactiveIdentifiers";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 /**
@@ -21,14 +21,17 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  * This pass prunes dependencies that are guaranteed to be non-reactive.
  */
 export function pruneNonReactiveDependencies(fn: ReactiveFunction): void {
-  const state = inferReactiveIdentifiers(fn);
-  visitReactiveFunction(fn, new Visitor(), state);
+  const reactiveIdentifiers = collectReactiveIdentifiers(fn);
+  visitReactiveFunction(fn, new Visitor(), reactiveIdentifiers);
 }
 
-type State = Set<IdentifierId>;
+type ReactiveIdentifiers = Set<IdentifierId>;
 
-class Visitor extends ReactiveFunctionVisitor<State> {
-  override visitScope(scope: ReactiveScopeBlock, state: State): void {
+class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
+  override visitScope(
+    scope: ReactiveScopeBlock,
+    state: ReactiveIdentifiers
+  ): void {
     this.traverseScope(scope, state);
     for (const dep of scope.scope.dependencies) {
       const isReactive =

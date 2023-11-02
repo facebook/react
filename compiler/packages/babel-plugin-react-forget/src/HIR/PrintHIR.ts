@@ -675,8 +675,9 @@ export function printPlace(place: Place): string {
     " ",
     printIdentifier(place.identifier),
     printMutableRange(place.identifier),
+    printType(place.identifier.type),
+    place.reactive ? "{reactive}" : null,
   ];
-  items.push(printType(place.identifier.type));
   return items.filter((x) => x != null).join("");
 }
 
