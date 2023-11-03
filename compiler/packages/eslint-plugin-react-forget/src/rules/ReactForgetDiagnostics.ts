@@ -23,6 +23,8 @@ type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetail, "loc"> & {
   loc: BabelSourceLocation;
 };
 
+type UserProvidedLogger = (...args: unknown[]) => void;
+
 function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
 }
@@ -77,6 +79,13 @@ const rule: Rule.RuleModule = {
     hasSuggestions: true,
   },
   create(context: Rule.RuleContext) {
+    let logger: UserProvidedLogger | null = null;
+    if (
+      context.options[0] != null &&
+      typeof context.options[0] === "function"
+    ) {
+      logger = context.options[0];
+    }
     // Compat with older versions of eslint
     const sourceCode = context.sourceCode?.text ?? context.getSourceCode().text;
     const filename = context.filename ?? context.getFilename();
@@ -164,8 +173,8 @@ const rule: Rule.RuleModule = {
               suggest,
             });
           }
-        } else {
-          throw err;
+        } else if (logger != null) {
+          logger(err);
         }
       }
     }
