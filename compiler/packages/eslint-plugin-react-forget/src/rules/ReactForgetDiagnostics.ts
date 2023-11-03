@@ -59,7 +59,7 @@ function isReportableDiagnostic(
 
 const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
-  compilationMode: "annotation",
+  compilationMode: "infer",
   panicThreshold: "CRITICAL_ERRORS",
   environment: {
     validateHooksUsage: true,

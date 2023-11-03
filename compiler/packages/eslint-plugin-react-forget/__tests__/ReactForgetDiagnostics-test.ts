@@ -29,7 +29,6 @@ const tests: ForgetTestCases = {
       name: "Basic example",
       code: normalizeIndent`
         function foo(x, y) {
-          'use forget';
           if (x) {
             return foo(false, y);
           }
@@ -44,7 +43,6 @@ const tests: ForgetTestCases = {
           text: string = 'Hello!',
           onClick: () => void,
         ) {
-          'use forget';
           return <div onClick={onClick}>{text}</div>;
         }
       `,
@@ -53,7 +51,6 @@ const tests: ForgetTestCases = {
       name: "Unsupported syntax",
       code: normalizeIndent`
         function foo(x) {
-          'use forget';
           var y = 1;
           return y * x;
         }
@@ -64,7 +61,6 @@ const tests: ForgetTestCases = {
       name: "[Invariant] Defined after use",
       code: normalizeIndent`
         function Component(props) {
-          'use forget';
           let y = function () {
             m(x);
           };
@@ -81,7 +77,6 @@ const tests: ForgetTestCases = {
       name: "[InvalidInput] Ref access during render",
       code: normalizeIndent`
         function Component(props) {
-          'use forget';
           const ref = useRef(null);
           const value = ref.current;
           return value;
@@ -91,10 +86,10 @@ const tests: ForgetTestCases = {
         {
           message:
             "[ReactForget] Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)",
-          line: 6,
+          line: 5,
           column: 10,
           endColumn: 15,
-          endLine: 6,
+          endLine: 5,
         },
       ],
     },
@@ -103,9 +98,8 @@ const tests: ForgetTestCases = {
       // Indentation is intentionally weird so it doesn't add extra whitespace
       code: normalizeIndent`
   function Component(props) {
-    'use forget';
   // eslint-disable-next-line react-hooks/rules-of-hooks
-    Component();
+    return <div>{props.foo}</div>;
   }`,
       errors: [
         {
@@ -115,9 +109,8 @@ const tests: ForgetTestCases = {
             {
               output: normalizeIndent`
   function Component(props) {
-    'use forget';
 
-    Component();
+    return <div>{props.foo}</div>;
   }`,
             },
           ],
