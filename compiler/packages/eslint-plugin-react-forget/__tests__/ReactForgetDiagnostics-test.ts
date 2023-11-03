@@ -71,6 +71,14 @@ const tests: ForgetTestCases = {
         }
       `,
     },
+    {
+      name: "Classes don't throw",
+      code: normalizeIndent`
+        class Foo {
+          #bar() {}
+        }
+      `,
+    },
   ],
   invalid: [
     {
