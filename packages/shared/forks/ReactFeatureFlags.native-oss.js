@@ -57,7 +57,7 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = false;
+export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
 

@@ -20,6 +20,7 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 export const {
   enableUseRefAccessWarning,
   enableDeferRootSchedulingToMicrotask,
+  enableUnifiedSyncLane,
   alwaysThrottleRetries,
   useMicrotasksForSchedulingInFabric,
   passChildrenWhenCloningPersistedNodes,
@@ -72,7 +73,6 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = true;
 export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = false;
 export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = false;
 
