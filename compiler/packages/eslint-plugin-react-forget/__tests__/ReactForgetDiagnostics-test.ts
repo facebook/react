@@ -6,7 +6,6 @@
  */
 
 import { RuleTester as ESLintTester } from "eslint";
-import * as HermesEslintParser from "hermes-eslint";
 import ReactForgetDiagnostics from "../src/rules/ReactForgetDiagnostics";
 
 /**
@@ -35,6 +34,18 @@ const tests: ForgetTestCases = {
             return foo(false, y);
           }
           return [y * 10];
+        }
+      `,
+    },
+    {
+      name: "Basic example with component syntax",
+      code: normalizeIndent`
+        export default component HelloWorld(
+          text: string = 'Hello!',
+          onClick: () => void,
+        ) {
+          'use forget';
+          return <div onClick={onClick}>{text}</div>;
         }
       `,
     },
@@ -121,10 +132,11 @@ const tests: ForgetTestCases = {
 };
 
 const eslintTester = new ESLintTester({
-  parser: HermesEslintParser,
+  parser: require.resolve("hermes-eslint"),
   parserOptions: {
     ecmaVersion: 2015,
     sourceType: "module",
+    enableExperimentalComponentSyntax: true,
   },
 });
 eslintTester.run("react-forget-diagnostics", ReactForgetDiagnostics, tests);

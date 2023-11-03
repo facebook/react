@@ -83,6 +83,7 @@ const rule: Rule.RuleModule = {
 
     const babelAST = HermesParser.parse(sourceCode, {
       babel: true,
+      enableExperimentalComponentSyntax: true,
       sourceFilename: filename,
       sourceType: "module",
     });
