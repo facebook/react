@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import BabelESLintParser from "@babel/eslint-parser";
 import { RuleTester as ESLintTester } from "eslint";
+import * as HermesEslintParser from "hermes-eslint";
 import ReactForgetDiagnostics from "../src/rules/ReactForgetDiagnostics";
 
 /**
@@ -121,9 +121,9 @@ const tests: ForgetTestCases = {
 };
 
 const eslintTester = new ESLintTester({
-  parser: BabelESLintParser,
+  parser: HermesEslintParser,
   parserOptions: {
-    ecmaVersion: 6,
+    ecmaVersion: 2015,
     sourceType: "module",
   },
 });

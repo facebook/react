@@ -5,15 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// v0.12.1
+// v0.17.1
 declare module "hermes-parser" {
   type HermesParserOptions = {
-    babel: boolean;
-    allowReturnOutsideFunction: boolean;
-    flow: "all" | "detect";
-    sourceFilename: string | null;
-    sourceType: "module" | "script" | "unambiguous";
-    tokens: boolean;
+    allowReturnOutsideFunction?: boolean;
+    babel?: boolean;
+    flow?: "all" | "detect";
+    enableExperimentalComponentSyntax?: boolean;
+    sourceFilename?: string;
+    sourceType?: "module" | "script" | "unambiguous";
+    tokens?: boolean;
   };
   export function parse(code: string, options: Partial<HermesParserOptions>);
 }

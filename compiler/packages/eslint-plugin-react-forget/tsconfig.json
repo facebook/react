@@ -4,6 +4,9 @@
     "rootDir": "../",
     "noEmit": true,
     "jsx": "react-jsxdev",
+    "paths": {
+      "*": ["./src/types/*"]
+    },
 
     // weaken strictness from preset
     "importsNotUsedAsValues": "remove",
@@ -15,6 +18,6 @@
     "noUnusedLocals": false,
     "sourceMap": false
   },
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "./src/types/*"],
   "include": ["src/**/*.ts"]
 }
