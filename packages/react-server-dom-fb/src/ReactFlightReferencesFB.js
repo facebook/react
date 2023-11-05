@@ -7,68 +7,67 @@
  * @flow
  */
 
-import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-
-export type ServerReference<T: Function> = T & {
-  $$typeof: symbol,
-  $$id: string,
-  $$bound: null | Array<ReactClientValue>,
-};
+export type ClientManifest = {[string]: mixed};
 
 // eslint-disable-next-line no-unused-vars
-export type ClientReference<T> = {
-  $$typeof: symbol,
-  $$id: string,
-};
+export type ServerReference<T> = string;
 
-const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');
-const SERVER_REFERENCE_TAG = Symbol.for('react.server.reference');
+// eslint-disable-next-line no-unused-vars
+export type ClientReference<T> = string;
 
-export function isClientReference(reference: Object): boolean {
-  return reference.$$typeof === CLIENT_REFERENCE_TAG;
+const registeredClientReferences = new Map<mixed, ClientReferenceKey>();
+const registeredServerReferences = new Map<mixed, ServerReferenceId>();
+
+export type ClientReferenceKey = string;
+export type ServerReferenceId = string;
+
+export function isClientReference<T>(reference: T): boolean {
+  return registeredClientReferences.has(reference);
 }
 
-export function isServerReference(reference: Object): boolean {
-  return reference.$$typeof === SERVER_REFERENCE_TAG;
+export function isServerReference<T>(reference: T): boolean {
+  return registeredServerReferences.has(reference);
 }
 
 export function registerClientReference<T>(
-  proxyImplementation: any,
-  id: string,
+  clientReference: ClientReference<T>,
   exportName: string,
 ): ClientReference<T> {
-  return Object.defineProperties(proxyImplementation, {
-    $$typeof: {value: CLIENT_REFERENCE_TAG},
-    $$id: {value: id + '#' + exportName},
-  });
-}
+  registeredClientReferences.set(clientReference, exportName);
 
-// $FlowFixMe[method-unbinding]
-const FunctionBind = Function.prototype.bind;
-// $FlowFixMe[method-unbinding]
-const ArraySlice = Array.prototype.slice;
-function bind(this: ServerReference<any>) {
-  // $FlowFixMe[unsupported-syntax]
-  const newFn = FunctionBind.apply(this, arguments);
-  if (this.$$typeof === SERVER_REFERENCE_TAG) {
-    // $FlowFixMe[method-unbinding]
-    const args = ArraySlice.call(arguments, 1);
-    newFn.$$typeof = SERVER_REFERENCE_TAG;
-    newFn.$$id = this.$$id;
-    newFn.$$bound = this.$$bound ? this.$$bound.concat(args) : args;
-  }
-  return newFn;
+  return exportName;
 }
 
 export function registerServerReference<T>(
-  reference: ServerReference<T>,
-  id: string,
+  serverReference: ServerReference<T>,
   exportName: string,
 ): ServerReference<T> {
-  return Object.defineProperties((reference: any), {
-    $$typeof: {value: SERVER_REFERENCE_TAG},
-    $$id: {value: id + '#' + exportName},
-    $$bound: {value: null},
-    bind: {value: bind},
-  });
+  registeredServerReferences.set(serverReference, exportName);
+
+  return exportName;
+}
+
+export function getClientReferenceKey<T>(
+  clientReference: ClientReference<T>,
+): ClientReferenceKey {
+  const id = registeredClientReferences.get(clientReference);
+  if (id != null) {
+    return id;
+  }
+  throw new Error(
+    'Expected client reference ' + clientReference + ' to be registered.',
+  );
+}
+
+export function getServerReferenceId<T>(
+  config: ClientManifest,
+  serverReference: ServerReference<T>,
+): ServerReferenceId {
+  const id = registeredServerReferences.get(serverReference);
+  if (id != null) {
+    return id;
+  }
+  throw new Error(
+    'Expected client reference ' + serverReference + ' to be registered.',
+  );
 }

@@ -14,12 +14,14 @@ import type {
 } from 'shared/ReactTypes';
 
 export type ModuleLoading = mixed;
-
 export type SSRModuleMap = mixed;
-
 export type ServerManifest = string; // Module root path
+export type {
+  ClientManifest,
+  ServerReferenceId,
+} from './ReactFlightReferencesFB';
 
-export type ServerReferenceId = string;
+import type {ServerReferenceId} from './ReactFlightReferencesFB';
 
 export opaque type ClientReferenceMetadata = [
   string, // module path
@@ -59,23 +61,7 @@ export function resolveServerReference<T>(
   config: ServerManifest,
   id: ServerReferenceId,
 ): ClientReference<T> {
-  const baseURL: string = config;
-  const idx = id.lastIndexOf('#');
-  const exportName = id.slice(idx + 1);
-  const fullURL = id.slice(0, idx);
-  if (!fullURL.startsWith(baseURL)) {
-    throw new Error(
-      'Attempted to load a Server Reference outside the hosted root.',
-    );
-  }
-  return {
-    specifier: fullURL,
-    name: exportName,
-    loadModule: () => {
-      // TODO: Implement
-      throw new Error('Load module is not implemented.');
-    },
-  };
+  throw new Error('Not implemented');
 }
 
 const asyncModuleCache: Map<string, Thenable<any>> = new Map();

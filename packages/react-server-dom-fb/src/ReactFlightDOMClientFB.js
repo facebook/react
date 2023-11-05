@@ -11,8 +11,6 @@ import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 
-import type {ReactServerValue} from 'react-client/src/ReactFlightReplyClient';
-
 import {
   createResponse,
   getRoot,
@@ -21,24 +19,17 @@ import {
   close,
 } from 'react-client/src/ReactFlightClient';
 
-import {
-  processReply,
-  createServerReference,
-} from 'react-client/src/ReactFlightReplyClient';
 import type {SSRModuleMap} from './ReactFlightClientConfigFBBundler';
 
-type CallServerCallback = <A, T>(string, args: A) => Promise<T>;
-
-export type Options = {
+type Options = {
   ssrModuleMap: SSRModuleMap,
-  callServer?: CallServerCallback,
 };
 
 function createResponseFromOptions(options: void | Options) {
   return createResponse(
     options && options.ssrModuleMap,
     null,
-    options && options.callServer ? options.callServer : undefined,
+    undefined,
     undefined,
   );
 }
@@ -79,33 +70,11 @@ function createFromReadableStream<T>(
   return getRoot(response);
 }
 
-function createFromFetch<T>(
-  promiseForResponse: Promise<Response>,
-  options?: Options,
-): Thenable<T> {
+function processBuffer<T>(buffer: Uint8Array, options?: Options): Thenable<T> {
   const response: FlightResponse = createResponseFromOptions(options);
-  promiseForResponse.then(
-    function (r) {
-      startReadingFromStream(response, (r.body: any));
-    },
-    function (e) {
-      reportGlobalError(response, e);
-    },
-  );
+
+  processBinaryChunk(response, buffer);
   return getRoot(response);
 }
 
-function encodeReply(
-  value: ReactServerValue,
-): Promise<string | URLSearchParams | FormData> {
-  return new Promise((resolve, reject) => {
-    processReply(value, '', resolve, reject);
-  });
-}
-
-export {
-  createFromFetch,
-  createFromReadableStream,
-  encodeReply,
-  createServerReference,
-};
+export {createFromReadableStream, processBuffer};
