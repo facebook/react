@@ -15,12 +15,12 @@ export type ServerReference<T> = string;
 // eslint-disable-next-line no-unused-vars
 export type ClientReference<T> = string;
 
-const registeredClientReferences = new Map<mixed, ClientReferenceKey>();
+const registeredClientReferences = new Map<mixed, ClientReferenceMetadata>();
 const registeredServerReferences = new Map<mixed, ServerReferenceId>();
 
 export type ClientReferenceKey = string;
 export type ServerReferenceId = string;
-export type ClientReferenceMetadata = string;
+export type ClientReferenceMetadata = [ClientReferenceKey, string];
 
 export function isClientReference<T>(reference: T): boolean {
   return registeredClientReferences.has(reference);
@@ -32,11 +32,12 @@ export function isServerReference<T>(reference: T): boolean {
 
 export function registerClientReference<T>(
   clientReference: ClientReference<T>,
+  referenceKey: ClientReferenceKey,
   exportName: string,
 ): ClientReference<T> {
-  registeredClientReferences.set(clientReference, exportName);
+  registeredClientReferences.set(clientReference, [referenceKey, exportName]);
 
-  return exportName;
+  return clientReference;
 }
 
 export function registerServerReference<T>(
@@ -45,15 +46,15 @@ export function registerServerReference<T>(
 ): ServerReference<T> {
   registeredServerReferences.set(serverReference, exportName);
 
-  return exportName;
+  return serverReference;
 }
 
 export function getClientReferenceKey<T>(
   clientReference: ClientReference<T>,
 ): ClientReferenceKey {
-  const id = registeredClientReferences.get(clientReference);
-  if (id != null) {
-    return id;
+  const record = registeredClientReferences.get(clientReference);
+  if (record != null) {
+    return record[0];
   }
   throw new Error(
     'Expected client reference ' + clientReference + ' to be registered.',
@@ -61,12 +62,12 @@ export function getClientReferenceKey<T>(
 }
 
 export function resolveClientReferenceMetadata<T>(
-  config: ClientManifest,
+  _config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  const id = registeredClientReferences.get(clientReference);
-  if (id != null) {
-    return id;
+  const metadata = registeredClientReferences.get(clientReference);
+  if (metadata != null) {
+    return metadata;
   }
 
   throw new Error(
