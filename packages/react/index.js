@@ -56,7 +56,7 @@ export {
   unstable_Cache,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
-  unstable_Activity,
+  unstable_Offscreen,
   unstable_Scope,
   unstable_SuspenseList,
   unstable_TracingMarker,

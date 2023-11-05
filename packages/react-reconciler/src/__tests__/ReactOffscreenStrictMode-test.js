@@ -1,16 +1,16 @@
 let React;
-let Activity;
+let Offscreen;
 let ReactNoop;
 let act;
 let log;
 
-describe('Activity StrictMode', () => {
+describe('ReactOffscreenStrictMode', () => {
   beforeEach(() => {
     jest.resetModules();
     log = [];
 
     React = require('react');
-    Activity = React.unstable_Activity;
+    Offscreen = React.unstable_Offscreen;
     ReactNoop = require('react-noop-renderer');
     act = require('internal-test-utils').act;
   });
@@ -31,14 +31,14 @@ describe('Activity StrictMode', () => {
     return <span>label</span>;
   }
 
-  // @gate __DEV__ && enableActivity
+  // @gate __DEV__ && enableOffscreen
   it('should trigger strict effects when offscreen is visible', async () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Activity mode="visible">
+          <Offscreen mode="visible">
             <Component label="A" />
-          </Activity>
+          </Offscreen>
         </React.StrictMode>,
       );
     });
@@ -55,14 +55,14 @@ describe('Activity StrictMode', () => {
     ]);
   });
 
-  // @gate __DEV__ && enableActivity && enableDO_NOT_USE_disableStrictPassiveEffect
+  // @gate __DEV__ && enableOffscreen && enableDO_NOT_USE_disableStrictPassiveEffect
   it('does not trigger strict effects when disableStrictPassiveEffect is presented on StrictMode', async () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode DO_NOT_USE_disableStrictPassiveEffect={true}>
-          <Activity>
+          <Offscreen>
             <Component label="A" />
-          </Activity>
+          </Offscreen>
         </React.StrictMode>,
       );
     });
@@ -77,14 +77,14 @@ describe('Activity StrictMode', () => {
     ]);
   });
 
-  // @gate __DEV__ && enableActivity && useModernStrictMode
+  // @gate __DEV__ && enableOffscreen && useModernStrictMode
   it('should not trigger strict effects when offscreen is hidden', async () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Activity mode="hidden">
+          <Offscreen mode="hidden">
             <Component label="A" />
-          </Activity>
+          </Offscreen>
         </React.StrictMode>,
       );
     });
@@ -96,10 +96,10 @@ describe('Activity StrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Activity mode="hidden">
+          <Offscreen mode="hidden">
             <Component label="A" />
             <Component label="B" />
-          </Activity>
+          </Offscreen>
         </React.StrictMode>,
       );
     });
@@ -111,9 +111,9 @@ describe('Activity StrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Activity mode="visible">
+          <Offscreen mode="visible">
             <Component label="A" />
-          </Activity>
+          </Offscreen>
         </React.StrictMode>,
       );
     });
@@ -134,9 +134,9 @@ describe('Activity StrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Activity mode="hidden">
+          <Offscreen mode="hidden">
             <Component label="A" />
-          </Activity>
+          </Offscreen>
         </React.StrictMode>,
       );
     });
@@ -176,7 +176,7 @@ describe('Activity StrictMode', () => {
     });
   });
 
-  // @gate __DEV__ && enableActivity
+  // @gate __DEV__ && enableOffscreen
   it('should double invoke effects on unsuspended child', async () => {
     let shouldSuspend = true;
     let resolve;
@@ -218,9 +218,9 @@ describe('Activity StrictMode', () => {
     await act(() => {
       ReactNoop.render(
         <React.StrictMode>
-          <Activity mode="visible">
+          <Offscreen mode="visible">
             <Parent />
-          </Activity>
+          </Offscreen>
         </React.StrictMode>,
       );
     });

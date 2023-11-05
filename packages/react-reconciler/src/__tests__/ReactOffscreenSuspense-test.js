@@ -3,7 +3,7 @@ let ReactNoop;
 let Scheduler;
 let act;
 let LegacyHidden;
-let Activity;
+let Offscreen;
 let Suspense;
 let useState;
 let useEffect;
@@ -13,7 +13,7 @@ let waitFor;
 let waitForPaint;
 let assertLog;
 
-describe('Activity Suspense', () => {
+describe('ReactOffscreen', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -22,7 +22,7 @@ describe('Activity Suspense', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     LegacyHidden = React.unstable_LegacyHidden;
-    Activity = React.unstable_Activity;
+    Offscreen = React.unstable_Offscreen;
     Suspense = React.Suspense;
     useState = React.useState;
     useEffect = React.useEffect;
@@ -98,7 +98,7 @@ describe('Activity Suspense', () => {
     return text;
   }
 
-  // @gate enableActivity
+  // @gate enableOffscreen
   test('basic example of suspending inside hidden tree', async () => {
     const root = ReactNoop.createRoot();
 
@@ -108,11 +108,11 @@ describe('Activity Suspense', () => {
           <span>
             <Text text="Visible" />
           </span>
-          <Activity mode="hidden">
+          <Offscreen mode="hidden">
             <span>
               <AsyncText text="Hidden" />
             </span>
-          </Activity>
+          </Offscreen>
         </Suspense>
       );
     }
@@ -159,7 +159,7 @@ describe('Activity Suspense', () => {
       );
     }
 
-    // Unlike Activity, LegacyHidden never captures if something suspends
+    // Unlike Offscreen, LegacyHidden never captures if something suspends
     await act(() => {
       root.render(<App />);
     });
@@ -184,9 +184,9 @@ describe('Activity Suspense', () => {
           <span>
             <Text text={open ? 'Open' : 'Closed'} />
           </span>
-          <Activity mode={open ? 'visible' : 'hidden'}>
+          <Offscreen mode={open ? 'visible' : 'hidden'}>
             <span>{children}</span>
-          </Activity>
+          </Offscreen>
         </Suspense>
       );
     }
@@ -233,7 +233,7 @@ describe('Activity Suspense', () => {
     );
   });
 
-  // @gate enableActivity
+  // @gate enableOffscreen
   test("suspending inside currently visible tree that's switching to hidden", async () => {
     const root = ReactNoop.createRoot();
 
@@ -243,9 +243,9 @@ describe('Activity Suspense', () => {
           <span>
             <Text text={open ? 'Open' : 'Closed'} />
           </span>
-          <Activity mode={open ? 'visible' : 'hidden'}>
+          <Offscreen mode={open ? 'visible' : 'hidden'}>
             <span>{children}</span>
-          </Activity>
+          </Offscreen>
         </Suspense>
       );
     }
@@ -330,11 +330,11 @@ describe('Activity Suspense', () => {
 
     function App({show}) {
       return (
-        <Activity mode={show ? 'visible' : 'hidden'}>
+        <Offscreen mode={show ? 'visible' : 'hidden'}>
           <span>
             <Child />
           </span>
-        </Activity>
+        </Offscreen>
       );
     }
 
@@ -368,11 +368,11 @@ describe('Activity Suspense', () => {
 
     function App({show}) {
       return (
-        <Activity mode={show ? 'visible' : 'hidden'}>
+        <Offscreen mode={show ? 'visible' : 'hidden'}>
           <span>
             <Child />
           </span>
-        </Activity>
+        </Offscreen>
       );
     }
 
@@ -409,11 +409,11 @@ describe('Activity Suspense', () => {
     expect(root).toMatchRenderedOutput(<span hidden={true}>B1</span>);
   });
 
-  // @gate enableActivity
+  // @gate enableOffscreen
   test('detect updates to a hidden tree during a concurrent event', async () => {
     // This is a pretty complex test case. It relates to how we detect if an
     // update is made to a hidden tree: when scheduling the update, we walk up
-    // the fiber return path to see if any of the parents is a hidden Activity
+    // the fiber return path to see if any of the parents is a hidden Offscreen
     // component. This doesn't work if there's already a render in progress,
     // because the tree might be about to flip to hidden. To avoid a data race,
     // queue updates atomically: wait to queue the update until after the
@@ -443,11 +443,11 @@ describe('Activity Suspense', () => {
       setOuter = _setOuter;
       return (
         <>
-          <Activity mode={show ? 'visible' : 'hidden'}>
+          <Offscreen mode={show ? 'visible' : 'hidden'}>
             <span>
               <Child outer={outer} />
             </span>
-          </Activity>
+          </Offscreen>
           <span>
             <Text text={'Outer: ' + outer} />
           </span>

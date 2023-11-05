@@ -24,11 +24,9 @@ import type {
   SuspenseListRenderState,
   RetryQueue,
 } from './ReactFiberSuspenseComponent';
-import type {
-  OffscreenState,
-  OffscreenQueue,
-} from './ReactFiberActivityComponent';
-import {isOffscreenManual} from './ReactFiberActivityComponent';
+import type {OffscreenQueue} from './ReactFiberOffscreenComponent';
+import {isOffscreenManual} from './ReactFiberOffscreenComponent';
+import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import {

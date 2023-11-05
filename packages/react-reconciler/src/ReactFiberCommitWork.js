@@ -23,13 +23,13 @@ import type {SuspenseState, RetryQueue} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Wakeable} from 'shared/ReactTypes';
-import {isOffscreenManual} from './ReactFiberActivityComponent';
+import {isOffscreenManual} from './ReactFiberOffscreenComponent';
 import type {
   OffscreenState,
   OffscreenInstance,
   OffscreenQueue,
   OffscreenProps,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {RootState} from './ReactFiberRoot';
@@ -209,7 +209,7 @@ import {
   OffscreenVisible,
   OffscreenDetached,
   OffscreenPassiveEffectsConnected,
-} from './ReactFiberActivityComponent';
+} from './ReactFiberOffscreenComponent';
 import {
   TransitionRoot,
   TransitionTracingMarker,

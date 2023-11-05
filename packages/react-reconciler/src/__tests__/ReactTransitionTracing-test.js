@@ -18,7 +18,7 @@ let assertLog;
 let getCacheForType;
 let useState;
 let Suspense;
-let Activity;
+let Offscreen;
 let startTransition;
 
 let caches;
@@ -52,7 +52,7 @@ describe('ReactInteractionTracing', () => {
     useState = React.useState;
     startTransition = React.startTransition;
     Suspense = React.Suspense;
-    Activity = React.unstable_Activity;
+    Offscreen = React.unstable_Offscreen;
 
     getCacheForType = React.unstable_getCacheForType;
 
@@ -2180,11 +2180,11 @@ describe('ReactInteractionTracing', () => {
           <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText text="Text" />
           </Suspense>
-          <Activity mode="hidden">
+          <Offscreen mode="hidden">
             <Suspense fallback={<Text text="Hidden Loading..." />}>
               <AsyncText text="Hidden Text" />
             </Suspense>
-          </Activity>
+          </Offscreen>
         </React.unstable_TracingMarker>
       );
     }
