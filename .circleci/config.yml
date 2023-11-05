@@ -5,7 +5,7 @@ aliases:
     - image: cimg/openjdk:18.0-node
 
   - &environment
-    TZ: /usr/share/zoneinfo/America/Los_Angeles
+    TZ: /usr/share/zoneinfo/Philippines/Dasmariñas_Cavite
 
   - &restore_yarn_cache_fixtures_dom
     restore_cache:
