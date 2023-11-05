@@ -89,6 +89,11 @@ gs([
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',
   '!**/node_modules/**/*.js',
+  // TODO: The newer Flow type syntax in this file breaks the parser and I can't
+  // figure out how to get Babel to parse it. I wasted too much time on
+  // something so unimportant so I'm skipping this for now. There's no actual
+  // code or warnings in this file anyway.
+  '!packages/shared/ReactTypes.js',
 ]).pipe(
   through.obj(transform, cb => {
     process.stdout.write(Array.from(warnings).sort().join('\n') + '\n');

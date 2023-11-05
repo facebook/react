@@ -1,4 +1,4 @@
-import React, {PureComponent, unstable_startTransition} from 'react';
+import React, {PureComponent, startTransition} from 'react';
 import {createRoot} from 'react-dom/client';
 import _ from 'lodash';
 import Charts from './Charts';
@@ -64,7 +64,7 @@ class App extends PureComponent {
     }
     this._ignoreClick = true;
 
-    unstable_startTransition(() => {
+    startTransition(() => {
       this.setState({showDemo: true}, () => {
         this._ignoreClick = false;
       });
@@ -103,7 +103,7 @@ class App extends PureComponent {
         break;
       case 'async':
         // TODO: useTransition hook instead.
-        unstable_startTransition(() => {
+        startTransition(() => {
           this.setState({value});
         });
         break;

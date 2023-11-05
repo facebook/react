@@ -10,10 +10,28 @@
 
 'use strict';
 
+const heldValues = [];
+let finalizationCallback;
+function FinalizationRegistryMock(callback) {
+  finalizationCallback = callback;
+}
+FinalizationRegistryMock.prototype.register = function (target, heldValue) {
+  heldValues.push(heldValue);
+};
+global.FinalizationRegistry = FinalizationRegistryMock;
+
+function gc() {
+  for (let i = 0; i < heldValues.length; i++) {
+    finalizationCallback(heldValues[i]);
+  }
+  heldValues.length = 0;
+}
+
 let act;
 let use;
 let startTransition;
 let React;
+let ReactServer;
 let ReactNoop;
 let ReactNoopFlightServer;
 let ReactNoopFlightClient;
@@ -25,12 +43,18 @@ let assertLog;
 describe('ReactFlight', () => {
   beforeEach(() => {
     jest.resetModules();
-
+    jest.mock('react', () => require('react/react.shared-subset'));
+    ReactServer = require('react');
+    ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+    // This stores the state so we need to preserve it
+    const flightModules = require('react-noop-renderer/flight-modules');
+    __unmockReact();
+    jest.resetModules();
+    jest.mock('react-noop-renderer/flight-modules', () => flightModules);
     React = require('react');
     startTransition = React.startTransition;
     use = React.use;
     ReactNoop = require('react-noop-renderer');
-    ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     ReactNoopFlightClient = require('react-noop-renderer/flight-client');
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
@@ -97,6 +121,32 @@ describe('ReactFlight', () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
+
+  function createServerContext(globalName, defaultValue, withStack) {
+    let ctx;
+    expect(() => {
+      ctx = React.createServerContext(globalName, defaultValue);
+    }).toErrorDev(
+      'Server Context is deprecated and will soon be removed. ' +
+        'It was never documented and we have found it not to be useful ' +
+        'enough to warrant the downside it imposes on all apps.',
+      {withoutStack: !withStack},
+    );
+    return ctx;
+  }
+
+  function createServerServerContext(globalName, defaultValue, withStack) {
+    let ctx;
+    expect(() => {
+      ctx = ReactServer.createServerContext(globalName, defaultValue);
+    }).toErrorDev(
+      'Server Context is deprecated and will soon be removed. ' +
+        'It was never documented and we have found it not to be useful ' +
+        'enough to warrant the downside it imposes on all apps.',
+      {withoutStack: !withStack},
+    );
+    return ctx;
+  }
 
   function clientReference(value) {
     return Object.defineProperties(
@@ -321,6 +371,88 @@ describe('ReactFlight', () => {
     });
 
     expect(ReactNoop).toMatchRenderedOutput('prop: 2009-02-13T23:31:30.123Z');
+  });
+
+  it('can transport Map', async () => {
+    function ComponentClient({prop, selected}) {
+      return `
+        map: ${prop instanceof Map}
+        size: ${prop.size}
+        greet: ${prop.get('hi').greet}
+        content: ${JSON.stringify(Array.from(prop))}
+        selected: ${prop.get(selected)}
+      `;
+    }
+    const Component = clientReference(ComponentClient);
+
+    const objKey = {obj: 'key'};
+    const map = new Map([
+      ['hi', {greet: 'world'}],
+      [objKey, 123],
+    ]);
+    const model = <Component prop={map} selected={objKey} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(`
+        map: true
+        size: 2
+        greet: world
+        content: [["hi",{"greet":"world"}],[{"obj":"key"},123]]
+        selected: 123
+      `);
+  });
+
+  it('can transport Set', async () => {
+    function ComponentClient({prop, selected}) {
+      return `
+        set: ${prop instanceof Set}
+        size: ${prop.size}
+        hi: ${prop.has('hi')}
+        content: ${JSON.stringify(Array.from(prop))}
+        selected: ${prop.has(selected)}
+      `;
+    }
+    const Component = clientReference(ComponentClient);
+
+    const objKey = {obj: 'key'};
+    const set = new Set(['hi', objKey]);
+    const model = <Component prop={set} selected={objKey} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(`
+        set: true
+        size: 2
+        hi: true
+        content: ["hi",{"obj":"key"}]
+        selected: true
+      `);
+  });
+
+  it('can transport cyclic objects', async () => {
+    function ComponentClient({prop}) {
+      expect(prop.obj.obj.obj).toBe(prop.obj.obj);
+    }
+    const Component = clientReference(ComponentClient);
+
+    const cyclic = {obj: null};
+    cyclic.obj = cyclic;
+    const model = <Component prop={cyclic} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
   });
 
   it('can render a lazy component as a shared component on the server', async () => {
@@ -877,26 +1009,28 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient.read(transport);
   });
 
-  it('should warn in DEV if a class instance is passed to a host component', () => {
+  it('should error if a class instance is passed to a host component', () => {
     class Foo {
       method() {}
     }
-    expect(() => {
-      const transport = ReactNoopFlightServer.render(
-        <input value={new Foo()} />,
-      );
-      ReactNoopFlightClient.read(transport);
-    }).toErrorDev(
-      'Only plain objects can be passed to Client Components from Server Components. ',
-      {withoutStack: true},
-    );
+    const errors = [];
+    ReactNoopFlightServer.render(<input value={new Foo()} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual([
+      'Only plain objects, and a few built-ins, can be passed to Client Components ' +
+        'from Server Components. Classes or null prototypes are not supported.',
+    ]);
   });
 
   it('should warn in DEV if a a client reference is passed to useContext()', () => {
     const Context = React.createContext();
     const ClientContext = clientReference(Context);
     function ServerComponent() {
-      return React.useContext(ClientContext);
+      return ReactServer.useContext(ClientContext);
     }
     expect(() => {
       const transport = ReactNoopFlightServer.render(<ServerComponent />);
@@ -908,7 +1042,7 @@ describe('ReactFlight', () => {
 
   describe('Hooks', () => {
     function DivWithId({children}) {
-      const id = React.useId();
+      const id = ReactServer.useId();
       return <div prop={id}>{children}</div>;
     }
 
@@ -965,7 +1099,7 @@ describe('ReactFlight', () => {
       // so the output passed to the Client has no knowledge of the useId use. In the future we would like to add a DEV warning when this happens. For now
       // we just accept that it is a nuance of useId in Flight
       function App() {
-        const id = React.useId();
+        const id = ReactServer.useId();
         const div = <div prop={id}>{id}</div>;
         return <ClientDoublerModuleRef el={div} />;
       }
@@ -1002,19 +1136,17 @@ describe('ReactFlight', () => {
   describe('ServerContext', () => {
     // @gate enableServerContext
     it('supports basic createServerContext usage', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'hello from server',
       );
       function Foo() {
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return <div>{context}</div>;
       }
 
       const transport = ReactNoopFlightServer.render(<Foo />);
       await act(async () => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(await ReactNoopFlightClient.read(transport));
       });
 
@@ -1023,7 +1155,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('propagates ServerContext providers in flight', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
@@ -1038,14 +1170,12 @@ describe('ReactFlight', () => {
         );
       }
       function Bar() {
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return context;
       }
 
       const transport = ReactNoopFlightServer.render(<Foo />);
       await act(async () => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(await ReactNoopFlightClient.read(transport));
       });
 
@@ -1054,7 +1184,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('errors if you try passing JSX through ServerContext value', () => {
-      const ServerContext = React.createServerContext('ServerContext', {
+      const ServerContext = createServerServerContext('ServerContext', {
         foo: {
           bar: <span>hi this is default</span>,
         },
@@ -1075,7 +1205,7 @@ describe('ReactFlight', () => {
         );
       }
       function Bar() {
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return context.foo.bar;
       }
 
@@ -1088,7 +1218,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('propagates ServerContext and cleans up the providers in flight', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
@@ -1113,7 +1243,7 @@ describe('ReactFlight', () => {
         );
       }
       function Bar() {
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return <span>{context}</span>;
       }
 
@@ -1135,7 +1265,7 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('propagates ServerContext providers in flight after suspending', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
@@ -1166,7 +1296,7 @@ describe('ReactFlight', () => {
           throw promise;
         }
         Scheduler.log('rendered');
-        const context = React.useContext(ServerContext);
+        const context = ReactServer.useContext(ServerContext);
         return context;
       }
 
@@ -1183,8 +1313,6 @@ describe('ReactFlight', () => {
       assertLog(['rendered']);
 
       await act(async () => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         ReactNoop.render(await ReactNoopFlightClient.read(transport));
       });
 
@@ -1193,14 +1321,15 @@ describe('ReactFlight', () => {
 
     // @gate enableServerContext
     it('serializes ServerContext to client', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
+      const ClientContext = createServerContext('ServerContext', 'default');
 
       function ClientBar() {
         Scheduler.log('ClientBar');
-        const context = React.useContext(ServerContext);
+        const context = React.useContext(ClientContext);
         return <span>{context}</span>;
       }
 
@@ -1223,8 +1352,6 @@ describe('ReactFlight', () => {
       assertLog([]);
 
       await act(async () => {
-        ServerContext._currentRenderer = null;
-        ServerContext._currentRenderer2 = null;
         const flightModel = await ReactNoopFlightClient.read(transport);
         ReactNoop.render(flightModel.foo);
       });
@@ -1233,18 +1360,18 @@ describe('ReactFlight', () => {
       expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
 
       expect(() => {
-        React.createServerContext('ServerContext', 'default');
+        createServerContext('ServerContext', 'default');
       }).toThrow('ServerContext: ServerContext already defined');
     });
 
     // @gate enableServerContext
     it('takes ServerContext from the client for refetching use cases', async () => {
-      const ServerContext = React.createServerContext(
+      const ServerContext = createServerServerContext(
         'ServerContext',
         'default',
       );
       function Bar() {
-        return <span>{React.useContext(ServerContext)}</span>;
+        return <span>{ReactServer.useContext(ServerContext)}</span>;
       }
       const transport = ReactNoopFlightServer.render(<Bar />, {
         context: [['ServerContext', 'Override']],
@@ -1262,7 +1389,7 @@ describe('ReactFlight', () => {
       let ServerContext;
       function inlineLazyServerContextInitialization() {
         if (!ServerContext) {
-          ServerContext = React.createServerContext('ServerContext', 'default');
+          ServerContext = createServerServerContext('ServerContext', 'default');
         }
         return ServerContext;
       }
@@ -1270,7 +1397,7 @@ describe('ReactFlight', () => {
       let ClientContext;
       function inlineContextInitialization() {
         if (!ClientContext) {
-          ClientContext = React.createServerContext('ServerContext', 'default');
+          ClientContext = createServerContext('ServerContext', 'default', true);
         }
         return ClientContext;
       }
@@ -1287,7 +1414,7 @@ describe('ReactFlight', () => {
         return (
           <article>
             <div>
-              {React.useContext(inlineLazyServerContextInitialization())}
+              {ReactServer.useContext(inlineLazyServerContextInitialization())}
             </div>
             <Baz />
           </article>
@@ -1322,11 +1449,17 @@ describe('ReactFlight', () => {
       // Reset all modules, except flight-modules which keeps the registry of Client Components
       const flightModules = require('react-noop-renderer/flight-modules');
       jest.resetModules();
+      jest.mock('react', () => require('react/react.shared-subset'));
       jest.mock('react-noop-renderer/flight-modules', () => flightModules);
 
+      ReactServer = require('react');
+      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+
+      __unmockReact();
+      jest.resetModules();
+      jest.mock('react-noop-renderer/flight-modules', () => flightModules);
       React = require('react');
       ReactNoop = require('react-noop-renderer');
-      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
       ReactNoopFlightClient = require('react-noop-renderer/flight-client');
       act = require('internal-test-utils').act;
       Scheduler = require('scheduler');
@@ -1352,5 +1485,203 @@ describe('ReactFlight', () => {
         </>,
       );
     });
+  });
+
+  // @gate enableTaint
+  it('errors when a tainted object is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    const user = {
+      name: 'Seb',
+      age: 'rather not say',
+    };
+    ReactServer.experimental_taintObjectReference(
+      "Don't pass the raw user object to the client",
+      user,
+    );
+    const errors = [];
+    ReactNoopFlightServer.render(<User user={user} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(["Don't pass the raw user object to the client"]);
+  });
+
+  // @gate enableTaint
+  it('errors with a specific message when a tainted function is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    function change() {}
+    ReactServer.experimental_taintObjectReference(
+      'A change handler cannot be passed to a client component',
+      change,
+    );
+    const errors = [];
+    ReactNoopFlightServer.render(<User onChange={change} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual([
+      'A change handler cannot be passed to a client component',
+    ]);
+  });
+
+  // @gate enableTaint
+  it('errors when a tainted string is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    const process = {
+      env: {
+        SECRET: '3e971ecc1485fe78625598bf9b6f85db',
+      },
+    };
+    ReactServer.experimental_taintUniqueValue(
+      'Cannot pass a secret token to the client',
+      process,
+      process.env.SECRET,
+    );
+
+    const errors = [];
+    ReactNoopFlightServer.render(<User token={process.env.SECRET} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+
+    // This just ensures the process object is kept alive for the life time of
+    // the test since we're simulating a global as an example.
+    expect(process.env.SECRET).toBe('3e971ecc1485fe78625598bf9b6f85db');
+  });
+
+  // @gate enableTaint
+  it('errors when a tainted bigint is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    const currentUser = {
+      name: 'Seb',
+      token: BigInt('0x3e971ecc1485fe78625598bf9b6f85dc'),
+    };
+    ReactServer.experimental_taintUniqueValue(
+      'Cannot pass a secret token to the client',
+      currentUser,
+      currentUser.token,
+    );
+
+    function App({user}) {
+      return <User token={user.token} />;
+    }
+
+    const errors = [];
+    ReactNoopFlightServer.render(<App user={currentUser} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+  });
+
+  // @gate enableTaint && enableBinaryFlight
+  it('errors when a tainted binary value is serialized', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    const currentUser = {
+      name: 'Seb',
+      token: new Uint32Array([0x3e971ecc, 0x1485fe78, 0x625598bf, 0x9b6f85dd]),
+    };
+    ReactServer.experimental_taintUniqueValue(
+      'Cannot pass a secret token to the client',
+      currentUser,
+      currentUser.token,
+    );
+
+    function App({user}) {
+      const clone = user.token.slice();
+      return <User token={clone} />;
+    }
+
+    const errors = [];
+    ReactNoopFlightServer.render(<App user={currentUser} />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+  });
+
+  // @gate enableTaint
+  it('keep a tainted value tainted until the end of any pending requests', async () => {
+    function UserClient({user}) {
+      return <span>{user.name}</span>;
+    }
+    const User = clientReference(UserClient);
+
+    function getUser() {
+      const user = {
+        name: 'Seb',
+        token: '3e971ecc1485fe78625598bf9b6f85db',
+      };
+      ReactServer.experimental_taintUniqueValue(
+        'Cannot pass a secret token to the client',
+        user,
+        user.token,
+      );
+      return user;
+    }
+
+    function App() {
+      const user = getUser();
+      const derivedValue = {...user};
+      // A garbage collection can happen at any time. Even before the end of
+      // this request. This would clean up the user object.
+      gc();
+      // We should still block the tainted value.
+      return <User user={derivedValue} />;
+    }
+
+    let errors = [];
+    ReactNoopFlightServer.render(<App />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+
+    expect(errors).toEqual(['Cannot pass a secret token to the client']);
+
+    // After the previous requests finishes, the token can be rendered again.
+
+    errors = [];
+    ReactNoopFlightServer.render(
+      <User user={{token: '3e971ecc1485fe78625598bf9b6f85db'}} />,
+      {
+        onError(x) {
+          errors.push(x.message);
+        },
+      },
+    );
+
+    expect(errors).toEqual([]);
   });
 });

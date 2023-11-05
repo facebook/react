@@ -15,10 +15,8 @@ import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 const pooledTransform = new Transform();
 
 const NO_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 /** Helper Methods */
@@ -310,10 +308,6 @@ export function getPublicInstance(instance) {
 export function prepareForCommit() {
   // Noop
   return null;
-}
-
-export function prepareUpdate(domElement, type, oldProps, newProps) {
-  return UPDATE_SIGNAL;
 }
 
 export function resetAfterCommit() {

@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const nodePath = require('path');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
 function resolveEntryFork(resolvedEntry, isFBBundle) {
@@ -42,13 +43,20 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
   return resolvedEntry;
 }
 
-jest.mock('react', () => {
-  const resolvedEntryPoint = resolveEntryFork(
-    require.resolve('react'),
-    global.__WWW__
-  );
-  return jest.requireActual(resolvedEntryPoint);
-});
+function mockReact() {
+  jest.mock('react', () => {
+    const resolvedEntryPoint = resolveEntryFork(
+      require.resolve('react'),
+      global.__WWW__
+    );
+    return jest.requireActual(resolvedEntryPoint);
+  });
+}
+
+// When we want to unmock React we really need to mock it again.
+global.__unmockReact = mockReact;
+
+mockReact();
 
 jest.mock('react/react.shared-subset', () => {
   const resolvedEntryPoint = resolveEntryFork(
@@ -117,7 +125,23 @@ function mockAllConfigs(rendererInfo) {
     jest.mock(path, () => {
       let idx = path.lastIndexOf('/');
       let forkPath = path.slice(0, idx) + '/forks' + path.slice(idx);
-      return jest.requireActual(`${forkPath}.${rendererInfo.shortName}.js`);
+      let parts = rendererInfo.shortName.split('-');
+      while (parts.length) {
+        try {
+          const candidate = `${forkPath}.${parts.join('-')}.js`;
+          fs.statSync(nodePath.join(process.cwd(), 'packages', candidate));
+          return jest.requireActual(candidate);
+        } catch (error) {
+          if (error.code !== 'ENOENT') {
+            throw error;
+          }
+          // try without a part
+        }
+        parts.pop();
+      }
+      throw new Error(
+        `Expected to find a fork for ${path} but did not find one.`
+      );
     });
   });
 }
@@ -145,7 +169,7 @@ inlinedHostConfigs.forEach(rendererInfo => {
 // Make it possible to import this module inside
 // the React package itself.
 jest.mock('shared/ReactSharedInternals', () =>
-  jest.requireActual('react/src/ReactSharedInternals')
+  jest.requireActual('react/src/ReactSharedInternalsClient')
 );
 
 // Make it possible to import this module inside

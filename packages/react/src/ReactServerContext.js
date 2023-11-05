@@ -19,9 +19,7 @@ import type {
 } from 'shared/ReactTypes';
 
 import {enableServerContext} from 'shared/ReactFeatureFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-
-const ContextRegistry = ReactSharedInternals.ContextRegistry;
+import {ContextRegistry} from './ReactServerContextRegistry';
 
 export function createServerContext<T: ServerContextJSONValue>(
   globalName: string,
@@ -29,6 +27,13 @@ export function createServerContext<T: ServerContextJSONValue>(
 ): ReactServerContext<T> {
   if (!enableServerContext) {
     throw new Error('Not implemented.');
+  }
+  if (__DEV__) {
+    console.error(
+      'Server Context is deprecated and will soon be removed. ' +
+        'It was never documented and we have found it not to be useful ' +
+        'enough to warrant the downside it imposes on all apps.',
+    );
   }
   let wasDefined = true;
   if (!ContextRegistry[globalName]) {

@@ -1,7 +1,7 @@
 'use strict';
 
 const semver = require('semver');
-const ReactVersion = require('../../../packages/shared/ReactVersion');
+const {ReactVersion} = require('../../../ReactVersions');
 
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
@@ -32,7 +32,7 @@ global.process.env.LIGHT_MODE_DIMMED_ERROR_COLOR =
 global.process.env.LIGHT_MODE_DIMMED_LOG_COLOR = LIGHT_MODE_DIMMED_LOG_COLOR;
 
 global._test_react_version = (range, testName, callback) => {
-  const reactVersion = process.env.REACT_VERSION || ReactVersion.default;
+  const reactVersion = process.env.REACT_VERSION || ReactVersion;
   const shouldPass = semver.satisfies(reactVersion, range);
 
   if (shouldPass) {
@@ -43,7 +43,7 @@ global._test_react_version = (range, testName, callback) => {
 };
 
 global._test_react_version_focus = (range, testName, callback) => {
-  const reactVersion = process.env.REACT_VERSION || ReactVersion.default;
+  const reactVersion = process.env.REACT_VERSION || ReactVersion;
   const shouldPass = semver.satisfies(reactVersion, range);
 
   if (shouldPass) {

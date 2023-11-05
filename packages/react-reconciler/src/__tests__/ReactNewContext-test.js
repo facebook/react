@@ -885,13 +885,9 @@ describe('ReactNewContext', () => {
         );
       }
 
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          ReactNoop.render(<App value={1} />);
-        });
-      } else {
+      React.startTransition(() => {
         ReactNoop.render(<App value={1} />);
-      }
+      });
       // Render past the Provider, but don't commit yet
       await waitFor(['Foo']);
 
@@ -934,13 +930,9 @@ describe('ReactNewContext', () => {
         );
       }
 
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          ReactNoop.render(<App value={1} />);
-        });
-      } else {
+      React.startTransition(() => {
         ReactNoop.render(<App value={1} />);
-      }
+      });
       await waitForAll(['Foo', 'Foo']);
 
       // Get a new copy of ReactNoop
@@ -1551,11 +1543,20 @@ describe('ReactNewContext', () => {
       }
 
       function Root(props) {
-        return contextKeys.reduceRight((children, key) => {
-          const Context = contexts.get(key);
-          const value = props.values[key];
-          return <Context.Provider value={value}>{children}</Context.Provider>;
-        }, <ConsumerTree rand={props.rand} depth={0} maxDepth={props.maxDepth} />);
+        return contextKeys.reduceRight(
+          (children, key) => {
+            const Context = contexts.get(key);
+            const value = props.values[key];
+            return (
+              <Context.Provider value={value}>{children}</Context.Provider>
+            );
+          },
+          <ConsumerTree
+            rand={props.rand}
+            depth={0}
+            maxDepth={props.maxDepth}
+          />,
+        );
       }
 
       const initialValues = contextKeys.reduce(

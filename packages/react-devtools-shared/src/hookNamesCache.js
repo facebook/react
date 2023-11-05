@@ -11,11 +11,11 @@ import {__DEBUG__} from 'react-devtools-shared/src/constants';
 
 import type {HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {Thenable, Wakeable} from 'shared/ReactTypes';
-import type {Element} from './devtools/views/Components/types';
 import type {
+  Element,
   HookNames,
   HookSourceLocationKey,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
 import type {FetchFileWithCaching} from 'react-devtools-shared/src/devtools/views/Components/FetchFileWithCachingContext';
 import {withCallbackPerfMeasurements} from './PerformanceLoggingUtils';

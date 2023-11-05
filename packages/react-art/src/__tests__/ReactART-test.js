@@ -364,7 +364,7 @@ describe('ReactART', () => {
     expect(onClick2).toBeCalled();
   });
 
-  // @gate !enableSyncDefaultUpdates
+  // @gate forceConcurrentByDefaultForTesting
   it('can concurrently render with a "primary" renderer while sharing context', async () => {
     const CurrentRendererContext = React.createContext(null);
 

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactElement} from 'shared/ReactElementType';
+import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
@@ -18,7 +18,7 @@ import type {SuspenseInstance} from './ReactFiberConfig';
 import type {
   OffscreenProps,
   OffscreenInstance,
-} from './ReactFiberOffscreenComponent';
+} from './ReactFiberActivityComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
@@ -33,12 +33,13 @@ import {
   enableProfilerTimer,
   enableScopeAPI,
   enableLegacyHidden,
-  enableSyncDefaultUpdates,
+  forceConcurrentByDefaultForTesting,
   allowConcurrentByDefault,
   enableTransitionTracing,
   enableDebugTracing,
   enableFloat,
   enableHostSingletons,
+  enableDO_NOT_USE_disableStrictPassiveEffect,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -70,7 +71,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
 } from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberOffscreenComponent';
+import {OffscreenVisible} from './ReactFiberActivityComponent';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -87,6 +88,7 @@ import {
   StrictLegacyMode,
   StrictEffectsMode,
   ConcurrentUpdatesByDefaultMode,
+  NoStrictPassiveEffectsMode,
 } from './ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
@@ -460,10 +462,13 @@ export function createHostRootFiber(
     }
     if (
       // We only use this flag for our repo tests to check both behaviors.
-      // TODO: Flip this flag and rename it something like "forceConcurrentByDefaultForTesting"
-      !enableSyncDefaultUpdates ||
+      forceConcurrentByDefaultForTesting
+    ) {
+      mode |= ConcurrentUpdatesByDefaultMode;
+    } else if (
       // Only for internal experiments.
-      (allowConcurrentByDefault && concurrentUpdatesByDefaultOverride)
+      allowConcurrentByDefault &&
+      concurrentUpdatesByDefaultOverride
     ) {
       mode |= ConcurrentUpdatesByDefaultMode;
     }
@@ -485,6 +490,7 @@ export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
   pendingProps: any,
+  source: null | Source,
   owner: null | Fiber,
   mode: TypeOfMode,
   lanes: Lanes,
@@ -536,6 +542,12 @@ export function createFiberFromTypeAndProps(
         if ((mode & ConcurrentMode) !== NoMode) {
           // Strict effects should never run on legacy roots
           mode |= StrictEffectsMode;
+          if (
+            enableDO_NOT_USE_disableStrictPassiveEffect &&
+            pendingProps.DO_NOT_USE_disableStrictPassiveEffect
+          ) {
+            mode |= NoStrictPassiveEffectsMode;
+          }
         }
         break;
       case REACT_PROFILER_TYPE:
@@ -632,6 +644,7 @@ export function createFiberFromTypeAndProps(
   fiber.lanes = lanes;
 
   if (__DEV__) {
+    fiber._debugSource = source;
     fiber._debugOwner = owner;
   }
 
@@ -643,8 +656,10 @@ export function createFiberFromElement(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
+  let source = null;
   let owner = null;
   if (__DEV__) {
+    source = element._source;
     owner = element._owner;
   }
   const type = element.type;
@@ -654,6 +669,7 @@ export function createFiberFromElement(
     type,
     key,
     pendingProps,
+    source,
     owner,
     mode,
     lanes,
