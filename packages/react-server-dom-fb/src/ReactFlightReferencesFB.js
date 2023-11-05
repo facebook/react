@@ -20,6 +20,7 @@ const registeredServerReferences = new Map<mixed, ServerReferenceId>();
 
 export type ClientReferenceKey = string;
 export type ServerReferenceId = string;
+export type ClientReferenceMetadata = string;
 
 export function isClientReference<T>(reference: T): boolean {
   return registeredClientReferences.has(reference);
@@ -54,6 +55,20 @@ export function getClientReferenceKey<T>(
   if (id != null) {
     return id;
   }
+  throw new Error(
+    'Expected client reference ' + clientReference + ' to be registered.',
+  );
+}
+
+export function resolveClientReferenceMetadata<T>(
+  config: ClientManifest,
+  clientReference: ClientReference<T>,
+): ClientReferenceMetadata {
+  const id = registeredClientReferences.get(clientReference);
+  if (id != null) {
+    return id;
+  }
+
   throw new Error(
     'Expected client reference ' + clientReference + ' to be registered.',
   );

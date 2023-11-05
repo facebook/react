@@ -17,24 +17,17 @@ import type {
 
 export type {ClientReference, ServerReference};
 
-export type ClientReferenceMetadata = void;
-
 export {
   ClientManifest,
-  isClientReference,
-  isServerReference,
-  ServerReferenceId,
   ClientReferenceKey,
+  ClientReferenceMetadata,
   getClientReferenceKey,
   getServerReferenceId,
+  isClientReference,
+  isServerReference,
+  resolveClientReferenceMetadata,
+  ServerReferenceId,
 } from './ReactFlightReferencesFB';
-
-export function resolveClientReferenceMetadata<T>(
-  config: ClientManifest,
-  clientReference: ClientReference<T>,
-): ClientReferenceMetadata {
-  return;
-}
 
 export function getServerReferenceBoundArguments<T>(
   config: ClientManifest,
