@@ -210,6 +210,13 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
+  pruneUnusedLabels(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PruneUnusedLabels",
+    value: reactiveFunction,
+  });
+
   memoizeFbtOperandsInSameScope(reactiveFunction);
   yield log({
     kind: "reactive",
@@ -317,13 +324,6 @@ function* runWithEnvironment(
   yield log({
     kind: "reactive",
     name: "PromoteUsedTemporaries",
-    value: reactiveFunction,
-  });
-
-  pruneUnusedLabels(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "PruneUnusedLabels",
     value: reactiveFunction,
   });
 
