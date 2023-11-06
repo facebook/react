@@ -6,18 +6,20 @@
  */
 
 import { CompilerError } from "..";
-import {
-  FunctionExpression,
-  HIRFunction,
-  IdentifierId,
-  getHookKind,
-} from "../HIR";
+import { FunctionExpression, HIRFunction, IdentifierId } from "../HIR";
 
 export function validateUseMemo(fn: HIRFunction): void {
+  const useMemos = new Set<IdentifierId>();
   const functions = new Map<IdentifierId, FunctionExpression>();
   for (const [, block] of fn.body.blocks) {
     for (const { lvalue, value } of block.instructions) {
       switch (value.kind) {
+        case "LoadGlobal": {
+          if (value.name === "useMemo") {
+            useMemos.add(lvalue.identifier.id);
+          }
+          break;
+        }
         case "FunctionExpression": {
           functions.set(lvalue.identifier.id, value);
           break;
@@ -27,10 +29,10 @@ export function validateUseMemo(fn: HIRFunction): void {
           // Is the function being called useMemo, with at least 1 argument?
           const callee =
             value.kind === "CallExpression"
-              ? value.callee.identifier
-              : value.property.identifier;
-          const hookKind = getHookKind(fn.env, callee);
-          if (hookKind !== "useMemo" || value.args.length === 0) {
+              ? value.callee.identifier.id
+              : value.property.identifier.id;
+          const isUseMemo = useMemos.has(callee);
+          if (!isUseMemo || value.args.length === 0) {
             continue;
           }
 

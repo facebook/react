@@ -29,9 +29,9 @@ import { calculateExpensiveNumber } from "shared-runtime";
 function Component(props) {
   const $ = useMemoCache(2);
   const [x] = React.useState(0);
-  let t39;
-  t39 = calculateExpensiveNumber(x);
-  const expensiveNumber = t39;
+  let t17;
+  t17 = calculateExpensiveNumber(x);
+  const expensiveNumber = t17;
   let t0;
   if ($[0] !== expensiveNumber) {
     t0 = <div>{expensiveNumber}</div>;

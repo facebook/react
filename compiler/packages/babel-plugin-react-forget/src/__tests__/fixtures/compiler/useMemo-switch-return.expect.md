@@ -34,13 +34,13 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function Component(props) {
-  let t49;
-  bb11: {
+  let t21;
+  bb10: {
     let y;
     bb2: switch (props.switch) {
       case "foo": {
-        t49 = "foo";
-        break bb11;
+        t21 = "foo";
+        break bb10;
       }
       case "bar": {
         y = "bar";
@@ -51,9 +51,9 @@ function Component(props) {
       }
     }
 
-    t49 = y;
+    t21 = y;
   }
-  const x = t49;
+  const x = t21;
   return x;
 }
 

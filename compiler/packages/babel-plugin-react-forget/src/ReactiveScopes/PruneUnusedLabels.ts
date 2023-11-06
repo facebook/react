@@ -8,26 +8,31 @@
 import {
   BlockId,
   ReactiveFunction,
-  ReactiveTerminal,
+  ReactiveStatement,
   ReactiveTerminalStatement,
 } from "../HIR/HIR";
-import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
+import {
+  ReactiveFunctionTransform,
+  Transformed,
+  visitReactiveFunction,
+} from "./visitors";
 
 /**
- * Prunes terminal labels that are never explicitly jumped to.
+ * Flattens labeled terminals where the label is not reachable, and
+ * nulls out labels for other terminals where the label is unused.
  */
 export function pruneUnusedLabels(fn: ReactiveFunction): void {
   const labels: Labels = new Set();
-  visitReactiveFunction(fn, new Visitor(), labels);
+  visitReactiveFunction(fn, new Transform(), labels);
 }
 
 type Labels = Set<BlockId>;
 
-class Visitor extends ReactiveFunctionVisitor<Labels> {
-  override visitTerminal(
-    stmt: ReactiveTerminalStatement<ReactiveTerminal>,
+class Transform extends ReactiveFunctionTransform<Labels> {
+  override transformTerminal(
+    stmt: ReactiveTerminalStatement,
     state: Labels
-  ): void {
+  ): Transformed<ReactiveStatement> {
     this.traverseTerminal(stmt, state);
     const { terminal } = stmt;
     if (
@@ -36,8 +41,16 @@ class Visitor extends ReactiveFunctionVisitor<Labels> {
     ) {
       state.add(terminal.label);
     }
-    if (stmt.label !== null && !state.has(stmt.label)) {
-      stmt.label = null;
+    // Is this terminal reachable via a break/continue to its label?
+    const isReachableLabel = stmt.label !== null && state.has(stmt.label);
+    if (stmt.terminal.kind === "label" && !isReachableLabel) {
+      // Flatten labeled terminals where the label isn't necessary
+      return { kind: "replace-many", value: stmt.terminal.block };
+    } else {
+      if (!isReachableLabel) {
+        stmt.label = null;
+      }
+      return { kind: "keep" };
     }
   }
 }

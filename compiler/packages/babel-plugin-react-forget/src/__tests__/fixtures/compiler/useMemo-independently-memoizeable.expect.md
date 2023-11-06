@@ -20,7 +20,7 @@ function Component(props) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(10);
-  let t59;
+  let t26;
   let t0;
   if ($[0] !== props.a) {
     t0 = makeObject(props.a);
@@ -48,8 +48,8 @@ function Component(props) {
   } else {
     t2 = $[6];
   }
-  t59 = t2;
-  const [a_0, b_0] = t59;
+  t26 = t2;
+  const [a_0, b_0] = t26;
   let t3;
   if ($[7] !== a_0 || $[8] !== b_0) {
     t3 = [a_0, b_0];

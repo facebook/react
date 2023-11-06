@@ -27,12 +27,9 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react"; // @enableMergeConsecutiveScopes
 function Component(id) {
   const $ = useMemoCache(3);
-  let t22;
-  t22 = undefined;
-  const bar = t22;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Bar title={bar} />;
+    t0 = <Bar title={undefined} />;
     $[0] = t0;
   } else {
     t0 = $[0];

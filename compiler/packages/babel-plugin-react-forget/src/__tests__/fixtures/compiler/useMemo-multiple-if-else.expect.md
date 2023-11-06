@@ -33,8 +33,8 @@ import { useMemo, unstable_useMemoCache as useMemoCache } from "react";
 
 function Component(props) {
   const $ = useMemoCache(3);
-  let t68;
-  bb10: {
+  let t31;
+  bb9: {
     let y;
     if ($[0] !== props) {
       y = [];
@@ -42,21 +42,21 @@ function Component(props) {
         y.push(props.a);
       }
       if (props.cond2) {
-        t68 = y;
-        break bb10;
+        t31 = y;
+        break bb9;
       }
 
       y.push(props.b);
       $[0] = props;
       $[1] = y;
-      $[2] = t68;
+      $[2] = t31;
     } else {
       y = $[1];
-      t68 = $[2];
+      t31 = $[2];
     }
-    t68 = y;
+    t31 = y;
   }
-  const x = t68;
+  const x = t31;
   return x;
 }
 

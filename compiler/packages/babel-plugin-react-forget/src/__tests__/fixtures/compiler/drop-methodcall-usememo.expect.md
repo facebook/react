@@ -28,7 +28,7 @@ import * as React from "react";
 
 function Component(props) {
   const $ = useMemoCache(2);
-  let t42;
+  let t19;
   let x;
   if ($[0] !== props.value) {
     x = [];
@@ -38,8 +38,8 @@ function Component(props) {
   } else {
     x = $[1];
   }
-  t42 = x;
-  const x_0 = t42;
+  t19 = x;
+  const x_0 = t19;
   return x_0;
 }
 

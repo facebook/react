@@ -115,6 +115,18 @@ function* runWithEnvironment(
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
 
+  validateUseMemo(hir);
+
+  dropManualMemoization(hir);
+  yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
+
+  inlineImmediatelyInvokedFunctionExpressions(hir);
+  yield log({
+    kind: "hir",
+    name: "InlineImmediatelyInvokedFunctionExpressions",
+    value: hir,
+  });
+
   mergeConsecutiveBlocks(hir);
   yield log({ kind: "hir", name: "MergeConsecutiveBlocks", value: hir });
 
@@ -135,8 +147,6 @@ function* runWithEnvironment(
   inferTypes(hir);
   yield log({ kind: "hir", name: "InferTypes", value: hir });
 
-  validateUseMemo(hir);
-
   if (env.config.validateHooksUsage) {
     validateHooksUsage(hir);
     const conditionalHooksResult = validateUnconditionalHooks(hir).unwrap();
@@ -146,16 +156,6 @@ function* runWithEnvironment(
       value: conditionalHooksResult.debug(),
     });
   }
-
-  dropManualMemoization(hir);
-  yield log({ kind: "hir", name: "DropManualMemoization", value: hir });
-
-  inlineImmediatelyInvokedFunctionExpressions(hir);
-  yield log({
-    kind: "hir",
-    name: "InlineImmediatelyInvokedFunctionExpressions",
-    value: hir,
-  });
 
   analyseFunctions(hir);
   yield log({ kind: "hir", name: "AnalyseFunctions", value: hir });

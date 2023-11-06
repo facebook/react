@@ -28,17 +28,17 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function Component(props) {
-  let t38;
-  bb9: switch (props.key) {
+  let t17;
+  bb8: switch (props.key) {
     case "key": {
-      t38 = props.value;
-      break bb9;
+      t17 = props.value;
+      break bb8;
     }
     default: {
-      t38 = props.defaultValue;
+      t17 = props.defaultValue;
     }
   }
-  const x = t38;
+  const x = t17;
   return x;
 }
 
