@@ -94,7 +94,7 @@ export default function inferReferenceEffects(
 ): void {
   // Initial state contains function params
   // TODO: include module declarations here as well
-  const initialState = InferenceState.empty();
+  const initialState = InferenceState.empty(fn.env);
   const value: InstructionValue = {
     kind: "Primitive",
     loc: fn.loc,
@@ -186,6 +186,8 @@ export default function inferReferenceEffects(
  * Maintains a mapping of top-level variables to the kind of value they hold
  */
 class InferenceState {
+  #env: Environment;
+
   // The kind of reach value, based on its allocation site
   #values: Map<InstructionValue, ValueKind>;
   // The set of values pointed to by each identifier. This is a set
@@ -194,15 +196,17 @@ class InferenceState {
   #variables: Map<IdentifierId, Set<InstructionValue>>;
 
   constructor(
+    env: Environment,
     values: Map<InstructionValue, ValueKind>,
     variables: Map<IdentifierId, Set<InstructionValue>>
   ) {
+    this.#env = env;
     this.#values = values;
     this.#variables = variables;
   }
 
-  static empty(): InferenceState {
-    return new InferenceState(new Map(), new Map());
+  static empty(env: Environment): InferenceState {
+    return new InferenceState(env, new Map(), new Map());
   }
 
   /**
@@ -317,7 +321,17 @@ class InferenceState {
         ) {
           effect = Effect.Freeze;
           valueKind = ValueKind.Frozen;
-          values.forEach((value) => this.#values.set(value, ValueKind.Frozen));
+          values.forEach((value) => {
+            this.#values.set(value, ValueKind.Frozen);
+
+            if (this.#env.config.enableTransitivelyFreezeFunctionExpressions) {
+              if (value.kind === "FunctionExpression") {
+                for (const operand of eachInstructionValueOperand(value)) {
+                  this.reference(operand, Effect.Freeze);
+                }
+              }
+            }
+          });
         } else {
           effect = Effect.Read;
         }
@@ -482,6 +496,7 @@ class InferenceState {
       return null;
     } else {
       return new InferenceState(
+        this.#env,
         nextValues ?? new Map(this.#values),
         nextVariables ?? new Map(this.#variables)
       );
@@ -494,7 +509,11 @@ class InferenceState {
    * clone cheaper.
    */
   clone(): InferenceState {
-    return new InferenceState(new Map(this.#values), new Map(this.#variables));
+    return new InferenceState(
+      this.#env,
+      new Map(this.#values),
+      new Map(this.#variables)
+    );
   }
 
   /**

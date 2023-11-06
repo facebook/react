@@ -176,6 +176,41 @@ export type EnvironmentConfig = {
   enableEmitFreeze: ExternalFunction | null;
 
   /**
+   * Forget infers certain operations as "freezing" a value, such that those
+   * values should not be subsequently mutated. By default this freeze operation
+   * applies to the value itself and its direct aliases, but not values captured
+   * by the value being frozen.
+   *
+   * In the following, passing `x` to JSX freezes it, which includes freezing `y`
+   * and `z` which x may alias:
+   *
+   * ```
+   * let x;
+   * if (cond) {
+   *   x = y
+   * } else {
+   *   x = z;
+   * }
+   * <div>{x}</div>
+   * ```
+   *
+   * However, in the following example we currently only consider x itself to be
+   * frozen, not `y` or `z`:
+   *
+   * ```
+   * let y = ...;
+   * let z = ...;
+   * let x = () => { return [y, z]; };
+   * <div>{x}</div>
+   * ```
+   *
+   * With this flag enabled, function expression dependencies (values closed over)
+   * are transitively frozen when the function itself is frozen. So in this case,
+   * `y` and `z` would be frozen when `x` is frozen.
+   */
+  enableTransitivelyFreezeFunctionExpressions: boolean;
+
+  /**
    * Enable merging consecutive scopes that invalidate together.
    *
    * Defaults to false.
@@ -246,6 +281,7 @@ export const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
   enableEmitFreeze: null,
   enableForest: false,
   enableChangeVariableCodegen: false,
+  enableTransitivelyFreezeFunctionExpressions: false,
 
   validateFrozenLambdas: false,
   validateNoSetStateInRender: false,

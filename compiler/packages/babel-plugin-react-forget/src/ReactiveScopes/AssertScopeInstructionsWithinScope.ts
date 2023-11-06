@@ -43,18 +43,39 @@ import { ReactiveFunctionVisitor } from "./visitors";
 export function assertScopeInstructionsWithinScopes(
   fn: ReactiveFunction
 ): void {
-  visitReactiveFunction(fn, new Visitor(), undefined);
+  const existingScopes = new Set<ScopeId>();
+  visitReactiveFunction(fn, new FindAllScopesVisitor(), existingScopes);
+  visitReactiveFunction(
+    fn,
+    new CheckInstructionsAgainstScopesVisitor(),
+    existingScopes
+  );
 }
 
-class Visitor extends ReactiveFunctionVisitor<void> {
-  seenScopes: Set<ScopeId> = new Set();
+class FindAllScopesVisitor extends ReactiveFunctionVisitor<Set<ScopeId>> {
+  override visitScope(block: ReactiveScopeBlock, state: Set<ScopeId>): void {
+    this.traverseScope(block, state);
+    state.add(block.scope.id);
+  }
+}
+
+class CheckInstructionsAgainstScopesVisitor extends ReactiveFunctionVisitor<
+  Set<ScopeId>
+> {
   activeScopes: Set<ScopeId> = new Set();
 
-  override visitPlace(id: InstructionId, place: Place, _state: void): void {
+  override visitPlace(
+    id: InstructionId,
+    place: Place,
+    state: Set<ScopeId>
+  ): void {
     const scope = getPlaceScope(id, place);
     if (
       scope !== null &&
-      this.seenScopes.has(scope.id) &&
+      // is there a scope for this at all, or did we end up pruning this scope?
+      state.has(scope.id) &&
+      // if the scope exists somewhere, it must be active or else this is a straggler
+      // instruction
       !this.activeScopes.has(scope.id)
     ) {
       CompilerError.invariant(false, {
@@ -67,8 +88,7 @@ class Visitor extends ReactiveFunctionVisitor<void> {
     }
   }
 
-  override visitScope(block: ReactiveScopeBlock, state: void): void {
-    this.seenScopes.add(block.scope.id);
+  override visitScope(block: ReactiveScopeBlock, state: Set<ScopeId>): void {
     this.activeScopes.add(block.scope.id);
     this.traverseScope(block, state);
     this.activeScopes.delete(block.scope.id);
