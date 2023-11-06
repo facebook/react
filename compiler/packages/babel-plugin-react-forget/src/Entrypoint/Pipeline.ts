@@ -36,6 +36,7 @@ import {
 import {
   CodegenFunction,
   alignReactiveScopesToBlockScopes,
+  assertScopeInstructionsWithinScopes,
   buildReactiveBlocks,
   buildReactiveFunction,
   codegenReactiveFunction,
@@ -260,6 +261,8 @@ function* runWithEnvironment(
     name: "FlattenReactiveLoops",
     value: reactiveFunction,
   });
+
+  assertScopeInstructionsWithinScopes(reactiveFunction);
 
   flattenScopesWithHooks(reactiveFunction);
   yield log({

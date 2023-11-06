@@ -6,6 +6,7 @@
  */
 
 export { alignReactiveScopesToBlockScopes } from "./AlignReactiveScopesToBlockScopes";
+export { assertScopeInstructionsWithinScopes } from "./AssertScopeInstructionsWithinScope";
 export { buildReactiveBlocks } from "./BuildReactiveBlocks";
 export { buildReactiveFunction } from "./BuildReactiveFunction";
 export {

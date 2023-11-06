@@ -82,7 +82,7 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
   override visitBlock(block: ReactiveBlock, state: Context): void {
     state.enter(() => {
       this.traverseBlock(block, state);
-    }, "block");
+    });
   }
 }
 
@@ -91,10 +91,7 @@ type PendingReactiveScope = { active: boolean; scope: ReactiveScope };
 class Context {
   // For each block scope (outer array) stores a list of ReactiveScopes that start
   // in that block scope.
-  #blockScopes: Array<{
-    kind: "block" | "value";
-    scopes: Array<PendingReactiveScope>;
-  }> = [];
+  #blockScopes: Array<Array<PendingReactiveScope>> = [];
 
   // ReactiveScopes whose declaring block scope has ended but may still need to
   // be "closed" (ie have their range.end be updated). A given scope can be in
@@ -105,11 +102,11 @@ class Context {
   // the above data structures they're in, to avoid tracking the same scope twice.
   #seenScopes: Set<ScopeId> = new Set();
 
-  enter(fn: () => void, kind: "block" | "value" = "block"): void {
-    this.#blockScopes.push({ kind, scopes: [] });
+  enter(fn: () => void): void {
+    this.#blockScopes.push([]);
     fn();
     const lastScope = this.#blockScopes.pop()!;
-    for (const scope of lastScope.scopes) {
+    for (const scope of lastScope) {
       if (scope.active) {
         this.#unclosedScopes.push(scope);
       }
@@ -118,10 +115,7 @@ class Context {
 
   visitId(id: InstructionId): void {
     const currentScopes = this.#blockScopes.at(-1)!;
-    if (currentScopes.kind === "value") {
-      return;
-    }
-    const scopes = [...currentScopes.scopes, ...this.#unclosedScopes];
+    const scopes = [...currentScopes, ...this.#unclosedScopes];
     for (const pending of scopes) {
       if (!pending.active) {
         continue;
@@ -137,7 +131,7 @@ class Context {
     if (!this.#seenScopes.has(scope.id)) {
       const currentScopes = this.#blockScopes.at(-1)!;
       this.#seenScopes.add(scope.id);
-      currentScopes.scopes.push({
+      currentScopes.push({
         active: true,
         scope,
       });
