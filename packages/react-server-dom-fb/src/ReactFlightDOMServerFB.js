@@ -18,8 +18,8 @@ import {
 } from 'react-server/src/ReactFlightServer';
 
 export {
-  registerServerReference,
   registerClientReference,
+  registerServerReference,
 } from './ReactFlightReferencesFB';
 
 type Options = {

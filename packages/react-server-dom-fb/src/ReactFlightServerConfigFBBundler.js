@@ -15,18 +15,17 @@ import type {
   ServerReference,
 } from './ReactFlightReferencesFB';
 
-export type {ClientReference, ServerReference};
+export type {ClientManifest, ClientReference, ServerReference};
 
 export {
-  ClientManifest,
   ClientReferenceKey,
   ClientReferenceMetadata,
   getClientReferenceKey,
-  getServerReferenceId,
   isClientReference,
-  isServerReference,
   resolveClientReferenceMetadata,
+  isServerReference,
   ServerReferenceId,
+  getServerReferenceId,
 } from './ReactFlightReferencesFB';
 
 export function getServerReferenceBoundArguments<T>(

@@ -16,19 +16,11 @@ export type ServerReference<T> = string;
 export type ClientReference<T> = string;
 
 const registeredClientReferences = new Map<mixed, ClientReferenceMetadata>();
-const registeredServerReferences = new Map<mixed, ServerReferenceId>();
 
 export type ClientReferenceKey = string;
-export type ServerReferenceId = string;
 export type ClientReferenceMetadata = [ClientReferenceKey, string];
 
-export function isClientReference<T>(reference: T): boolean {
-  return registeredClientReferences.has(reference);
-}
-
-export function isServerReference<T>(reference: T): boolean {
-  return registeredServerReferences.has(reference);
-}
+export type ServerReferenceId = string;
 
 export function registerClientReference<T>(
   clientReference: ClientReference<T>,
@@ -40,13 +32,8 @@ export function registerClientReference<T>(
   return clientReference;
 }
 
-export function registerServerReference<T>(
-  serverReference: ServerReference<T>,
-  exportName: string,
-): ServerReference<T> {
-  registeredServerReferences.set(serverReference, exportName);
-
-  return serverReference;
+export function isClientReference<T>(reference: T): boolean {
+  return registeredClientReferences.has(reference);
 }
 
 export function getClientReferenceKey<T>(
@@ -75,15 +62,20 @@ export function resolveClientReferenceMetadata<T>(
   );
 }
 
+export function registerServerReference<T>(
+  serverReference: ServerReference<T>,
+  exportName: string,
+): ServerReference<T> {
+  throw new Error('Not Implemented.');
+}
+
+export function isServerReference<T>(reference: T): boolean {
+  throw new Error('Not Implemented.');
+}
+
 export function getServerReferenceId<T>(
   config: ClientManifest,
   serverReference: ServerReference<T>,
 ): ServerReferenceId {
-  const id = registeredServerReferences.get(serverReference);
-  if (id != null) {
-    return id;
-  }
-  throw new Error(
-    'Expected client reference ' + serverReference + ' to be registered.',
-  );
+  throw new Error('Not Implemented.');
 }
