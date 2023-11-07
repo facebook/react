@@ -332,18 +332,6 @@ export function compileProgram(
     }
   }
 
-  for (const { originalFn: fn, compiledFn } of compiledFns) {
-    // Only insert Forget-ified functions if we have not encountered a critical
-    // error elsewhere in the file, regardless of bailout mode.
-    insertNewFunctionDeclaration(fn, compiledFn, pass);
-    hasForgetMutatedOriginalSource = true;
-  }
-
-  // Forget compiled the component, we need to update existing imports of unstable_useMemoCache
-  if (hasForgetMutatedOriginalSource) {
-    updateUseMemoCacheImport(program, options);
-  }
-
   const externalFunctions: ExternalFunction[] = [];
   try {
     // TODO: check for duplicate import specifiers
@@ -368,6 +356,18 @@ export function compileProgram(
   } catch (err) {
     handleError(pass, null, err);
     return;
+  }
+
+  // Only insert Forget-ified functions if we have not encountered a critical
+  // error elsewhere in the file, regardless of bailout mode.
+  for (const { originalFn: fn, compiledFn } of compiledFns) {
+    insertNewFunctionDeclaration(fn, compiledFn, pass);
+    hasForgetMutatedOriginalSource = true;
+  }
+
+  // Forget compiled the component, we need to update existing imports of unstable_useMemoCache
+  if (hasForgetMutatedOriginalSource) {
+    updateUseMemoCacheImport(program, options);
   }
 
   addImportsToProgram(program, externalFunctions);
