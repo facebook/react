@@ -18,7 +18,7 @@ import {
   lower,
   mergeConsecutiveBlocks,
 } from "../HIR";
-import { Environment, PartialEnvironmentConfig } from "../HIR/Environment";
+import { Environment, EnvironmentConfig } from "../HIR/Environment";
 import { findContextIdentifiers } from "../HIR/FindContextIdentifiers";
 import {
   analyseFunctions,
@@ -87,10 +87,10 @@ export function* run(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  config?: PartialEnvironmentConfig | null
+  config: EnvironmentConfig
 ): Generator<CompilerPipelineValue, CodegenFunction> {
   const contextIdentifiers = findContextIdentifiers(func);
-  const env = new Environment(config ?? null, contextIdentifiers);
+  const env = new Environment(config, contextIdentifiers);
   yield {
     kind: "debug",
     name: "EnvironmentConfig",
@@ -368,9 +368,9 @@ export function compileFn(
   func: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >,
-  options?: Partial<PartialEnvironmentConfig> | null
+  config: EnvironmentConfig
 ): CodegenFunction {
-  let generator = run(func, options);
+  let generator = run(func, config);
   while (true) {
     const next = generator.next();
     if (next.done) {

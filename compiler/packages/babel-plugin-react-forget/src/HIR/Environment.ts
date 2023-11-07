@@ -328,21 +328,10 @@ export class Environment {
   #hoistedIdentifiers: Set<t.Identifier>;
 
   constructor(
-    partialConfig: PartialEnvironmentConfig | null,
+    config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>
   ) {
     this.#shapes = new Map(DEFAULT_SHAPES);
-    const config: EnvironmentConfig = { ...DEFAULT_ENVIRONMENT_CONFIG };
-    if (partialConfig != null) {
-      for (const key of Object.keys(DEFAULT_ENVIRONMENT_CONFIG)) {
-        if (!isEnvironmentConfigKey(key)) {
-          continue;
-        }
-        if (Object.prototype.hasOwnProperty.call(partialConfig, key)) {
-          config[key] = partialConfig[key] as any; // we know the key is present from hasOwnProperty
-        }
-      }
-    }
     this.config = config;
 
     if (this.config.customHooks != null && this.config.customHooks.size > 0) {
@@ -472,4 +461,21 @@ function isHookName(name: string): boolean {
   //   return name === 'use' || /^use[A-Z0-9]/.test(name);
   // }
   return /^use[A-Z0-9]/.test(name);
+}
+
+export function validateEnvironmentConfig(
+  partialConfig: PartialEnvironmentConfig | null
+): EnvironmentConfig {
+  const config: EnvironmentConfig = { ...DEFAULT_ENVIRONMENT_CONFIG };
+  if (partialConfig != null) {
+    for (const key of Object.keys(DEFAULT_ENVIRONMENT_CONFIG)) {
+      if (!isEnvironmentConfigKey(key)) {
+        continue;
+      }
+      if (Object.prototype.hasOwnProperty.call(partialConfig, key)) {
+        config[key] = partialConfig[key] as any; // we know the key is present from hasOwnProperty
+      }
+    }
+  }
+  return config;
 }

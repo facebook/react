@@ -13,6 +13,7 @@ import {
   CompilerSuggestionOperation,
   ErrorSeverity,
 } from "../CompilerError";
+import { validateEnvironmentConfig } from "../HIR/Environment";
 import { CodegenFunction } from "../ReactiveScopes";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
 import { assertExhaustive } from "../Utils/utils";
@@ -247,7 +248,8 @@ export function compileProgram(
 
     let compiledFn: CodegenFunction;
     try {
-      compiledFn = compileFn(fn, pass.opts.environment);
+      const config = validateEnvironmentConfig(pass.opts.environment);
+      compiledFn = compileFn(fn, config);
       pass.opts.logger?.logEvent(pass.filename, {
         kind: "CompileSuccess",
         fnLoc: fn.node.loc ?? null,
