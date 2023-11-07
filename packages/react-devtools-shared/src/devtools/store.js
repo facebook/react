@@ -27,7 +27,7 @@ import {
   setSavedComponentFilters,
   separateDisplayNameAndHOCs,
   shallowDiffers,
-  utfDecodeString,
+  utfDecodeStringWithRanges,
 } from '../utils';
 import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
@@ -450,7 +450,7 @@ export default class Store extends EventEmitter<{
   }
 
   // This build of DevTools supports the legacy profiler.
-  // This is a static flag, controled by the Store config.
+  // This is a static flag, controlled by the Store config.
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
@@ -467,7 +467,7 @@ export default class Store extends EventEmitter<{
   }
 
   // This build of DevTools supports the Timeline profiler.
-  // This is a static flag, controled by the Store config.
+  // This is a static flag, controlled by the Store config.
   get supportsTimeline(): boolean {
     return this._supportsTimeline;
   }
@@ -502,30 +502,58 @@ export default class Store extends EventEmitter<{
     }
 
     // Find which root this element is in...
-    let rootID;
     let root;
     let rootWeight = 0;
     for (let i = 0; i < this._roots.length; i++) {
-      rootID = this._roots[i];
-      root = ((this._idToElement.get(rootID): any): Element);
+      const rootID = this._roots[i];
+      root = this._idToElement.get(rootID);
+
+      if (root === undefined) {
+        this._throwAndEmitError(
+          Error(
+            `Couldn't find root with id "${rootID}": no matching node was found in the Store.`,
+          ),
+        );
+
+        return null;
+      }
+
       if (root.children.length === 0) {
         continue;
-      } else if (rootWeight + root.weight > index) {
+      }
+
+      if (rootWeight + root.weight > index) {
         break;
       } else {
         rootWeight += root.weight;
       }
     }
 
+    if (root === undefined) {
+      return null;
+    }
+
     // Find the element in the tree using the weight of each node...
     // Skip over the root itself, because roots aren't visible in the Elements tree.
-    let currentElement = ((root: any): Element);
+    let currentElement: Element = root;
     let currentWeight = rootWeight - 1;
+
     while (index !== currentWeight) {
       const numChildren = currentElement.children.length;
       for (let i = 0; i < numChildren; i++) {
         const childID = currentElement.children[i];
-        const child = ((this._idToElement.get(childID): any): Element);
+        const child = this._idToElement.get(childID);
+
+        if (child === undefined) {
+          this._throwAndEmitError(
+            Error(
+              `Couldn't child element with id "${childID}": no matching node was found in the Store.`,
+            ),
+          );
+
+          return null;
+        }
+
         const childWeight = child.isCollapsed ? 1 : child.weight;
 
         if (index <= currentWeight + childWeight) {
@@ -538,7 +566,7 @@ export default class Store extends EventEmitter<{
       }
     }
 
-    return ((currentElement: any): Element) || null;
+    return currentElement || null;
   }
 
   getElementIDAtIndex(index: number): number | null {
@@ -560,32 +588,31 @@ export default class Store extends EventEmitter<{
   getElementsWithErrorsAndWarnings(): Array<{id: number, index: number}> {
     if (this._cachedErrorAndWarningTuples !== null) {
       return this._cachedErrorAndWarningTuples;
-    } else {
-      const errorAndWarningTuples: ErrorAndWarningTuples = [];
-
-      this._errorsAndWarnings.forEach((_, id) => {
-        const index = this.getIndexOfElementID(id);
-        if (index !== null) {
-          let low = 0;
-          let high = errorAndWarningTuples.length;
-          while (low < high) {
-            const mid = (low + high) >> 1;
-            if (errorAndWarningTuples[mid].index > index) {
-              high = mid;
-            } else {
-              low = mid + 1;
-            }
-          }
-
-          errorAndWarningTuples.splice(low, 0, {id, index});
-        }
-      });
-
-      // Cache for later (at least until the tree changes again).
-      this._cachedErrorAndWarningTuples = errorAndWarningTuples;
-
-      return errorAndWarningTuples;
     }
+
+    const errorAndWarningTuples: ErrorAndWarningTuples = [];
+
+    this._errorsAndWarnings.forEach((_, id) => {
+      const index = this.getIndexOfElementID(id);
+      if (index !== null) {
+        let low = 0;
+        let high = errorAndWarningTuples.length;
+        while (low < high) {
+          const mid = (low + high) >> 1;
+          if (errorAndWarningTuples[mid].index > index) {
+            high = mid;
+          } else {
+            low = mid + 1;
+          }
+        }
+
+        errorAndWarningTuples.splice(low, 0, {id, index});
+      }
+    });
+
+    // Cache for later (at least until the tree changes again).
+    this._cachedErrorAndWarningTuples = errorAndWarningTuples;
+    return errorAndWarningTuples;
   }
 
   getErrorAndWarningCountForElementID(id: number): {
@@ -923,7 +950,11 @@ export default class Store extends EventEmitter<{
       const nextLength = operations[i];
       i++;
 
-      const nextString = utfDecodeString(operations.slice(i, i + nextLength));
+      const nextString = utfDecodeStringWithRanges(
+        operations,
+        i,
+        i + nextLength - 1,
+      );
       stringTable.push(nextString);
       i += nextLength;
     }
@@ -1035,7 +1066,7 @@ export default class Store extends EventEmitter<{
                 ),
               );
 
-              continue;
+              break;
             }
 
             parentElement.children.push(id);
@@ -1088,7 +1119,7 @@ export default class Store extends EventEmitter<{
                 ),
               );
 
-              continue;
+              break;
             }
 
             i += 1;
@@ -1126,7 +1157,7 @@ export default class Store extends EventEmitter<{
                   ),
                 );
 
-                continue;
+                break;
               }
 
               const index = parentElement.children.indexOf(id);
@@ -1172,7 +1203,17 @@ export default class Store extends EventEmitter<{
             }
           };
 
-          const root = ((this._idToElement.get(id): any): Element);
+          const root = this._idToElement.get(id);
+          if (root === undefined) {
+            this._throwAndEmitError(
+              Error(
+                `Cannot remove root "${id}": no matching node was found in the Store.`,
+              ),
+            );
+
+            break;
+          }
+
           recursivelyDeleteElements(id);
 
           this._rootIDToCapabilities.delete(id);
@@ -1194,7 +1235,7 @@ export default class Store extends EventEmitter<{
               ),
             );
 
-            continue;
+            break;
           }
 
           const children = element.children;
@@ -1279,7 +1320,7 @@ export default class Store extends EventEmitter<{
 
     this._revision++;
 
-    // Any time the tree changes (e.g. elements added, removed, or reordered) cached inidices may be invalid.
+    // Any time the tree changes (e.g. elements added, removed, or reordered) cached indices may be invalid.
     this._cachedErrorAndWarningTuples = null;
 
     if (haveErrorsOrWarningsChanged) {

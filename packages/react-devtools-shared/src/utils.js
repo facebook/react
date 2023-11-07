@@ -116,7 +116,7 @@ export function getWrappedDisplayName(
   wrapperName: string,
   fallbackName?: string,
 ): string {
-  const displayName = (outerType: any).displayName;
+  const displayName = (outerType: any)?.displayName;
   return (
     displayName || `${wrapperName}(${getDisplayName(innerType, fallbackName)})`
   );
@@ -152,15 +152,14 @@ export function getUID(): number {
   return ++uidCounter;
 }
 
-export function utfDecodeString(array: Array<number>): string {
-  // Avoid spreading the array (e.g. String.fromCodePoint(...array))
-  // Functions arguments are first placed on the stack before the function is called
-  // which throws a RangeError for large arrays.
-  // See github.com/facebook/react/issues/22293
+export function utfDecodeStringWithRanges(
+  array: Array<number>,
+  left: number,
+  right: number,
+): string {
   let string = '';
-  for (let i = 0; i < array.length; i++) {
-    const char = array[i];
-    string += String.fromCodePoint(char);
+  for (let i = left; i <= right; i++) {
+    string += String.fromCodePoint(array[i]);
   }
   return string;
 }
@@ -216,8 +215,10 @@ export function printOperationsArray(operations: Array<number>) {
   const stringTableEnd = i + stringTableSize;
   while (i < stringTableEnd) {
     const nextLength = operations[i++];
-    const nextString = utfDecodeString(
-      (operations.slice(i, i + nextLength): any),
+    const nextString = utfDecodeStringWithRanges(
+      operations,
+      i,
+      i + nextLength - 1,
     );
     stringTable.push(nextString);
     i += nextLength;

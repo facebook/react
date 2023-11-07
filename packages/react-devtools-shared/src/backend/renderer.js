@@ -439,7 +439,6 @@ export function getInternalReactConstants(version: string): {
         return 'Cache';
       case ClassComponent:
       case IncompleteClassComponent:
-        return getDisplayName(resolvedType);
       case FunctionComponent:
       case IndeterminateComponent:
         return getDisplayName(resolvedType);
