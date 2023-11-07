@@ -106,14 +106,10 @@ function handleError(
   }
 }
 
-/**
- * Mutates the source AST to include a newly Forget-compiled function.
- */
-function insertNewFunctionDeclaration(
+function createNewFunctionNode(
   originalFn: BabelFn,
-  compiledFn: CodegenFunction,
-  pass: CompilerPass
-): void {
+  compiledFn: CodegenFunction
+): t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression {
   let transformedFn:
     | t.FunctionDeclaration
     | t.ArrowFunctionExpression
@@ -162,25 +158,7 @@ function insertNewFunctionDeclaration(
 
   // Avoid visiting the new transformed version
   ALREADY_COMPILED.add(transformedFn);
-
-  if (pass.opts.instrumentForget != null) {
-    const instrumentFnName = pass.opts.instrumentForget.importSpecifierName;
-    addInstrumentForget(transformedFn, instrumentFnName);
-  }
-  if (pass.opts)
-    if (pass.opts.gating != null) {
-      if (pass.opts.instrumentForget != null) {
-        const instrumentFnName = pass.opts.instrumentForget.importSpecifierName;
-        addInstrumentForget(originalFn.node, instrumentFnName);
-      }
-      insertGatedFunctionDeclaration(
-        originalFn,
-        transformedFn,
-        pass.opts.gating
-      );
-    } else {
-      originalFn.replaceWith(transformedFn);
-    }
+  return transformedFn;
 }
 
 function findEslintSuppressions(
@@ -329,17 +307,17 @@ export function compileProgram(
   }
 
   const externalFunctions: ExternalFunction[] = [];
+  let instrumentForget: null | ExternalFunction = null;
+  let gating: null | ExternalFunction = null;
   try {
     // TODO: check for duplicate import specifiers
     if (options.gating != null) {
-      const gating = tryParseExternalFunction(options.gating);
+      gating = tryParseExternalFunction(options.gating);
       externalFunctions.push(gating);
     }
 
     if (options.instrumentForget != null) {
-      const instrumentForget = tryParseExternalFunction(
-        options.instrumentForget
-      );
+      instrumentForget = tryParseExternalFunction(options.instrumentForget);
       externalFunctions.push(instrumentForget);
     }
 
@@ -356,8 +334,22 @@ export function compileProgram(
 
   // Only insert Forget-ified functions if we have not encountered a critical
   // error elsewhere in the file, regardless of bailout mode.
-  for (const { originalFn: fn, compiledFn } of compiledFns) {
-    insertNewFunctionDeclaration(fn, compiledFn, pass);
+  for (const { originalFn, compiledFn } of compiledFns) {
+    const transformedFn = createNewFunctionNode(originalFn, compiledFn);
+    if (instrumentForget != null) {
+      const instrumentFnName = instrumentForget.importSpecifierName;
+      addInstrumentForget(transformedFn, instrumentFnName);
+    }
+
+    if (gating != null) {
+      if (instrumentForget != null) {
+        const instrumentFnName = instrumentForget.importSpecifierName;
+        addInstrumentForget(originalFn.node, instrumentFnName);
+      }
+      insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
+    } else {
+      originalFn.replaceWith(transformedFn);
+    }
   }
 
   // Forget compiled the component, we need to update existing imports of unstable_useMemoCache
