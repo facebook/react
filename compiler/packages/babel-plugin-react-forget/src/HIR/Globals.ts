@@ -312,9 +312,55 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
       returnValueKind: ValueKind.Frozen,
     }),
   ],
+  [
+    "useInsertionEffect",
+    addHook(DEFAULT_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.Freeze,
+      returnType: { kind: "Poly" },
+      calleeEffect: Effect.Read,
+      hookKind: "useLayoutEffect",
+      returnValueKind: ValueKind.Frozen,
+    }),
+  ],
 ];
 
-TYPED_GLOBALS.push(["React", addObject(DEFAULT_SHAPES, null, BUILTIN_HOOKS)]);
+TYPED_GLOBALS.push([
+  "React",
+  addObject(DEFAULT_SHAPES, null, [
+    ...BUILTIN_HOOKS,
+    [
+      "createElement",
+      addFunction(DEFAULT_SHAPES, [], {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: { kind: "Poly" },
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Frozen,
+      }),
+    ],
+    [
+      "cloneElement",
+      addFunction(DEFAULT_SHAPES, [], {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: { kind: "Poly" },
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Frozen,
+      }),
+    ],
+    [
+      "createRef",
+      addFunction(DEFAULT_SHAPES, [], {
+        positionalParams: [],
+        restParam: Effect.Capture, // createRef takes no paramters
+        returnType: { kind: "Object", shapeId: BuiltInUseRefId },
+        calleeEffect: Effect.Read,
+        returnValueKind: ValueKind.Mutable,
+      }),
+    ],
+  ]),
+]);
 
 export type Global = BuiltInType | PolyType;
 export type GlobalRegistry = Map<string, Global>;
