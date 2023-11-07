@@ -18,6 +18,7 @@ import {
 global.ReadableStream =
   require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
+global.TextDecoder = require('util').TextDecoder;
 
 let React;
 let ReactDOM;
@@ -1314,6 +1315,108 @@ describe('ReactDOMFizzStaticBrowser', () => {
       '<!DOCTYPE html><html><head>' +
         '<link rel="stylesheet" href="my-style" data-precedence="high"/>' +
         '</head><body><div>Hello</div></body></html>',
+    );
+  });
+
+  // @gate enablePostpone
+  it('does not emit preloads during resume for Resources preloaded through onHeaders', async () => {
+    let prerendering = true;
+
+    let hasLoaded = false;
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    function WaitIfResuming({children}) {
+      if (!prerendering && !hasLoaded) {
+        throw promise;
+      }
+      return children;
+    }
+
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return null;
+    }
+
+    let headers;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('image', {as: 'image', fetchPriority: 'high'});
+      return (
+        <html>
+          <body>
+            hello
+            <Suspense fallback={null}>
+              <WaitIfResuming>
+                world
+                <link rel="stylesheet" href="style" precedence="default" />
+              </WaitIfResuming>
+            </Suspense>
+            <Postpone />
+          </body>
+        </html>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />, {
+      onHeaders,
+    });
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    expect(await readContent(prerendered.prelude)).toBe('');
+    expect(headers).toEqual(
+      new Headers({
+        Link: `
+<image>; rel=preload; as="image"; fetchpriority="high",
+ <style>; rel=preload; as="style"
+`
+          .replaceAll('\n', '')
+          .trim(),
+      }),
+    );
+
+    const content = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+    );
+
+    const decoder = new TextDecoder();
+    const reader = content.getReader();
+    let {value, done} = await reader.read();
+    let result = decoder.decode(value, {stream: true});
+
+    expect(result).toBe(
+      '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$-->',
+    );
+
+    await 1;
+    hasLoaded = true;
+    resolve();
+
+    while (true) {
+      ({value, done} = await reader.read());
+      if (done) {
+        result += decoder.decode(value);
+        break;
+      }
+      result += decoder.decode(value, {stream: true});
+    }
+
+    // We are mostly just trying to assert that no preload for our stylesheet was emitted
+    // prior to sending the segment the stylesheet was for. This test is asserting this
+    // because the boundary complete instruction is sent when we are writing the
+    const instructionIndex = result.indexOf('$RC');
+    expect(instructionIndex > -1).toBe(true);
+    const slice = result.slice(0, instructionIndex + '$RC'.length);
+
+    expect(slice).toBe(
+      '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$--><div hidden id="S:1">world<!-- --></div><script>$RC',
     );
   });
 });

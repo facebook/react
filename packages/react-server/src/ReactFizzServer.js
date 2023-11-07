@@ -77,6 +77,7 @@ import {
   pushFormStateMarkerIsMatching,
   pushFormStateMarkerIsNotMatching,
   resetResumableState,
+  emitEarlyPreloads,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -455,6 +456,7 @@ export function createPrerenderRequest(
     onShellError,
     onFatalError,
     onPostpone,
+    undefined,
   );
   // Start tracking postponed holes during this render.
   request.trackedPostpones = {
@@ -3016,8 +3018,7 @@ function erroredTask(
 
   request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
-    const onAllReady = request.onAllReady;
-    onAllReady();
+    completeAll(request);
   }
 }
 
@@ -3165,9 +3166,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         }
         request.pendingRootTasks--;
         if (request.pendingRootTasks === 0) {
-          request.onShellError = noop;
-          const onShellReady = request.onShellReady;
-          onShellReady();
+          completeShell(request);
         }
       }
     }
@@ -3209,9 +3208,52 @@ function abortTask(task: Task, request: Request, error: mixed): void {
 
   request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
-    const onAllReady = request.onAllReady;
-    onAllReady();
+    completeAll(request);
   }
+}
+
+// I extracted this function out because we want to ensure we consistently emit preloads before
+// transitioning to the next request stage and this transition can happen in multiple places in this
+// implementation.
+function completeShell(request: Request) {
+  if (request.trackedPostpones === null) {
+    // We only emit early preloads on shell completion for renders. For prerenders
+    // we wait for the entire Request to finish because we are not responding to a
+    // live request and can wait for as much data as possible.
+
+    // we should only be calling completeShell when the shell is complete so we
+    // just use a literal here
+    const shellComplete = true;
+    emitEarlyPreloads(
+      request.renderState,
+      request.resumableState,
+      shellComplete,
+    );
+  }
+  // We have completed the shell so the shell can't error anymore.
+  request.onShellError = noop;
+  const onShellReady = request.onShellReady;
+  onShellReady();
+}
+
+// I extracted this function out because we want to ensure we consistently emit preloads before
+// transitioning to the next request stage and this transition can happen in multiple places in this
+// implementation.
+function completeAll(request: Request) {
+  // During a render the shell must be complete if the entire request is finished
+  // however during a Prerender it is possible that the shell is incomplete because
+  // it postponed. We cannot use rootPendingTasks in the prerender case because
+  // those hit zero even when the shell postpones. Instead we look at the completedRootSegment
+  const shellComplete =
+    request.trackedPostpones === null
+      ? // Render, we assume it is completed
+        true
+      : // Prerender Request, we use the state of the root segment
+        request.completedRootSegment === null ||
+        request.completedRootSegment.status !== POSTPONED;
+  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
+  const onAllReady = request.onAllReady;
+  onAllReady();
 }
 
 function queueCompletedSegment(
@@ -3254,10 +3296,7 @@ function finishedTask(
     }
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
-      // We have completed the shell so the shell can't error anymore.
-      request.onShellError = noop;
-      const onShellReady = request.onShellReady;
-      onShellReady();
+      completeShell(request);
     }
   } else {
     boundary.pendingTasks--;
@@ -3313,10 +3352,7 @@ function finishedTask(
 
   request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
-    // This needs to be called at the very end so that we can synchronously write the result
-    // in the callback if needed.
-    const onAllReady = request.onAllReady;
-    onAllReady();
+    completeAll(request);
   }
 }
 
@@ -3528,14 +3564,11 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     );
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
-      request.onShellError = noop;
-      const onShellReady = request.onShellReady;
-      onShellReady();
+      completeShell(request);
     }
     request.allPendingTasks--;
     if (request.allPendingTasks === 0) {
-      const onAllReady = request.onAllReady;
-      onAllReady();
+      completeAll(request);
     }
     return;
   } finally {
@@ -4056,6 +4089,33 @@ export function startWork(request: Request): void {
   } else {
     scheduleWork(() => performWork(request));
   }
+  if (request.trackedPostpones === null) {
+    // this is either a regular render or a resume. For regular render we want
+    // to call emitEarlyPreloads after the first performWork because we want
+    // are responding to a live request and need to balance sending something early
+    // (i.e. don't want for the shell to finish) but we need something to send.
+    // The only implementation of this is for DOM at the moment and during resumes nothing
+    // actually emits but the code paths here are the same.
+    // During a prerender we don't want to be too aggressive in emitting early preloads
+    // because we aren't responding to a live request and we can wait for the prerender to
+    // postpone before we emit anything.
+    if (supportsRequestStorage) {
+      scheduleWork(() =>
+        requestStorage.run(
+          request,
+          enqueueEarlyPreloadsAfterInitialWork,
+          request,
+        ),
+      );
+    } else {
+      scheduleWork(() => enqueueEarlyPreloadsAfterInitialWork(request));
+    }
+  }
+}
+
+function enqueueEarlyPreloadsAfterInitialWork(request: Request) {
+  const shellComplete = request.pendingRootTasks === 0;
+  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
 }
 
 function enqueueFlush(request: Request): void {
@@ -4081,6 +4141,27 @@ function enqueueFlush(request: Request): void {
   }
 }
 
+// This function is intented to only be called during the pipe function for the Node builds.
+// The reason we need this is because `renderToPipeableStream` is the only API which allows
+// you to start flowing before the shell is complete and we've had a chance to emit early
+// preloads already. This is really just defensive programming to ensure that we give hosts an
+// opportunity to flush early preloads before streaming begins in case they are in an environment
+// that only supports a single call to emitEarlyPreloads like the DOM renderers. It's unfortunate
+// to put this Node only function directly in ReactFizzServer but it'd be more ackward to factor it
+// by moving the implementation into ReactServerStreamConfigNode and even then we may not be able to
+// eliminate all the wasted branching.
+export function prepareForStartFlowingIfBeforeAllReady(request: Request) {
+  const shellComplete =
+    request.trackedPostpones === null
+      ? // Render Request, we define shell complete by the pending root tasks
+        request.pendingRootTasks === 0
+      : // Prerender Request, we define shell complete by completedRootSegemtn
+      request.completedRootSegment === null
+      ? request.pendingRootTasks === 0
+      : request.completedRootSegment.status !== POSTPONED;
+  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
+}
+
 export function startFlowing(request: Request, destination: Destination): void {
   if (request.status === CLOSING) {
     request.status = CLOSED;
@@ -4095,6 +4176,7 @@ export function startFlowing(request: Request, destination: Destination): void {
     return;
   }
   request.destination = destination;
+
   try {
     flushCompletedQueues(request, destination);
   } catch (error) {

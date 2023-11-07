@@ -3690,6 +3690,157 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  it('provides headers after initial work if onHeaders option used', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function Preloads() {
+      ReactDOM.preload('font2', {as: 'font'});
+      ReactDOM.preload('imagepre2', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preconnect('pre2', {crossOrigin: 'use-credentials'});
+      ReactDOM.prefetchDNS('dns2');
+    }
+
+    function Blocked() {
+      readText('blocked');
+      return (
+        <>
+          <Preloads />
+          <img src="image2" />
+        </>
+      );
+    }
+
+    function App() {
+      ReactDOM.preload('font', {as: 'font'});
+      ReactDOM.preload('imagepre', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preconnect('pre', {crossOrigin: 'use-credentials'});
+      ReactDOM.prefetchDNS('dns');
+      return (
+        <html>
+          <body>
+            <img src="image" />
+            <Blocked />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<pre>; rel=preconnect; crossorigin="use-credentials",
+ <dns>; rel=dns-prefetch,
+ <font>; rel=preload; as="font"; crossorigin="",
+ <imagepre>; rel=preload; as="image"; fetchpriority="high",
+ <image>; rel=preload; as="image"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
+  it('encodes img srcset and sizes into preload header params', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('presrc', {
+        as: 'image',
+        fetchPriority: 'high',
+        imageSrcSet: 'presrcset',
+        imageSizes: 'presizes',
+      });
+      return (
+        <html>
+          <body>
+            <img src="src" srcSet="srcset" sizes="sizes" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<presrc>; rel=preload; as="image"; fetchpriority="high"; imagesrcset="presrcset"; imagesizes="presizes",
+ <src>; rel=preload; as="image"; imagesrcset="srcset"; imagesizes="sizes"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
+  it('emits nothing for headers if you pipe before work begins', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('presrc', {
+        as: 'image',
+        fetchPriority: 'high',
+        imageSrcSet: 'presrcset',
+        imageSizes: 'presizes',
+      });
+      return (
+        <html>
+          <body>
+            <img src="src" srcSet="srcset" sizes="sizes" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders}).pipe(writable);
+    });
+
+    expect(headers).toEqual({});
+  });
+
+  it('stops accumulating new headers once the maxHeadersLength limit is satisifed', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preconnect('foo');
+      ReactDOM.preconnect('bar');
+      ReactDOM.preconnect('baz');
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders, maxHeadersLength: 44});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<foo>; rel=preconnect,
+ <bar>; rel=preconnect
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};
