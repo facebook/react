@@ -1,16 +1,14 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @nolint
- * @preventMunge
- * @preserve-invariant-messages
- */
-
 /*
+
+ Copyright (c) Meta Platforms, Inc. and affiliates.
+
+ This source code is licensed under the MIT license found in the
+ LICENSE file in the root directory of this source tree.
+
+ @noflow
+ @nolint
+ @preventMunge
+ @preserve-invariant-messages
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
 "use strict";
@@ -16011,7 +16009,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1755 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-ecf7ebc4",
+  version: "18.3.0-www-modern-aebd572b",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2106 = {
@@ -16042,7 +16040,7 @@ var internals$jscomp$inline_2106 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-ecf7ebc4"
+  reconcilerVersion: "18.3.0-www-modern-aebd572b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2107 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16307,4 +16305,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-ecf7ebc4";
+exports.version = "18.3.0-www-modern-aebd572b";

@@ -1,30 +1,21 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @nolint
- * @preventMunge
- * @preserve-invariant-messages
- */
+/*
 
+ Copyright (c) Meta Platforms, Inc. and affiliates.
 
-          'use strict';
+ This source code is licensed under the MIT license found in the
+ LICENSE file in the root directory of this source tree.
 
-/* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart ===
-    'function'
-) {
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
-}
-          /*
+ @noflow
+ @nolint
+ @preventMunge
+ @preserve-invariant-messages
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
 "use strict";
+"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+  "function" ===
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
 var Scheduler = require("scheduler"),
   React = require("react"),
   assign = Object.assign;
@@ -17261,7 +17252,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1881 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-7b8abb91",
+  version: "18.3.0-www-classic-230b0df8",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17305,7 +17296,7 @@ var devToolsConfig$jscomp$inline_1881 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-7b8abb91"
+  reconcilerVersion: "18.3.0-www-classic-230b0df8"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17629,14 +17620,8 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-7b8abb91";
-
-          /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop ===
-    'function'
-) {
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());
-}
-        
+exports.version = "18.3.0-www-classic-230b0df8";
+"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+  "function" ===
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(Error());
