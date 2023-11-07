@@ -19,7 +19,7 @@ if (__DEV__) {
 var React = require("react");
 var ReactDOM = require("react-dom");
 
-var ReactVersion = "18.3.0-www-classic-529c102c";
+var ReactVersion = "18.3.0-www-classic-5ff7366a";
 
 // This refers to a WWW module.
 var warningWWW = require("warning");
@@ -288,6 +288,20 @@ function checkAttributeStringCoercion(value, attributeName) {
         "The provided `%s` attribute is an unsupported type %s." +
           " This value must be coerced to a string before using it here.",
         attributeName,
+        typeName(value)
+      );
+
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+function checkOptionStringCoercion(value, propName) {
+  {
+    if (willCoercionThrow(value)) {
+      error(
+        "The provided `%s` option is an unsupported type %s." +
+          " This value must be coerced to a string before using it here.",
+        propName,
         typeName(value)
       );
 
@@ -1791,6 +1805,14 @@ function warnValidStyle(name, value) {
   }
 }
 
+function getCrossOriginString(input) {
+  if (typeof input === "string") {
+    return input === "use-credentials" ? input : "";
+  }
+
+  return undefined;
+}
+
 // code copied and modified from escape-html
 var matchHtmlRegExp = /["'&<>]/;
 /**
@@ -1977,7 +1999,7 @@ var ReactDOMServerDispatcher = {
 };
 function prepareHostDispatcher() {
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
-} // Used to distinguish these contexts from ones used in other renderers.
+} // We make every property of the descriptor optional because it is not a contract that
 var ScriptStreamingFormat = 0;
 var DataStreamingFormat = 1;
 var NothingSent =
@@ -2054,7 +2076,15 @@ var scriptReplacer = function (match, prefix, s, suffix) {
 var importMapScriptStart = stringToPrecomputedChunk(
   '<script type="importmap">'
 );
-var importMapScriptEnd = stringToPrecomputedChunk("</script>"); // Allows us to keep track of what we've already written so we can refer back to it.
+var importMapScriptEnd = stringToPrecomputedChunk("</script>"); // Since we store headers as strings we deal with their length in utf16 code units
+// rather than visual characters or the utf8 encoding that is used for most binary
+// serialization. Some common HTTP servers only allow for headers to be 4kB in length.
+// We choose a default length that is likely to be well under this already limited length however
+// pathological cases may still cause the utf-8 encoding of the headers to approach this limit.
+// It should also be noted that this maximum is a soft maximum. we have not reached the limit we will
+// allow one more header to be captured which means in practice if the limit is approached it will be exceeded
+
+var DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS = 2000; // Allows us to keep track of what we've already written so we can refer back to it.
 // if passed externalRuntimeConfig and the enableFizzExternalRuntime feature flag
 // is set, the server will send instructions via data attributes (instead of inline scripts)
 
@@ -2065,7 +2095,9 @@ function createRenderState$1(
   bootstrapScripts,
   bootstrapModules,
   externalRuntimeConfig,
-  importMap
+  importMap,
+  onHeaders,
+  maxHeadersLength
 ) {
   var inlineScriptWithNonce =
     nonce === undefined
@@ -2128,6 +2160,28 @@ function createRenderState$1(
     importMapChunks.push(importMapScriptEnd);
   }
 
+  {
+    if (onHeaders && typeof maxHeadersLength === "number") {
+      if (maxHeadersLength <= 0) {
+        error(
+          "React expected a positive non-zero `maxHeadersLength` option but found %s instead. When using the `onHeaders` option you may supply an optional `maxHeadersLength` option as well however, when setting this value to zero or less no headers will be captured.",
+          maxHeadersLength === 0 ? "zero" : maxHeadersLength
+        );
+      }
+    }
+  }
+
+  var headers = onHeaders
+    ? {
+        preconnects: "",
+        fontPreloads: "",
+        highImagePreloads: "",
+        remainingCapacity:
+          typeof maxHeadersLength === "number"
+            ? maxHeadersLength
+            : DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS
+      }
+    : null;
   var renderState = {
     placeholderPrefix: stringToPrecomputedChunk(idPrefix + "P:"),
     segmentPrefix: stringToPrecomputedChunk(idPrefix + "S:"),
@@ -2137,6 +2191,19 @@ function createRenderState$1(
     headChunks: null,
     externalRuntimeScript: externalRuntimeScript,
     bootstrapChunks: bootstrapChunks,
+    onHeaders: onHeaders,
+    headers: headers,
+    resets: {
+      font: {},
+      dns: {},
+      connect: {
+        default: {},
+        anonymous: {},
+        credentials: {}
+      },
+      image: {},
+      style: {}
+    },
     charsetChunks: [],
     preconnectChunks: [],
     importMapChunks: importMapChunks,
@@ -4273,34 +4340,81 @@ function pushImg(
     } else if (!resumableState.imageResources.hasOwnProperty(key)) {
       // We must construct a new preload resource
       resumableState.imageResources[key] = PRELOAD_NO_CREDS;
-      resource = [];
-      pushLinkImpl(resource, {
-        rel: "preload",
-        as: "image",
-        // There is a bug in Safari where imageSrcSet is not respected on preload links
-        // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-        // This harms older browers that do not support imageSrcSet by making their preloads not work
-        // but this population is shrinking fast and is already small so we accept this tradeoff.
-        href: srcSet ? undefined : src,
-        imageSrcSet: srcSet,
-        imageSizes: sizes,
-        crossOrigin: props.crossOrigin,
-        integrity: props.integrity,
-        type: props.type,
-        fetchPriority: props.fetchPriority,
-        referrerPolicy: props.referrerPolicy
-      });
+      var crossOrigin = getCrossOriginString(props.crossOrigin);
+      var headers = renderState.headers;
+      var header;
 
       if (
-        props.fetchPriority === "high" ||
-        renderState.highImagePreloads.size < 10
+        headers &&
+        headers.remainingCapacity > 0 && // this is a hueristic similar to capping element preloads to 10 unless explicitly
+        // fetchPriority="high". We use length here which means it will fit fewer images when
+        // the urls are long and more when short. arguably byte size is a better hueristic because
+        // it directly translates to how much we send down before content is actually seen.
+        // We could unify the counts and also make it so the total is tracked regardless of
+        // flushing output but since the headers are likely to be go earlier than content
+        // they don't really conflict so for now I've kept them separate
+        (props.fetchPriority === "high" ||
+          headers.highImagePreloads.length < 500) && // We manually construct the options for the preload only from strings. We don't want to pollute
+        // the params list with arbitrary props and if we copied everything over as it we might get
+        // coercion errors. We have checks for this in Dev but it seems safer to just only accept values
+        // that are strings
+        ((header = getPreloadAsHeader(src, "image", {
+          imageSrcSet: props.srcSet,
+          imageSizes: props.sizes,
+          crossOrigin: crossOrigin,
+          integrity: props.integrity,
+          nonce: props.nonce,
+          type: props.type,
+          fetchPriority: props.fetchPriority,
+          referrerPolicy: props.refererPolicy
+        })), // We always consume the header length since once we find one header that doesn't fit
+        // we assume all the rest won't as well. This is to avoid getting into a situation
+        // where we have a very small remaining capacity but no headers will ever fit and we end
+        // up constantly trying to see if the next resource might make it. In the future we can
+        // make this behavior different between render and prerender since in the latter case
+        // we are less sensitive to the current requests runtime per and more sensitive to maximizing
+        // headers.
+        (headers.remainingCapacity -= header.length) >= 2)
       ) {
-        renderState.highImagePreloads.add(resource);
-      } else {
-        renderState.bulkPreloads.add(resource); // We can bump the priority up if the same img is rendered later
-        // with fetchPriority="high"
+        // If we postpone in the shell we will still emit this preload so we track
+        // it to make sure we don't reset it.
+        renderState.resets.image[key] = PRELOAD_NO_CREDS;
 
-        promotablePreloads.set(key, resource);
+        if (headers.highImagePreloads) {
+          headers.highImagePreloads += ", ";
+        } // $FlowFixMe[unsafe-addition]: we assign header during the if condition
+
+        headers.highImagePreloads += header;
+      } else {
+        resource = [];
+        pushLinkImpl(resource, {
+          rel: "preload",
+          as: "image",
+          // There is a bug in Safari where imageSrcSet is not respected on preload links
+          // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+          // This harms older browers that do not support imageSrcSet by making their preloads not work
+          // but this population is shrinking fast and is already small so we accept this tradeoff.
+          href: srcSet ? undefined : src,
+          imageSrcSet: srcSet,
+          imageSizes: sizes,
+          crossOrigin: crossOrigin,
+          integrity: props.integrity,
+          type: props.type,
+          fetchPriority: props.fetchPriority,
+          referrerPolicy: props.referrerPolicy
+        });
+
+        if (
+          props.fetchPriority === "high" ||
+          renderState.highImagePreloads.size < 10
+        ) {
+          renderState.highImagePreloads.add(resource);
+        } else {
+          renderState.bulkPreloads.add(resource); // We can bump the priority up if the same img is rendered later
+          // with fetchPriority="high"
+
+          promotablePreloads.set(key, resource);
+        }
       }
     }
   }
@@ -6582,13 +6696,39 @@ function prefetchDNS(href) {
     var key = getResourceKey(href);
 
     if (!resumableState.dnsResources.hasOwnProperty(key)) {
-      var resource = [];
       resumableState.dnsResources[key] = EXISTS;
-      pushLinkImpl(resource, {
-        href: href,
-        rel: "dns-prefetch"
-      });
-      renderState.preconnects.add(resource);
+      var headers = renderState.headers;
+      var header;
+
+      if (
+        headers &&
+        headers.remainingCapacity > 0 && // Compute the header since we might be able to fit it in the max length
+        ((header = getPrefetchDNSAsHeader(href)), // We always consume the header length since once we find one header that doesn't fit
+        // we assume all the rest won't as well. This is to avoid getting into a situation
+        // where we have a very small remaining capacity but no headers will ever fit and we end
+        // up constantly trying to see if the next resource might make it. In the future we can
+        // make this behavior different between render and prerender since in the latter case
+        // we are less sensitive to the current requests runtime per and more sensitive to maximizing
+        // headers.
+        (headers.remainingCapacity -= header.length) >= 2)
+      ) {
+        // Store this as resettable in case we are prerendering and postpone in the Shell
+        renderState.resets.dns[key] = EXISTS;
+
+        if (headers.preconnects) {
+          headers.preconnects += ", ";
+        } // $FlowFixMe[unsafe-addition]: we assign header during the if condition
+
+        headers.preconnects += header;
+      } else {
+        // Encode as element
+        var resource = [];
+        pushLinkImpl(resource, {
+          href: href,
+          rel: "dns-prefetch"
+        });
+        renderState.preconnects.add(resource);
+      }
     }
 
     flushResources(request);
@@ -6611,23 +6751,48 @@ function preconnect(href, crossOrigin) {
   var renderState = getRenderState(request);
 
   if (typeof href === "string" && href) {
-    var resources =
+    var bucket =
       crossOrigin === "use-credentials"
-        ? resumableState.connectResources.credentials
+        ? "credentials"
         : typeof crossOrigin === "string"
-        ? resumableState.connectResources.anonymous
-        : resumableState.connectResources.default;
+        ? "anonymous"
+        : "default";
     var key = getResourceKey(href);
 
-    if (!resources.hasOwnProperty(key)) {
-      var resource = [];
-      resources[key] = EXISTS;
-      pushLinkImpl(resource, {
-        rel: "preconnect",
-        href: href,
-        crossOrigin: crossOrigin
-      });
-      renderState.preconnects.add(resource);
+    if (!resumableState.connectResources[bucket].hasOwnProperty(key)) {
+      resumableState.connectResources[bucket][key] = EXISTS;
+      var headers = renderState.headers;
+      var header;
+
+      if (
+        headers &&
+        headers.remainingCapacity > 0 && // Compute the header since we might be able to fit it in the max length
+        ((header = getPreconnectAsHeader(href, crossOrigin)), // We always consume the header length since once we find one header that doesn't fit
+        // we assume all the rest won't as well. This is to avoid getting into a situation
+        // where we have a very small remaining capacity but no headers will ever fit and we end
+        // up constantly trying to see if the next resource might make it. In the future we can
+        // make this behavior different between render and prerender since in the latter case
+        // we are less sensitive to the current requests runtime per and more sensitive to maximizing
+        // headers.
+        (headers.remainingCapacity -= header.length) >= 2)
+      ) {
+        // Store this in resettableState in case we are prerending and postpone in the Shell
+        renderState.resets.connect[bucket][key] = EXISTS;
+
+        if (headers.preconnects) {
+          headers.preconnects += ", ";
+        } // $FlowFixMe[unsafe-addition]: we assign header during the if condition
+
+        headers.preconnects += header;
+      } else {
+        var resource = [];
+        pushLinkImpl(resource, {
+          rel: "preconnect",
+          href: href,
+          crossOrigin: crossOrigin
+        });
+        renderState.preconnects.add(resource);
+      }
     }
 
     flushResources(request);
@@ -6668,30 +6833,61 @@ function preload(href, as, options) {
         }
 
         resumableState.imageResources[key] = PRELOAD_NO_CREDS;
-        var resource = [];
-        pushLinkImpl(
-          resource,
-          assign(
-            {
-              rel: "preload",
-              // There is a bug in Safari where imageSrcSet is not respected on preload links
-              // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
-              // This harms older browers that do not support imageSrcSet by making their preloads not work
-              // but this population is shrinking fast and is already small so we accept this tradeoff.
-              href: imageSrcSet ? undefined : href,
-              as: as
-            },
-            options
-          )
-        );
+        var headers = renderState.headers;
+        var header;
 
-        if (fetchPriority === "high") {
-          renderState.highImagePreloads.add(resource);
+        if (
+          headers &&
+          headers.remainingCapacity > 0 &&
+          fetchPriority === "high" && // Compute the header since we might be able to fit it in the max length
+          ((header = getPreloadAsHeader(href, as, options)), // We always consume the header length since once we find one header that doesn't fit
+          // we assume all the rest won't as well. This is to avoid getting into a situation
+          // where we have a very small remaining capacity but no headers will ever fit and we end
+          // up constantly trying to see if the next resource might make it. In the future we can
+          // make this behavior different between render and prerender since in the latter case
+          // we are less sensitive to the current requests runtime per and more sensitive to maximizing
+          // headers.
+          (headers.remainingCapacity -= header.length) >= 2)
+        ) {
+          // If we postpone in the shell we will still emit a preload as a header so we
+          // track this to make sure we don't reset it.
+          renderState.resets.image[key] = PRELOAD_NO_CREDS;
+
+          if (headers.highImagePreloads) {
+            headers.highImagePreloads += ", ";
+          } // $FlowFixMe[unsafe-addition]: we assign header during the if condition
+
+          headers.highImagePreloads += header;
         } else {
-          renderState.bulkPreloads.add(resource); // Stash the resource in case we need to promote it to higher priority
-          // when an img tag is rendered
+          // If we don't have headers to write to we have to encode as elements to flush in the head
+          // When we have imageSrcSet the browser probably cannot load the right version from headers
+          // (this should be verified by testing). For now we assume these need to go in the head
+          // as elements even if headers are available.
+          var resource = [];
+          pushLinkImpl(
+            resource,
+            assign(
+              {
+                rel: "preload",
+                // There is a bug in Safari where imageSrcSet is not respected on preload links
+                // so we omit the href here if we have imageSrcSet b/c safari will load the wrong image.
+                // This harms older browers that do not support imageSrcSet by making their preloads not work
+                // but this population is shrinking fast and is already small so we accept this tradeoff.
+                href: imageSrcSet ? undefined : href,
+                as: as
+              },
+              options
+            )
+          );
 
-          renderState.preloads.images.set(key, resource);
+          if (fetchPriority === "high") {
+            renderState.highImagePreloads.add(resource);
+          } else {
+            renderState.bulkPreloads.add(resource); // Stash the resource in case we need to promote it to higher priority
+            // when an img tag is rendered
+
+            renderState.preloads.images.set(key, resource);
+          }
         }
 
         break;
@@ -6777,29 +6973,59 @@ function preload(href, as, options) {
           resumableState.unknownResources[as] = resources;
         }
 
-        var _resource4 = [];
-
-        var props = assign(
-          {
-            rel: "preload",
-            href: href,
-            as: as
-          },
-          options
-        );
-
-        switch (as) {
-          case "font":
-            renderState.fontPreloads.add(_resource4);
-            break;
-          // intentional fall through
-
-          default:
-            renderState.bulkPreloads.add(_resource4);
-        }
-
-        pushLinkImpl(_resource4, props);
         resources[_key3] = PRELOAD_NO_CREDS;
+        var _headers = renderState.headers;
+
+        var _header;
+
+        if (
+          _headers &&
+          _headers.remainingCapacity > 0 &&
+          as === "font" && // We compute the header here because we might be able to fit it in the max length
+          ((_header = getPreloadAsHeader(href, as, options)), // We always consume the header length since once we find one header that doesn't fit
+          // we assume all the rest won't as well. This is to avoid getting into a situation
+          // where we have a very small remaining capacity but no headers will ever fit and we end
+          // up constantly trying to see if the next resource might make it. In the future we can
+          // make this behavior different between render and prerender since in the latter case
+          // we are less sensitive to the current requests runtime per and more sensitive to maximizing
+          // headers.
+          (_headers.remainingCapacity -= _header.length) >= 2)
+        ) {
+          // If we postpone in the shell we will still emit this preload so we
+          // track it here to prevent it from being reset.
+          renderState.resets.font[_key3] = PRELOAD_NO_CREDS;
+
+          if (_headers.fontPreloads) {
+            _headers.fontPreloads += ", ";
+          } // $FlowFixMe[unsafe-addition]: we assign header during the if condition
+
+          _headers.fontPreloads += _header;
+        } else {
+          // We either don't have headers or we are preloading something that does
+          // not warrant elevated priority so we encode as an element.
+          var _resource4 = [];
+
+          var props = assign(
+            {
+              rel: "preload",
+              href: href,
+              as: as
+            },
+            options
+          );
+
+          pushLinkImpl(_resource4, props);
+
+          switch (as) {
+            case "font":
+              renderState.fontPreloads.add(_resource4);
+              break;
+            // intentional fall through
+
+            default:
+              renderState.bulkPreloads.add(_resource4);
+          }
+        }
       }
     } // If we got this far we created a new resource
 
@@ -7168,6 +7394,150 @@ function adoptPreloadCredentials(target, preloadState) {
   if (target.integrity == null) target.integrity = preloadState[1];
 }
 
+function getPrefetchDNSAsHeader(href) {
+  var escapedHref = escapeHrefForLinkHeaderURLContext(href);
+  return "<" + escapedHref + ">; rel=dns-prefetch";
+}
+
+function getPreconnectAsHeader(href, crossOrigin) {
+  var escapedHref = escapeHrefForLinkHeaderURLContext(href);
+  var value = "<" + escapedHref + ">; rel=preconnect";
+
+  if (typeof crossOrigin === "string") {
+    var escapedCrossOrigin = escapeStringForLinkHeaderQuotedParamValueContext(
+      crossOrigin,
+      "crossOrigin"
+    );
+    value += '; crossorigin="' + escapedCrossOrigin + '"';
+  }
+
+  return value;
+}
+
+function getPreloadAsHeader(href, as, params) {
+  var escapedHref = escapeHrefForLinkHeaderURLContext(href);
+  var escapedAs = escapeStringForLinkHeaderQuotedParamValueContext(as, "as");
+  var value = "<" + escapedHref + '>; rel=preload; as="' + escapedAs + '"';
+
+  for (var paramName in params) {
+    if (hasOwnProperty.call(params, paramName)) {
+      var paramValue = params[paramName];
+
+      if (typeof paramValue === "string") {
+        value +=
+          "; " +
+          paramName.toLowerCase() +
+          '="' +
+          escapeStringForLinkHeaderQuotedParamValueContext(
+            paramValue,
+            paramName
+          ) +
+          '"';
+      }
+    }
+  }
+
+  return value;
+}
+
+function getStylesheetPreloadAsHeader(stylesheet) {
+  var props = stylesheet.props;
+  var preloadOptions = {
+    crossOrigin: props.crossOrigin,
+    integrity: props.integrity,
+    nonce: props.nonce,
+    type: props.type,
+    fetchPriority: props.fetchPriority,
+    referrerPolicy: props.referrerPolicy,
+    media: props.media
+  };
+  return getPreloadAsHeader(props.href, "style", preloadOptions);
+} // This escaping function is only safe to use for href values being written into
+// a "Link" header in between `<` and `>` characters. The primary concern with the href is
+// to escape the bounding characters as well as new lines. This is unsafe to use in any other
+// context
+
+var regexForHrefInLinkHeaderURLContext = /[<>\r\n]/g;
+
+function escapeHrefForLinkHeaderURLContext(hrefInput) {
+  {
+    checkAttributeStringCoercion(hrefInput, "href");
+  }
+
+  var coercedHref = "" + hrefInput;
+  return coercedHref.replace(
+    regexForHrefInLinkHeaderURLContext,
+    escapeHrefForLinkHeaderURLContextReplacer
+  );
+}
+
+function escapeHrefForLinkHeaderURLContextReplacer(match) {
+  switch (match) {
+    case "<":
+      return "%3C";
+
+    case ">":
+      return "%3E";
+
+    case "\n":
+      return "%0A";
+
+    case "\r":
+      return "%0D";
+
+    default: {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error(
+        "escapeLinkHrefForHeaderContextReplacer encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React"
+      );
+    }
+  }
+} // This escaping function is only safe to use for quoted param values in an HTTP header.
+// It is unsafe to use for any value not inside quote marks in parater value position.
+
+var regexForLinkHeaderQuotedParamValueContext = /["';,\r\n]/g;
+
+function escapeStringForLinkHeaderQuotedParamValueContext(value, name) {
+  {
+    checkOptionStringCoercion(value, name);
+  }
+
+  var coerced = "" + value;
+  return coerced.replace(
+    regexForLinkHeaderQuotedParamValueContext,
+    escapeStringForLinkHeaderQuotedParamValueContextReplacer
+  );
+}
+
+function escapeStringForLinkHeaderQuotedParamValueContextReplacer(match) {
+  switch (match) {
+    case '"':
+      return "%22";
+
+    case "'":
+      return "%27";
+
+    case ";":
+      return "%3B";
+
+    case ",":
+      return "%2C";
+
+    case "\n":
+      return "%0A";
+
+    case "\r":
+      return "%0D";
+
+    default: {
+      // eslint-disable-next-line react-internal/prod-error-codes
+      throw new Error(
+        "escapeStringForLinkHeaderQuotedParamValueContextReplacer encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React"
+      );
+    }
+  }
+}
+
 function hoistStyleQueueDependency(styleQueue) {
   this.styles.add(styleQueue);
 }
@@ -7186,11 +7556,114 @@ function hoistResources(renderState, source) {
       currentBoundaryResources
     );
   }
+} // This function is called at various times depending on whether we are rendering
+// or prerendering. In this implementation we only actually emit headers once and
+// subsequent calls are ignored. We track whether the request has a completed shell
+// to determine whether we will follow headers with a flush including stylesheets.
+// In the context of prerrender we don't have a completed shell when the request finishes
+// with a postpone in the shell. In the context of a render we don't have a completed shell
+// if this is called before the shell finishes rendering which usually will happen anytime
+// anything suspends in the shell.
+
+function emitEarlyPreloads(renderState, resumableState, shellComplete) {
+  var onHeaders = renderState.onHeaders;
+
+  if (onHeaders) {
+    var headers = renderState.headers;
+
+    if (headers) {
+      var linkHeader = headers.preconnects;
+
+      if (headers.fontPreloads) {
+        if (linkHeader) {
+          linkHeader += ", ";
+        }
+
+        linkHeader += headers.fontPreloads;
+      }
+
+      if (headers.highImagePreloads) {
+        if (linkHeader) {
+          linkHeader += ", ";
+        }
+
+        linkHeader += headers.highImagePreloads;
+      }
+
+      if (!shellComplete) {
+        // We use raw iterators because we want to be able to halt iteration
+        // We could refactor renderState to store these dually in arrays to
+        // make this more efficient at the cost of additional memory and
+        // write overhead. However this code only runs once per request so
+        // for now I consider this sufficient.
+        var queueIter = renderState.styles.values();
+
+        outer: for (
+          var queueStep = queueIter.next();
+          headers.remainingCapacity > 0 && !queueStep.done;
+          queueStep = queueIter.next()
+        ) {
+          var sheets = queueStep.value.sheets;
+          var sheetIter = sheets.values();
+
+          for (
+            var sheetStep = sheetIter.next();
+            headers.remainingCapacity > 0 && !sheetStep.done;
+            sheetStep = sheetIter.next()
+          ) {
+            var sheet = sheetStep.value;
+            var props = sheet.props;
+            var key = getResourceKey(props.href);
+            var header = getStylesheetPreloadAsHeader(sheet); // We mutate the capacity b/c we don't want to keep checking if later headers will fit.
+            // This means that a particularly long header might close out the header queue where later
+            // headers could still fit. We could in the future alter the behavior here based on prerender vs render
+            // since during prerender we aren't as concerned with pure runtime performance.
+
+            if ((headers.remainingCapacity -= header.length) >= 2) {
+              renderState.resets.style[key] = PRELOAD_NO_CREDS;
+
+              if (linkHeader) {
+                linkHeader += ", ";
+              }
+
+              linkHeader += header; // We already track that the resource exists in resumableState however
+              // if the resumableState resets because we postponed in the shell
+              // which is what is happening in this branch if we are prerendering
+              // then we will end up resetting the resumableState. When it resets we
+              // want to record the fact that this stylesheet was already preloaded
+
+              renderState.resets.style[key] =
+                typeof props.crossOrigin === "string" ||
+                typeof props.integrity === "string"
+                  ? [props.crossOrigin, props.integrity]
+                  : PRELOAD_NO_CREDS;
+            } else {
+              break outer;
+            }
+          }
+        }
+      }
+
+      if (linkHeader) {
+        onHeaders({
+          Link: linkHeader
+        });
+      } else {
+        // We still call this with no headers because a user may be using it as a signal that
+        // it React will not provide any headers
+        onHeaders({});
+      }
+
+      renderState.headers = null;
+      return;
+    }
+  }
 }
 
 function createRenderState(resumableState, generateStaticMarkup) {
   var renderState = createRenderState$1(
     resumableState,
+    undefined,
     undefined,
     undefined,
     undefined,
@@ -7208,6 +7681,9 @@ function createRenderState(resumableState, generateStaticMarkup) {
     headChunks: renderState.headChunks,
     externalRuntimeScript: renderState.externalRuntimeScript,
     bootstrapChunks: renderState.bootstrapChunks,
+    onHeaders: renderState.onHeaders,
+    headers: renderState.headers,
+    resets: renderState.resets,
     charsetChunks: renderState.charsetChunks,
     preconnectChunks: renderState.preconnectChunks,
     importMapChunks: renderState.importMapChunks,
@@ -12217,8 +12693,7 @@ function erroredTask(request, boundary, error) {
   request.allPendingTasks--;
 
   if (request.allPendingTasks === 0) {
-    var onAllReady = request.onAllReady;
-    onAllReady();
+    completeAll(request);
   }
 }
 
@@ -12379,9 +12854,7 @@ function abortTask(task, request, error) {
         request.pendingRootTasks--;
 
         if (request.pendingRootTasks === 0) {
-          request.onShellError = noop;
-          var onShellReady = request.onShellReady;
-          onShellReady();
+          completeShell(request);
         }
       }
     }
@@ -12428,9 +12901,47 @@ function abortTask(task, request, error) {
   request.allPendingTasks--;
 
   if (request.allPendingTasks === 0) {
-    var onAllReady = request.onAllReady;
-    onAllReady();
+    completeAll(request);
   }
+} // I extracted this function out because we want to ensure we consistently emit preloads before
+// transitioning to the next request stage and this transition can happen in multiple places in this
+// implementation.
+
+function completeShell(request) {
+  if (request.trackedPostpones === null) {
+    // We only emit early preloads on shell completion for renders. For prerenders
+    // we wait for the entire Request to finish because we are not responding to a
+    // live request and can wait for as much data as possible.
+    // we should only be calling completeShell when the shell is complete so we
+    // just use a literal here
+    var shellComplete = true;
+    emitEarlyPreloads(
+      request.renderState,
+      request.resumableState,
+      shellComplete
+    );
+  } // We have completed the shell so the shell can't error anymore.
+
+  request.onShellError = noop;
+  var onShellReady = request.onShellReady;
+  onShellReady();
+} // I extracted this function out because we want to ensure we consistently emit preloads before
+// transitioning to the next request stage and this transition can happen in multiple places in this
+// implementation.
+
+function completeAll(request) {
+  // During a render the shell must be complete if the entire request is finished
+  // however during a Prerender it is possible that the shell is incomplete because
+  // it postponed. We cannot use rootPendingTasks in the prerender case because
+  // those hit zero even when the shell postpones. Instead we look at the completedRootSegment
+  var shellComplete =
+    request.trackedPostpones === null // Render, we assume it is completed
+      ? true // Prerender Request, we use the state of the root segment
+      : request.completedRootSegment === null ||
+        request.completedRootSegment.status !== POSTPONED;
+  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
+  var onAllReady = request.onAllReady;
+  onAllReady();
 }
 
 function queueCompletedSegment(boundary, segment) {
@@ -12469,10 +12980,7 @@ function finishedTask(request, boundary, segment) {
     request.pendingRootTasks--;
 
     if (request.pendingRootTasks === 0) {
-      // We have completed the shell so the shell can't error anymore.
-      request.onShellError = noop;
-      var onShellReady = request.onShellReady;
-      onShellReady();
+      completeShell(request);
     }
   } else {
     boundary.pendingTasks--;
@@ -12530,10 +13038,7 @@ function finishedTask(request, boundary, segment) {
   request.allPendingTasks--;
 
   if (request.allPendingTasks === 0) {
-    // This needs to be called at the very end so that we can synchronously write the result
-    // in the callback if needed.
-    var onAllReady = request.onAllReady;
-    onAllReady();
+    completeAll(request);
   }
 }
 
@@ -12721,16 +13226,13 @@ function retryReplayTask(request, task) {
     request.pendingRootTasks--;
 
     if (request.pendingRootTasks === 0) {
-      request.onShellError = noop;
-      var onShellReady = request.onShellReady;
-      onShellReady();
+      completeShell(request);
     }
 
     request.allPendingTasks--;
 
     if (request.allPendingTasks === 0) {
-      var onAllReady = request.onAllReady;
-      onAllReady();
+      completeAll(request);
     }
 
     return;
@@ -13239,6 +13741,28 @@ function startWork(request) {
       return performWork(request);
     });
   }
+
+  if (request.trackedPostpones === null) {
+    // this is either a regular render or a resume. For regular render we want
+    // to call emitEarlyPreloads after the first performWork because we want
+    // are responding to a live request and need to balance sending something early
+    // (i.e. don't want for the shell to finish) but we need something to send.
+    // The only implementation of this is for DOM at the moment and during resumes nothing
+    // actually emits but the code paths here are the same.
+    // During a prerender we don't want to be too aggressive in emitting early preloads
+    // because we aren't responding to a live request and we can wait for the prerender to
+    // postpone before we emit anything.
+    {
+      scheduleWork(function () {
+        return enqueueEarlyPreloadsAfterInitialWork(request);
+      });
+    }
+  }
+}
+
+function enqueueEarlyPreloadsAfterInitialWork(request) {
+  var shellComplete = request.pendingRootTasks === 0;
+  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
 }
 
 function enqueueFlush(request) {
@@ -13261,8 +13785,7 @@ function enqueueFlush(request) {
       }
     });
   }
-}
-
+} // This function is intented to only be called during the pipe function for the Node builds.
 function startFlowing(request, destination) {
   if (request.status === CLOSING) {
     request.status = CLOSED;

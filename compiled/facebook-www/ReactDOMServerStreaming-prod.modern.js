@@ -945,8 +945,11 @@ function pushStartInstance(
           throw Error(
             "If you supply `defaultValue` on a <textarea>, do not pass children."
           );
-        if (isArrayImpl(children$jscomp$1) && 1 < children$jscomp$1.length)
-          throw Error("<textarea> can only have at most one child.");
+        if (isArrayImpl(children$jscomp$1)) {
+          if (1 < children$jscomp$1.length)
+            throw Error("<textarea> can only have at most one child.");
+          value$jscomp$0 = "" + children$jscomp$1[0];
+        }
         value$jscomp$0 = "" + children$jscomp$1;
       }
       "string" === typeof value$jscomp$0 &&
@@ -1451,27 +1454,56 @@ function pushStartInstance(
           )
             promotablePreloads.delete(key$jscomp$0),
               renderState.highImagePreloads.add(resource$jscomp$0);
-        } else
-          resumableState.imageResources.hasOwnProperty(key$jscomp$0) ||
-            ((resumableState.imageResources[key$jscomp$0] = PRELOAD_NO_CREDS),
-            (resource$jscomp$0 = []),
-            pushLinkImpl(resource$jscomp$0, {
-              rel: "preload",
-              as: "image",
-              href: srcSet ? void 0 : src,
-              imageSrcSet: srcSet,
-              imageSizes: sizes,
-              crossOrigin: props.crossOrigin,
-              integrity: props.integrity,
-              type: props.type,
-              fetchPriority: props.fetchPriority,
-              referrerPolicy: props.referrerPolicy
-            }),
-            "high" === props.fetchPriority ||
-            10 > renderState.highImagePreloads.size
-              ? renderState.highImagePreloads.add(resource$jscomp$0)
-              : (renderState.bulkPreloads.add(resource$jscomp$0),
-                promotablePreloads.set(key$jscomp$0, resource$jscomp$0)));
+        } else if (
+          !resumableState.imageResources.hasOwnProperty(key$jscomp$0)
+        ) {
+          resumableState.imageResources[key$jscomp$0] = PRELOAD_NO_CREDS;
+          var input = props.crossOrigin;
+          var JSCompiler_inline_result$jscomp$5 =
+            "string" === typeof input
+              ? "use-credentials" === input
+                ? input
+                : ""
+              : void 0;
+          var headers = renderState.headers,
+            header;
+          headers &&
+          0 < headers.remainingCapacity &&
+          ("high" === props.fetchPriority ||
+            500 > headers.highImagePreloads.length) &&
+          ((header = getPreloadAsHeader(src, "image", {
+            imageSrcSet: props.srcSet,
+            imageSizes: props.sizes,
+            crossOrigin: JSCompiler_inline_result$jscomp$5,
+            integrity: props.integrity,
+            nonce: props.nonce,
+            type: props.type,
+            fetchPriority: props.fetchPriority,
+            referrerPolicy: props.refererPolicy
+          })),
+          2 <= (headers.remainingCapacity -= header.length))
+            ? ((renderState.resets.image[key$jscomp$0] = PRELOAD_NO_CREDS),
+              headers.highImagePreloads && (headers.highImagePreloads += ", "),
+              (headers.highImagePreloads += header))
+            : ((resource$jscomp$0 = []),
+              pushLinkImpl(resource$jscomp$0, {
+                rel: "preload",
+                as: "image",
+                href: srcSet ? void 0 : src,
+                imageSrcSet: srcSet,
+                imageSizes: sizes,
+                crossOrigin: JSCompiler_inline_result$jscomp$5,
+                integrity: props.integrity,
+                type: props.type,
+                fetchPriority: props.fetchPriority,
+                referrerPolicy: props.referrerPolicy
+              }),
+              "high" === props.fetchPriority ||
+              10 > renderState.highImagePreloads.size
+                ? renderState.highImagePreloads.add(resource$jscomp$0)
+                : (renderState.bulkPreloads.add(resource$jscomp$0),
+                  promotablePreloads.set(key$jscomp$0, resource$jscomp$0)));
+        }
       }
       return pushSelfClosing(target$jscomp$0, props, "img");
     case "base":
@@ -1498,36 +1530,36 @@ function pushStartInstance(
     case "head":
       if (2 > formatContext.insertionMode && null === renderState.headChunks) {
         renderState.headChunks = [];
-        var JSCompiler_inline_result$jscomp$5 = pushStartGenericElement(
+        var JSCompiler_inline_result$jscomp$6 = pushStartGenericElement(
           renderState.headChunks,
           props,
           "head"
         );
       } else
-        JSCompiler_inline_result$jscomp$5 = pushStartGenericElement(
+        JSCompiler_inline_result$jscomp$6 = pushStartGenericElement(
           target$jscomp$0,
           props,
           "head"
         );
-      return JSCompiler_inline_result$jscomp$5;
+      return JSCompiler_inline_result$jscomp$6;
     case "html":
       if (
         0 === formatContext.insertionMode &&
         null === renderState.htmlChunks
       ) {
         renderState.htmlChunks = ["<!DOCTYPE html>"];
-        var JSCompiler_inline_result$jscomp$6 = pushStartGenericElement(
+        var JSCompiler_inline_result$jscomp$7 = pushStartGenericElement(
           renderState.htmlChunks,
           props,
           "html"
         );
       } else
-        JSCompiler_inline_result$jscomp$6 = pushStartGenericElement(
+        JSCompiler_inline_result$jscomp$7 = pushStartGenericElement(
           target$jscomp$0,
           props,
           "html"
         );
-      return JSCompiler_inline_result$jscomp$6;
+      return JSCompiler_inline_result$jscomp$7;
     default:
       if (-1 !== type.indexOf("-")) {
         target$jscomp$0.push(startChunkForTag(type));
@@ -2059,10 +2091,29 @@ function prefetchDNS(href) {
       renderState = request.renderState;
     if ("string" === typeof href && href) {
       if (!resumableState.dnsResources.hasOwnProperty(href)) {
-        var resource = [];
         resumableState.dnsResources[href] = null;
-        pushLinkImpl(resource, { href: href, rel: "dns-prefetch" });
-        renderState.preconnects.add(resource);
+        resumableState = renderState.headers;
+        var header, JSCompiler_temp;
+        if (
+          (JSCompiler_temp =
+            resumableState && 0 < resumableState.remainingCapacity)
+        )
+          JSCompiler_temp =
+            ((header =
+              "<" +
+              ("" + href).replace(
+                regexForHrefInLinkHeaderURLContext,
+                escapeHrefForLinkHeaderURLContextReplacer
+              ) +
+              ">; rel=dns-prefetch"),
+            2 <= (resumableState.remainingCapacity -= header.length));
+        JSCompiler_temp
+          ? ((renderState.resets.dns[href] = null),
+            resumableState.preconnects && (resumableState.preconnects += ", "),
+            (resumableState.preconnects += header))
+          : ((header = []),
+            pushLinkImpl(header, { href: href, rel: "dns-prefetch" }),
+            renderState.preconnects.add(header));
       }
       enqueueFlush(request);
     }
@@ -2074,21 +2125,49 @@ function preconnect(href, crossOrigin) {
     var resumableState = request.resumableState,
       renderState = request.renderState;
     if ("string" === typeof href && href) {
-      resumableState =
+      var bucket =
         "use-credentials" === crossOrigin
-          ? resumableState.connectResources.credentials
+          ? "credentials"
           : "string" === typeof crossOrigin
-          ? resumableState.connectResources.anonymous
-          : resumableState.connectResources.default;
-      if (!resumableState.hasOwnProperty(href)) {
-        var resource = [];
-        resumableState[href] = null;
-        pushLinkImpl(resource, {
-          rel: "preconnect",
-          href: href,
-          crossOrigin: crossOrigin
-        });
-        renderState.preconnects.add(resource);
+          ? "anonymous"
+          : "default";
+      if (!resumableState.connectResources[bucket].hasOwnProperty(href)) {
+        resumableState.connectResources[bucket][href] = null;
+        resumableState = renderState.headers;
+        var header, JSCompiler_temp;
+        if (
+          (JSCompiler_temp =
+            resumableState && 0 < resumableState.remainingCapacity)
+        ) {
+          JSCompiler_temp =
+            "<" +
+            ("" + href).replace(
+              regexForHrefInLinkHeaderURLContext,
+              escapeHrefForLinkHeaderURLContextReplacer
+            ) +
+            ">; rel=preconnect";
+          if ("string" === typeof crossOrigin) {
+            var escapedCrossOrigin = ("" + crossOrigin).replace(
+              regexForLinkHeaderQuotedParamValueContext,
+              escapeStringForLinkHeaderQuotedParamValueContextReplacer
+            );
+            JSCompiler_temp += '; crossorigin="' + escapedCrossOrigin + '"';
+          }
+          JSCompiler_temp =
+            ((header = JSCompiler_temp),
+            2 <= (resumableState.remainingCapacity -= header.length));
+        }
+        JSCompiler_temp
+          ? ((renderState.resets.connect[bucket][href] = null),
+            resumableState.preconnects && (resumableState.preconnects += ", "),
+            (resumableState.preconnects += header))
+          : ((bucket = []),
+            pushLinkImpl(bucket, {
+              rel: "preconnect",
+              href: href,
+              crossOrigin: crossOrigin
+            }),
+            renderState.preconnects.add(bucket));
       }
       enqueueFlush(request);
     }
@@ -2107,23 +2186,34 @@ function preload(href, as, options) {
             var imageSizes = options.imageSizes;
             var fetchPriority = options.fetchPriority;
           }
-          imageSizes = imageSrcSet
+          var key = imageSrcSet
             ? imageSrcSet + "\n" + (imageSizes || "")
             : href;
-          if (resumableState.imageResources.hasOwnProperty(imageSizes)) return;
-          resumableState.imageResources[imageSizes] = PRELOAD_NO_CREDS;
-          resumableState = [];
-          pushLinkImpl(
-            resumableState,
-            assign(
-              { rel: "preload", href: imageSrcSet ? void 0 : href, as: as },
-              options
-            )
-          );
-          "high" === fetchPriority
-            ? renderState.highImagePreloads.add(resumableState)
-            : (renderState.bulkPreloads.add(resumableState),
-              renderState.preloads.images.set(imageSizes, resumableState));
+          if (resumableState.imageResources.hasOwnProperty(key)) return;
+          resumableState.imageResources[key] = PRELOAD_NO_CREDS;
+          resumableState = renderState.headers;
+          var header;
+          resumableState &&
+          0 < resumableState.remainingCapacity &&
+          "high" === fetchPriority &&
+          ((header = getPreloadAsHeader(href, as, options)),
+          2 <= (resumableState.remainingCapacity -= header.length))
+            ? ((renderState.resets.image[key] = PRELOAD_NO_CREDS),
+              resumableState.highImagePreloads &&
+                (resumableState.highImagePreloads += ", "),
+              (resumableState.highImagePreloads += header))
+            : ((resumableState = []),
+              pushLinkImpl(
+                resumableState,
+                assign(
+                  { rel: "preload", href: imageSrcSet ? void 0 : href, as: as },
+                  options
+                )
+              ),
+              "high" === fetchPriority
+                ? renderState.highImagePreloads.add(resumableState)
+                : (renderState.bulkPreloads.add(resumableState),
+                  renderState.preloads.images.set(key, resumableState)));
           break;
         case "style":
           if (resumableState.styleResources.hasOwnProperty(href)) return;
@@ -2167,17 +2257,31 @@ function preload(href, as, options) {
           } else
             (imageSrcSet = {}),
               (resumableState.unknownResources[as] = imageSrcSet);
-          resumableState = [];
-          options = assign({ rel: "preload", href: href, as: as }, options);
-          switch (as) {
-            case "font":
-              renderState.fontPreloads.add(resumableState);
-              break;
-            default:
-              renderState.bulkPreloads.add(resumableState);
-          }
-          pushLinkImpl(resumableState, options);
           imageSrcSet[href] = PRELOAD_NO_CREDS;
+          if (
+            (resumableState = renderState.headers) &&
+            0 < resumableState.remainingCapacity &&
+            "font" === as &&
+            ((key = getPreloadAsHeader(href, as, options)),
+            2 <= (resumableState.remainingCapacity -= key.length))
+          )
+            (renderState.resets.font[href] = PRELOAD_NO_CREDS),
+              resumableState.fontPreloads &&
+                (resumableState.fontPreloads += ", "),
+              (resumableState.fontPreloads += key);
+          else
+            switch (
+              ((resumableState = []),
+              (href = assign({ rel: "preload", href: href, as: as }, options)),
+              pushLinkImpl(resumableState, href),
+              as)
+            ) {
+              case "font":
+                renderState.fontPreloads.add(resumableState);
+                break;
+              default:
+                renderState.bulkPreloads.add(resumableState);
+            }
       }
       enqueueFlush(request);
     }
@@ -2313,11 +2417,130 @@ function adoptPreloadCredentials(target, preloadState) {
   null == target.crossOrigin && (target.crossOrigin = preloadState[0]);
   null == target.integrity && (target.integrity = preloadState[1]);
 }
+function getPreloadAsHeader(href, as, params) {
+  href = ("" + href).replace(
+    regexForHrefInLinkHeaderURLContext,
+    escapeHrefForLinkHeaderURLContextReplacer
+  );
+  as = ("" + as).replace(
+    regexForLinkHeaderQuotedParamValueContext,
+    escapeStringForLinkHeaderQuotedParamValueContextReplacer
+  );
+  as = "<" + href + '>; rel=preload; as="' + as + '"';
+  for (var paramName in params)
+    hasOwnProperty.call(params, paramName) &&
+      ((href = params[paramName]),
+      "string" === typeof href &&
+        (as +=
+          "; " +
+          paramName.toLowerCase() +
+          '="' +
+          ("" + href).replace(
+            regexForLinkHeaderQuotedParamValueContext,
+            escapeStringForLinkHeaderQuotedParamValueContextReplacer
+          ) +
+          '"'));
+  return as;
+}
+var regexForHrefInLinkHeaderURLContext = /[<>\r\n]/g;
+function escapeHrefForLinkHeaderURLContextReplacer(match) {
+  switch (match) {
+    case "<":
+      return "%3C";
+    case ">":
+      return "%3E";
+    case "\n":
+      return "%0A";
+    case "\r":
+      return "%0D";
+    default:
+      throw Error(
+        "escapeLinkHrefForHeaderContextReplacer encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React"
+      );
+  }
+}
+var regexForLinkHeaderQuotedParamValueContext = /["';,\r\n]/g;
+function escapeStringForLinkHeaderQuotedParamValueContextReplacer(match) {
+  switch (match) {
+    case '"':
+      return "%22";
+    case "'":
+      return "%27";
+    case ";":
+      return "%3B";
+    case ",":
+      return "%2C";
+    case "\n":
+      return "%0A";
+    case "\r":
+      return "%0D";
+    default:
+      throw Error(
+        "escapeStringForLinkHeaderQuotedParamValueContextReplacer encountered a match it does not know how to replace. this means the match regex and the replacement characters are no longer in sync. This is a bug in React"
+      );
+  }
+}
 function hoistStyleQueueDependency(styleQueue) {
   this.styles.add(styleQueue);
 }
 function hoistStylesheetDependency(stylesheet) {
   this.stylesheets.add(stylesheet);
+}
+function emitEarlyPreloads(renderState, resumableState, shellComplete) {
+  if ((resumableState = renderState.onHeaders)) {
+    var headers = renderState.headers;
+    if (headers) {
+      var linkHeader = headers.preconnects;
+      headers.fontPreloads &&
+        (linkHeader && (linkHeader += ", "),
+        (linkHeader += headers.fontPreloads));
+      headers.highImagePreloads &&
+        (linkHeader && (linkHeader += ", "),
+        (linkHeader += headers.highImagePreloads));
+      if (!shellComplete) {
+        shellComplete = renderState.styles.values();
+        var queueStep = shellComplete.next();
+        a: for (
+          ;
+          0 < headers.remainingCapacity && !queueStep.done;
+          queueStep = shellComplete.next()
+        ) {
+          queueStep = queueStep.value.sheets.values();
+          for (
+            var sheetStep = queueStep.next();
+            0 < headers.remainingCapacity && !sheetStep.done;
+            sheetStep = queueStep.next()
+          ) {
+            var sheet = sheetStep.value;
+            sheetStep = sheet.props;
+            var key = sheetStep.href;
+            sheet = sheet.props;
+            sheet = getPreloadAsHeader(sheet.href, "style", {
+              crossOrigin: sheet.crossOrigin,
+              integrity: sheet.integrity,
+              nonce: sheet.nonce,
+              type: sheet.type,
+              fetchPriority: sheet.fetchPriority,
+              referrerPolicy: sheet.referrerPolicy,
+              media: sheet.media
+            });
+            if (2 <= (headers.remainingCapacity -= sheet.length))
+              (renderState.resets.style[key] = PRELOAD_NO_CREDS),
+                linkHeader && (linkHeader += ", "),
+                (linkHeader += sheet),
+                (renderState.resets.style[key] =
+                  "string" === typeof sheetStep.crossOrigin ||
+                  "string" === typeof sheetStep.integrity
+                    ? [sheetStep.crossOrigin, sheetStep.integrity]
+                    : PRELOAD_NO_CREDS);
+            else break a;
+          }
+        }
+      }
+      linkHeader ? resumableState({ Link: linkHeader }) : resumableState({});
+      renderState.headers = null;
+    }
+  }
 }
 var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -2790,11 +3013,11 @@ function useFormState(action, initialState, permalink) {
       });
     return [initialState, action];
   }
-  var boundAction$18 = action.bind(null, initialState);
+  var boundAction$20 = action.bind(null, initialState);
   return [
     initialState,
     function (payload) {
-      boundAction$18(payload);
+      boundAction$20(payload);
     }
   ];
 }
@@ -3947,15 +4170,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructiveImpl(request, task, null, node, childIndex);
-    } catch (thrownValue$33) {
+    } catch (thrownValue$35) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$33 === SuspenseException
+          thrownValue$35 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$33),
+            : thrownValue$35),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -4081,8 +4304,7 @@ function abortTask(task, request, error) {
           boundary
         ));
       request.pendingRootTasks--;
-      0 === request.pendingRootTasks &&
-        ((request.onShellError = noop), (task = request.onShellReady), task());
+      0 === request.pendingRootTasks && completeShell(request);
     }
   } else
     boundary.pendingTasks--,
@@ -4096,7 +4318,26 @@ function abortTask(task, request, error) {
       }),
       boundary.fallbackAbortableTasks.clear();
   request.allPendingTasks--;
-  0 === request.allPendingTasks && ((task = request.onAllReady), task());
+  0 === request.allPendingTasks && completeAll(request);
+}
+function completeShell(request) {
+  null === request.trackedPostpones &&
+    emitEarlyPreloads(request.renderState, request.resumableState, !0);
+  request.onShellError = noop;
+  request = request.onShellReady;
+  request();
+}
+function completeAll(request) {
+  emitEarlyPreloads(
+    request.renderState,
+    request.resumableState,
+    null === request.trackedPostpones
+      ? !0
+      : null === request.completedRootSegment ||
+          5 !== request.completedRootSegment.status
+  );
+  request = request.onAllReady;
+  request();
 }
 function queueCompletedSegment(boundary, segment) {
   if (
@@ -4120,10 +4361,7 @@ function finishedTask(request, boundary, segment) {
       request.completedRootSegment = segment;
     }
     request.pendingRootTasks--;
-    0 === request.pendingRootTasks &&
-      ((request.onShellError = noop),
-      (boundary = request.onShellReady),
-      boundary());
+    0 === request.pendingRootTasks && completeShell(request);
   } else
     boundary.pendingTasks--,
       4 !== boundary.status &&
@@ -4146,7 +4384,7 @@ function finishedTask(request, boundary, segment) {
               boundary.parentFlushed &&
               request.partialBoundaries.push(boundary)));
   request.allPendingTasks--;
-  0 === request.allPendingTasks && ((request = request.onAllReady), request());
+  0 === request.allPendingTasks && completeAll(request);
 }
 function flushSubtree(request, destination, segment) {
   segment.parentFlushed = !0;
@@ -4592,13 +4830,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$35 = partialBoundaries[i];
+      var boundary$37 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.renderState.boundaryResources =
-          boundary$35.resources;
-        var completedSegments = boundary$35.completedSegments;
+          boundary$37.resources;
+        var completedSegments = boundary$37.completedSegments;
         for (
           resumableState$jscomp$0 = 0;
           resumableState$jscomp$0 < completedSegments.length;
@@ -4608,7 +4846,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$35,
+              boundary$37,
               completedSegments[resumableState$jscomp$0]
             )
           ) {
@@ -4620,7 +4858,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$0);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$35.resources,
+          boundary$37.resources,
           clientRenderedBoundaries.renderState
         );
       }
@@ -4675,8 +4913,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$37) {
-    logRecoverableError(request, error$37), fatalError(request, error$37);
+  } catch (error$39) {
+    logRecoverableError(request, error$39), fatalError(request, error$39);
   }
 }
 exports.abortStream = function (stream, reason) {
@@ -4774,16 +5012,9 @@ exports.renderNextChunk = function (stream) {
                   errorDigest
                 );
                 request.pendingRootTasks--;
-                if (0 === request.pendingRootTasks) {
-                  request.onShellError = noop;
-                  var onShellReady = request.onShellReady;
-                  onShellReady();
-                }
+                0 === request.pendingRootTasks && completeShell(request);
                 request.allPendingTasks--;
-                if (0 === request.allPendingTasks) {
-                  var onAllReady = request.onAllReady;
-                  onAllReady();
-                }
+                0 === request.allPendingTasks && completeAll(request);
               }
             } finally {
               request.renderState.boundaryResources = null;
@@ -4849,10 +5080,7 @@ exports.renderNextChunk = function (stream) {
                           boundary$jscomp$0
                         )));
                 request.allPendingTasks--;
-                if (0 === request.allPendingTasks) {
-                  var onAllReady$jscomp$0 = request.onAllReady;
-                  onAllReady$jscomp$0();
-                }
+                0 === request.allPendingTasks && completeAll(request);
               }
             } finally {
               request.renderState.boundaryResources = null;
@@ -4958,6 +5186,15 @@ exports.renderToStream = function (children, options) {
     headChunks: null,
     externalRuntimeScript: externalRuntimeScript,
     bootstrapChunks: bootstrapChunks,
+    onHeaders: void 0,
+    headers: null,
+    resets: {
+      font: {},
+      dns: {},
+      connect: { default: {}, anonymous: {}, credentials: {} },
+      image: {},
+      style: {}
+    },
     charsetChunks: [],
     preconnectChunks: [],
     importMapChunks: [],
