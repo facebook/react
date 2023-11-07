@@ -19,7 +19,12 @@ import { assertExhaustive } from "../Utils/utils";
 import { insertGatedFunctionDeclaration } from "./Gating";
 import { addImportsToProgram, updateUseMemoCacheImport } from "./Imports";
 import { addInstrumentForget } from "./Instrumentation";
-import { ExternalFunction, PluginOptions, parsePluginOptions } from "./Options";
+import {
+  ExternalFunction,
+  PluginOptions,
+  parsePluginOptions,
+  tryParseExternalFunction,
+} from "./Options";
 import { compileFn } from "./Pipeline";
 
 export type CompilerPass = {
@@ -340,16 +345,31 @@ export function compileProgram(
   }
 
   const externalFunctions: ExternalFunction[] = [];
-  // TODO: check for duplicate import specifiers
-  if (options.gating != null) {
-    externalFunctions.push(options.gating);
+  try {
+    // TODO: check for duplicate import specifiers
+    if (options.gating != null) {
+      const gating = tryParseExternalFunction(options.gating);
+      externalFunctions.push(gating);
+    }
+
+    if (options.instrumentForget != null) {
+      const instrumentForget = tryParseExternalFunction(
+        options.instrumentForget
+      );
+      externalFunctions.push(instrumentForget);
+    }
+
+    if (options.environment?.enableEmitFreeze != null) {
+      const enableEmitFreeze = tryParseExternalFunction(
+        options.environment.enableEmitFreeze
+      );
+      externalFunctions.push(enableEmitFreeze);
+    }
+  } catch (err) {
+    handleError(pass, null, err);
+    return;
   }
-  if (options.instrumentForget != null) {
-    externalFunctions.push(options.instrumentForget);
-  }
-  if (options.environment?.enableEmitFreeze != null) {
-    externalFunctions.push(options.environment.enableEmitFreeze);
-  }
+
   addImportsToProgram(program, externalFunctions);
 }
 

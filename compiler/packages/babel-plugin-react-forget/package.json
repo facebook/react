@@ -31,7 +31,9 @@
     "@babel/types": "^7.19.0",
     "chalk": "4",
     "invariant": "^2.2.4",
-    "pretty-format": "^24"
+    "pretty-format": "^24",
+    "zod": "^3.22.4",
+    "zod-validation-error": "^2.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.2.0",

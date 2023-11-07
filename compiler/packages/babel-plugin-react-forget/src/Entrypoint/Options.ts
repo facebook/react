@@ -6,24 +6,39 @@
  */
 
 import * as t from "@babel/types";
-import { CompilerErrorDetailOptions } from "../CompilerError";
+import { z } from "zod";
+import { CompilerError, CompilerErrorDetailOptions } from "../CompilerError";
 import { PartialEnvironmentConfig } from "../HIR/Environment";
 
-export type ExternalFunction = {
-  /**
-   * Source for the imported module that exports the `importSpecifierName` functions
-   */
-  source: string;
-  /**
-   * Unique name for the feature flag test condition, eg `isForgetEnabled_ProjectName`
-   */
-  importSpecifierName: string;
-};
+import { fromZodError } from "zod-validation-error";
 
-export type InstrumentForgetOptions = {
-  gating: ExternalFunction;
-  instrumentFn: ExternalFunction;
-};
+export const ExternalFunctionSchema = z.object({
+  // Source for the imported module that exports the `importSpecifierName` functions
+  source: z.string(),
+
+  // Unique name for the feature flag test condition, eg `isForgetEnabled_ProjectName`
+  importSpecifierName: z.string(),
+});
+
+export function tryParseExternalFunction(
+  maybeExternalFunction: any
+): ExternalFunction {
+  const externalFunction = ExternalFunctionSchema.safeParse(
+    maybeExternalFunction
+  );
+  if (externalFunction.success) {
+    return externalFunction.data;
+  }
+
+  CompilerError.invalidConfig({
+    reason: `${fromZodError(externalFunction.error)}`,
+    description: "Update Forget config to fix the error",
+    loc: null,
+    suggestions: null,
+  });
+}
+
+export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
 
 export type PanicThresholdOptions =
   // Any errors will panic the compiler by throwing an exception, which will
