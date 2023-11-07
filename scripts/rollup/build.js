@@ -56,6 +56,7 @@ const {
   NODE_PROFILING,
   BUN_DEV,
   BUN_PROD,
+  FB_WWW_BROWSER_SCRIPT,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -251,6 +252,7 @@ function getFormat(bundleType) {
     case ESM_DEV:
     case ESM_PROD:
       return `es`;
+    case FB_WWW_BROWSER_SCRIPT:
     case BROWSER_SCRIPT:
       return `iife`;
   }
@@ -280,6 +282,7 @@ function isProductionBundleType(bundleType) {
     case RN_OSS_PROFILING:
     case RN_FB_PROD:
     case RN_FB_PROFILING:
+    case FB_WWW_BROWSER_SCRIPT:
     case BROWSER_SCRIPT:
       return true;
     default:
@@ -304,6 +307,7 @@ function isProfilingBundleType(bundleType) {
     case ESM_PROD:
     case UMD_DEV:
     case UMD_PROD:
+    case FB_WWW_BROWSER_SCRIPT:
     case BROWSER_SCRIPT:
       return false;
     case FB_WWW_PROFILING:
@@ -322,10 +326,12 @@ function getBundleTypeFlags(bundleType) {
     bundleType === UMD_DEV ||
     bundleType === UMD_PROD ||
     bundleType === UMD_PROFILING;
-  const isFBWWWBundle =
+  const isFBWWWBundleAndNotBrowserScript =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
     bundleType === FB_WWW_PROFILING;
+  const isFBWWWBundle =
+    isFBWWWBundleAndNotBrowserScript || bundleType === FB_WWW_BROWSER_SCRIPT;
   const isRNBundle =
     bundleType === RN_OSS_DEV ||
     bundleType === RN_OSS_PROD ||
@@ -339,7 +345,10 @@ function getBundleTypeFlags(bundleType) {
     bundleType === RN_FB_PROD ||
     bundleType === RN_FB_PROFILING;
 
-  const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
+  const isBrowserScript = FB_WWW_BROWSER_SCRIPT || BROWSER_SCRIPT;
+
+  const shouldStayReadable =
+    isFBWWWBundleAndNotBrowserScript || isRNBundle || forcePrettyOutput;
 
   const shouldBundleDependencies =
     bundleType === UMD_DEV ||
@@ -348,9 +357,11 @@ function getBundleTypeFlags(bundleType) {
 
   return {
     isUMDBundle,
+    isFBWWWBundleAndNotBrowserScript,
     isFBWWWBundle,
     isRNBundle,
     isFBRNBundle,
+    isBrowserScript,
     shouldBundleDependencies,
     shouldStayReadable,
   };
@@ -387,7 +398,8 @@ function getPlugins(
     const isProduction = isProductionBundleType(bundleType);
     const isProfiling = isProfilingBundleType(bundleType);
 
-    const {isUMDBundle, shouldStayReadable} = getBundleTypeFlags(bundleType);
+    const {isUMDBundle, shouldStayReadable, isFBWWWBundle, isBrowserScript} =
+      getBundleTypeFlags(bundleType);
 
     const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
 
@@ -408,7 +420,8 @@ function getPlugins(
       needsMinifiedByClosure &&
       !isUMDBundle &&
       !sourcemapPackageExcludes.includes(entry) &&
-      !shouldStayReadable;
+      !shouldStayReadable &&
+      bundleType !== FB_WWW_BROWSER_SCRIPT;
 
     return [
       // Keep dynamic imports as externals
@@ -494,11 +507,12 @@ function getPlugins(
             language_out:
               bundleType === NODE_ES2015
                 ? 'ECMASCRIPT_2020'
-                : bundleType === BROWSER_SCRIPT
+                : isBrowserScript
                 ? 'ECMASCRIPT5'
                 : 'ECMASCRIPT5_STRICT',
             emit_use_strict:
               bundleType !== BROWSER_SCRIPT &&
+              bundleType !== FB_WWW_BROWSER_SCRIPT &&
               bundleType !== ESM_PROD &&
               bundleType !== ESM_DEV,
             env: 'CUSTOM',
@@ -697,12 +711,15 @@ async function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  const {isFBWWWBundle, isFBRNBundle, shouldBundleDependencies} =
-    getBundleTypeFlags(bundleType);
+  const {
+    isFBWWWBundleAndNotBrowserScript,
+    isFBRNBundle,
+    shouldBundleDependencies,
+  } = getBundleTypeFlags(bundleType);
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
-    isFBWWWBundle || isFBRNBundle
+    isFBWWWBundleAndNotBrowserScript || isFBRNBundle
   );
 
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
@@ -903,6 +920,7 @@ async function buildEverything() {
       [bundle, NODE_PROFILING],
       [bundle, BUN_DEV],
       [bundle, BUN_PROD],
+      [bundle, FB_WWW_BROWSER_SCRIPT],
       [bundle, FB_WWW_DEV],
       [bundle, FB_WWW_PROD],
       [bundle, FB_WWW_PROFILING],

@@ -133,10 +133,6 @@ jobs:
           mv build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
             ./compiled/facebook-www/eslint-plugin-react-hooks.js
 
-          # Copy unstable_server-external-runtime.js into facebook-www
-          mv build/oss-stable/react-dom/unstable_server-external-runtime.js \
-            ./compiled/facebook-www/unstable_server-external-runtime.js
-
           # Copy react-refresh-babel.development.js into babel-plugin-react-refresh
           mv build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js \
             ./compiled/babel-plugin-react-refresh/index.js
@@ -148,7 +144,7 @@ jobs:
           mkdir -p ${BASE_FOLDER}/react-native-github/Libraries/Renderer/
           mkdir -p ${BASE_FOLDER}/RKJSModules/vendor/{scheduler,react,react-is,react-test-renderer}/
 
-          # Move React Native renderer 
+          # Move React Native renderer
           mv build/react-native/implementations/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
           mv build/react-native/shims/ $BASE_FOLDER/react-native-github/Libraries/Renderer/
           mv build/facebook-react-native/scheduler/cjs/ $BASE_FOLDER/RKJSModules/vendor/scheduler/

@@ -29,6 +29,7 @@ const {
   NODE_PROFILING,
   BUN_DEV,
   BUN_PROD,
+  FB_WWW_BROWSER_SCRIPT,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -66,6 +67,23 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
     case UMD_PROD:
     case UMD_PROFILING:
       return `build/node_modules/${packageName}/umd/${filename}`;
+    case FB_WWW_BROWSER_SCRIPT: {
+      // Bundles that are served as browser scripts need to be able to be sent
+      // straight to the browser with any additional bundling. We shouldn't use
+      // a module to re-export. Depending on how they are served, they also may
+      // not go through package.json module resolution, so we shouldn't rely on
+      // that either. We should consider the output path as part of the public
+      // contract, and explicitly specify its location within the package's
+      // directory structure.
+      const outputPath = bundle.outputPath;
+      if (!outputPath) {
+        throw new Error(
+          'Bundles with type FB_WWW_BROWSER_SCRIPT must specific an explicit ' +
+          'output path.'
+        );
+      }
+      return `build/facebook-www/${outputPath}`;
+    }
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:

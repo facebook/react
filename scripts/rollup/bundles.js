@@ -19,6 +19,7 @@ const bundleTypes = {
   NODE_PROFILING: 'NODE_PROFILING',
   BUN_DEV: 'BUN_DEV',
   BUN_PROD: 'BUN_PROD',
+  FB_WWW_BROWSER_SCRIPT: 'FB_WWW_BROWSER_SCRIPT',
   FB_WWW_DEV: 'FB_WWW_DEV',
   FB_WWW_PROD: 'FB_WWW_PROD',
   FB_WWW_PROFILING: 'FB_WWW_PROFILING',
@@ -43,6 +44,7 @@ const {
   NODE_PROFILING,
   BUN_DEV,
   BUN_PROD,
+  FB_WWW_BROWSER_SCRIPT,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -300,7 +302,7 @@ const bundles = [
 
   /******* React DOM Fizz Server External Runtime *******/
   {
-    bundleTypes: [BROWSER_SCRIPT],
+    bundleTypes: [BROWSER_SCRIPT, FB_WWW_BROWSER_SCRIPT],
     moduleType: RENDERER,
     entry: 'react-dom/unstable_server-external-runtime',
     outputPath: 'unstable_server-external-runtime.js',
@@ -1130,6 +1132,7 @@ function getFilename(bundle, bundleType) {
     case RN_FB_PROFILING:
     case RN_OSS_PROFILING:
       return `${globalName}-profiling.js`;
+    case FB_WWW_BROWSER_SCRIPT:
     case BROWSER_SCRIPT:
       return `${name}.js`;
   }

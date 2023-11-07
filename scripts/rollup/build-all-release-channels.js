@@ -168,7 +168,10 @@ function processStable(buildDir) {
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
         hash.update(fs.readFileSync(filePath));
-        fs.renameSync(filePath, filePath.replace('.js', '.classic.js'));
+
+        if (fileName !== 'unstable_server-external-runtime.js') {
+          fs.renameSync(filePath, filePath.replace('.js', '.classic.js'));
+        }
       }
     }
     updatePlaceholderReactVersionInCompiledArtifacts(
@@ -242,7 +245,9 @@ function processExperimental(buildDir, version) {
       const stats = fs.statSync(filePath);
       if (!stats.isDirectory()) {
         hash.update(fs.readFileSync(filePath));
-        fs.renameSync(filePath, filePath.replace('.js', '.modern.js'));
+        if (fileName !== 'unstable_server-external-runtime.js') {
+          fs.renameSync(filePath, filePath.replace('.js', '.modern.js'));
+        }
       }
     }
     updatePlaceholderReactVersionInCompiledArtifacts(

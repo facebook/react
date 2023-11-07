@@ -17,6 +17,7 @@ const {
   NODE_PROFILING,
   BUN_DEV,
   BUN_PROD,
+  FB_WWW_BROWSER_SCRIPT,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -442,7 +443,7 @@ function wrapBundle(
     }
   }
 
-  if (bundleType === BROWSER_SCRIPT) {
+  if (bundleType === BROWSER_SCRIPT || FB_WWW_BROWSER_SCRIPT) {
     // Bundles of type BROWSER_SCRIPT get sent straight to the browser without
     // additional processing. So we should exclude any extra wrapper comments.
     return source;
