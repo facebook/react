@@ -242,7 +242,6 @@ export function compileProgram(
   // have already encountered errors) for reporting.
   const lintError = findEslintSuppressions(pass.comments);
   let hasCriticalError = lintError != null;
-  let hasForgetMutatedOriginalSource: boolean = false;
   const compiledFns: CompileResult[] = [];
 
   const traverseFunction = (
@@ -359,11 +358,10 @@ export function compileProgram(
   // error elsewhere in the file, regardless of bailout mode.
   for (const { originalFn: fn, compiledFn } of compiledFns) {
     insertNewFunctionDeclaration(fn, compiledFn, pass);
-    hasForgetMutatedOriginalSource = true;
   }
 
   // Forget compiled the component, we need to update existing imports of unstable_useMemoCache
-  if (hasForgetMutatedOriginalSource) {
+  if (compiledFns.length > 0) {
     updateUseMemoCacheImport(program, options);
   }
 
