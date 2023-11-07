@@ -1,27 +1,20 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @nolint
- * @preventMunge
- * @generated SignedSource<<e31a0fac45863f3f63abd21e7dea9758>>
- */
+/*
 
+ Copyright (c) Meta Platforms, Inc. and affiliates.
 
-          'use strict';
+ This source code is licensed under the MIT license found in the
+ LICENSE file in the root directory of this source tree.
 
-/* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart ===
-    'function'
-) {
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
-}
-          "use strict";
+ @noflow
+ @nolint
+ @preventMunge
+ @generated SignedSource<<8168b1ab1f69cb9572ec780bb8224b09>>
+*/
+"use strict";
+"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+  "function" ===
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
 require("react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore");
 var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/ReactNativePrivateInterface"),
   React = require("react"),
@@ -10462,7 +10455,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1189 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-d6cf2528",
+    version: "18.3.0-canary-918fff52",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10518,7 +10511,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-d6cf2528"
+  reconcilerVersion: "18.3.0-canary-918fff52"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
@@ -10616,13 +10609,7 @@ exports.unmountComponentAtNodeAndRemoveContainer = function (containerTag) {
   ReactNativePrivateInterface.UIManager.removeRootView(containerTag);
 };
 exports.unstable_batchedUpdates = batchedUpdates$1;
-
-          /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop ===
-    'function'
-) {
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());
-}
-        
+"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+  "function" ===
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(Error());

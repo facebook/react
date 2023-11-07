@@ -1,27 +1,20 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @nolint
- * @preventMunge
- * @generated SignedSource<<933803924ed19507fb33fd09fca6dd3c>>
- */
+/*
 
+ Copyright (c) Meta Platforms, Inc. and affiliates.
 
-          'use strict';
+ This source code is licensed under the MIT license found in the
+ LICENSE file in the root directory of this source tree.
 
-/* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart ===
-    'function'
-) {
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
-}
-          "use strict";
+ @noflow
+ @nolint
+ @preventMunge
+ @generated SignedSource<<0f7797b47b8b2ddfff6ea9a65887641f>>
+*/
+"use strict";
+"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+  "function" ===
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
 require("react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore");
 var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/ReactNativePrivateInterface"),
   dynamicFlags = require("ReactNativeInternalFeatureFlags"),
@@ -10244,7 +10237,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1126 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-8ec7f1ee",
+    version: "18.3.0-canary-42042f68",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10300,7 +10293,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-8ec7f1ee"
+  reconcilerVersion: "18.3.0-canary-42042f68"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
@@ -10415,13 +10408,7 @@ exports.stopSurface = function (containerTag) {
 exports.unmountComponentAtNode = function (containerTag) {
   this.stopSurface(containerTag);
 };
-
-          /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop ===
-    'function'
-) {
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());
-}
-        
+"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+  "function" ===
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(Error());

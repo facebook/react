@@ -1,15 +1,15 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @nolint
- * @preventMunge
- * @generated SignedSource<<87e7b57a62257e3d246f6aac3f6ce7c3>>
- */
+/*
 
+ Copyright (c) Meta Platforms, Inc. and affiliates.
+
+ This source code is licensed under the MIT license found in the
+ LICENSE file in the root directory of this source tree.
+
+ @noflow
+ @nolint
+ @preventMunge
+ @generated SignedSource<<9a8d63af6064b0ad8e3e38ffda3394dd>>
+*/
 "use strict";
 function push(heap, node) {
   var index = heap.length;

@@ -1,15 +1,15 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @nolint
- * @preventMunge
- * @generated SignedSource<<0e17d6b3fe815dee43646c53805b2e2b>>
- */
+/*
 
+ Copyright (c) Meta Platforms, Inc. and affiliates.
+
+ This source code is licensed under the MIT license found in the
+ LICENSE file in the root directory of this source tree.
+
+ @noflow
+ @nolint
+ @preventMunge
+ @generated SignedSource<<427478b618267376bbb421f37dff00a2>>
+*/
 "use strict";
 var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -580,4 +580,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-2983249dd-20231107";
+exports.version = "18.3.0-canary-2c8a139a5-20231107";

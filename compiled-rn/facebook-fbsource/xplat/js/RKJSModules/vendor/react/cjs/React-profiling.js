@@ -1,27 +1,20 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- * @noflow
- * @nolint
- * @preventMunge
- * @generated SignedSource<<091eb71570b9a78d0a8b78f2b4396b5b>>
- */
+/*
 
+ Copyright (c) Meta Platforms, Inc. and affiliates.
 
-          'use strict';
+ This source code is licensed under the MIT license found in the
+ LICENSE file in the root directory of this source tree.
 
-/* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart ===
-    'function'
-) {
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
-}
-          "use strict";
+ @noflow
+ @nolint
+ @preventMunge
+ @generated SignedSource<<57cc97c15e4037e1ee2d1a3ed3006928>>
+*/
+"use strict";
+"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+  "function" ===
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
 var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -583,14 +576,8 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-2983249dd-20231107";
-
-          /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop ===
-    'function'
-) {
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());
-}
-        
+exports.version = "18.3.0-canary-2c8a139a5-20231107";
+"undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
+  "function" ===
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
+  __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(Error());
