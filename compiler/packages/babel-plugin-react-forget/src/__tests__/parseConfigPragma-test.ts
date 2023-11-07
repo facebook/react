@@ -5,21 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { DEFAULT_ENVIRONMENT_CONFIG, parseConfigPragma } from "..";
+import { parseConfigPragma, validateEnvironmentConfig } from "..";
 
 describe("parseConfigPragma()", () => {
   it("parses flags in various forms", () => {
+    const defaultConfig = validateEnvironmentConfig({});
+
+    // Validate defaults first to make sure that the parser is getting the value from the pragma,
+    // and not just missing it and getting the default value
+    expect(defaultConfig.enableForest).toBe(false);
+    expect(defaultConfig.validateFrozenLambdas).toBe(false);
+    expect(defaultConfig.memoizeJsxElements).toBe(true);
+
     const config = parseConfigPragma(
       "@enableForest @validateFrozenLambdas:true @memoizeJsxElements:false"
     );
-    // Validate defaults first to make sure that the parser is getting the value from the pragma,
-    // and not just missing it and getting the default value
-    expect(DEFAULT_ENVIRONMENT_CONFIG.enableForest).toBe(false);
-    expect(DEFAULT_ENVIRONMENT_CONFIG.validateFrozenLambdas).toBe(false);
-    expect(DEFAULT_ENVIRONMENT_CONFIG.memoizeJsxElements).toBe(true);
-
     expect(config).toEqual({
-      ...DEFAULT_ENVIRONMENT_CONFIG,
+      ...defaultConfig,
       enableForest: true,
       validateFrozenLambdas: true,
       memoizeJsxElements: false,

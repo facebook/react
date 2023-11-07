@@ -13,19 +13,18 @@ import {
   CompilerSuggestionOperation,
   ErrorSeverity,
 } from "../CompilerError";
-import { validateEnvironmentConfig } from "../HIR/Environment";
+import {
+  ExternalFunction,
+  tryParseExternalFunction,
+  validateEnvironmentConfig,
+} from "../HIR/Environment";
 import { CodegenFunction } from "../ReactiveScopes";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
 import { assertExhaustive } from "../Utils/utils";
 import { insertGatedFunctionDeclaration } from "./Gating";
 import { addImportsToProgram, updateUseMemoCacheImport } from "./Imports";
 import { addInstrumentForget } from "./Instrumentation";
-import {
-  ExternalFunction,
-  PluginOptions,
-  parsePluginOptions,
-  tryParseExternalFunction,
-} from "./Options";
+import { PluginOptions, parsePluginOptions } from "./Options";
 import { compileFn } from "./Pipeline";
 
 export type CompilerPass = {

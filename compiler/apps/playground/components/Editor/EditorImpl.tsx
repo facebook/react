@@ -39,7 +39,7 @@ import {
 } from "./Output";
 
 function parseFunctions(
-  source: string
+  source: string,
 ): Array<NodePath<t.FunctionDeclaration>> {
   const items: Array<NodePath<t.FunctionDeclaration>> = [];
   try {
@@ -77,6 +77,8 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
+      noAlias: true,
+      transitiveMixedData: true,
     },
   ],
   [
@@ -84,6 +86,8 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
+      noAlias: true,
+      transitiveMixedData: true,
     },
   ],
   [
@@ -91,6 +95,8 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
+      noAlias: true,
+      transitiveMixedData: true,
     },
   ],
   [
@@ -98,6 +104,8 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
+      noAlias: true,
+      transitiveMixedData: true,
     },
   ],
   [
@@ -105,6 +113,8 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
     {
       valueKind: ValueKind.Frozen,
       effectKind: Effect.Freeze,
+      noAlias: true,
+      transitiveMixedData: true,
     },
   ],
 ];
@@ -199,7 +209,7 @@ export default function Editor() {
   const { enqueueSnackbar } = useSnackbar();
   const compilerOutput = useMemo(
     () => compile(deferredStore.source),
-    [deferredStore.source]
+    [deferredStore.source],
   );
 
   useMountEffect(() => {
@@ -213,7 +223,7 @@ export default function Editor() {
         ...createMessage(
           "Bad URL - fell back to the default Playground.",
           MessageLevel.Info,
-          MessageSource.Playground
+          MessageSource.Playground,
         ),
       });
       mountStore = defaultStore;

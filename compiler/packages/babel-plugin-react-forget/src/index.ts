@@ -20,13 +20,15 @@ export {
   run,
 } from "./Entrypoint";
 export {
-  DEFAULT_ENVIRONMENT_CONFIG,
   Effect,
+  EnvironmentConfig,
+  ExternalFunction,
   Hook,
   SourceLocation,
   ValueKind,
   parseConfigPragma,
   printHIR,
+  validateEnvironmentConfig,
 } from "./HIR";
 export { printReactiveFunction } from "./ReactiveScopes";
 

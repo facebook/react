@@ -6,8 +6,9 @@
  */
 
 import * as t from "@babel/types";
+import { z } from "zod";
+import { fromZodError } from "zod-validation-error";
 import { CompilerError } from "../CompilerError";
-import { ExternalFunction } from "../Entrypoint/Options";
 import { log } from "../Utils/logger";
 import {
   DEFAULT_GLOBALS,
@@ -36,26 +37,35 @@ import {
   addHook,
 } from "./ObjectShape";
 
-export type Hook = {
+export const ExternalFunctionSchema = z.object({
+  // Source for the imported module that exports the `importSpecifierName` functions
+  source: z.string(),
+
+  // Unique name for the feature flag test condition, eg `isForgetEnabled_ProjectName`
+  importSpecifierName: z.string(),
+});
+export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
+
+const HookSchema = z.object({
   /**
    * The effect of arguments to this hook. Describes whether the hook may or may
    * not mutate arguments, etc.
    */
-  effectKind: Effect;
+  effectKind: z.nativeEnum(Effect),
 
   /**
    * The kind of value returned by the hook. Allows indicating that a hook returns
    * a primitive or already-frozen value, which can allow more precise memoization
    * of callers.
    */
-  valueKind: ValueKind;
+  valueKind: z.nativeEnum(ValueKind),
 
   /**
    * Specifies whether hook arguments may be aliased by other arguments or by the
    * return value of the function. Defaults to false. When enabled, this allows the
    * compiler to avoid memoizing arguments.
    */
-  noAlias?: boolean;
+  noAlias: z.boolean().default(false),
 
   /**
    * Specifies whether the hook returns data that is composed of:
@@ -74,8 +84,10 @@ export type Hook = {
    * like `data.items.map(...)` since these builtin types have few built-in
    * methods.
    */
-  transitiveMixedData?: boolean;
-};
+  transitiveMixedData: z.boolean().default(false),
+});
+
+export type Hook = z.infer<typeof HookSchema>;
 
 // TODO(mofeiZ): User defined global types (with corresponding shapes).
 // User defined global types should have inline ObjectShapes instead of directly
@@ -85,52 +97,42 @@ export type Hook = {
 //   missing required shapes (BuiltInArray for [] and BuiltInObject for {})
 //   missing some recursive Object / Function shapeIds
 
-export type EnvironmentConfig = {
-  customHooks: Map<string, Hook> | null;
+const EnvironmentConfigSchema = z.object({
+  customHooks: z.map(z.string(), HookSchema).nullish(),
 
   // 🌲
-  enableForest: boolean;
+  enableForest: z.boolean().default(false),
 
   /**
    * Enable memoization of JSX elements in addition to other types of values. When disabled,
    * other types (objects, arrays, call expressions, etc) are memoized, but not known JSX
    * values.
-   *
-   * Defaults to true
    */
-  memoizeJsxElements: boolean;
+  memoizeJsxElements: z.boolean().default(true),
 
   /**
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
    * When disabled, the component is assumed to follow the rules (though the Babel plugin looks
    * for suppressions of the lint rule).
-   *
-   * Defaults to false
    */
-  validateHooksUsage: boolean;
+  validateHooksUsage: z.boolean().default(true),
 
   /**
    * Validate that ref values (`ref.current`) are not accessed during render.
-   *
-   * Defaults to false
    */
-  validateRefAccessDuringRender: boolean;
+  validateRefAccessDuringRender: z.boolean().default(false),
 
   /**
    * Validate that mutable lambdas are not passed where a frozen value is expected, since mutable
    * lambdas cannot be frozen. The only mutation allowed inside a frozen lambda is of ref values.
-   *
-   * Defaults to false
    */
-  validateFrozenLambdas: boolean;
+  validateFrozenLambdas: z.boolean().default(false),
 
   /**
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
-   *
-   * Defaults to false
    */
-  validateNoSetStateInRender: boolean;
+  validateNoSetStateInRender: z.boolean().default(false),
 
   /**
    * When enabled, the compiler assumes that hooks follow the Rules of React:
@@ -138,19 +140,15 @@ export type EnvironmentConfig = {
    *   any arguments to a hook are assumed frozen after calling the hook.
    * - Hooks may memoize the result they return, thus the return value is
    *   assumed frozen.
-
-   * Defaults to false
    */
-  enableAssumeHooksFollowRulesOfReact: boolean;
+  enableAssumeHooksFollowRulesOfReact: z.boolean().default(false),
 
   /**
    * When enabled, removes *all* memoization from the function: this includes
    * removing manually added useMemo/useCallback as well as not adding Forget's
    * usual useMemoCache-based memoization.
-   *
-   * Defaults to false (ie, by default memoization is enabled)
    */
-  disableAllMemoization: boolean;
+  disableAllMemoization: z.boolean().default(false),
 
   /**
    * Enables codegen mutability debugging. This emits a dev-mode only to log mutations
@@ -173,7 +171,7 @@ export type EnvironmentConfig = {
    *    }
    *  }
    */
-  enableEmitFreeze: ExternalFunction | null;
+  enableEmitFreeze: ExternalFunctionSchema.nullish(),
 
   /**
    * Forget infers certain operations as "freezing" a value, such that those
@@ -208,21 +206,17 @@ export type EnvironmentConfig = {
    * are transitively frozen when the function itself is frozen. So in this case,
    * `y` and `z` would be frozen when `x` is frozen.
    */
-  enableTransitivelyFreezeFunctionExpressions: boolean;
+  enableTransitivelyFreezeFunctionExpressions: z.boolean().default(false),
 
   /**
    * Enable merging consecutive scopes that invalidate together.
-   *
-   * Defaults to false.
    */
-  enableMergeConsecutiveScopes: boolean;
+  enableMergeConsecutiveScopes: z.boolean().default(true),
 
   /**
    * Enable validation of mutable ranges
-   *
-   * Defaults to false
    */
-  assertValidMutableRanges: boolean;
+  assertValidMutableRanges: z.boolean().default(false),
 
   /**
    * Instead of handling holey arrays, bail out with a TODO error.
@@ -244,7 +238,7 @@ export type EnvironmentConfig = {
    * PR that changed the AST definition
    * https://github.com/babel/babel/pull/10917/files#diff-19b555d2f3904c206af406540d9df200b1e16befedb83ff39ebfcbd876f7fa8aL52-R56
    */
-  bailoutOnHoleyArrays: boolean;
+  bailoutOnHoleyArrays: z.boolean().default(false),
 
   /**
    * Enable emitting "change variables" which store the result of whether a particular
@@ -264,55 +258,44 @@ export type EnvironmentConfig = {
    * if ($[0] !== input) ...
    * ```
    */
-  enableChangeVariableCodegen: boolean;
-};
+  enableChangeVariableCodegen: z.boolean().default(false),
+});
 
-export const DEFAULT_ENVIRONMENT_CONFIG: Readonly<EnvironmentConfig> = {
-  customHooks: null,
-
-  memoizeJsxElements: true,
-  validateHooksUsage: true,
-  enableMergeConsecutiveScopes: true,
-
-  assertValidMutableRanges: false,
-  bailoutOnHoleyArrays: false,
-  disableAllMemoization: false,
-  enableAssumeHooksFollowRulesOfReact: false,
-  enableEmitFreeze: null,
-  enableForest: false,
-  enableChangeVariableCodegen: false,
-  enableTransitivelyFreezeFunctionExpressions: false,
-
-  validateFrozenLambdas: false,
-  validateNoSetStateInRender: false,
-  validateRefAccessDuringRender: false,
-};
+export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
 
 export function parseConfigPragma(pragma: string): EnvironmentConfig {
-  const config = { ...DEFAULT_ENVIRONMENT_CONFIG };
-  for (const key of Object.keys(DEFAULT_ENVIRONMENT_CONFIG)) {
-    if (!isEnvironmentConfigKey(key)) {
+  const maybeConfig: any = {};
+  // Get the defaults to programmatically check for boolean properties
+  const defaultConfig = EnvironmentConfigSchema.parse({});
+
+  for (const token of pragma.split(" ")) {
+    if (!token.startsWith("@")) {
       continue;
     }
-    const value = config[key];
-    if (typeof value !== "boolean") {
-      // We only support setting boolean flags via pragma strings
+    const keyVal = token.slice(1);
+    let [key, val]: any = keyVal.split(":");
+    if (typeof defaultConfig[key as keyof EnvironmentConfig] !== "boolean") {
+      // skip parsing non-boolean properties
       continue;
     }
-    if (pragma.includes(`@${key}:true`)) {
-      config[key] = true as any;
-    } else if (pragma.includes(`@${key}:false`)) {
-      config[key] = false as any;
-    } else if (pragma.includes(`@${key}`)) {
-      config[key] = true as any;
+    if (val === undefined || val === "true") {
+      val = true;
+    } else {
+      val = false;
     }
+    maybeConfig[key] = val;
   }
 
-  return config;
-}
-
-function isEnvironmentConfigKey(key: string): key is keyof EnvironmentConfig {
-  return Object.prototype.hasOwnProperty.call(DEFAULT_ENVIRONMENT_CONFIG, key);
+  const config = EnvironmentConfigSchema.safeParse(maybeConfig);
+  if (config.success) {
+    return config.data;
+  }
+  CompilerError.invalidConfig({
+    reason: `${fromZodError(config.error)}`,
+    description: "Update Forget config to fix the error",
+    loc: null,
+    suggestions: null,
+  });
 }
 
 export type PartialEnvironmentConfig = Partial<EnvironmentConfig>;
@@ -466,16 +449,33 @@ function isHookName(name: string): boolean {
 export function validateEnvironmentConfig(
   partialConfig: PartialEnvironmentConfig | null
 ): EnvironmentConfig {
-  const config: EnvironmentConfig = { ...DEFAULT_ENVIRONMENT_CONFIG };
-  if (partialConfig != null) {
-    for (const key of Object.keys(DEFAULT_ENVIRONMENT_CONFIG)) {
-      if (!isEnvironmentConfigKey(key)) {
-        continue;
-      }
-      if (Object.prototype.hasOwnProperty.call(partialConfig, key)) {
-        config[key] = partialConfig[key] as any; // we know the key is present from hasOwnProperty
-      }
-    }
+  const config = EnvironmentConfigSchema.safeParse(partialConfig);
+  if (config.success) {
+    return config.data;
   }
-  return config;
+
+  CompilerError.invalidConfig({
+    reason: `${fromZodError(config.error)}`,
+    description: "Update Forget config to fix the error",
+    loc: null,
+    suggestions: null,
+  });
+}
+
+export function tryParseExternalFunction(
+  maybeExternalFunction: any
+): ExternalFunction {
+  const externalFunction = ExternalFunctionSchema.safeParse(
+    maybeExternalFunction
+  );
+  if (externalFunction.success) {
+    return externalFunction.data;
+  }
+
+  CompilerError.invalidConfig({
+    reason: `${fromZodError(externalFunction.error)}`,
+    description: "Update Forget config to fix the error",
+    loc: null,
+    suggestions: null,
+  });
 }

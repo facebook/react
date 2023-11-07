@@ -11,10 +11,12 @@ export { assertValidMutableRanges } from "./AssertValidMutableRanges";
 export { lower } from "./BuildHIR";
 export { computeDominatorTree, computePostDominatorTree } from "./Dominator";
 export {
-  DEFAULT_ENVIRONMENT_CONFIG,
   Environment,
+  EnvironmentConfig,
+  ExternalFunction,
   Hook,
   parseConfigPragma,
+  validateEnvironmentConfig,
 } from "./Environment";
 export * from "./HIR";
 export {

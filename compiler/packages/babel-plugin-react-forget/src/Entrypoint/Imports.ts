@@ -8,9 +8,9 @@
 import { NodePath } from "@babel/core";
 import * as t from "@babel/types";
 import { CompilerError } from "../CompilerError";
-import { GeneratedSource } from "../HIR";
+import { ExternalFunction, GeneratedSource } from "../HIR";
 import { getOrInsertDefault } from "../Utils/utils";
-import { ExternalFunction, PluginOptions } from "./Options";
+import { PluginOptions } from "./Options";
 
 export function addImportsToProgram(
   path: NodePath<t.Program>,

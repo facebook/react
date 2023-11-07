@@ -7,14 +7,17 @@
 
 import { jsx } from "@babel/plugin-syntax-jsx";
 import babelJest from "babel-jest";
-import { DEFAULT_ENVIRONMENT_CONFIG, compile } from "babel-plugin-react-forget";
+import { compile } from "babel-plugin-react-forget";
 import { execSync } from "child_process";
 
 import type { NodePath, Visitor } from "@babel/traverse";
 import type { CallExpression, FunctionDeclaration } from "@babel/types";
 import * as t from "@babel/types";
+import {
+  EnvironmentConfig,
+  validateEnvironmentConfig,
+} from "babel-plugin-react-forget";
 import { basename } from "path";
-import { EnvironmentConfig } from "../../src/HIR/Environment";
 
 /**
  * -- IMPORTANT --
@@ -23,10 +26,9 @@ import { EnvironmentConfig } from "../../src/HIR/Environment";
  * as our script files are currently not used for babel cache breaking!!
  */
 const e2eTransformerCacheKey = 1;
-const forgetOptions: EnvironmentConfig = {
-  ...DEFAULT_ENVIRONMENT_CONFIG,
+const forgetOptions: EnvironmentConfig = validateEnvironmentConfig({
   enableAssumeHooksFollowRulesOfReact: true,
-};
+});
 const debugMode = process.env["DEBUG_FORGET_COMPILER"] != null;
 
 module.exports = (useForget: boolean) => {
