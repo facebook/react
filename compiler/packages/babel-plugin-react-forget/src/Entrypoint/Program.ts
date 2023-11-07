@@ -283,9 +283,7 @@ export function compileProgram(
       return;
     }
 
-    if (pass.opts.noEmit) {
-      return;
-    } else if (!hasCriticalError) {
+    if (!pass.opts.noEmit && !hasCriticalError) {
       compiledFns.push({ originalFn: fn, compiledFn });
     }
   };
