@@ -278,9 +278,8 @@ export function compileProgram(
         memoSlots: compiledFn.memoSlotsUsed,
       });
     } catch (err) {
-      handleError(pass, fn.node.loc ?? null, err);
-
       hasCriticalError ||= isCriticalError(err);
+      handleError(pass, fn.node.loc ?? null, err);
       return;
     }
 
