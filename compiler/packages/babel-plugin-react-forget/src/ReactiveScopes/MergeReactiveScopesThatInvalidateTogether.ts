@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -29,7 +29,7 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/**
+/*
  * The primary goal of this pass is to reduce memoization overhead, specifically:
  * - Use fewer memo slots
  * - Reduce the number of comparisons and other memoization-related instructions
@@ -53,12 +53,12 @@ import {
  * With that in mind we can apply the optimization in two cases. Given a block with
  * scope A, some safe-to-memoize instructions I, and scope B, we can merge scopes when:
  * - A and B have identical dependencies. This means they will invalidate together, so
- *   by merging the scopes we can avoid duplicate cache slots and duplicate checks of
- *   those dependencies.
+ *    by merging the scopes we can avoid duplicate cache slots and duplicate checks of
+ *    those dependencies.
  * - The output of A is the input to B. Any invalidation of A will change its output
- *   which invalidates B, so we can similarly merge scopes. Note that this optimization
- *   may not be beneficial if the outupts of A are not guaranteed to change if its input
- *   changes, but in practice this is generally the case.
+ *    which invalidates B, so we can similarly merge scopes. Note that this optimization
+ *    may not be beneficial if the outupts of A are not guaranteed to change if its input
+ *    changes, but in practice this is generally the case.
  *
  * ## Nested Scopes
  *
@@ -173,12 +173,14 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
             case "LoadLocal":
             case "Primitive":
             case "PropertyLoad": {
-              // We can merge two scopes if there are intervening instructions, but:
-              // - Only if the instructions are simple and it's okay to make them
-              //   execute conditionally (hence allowing a conservative subset of value kinds)
-              // - The values produced are used at or before the next scope. If they are used
-              //   later and we move them into the scope, then they wouldn't be accessible to
-              //   subsequent code wo expanding the set of declarations, which we want to avoid
+              /*
+               * We can merge two scopes if there are intervening instructions, but:
+               * - Only if the instructions are simple and it's okay to make them
+               *   execute conditionally (hence allowing a conservative subset of value kinds)
+               * - The values produced are used at or before the next scope. If they are used
+               *   later and we move them into the scope, then they wouldn't be accessible to
+               *   subsequent code wo expanding the set of declarations, which we want to avoid
+               */
               if (current !== null && instr.instruction.lvalue !== null) {
                 current.lvalues.add(instr.instruction.lvalue.identifier.id);
               }
@@ -218,17 +220,23 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
             for (const [key, value] of instr.scope.declarations) {
               current.scope.scope.declarations.set(key, value);
             }
-            // Then prune declarations - this removes declarations from the earlier
-            // scope that are last-used at or before the newly merged subsequent scope
+            /*
+             * Then prune declarations - this removes declarations from the earlier
+             * scope that are last-used at or before the newly merged subsequent scope
+             */
             updateScopeDeclarations(current.scope.scope, this.lastUsage);
             current.to = i + 1;
-            // We already checked that intermediate values were used at-or-before the merged
-            // scoped, so we can reset
+            /*
+             * We already checked that intermediate values were used at-or-before the merged
+             * scoped, so we can reset
+             */
             current.lvalues.clear();
 
             if (!scopeAlwaysInvalidatesOnDependencyChanges(instr)) {
-              // The subsequent scope that we just merged isn't guaranteed to invalidate if its
-              // inputs change, so it is not a candidate for future merging
+              /*
+               * The subsequent scope that we just merged isn't guaranteed to invalidate if its
+               * inputs change, so it is not a candidate for future merging
+               */
               log(
                 `  but scope @${instr.scope.id} doesnt guaranteed invalidate so it cannot merge further`
               );
@@ -319,7 +327,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
   }
 }
 
-/**
+/*
  * Updates @param scope's declarations to remove any declarations that are not
  * used after the scope, based on the scope's updated range post-merging.
  */
@@ -335,7 +343,7 @@ function updateScopeDeclarations(
   }
 }
 
-/**
+/*
  * Returns whether the given @param scope is the last usage of all
  * the given @param lvalues. Returns false if any of the lvalues
  * are used again after the scope.
@@ -366,13 +374,15 @@ function canMergeScopes(a: ReactiveScopeBlock, b: ReactiveScopeBlock): boolean {
     log(`  canMergeScopes: dependencies are equal`);
     return true;
   }
-  // Merge scopes where the outputs of the previous scope are the inputs
-  // of the subsequent scope. Note that the output of a scope is not
-  // guaranteed to change when its inputs change, for example `foo(x)`
-  // may not change when `x` changes, for example `foo(x) { return x < 10}`
-  // will not change as x changes from 0 -> 1.
-  // Therefore we check that the outputs of the previous scope are of a type
-  // that is guaranteed to invalidate with its inputs, and only merge in this case.
+  /*
+   * Merge scopes where the outputs of the previous scope are the inputs
+   * of the subsequent scope. Note that the output of a scope is not
+   * guaranteed to change when its inputs change, for example `foo(x)`
+   * may not change when `x` changes, for example `foo(x) { return x < 10}`
+   * will not change as x changes from 0 -> 1.
+   * Therefore we check that the outputs of the previous scope are of a type
+   * that is guaranteed to invalidate with its inputs, and only merge in this case.
+   */
   if (
     areEqualDependencies(
       new Set(
@@ -455,8 +465,10 @@ class DeclarationTypeVisitor extends ReactiveFunctionVisitor<void> {
       instruction.lvalue === null ||
       !this.scope.declarations.has(instruction.lvalue.identifier.id)
     ) {
-      // no lvalue or this instruction isn't directly constructing a
-      // scope output value, skip
+      /*
+       * no lvalue or this instruction isn't directly constructing a
+       * scope output value, skip
+       */
       log(
         `    skip instruction lvalue=${
           instruction.lvalue?.identifier.id
@@ -473,9 +485,11 @@ class DeclarationTypeVisitor extends ReactiveFunctionVisitor<void> {
       case "JsxExpression":
       case "JsxFragment":
       case "ObjectExpression": {
-        // These instruction types *always* allocate. If they execute
-        // they will produce a new value, triggering downstream reactive
-        // updates
+        /*
+         * These instruction types *always* allocate. If they execute
+         * they will produce a new value, triggering downstream reactive
+         * updates
+         */
         this.alwaysInvalidatesOnInputChange = true;
         break;
       }

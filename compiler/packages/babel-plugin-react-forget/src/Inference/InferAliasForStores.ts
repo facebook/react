@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -27,8 +27,10 @@ export function inferAliasForStores(
       const { value, lvalue } = instr;
       const isStore =
         lvalue.effect === Effect.Store ||
-        // Some typed functions annotate callees or arguments
-        // as Effect.Store.
+        /*
+         * Some typed functions annotate callees or arguments
+         * as Effect.Store.
+         */
         ![...eachInstructionValueOperand(value)].every(
           (operand) => operand.effect !== Effect.Store
         );

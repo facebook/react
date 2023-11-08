@@ -28,6 +28,8 @@ module.exports = {
     // obvious if the declaration was lifted to the parent root
     "no-inner-declarations": "off",
 
+    "multiline-comment-style": ["error", "starred-block"],
+
     "@typescript-eslint/no-empty-function": "off",
 
     // Explicitly casting to/through any is sometimes required, often for error messages to

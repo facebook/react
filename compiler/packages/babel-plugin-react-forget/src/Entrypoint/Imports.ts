@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -19,8 +19,10 @@ export function addImportsToProgram(
   const identifiers: Set<string> = new Set();
   const sortedImports: Map<string, Array<string>> = new Map();
   for (const { importSpecifierName, source } of importList) {
-    // Codegen currently does not rename import specifiers, so we do additional
-    // validation here
+    /*
+     * Codegen currently does not rename import specifiers, so we do additional
+     * validation here
+     */
     if (identifiers.has(importSpecifierName)) {
       CompilerError.invalidConfig({
         reason: `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
@@ -59,7 +61,7 @@ export function addImportsToProgram(
   path.unshiftContainer("body", stmts);
 }
 
-/**
+/*
  * Matches `import { ... } from 'react';`
  * but not `import * as React from 'react';`
  */
@@ -108,7 +110,7 @@ export function findExistingImports(program: NodePath<t.Program>): {
   };
 }
 
-/**
+/*
  * If an existing import of React exists (ie `import {useMemo} from 'React'`), inject useMemoCache
  * into the list of destructured variables.
  */
@@ -140,8 +142,10 @@ export function updateUseMemoCacheImport(
   program: NodePath<t.Program>,
   options: PluginOptions
 ): void {
-  // If there isn't already an import of * as React, insert it so useMemoCache doesn't
-  // throw
+  /*
+   * If there isn't already an import of * as React, insert it so useMemoCache doesn't
+   * throw
+   */
   const { didInsertUseMemoCache, hasExistingReactImport } =
     findExistingImports(program);
 
@@ -151,9 +155,11 @@ export function updateUseMemoCacheImport(
   }
 
   if (options.enableUseMemoCachePolyfill === false) {
-    // If Forget did successfully compile inject/update an import of
-    // `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
-    // `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
+    /*
+     * If Forget did successfully compile inject/update an import of
+     * `import {unstable_useMemoCache as useMemoCache} from 'react'` and rename
+     * `React.unstable_useMemoCache(n)` to `useMemoCache(n)`;
+     */
     if (hasExistingReactImport) {
       const didUpdateImport = updateExistingReactImportDeclaration(program);
       if (didUpdateImport === false) {

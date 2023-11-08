@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,22 +7,22 @@
 
 import { NodePath } from "@babel/traverse";
 
-/**
+/*
  * Trigger an exhaustivess check in TypeScript and throw at runtime.
  *
  * Example:
  *
  * ```ts
  * enum ErrorCode = {
- *   E0001 = "E0001",
- *   E0002 = "E0002"
+ *    E0001 = "E0001",
+ *    E0002 = "E0002"
  * }
  *
  * switch (code) {
- *   case ErrorCode.E0001:
- *     // ...
- *   default:
- *     assertExhaustive(code, "Unhandled error code");
+ *    case ErrorCode.E0001:
+ *      // ...
+ *    default:
+ *      assertExhaustive(code, "Unhandled error code");
  * }
  * ```
  */
@@ -30,9 +30,7 @@ export function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
 }
 
-/**
- * Modifies @param array in place, retaining only the items where the predicate returns true.
- */
+// Modifies @param array in place, retaining only the items where the predicate returns true.
 export function retainWhere<T>(
   array: Array<T>,
   predicate: (item: T) => boolean
@@ -73,8 +71,10 @@ export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
 export function hasNode<T>(
   input: NodePath<T | null | undefined>
 ): input is NodePath<NonNullable<T>> {
-  // Internal babel is on an older version that does not have hasNode (v7.17)
-  // See https://github.com/babel/babel/pull/13940/files for impl
-  // https://github.com/babel/babel/blob/5ebab544af2f1c6fc6abdaae6f4e5426975c9a16/packages/babel-traverse/src/path/index.ts#L128-L130
+  /*
+   * Internal babel is on an older version that does not have hasNode (v7.17)
+   * See https://github.com/babel/babel/pull/13940/files for impl
+   * https://github.com/babel/babel/blob/5ebab544af2f1c6fc6abdaae6f4e5426975c9a16/packages/babel-traverse/src/path/index.ts#L128-L130
+   */
   return input.node != null;
 }

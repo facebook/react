@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -10,7 +10,7 @@ import { CompilerError } from "../CompilerError";
 import { BlockId, HIRFunction } from "./HIR";
 import { eachTerminalSuccessor } from "./visitors";
 
-/**
+/*
  * Computes the dominator tree of the given function. The returned `Dominator` stores the immediate
  * dominator of each node in the function, which can be retrieved with `Dominator.prototype.get()`.
  *
@@ -24,7 +24,7 @@ export function computeDominatorTree(fn: HIRFunction): Dominator<BlockId> {
   return new Dominator(graph.entry, nodes);
 }
 
-/**
+/*
  * Similar to `computeDominatorTree()` but computes the post dominators of the function. The returned
  * `PostDominator` stores the immediate post-dominators of each node in the function.
  *
@@ -39,9 +39,11 @@ export function computePostDominatorTree(
   const graph = buildReverseGraph(fn, options.includeThrowsAsExitNode);
   const nodes = computeImmediateDominators(graph);
 
-  // When options.includeThrowsAsExitNode is false, nodes that flow into a throws
-  // terminal and don't reach the exit node won't be in the node map. Add them
-  // with themselves as dominator to reflect that they don't flow into the exit.
+  /*
+   * When options.includeThrowsAsExitNode is false, nodes that flow into a throws
+   * terminal and don't reach the exit node won't be in the node map. Add them
+   * with themselves as dominator to reflect that they don't flow into the exit.
+   */
   if (!options.includeThrowsAsExitNode) {
     for (const [id] of fn.body.blocks) {
       if (!nodes.has(id)) {
@@ -63,9 +65,7 @@ type Graph<T> = {
   nodes: Map<T, Node<T>>;
 };
 
-/**
- * A dominator tree that stores the immediate dominator for each block in function.
- */
+// A dominator tree that stores the immediate dominator for each block in function.
 export class Dominator<T> {
   #entry: T;
   #nodes: Map<T, T>;
@@ -75,14 +75,12 @@ export class Dominator<T> {
     this.#nodes = nodes;
   }
 
-  /**
-   * Returns the entry node
-   */
+  // Returns the entry node
   get entry(): T {
     return this.#entry;
   }
 
-  /**
+  /*
    * Returns the immediate dominator of the block with @param id if present. Returns null
    * if there is no immediate dominator (ie if the dominator is @param id itself).
    */
@@ -118,14 +116,12 @@ export class PostDominator<T> {
     this.#nodes = nodes;
   }
 
-  /**
-   * Returns the node representing normal exit from the function, ie return terminals.
-   */
+  // Returns the node representing normal exit from the function, ie return terminals.
   get exit(): T {
     return this.#exit;
   }
 
-  /**
+  /*
    * Returns the immediate dominator of the block with @param id if present. Returns null
    * if there is no immediate dominator (ie if the dominator is @param id itself).
    */
@@ -152,7 +148,7 @@ export class PostDominator<T> {
   }
 }
 
-/**
+/*
  * The implementation is a straightforward adaptation of https://www.cs.rice.edu/~keith/Embed/dom.pdf
  * except that CFG nodes ordering is inverted (so the comparison functions are swapped)
  */
@@ -219,9 +215,7 @@ function intersect<T>(a: T, b: T, graph: Graph<T>, nodes: Map<T, T>): T {
   return block1.id;
 }
 
-/**
- * Turns the HIRFunction into a simplified internal form that is shared for dominator/post-dominator computation
- */
+// Turns the HIRFunction into a simplified internal form that is shared for dominator/post-dominator computation
 function buildGraph(fn: HIRFunction): Graph<BlockId> {
   const graph: Graph<BlockId> = { entry: fn.body.entry, nodes: new Map() };
   let index = 0;
@@ -236,7 +230,7 @@ function buildGraph(fn: HIRFunction): Graph<BlockId> {
   return graph;
 }
 
-/**
+/*
  *  Turns the HIRFunction into a simplified internal form that is shared for dominator/post-dominator computation,
  * notably this version flips the graph and puts the reversed form back into RPO (such that successors are before predecessors).
  * Note that RPO of the reversed graph isn't the same as reversed RPO of the forward graph because of loops.

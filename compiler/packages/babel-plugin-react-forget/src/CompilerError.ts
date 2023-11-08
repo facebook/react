@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -9,23 +9,15 @@ import type { SourceLocation } from "./HIR";
 import { assertExhaustive } from "./Utils/utils";
 
 export enum ErrorSeverity {
-  /**
-   * Invalid JS syntax, or valid syntax that is semantically invalid which may indicate some misunderstanding on the user’s part.
-   */
+  // Invalid JS syntax, or valid syntax that is semantically invalid which may indicate some misunderstanding on the user’s part.
   InvalidJS = "InvalidJS",
-  /**
-   * Code that breaks the rules of React.
-   */
+  // Code that breaks the rules of React.
   InvalidReact = "InvalidReact",
-  /**
-   * Incorrect configuration of the compiler.
-   */
+  // Incorrect configuration of the compiler.
   InvalidConfig = "InvalidConfig",
-  /**
-   * Unhandled syntax that we don't support yet.
-   */
+  // Unhandled syntax that we don't support yet.
   Todo = "Todo",
-  /**
+  /*
    * An unexpected internal error in the compiler that indicates critical issues that can panic
    * the compiler.
    */
@@ -62,7 +54,7 @@ export type CompilerErrorDetailOptions = {
   suggestions: Array<CompilerSuggestion> | null;
 };
 
-/**
+/*
  * Each bailout or invariant in HIR lowering creates an {@link CompilerErrorDetail}, which is then
  * aggregated into a single {@link CompilerError} later.
  */
@@ -206,7 +198,7 @@ export class CompilerError extends Error {
     return this.details.length > 0;
   }
 
-  /**
+  /*
    * An error is critical if it means the compiler has entered into a broken state and cannot
    * continue safely. Other expected errors such as Todos mean that we can skip over that component
    * but otherwise continue compiling the rest of the app.

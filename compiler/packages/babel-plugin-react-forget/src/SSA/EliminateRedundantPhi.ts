@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -13,7 +13,7 @@ import {
   eachTerminalOperand,
 } from "../HIR/visitors";
 
-/**
+/*
  * Pass to eliminate redundant phi nodes:
  * - all operands are the same identifier, ie `x2 = phi(x1, x1, x1)`.
  * - all operands are the same identifier *or* the output of the phi, ie `x2 = phi(x1, x2, x1, x2)`.
@@ -35,21 +35,27 @@ export function eliminateRedundantPhi(
   const rewrites: Map<Identifier, Identifier> =
     sharedRewrites != null ? sharedRewrites : new Map();
 
-  // Whether or the CFG has a back-edge (a loop). We determine this dynamically
-  // during the first iteration over the CFG by recording which blocks were already
-  // visited, and checking if a block has any predecessors that weren't visited yet.
-  // Because blocks are in reverse postorder, the only time this can occur is a loop.
+  /*
+   * Whether or the CFG has a back-edge (a loop). We determine this dynamically
+   * during the first iteration over the CFG by recording which blocks were already
+   * visited, and checking if a block has any predecessors that weren't visited yet.
+   * Because blocks are in reverse postorder, the only time this can occur is a loop.
+   */
   let hasBackEdge = false;
   const visited: Set<BlockId> = new Set();
 
-  // size tracks the number of rewrites at the beginning of each iteration, so we can
-  // compare to see if any new rewrites were added in that iteration.
+  /*
+   * size tracks the number of rewrites at the beginning of each iteration, so we can
+   * compare to see if any new rewrites were added in that iteration.
+   */
   let size = rewrites.size;
   do {
     size = rewrites.size;
     for (const [blockId, block] of ir.blocks) {
-      // On the first iteration of the loop check for any back-edges.
-      // if there aren't any then there won't be a second iteration
+      /*
+       * On the first iteration of the loop check for any back-edges.
+       * if there aren't any then there won't be a second iteration
+       */
       if (!hasBackEdge) {
         for (const predId of block.preds) {
           if (!visited.has(predId)) {
@@ -75,12 +81,16 @@ export function eliminateRedundantPhi(
             (same !== null && operand.id === same.id) ||
             operand.id === phi.id.id
           ) {
-            // This operand is the same as the phi or is the same as the
-            // previous non-phi operands
+            /*
+             * This operand is the same as the phi or is the same as the
+             * previous non-phi operands
+             */
             continue;
           } else if (same !== null) {
-            // There are multiple operands not equal to the phi itself,
-            // this phi can't be eliminated.
+            /*
+             * There are multiple operands not equal to the phi itself,
+             * this phi can't be eliminated.
+             */
             continue phis;
           } else {
             // First non-phi operand
@@ -115,9 +125,11 @@ export function eliminateRedundantPhi(
             rewritePlace(place, rewrites);
           }
 
-          // recursive call to:
-          // - eliminate phi nodes in child node
-          // - propagate rewrites, which may have changed between iterations
+          /*
+           * recursive call to:
+           * - eliminate phi nodes in child node
+           * - propagate rewrites, which may have changed between iterations
+           */
           eliminateRedundantPhi(instr.value.loweredFunc.func, rewrites);
         }
       }
@@ -128,9 +140,11 @@ export function eliminateRedundantPhi(
         rewritePlace(place, rewrites);
       }
     }
-    // We only need to loop if there were newly eliminated phis in this iteration
-    // *and* the CFG has loops. If there are no loops, then all eliminated phis
-    // have already propagated forwards since we visit in reverse postorder.
+    /*
+     * We only need to loop if there were newly eliminated phis in this iteration
+     * *and* the CFG has loops. If there are no loops, then all eliminated phis
+     * have already propagated forwards since we visit in reverse postorder.
+     */
   } while (rewrites.size > size && hasBackEdge);
 }
 

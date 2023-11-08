@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -45,13 +45,15 @@ import {
 } from "./HIR";
 import HIRBuilder, { Bindings } from "./HIRBuilder";
 
-// *******************************************************************************************
-// *******************************************************************************************
-// ************************************* Lowering to HIR *************************************
-// *******************************************************************************************
-// *******************************************************************************************
+/*
+ * *******************************************************************************************
+ * *******************************************************************************************
+ * ************************************* Lowering to HIR *************************************
+ * *******************************************************************************************
+ * *******************************************************************************************
+ */
 
-/**
+/*
  * Converts a function into a high-level intermediate form (HIR) which represents
  * the code as a control-flow graph. All normal control-flow is modeled as accurately
  * as possible to allow precise, expression-level memoization. The main exceptions are
@@ -211,9 +213,7 @@ export function lower(
   });
 }
 
-/**
- * Helper to lower a statement
- */
+// Helper to lower a statement
 function lowerStatement(
   builder: HIRBuilder,
   stmtPath: NodePath<t.Statement>,
@@ -226,9 +226,11 @@ function lowerStatement(
       const value = lowerExpressionToTemporary(builder, stmt.get("argument"));
       const handler = builder.resolveThrowHandler();
       if (handler != null) {
-        // NOTE: we could support this, but a `throw` inside try/catch is using exceptions
-        // for control-flow and is generally considered an anti-pattern. we can likely
-        // just not support this pattern, unless it really becomes necessary for some reason.
+        /*
+         * NOTE: we could support this, but a `throw` inside try/catch is using exceptions
+         * for control-flow and is generally considered an anti-pattern. we can likely
+         * just not support this pattern, unless it really becomes necessary for some reason.
+         */
         builder.errors.push({
           reason:
             "(BuildHIR::lowerStatement) Support ThrowStatement inside of try/catch",
@@ -351,16 +353,20 @@ function lowerStatement(
 
       for (const s of statements) {
         const hoistableIdentifiers = new Set<NodePath<t.Identifier>>();
-        // After visiting the declaration, hoisting is no longer required
-        // TODO: support other kinds of declarations
+        /*
+         * After visiting the declaration, hoisting is no longer required
+         * TODO: support other kinds of declarations
+         */
         if (s.isVariableDeclaration()) {
           for (const decl of s.get("declarations")) {
             recordDeclaration(decl.get("id"));
           }
         }
 
-        // If we see a hoistable identifier before its declaration, it should be hoisted just
-        // before the statement that references it
+        /*
+         * If we see a hoistable identifier before its declaration, it should be hoisted just
+         * before the statement that references it
+         */
         s.traverse({
           Identifier(id: NodePath<t.Identifier>) {
             const binding = stmt.scope.getBinding(id.node.name);
@@ -587,7 +593,7 @@ function lowerStatement(
           }
         );
       });
-      /**
+      /*
        * The code leading up to the loop must jump to the conditional block,
        * to evaluate whether to enter the loop or bypass to the continuation.
        */
@@ -603,7 +609,7 @@ function lowerStatement(
         },
         conditionalBlock
       );
-      /**
+      /*
        * The conditional block is empty and exists solely as conditional for
        * (re)entering or exiting the loop
        */
@@ -630,14 +636,18 @@ function lowerStatement(
         case "ForStatement":
         case "WhileStatement":
         case "DoWhileStatement": {
-          // labeled loops are special because of continue, so push the label
-          // down
+          /*
+           * labeled loops are special because of continue, so push the label
+           * down
+           */
           lowerStatement(builder, stmt.get("body"), label);
           break;
         }
         default: {
-          // All other statements create a continuation block to allow `break`,
-          // explicitly *don't* pass the label down
+          /*
+           * All other statements create a continuation block to allow `break`,
+           * explicitly *don't* pass the label down
+           */
           const continuationBlock = builder.reserve("block");
           const block = builder.enter("block", () => {
             const body = stmt.get("body");
@@ -670,13 +680,13 @@ function lowerStatement(
       const stmt = stmtPath as NodePath<t.SwitchStatement>;
       //  Block following the switch
       const continuationBlock = builder.reserve("block");
-      /**
+      /*
        * The goto target for any cases that fallthrough, which initially starts
        * as the continuation block and is then updated as we iterate through cases
        * in reverse order.
        */
       let fallthrough = continuationBlock.id;
-      /**
+      /*
        * Iterate through cases in reverse order, so that previous blocks can fallthrough
        * to successors
        */
@@ -702,7 +712,7 @@ function lowerStatement(
             case_
               .get("consequent")
               .forEach((consequent) => lowerStatement(builder, consequent));
-            /**
+            /*
              * always generate a fallthrough to the next block, this may be dead code
              * if there was an explicit break, but if so it will be pruned later.
              */
@@ -725,12 +735,12 @@ function lowerStatement(
         });
         fallthrough = block;
       }
-      /**
+      /*
        * it doesn't matter for our analysis purposes, but reverse the order of the cases
        * back to the original to make it match the original code/intent.
        */
       cases.reverse();
-      /**
+      /*
        * If there wasn't an explicit default case, generate one to model the fact that execution
        * could bypass any of the other cases and jump directly to the continuation.
        */
@@ -876,8 +886,10 @@ function lowerStatement(
           }
         );
       });
-      // Jump to the conditional block to evaluate whether to (re)enter the loop or exit to the
-      // continuation block.
+      /*
+       * Jump to the conditional block to evaluate whether to (re)enter the loop or exit to the
+       * continuation block.
+       */
       const loc = stmt.node.loc ?? GeneratedSource;
       builder.terminateWithContinuation(
         {
@@ -890,7 +902,7 @@ function lowerStatement(
         },
         conditionalBlock
       );
-      /**
+      /*
        * The conditional block is empty and exists solely as conditional for
        * (re)entering or exiting the loop
        */
@@ -918,12 +930,14 @@ function lowerStatement(
       });
       const id = stmt.get("id") as NodePath<t.Identifier>;
 
-      // Desugar FunctionDeclaration to FunctionExpression.
-      //
-      // For example:
-      //   function foo() {};
-      // becomes
-      //   let foo = function foo() {};
+      /*
+       * Desugar FunctionDeclaration to FunctionExpression.
+       *
+       * For example:
+       *   function foo() {};
+       * becomes
+       *   let foo = function foo() {};
+       */
       const desugared = stmt.replaceWith(
         t.variableDeclaration("let", [
           t.variableDeclarator(
@@ -981,9 +995,11 @@ function lowerStatement(
         initBlock
       );
 
-      // The init of a ForOf statement is compound over a left (VariableDeclaration | LVal) and
-      // right (Expression), so we synthesize a new InstrValue and assignment (potentially multiple
-      // instructions when we handle other syntax like Patterns)
+      /*
+       * The init of a ForOf statement is compound over a left (VariableDeclaration | LVal) and
+       * right (Expression), so we synthesize a new InstrValue and assignment (potentially multiple
+       * instructions when we handle other syntax like Patterns)
+       */
       const left = stmt.get("left");
       const leftLoc = left.node.loc ?? GeneratedSource;
       let test: Place;
@@ -1064,9 +1080,11 @@ function lowerStatement(
         initBlock
       );
 
-      // The init of a ForIn statement is compound over a left (VariableDeclaration | LVal) and
-      // right (Expression), so we synthesize a new InstrValue and assignment (potentially multiple
-      // instructions when we handle other syntax like Patterns)
+      /*
+       * The init of a ForIn statement is compound over a left (VariableDeclaration | LVal) and
+       * right (Expression), so we synthesize a new InstrValue and assignment (potentially multiple
+       * instructions when we handle other syntax like Patterns)
+       */
       const left = stmt.get("left");
       const leftLoc = left.node.loc ?? GeneratedSource;
       let test: Place;
@@ -2146,8 +2164,10 @@ function lowerExpression(
         argument
       );
       if (lvalue === null) {
-        // lowerIdentifierForAssignment should have already reported an error if it returned null,
-        // we check here just in case
+        /*
+         * lowerIdentifierForAssignment should have already reported an error if it returned null,
+         * we check here just in case
+         */
         if (!builder.errors.hasErrors()) {
           builder.errors.push({
             reason: `(BuildHIR::lowerExpression) Found an invalid UpdateExpression without a previously reported error`,
@@ -2209,9 +2229,11 @@ function lowerOptionalMemberExpression(
   const continuationBlock = builder.reserve(builder.currentBlockKind());
   const consequent = builder.reserve("value");
 
-  // block to evaluate if the callee is null/undefined, this sets the result of the call to undefined.
-  // note that we only create an alternate when first entering an optional subtree of the ast: if this
-  // is a child of an optional node, we use the alterate created by the parent.
+  /*
+   * block to evaluate if the callee is null/undefined, this sets the result of the call to undefined.
+   * note that we only create an alternate when first entering an optional subtree of the ast: if this
+   * is a child of an optional node, we use the alterate created by the parent.
+   */
   const alternate =
     parentAlternate !== null
       ? parentAlternate
@@ -2268,8 +2290,10 @@ function lowerOptionalMemberExpression(
     suggestions: null,
   });
 
-  // block to evaluate if the callee is non-null/undefined. arguments are lowered in this block to preserve
-  // the semantic of conditional evaluation depending on the callee
+  /*
+   * block to evaluate if the callee is non-null/undefined. arguments are lowered in this block to preserve
+   * the semantic of conditional evaluation depending on the callee
+   */
   builder.enterReserved(consequent, () => {
     const { value } = lowerMemberExpression(builder, expr, object);
     const temp = lowerValueToTemporary(builder, value);
@@ -2315,9 +2339,11 @@ function lowerOptionalCallExpression(
   const continuationBlock = builder.reserve(builder.currentBlockKind());
   const consequent = builder.reserve("value");
 
-  // block to evaluate if the callee is null/undefined, this sets the result of the call to undefined.
-  // note that we only create an alternate when first entering an optional subtree of the ast: if this
-  // is a child of an optional node, we use the alterate created by the parent.
+  /*
+   * block to evaluate if the callee is null/undefined, this sets the result of the call to undefined.
+   * note that we only create an alternate when first entering an optional subtree of the ast: if this
+   * is a child of an optional node, we use the alterate created by the parent.
+   */
   const alternate =
     parentAlternate !== null
       ? parentAlternate
@@ -2342,8 +2368,10 @@ function lowerOptionalCallExpression(
           };
         });
 
-  // Lower the callee within the test block to represent the fact that the code for the callee is
-  // scoped within the optional
+  /*
+   * Lower the callee within the test block to represent the fact that the code for the callee is
+   * scoped within the optional
+   */
   let callee:
     | { kind: "CallExpression"; callee: Place }
     | { kind: "MethodCall"; receiver: Place; property: Place };
@@ -2393,8 +2421,10 @@ function lowerOptionalCallExpression(
     };
   });
 
-  // block to evaluate if the callee is non-null/undefined. arguments are lowered in this block to preserve
-  // the semantic of conditional evaluation depending on the callee
+  /*
+   * block to evaluate if the callee is non-null/undefined. arguments are lowered in this block to preserve
+   * the semantic of conditional evaluation depending on the callee
+   */
   builder.enterReserved(consequent, () => {
     const args = lowerArguments(builder, expr.get("arguments"));
     const temp = buildTemporaryPlace(builder, loc);
@@ -2454,7 +2484,7 @@ function lowerOptionalCallExpression(
   return { kind: "LoadLocal", place, loc: place.loc };
 }
 
-/**
+/*
  * There are a few places where we do not preserve original evaluation ordering and/or control flow, such as
  * switch case test values and default values in destructuring (assignment patterns). In these cases we allow
  * simple expressions whose evaluation cannot be observed:
@@ -2569,10 +2599,12 @@ function isReorderableExpression(
         });
     }
     case "MemberExpression": {
-      // A common pattern is switch statements where the case test values are properties of a global,
-      // eg `case ProductOptions.Option: { ... }`
-      // We therefore allow expressions where the innermost object is a global identifier, and reject
-      // all other member expressions (for now).
+      /*
+       * A common pattern is switch statements where the case test values are properties of a global,
+       * eg `case ProductOptions.Option: { ... }`
+       * We therefore allow expressions where the innermost object is a global identifier, and reject
+       * all other member expressions (for now).
+       */
       const test = expr as NodePath<t.MemberExpression>;
       let innerObject: NodePath<t.Expression> = test;
       while (innerObject.isMemberExpression()) {
@@ -2862,7 +2894,7 @@ function lowerJsxElement(
   }
 }
 
-/**
+/*
  * Trims whitespace according to the JSX spec:
  * > JSX removes whitespace at the beginning and ending of a line.
  * > It also removes blank lines. New lines adjacent to tags are removed;
@@ -2955,12 +2987,14 @@ function lowerFunction(
   const componentScope: Scope = builder.parentFunction.scope;
   const captured = gatherCapturedDeps(builder, expr, componentScope);
 
-  // TODO(gsn): In the future, we could only pass in the context identifiers
-  // that are actually used by this function and it's nested functions, rather
-  // than all context identifiers.
-  //
-  // This isn't a problem in practice because use Babel's scope analysis to
-  // identify the correct references.
+  /*
+   * TODO(gsn): In the future, we could only pass in the context identifiers
+   * that are actually used by this function and it's nested functions, rather
+   * than all context identifiers.
+   *
+   * This isn't a problem in practice because use Babel's scope analysis to
+   * identify the correct references.
+   */
   const lowering = lower(
     expr,
     builder.environment,
@@ -3034,9 +3068,7 @@ function lowerIdentifier(
   return place;
 }
 
-/**
- * Creates a temporary Identifier and Place referencing that identifier.
- */
+// Creates a temporary Identifier and Place referencing that identifier.
 function buildTemporaryPlace(builder: HIRBuilder, loc: SourceLocation): Place {
   const place: Place = {
     kind: "Identifier",
@@ -3218,12 +3250,14 @@ function lowerAssignment(
       const elements = lvalue.get("elements");
       const items: ArrayPattern["items"] = [];
       const followups: Array<{ place: Place; path: NodePath<t.LVal> }> = [];
-      // A given destructuring statement must contain all declarations or all
-      // reassignments. This is enforced by the parser, but we rewrite nested
-      // destructuring into assignment to a temporary. Therefore, if we see
-      // any reassignments that are nested destructuring we fall back to
-      // using temporaries for all variables, and emitting the actual reassignments
-      // in follow-up statements
+      /*
+       * A given destructuring statement must contain all declarations or all
+       * reassignments. This is enforced by the parser, but we rewrite nested
+       * destructuring into assignment to a temporary. Therefore, if we see
+       * any reassignments that are nested destructuring we fall back to
+       * using temporaries for all variables, and emitting the actual reassignments
+       * in follow-up statements
+       */
       const forceTemporaries =
         kind === InstructionKind.Reassign &&
         elements.some((element) => !element.isIdentifier());
@@ -3313,12 +3347,14 @@ function lowerAssignment(
       const propertiesPaths = lvalue.get("properties");
       const properties: ObjectPattern["properties"] = [];
       const followups: Array<{ place: Place; path: NodePath<t.LVal> }> = [];
-      // A given destructuring statement must contain all declarations or all
-      // reassignments. This is enforced by the parser, but we rewrite nested
-      // destructuring into assignment to a temporary. Therefore, if we see
-      // any reassignments that are nested destructuring we fall back to
-      // using temporaries for all variables, and emitting the actual reassignments
-      // in follow-up statements
+      /*
+       * A given destructuring statement must contain all declarations or all
+       * reassignments. This is enforced by the parser, but we rewrite nested
+       * destructuring into assignment to a temporary. Therefore, if we see
+       * any reassignments that are nested destructuring we fall back to
+       * using temporaries for all variables, and emitting the actual reassignments
+       * in follow-up statements
+       */
       const forceTemporaries =
         kind === InstructionKind.Reassign &&
         propertiesPaths.some(
@@ -3456,8 +3492,10 @@ function lowerAssignment(
       const continuationBlock = builder.reserve(builder.currentBlockKind());
 
       const consequent = builder.enter("value", () => {
-        // Because we reorder evaluation, we restrict the allowed default values to those where
-        // evaluation order is unobservable
+        /*
+         * Because we reorder evaluation, we restrict the allowed default values to those where
+         * evaluation order is unobservable
+         */
         const defaultValue = lowerReorderableExpression(
           builder,
           lvalue.get("right")
@@ -3573,8 +3611,10 @@ function gatherCapturedDeps(
   const capturedRefs: Set<Place> = new Set();
   const seenPaths: Set<string> = new Set();
 
-  // Capture all the scopes from the parent of this function up to and including
-  // the component scope.
+  /*
+   * Capture all the scopes from the parent of this function up to and including
+   * the component scope.
+   */
   const pureScopes: Set<Scope> = captureScopes({
     from: fn.scope.parent,
     to: componentScope,
@@ -3598,8 +3638,10 @@ function gatherCapturedDeps(
   ): void {
     // Base context variable to depend on
     let baseIdentifier: NodePath<t.Identifier> | NodePath<t.JSXIdentifier>;
-    // Base expression to depend on, which (for now) may contain non side-effectful
-    // member expressions
+    /*
+     * Base expression to depend on, which (for now) may contain non side-effectful
+     * member expressions
+     */
     let dependency:
       | NodePath<t.MemberExpression>
       | NodePath<t.Identifier>
@@ -3631,8 +3673,10 @@ function gatherCapturedDeps(
       }
       baseIdentifier = currentId;
 
-      // Get the expression to depend on, which may involve PropertyLoads
-      // for member expressions
+      /*
+       * Get the expression to depend on, which may involve PropertyLoads
+       * for member expressions
+       */
       let currentDep:
         | NodePath<t.MemberExpression>
         | NodePath<t.Identifier>
@@ -3657,24 +3701,20 @@ function gatherCapturedDeps(
       dependency = path;
     }
 
-    /**
+    /*
      * Skip dependency path, as we already tried to recursively add it (+ all subexpressions)
      * as a dependency.
      */
     dependency.skip();
 
-    /**
-     * Add the base identifier binding as a dependency.
-     */
+    // Add the base identifier binding as a dependency.
     const binding = baseIdentifier.scope.getBinding(baseIdentifier.node.name);
     if (binding === undefined || !pureScopes.has(binding.scope)) {
       return;
     }
     const idKey = String(addCapturedId(binding.identifier));
 
-    /**
-     * Add the expression (potentially a memberexpr path) as a dependency.
-     */
+    // Add the expression (potentially a memberexpr path) as a dependency.
     let exprKey = idKey;
     if (dependency.isMemberExpression()) {
       let pathTokens = [];
@@ -3707,9 +3747,11 @@ function gatherCapturedDeps(
   fn.traverse({
     Expression(path) {
       if (path.isAssignmentExpression()) {
-        // Babel has a bug where it doesn't visit the LHS of an
-        // AssignmentExpression if it's an Identifier. Work around it by explicitly
-        // visiting it.
+        /*
+         * Babel has a bug where it doesn't visit the LHS of an
+         * AssignmentExpression if it's an Identifier. Work around it by explicitly
+         * visiting it.
+         */
         const left = path.get("left");
         if (left.isIdentifier()) {
           handleMaybeDependency(left);

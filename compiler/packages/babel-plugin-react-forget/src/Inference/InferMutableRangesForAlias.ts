@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -14,8 +14,10 @@ export function inferMutableRangesForAlias(
 ): void {
   const aliasSets = aliases.buildSets();
   for (const aliasSet of aliasSets) {
-    // Update mutableRange.end only if the identifiers have actually been
-    // mutated.
+    /*
+     * Update mutableRange.end only if the identifiers have actually been
+     * mutated.
+     */
     const mutatingIdentifiers = [...aliasSet].filter(
       (id) => id.mutableRange.end - id.mutableRange.start > 1
     );
@@ -29,8 +31,10 @@ export function inferMutableRangesForAlias(
         }
       }
 
-      // Update mutableRange.end for all aliases in this set ending before the
-      // last mutation.
+      /*
+       * Update mutableRange.end for all aliases in this set ending before the
+       * last mutation.
+       */
       for (const alias of aliasSet) {
         if (alias.mutableRange.end < lastMutatingInstructionId) {
           alias.mutableRange.end = lastMutatingInstructionId as InstructionId;

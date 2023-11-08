@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -22,7 +22,7 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/**
+/*
  * Ensures that each named variable in the given function has a unique name
  * that does not conflict with any other variables in the same block scope.
  * Note that the scoping is based on the final inferred blocks, not the
@@ -65,8 +65,10 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
     }
   }
   override visitScope(scope: ReactiveScopeBlock, state: Scopes): void {
-    // Intentionally bypass visitBlock() since scopes do not introduce a new
-    // block scope
+    /*
+     * Intentionally bypass visitBlock() since scopes do not introduce a new
+     * block scope
+     */
     this.traverseBlock(scope.instructions, state);
   }
 }

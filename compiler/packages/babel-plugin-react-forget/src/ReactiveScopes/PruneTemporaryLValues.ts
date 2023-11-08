@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -14,7 +14,7 @@ import {
 } from "../HIR/HIR";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
-/**
+/*
  * Nulls out lvalues for temporary variables that are never accessed later. This only
  * nulls out the lvalue itself, it does not remove the corresponding instructions.
  */

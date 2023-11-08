@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -137,19 +137,23 @@ class SSABuilder {
     }
 
     if (block.preds.size == 0) {
-      // We're at the entry block and haven't found our defintion yet.
-      // console.log(
-      //   `Unable to find "${printIdentifier(
-      //     oldId
-      //   )}" in bb${blockId}, assuming it's a global`
-      // );
+      /*
+       * We're at the entry block and haven't found our defintion yet.
+       * console.log(
+       *   `Unable to find "${printIdentifier(
+       *     oldId
+       *   )}" in bb${blockId}, assuming it's a global`
+       * );
+       */
       this.#unknown.add(oldId);
       return oldId;
     }
 
     if (this.unsealedPreds.get(block)! > 0) {
-      // We haven't visited all our predecessors, let's place an incomplete phi
-      // for now.
+      /*
+       * We haven't visited all our predecessors, let's place an incomplete phi
+       * for now.
+       */
       const newId = this.makeId(oldId);
       state.incompletePhis.push({ oldId, newId });
       state.defs.set(oldId, newId);
@@ -166,9 +170,11 @@ class SSABuilder {
 
     // There are multiple predecessors, we may need a phi.
     const newId = this.makeId(oldId);
-    // Adding a phi may loop back to our block if there is a loop in the CFG.  We
-    // update our defs before adding the phi to terminate the recursion rather than
-    // looping infinitely.
+    /*
+     * Adding a phi may loop back to our block if there is a loop in the CFG.  We
+     * update our defs before adding the phi to terminate the recursion rather than
+     * looping infinitely.
+     */
     state.defs.set(oldId, newId);
     return this.addPhi(block, oldId, newId);
   }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,7 +16,7 @@ import {
 import { markPredecessors, removeUnreachableFallthroughs } from "./HIRBuilder";
 import { mapOptionalFallthroughs } from "./visitors";
 
-/**
+/*
  * Merges sequences of blocks that will always execute consecutively —
  * ie where the predecessor always transfers control to the successor
  * (ie ends in a goto) and where the predecessor is the only predecessor
@@ -40,8 +40,10 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       }
     }
 
-    // Can only merge blocks with a single predecessor, can't merge
-    // value blocks
+    /*
+     * Can only merge blocks with a single predecessor, can't merge
+     * value blocks
+     */
     if (block.kind !== "block" || block.preds.size !== 1) {
       continue;
     }
@@ -55,8 +57,10 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       suggestions: null,
     });
     if (predecessor.terminal.kind !== "goto" || predecessor.kind !== "block") {
-      // The predecessor is not guaranteed to transfer control to this block,
-      // they aren't consecutive.
+      /*
+       * The predecessor is not guaranteed to transfer control to this block,
+       * they aren't consecutive.
+       */
       continue;
     }
 
@@ -109,15 +113,13 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
 class MergedBlocks {
   #map: Map<BlockId, BlockId> = new Map();
 
-  /**
-   * Record that @param block was merged into @param into.
-   */
+  // Record that @param block was merged into @param into.
   merge(block: BlockId, into: BlockId): void {
     const target = this.get(into);
     this.#map.set(block, target);
   }
 
-  /**
+  /*
    * Get the id of the block that @param block has been merged into.
    * This is transitive, in the case that eg @param block was merged
    * into a block which later merged into another block.

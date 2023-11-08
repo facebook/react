@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,7 +15,7 @@ import { BlockId, HIRFunction, SourceLocation, getHookKind } from "../HIR/HIR";
 import { findBlocksWithBackEdges } from "../Optimization/DeadCodeElimination";
 import { Err, Ok, Result } from "../Utils/Result";
 
-/**
+/*
  * Validates that the function honors the [Rules of Hooks](https://react.dev/warnings/invalid-hook-call-warning)
  * rule that hooks may not be called conditionally. More precisely, a component or hook must always call the
  * same set of hooks in the same order.
@@ -26,13 +26,13 @@ import { Err, Ok, Result } from "../Utils/Result";
  * entry block to the exit:
  *
  * ```
- *                 bb0 (entry)
- *                /         \
- *             bb1          bb2
- *               \         /
- *                   bb3
- *                    |
- *                 (exit)
+ *                  bb0 (entry)
+ *                 /         \
+ *              bb1          bb2
+ *                \         /
+ *                    bb3
+ *                     |
+ *                  (exit)
  * ```
  *
  * Here, neither bb1 or bb2 post dominate the entry, which corresponds to the fact that control can
@@ -43,13 +43,13 @@ import { Err, Ok, Result } from "../Utils/Result";
  * However if for example bb2 were to early return:
  *
  * ```
- *                 bb0 (entry)
- *                /         \
- *             bb1          bb2
- *               \           |
- *                   bb3    /
- *                    |   /
- *                 (exit)
+ *                  bb0 (entry)
+ *                 /         \
+ *              bb1          bb2
+ *                \           |
+ *                    bb3    /
+ *                     |   /
+ *                  (exit)
  * ```
  *
  * Now only the exit node would post dominate the entry node: there is no other node which is
@@ -62,8 +62,10 @@ export function validateUnconditionalHooks(
   const unconditionalBlocks = new Set<BlockId>();
   const blocksWithBackEdges = findBlocksWithBackEdges(fn);
   const dominators = computePostDominatorTree(fn, {
-    // Hooks must only be in a consistent order for executions that return normally,
-    // so we opt-in to viewing throw as a non-exit node.
+    /*
+     * Hooks must only be in a consistent order for executions that return normally,
+     * so we opt-in to viewing throw as a non-exit node.
+     */
     includeThrowsAsExitNode: false,
   });
   const exit = dominators.exit;
@@ -100,9 +102,11 @@ export function validateUnconditionalHooks(
         instr.value.kind === "CallExpression" &&
         getHookKind(fn.env, instr.value.callee.identifier) != null
       ) {
-        // TODO: the current ESLint rule has different error messages for code that is called conditionally, in a loop, etc.
-        // An option would be to first record an Array<[BlockId, Place]> of problematic hooks, then compute the normal dominator graph
-        // and walk upward to determine whether each error location was due to a loop, if, etc.
+        /*
+         * TODO: the current ESLint rule has different error messages for code that is called conditionally, in a loop, etc.
+         * An option would be to first record an Array<[BlockId, Place]> of problematic hooks, then compute the normal dominator graph
+         * and walk upward to determine whether each error location was due to a loop, if, etc.
+         */
         recordError(instr.loc);
       } else if (
         instr.value.kind === "MethodCall" &&

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,7 +16,7 @@ import {
   eachTerminalOperand,
 } from "../HIR/visitors";
 
-/**
+/*
  * Validates that the function honors the [Rules of Hooks](https://react.dev/warnings/invalid-hook-call-warning)
  * rule that hooks may only be called and not otherwise referenced as first-class values.
  */

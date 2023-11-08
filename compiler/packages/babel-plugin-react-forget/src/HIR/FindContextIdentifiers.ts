@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -125,8 +125,10 @@ function handleAssignment(
   reassigned: Set<t.Identifier>,
   lvalPath: NodePath<t.LVal>
 ): void {
-  // Find all reassignments to identifiers declared outside of currentLambda
-  // This closely follows destructuring assignment assumptions and logic in BuildHIR
+  /*
+   * Find all reassignments to identifiers declared outside of currentLambda
+   * This closely follows destructuring assignment assumptions and logic in BuildHIR
+   */
   const lvalNode = lvalPath.node;
   switch (lvalNode.type) {
     case "Identifier": {

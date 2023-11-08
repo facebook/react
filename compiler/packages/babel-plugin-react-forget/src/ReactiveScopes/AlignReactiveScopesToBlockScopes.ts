@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,17 +16,17 @@ import {
 import { getPlaceScope } from "./BuildReactiveBlocks";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
-/**
+/*
  * Note: this is the 2nd of 4 passes that determine how to break a function into discrete
  * reactive scopes (independently memoizeable units of code):
  * 1. InferReactiveScopeVariables (on HIR) determines operands that mutate together and assigns
- *    them a unique reactive scope.
+ *     them a unique reactive scope.
  * 2. AlignReactiveScopesToBlockScopes (this pass, on ReactiveFunction) aligns reactive scopes
- *    to block scopes.
+ *     to block scopes.
  * 3. MergeOverlappingReactiveScopes (on ReactiveFunction) ensures that reactive scopes do not
- *    overlap, merging any such scopes.
+ *     overlap, merging any such scopes.
  * 4. BuildReactiveBlocks (on ReactiveFunction) groups the statements for each scope into
- *    a ReactiveScopeBlock.
+ *     a ReactiveScopeBlock.
  *
  * Prior inference passes assign a reactive scope to each operand, but the ranges of these
  * scopes are based on specific instructions at arbitrary points in the control-flow graph.
@@ -38,14 +38,14 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  *
  * ```javascript
  * function foo(cond, a) {
- *                    ⌵ original scope
- *                         ⌵ expanded scope
- *   const x = [];    ⌝    ⌝
- *   if (cond) {      ⎮    ⎮
- *     ...            ⎮    ⎮
- *     x.push(a);     ⌟    ⎮
- *     ...                 ⎮
- *   }                     ⌟
+ *                     ⌵ original scope
+ *                          ⌵ expanded scope
+ *    const x = [];    ⌝    ⌝
+ *    if (cond) {      ⎮    ⎮
+ *      ...            ⎮    ⎮
+ *      x.push(a);     ⌟    ⎮
+ *      ...                 ⎮
+ *    }                     ⌟
  * }
  * ```
  *
@@ -89,17 +89,23 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
 type PendingReactiveScope = { active: boolean; scope: ReactiveScope };
 
 class Context {
-  // For each block scope (outer array) stores a list of ReactiveScopes that start
-  // in that block scope.
+  /*
+   * For each block scope (outer array) stores a list of ReactiveScopes that start
+   * in that block scope.
+   */
   #blockScopes: Array<Array<PendingReactiveScope>> = [];
 
-  // ReactiveScopes whose declaring block scope has ended but may still need to
-  // be "closed" (ie have their range.end be updated). A given scope can be in
-  // blockScopes OR this array but not both.
+  /*
+   * ReactiveScopes whose declaring block scope has ended but may still need to
+   * be "closed" (ie have their range.end be updated). A given scope can be in
+   * blockScopes OR this array but not both.
+   */
   #unclosedScopes: Array<PendingReactiveScope> = [];
 
-  // Set of all scope ids that have been seen so far, regardless of which of
-  // the above data structures they're in, to avoid tracking the same scope twice.
+  /*
+   * Set of all scope ids that have been seen so far, regardless of which of
+   * the above data structures they're in, to avoid tracking the same scope twice.
+   */
   #seenScopes: Set<ScopeId> = new Set();
 
   enter(fn: () => void): void {

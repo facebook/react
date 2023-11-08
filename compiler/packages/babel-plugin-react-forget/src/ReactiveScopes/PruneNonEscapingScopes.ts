@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -36,85 +36,87 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/**
+/*
  * This pass prunes reactive scopes that are not necessary to bound downstream computation.
  * Specifically, the pass identifies the set of identifiers which may "escape". Values can
  * escape in one of two ways:
  * * They are directly returned by the function and/or transitively aliased by a return
- *   value.
+ *    value.
  * * They are passed as input to a hook. This is because any value passed to a hook may
- *   have its referenced ultimately stored by React (ie, be aliased by an external value).
- *   For example, the closure passed to useEffect escapes.
+ *    have its referenced ultimately stored by React (ie, be aliased by an external value).
+ *    For example, the closure passed to useEffect escapes.
  *
  * Example to build intuition:
  *
  * ```javascript
  * function Component(props) {
- *   const a = {}; // not aliased or returned: *not* memoized
- *   const b = {}; // aliased by c, which is returned: memoized
- *   const c = [b]; // directly returned: memoized
- *   return c;
+ *    const a = {}; // not aliased or returned: *not* memoized
+ *    const b = {}; // aliased by c, which is returned: memoized
+ *    const c = [b]; // directly returned: memoized
+ *    return c;
  * }
  * ```
  *
  * However, this logic alone is insufficient for two reasons:
  * - Statically memoizing JSX elements *may* be inefficient compared to using dynamic
- *   memoization with `React.memo()`. Static memoization may be JIT'd and can look at
- *   the precise props w/o dynamic iteration, but incurs potentially large code-size
- *   overhead. Dynamic memoization with `React.memo()` incurs potentially increased
- *   runtime overhead for smaller code size. We plan to experiment with both variants
- *   for JSX.
+ *    memoization with `React.memo()`. Static memoization may be JIT'd and can look at
+ *    the precise props w/o dynamic iteration, but incurs potentially large code-size
+ *    overhead. Dynamic memoization with `React.memo()` incurs potentially increased
+ *    runtime overhead for smaller code size. We plan to experiment with both variants
+ *    for JSX.
  * - Because we merge values whose mutations _interleave_ into a single scope, there
- *   can be cases where a non-escaping value needs to be memoized anyway to avoid breaking
- *   a memoization input. As a rule, for any scope that has a memoized output, all of that
- *   scope's transitive dependencies must also be memoized _even if they don't escape_.
- *   Failing to memoize them would cause the scope to invalidate more often than necessary
- *   and break downstream memoization.
+ *    can be cases where a non-escaping value needs to be memoized anyway to avoid breaking
+ *    a memoization input. As a rule, for any scope that has a memoized output, all of that
+ *    scope's transitive dependencies must also be memoized _even if they don't escape_.
+ *    Failing to memoize them would cause the scope to invalidate more often than necessary
+ *    and break downstream memoization.
  *
  * Example of this second case:
  *
  * ```javascript
  * function Component(props) {
- *   // a can be independently memoized but it doesn't escape, so naively we may think its
- *   // safe to not memoize. but not memoizing would break caching of b, which does
- *   // escape.
- *   const a = [props.a];
+ *    // a can be independently memoized but it doesn't escape, so naively we may think its
+ *    // safe to not memoize. but not memoizing would break caching of b, which does
+ *    // escape.
+ *    const a = [props.a];
  *
- *   // b and c are interleaved and grouped into a single scope,
- *   // but they are independent values. c does not escape, but
- *   // we need to ensure that a is memoized or else b will invalidate
- *   // on every render since a is a dependency.
- *   const b = [];
- *   const c = {};
- *   c.a = a;
- *   b.push(props.b);
+ *    // b and c are interleaved and grouped into a single scope,
+ *    // but they are independent values. c does not escape, but
+ *    // we need to ensure that a is memoized or else b will invalidate
+ *    // on every render since a is a dependency.
+ *    const b = [];
+ *    const c = {};
+ *    c.a = a;
+ *    b.push(props.b);
  *
- *   return b;
+ *    return b;
  * }
  * ```
  *
  * ## Algorithm
  *
  * 1. First we build up a graph, a mapping of IdentifierId to a node describing all the
- *    scopes and inputs involved in creating that identifier. Individual nodes are marked
- *    as definitely aliased, conditionally aliased, or unaliased:
- *      a. Arrays, objects, function calls all produce a new value and are always marked as aliased
- *      b. Conditional and logical expressions (and a few others) are conditinally aliased,
- *         depending on whether their result value is aliased.
- *      c. JSX is always unaliased (though its props children may be)
+ *     scopes and inputs involved in creating that identifier. Individual nodes are marked
+ *     as definitely aliased, conditionally aliased, or unaliased:
+ *       a. Arrays, objects, function calls all produce a new value and are always marked as aliased
+ *       b. Conditional and logical expressions (and a few others) are conditinally aliased,
+ *          depending on whether their result value is aliased.
+ *       c. JSX is always unaliased (though its props children may be)
  * 2. The same pass which builds the graph also stores the set of returned identifiers and set of
- *    identifiers passed as arguments to hooks.
+ *     identifiers passed as arguments to hooks.
  * 3. We traverse the graph starting from the returned identifiers and mark reachable dependencies
- *    as escaping, based on the combination of the parent node's type and its children (eg a
- *    conditional node with an aliased dep promotes to aliased).
+ *     as escaping, based on the combination of the parent node's type and its children (eg a
+ *     conditional node with an aliased dep promotes to aliased).
  * 4. Finally we prune scopes whose outputs weren't marked.
  */
 export function pruneNonEscapingScopes(
   fn: ReactiveFunction,
   options: MemoizationOptions
 ): void {
-  // First build up a map of which instructions are involved in creating which values,
-  // and which values are returned.
+  /*
+   * First build up a map of which instructions are involved in creating which values,
+   * and which values are returned.
+   */
   const state = new State(fn.env);
   for (const param of fn.params) {
     if (param.kind === "Identifier") {
@@ -131,8 +133,10 @@ export function pruneNonEscapingScopes(
 
   log(() => prettyFormat(state));
 
-  // Then walk outward from the returned values and find all captured operands.
-  // This forms the set of identifiers which should be memoized.
+  /*
+   * Then walk outward from the returned values and find all captured operands.
+   * This forms the set of identifiers which should be memoized.
+   */
   const memoized = computeMemoizedIdentifiers(state);
 
   log(() => prettyFormat(memoized));
@@ -150,18 +154,24 @@ export type MemoizationOptions = {
 enum MemoizationLevel {
   // The value should be memoized if it escapes
   Memoized = "Memoized",
-  // Values that are memoized if their dependencies are memoized (used for logical/ternary and
-  // other expressions that propagate dependencies wo changing them)
+  /*
+   * Values that are memoized if their dependencies are memoized (used for logical/ternary and
+   * other expressions that propagate dependencies wo changing them)
+   */
   Conditional = "Conditional",
-  // Values that cannot be compared with Object.is, but which by default don't need to be memoized
-  // unless forced
+  /*
+   * Values that cannot be compared with Object.is, but which by default don't need to be memoized
+   * unless forced
+   */
   Unmemoized = "Unmemoized",
   // The value will never be memoized: used for values that can be cheaply compared w Object.is
   Never = "Never",
 }
 
-// Given an identifier that appears as an lvalue multiple times with different memoization levels,
-// determines the final memoization level.
+/*
+ * Given an identifier that appears as an lvalue multiple times with different memoization levels,
+ * determines the final memoization level.
+ */
 function joinAliases(
   kind1: MemoizationLevel,
   kind2: MemoizationLevel
@@ -204,8 +214,10 @@ type ScopeNode = {
 // Stores the identifier and scope graphs, set of returned identifiers, etc
 class State {
   env: Environment;
-  // Maps lvalues for LoadLocal to the identifier being loaded, to resolve indirections
-  // in subsequent lvalues/rvalues
+  /*
+   * Maps lvalues for LoadLocal to the identifier being loaded, to resolve indirections
+   * in subsequent lvalues/rvalues
+   */
   definitions: Map<IdentifierId, IdentifierId> = new Map();
 
   identifiers: Map<IdentifierId, IdentifierNode> = new Map();
@@ -216,9 +228,7 @@ class State {
     this.env = env;
   }
 
-  /**
-   * Declare a new identifier, used for function id and params
-   */
+  // Declare a new identifier, used for function id and params
   declare(id: IdentifierId): void {
     this.identifiers.set(id, {
       level: MemoizationLevel.Never,
@@ -229,7 +239,7 @@ class State {
     });
   }
 
-  /**
+  /*
    * Associates the identifier with its scope, if there is one and it is active for the given instruction id:
    * - Records the scope and its dependencies
    * - Associates the identifier with this scope
@@ -261,7 +271,7 @@ class State {
   }
 }
 
-/**
+/*
  * Given a state derived from visiting the function, walks the graph from the returned nodes
  * to determine which other values should be memoized. Returns a set of all identifiers
  * that should be memoized.
@@ -283,8 +293,10 @@ function computeMemoizedIdentifiers(state: State): Set<IdentifierId> {
     }
     node.seen = true;
 
-    // Note: in case of cycles we temporarily mark the identifier as non-memoized,
-    // this is reset later after processing dependencies
+    /*
+     * Note: in case of cycles we temporarily mark the identifier as non-memoized,
+     * this is reset later after processing dependencies
+     */
     node.memoized = false;
 
     // Visit dependencies, determine if any of them are memoized
@@ -342,7 +354,7 @@ type LValueMemoization = {
   level: MemoizationLevel;
 };
 
-/**
+/*
  * Given a value, returns a description of how it should be memoized:
  * - lvalues: optional extra places that are lvalue-like in the sense of
  *   aliasing the rvalues
@@ -396,9 +408,11 @@ function computeMemoizationInputs(
           lvalue !== null
             ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
             : [],
-        // Only the final value of the sequence is a true rvalue:
-        // values from the sequence's instructions are evaluated
-        // as separate nodes
+        /*
+         * Only the final value of the sequence is a true rvalue:
+         * values from the sequence's instructions are evaluated
+         * as separate nodes
+         */
         rvalues: computeMemoizationInputs(env, value.value, null, options)
           .rvalues,
       };
@@ -424,8 +438,10 @@ function computeMemoizationInputs(
         ? MemoizationLevel.Memoized
         : MemoizationLevel.Unmemoized;
       return {
-        // JSX elements themselves are not memoized unless forced to
-        // avoid breaking downstream memoization
+        /*
+         * JSX elements themselves are not memoized unless forced to
+         * avoid breaking downstream memoization
+         */
         lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
         rvalues: operands,
       };
@@ -435,8 +451,10 @@ function computeMemoizationInputs(
         ? MemoizationLevel.Memoized
         : MemoizationLevel.Unmemoized;
       return {
-        // JSX elements themselves are not memoized unless forced to
-        // avoid breaking downstream memoization
+        /*
+         * JSX elements themselves are not memoized unless forced to
+         * avoid breaking downstream memoization
+         */
         lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
         rvalues: value.children,
       };
@@ -578,14 +596,18 @@ function computeMemoizationInputs(
           lvalue !== null
             ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
             : [],
-        // Only the object is aliased to the result, and the result only needs to be
-        // memoized if the object is
+        /*
+         * Only the object is aliased to the result, and the result only needs to be
+         * memoized if the object is
+         */
         rvalues: [value.object],
       };
     }
     case "ComputedStore": {
-      // The object being stored to acts as an lvalue (it aliases the value), but
-      // the computed key is not aliased
+      /*
+       * The object being stored to acts as an lvalue (it aliases the value), but
+       * the computed key is not aliased
+       */
       const lvalues = [
         { place: value.object, level: MemoizationLevel.Conditional },
       ];
@@ -670,8 +692,10 @@ function computeMemoizationInputs(
     case "NewExpression":
     case "ObjectExpression":
     case "PropertyStore": {
-      // All of these instructions may produce new values which must be memoized if
-      // reachable from a return value. Any mutable rvalue may alias any other rvalue
+      /*
+       * All of these instructions may produce new values which must be memoized if
+       * reachable from a return value. Any mutable rvalue may alias any other rvalue
+       */
       const operands = [...eachReactiveValueOperand(value)];
       const lvalues = operands
         .filter((operand) => isMutableEffect(operand.effect, operand.loc))
@@ -737,7 +761,7 @@ function computePatternLValues(pattern: Pattern): Array<LValueMemoization> {
   return lvalues;
 }
 
-/**
+/*
  * Populates the input state with the set of returned identifiers and information about each
  * identifier's and scope's dependencies.
  */
@@ -788,8 +812,10 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
         state.identifiers.set(lvalueId, node);
       }
       node.level = joinAliases(node.level, level);
-      // This looks like NxM iterations but in practice all instructions with multiple
-      // lvalues have only a single rvalue
+      /*
+       * This looks like NxM iterations but in practice all instructions with multiple
+       * lvalues have only a single rvalue
+       */
       for (const operand of aliasing.rvalues) {
         const operandId =
           state.definitions.get(operand.identifier.id) ?? operand.identifier.id;
@@ -814,10 +840,12 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
           this.env,
           instruction.value.callee.identifier.type
         );
-        // Hook values are assumed to escape by default since they can be inputs
-        // to reactive scopes in the hook. However if the hook is annotated as
-        // noAlias we know that the arguments cannot escape and don't need to
-        // be memoized.
+        /*
+         * Hook values are assumed to escape by default since they can be inputs
+         * to reactive scopes in the hook. However if the hook is annotated as
+         * noAlias we know that the arguments cannot escape and don't need to
+         * be memoized.
+         */
         if (signature && signature.noAlias === true) {
           return;
         }
@@ -841,9 +869,7 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
   }
 }
 
-/**
- * Prune reactive scopes that do not have any memoized outputs
- */
+// Prune reactive scopes that do not have any memoized outputs
 class PruneScopesTransform extends ReactiveFunctionTransform<
   Set<IdentifierId>
 > {

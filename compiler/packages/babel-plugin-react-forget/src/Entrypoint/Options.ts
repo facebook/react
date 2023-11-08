@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -10,14 +10,18 @@ import { CompilerErrorDetailOptions } from "../CompilerError";
 import { ExternalFunction, PartialEnvironmentConfig } from "../HIR/Environment";
 
 export type PanicThresholdOptions =
-  // Any errors will panic the compiler by throwing an exception, which will
-  // bubble up to the nearest exception handler above the Forget transform.
-  // If Forget is invoked through `ReactForgetBabelPlugin`, this will at the least
-  // skip Forget compilation for the rest of current file.
+  /*
+   * Any errors will panic the compiler by throwing an exception, which will
+   * bubble up to the nearest exception handler above the Forget transform.
+   * If Forget is invoked through `ReactForgetBabelPlugin`, this will at the least
+   * skip Forget compilation for the rest of current file.
+   */
   | "ALL_ERRORS"
-  // Panic by throwing an exception only on critical or unrecognized errors.
-  // For all other errors, skip the erroring function without inserting
-  // a Forget-compiled version (i.e. same behavior as noEmit).
+  /*
+   * Panic by throwing an exception only on critical or unrecognized errors.
+   * For all other errors, skip the erroring function without inserting
+   * a Forget-compiled version (i.e. same behavior as noEmit).
+   */
   | "CRITICAL_ERRORS"
   // Never panic by throwing an exception.
   | "NONE";
@@ -27,52 +31,52 @@ export type PluginOptions = {
 
   logger: Logger | null;
 
-  /**
+  /*
    * Specifying a `gating` config, makes Forget compile and emit a separate
    * version of the function gated by importing the `gating.importSpecifierName` from the
    * specified `gating.source`.
    *
    * For example:
-   *  gating: {
-   *    source: 'ReactForgetFeatureFlag',
-   *    importSpecifierName: 'isForgetEnabled_Pokes',
-   *  }
+   *   gating: {
+   *     source: 'ReactForgetFeatureFlag',
+   *     importSpecifierName: 'isForgetEnabled_Pokes',
+   *   }
    *
    * produces:
-   *  import {isForgetEnabled_Pokes} from 'ReactForgetFeatureFlag';
+   *   import {isForgetEnabled_Pokes} from 'ReactForgetFeatureFlag';
    *
-   *  Foo_forget()   {}
+   *   Foo_forget()   {}
    *
-   *  Foo_uncompiled() {}
+   *   Foo_uncompiled() {}
    *
-   *  var Foo = isForgetEnabled_Pokes() ? Foo_forget : Foo_uncompiled;
+   *   var Foo = isForgetEnabled_Pokes() ? Foo_forget : Foo_uncompiled;
    */
   gating: ExternalFunction | null;
-  /**
+  /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
    * instrumentation function, for components and hooks that Forget compiles.
    * For example:
-   *  instrumentForget: {
-   *    source: 'react-forget-runtime',
-   *    importSpecifierName: 'useRenderCounter',
-   *  }
+   *   instrumentForget: {
+   *     source: 'react-forget-runtime',
+   *     importSpecifierName: 'useRenderCounter',
+   *   }
    *
    * produces:
-   *  import {useRenderCounter} from 'react-forget-runtime-pokes';
+   *   import {useRenderCounter} from 'react-forget-runtime-pokes';
    *
-   *  function Component(props) {
-   *    if (__DEV__) {
-   *       useRenderCounter();
-   *    }
-   *    // ...
-   *  }
+   *   function Component(props) {
+   *     if (__DEV__) {
+   *        useRenderCounter();
+   *     }
+   *     // ...
+   *   }
    *
    */
   instrumentForget: ExternalFunction | null;
 
   panicThreshold: PanicThresholdOptions;
 
-  /**
+  /*
    * When enabled, Forget will continue statically analyzing and linting code, but skip over codegen
    * passes.
    *
@@ -80,21 +84,21 @@ export type PluginOptions = {
    */
   noEmit: boolean;
 
-  /**
+  /*
    * Determines the strategy for determining which functions to compile. Note that regardless of
    * which mode is enabled, a component can be opted out by adding the string literal
    * `"use no forget"` at the top of the function body, eg.:
    *
    * ```
    * function ComponentYouWantToSkipCompilation(props) {
-   *   "use no forget";
-   *   ...
+   *    "use no forget";
+   *    ...
    * }
    * ```
    */
   compilationMode: CompilationMode;
 
-  /**
+  /*
    * If enabled, Forget will import `useMemoCache` from a polyfill instead of React. Use this if
    * you are for whatever reason unable to use an experimental version of React.
    *
@@ -107,14 +111,16 @@ export type PluginOptions = {
 };
 
 export type CompilationMode =
-  // Compiles functions annotated with "use forget" or component/hook-like functions.
-  // This latter includes:
-  // * Components declared with component syntax.
-  // * Functions which can be inferred to be a component or hook:
-  //   - Be named like a hook or component. This logic matches the ESLint rule.
-  //   - *and* create JSX and/or call a hook. This is an additional check to help prevent
-  //     false positives, since compilation has a greater impact than linting.
-  // This is the default mode
+  /*
+   * Compiles functions annotated with "use forget" or component/hook-like functions.
+   * This latter includes:
+   * * Components declared with component syntax.
+   * * Functions which can be inferred to be a component or hook:
+   *   - Be named like a hook or component. This logic matches the ESLint rule.
+   *   - *and* create JSX and/or call a hook. This is an additional check to help prevent
+   *     false positives, since compilation has a greater impact than linting.
+   * This is the default mode
+   */
   | "infer"
   // Compile only functions which are explicitly annotated with "use forget"
   | "annotation"

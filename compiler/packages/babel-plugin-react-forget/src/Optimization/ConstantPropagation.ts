@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -33,7 +33,7 @@ import {
 } from "../HIR/HIRBuilder";
 import { eliminateRedundantPhi } from "../SSA";
 
-/**
+/*
  * Applies constant propagation/folding to the given function. The approach is
  * [Sparse Conditional Constant Propagation](https://en.wikipedia.org/wiki/Sparse_conditional_constant_propagation):
  * we use abstract interpretation to record known constant values for identifiers,
@@ -67,8 +67,10 @@ function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
     if (!haveTerminalsChanged) {
       break;
     }
-    // If terminals have changed then blocks may have become newly unreachable.
-    // Re-run minification of the graph (incl reordering instruction ids)
+    /*
+     * If terminals have changed then blocks may have become newly unreachable.
+     * Re-run minification of the graph (incl reordering instruction ids)
+     */
     reversePostorderBlocks(fn.body);
     removeUnreachableFallthroughs(fn.body);
     removeUnreachableForUpdates(fn.body);
@@ -87,11 +89,15 @@ function constantPropagationImpl(fn: HIRFunction, constants: Constants): void {
         }
       }
     }
-    // By removing some phi operands, there may be phis that were not previously
-    // redundant but now are
+    /*
+     * By removing some phi operands, there may be phis that were not previously
+     * redundant but now are
+     */
     eliminateRedundantPhi(fn);
-    // Finally, merge together any blocks that are now guaranteed to execute
-    // consecutively
+    /*
+     * Finally, merge together any blocks that are now guaranteed to execute
+     * consecutively
+     */
     mergeConsecutiveBlocks(fn);
 
     assertConsistentIdentifiers(fn);
@@ -105,9 +111,11 @@ function applyConstantPropagation(
 ): boolean {
   let hasChanges = false;
   for (const [, block] of fn.body.blocks) {
-    // Initialize phi values if all operands have the same known constant value.
-    // Note that this analysis uses a single-pass only, so it will never fill in
-    // phi values for blocks that have a back-edge.
+    /*
+     * Initialize phi values if all operands have the same known constant value.
+     * Note that this analysis uses a single-pass only, so it will never fill in
+     * phi values for blocks that have a back-edge.
+     */
     for (const phi of block.phis) {
       let value = evaluatePhi(phi, constants);
       if (value !== null) {
@@ -117,8 +125,10 @@ function applyConstantPropagation(
 
     for (let i = 0; i < block.instructions.length; i++) {
       if (block.kind === "sequence" && i === block.instructions.length - 1) {
-        // evaluating the last value of a value block can break order of evaluation,
-        // skip these instructions
+        /*
+         * evaluating the last value of a value block can break order of evaluation,
+         * skip these instructions
+         */
         continue;
       }
       const instr = block.instructions[i]!;
@@ -165,8 +175,10 @@ function evaluatePhi(phi: Phi, constants: Constants): Constant | null {
       return null;
     }
 
-    // first iteration of the loop, let's store the operand and continue
-    // looping.
+    /*
+     * first iteration of the loop, let's store the operand and continue
+     * looping.
+     */
     if (value === null) {
       value = operandValue;
       continue;
@@ -433,7 +445,7 @@ function evaluateInstruction(
   }
 }
 
-/**
+/*
  * Recursively read the value of a place: if it is a constant place, attempt to read
  * from that place until reaching a primitive or finding a value that is unset.
  */

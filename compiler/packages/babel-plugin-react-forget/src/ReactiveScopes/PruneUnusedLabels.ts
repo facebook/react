@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -17,7 +17,7 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/**
+/*
  * Flattens labeled terminals where the label is not reachable, and
  * nulls out labels for other terminals where the label is unused.
  */

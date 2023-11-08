@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,17 +20,17 @@ import { retainWhere } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
-/**
+/*
  * Note: this is the 3rd of 4 passes that determine how to break a function into discrete
  * reactive scopes (independently memoizeable units of code):
  * 1. InferReactiveScopeVariables (on HIR) determines operands that mutate together and assigns
- *    them a unique reactive scope.
+ *     them a unique reactive scope.
  * 2. AlignReactiveScopesToBlockScopes (on ReactiveFunction) aligns reactive scopes
- *    to block scopes.
+ *     to block scopes.
  * 3. MergeOverlappingReactiveScopes (this pass, on ReactiveFunction) ensures that reactive
- *    scopes do not overlap, merging any such scopes.
+ *     scopes do not overlap, merging any such scopes.
  * 4. BuildReactiveBlocks (on ReactiveFunction) groups the statements for each scope into
- *    a ReactiveScopeBlock.
+ *     a ReactiveScopeBlock.
  *
  * Previous passes may leave "overlapping" scopes, ie where one or more instructions are within
  * the mutable range of multiple reactive scopes. We prefer to avoid executing instructions twice
@@ -47,16 +47,16 @@ import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
  *
  * ```javascript
  * function foo(cond, a) {
- *                                 ⌵ scope for x
- *   let x = [];                   ⌝
- *   if (cond) {                   ⎮
- *                   ⌵ scope for y ⎮
- *     let y = [];   ⌝             ⎮
- *     if (b) {      ⎮             ⎮
- *       y.push(b);  ⌟             ⎮
- *     }                           ⎮
- *     x.push(<div>{y}</div>);     ⎮
- *   }                             ⌟
+ *                                  ⌵ scope for x
+ *    let x = [];                   ⌝
+ *    if (cond) {                   ⎮
+ *                    ⌵ scope for y ⎮
+ *      let y = [];   ⌝             ⎮
+ *      if (b) {      ⎮             ⎮
+ *        y.push(b);  ⌟             ⎮
+ *      }                           ⎮
+ *      x.push(<div>{y}</div>);     ⎮
+ *    }                             ⌟
  * }
  * ```
  *
@@ -182,30 +182,36 @@ class Context {
     let index = this.scopes.length - 1;
     let nextBlock = currentBlock;
     while (!nextBlock.seen.has(scope.id)) {
-      // scopes that cross control-flow boundaries are merged with overlapping
-      // scopes
+      /*
+       * scopes that cross control-flow boundaries are merged with overlapping
+       * scopes
+       */
       this.joinedScopes.union([scope, ...nextBlock.scopes.map((s) => s.scope)]);
       index--;
       if (index < 0) {
-        // TODO: handle reassignments in multiple branches. these create new identifiers that
-        // add an entry to this.seenScopes but which are then removed when their blocks exit.
-        // this is also wrong for codegen, different versions of an identifier could be cached
-        // differently and so a reassigned version of a variable needs a separate declaration.
-        // console.log(`scope ${scope.id} not found`);
+        /*
+         * TODO: handle reassignments in multiple branches. these create new identifiers that
+         * add an entry to this.seenScopes but which are then removed when their blocks exit.
+         * this is also wrong for codegen, different versions of an identifier could be cached
+         * differently and so a reassigned version of a variable needs a separate declaration.
+         * console.log(`scope ${scope.id} not found`);
+         */
 
-        // for (let i = this.scopes.length - 1; i > index; i--) {
-        //   const s = this.scopes[i];
-        //   console.log(
-        //     JSON.stringify(
-        //       {
-        //         seen: Array.from(s.seen),
-        //         scopes: s.scopes,
-        //       },
-        //       null,
-        //       2
-        //     )
-        //   );
-        // }
+        /*
+         * for (let i = this.scopes.length - 1; i > index; i--) {
+         *   const s = this.scopes[i];
+         *   console.log(
+         *     JSON.stringify(
+         *       {
+         *         seen: Array.from(s.seen),
+         *         scopes: s.scopes,
+         *       },
+         *       null,
+         *       2
+         *     )
+         *   );
+         * }
+         */
         currentBlock.seen.add(scope.id);
         currentBlock.scopes.push({ shadowedBy: null, scope });
         return;

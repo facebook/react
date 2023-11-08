@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -18,7 +18,7 @@ export type Type =
   | ObjectMethod;
 export type PrimitiveType = { kind: "Primitive" };
 
-/**
+/*
  * An {@link FunctionType} or {@link ObjectType} (also a JS object) may be associated with an
  * inferred "object shape", i.e. a known property (key -> Type) map. This is
  * subtly different from JS language semantics - `shape` represents both
@@ -27,7 +27,7 @@ export type PrimitiveType = { kind: "Primitive" };
  * {@link ObjectShape.functionType} is always present on the shape of a {@link FunctionType},
  * and it represents the call signature of the function. Note that Forget thinks of a
  * {@link FunctionType} as any "callable object" (not to be confused with objects that
- *  extend the global `Function`.)
+ *   extend the global `Function`.)
  *
  * If `shapeId` is present, it is a key into the ShapeRegistry used to infer this
  * FunctionType or ObjectType instance (i.e. from an Environment).
@@ -65,7 +65,7 @@ export type ObjectMethod = {
   kind: "ObjectMethod";
 };
 
-/**
+/*
  * Simulated opaque type for TypeId to prevent using normal numbers as ids
  * accidentally.
  */

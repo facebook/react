@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,7 +20,7 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/**
+/*
  * Most parts of compilation do not treat hooks specially, because there is no guarantee that custom
  * hooks obey any particular contract. For example, we can't assume that custom hooks won't modify
  * their arguments, and we can't assume that hooks return immutable or memoized values. Therefore

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -10,7 +10,7 @@
 import type * as BabelCore from "@babel/core";
 import { compileProgram, parsePluginOptions } from "../Entrypoint";
 
-/**
+/*
  * The React Forget Babel Plugin
  * @param {*} _babel
  * @returns
@@ -21,9 +21,11 @@ export default function ReactForgetBabelPlugin(
   return {
     name: "react-forget",
     visitor: {
-      // Note: Babel does some "smart" merging of visitors across plugins, so even if A is inserted
-      // prior to B, if A does not have a Program visitor and B does, B will run first. We always
-      // want Forget to run true to source as possible.
+      /*
+       * Note: Babel does some "smart" merging of visitors across plugins, so even if A is inserted
+       * prior to B, if A does not have a Program visitor and B does, B will run first. We always
+       * want Forget to run true to source as possible.
+       */
       Program(prog, pass): void {
         compileProgram(prog, {
           opts: parsePluginOptions(pass.opts),

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -8,7 +8,7 @@
 import { Effect, HIRFunction, IdentifierId } from "../HIR";
 import { HookKind } from "../HIR/ObjectShape";
 
-/**
+/*
  * Removes manual memoization using the `useMemo` and `useCallback` APIs. This pass is designed
  * to compose with InlineImmediatelyInvokedFunctionExpressions, and needs to run prior to entering
  * SSA form (alternatively we could refactor and re-EnterSSA after inlining). Therefore it cannot
@@ -55,22 +55,26 @@ export function dropManualMemoization(func: HIRFunction): void {
             if (hookKind === "useMemo") {
               const [fn] = instr.value.args;
 
-              // TODO(gsn): Consider inlining the function passed to useMemo,
-              // rather than just calling it directly.
-              //
-              // Replace the hook callee with the fn arg.
-              //
-              // before:
-              //   foo = Call useMemo$2($9, $10)
-              //
-              // after:
-              //   foo = Call $9()
+              /*
+               * TODO(gsn): Consider inlining the function passed to useMemo,
+               * rather than just calling it directly.
+               *
+               * Replace the hook callee with the fn arg.
+               *
+               * before:
+               *   foo = Call useMemo$2($9, $10)
+               *
+               * after:
+               *   foo = Call $9()
+               */
               if (fn.kind === "Identifier") {
                 instr.value = {
                   kind: "CallExpression",
                   callee: fn,
-                  // Drop the args, including the deps array which DCE will remove
-                  // later.
+                  /*
+                   * Drop the args, including the deps array which DCE will remove
+                   * later.
+                   */
                   args: [],
                   loc: instr.value.loc,
                 };
@@ -78,13 +82,15 @@ export function dropManualMemoization(func: HIRFunction): void {
             } else if (hookKind === "useCallback") {
               const [fn] = instr.value.args;
 
-              // Instead of a Call, just alias the callback directly.
-              //
-              // before:
-              //   foo = Call useCallback$8($19)
-              //
-              // after:
-              //   foo = $19
+              /*
+               * Instead of a Call, just alias the callback directly.
+               *
+               * before:
+               *   foo = Call useCallback$8($19)
+               *
+               * after:
+               *   foo = $19
+               */
               if (fn.kind === "Identifier") {
                 instr.value = {
                   kind: "LoadLocal",

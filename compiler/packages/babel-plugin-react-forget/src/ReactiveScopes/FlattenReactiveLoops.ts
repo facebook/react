@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -19,7 +19,7 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/**
+/*
  * Given a reactive function, flattens any scopes contained within a loop construct.
  * We won't initially support memoization within loops though this is possible in the future.
  */

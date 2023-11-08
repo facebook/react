@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -25,13 +25,13 @@ import {
   eachTerminalOperand,
 } from "../HIR/visitors";
 
-/**
+/*
  * Various APIs in React take ownership of the values passed to them, such that it is invalid
  * to subsequently modify those values. Examples include:
  * - Passing a value as a prop to JSX. Subsequently mutating this value will result in undefined
- *   behavior, since the mutation may or may not be observed depending on when the child re-renders.
- *   In addition, the value may be used as an input to memoization in children, and mutation could
- *   invalidate that memoization.
+ *    behavior, since the mutation may or may not be observed depending on when the child re-renders.
+ *    In addition, the value may be used as an input to memoization in children, and mutation could
+ *    invalidate that memoization.
  * - Passing a value to `useState()`, for the same reason.
  * - Passing a value to a hook, for the same reason.
  *
@@ -134,9 +134,11 @@ function validateOperand(
       state.temporaries.get(operand.identifier.id) ?? operand.identifier.id;
     const lambda = state.lambdas.get(operandId);
     if (lambda !== undefined) {
-      // TODO: these seem to always be null, we should try to preserve original
-      // names from source
-      // TODO: figure out how to print object methods as they don't have names
+      /*
+       * TODO: these seem to always be null, we should try to preserve original
+       * names from source
+       * TODO: figure out how to print object methods as they don't have names
+       */
       const description =
         lambda.kind === "FunctionExpression" &&
         lambda.name !== null &&

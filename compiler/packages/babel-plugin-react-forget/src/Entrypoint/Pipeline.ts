@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -100,7 +100,7 @@ export function* run(
   return ast;
 }
 
-/**
+/*
  * Note: this is split from run() to make `config` out of scope, so that all
  * access to feature flags has to be through the Environment for consistency.
  */

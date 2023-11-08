@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -31,11 +31,13 @@ class Visitor extends ReactiveFunctionVisitor<VisitorState> {
         promoteTemporary(identifier, state);
       }
     }
-    // This is technically optional. We could prune ReactiveScopes
-    // whose outputs are not used in another computation or return
-    // value.
-    // Many of our current test fixtures do not return a value, so
-    // it is better for now to promote (and memoize) every output.
+    /*
+     * This is technically optional. We could prune ReactiveScopes
+     * whose outputs are not used in another computation or return
+     * value.
+     * Many of our current test fixtures do not return a value, so
+     * it is better for now to promote (and memoize) every output.
+     */
     for (const [, declaration] of block.scope.declarations) {
       if (declaration.identifier.name == null) {
         promoteTemporary(declaration.identifier, state);

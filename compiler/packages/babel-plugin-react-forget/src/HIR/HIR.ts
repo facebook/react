@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,15 +12,17 @@ import { Environment } from "./Environment";
 import { HookKind } from "./ObjectShape";
 import { Type } from "./Types";
 
-// *******************************************************************************************
-// *******************************************************************************************
-// ************************************* Core Data Model *************************************
-// *******************************************************************************************
-// *******************************************************************************************
+/*
+ * *******************************************************************************************
+ * *******************************************************************************************
+ * ************************************* Core Data Model *************************************
+ * *******************************************************************************************
+ * *******************************************************************************************
+ */
 
 // AST -> (lowering) -> HIR -> (analysis) -> Reactive Scopes -> (codegen) -> AST
 
-/**
+/*
  * A location in a source file, intended to be used for providing diagnostic information and
  * transforming code while preserving source information (ie to emit source maps).
  *
@@ -29,16 +31,16 @@ import { Type } from "./Types";
 export const GeneratedSource = Symbol();
 export type SourceLocation = t.SourceLocation | typeof GeneratedSource;
 
-/**
+/*
  * A React function defines a computation that takes some set of reactive inputs
  * (props, hook arguments) and return a result (JSX, hook return value). Unlike
  * HIR, the data model is tree-shaped:
  *
  * ReactFunction
- *   ReactiveBlock
- *     ReactiveBlockScope*
- *      Place* (dependencies)
- *      (ReactiveInstruction | ReactiveTerminal)*
+ *    ReactiveBlock
+ *      ReactiveBlockScope*
+ *       Place* (dependencies)
+ *       (ReactiveInstruction | ReactiveTerminal)*
  *
  * Where ReactiveTerminal may recursively contain zero or more ReactiveBlocks.
  *
@@ -225,9 +227,7 @@ export type ReactiveTryTerminal = {
   id: InstructionId;
 };
 
-/**
- * A function lowered to HIR form, ie where its body is lowered to an HIR control-flow graph
- */
+// A function lowered to HIR form, ie where its body is lowered to an HIR control-flow graph
 export type HIRFunction = {
   loc: SourceLocation;
   id: string | null;
@@ -239,7 +239,7 @@ export type HIRFunction = {
   async: boolean;
 };
 
-/**
+/*
  * Each reactive scope may have its own control-flow, so the instructions form
  * a control-flow graph. The graph comprises a set of basic blocks which reference
  * each other via terminal statements, as well as a reference to the entry block.
@@ -247,7 +247,7 @@ export type HIRFunction = {
 export type HIR = {
   entry: BlockId;
 
-  /**
+  /*
    * Basic blocks are stored as a map to aid certain operations that need to
    * lookup blocks by their id. However, the order of the items in the map is
    * reverse postorder, that is, barring cycles, predecessors appear before
@@ -256,7 +256,7 @@ export type HIR = {
   blocks: Map<BlockId, BasicBlock>;
 };
 
-/**
+/*
  * Each basic block within an instruction graph contains zero or more instructions
  * followed by a terminal node. Note that basic blocks always execute consecutively,
  * there can be no branching within a block other than for an exception. Exceptions
@@ -274,7 +274,7 @@ export type BasicBlock = {
   phis: Set<Phi>;
 };
 
-/**
+/*
  * Terminal nodes generally represent statements that affect control flow, such as
  * for-of, if-else, return, etc.
  */
@@ -313,10 +313,10 @@ function _staticInvariantTerminalHasInstructionId(
   return terminal.id;
 }
 
-/**
+/*
  * Terminal nodes allowed for a value block
+ * A terminal that couldn't be lowered correctly.
  */
-// A terminal that couldn't be lowered correctly.
 export type UnsupportedTerminal = {
   kind: "unsupported";
   id: InstructionId;
@@ -453,10 +453,12 @@ export type LabelTerminal = {
 
 export type OptionalTerminal = {
   kind: "optional";
-  // Specifies whether this node was optional. If false, it means that the original
-  // node was part of an optional chain but this specific item was non-optional.
-  // For example, in `a?.b.c?.()`, the `.b` access is non-optional but appears within
-  // an optional chain.
+  /*
+   * Specifies whether this node was optional. If false, it means that the original
+   * node was part of an optional chain but this specific item was non-optional.
+   * For example, in `a?.b.c?.()`, the `.b` access is non-optional but appears within
+   * an optional chain.
+   */
   optional: boolean;
   test: BlockId;
   fallthrough: BlockId;
@@ -491,7 +493,7 @@ export type MaybeThrowTerminal = {
   loc: SourceLocation;
 };
 
-/**
+/*
  * Instructions generally represent expressions but with all nesting flattened away,
  * such that all operands to each instruction are either primitive values OR are
  * references to a place, which may be a temporary that holds the results of a
@@ -570,26 +572,16 @@ export type ObjectMethod = {
 };
 
 export enum InstructionKind {
-  /**
-   * const declaration
-   */
+  // const declaration
   Const = "Const",
-  /**
-   * let declaration
-   */
+  // let declaration
   Let = "Let",
-  /**
-   * assing a new value to a let binding
-   */
+  // assing a new value to a let binding
   Reassign = "Reassign",
-  /**
-   * catch clause binding
-   */
+  // catch clause binding
   Catch = "Catch",
 
-  /**
-   * hoisted const declarations
-   */
+  // hoisted const declarations
   HoistedConst = "HoistedConst",
 }
 
@@ -607,7 +599,7 @@ export type Phi = {
   type: Type;
 };
 
-/**
+/*
  * Forget currently does not handle MethodCall correctly in
  * all cases. Specifically, we do not bind the receiver and method property
  * before calling to args. Until we add a SequenceExpression to inline all
@@ -615,10 +607,10 @@ export type Phi = {
  * with some constraints.
  *
  * Forget currently makes these assumptions (checked in codegen):
- *  - {@link MethodCall.property} is a temporary produced by a PropertyLoad or ComputedLoad
- *    on {@link MethodCall.receiver}
- *  - {@link MethodCall.property} remains an rval (i.e. never promoted to a
- *    named identifier). We currently rely on this for codegen.
+ *   - {@link MethodCall.property} is a temporary produced by a PropertyLoad or ComputedLoad
+ *     on {@link MethodCall.receiver}
+ *   - {@link MethodCall.property} remains an rval (i.e. never promoted to a
+ *     named identifier). We currently rely on this for codegen.
  *
  * Type inference does not currently guarantee that {@link MethodCall.property}
  * is a FunctionType.
@@ -638,7 +630,7 @@ export type CallExpression = {
   loc: SourceLocation;
 };
 
-/**
+/*
  * The value of a given instruction. Note that values are not recursive: complex
  * values such as objects or arrays are always defined by instructions to define
  * their operands (saving to a temporary), then passing those temporaries as
@@ -816,9 +808,11 @@ export type InstructionValue =
       value: Place; // the collection
       loc: SourceLocation;
     }
-  // Models a prefix update expression such as --x or ++y
-  // This instructions increments or decrements the <lvalue>
-  // but evaluates to the value of <value> prior to the update.
+  /*
+   * Models a prefix update expression such as --x or ++y
+   * This instructions increments or decrements the <lvalue>
+   * but evaluates to the value of <value> prior to the update.
+   */
   | {
       kind: "PrefixUpdate";
       lvalue: Place;
@@ -826,9 +820,11 @@ export type InstructionValue =
       value: Place;
       loc: SourceLocation;
     }
-  // Models a postfix update expression such as x-- or y++
-  // This instructions increments or decrements the <lvalue>
-  // and evaluates to the value after the update
+  /*
+   * Models a postfix update expression such as x-- or y++
+   * This instructions increments or decrements the <lvalue>
+   * and evaluates to the value after the update
+   */
   | {
       kind: "PostfixUpdate";
       lvalue: Place;
@@ -838,7 +834,7 @@ export type InstructionValue =
     }
   // `debugger` statement
   | { kind: "Debugger"; loc: SourceLocation }
-  /**
+  /*
    * Catch-all for statements such as type imports, nested class declarations, etc
    * which are not directly represented, but included for completeness and to allow
    * passing through in codegen.
@@ -868,7 +864,7 @@ export type Destructure = {
   loc: SourceLocation;
 };
 
-/**
+/*
  * A place where data may be read from / written to:
  * - a variable (identifier)
  * - a path into an identifier
@@ -881,9 +877,7 @@ export type Place = {
   loc: SourceLocation;
 };
 
-/**
- * A primitive value with a specific (constant) value.
- */
+// A primitive value with a specific (constant) value.
 export type Primitive = {
   kind: "Primitive";
   value: number | boolean | string | null | undefined;
@@ -915,24 +909,26 @@ export type MutableRange = {
   end: InstructionId;
 };
 
-/**
- * Represents a user-defined variable (has a name) or a temporary variable (no name).
- */
+// Represents a user-defined variable (has a name) or a temporary variable (no name).
 export type Identifier = {
-  // unique value to distinguish a variable, since name is not guaranteed to
-  // exist or be unique
+  /*
+   * unique value to distinguish a variable, since name is not guaranteed to
+   * exist or be unique
+   */
   id: IdentifierId;
   // null for temporaries. name is primarily used for debugging.
   name: string | null;
   // The range for which this variable is mutable
   mutableRange: MutableRange;
-  // The ID of the reactive scope which will compute this value. Multiple
-  // variables may have the same scope id.
+  /*
+   * The ID of the reactive scope which will compute this value. Multiple
+   * variables may have the same scope id.
+   */
   scope: ReactiveScope | null;
   type: Type;
 };
 
-/**
+/*
  * Distinguish between different kinds of values relevant to inference purposes:
  * see the main docblock for the module for details.
  */
@@ -944,9 +940,7 @@ export enum ValueKind {
   Context = "context",
 }
 
-/**
- * The effect with which a value is modified.
- */
+// The effect with which a value is modified.
 export enum Effect {
   // Default value: not allowed after lifetime inference
   Unknown = "<unknown>",
@@ -956,15 +950,19 @@ export enum Effect {
   Read = "read",
   // This reference reads and stores the value
   Capture = "capture",
-  // This reference *may* write to (mutate) the value. This covers two similar cases:
-  // - The compiler is being conservative and assuming that a value *may* be mutated
-  // - The effect is polymorphic: mutable values may be mutated, non-mutable values
-  //   will not be mutated.
-  // In both cases, we conservatively assume that mutable values will be mutated.
-  // But we do not error if the value is known to be immutable.
+  /*
+   * This reference *may* write to (mutate) the value. This covers two similar cases:
+   * - The compiler is being conservative and assuming that a value *may* be mutated
+   * - The effect is polymorphic: mutable values may be mutated, non-mutable values
+   *   will not be mutated.
+   * In both cases, we conservatively assume that mutable values will be mutated.
+   * But we do not error if the value is known to be immutable.
+   */
   ConditionallyMutate = "mutate?",
-  // This reference *does* write to (mutate) the value. It is an error (invalid input)
-  // if an immutable value flows into a location with this effect.
+  /*
+   * This reference *does* write to (mutate) the value. It is an error (invalid input)
+   * if an immutable value flows into a location with this effect.
+   */
   Mutate = "mutate",
   // This reference may alias to (mutate) the value
   Store = "store",
@@ -1020,7 +1018,7 @@ export type ReactiveScopeDependency = {
   path: Array<string>;
 };
 
-/**
+/*
  * Simulated opaque type for BlockIds to prevent using normal numbers as block ids
  * accidentally.
  */
@@ -1037,7 +1035,7 @@ export function makeBlockId(id: number): BlockId {
   return id as BlockId;
 }
 
-/**
+/*
  * Simulated opaque type for ScopeIds to prevent using normal numbers as scope ids
  * accidentally.
  */
@@ -1054,7 +1052,7 @@ export function makeScopeId(id: number): ScopeId {
   return id as ScopeId;
 }
 
-/**
+/*
  * Simulated opaque type for IdentifierId to prevent using normal numbers as ids
  * accidentally.
  */
@@ -1071,7 +1069,7 @@ export function makeIdentifierId(id: number): IdentifierId {
   return id as IdentifierId;
 }
 
-/**
+/*
  * Simulated opaque type for InstructionId to prevent using normal numbers as ids
  * accidentally.
  */

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -26,10 +26,12 @@ export function insertGatedFunctionDeclaration(
   );
 
   let compiledFn;
-  // Convert function declarations to named variables *unless* this is an
-  // `export default function ...` since `export default const ...` is
-  // not supported. For that case we fall through to replacing w the raw
-  // conditional expression
+  /*
+   * Convert function declarations to named variables *unless* this is an
+   * `export default function ...` since `export default const ...` is
+   * not supported. For that case we fall through to replacing w the raw
+   * conditional expression
+   */
   if (
     fnPath.parentPath.node.type !== "ExportDefaultDeclaration" &&
     fnPath.node.type === "FunctionDeclaration" &&

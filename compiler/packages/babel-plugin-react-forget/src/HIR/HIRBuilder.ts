@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -32,15 +32,15 @@ import {
   mapTerminalSuccessors,
 } from "./visitors";
 
-// *******************************************************************************************
-// *******************************************************************************************
-// ************************************* Lowering to HIR *************************************
-// *******************************************************************************************
-// *******************************************************************************************
-
-/**
- * A work-in-progress block that does not yet have a terminator
+/*
+ * *******************************************************************************************
+ * *******************************************************************************************
+ * ************************************* Lowering to HIR *************************************
+ * *******************************************************************************************
+ * *******************************************************************************************
  */
+
+// A work-in-progress block that does not yet have a terminator
 export type WipBlock = {
   id: BlockId;
   instructions: Array<Instruction>;
@@ -77,20 +77,24 @@ export type Bindings = Map<
   { node: t.Identifier; identifier: Identifier }
 >;
 
-// Determines how instructions should be constructed in order to preserve
-// exception semantics
+/*
+ * Determines how instructions should be constructed in order to preserve
+ * exception semantics
+ */
 export type ExceptionsMode =
-  // Mode used for code not covered by explicit exception handling, any
-  // errors are assumed to be thrown out of the function
+  /*
+   * Mode used for code not covered by explicit exception handling, any
+   * errors are assumed to be thrown out of the function
+   */
   | { kind: "ThrowExceptions" }
-  // Mode used for code that *is* covered by explicit exception handling
-  // (ie try/catch), which requires modeling the possibility of control
-  // flow to the exception handler.
+  /*
+   * Mode used for code that *is* covered by explicit exception handling
+   * (ie try/catch), which requires modeling the possibility of control
+   * flow to the exception handler.
+   */
   | { kind: "CatchExceptions"; handler: BlockId };
 
-/**
- * Helper class for constructing a CFG
- */
+// Helper class for constructing a CFG
 export default class HIRBuilder {
   #completed: Map<BlockId, BasicBlock> = new Map();
   #current: WipBlock;
@@ -137,9 +141,7 @@ export default class HIRBuilder {
     return this.#current.kind;
   }
 
-  /**
-   * Push a statement or expression onto the current block
-   */
+  // Push a statement or expression onto the current block
   push(instruction: Instruction): void {
     this.#current.instructions.push(instruction);
     const exceptionHandler = this.#exceptionHandlerStack.at(-1);
@@ -216,7 +218,7 @@ export default class HIRBuilder {
     return binding;
   }
 
-  /**
+  /*
    * Maps an Identifier (or JSX identifier) Babel node to an internal `Identifier`
    * which represents the variable being referenced, according to the JS scoping rules.
    *
@@ -230,11 +232,11 @@ export default class HIRBuilder {
    *
    * ```javascript
    * function foo() {
-   *   const x = 0;
-   *   {
-   *     const x = 1;
-   *   }
-   *   return x;
+   *    const x = 0;
+   *    {
+   *      const x = 1;
+   *    }
+   *    return x;
    * }
    * ```
    *
@@ -298,20 +300,12 @@ export default class HIRBuilder {
     }
   }
 
-  /**
-   * Construct a final CFG from this context
-   */
+  // Construct a final CFG from this context
   build(): HIR {
     let ir: HIR = {
       blocks: this.#completed,
       entry: this.#entry,
     };
-    // logHIR("Build (pre-shrink)", ir);
-    // // First reduce indirections
-    // shrink(ir);
-    // logHIR("Build (shrunk)", ir);
-
-    // then convert to reverse postorder
     reversePostorderBlocks(ir);
     removeUnreachableForUpdates(ir);
     removeUnreachableFallthroughs(ir);
@@ -323,9 +317,7 @@ export default class HIRBuilder {
     return ir;
   }
 
-  /**
-   * Terminate the current block w the given terminal, and start a new block
-   */
+  // Terminate the current block w the given terminal, and start a new block
   terminate(terminal: Terminal, nextBlockKind: BlockKind | null): void {
     const { id: blockId, kind, instructions } = this.#current;
     this.#completed.set(blockId, {
@@ -342,7 +334,7 @@ export default class HIRBuilder {
     }
   }
 
-  /**
+  /*
    * Terminate the current block w the given terminal, and set the previously
    * reserved block as the new current block
    */
@@ -359,7 +351,7 @@ export default class HIRBuilder {
     this.#current = continuation;
   }
 
-  /**
+  /*
    * Reserve a block so that it can be referenced prior to construction.
    * Make this the current block with `terminateWithContinuation()` or
    * call `complete()` to save it without setting it as the current block.
@@ -368,9 +360,7 @@ export default class HIRBuilder {
     return newBlock(makeBlockId(this.#env.nextBlockId), kind);
   }
 
-  /**
-   * Save a previously reserved block as completed
-   */
+  // Save a previously reserved block as completed
   complete(block: WipBlock, terminal: Terminal): void {
     const { id: blockId, kind, instructions } = block;
     this.#completed.set(blockId, {
@@ -383,7 +373,7 @@ export default class HIRBuilder {
     });
   }
 
-  /**
+  /*
    * Sets the given wip block as the current block, executes the provided callback to populate the block
    * up to its terminal, and then resets the previous actively block.
    */
@@ -403,7 +393,7 @@ export default class HIRBuilder {
     this.#current = current;
   }
 
-  /**
+  /*
    * Create a new block and execute the provided callback with the new block
    * set as the current, resetting to the previously active block upon exit.
    * The lambda must return a terminal node, which is used to terminate the
@@ -463,19 +453,15 @@ export default class HIRBuilder {
     return value;
   }
 
-  /**
+  /*
    * Executes the provided lambda inside a scope in which the provided loop
    * information is cached for lookup with `lookupBreak()` and `lookupContinue()`
    */
   loop<T>(
     label: string | null,
-    /**
-     * block of the loop body. "continue" jumps here.
-     */
+    // block of the loop body. "continue" jumps here.
     continueBlock: BlockId,
-    /**
-     * block following the loop. "break" jumps here.
-     */
+    // block following the loop. "break" jumps here.
     breakBlock: BlockId,
     fn: () => T
   ): T {
@@ -503,7 +489,7 @@ export default class HIRBuilder {
     return value;
   }
 
-  /**
+  /*
    * Lookup the block target for a break statement, based on loops and switch statements
    * in scope. Throws if there is no available location to break.
    */
@@ -522,7 +508,7 @@ export default class HIRBuilder {
     });
   }
 
-  /**
+  /*
    * Lookup the block target for a continue statement, based on loops
    * in scope. Throws if there is no available location to continue, or if the given
    * label does not correspond to a loop (this should also be validated at parse time).
@@ -552,12 +538,10 @@ export default class HIRBuilder {
   }
 }
 
-/**
- * Helper to shrink a CFG eliminate jump-only blocks.
- */
+// Helper to shrink a CFG eliminate jump-only blocks.
 function _shrink(func: HIR): void {
   const gotos = new Map();
-  /**
+  /*
    * Given a target block for some terminator, resolves the ideal block that should be
    * targeted instead. This transitively resolves any blocks that are simple indirections
    * (empty blocks that terminate in a goto).
@@ -644,9 +628,11 @@ export function removeDeadDoWhileStatements(func: HIR): void {
     visited.add(block.id);
   }
 
-  // If the test condition of a DoWhile is unreachable, the terminal is effectively deadcode and we
-  // can just inline the loop body. We replace the terminal with a goto to the loop block and
-  // MergeConsecutiveBlocks figures out how to merge as appropriate.
+  /*
+   * If the test condition of a DoWhile is unreachable, the terminal is effectively deadcode and we
+   * can just inline the loop body. We replace the terminal with a goto to the loop block and
+   * MergeConsecutiveBlocks figures out how to merge as appropriate.
+   */
   for (const [_, block] of func.blocks) {
     if (block.terminal.kind === "do-while") {
       if (!visited.has(block.terminal.test)) {
@@ -662,7 +648,7 @@ export function removeDeadDoWhileStatements(func: HIR): void {
   }
 }
 
-/**
+/*
  * Converts the graph to reverse-postorder, with predecessor blocks appearing
  * before successors except in the case of back links (ie loops).
  */
@@ -677,18 +663,18 @@ export function reversePostorderBlocks(func: HIR): void {
     const block = func.blocks.get(blockId)!;
     const { terminal } = block;
 
-    /**
+    /*
      * Note that we visit successors in reverse order. This ensures that when we
      * reverse the list at the end, that "sibling" edges appear in-order. For example,
      * ```
      * // bb0
      * let x;
      * if (c) {
-     *   // bb1
-     *   x = 1;
+     *    // bb1
+     *    x = 1;
      * } else {
-     *   // b2
-     *   x = 2;
+     *    // b2
+     *    x = 2;
      * }
      * // bb3
      * x;
@@ -709,8 +695,10 @@ export function reversePostorderBlocks(func: HIR): void {
         break;
       }
       case "if": {
-        // can ignore fallthrough, if its reachable it will be reached through
-        // consequent/alternate
+        /*
+         * can ignore fallthrough, if its reachable it will be reached through
+         * consequent/alternate
+         */
         const { consequent, alternate } = terminal;
         visit(alternate);
         visit(consequent);
@@ -723,8 +711,10 @@ export function reversePostorderBlocks(func: HIR): void {
         break;
       }
       case "switch": {
-        // can ignore fallthrough, if its reachable it will be reached through
-        // a case
+        /*
+         * can ignore fallthrough, if its reachable it will be reached through
+         * a case
+         */
         const { cases } = terminal;
         for (const case_ of [...cases].reverse()) {
           visit(case_.block);
@@ -834,7 +824,7 @@ export function markPredecessors(func: HIR): void {
   visit(func.entry, null);
 }
 
-/**
+/*
  * If the given block is a simple indirection — empty terminated with a goto(break) —
  * returns the block being pointed to. Otherwise returns null.
  */
@@ -846,7 +836,7 @@ function getTargetIfIndirection(block: BasicBlock): number | null {
     : null;
 }
 
-/**
+/*
  * Finds try terminals where the handler is unreachable, and converts the try
  * to a goto(terminal.fallthrough)
  */

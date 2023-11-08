@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -94,10 +94,12 @@ function handleError(
       });
     }
   }
-  /** Always throw if the flag is enabled, otherwise we only throw if the error is critical
+  /*
+   * Always throw if the flag is enabled, otherwise we only throw if the error is critical
    * (eg an invariant is broken, meaning the compiler may be buggy). See
    * {@link CompilerError.isCritical} for mappings.
-   * */
+   *
+   */
   if (
     pass.opts.panicThreshold === "ALL_ERRORS" ||
     (pass.opts.panicThreshold === "CRITICAL_ERRORS" && isCriticalError(err))
@@ -205,9 +207,11 @@ function findEslintSuppressions(
   }
 }
 
-// This is a hack to work around what seems to be a Babel bug. Babel doesn't
-// consistently respect the `skip()` function to avoid revisiting a node within
-// a pass, so we use this set to track nodes that we have compiled.
+/*
+ * This is a hack to work around what seems to be a Babel bug. Babel doesn't
+ * consistently respect the `skip()` function to avoid revisiting a node within
+ * a pass, so we use this set to track nodes that we have compiled.
+ */
 const ALREADY_COMPILED: WeakSet<object> | Set<object> = new (WeakSet ?? Set)();
 
 export function compileProgram(
@@ -215,9 +219,11 @@ export function compileProgram(
   pass: CompilerPass
 ): void {
   const options = parsePluginOptions(pass.opts);
-  // Record lint errors and critical errors as depending on Forget's config,
-  // we may still need to run Forget's analysis on every function (even if we
-  // have already encountered errors) for reporting.
+  /*
+   * Record lint errors and critical errors as depending on Forget's config,
+   * we may still need to run Forget's analysis on every function (even if we
+   * have already encountered errors) for reporting.
+   */
   const lintError = findEslintSuppressions(pass.comments);
   let hasCriticalError = lintError != null;
   const compiledFns: CompileResult[] = [];
@@ -233,15 +239,19 @@ export function compileProgram(
       return;
     }
 
-    // We may be generating a new FunctionDeclaration node, so we must skip over it or this
-    // traversal will loop infinitely.
-    // Ensure we avoid visiting the original function again.
+    /*
+     * We may be generating a new FunctionDeclaration node, so we must skip over it or this
+     * traversal will loop infinitely.
+     * Ensure we avoid visiting the original function again.
+     */
     ALREADY_COMPILED.add(fn.node);
     fn.skip();
 
     if (lintError != null) {
-      // Report lint suppressions as InvalidReact if we find forget-able
-      // functions within the file
+      /*
+       * Report lint suppressions as InvalidReact if we find forget-able
+       * functions within the file
+       */
       handleError(pass, fn.node.loc ?? null, lintError);
     }
 
@@ -270,15 +280,19 @@ export function compileProgram(
   program.traverse(
     {
       ClassDeclaration(node: NodePath<t.ClassDeclaration>) {
-        // Don't visit functions defined inside classes, because they
-        // can reference `this` which is unsafe for compilation
+        /*
+         * Don't visit functions defined inside classes, because they
+         * can reference `this` which is unsafe for compilation
+         */
         node.skip();
         return;
       },
 
       ClassExpression(node: NodePath<t.ClassExpression>) {
-        // Don't visit functions defined inside classes, because they
-        // can reference `this` which is unsafe for compilation
+        /*
+         * Don't visit functions defined inside classes, because they
+         * can reference `this` which is unsafe for compilation
+         */
         node.skip();
         return;
       },
@@ -333,8 +347,10 @@ export function compileProgram(
     return;
   }
 
-  // Only insert Forget-ified functions if we have not encountered a critical
-  // error elsewhere in the file, regardless of bailout mode.
+  /*
+   * Only insert Forget-ified functions if we have not encountered a critical
+   * error elsewhere in the file, regardless of bailout mode.
+   */
   for (const { originalFn, compiledFn } of compiledFns) {
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
     if (instrumentForget != null) {
@@ -427,7 +443,7 @@ function isHookName(s: string): boolean {
   return /^use[A-Z0-9]/.test(s);
 }
 
-/**
+/*
  * We consider hooks to be a hook name identifier or a member expression
  * containing a hook name.
  */
@@ -448,7 +464,7 @@ function isHook(path: NodePath<t.Expression | t.PrivateName>): boolean {
   }
 }
 
-/**
+/*
  * Checks if the node is a React component name. React component names must
  * always start with an uppercase letter.
  */
@@ -472,7 +488,7 @@ function isReactFunction(
   );
 }
 
-/**
+/*
  * Checks if the node is a callback argument of forwardRef. This render function
  * should follow the rules of hooks.
  */
@@ -485,7 +501,7 @@ function isForwardRefCallback(path: NodePath<t.Expression>): boolean {
   );
 }
 
-/**
+/*
  * Checks if the node is a callback argument of React.memo. This anonymous
  * functional component should follow the rules of hooks.
  */
@@ -498,8 +514,10 @@ function isMemoCallback(path: NodePath<t.Expression>): boolean {
   );
 }
 
-// Adapted from the ESLint rule at
-// https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#L90-L103
+/*
+ * Adapted from the ESLint rule at
+ * https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#L90-L103
+ */
 function isReactFunctionLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
@@ -514,14 +532,18 @@ function isReactFunctionLike(
     return (
       // As an added check we also look for hook invocations or JSX
       callsHooksOrCreatesJsx(node) &&
-      // and avoid helper functions that take more than one argument
-      // helpers are _usually_ named with lowercase, but some code may
-      // violate this rule
+      /*
+       * and avoid helper functions that take more than one argument
+       * helpers are _usually_ named with lowercase, but some code may
+       * violate this rule
+       */
       node.get("params").length <= 1
     );
   }
-  // Otherwise for function or arrow function expressions, check if they
-  // appear as the argument to React.forwardRef() or React.memo():
+  /*
+   * Otherwise for function or arrow function expressions, check if they
+   * appear as the argument to React.forwardRef() or React.memo():
+   */
   if (node.isFunctionExpression() || node.isArrowFunctionExpression()) {
     if (isForwardRefCallback(node) || isMemoCallback(node)) {
       // As an added check we also look for hook invocations or JSX
@@ -551,7 +573,7 @@ function callsHooksOrCreatesJsx(node: NodePath<t.Node>): boolean {
   return invokesHooks || createsJsx;
 }
 
-/**
+/*
  * Gets the static name of a function AST node. For function declarations it is
  * easy. For anonymous function expressions it is much harder. If you search for
  * `IsAnonymousFunctionDefinition()` in the ECMAScript spec you'll find places
@@ -589,19 +611,23 @@ function getFunctionName(
     !parent.get("computed") &&
     parent.get("key").isLVal()
   ) {
-    // {useHook: () => {}}
-    // {useHook() {}}
+    /*
+     * {useHook: () => {}}
+     * {useHook() {}}
+     */
     id = parent.get("key");
   } else if (
     parent.isAssignmentPattern() &&
     parent.get("right").node === path.node &&
     !parent.get("computed")
   ) {
-    // const {useHook = () => {}} = {};
-    // ({useHook = () => {}} = {});
-    //
-    // Kinda clowny, but we'd said we'd follow spec convention for
-    // `IsAnonymousFunctionDefinition()` usage.
+    /*
+     * const {useHook = () => {}} = {};
+     * ({useHook = () => {}} = {});
+     *
+     * Kinda clowny, but we'd said we'd follow spec convention for
+     * `IsAnonymousFunctionDefinition()` usage.
+     */
     id = parent.get("left");
   }
   if (id !== null && (id.isIdentifier() || id.isMemberExpression())) {
@@ -634,8 +660,10 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
       }
 
       const scope = id.scope.getFunctionParent();
-      // A null scope means there's no function scope, which means we're at the
-      // top level scope.
+      /*
+       * A null scope means there's no function scope, which means we're at the
+       * top level scope.
+       */
       if (
         scope === null &&
         id.node.loc &&

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,21 +7,21 @@
 
 // Direct translation of Rust's Result type, although some ownership related methods are omitted.
 export interface Result<T, E> {
-  /**
+  /*
    * Maps a `Result<T, E>` to `Result<U, E>` by applying a function to a contained `Ok` value,
    * leaving an `Err` value untouched.
    *
    * This function can be used to compose the results of two functions.
    */
   map<U>(fn: (val: T) => U): Result<U, E>;
-  /**
+  /*
    * Maps a `Result<T, E>` to `Result<T, F>` by applying a function to a contained `Err` value,
    * leaving an `Ok` value untouched.
    *
    * This function can be used to pass through a successful result while handling an error.
    */
   mapErr<F>(fn: (val: E) => F): Result<T, F>;
-  /**
+  /*
    * Returns the provided default (if `Err`), or applies a function to the contained value
    * (if `Ok`).
    *
@@ -29,73 +29,59 @@ export interface Result<T, E> {
    * function call, it is recommended to use {@link mapOrElse}, which is lazily evaluated.
    */
   mapOr<U>(fallback: U, fn: (val: T) => U): U;
-  /**
+  /*
    * Maps a `Result<T, E>` to `U` by applying fallback function default to a contained `Err` value,
    * or function `fn` to a contained `Ok` value.
    *
    * This function can be used to unpack a successful result while handling an error.
    */
   mapOrElse<U>(fallback: () => U, fn: (val: T) => U): U;
-  /**
+  /*
    * Calls `fn` if the result is `Ok`, otherwise returns the `Err` value of self.
    *
    * This function can be used for control flow based on Result values.
    */
   andThen<U>(fn: (val: T) => Result<U, E>): Result<U, E>;
-  /**
+  /*
    * Returns res if the result is `Ok`, otherwise returns the `Err` value of self.
    *
    * Arguments passed to {@link and} are eagerly evaluated; if you are passing the result of a
    * function call, it is recommended to use {@link andThen}, which is lazily evaluated.
    */
   and<U>(res: Result<U, E>): Result<U, E>;
-  /**
+  /*
    * Returns `res` if the result is `Err`, otherwise returns the `Ok` value of self.
    *
    * Arguments passed to {@link or} are eagerly evaluated; if you are passing the result of a
    * function call, it is recommended to use {@link orElse}, which is lazily evaluated.
    */
   or(res: Result<T, E>): Result<T, E>;
-  /**
+  /*
    * Calls `fn` if the result is `Err`, otherwise returns the `Ok` value of self.
    *
    * This function can be used for control flow based on result values.
    */
   orElse<F>(fn: (val: E) => Result<T, F>): Result<T, F>;
-  /**
-   * Returns `true` if the result is `Ok`.
-   */
+  // Returns `true` if the result is `Ok`.
   isOk(): this is OkImpl<T>;
-  /**
-   * Returns `true` if the result is `Err`.
-   */
+  // Returns `true` if the result is `Err`.
   isErr(): this is ErrImpl<E>;
-  /**
-   * Returns the contained `Ok` value or throws.
-   */
+  // Returns the contained `Ok` value or throws.
   expect(msg: string): T;
-  /**
-   * Returns the contained `Err` value or throws.
-   */
+  // Returns the contained `Err` value or throws.
   expectErr(msg: string): E;
-  /**
-   * Returns the contained `Ok` value.
-   */
+  // Returns the contained `Ok` value.
   unwrap(): T;
-  /**
+  /*
    * Returns the contained `Ok` value or a provided default.
    *
    * Arguments passed to {@link unwrapOr} are eagerly evaluated; if you are passing the result of a
    * function call, it is recommended to use {@link unwrapOrElse}, which is lazily evaluated.
    */
   unwrapOr(fallback: T): T;
-  /**
-   * Returns the contained `Ok` value or computes it from a closure.
-   */
+  // Returns the contained `Ok` value or computes it from a closure.
   unwrapOrElse(fallback: (val: E) => T): T;
-  /**
-   * Returns the contained `Err` value or throws.
-   */
+  // Returns the contained `Err` value or throws.
   unwrapErr(): E;
 }
 

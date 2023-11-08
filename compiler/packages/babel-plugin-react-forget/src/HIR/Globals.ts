@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -18,7 +18,7 @@ import {
 } from "./ObjectShape";
 import { BuiltInType, PolyType } from "./Types";
 
-/**
+/*
  * This file exports types and defaults for JavaScript global objects.
  * A Forget `Environment` stores the GlobalRegistry and ShapeRegistry
  * used for the current project. These ultimately help Forget refine
@@ -26,9 +26,7 @@ import { BuiltInType, PolyType } from "./Types";
  * (i.e. read vs mutate) in source programs.
  */
 
-/**
- * ShapeRegistry with default definitions for builtins and global objects.
- */
+// ShapeRegistry with default definitions for builtins and global objects.
 export const DEFAULT_SHAPES: ShapeRegistry = new Map(BUILTIN_SHAPES);
 
 // Hack until we add ObjectShapes for all globals
@@ -90,15 +88,17 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
           returnValueKind: ValueKind.Immutable,
         }),
       ],
-      // https://tc39.es/ecma262/multipage/indexed-collections.html#sec-array.from
-      // Array.from(arrayLike, optionalFn, optionalThis) not added because
-      // the Effect of `arrayLike` is polymorphic i.e.
-      //  - Effect.read if
-      //     - it does not have an @iterator property and is array-like
-      //       (i.e. has a length property)
-      ///    - it is an iterable object whose iterator does not mutate itself
-      //  - Effect.mutate if it is a self-mutative iterator (e.g. a generator
-      //    function)
+      /*
+       * https://tc39.es/ecma262/multipage/indexed-collections.html#sec-array.from
+       * Array.from(arrayLike, optionalFn, optionalThis) not added because
+       * the Effect of `arrayLike` is polymorphic i.e.
+       *  - Effect.read if
+       *     - it does not have an @iterator property and is array-like
+       *       (i.e. has a length property)
+       *    - it is an iterable object whose iterator does not mutate itself
+       *  - Effect.mutate if it is a self-mutative iterator (e.g. a generator
+       *    function)
+       */
       [
         "of",
         // Array.of(element0, ..., elementN)
@@ -231,9 +231,11 @@ const TYPED_GLOBALS: Array<[string, BuiltInType]> = [
   // TODO: rest of Global objects
 ];
 
-// TODO(mofeiZ): We currently only store rest param effects for hooks.
-// now that FeatureFlag `enableTreatHooksAsFunctions` is removed we can
-// use positional params too (?)
+/*
+ * TODO(mofeiZ): We currently only store rest param effects for hooks.
+ * now that FeatureFlag `enableTreatHooksAsFunctions` is removed we can
+ * use positional params too (?)
+ */
 const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
   [
     "useContext",

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -47,27 +47,27 @@ export const ExternalFunctionSchema = z.object({
 export type ExternalFunction = z.infer<typeof ExternalFunctionSchema>;
 
 const HookSchema = z.object({
-  /**
+  /*
    * The effect of arguments to this hook. Describes whether the hook may or may
    * not mutate arguments, etc.
    */
   effectKind: z.nativeEnum(Effect),
 
-  /**
+  /*
    * The kind of value returned by the hook. Allows indicating that a hook returns
    * a primitive or already-frozen value, which can allow more precise memoization
    * of callers.
    */
   valueKind: z.nativeEnum(ValueKind),
 
-  /**
+  /*
    * Specifies whether hook arguments may be aliased by other arguments or by the
    * return value of the function. Defaults to false. When enabled, this allows the
    * compiler to avoid memoizing arguments.
    */
   noAlias: z.boolean().default(false),
 
-  /**
+  /*
    * Specifies whether the hook returns data that is composed of:
    * - undefined
    * - null
@@ -89,13 +89,15 @@ const HookSchema = z.object({
 
 export type Hook = z.infer<typeof HookSchema>;
 
-// TODO(mofeiZ): User defined global types (with corresponding shapes).
-// User defined global types should have inline ObjectShapes instead of directly
-// using ObjectShapes.ShapeRegistry, as a user-provided ShapeRegistry may be
-// accidentally be not well formed.
-// i.e.
-//   missing required shapes (BuiltInArray for [] and BuiltInObject for {})
-//   missing some recursive Object / Function shapeIds
+/*
+ * TODO(mofeiZ): User defined global types (with corresponding shapes).
+ * User defined global types should have inline ObjectShapes instead of directly
+ * using ObjectShapes.ShapeRegistry, as a user-provided ShapeRegistry may be
+ * accidentally be not well formed.
+ * i.e.
+ *   missing required shapes (BuiltInArray for [] and BuiltInObject for {})
+ *   missing some recursive Object / Function shapeIds
+ */
 
 const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).nullish(),
@@ -103,38 +105,36 @@ const EnvironmentConfigSchema = z.object({
   // 🌲
   enableForest: z.boolean().default(false),
 
-  /**
+  /*
    * Enable memoization of JSX elements in addition to other types of values. When disabled,
    * other types (objects, arrays, call expressions, etc) are memoized, but not known JSX
    * values.
    */
   memoizeJsxElements: z.boolean().default(true),
 
-  /**
+  /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
    * When disabled, the component is assumed to follow the rules (though the Babel plugin looks
    * for suppressions of the lint rule).
    */
   validateHooksUsage: z.boolean().default(true),
 
-  /**
-   * Validate that ref values (`ref.current`) are not accessed during render.
-   */
+  // Validate that ref values (`ref.current`) are not accessed during render.
   validateRefAccessDuringRender: z.boolean().default(false),
 
-  /**
+  /*
    * Validate that mutable lambdas are not passed where a frozen value is expected, since mutable
    * lambdas cannot be frozen. The only mutation allowed inside a frozen lambda is of ref values.
    */
   validateFrozenLambdas: z.boolean().default(false),
 
-  /**
+  /*
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
    */
   validateNoSetStateInRender: z.boolean().default(false),
 
-  /**
+  /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
    * - Hooks may memoize computation based on any of their parameters, thus
    *   any arguments to a hook are assumed frozen after calling the hook.
@@ -143,37 +143,37 @@ const EnvironmentConfigSchema = z.object({
    */
   enableAssumeHooksFollowRulesOfReact: z.boolean().default(false),
 
-  /**
+  /*
    * When enabled, removes *all* memoization from the function: this includes
    * removing manually added useMemo/useCallback as well as not adding Forget's
    * usual useMemoCache-based memoization.
    */
   disableAllMemoization: z.boolean().default(false),
 
-  /**
+  /*
    * Enables codegen mutability debugging. This emits a dev-mode only to log mutations
    * to values that Forget assumes are immutable (for Forget compiled code).
    * For example:
-   *  emitFreeze: {
-   *    source: 'ReactForgetRuntime',
-   *    importSpecifierName: 'makeReadOnly',
-   *  }
+   *   emitFreeze: {
+   *     source: 'ReactForgetRuntime',
+   *     importSpecifierName: 'makeReadOnly',
+   *   }
    *
    * produces:
-   *  import {makeReadOnly} from 'ReactForgetRuntime';
+   *   import {makeReadOnly} from 'ReactForgetRuntime';
    *
-   *  function Component(props) {
-   *    if (c_0) {
-   *      // ...
-   *      $[0] = __DEV__ ? makeReadOnly(x) : x;
-   *    } else {
-   *      x = $[0];
-   *    }
-   *  }
+   *   function Component(props) {
+   *     if (c_0) {
+   *       // ...
+   *       $[0] = __DEV__ ? makeReadOnly(x) : x;
+   *     } else {
+   *       x = $[0];
+   *     }
+   *   }
    */
   enableEmitFreeze: ExternalFunctionSchema.nullish(),
 
-  /**
+  /*
    * Forget infers certain operations as "freezing" a value, such that those
    * values should not be subsequently mutated. By default this freeze operation
    * applies to the value itself and its direct aliases, but not values captured
@@ -185,9 +185,9 @@ const EnvironmentConfigSchema = z.object({
    * ```
    * let x;
    * if (cond) {
-   *   x = y
+   *    x = y
    * } else {
-   *   x = z;
+   *    x = z;
    * }
    * <div>{x}</div>
    * ```
@@ -208,39 +208,37 @@ const EnvironmentConfigSchema = z.object({
    */
   enableTransitivelyFreezeFunctionExpressions: z.boolean().default(false),
 
-  /**
-   * Enable merging consecutive scopes that invalidate together.
-   */
+  // Enable merging consecutive scopes that invalidate together.
   enableMergeConsecutiveScopes: z.boolean().default(true),
 
-  /**
-   * Enable validation of mutable ranges
-   */
+  // Enable validation of mutable ranges
   assertValidMutableRanges: z.boolean().default(false),
 
-  /**
+  /*
+   *
    * Instead of handling holey arrays, bail out with a TODO error.
-   * 
+   *
    * Older versions of babel seem to have inconsistent handling of holey arrays,
    * at least when paired with HermesParser. When using these versions, we should
    * bail out instead of throwing a Babel validation error.
-
+   *
    * The babel ast definition for array elements changed from Array<PatternLike>
    * to Array<PatternLike | null>. Older versions does not expect null in the
    * ArrayPattern ast and will throw a validation error.
-   * 
+   *
    * - HermesParser will parse [, b] into [NodePath<null>, NodePath<Identifier>]
    * - Forget will try to preserve this holey array when we codegen back to js
    *   (e.g. we call a babel builder function arrayPattern([null, identifier]))
-   * - Babel will fail with `TypeError: Property elements[0] of ArrayPattern 
+   * - Babel will fail with `TypeError: Property elements[0] of ArrayPattern
    *   expected node to be of a type ["PatternLike"] but instead got null`
-   * 
+   *
    * PR that changed the AST definition
    * https://github.com/babel/babel/pull/10917/files#diff-19b555d2f3904c206af406540d9df200b1e16befedb83ff39ebfcbd876f7fa8aL52-R56
+   *
    */
   bailoutOnHoleyArrays: z.boolean().default(false),
 
-  /**
+  /*
    * Enable emitting "change variables" which store the result of whether a particular
    * reactive scope dependency has changed since the scope was last executed.
    *
@@ -387,8 +385,10 @@ export class Environment {
       shapeId = receiver.shapeId;
     }
     if (shapeId !== null) {
-      // If an object or function has a shapeId, it must have been assigned
-      // by Forget (and be present in a builtin or user-defined registry)
+      /*
+       * If an object or function has a shapeId, it must have been assigned
+       * by Forget (and be present in a builtin or user-defined registry)
+       */
       const shape = this.#shapes.get(shapeId);
       CompilerError.invariant(shape !== undefined, {
         reason: `[HIR] Forget internal error: cannot resolve shape ${shapeId}`,
@@ -440,9 +440,11 @@ export class Environment {
 
 // From https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#LL18C1-L23C2
 function isHookName(name: string): boolean {
-  // if (__EXPERIMENTAL__) {
-  //   return name === 'use' || /^use[A-Z0-9]/.test(name);
-  // }
+  /*
+   * if (__EXPERIMENTAL__) {
+   *   return name === 'use' || /^use[A-Z0-9]/.test(name);
+   * }
+   */
   return /^use[A-Z0-9]/.test(name);
 }
 

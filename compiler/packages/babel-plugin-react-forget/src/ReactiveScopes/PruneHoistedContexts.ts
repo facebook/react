@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -18,7 +18,7 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/**
+/*
  * Prunes DeclareContexts lowered for HoistedConsts, and transforms any references back to its
  * original instruction kind.
  */

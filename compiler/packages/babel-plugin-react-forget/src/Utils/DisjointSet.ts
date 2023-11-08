@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -7,13 +7,11 @@
 
 import { CompilerError } from "../CompilerError";
 
-/**
- * Represents items which form disjoint sets.
- */
+// Represents items which form disjoint sets.
 export default class DisjointSet<T> {
   #entries: Map<T, T> = new Map();
 
-  /**
+  /*
    * Updates the graph to reflect that the given @param items form a set,
    * linking any previous sets that the items were part of into a single
    * set.
@@ -26,9 +24,11 @@ export default class DisjointSet<T> {
       loc: null,
       suggestions: null,
     });
-    // determine an arbitrary "root" for this set: if the first
-    // item already has a root then use that, otherwise the first item
-    // will be the new root.
+    /*
+     * determine an arbitrary "root" for this set: if the first
+     * item already has a root then use that, otherwise the first item
+     * will be the new root.
+     */
     let root = this.find(first);
     if (root == null) {
       root = first;
@@ -54,7 +54,7 @@ export default class DisjointSet<T> {
     }
   }
 
-  /**
+  /*
    * Finds the set to which the given @param item is associated, if @param item
    * is present in this set. If item is not present, returns null.
    *
@@ -78,7 +78,7 @@ export default class DisjointSet<T> {
     return root;
   }
 
-  /**
+  /*
    * Forces the set into canonical form, ie with all items pointing directly to
    * their root, and returns a Map representing the mapping of items to their roots.
    */
@@ -91,7 +91,7 @@ export default class DisjointSet<T> {
     return entries;
   }
 
-  /**
+  /*
    * Calls the provided callback once for each item in the disjoint set,
    * passing the @param item and the @param group to which it belongs.
    */

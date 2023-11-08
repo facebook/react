@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -19,12 +19,16 @@ export function inferMutableRanges(ir: HIRFunction): void {
 
   // Calculate aliases
   const aliases = inferAliases(ir);
-  // Calculate aliases for try/catch, where any value created
-  // in the try block could be aliased to the catch param
+  /*
+   * Calculate aliases for try/catch, where any value created
+   * in the try block could be aliased to the catch param
+   */
   inferTryCatchAliases(ir, aliases);
 
-  // Eagerly canonicalize so that if nothing changes we can bail out
-  // after a single iteration
+  /*
+   * Eagerly canonicalize so that if nothing changes we can bail out
+   * after a single iteration
+   */
   let prevAliases: Map<Identifier, Identifier> = aliases.canonicalize();
   while (true) {
     // Infer mutable ranges for aliases that are not fields

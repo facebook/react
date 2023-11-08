@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,7 +20,7 @@ import {
   eachTerminalOperand,
 } from "./visitors";
 
-/**
+/*
  * Validation pass to check that there is a 1:1 mapping between Identifier objects and IdentifierIds,
  * ie there can only be one Identifier instance per IdentifierId.
  */

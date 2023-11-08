@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -553,9 +553,7 @@ export function mapPatternOperands(
   }
 }
 
-/**
- * Maps a terminal node's block assignments using the provided function.
- */
+// Maps a terminal node's block assignments using the provided function.
 export function mapTerminalSuccessors(
   terminal: Terminal,
   fn: (block: BlockId) => BlockId
@@ -793,7 +791,7 @@ export function mapTerminalSuccessors(
   }
 }
 
-/**
+/*
  * Helper to get a terminal's fallthrough. The main reason to extract this as a helper
  * function is to ensure that we use an exhaustive switch to ensure that we add new terminal
  * variants as appropriate.
@@ -845,10 +843,12 @@ export function mapOptionalFallthroughs(
     case "unsupported": {
       return;
     }
-    // NOTE: TypeScript has a bug where it does not correctly model properties whose values are
-    // non-null in some cases and nullable in other cases, if those cases are joined together.
-    // Thus we use one block per case here to ensure that any changes to the types will cause
-    // a compiler error.
+    /*
+     * NOTE: TypeScript has a bug where it does not correctly model properties whose values are
+     * non-null in some cases and nullable in other cases, if those cases are joined together.
+     * Thus we use one block per case here to ensure that any changes to the types will cause
+     * a compiler error.
+     */
     case "do-while": {
       const _: BlockId = terminal.fallthrough;
       break;
@@ -920,7 +920,7 @@ export function mapOptionalFallthroughs(
   }
 }
 
-/**
+/*
  * Iterates over the successor block ids of the provided terminal. The function is called
  * specifically for the successors that define the standard control flow, and not
  * pseduo-successors such as fallthroughs.

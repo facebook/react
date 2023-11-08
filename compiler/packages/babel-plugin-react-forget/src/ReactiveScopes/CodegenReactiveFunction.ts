@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -141,8 +141,10 @@ class Context {
 function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
   const temp = new Map(cx.temp);
   const result = codegenBlockNoReset(cx, block);
-  // Check that the block only added new temporaries and did not update the
-  // value of any existing temporary
+  /*
+   * Check that the block only added new temporaries and did not update the
+   * value of any existing temporary
+   */
   for (const [key, value] of cx.temp) {
     if (!temp.has(key)) {
       continue;
@@ -158,7 +160,7 @@ function codegenBlock(cx: Context, block: ReactiveBlock): t.BlockStatement {
   return result;
 }
 
-/**
+/*
  * Generates code for the block, without resetting the Context's temporary state.
  * This should not be used unless it is expected that temporaries from this block
  * can be referenced later, which is currently only true for sequence expressions
@@ -527,8 +529,10 @@ function codegenTerminal(
       }
       if (terminal.kind === "for-of") {
         return t.forOfStatement(
-          // Special handling here since we only want the VariableDeclarators without any inits
-          // This needs to be updated when we handle non-trivial ForOf inits
+          /*
+           * Special handling here since we only want the VariableDeclarators without any inits
+           * This needs to be updated when we handle non-trivial ForOf inits
+           */
           createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
             t.variableDeclarator(lval, null),
           ]),
@@ -537,8 +541,10 @@ function codegenTerminal(
         );
       } else {
         return t.forInStatement(
-          // Special handling here since we only want the VariableDeclarators without any inits
-          // This needs to be updated when we handle non-trivial ForOf inits
+          /*
+           * Special handling here since we only want the VariableDeclarators without any inits
+           * This needs to be updated when we handle non-trivial ForOf inits
+           */
           createVariableDeclaration(iterableItem.value.loc, varDeclKind, [
             t.variableDeclarator(lval, null),
           ]),
@@ -1195,8 +1201,10 @@ function codegenInstructionValue(
     }
     case "PropertyLoad": {
       const object = codegenPlaceToExpression(cx, instrValue.object);
-      // We currently only lower single chains of optional memberexpr.
-      // (See BuildHIR.ts for more detail.)
+      /*
+       * We currently only lower single chains of optional memberexpr.
+       * (See BuildHIR.ts for more detail.)
+       */
       value = t.memberExpression(
         object,
         t.identifier(instrValue.property),
@@ -1446,10 +1454,12 @@ function codegenJsxAttribute(
           break;
         }
         default: {
-          // NOTE JSXFragment is technically allowed as an attribute value per the spec
-          // but many tools do not support this case. We emit fragments wrapped in an
-          // expression container for compatibility purposes.
-          // spec: https://github.com/facebook/jsx/blob/main/AST.md#jsx-attributes
+          /*
+           * NOTE JSXFragment is technically allowed as an attribute value per the spec
+           * but many tools do not support this case. We emit fragments wrapped in an
+           * expression container for compatibility purposes.
+           * spec: https://github.com/facebook/jsx/blob/main/AST.md#jsx-attributes
+           */
           value = createJsxExpressionContainer(attribute.place.loc, innerValue);
           break;
         }

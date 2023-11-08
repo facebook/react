@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -15,7 +15,7 @@ import {
   PrimitiveType,
 } from "./Types";
 
-/**
+/*
  * This file exports types and defaults for JavaScript object shapes. These are
  * stored and used by a Forget `Environment`. See comments in `Types.ts`,
  * `Globals.ts`, and `Environment.ts` for more details.
@@ -26,13 +26,15 @@ const PRIMITIVE_TYPE: PrimitiveType = {
 };
 
 let nextAnonId = 0;
-// We currently use strings for anonymous ShapeIds since they are easily
-// debuggable, even though `Symbol()` might be more performant
+/*
+ * We currently use strings for anonymous ShapeIds since they are easily
+ * debuggable, even though `Symbol()` might be more performant
+ */
 function createAnonId(): string {
   return `<generated_${nextAnonId++}>`;
 }
 
-/**
+/*
  * Add a non-hook function to an existing ShapeRegistry.
  *
  * @returns a {@link FunctionType} representing the added function.
@@ -55,7 +57,7 @@ export function addFunction(
   };
 }
 
-/**
+/*
  * Add a hook to an existing ShapeRegistry.
  *
  * @returns a {@link FunctionType} representing the added hook function.
@@ -75,7 +77,7 @@ export function addHook(
   };
 }
 
-/**
+/*
  * Add an object to an existing ShapeRegistry.
  *
  * @returns an {@link ObjectType} representing the added object.
@@ -124,13 +126,13 @@ export type HookKind =
   | "useCallback"
   | "Custom";
 
-/**
+/*
  * Call signature of a function, used for type and effect inference.
  *
  * Note: Param type is not recorded since it currently does not affect inference.
  * Specifically, we currently do not:
- *  - infer types based on their usage in argument position
- *  - handle inference for overloaded / generic functions
+ *   - infer types based on their usage in argument position
+ *   - handle inference for overloaded / generic functions
  */
 export type FunctionSignature = {
   positionalParams: Array<Effect>;
@@ -139,7 +141,7 @@ export type FunctionSignature = {
   returnValueKind: ValueKind;
   calleeEffect: Effect;
   hookKind: HookKind | null;
-  /**
+  /*
    * Whether any of the parameters may be aliased by each other or the return
    * value. Defaults to false (parameters may alias). When true, the compiler
    * may choose not to memoize arguments if they do not otherwise escape.
@@ -147,7 +149,7 @@ export type FunctionSignature = {
   noAlias?: boolean;
 };
 
-/**
+/*
  * Shape of an {@link FunctionType} if {@link ObjectShape.functionType} is present,
  * or {@link ObjectType} otherwise.
  *
@@ -159,7 +161,7 @@ export type ObjectShape = {
   functionType: FunctionSignature | null;
 };
 
-/**
+/*
  * Every valid ShapeRegistry must contain ObjectShape definitions for
  * {@link BuiltInArrayId} and {@link BuiltInObjectId}, since these are the
  * the inferred types for [] and {}.
@@ -173,9 +175,7 @@ export const BuiltInUseRefId = "BuiltInUseRefId";
 export const BuiltInRefValueId = "BuiltInRefValue";
 export const BuiltInMixedReadonlyId = "BuiltInMixedReadonly";
 
-/**
- * ShapeRegistry with default definitions for built-ins.
- */
+// ShapeRegistry with default definitions for built-ins.
 export const BUILTIN_SHAPES: ShapeRegistry = new Map();
 
 /* Built-in array shape */
@@ -220,9 +220,11 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
       returnType: { kind: "Object", shapeId: BuiltInArrayId },
-      // callee is ConditionallyMutate because items of the array
-      // flow into the lambda and may be mutated there, even though
-      // the array object itself is not modified
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
@@ -234,9 +236,11 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       positionalParams: [],
       restParam: Effect.ConditionallyMutate,
       returnType: { kind: "Object", shapeId: BuiltInArrayId },
-      // callee is ConditionallyMutate because items of the array
-      // flow into the lambda and may be mutated there, even though
-      // the array object itself is not modified
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
@@ -267,8 +271,10 @@ addObject(BUILTIN_SHAPES, BuiltInObjectId, [
       returnValueKind: ValueKind.Immutable,
     }),
   ],
-  // TODO:
-  // hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, valueOf
+  /*
+   * TODO:
+   * hasOwnProperty, isPrototypeOf, propertyIsEnumerable, toLocaleString, valueOf
+   */
 ]);
 
 addObject(BUILTIN_SHAPES, BuiltInUseStateId, [

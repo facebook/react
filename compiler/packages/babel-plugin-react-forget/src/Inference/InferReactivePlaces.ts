@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -26,7 +26,7 @@ import { hasBackEdge } from "../Optimization/DeadCodeElimination";
 import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
 import { assertExhaustive } from "../Utils/utils";
 
-/**
+/*
  * Infers which `Place`s are reactive, ie may *semantically* change
  * over the course of the component/hook's lifetime. Places are reactive
  * if they derive from source source of reactivity, which includes the
@@ -49,8 +49,8 @@ import { assertExhaustive } from "../Utils/utils";
  * Ex:
  * ```
  * function Component(props) {
- *   const x = {}; // not yet reactive
- *   x.y = props.y;
+ *    const x = {}; // not yet reactive
+ *    x.y = props.y;
  * }
  * ```
  *
@@ -65,13 +65,13 @@ import { assertExhaustive } from "../Utils/utils";
  *
  * ```
  * function Component(props) {
- *   let x;
- *   if (props.cond) {
- *     x = 1;
- *   } else {
- *     x = 2;
- *   }
- *   return x;
+ *    let x;
+ *    if (props.cond) {
+ *      x = 1;
+ *    } else {
+ *      x = 2;
+ *    }
+ *    return x;
  * }
  * ```
  *
@@ -164,15 +164,19 @@ export function inferReactivePlaces(fn: HIRFunction): void {
       for (const instruction of block.instructions) {
         const { value } = instruction;
         let hasReactiveInput = false;
-        // NOTE: we want to mark all operands as reactive or not, so we
-        // avoid short-circuting here
+        /*
+         * NOTE: we want to mark all operands as reactive or not, so we
+         * avoid short-circuting here
+         */
         for (const operand of eachInstructionValueOperand(value)) {
           const reactive = reactiveIdentifiers.isReactive(operand);
           hasReactiveInput ||= reactive;
         }
 
-        // Hooks may always return a reactive variable, even if their inputs are
-        // non-reactive, because they can access state or context.
+        /*
+         * Hooks may always return a reactive variable, even if their inputs are
+         * non-reactive, because they can access state or context.
+         */
         if (
           value.kind === "CallExpression" &&
           getHookKind(fn.env, value.callee.identifier) != null
@@ -260,7 +264,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
   } while (reactiveIdentifiers.snapshot() && hasLoop);
 }
 
-/**
+/*
  * Computes the post-dominator frontier of @param block. These are immediate successors of nodes that
  * post-dominate @param targetId and from which execution may not reach @param block. Intuitively, these
  * are the earliest blocks from which execution branches such that it may or may not reach the target block.

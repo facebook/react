@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -21,7 +21,7 @@ import {
 } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 
-/**
+/*
  * For each usage of a value in the given function, determines if the usage
  * may be succeeded by a mutable usage of that same value and if so updates
  * the usage to be mutable.
@@ -30,7 +30,7 @@ import { assertExhaustive } from "../Utils/utils";
  * each reference are as follows:
  * - freeze: the value is frozen at this point
  * - readonly: the value is not modified at this point *or any subsequent
- *   point*
+ *    point*
  * - mutable: the value is modified at this point *or some subsequent point*.
  *
  * Note that this refines the capabilities inferered by InferReferenceCapability,
@@ -40,10 +40,10 @@ import { assertExhaustive } from "../Utils/utils";
  *
  * TODO:
  * 1. Forward data-flow analysis to determine aliasing. Unlike InferReferenceCapability
- *    which only tracks aliasing of top-level variables (`y = x`), this analysis needs
- *    to know if a value is aliased anywhere (`y.x = x`). The forward data flow tracks
- *    all possible locations which may have aliased a value. The concrete result is
- *    a mapping of each Place to the set of possibly-mutable values it may alias.
+ *     which only tracks aliasing of top-level variables (`y = x`), this analysis needs
+ *     to know if a value is aliased anywhere (`y.x = x`). The forward data flow tracks
+ *     all possible locations which may have aliased a value. The concrete result is
+ *     a mapping of each Place to the set of possibly-mutable values it may alias.
  *
  * ```
  * const x = []; // {x: v0; v0: mutable []}
@@ -55,7 +55,7 @@ import { assertExhaustive } from "../Utils/utils";
  *
  * DONE:
  * 2. Forward data-flow analysis to compute mutability liveness. Walk forwards over
- *    the CFG and track which values are mutated in a successor.
+ *     the CFG and track which values are mutated in a successor.
  *
  * ```
  * mutate(y);    // mutable y => v0, v1 mutated
@@ -124,12 +124,16 @@ export function inferMutableLifetimes(
       for (const operand of eachInstructionLValue(instr)) {
         const lvalueId = operand.identifier;
 
-        // lvalue start being mutable when they're initially assigned a
-        // value.
+        /*
+         * lvalue start being mutable when they're initially assigned a
+         * value.
+         */
         lvalueId.mutableRange.start = instr.id;
 
-        // Let's be optimistic and assume this lvalue is not mutable by
-        // default.
+        /*
+         * Let's be optimistic and assume this lvalue is not mutable by
+         * default.
+         */
         lvalueId.mutableRange.end = makeInstructionId(instr.id + 1);
       }
       for (const operand of eachInstructionOperand(instr)) {

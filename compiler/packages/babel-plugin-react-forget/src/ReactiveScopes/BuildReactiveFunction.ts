@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -30,7 +30,7 @@ import {
 } from "../HIR/HIR";
 import { assertExhaustive } from "../Utils/utils";
 
-/**
+/*
  * Converts from HIR (lower-level CFG) to ReactiveFunction, a tree representation
  * that is closer to an AST. This pass restores the original control flow constructs,
  * including break/continue to labeled statements. Note that this pass naively emits
@@ -184,10 +184,12 @@ class Driver {
 
           let consequent: ReactiveBlock;
           if (this.cx.isScheduled(case_.block)) {
-            // cases which are empty or contain only a `break` may point to blocks
-            // that are already scheduled. emit as follows:
-            // - if the block is for another case branch, don't emit a break and fall-through
-            // - else, emit an explicit break.
+            /*
+             * cases which are empty or contain only a `break` may point to blocks
+             * that are already scheduled. emit as follows:
+             * - if the block is for another case branch, don't emit a break and fall-through
+             * - else, emit an explicit break.
+             */
             const break_ = this.visitBreak(case_.block, null);
             if (
               index === 0 &&
@@ -195,9 +197,11 @@ class Driver {
               case_.block === terminal.fallthrough &&
               case_.test === null
             ) {
-              // If the last case statement (first in reverse order) is a default that
-              // jumps to the fallthrough, then we would emit a useless `default: {}`,
-              // so instead skip this case.
+              /*
+               * If the last case statement (first in reverse order) is a default that
+               * jumps to the fallthrough, then we would emit a useless `default: {}`,
+               * so instead skip this case.
+               */
               return;
             }
             const block = [];
@@ -715,8 +719,10 @@ class Driver {
         break;
       }
       case "maybe-throw": {
-        // ReactiveFunction does not explicit model maybe-throw semantics,
-        // so these terminals flatten away
+        /*
+         * ReactiveFunction does not explicit model maybe-throw semantics,
+         * so these terminals flatten away
+         */
         if (!this.cx.isScheduled(terminal.continuation)) {
           this.visitBlock(
             this.cx.ir.blocks.get(terminal.continuation)!,
@@ -883,8 +889,10 @@ class Driver {
         };
       }
     } else {
-      // The value block ended in a value terminal, recurse to get the value
-      // of that terminal
+      /*
+       * The value block ended in a value terminal, recurse to get the value
+       * of that terminal
+       */
       const init = this.visitValueBlockTerminal(defaultBlock.terminal);
       // Code following the logical terminal
       const final = this.visitValueBlock(init.fallthrough, loc);
@@ -1158,7 +1166,7 @@ class Context {
   ir: HIR;
   #nextScheduleId: number = 0;
 
-  /**
+  /*
    * Used to track which blocks *have been* generated already in order to
    * abort if a block is generated a second time. This is an error catching
    * mechanism for debugging purposes, and is not used by the codegen algorithm
@@ -1166,7 +1174,7 @@ class Context {
    */
   emitted: Set<BlockId> = new Set();
 
-  /**
+  /*
    * A set of blocks that are already scheduled to be emitted by eg a parent.
    * This allows child nodes to avoid re-emitting the same block and emit eg
    * a break instead.
@@ -1175,7 +1183,7 @@ class Context {
 
   #catchHandlers: Set<BlockId> = new Set();
 
-  /**
+  /*
    * Represents which control flow operations are currently in scope, with the innermost
    * scope last. Roughly speaking, the last ControlFlowTarget on the stack indicates where
    * control will implicitly transfer, such that gotos to that block can be elided. Gotos
@@ -1196,7 +1204,7 @@ class Context {
     this.#catchHandlers.add(block);
   }
 
-  /**
+  /*
    * Record that the given block will be emitted (eg by the codegen of a parent node)
    * so that child nodes can avoid re-emitting it.
    */
@@ -1246,9 +1254,7 @@ class Context {
     return id;
   }
 
-  /**
-   * Removes a block that was scheduled; must be called after that block is emitted.
-   */
+  // Removes a block that was scheduled; must be called after that block is emitted.
   unschedule(scheduleId: number): void {
     const last = this.#controlFlowStack.pop();
     CompilerError.invariant(last !== undefined && last.id === scheduleId, {
@@ -1268,7 +1274,7 @@ class Context {
     }
   }
 
-  /**
+  /*
    * Helper to unschedule multiple scheduled blocks. The ids should be in
    * the order in which they were scheduled, ie most recently scheduled last.
    */
@@ -1278,14 +1284,12 @@ class Context {
     }
   }
 
-  /**
-   * Check if the given @param block is scheduled or not.
-   */
+  // Check if the given @param block is scheduled or not.
   isScheduled(block: BlockId): boolean {
     return this.#scheduled.has(block) || this.#catchHandlers.has(block);
   }
 
-  /**
+  /*
    * Given the current control flow stack, determines how a `break` to the given @param block
    * must be emitted. Returns as follows:
    * - 'implicit' if control would implicitly transfer to that block
@@ -1304,12 +1308,16 @@ class Context {
       if (target.block === block) {
         let type: ControlFlowKind;
         if (target.type === "loop") {
-          // breaking out of a loop requires an explicit break,
-          // but only requires a label if breaking past the innermost loop.
+          /*
+           * breaking out of a loop requires an explicit break,
+           * but only requires a label if breaking past the innermost loop.
+           */
           type = hasPrecedingLoop ? "labeled" : "unlabeled";
         } else if (i === this.#controlFlowStack.length - 1) {
-          // breaking to the last break point, which is where control will transfer
-          // implicitly
+          /*
+           * breaking to the last break point, which is where control will transfer
+           * implicitly
+           */
           type = "implicit";
         } else {
           // breaking somewhere else requires an explicit break
@@ -1325,7 +1333,7 @@ class Context {
     return null;
   }
 
-  /**
+  /*
    * Given the current control flow stack, determines how a `continue` to the given @param block
    * must be emitted. Returns as follows:
    * - 'implicit' if control would implicitly continue to that block
@@ -1344,16 +1352,22 @@ class Context {
       if (target.type == "loop" && target.continueBlock === block) {
         let type: ControlFlowKind;
         if (hasPrecedingLoop) {
-          // continuing to a loop that is not the innermost loop always requires
-          // a label
+          /*
+           * continuing to a loop that is not the innermost loop always requires
+           * a label
+           */
           type = "labeled";
         } else if (i === this.#controlFlowStack.length - 1) {
-          // continuing to the last break point, which is where control will
-          // transfer to naturally
+          /*
+           * continuing to the last break point, which is where control will
+           * transfer to naturally
+           */
           type = "implicit";
         } else {
-          // the continue is inside some conditional logic, requires an explicit
-          // continue
+          /*
+           * the continue is inside some conditional logic, requires an explicit
+           * continue
+           */
           type = "unlabeled";
         }
         return {

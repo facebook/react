@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -45,7 +45,7 @@ export function validateNoSetStateInRender(
         switch (instr.value.kind) {
           case "ObjectMethod":
           case "FunctionExpression": {
-            /**
+            /*
              * TODO: setState's return value is considered Frozen, so the lambda's mutable range
              * does not get extended even if the lambda is called in render. The below only catches
              * setStates where the lambda has another instruction that extends its mutable range

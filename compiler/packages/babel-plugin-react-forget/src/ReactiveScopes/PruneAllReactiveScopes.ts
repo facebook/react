@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -16,7 +16,7 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/**
+/*
  * Removes *all* reactive scopes. Intended for experimentation only, to allow
  * accurately removing memoization using the compiler pipeline to get a baseline
  * for performance of a product without memoization applied.

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -47,8 +47,10 @@ export function validateUseMemo(fn: HIRFunction): void {
             continue;
           }
 
-          // If yes get the first argument and if it refers to a locally defined function
-          // expression, validate the function
+          /*
+           * If yes get the first argument and if it refers to a locally defined function
+           * expression, validate the function
+           */
           const [arg] = value.args;
           if (arg.kind !== "Identifier") {
             continue;

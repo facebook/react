@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -19,7 +19,7 @@ import {
 import { eachPatternOperand, mapPatternOperands } from "../HIR/visitors";
 import { ReactiveFunctionTransform, visitReactiveFunction } from "./visitors";
 
-/**
+/*
  * Destructuring statements may sometimes define some variables which are declared by the scope,
  * and others that are only used locally within the scope, for example:
  *
@@ -34,13 +34,13 @@ import { ReactiveFunctionTransform, visitReactiveFunction } from "./visitors";
  * let c_0 = $[0] !== value;
  * let rest;
  * if (c_0) {
- *   // OOPS! we want to reassign `rest` here, but
- *   // `x` isn't declared anywhere!
- *   {x, ...rest} = value;
- *   $[0] = value;
- *   $[1] = rest;
+ *    // OOPS! we want to reassign `rest` here, but
+ *    // `x` isn't declared anywhere!
+ *    {x, ...rest} = value;
+ *    $[0] = value;
+ *    $[1] = rest;
  * } else {
- *   rest = $[1];
+ *    rest = $[1];
  * }
  * return rest;
  * ```
@@ -57,12 +57,12 @@ import { ReactiveFunctionTransform, visitReactiveFunction } from "./visitors";
  * let c_0 = $[0] !== value;
  * let rest;
  * if (c_0) {
- *   const {x, ...t0} = value; <-- replace `rest` with a temporary
- *   rest = t0; // <-- and create a separate instruction to assign that to `rest`
- *   $[0] = value;
- *   $[1] = rest;
+ *    const {x, ...t0} = value; <-- replace `rest` with a temporary
+ *    rest = t0; // <-- and create a separate instruction to assign that to `rest`
+ *    $[0] = value;
+ *    $[1] = rest;
  * } else {
- *   rest = $[1];
+ *    rest = $[1];
  * }
  * return rest;
  * ```
@@ -147,8 +147,10 @@ function transformDestructuring(
   if (reassigned.size === 0 || !hasDeclaration) {
     return null;
   }
-  // Else it's a mix, replace the reassigned items in the destructuring with temporary
-  // variables and emit separate assignment statements for them
+  /*
+   * Else it's a mix, replace the reassigned items in the destructuring with temporary
+   * variables and emit separate assignment statements for them
+   */
   const instructions: Array<ReactiveInstruction> = [];
   const renamed: Map<Place, Place> = new Map();
   mapPatternOperands(destructure.lvalue.pattern, (place) => {

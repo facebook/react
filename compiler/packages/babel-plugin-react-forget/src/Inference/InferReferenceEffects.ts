@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -46,21 +46,21 @@ const UndefinedValue: InstructionValue = {
   value: undefined,
 };
 
-/**
+/*
  * For every usage of a value in the given function, infers the effect or action
  * taken at that reference. Each reference is inferred as exactly one of:
  * - freeze: this usage freezes the value, ie converts it to frozen. This is only inferred
- *   when the value *may* not already be frozen.
+ *    when the value *may* not already be frozen.
  * - frozen: the value is known to already be "owned" by React and is therefore already
- *   frozen (permanently and transitively immutable).
+ *    frozen (permanently and transitively immutable).
  * - immutable: the value is not owned by React, but is known to be an immutable value
- *   that therefore cannot ever change.
+ *    that therefore cannot ever change.
  * - readonly: the value is not frozen or immutable, but this usage of the value does
- *   not modify it. the value may be mutated by a subsequent reference. Examples include
- *   referencing the operands of a binary expression, or referencing the items/properties
- *   of an array or object literal.
+ *    not modify it. the value may be mutated by a subsequent reference. Examples include
+ *    referencing the operands of a binary expression, or referencing the items/properties
+ *    of an array or object literal.
  * - mutable: the value is not frozen or immutable, and this usage *may* modify it.
- *   Examples include passing a value to as a function argument or assigning into an object.
+ *    Examples include passing a value to as a function argument or assigning into an object.
  *
  * Note that the inference follows variable assignment, so assigning a frozen value
  * to a different value will infer usages of the other variable as frozen as well.
@@ -69,10 +69,10 @@ const UndefinedValue: InstructionValue = {
  * - React function arguments are frozen (component props, hook arguments).
  * - Hook arguments are frozen at the point the hook is invoked.
  * - React function return values are frozen at the point of being returned,
- *   thus the return value of a hook call is frozen.
+ *    thus the return value of a hook call is frozen.
  * - JSX represents invocation of a React function (the component) and
- *   therefore all values passed to JSX become frozen at the point the JSX
- *   is created.
+ *    therefore all values passed to JSX become frozen at the point the JSX
+ *    is created.
  *
  * Internally, the inference tracks the approximate type of value held by each variable,
  * and iterates over the control flow graph. The inferred effect of reach reference is
@@ -80,7 +80,7 @@ const UndefinedValue: InstructionValue = {
  * object; an if condition reads the condition) and the type of the value. The types of values
  * are:
  * - frozen: can be any type so long as the value is known to be owned by React, permanently
- *   and transitively immutable
+ *    and transitively immutable
  * - maybe-frozen: the value may or may not be frozen, conditionally depending on control flow.
  * - immutable: a type with value semantics: primitives, records/tuples when standardized.
  * - mutable: a type with reference semantics eg array, object, class instance, etc.
@@ -92,8 +92,10 @@ export default function inferReferenceEffects(
   fn: HIRFunction,
   options: { isFunctionExpression: boolean } = { isFunctionExpression: false }
 ): void {
-  // Initial state contains function params
-  // TODO: include module declarations here as well
+  /*
+   * Initial state contains function params
+   * TODO: include module declarations here as well
+   */
   const initialState = InferenceState.empty(fn.env);
   const value: InstructionValue = {
     kind: "Primitive",
@@ -141,9 +143,11 @@ export default function inferReferenceEffects(
   // Map of blocks to the last (merged) incoming state that was processed
   const statesByBlock: Map<BlockId, InferenceState> = new Map();
 
-  // Multiple predecessors may be visited prior to reaching a given successor,
-  // so track the list of incoming state for each successor block.
-  // These are merged when reaching that block again.
+  /*
+   * Multiple predecessors may be visited prior to reaching a given successor,
+   * so track the list of incoming state for each successor block.
+   * These are merged when reaching that block again.
+   */
   const queuedStates: Map<BlockId, InferenceState> = new Map();
   function queue(blockId: BlockId, state: InferenceState): void {
     let queuedState = queuedStates.get(blockId);
@@ -152,8 +156,10 @@ export default function inferReferenceEffects(
       state = queuedState.merge(state) ?? state;
       queuedStates.set(blockId, state);
     } else {
-      // this is the first queued state for this block, see whether
-      // there are changed relative to the last time it was processed.
+      /*
+       * this is the first queued state for this block, see whether
+       * there are changed relative to the last time it was processed.
+       */
       const prevState = statesByBlock.get(blockId);
       const nextState = prevState != null ? prevState.merge(state) : state;
       if (nextState != null) {
@@ -182,17 +188,17 @@ export default function inferReferenceEffects(
   }
 }
 
-/**
- * Maintains a mapping of top-level variables to the kind of value they hold
- */
+// Maintains a mapping of top-level variables to the kind of value they hold
 class InferenceState {
   #env: Environment;
 
   // The kind of reach value, based on its allocation site
   #values: Map<InstructionValue, ValueKind>;
-  // The set of values pointed to by each identifier. This is a set
-  // to accomodate phi points (where a variable may have different
-  // values from different control flow paths).
+  /*
+   * The set of values pointed to by each identifier. This is a set
+   * to accomodate phi points (where a variable may have different
+   * values from different control flow paths).
+   */
   #variables: Map<IdentifierId, Set<InstructionValue>>;
 
   constructor(
@@ -209,9 +215,7 @@ class InferenceState {
     return new InferenceState(env, new Map(), new Map());
   }
 
-  /**
-   * (Re)initializes a @param value with its default @param kind.
-   */
+  // (Re)initializes a @param value with its default @param kind.
   initialize(value: InstructionValue, kind: ValueKind): void {
     CompilerError.invariant(value.kind !== "LoadLocal", {
       reason:
@@ -223,9 +227,7 @@ class InferenceState {
     this.#values.set(value, kind);
   }
 
-  /**
-   * Lookup the kind of the given @param value.
-   */
+  // Lookup the kind of the given @param value.
   kind(place: Place): ValueKind {
     const values = this.#variables.get(place.identifier.id);
     CompilerError.invariant(values != null, {
@@ -250,9 +252,7 @@ class InferenceState {
     return mergedKind;
   }
 
-  /**
-   * Updates the value at @param place to point to the same value as @param value.
-   */
+  // Updates the value at @param place to point to the same value as @param value.
   alias(place: Place, value: Place): void {
     const values = this.#variables.get(value.identifier.id);
     CompilerError.invariant(values != null, {
@@ -264,9 +264,7 @@ class InferenceState {
     this.#variables.set(place.identifier.id, new Set(values));
   }
 
-  /**
-   * Defines (initializing or updating) a variable with a specific kind of value.
-   */
+  // Defines (initializing or updating) a variable with a specific kind of value.
   define(place: Place, value: InstructionValue): void {
     CompilerError.invariant(this.#values.has(value), {
       reason: `Expected value to be initialized at '${printSourceLocation(
@@ -283,10 +281,10 @@ class InferenceState {
     return this.#variables.has(place.identifier.id);
   }
 
-  /**
+  /*
    * Records that a given Place was accessed with the given kind and:
    * - Updates the effect of @param place based on the kind of value
-   *   and the kind of reference (@param effectKind).
+   *    and the kind of reference (@param effectKind).
    * - Updates the value kind to reflect the effect of the reference.
    *
    * Notably, a mutable reference is downgraded to readonly if the
@@ -383,12 +381,14 @@ class InferenceState {
           });
         }
 
-        // TODO(gsn): This should be bailout once we add bailout infra.
-        //
-        // invariant(
-        //   valueKind === ValueKind.Mutable,
-        //   `expected valueKind to be 'Mutable' but found to be '${valueKind}'`
-        // );
+        /*
+         * TODO(gsn): This should be bailout once we add bailout infra.
+         *
+         * invariant(
+         *   valueKind === ValueKind.Mutable,
+         *   `expected valueKind to be 'Mutable' but found to be '${valueKind}'`
+         * );
+         */
         effect = isObjectType(place.identifier) ? Effect.Store : Effect.Mutate;
         break;
       }
@@ -433,14 +433,14 @@ class InferenceState {
     place.effect = effect;
   }
 
-  /**
+  /*
    * Combine the contents of @param this and @param other, returning a new
    * instance with the combined changes _if_ there are any changes, or
    * returning null if no changes would occur. Changes include:
    * - new entries in @param other that did not exist in @param this
    * - entries whose values differ in @param this and @param other,
-   *   and where joining the values produces a different value than
-   *   what was in @param this.
+   *    and where joining the values produces a different value than
+   *    what was in @param this.
    *
    * Note that values are joined using a lattice operation to ensure
    * termination.
@@ -503,7 +503,7 @@ class InferenceState {
     }
   }
 
-  /**
+  /*
    * Returns a copy of this state.
    * TODO: consider using persistent data structures to make
    * clone cheaper.
@@ -516,7 +516,7 @@ class InferenceState {
     );
   }
 
-  /**
+  /*
    * For debugging purposes, dumps the state to a plain
    * object so that it can printed as JSON.
    */
@@ -558,46 +558,46 @@ class InferenceState {
   }
 }
 
-/**
+/*
  * Joins two values using the following rules:
  * == Effect Transitions ==
  *
  * Freezing an immutable value has not effect:
- *               ┌───────────────┐
- *               │               │
- *               ▼               │ Freeze
+ *                ┌───────────────┐
+ *                │               │
+ *                ▼               │ Freeze
  * ┌──────────────────────────┐  │
  * │        Immutable         │──┘
  * └──────────────────────────┘
  *
  * Freezing a mutable or maybe-frozen value makes it frozen. Freezing a frozen
  * value has no effect:
- *                                                    ┌───────────────┐
+ *                                                     ┌───────────────┐
  * ┌─────────────────────────┐     Freeze             │               │
  * │       MaybeFrozen       │────┐                   ▼               │ Freeze
  * └─────────────────────────┘    │     ┌──────────────────────────┐  │
- *                                ├────▶│          Frozen          │──┘
- *                                │     └──────────────────────────┘
+ *                                 ├────▶│          Frozen          │──┘
+ *                                 │     └──────────────────────────┘
  * ┌─────────────────────────┐    │
  * │         Mutable         │────┘
  * └─────────────────────────┘
  *
  * == Join Lattice ==
  * - immutable | mutable => mutable
- *    The justification is that immutable and mutable values are different types,
- *    and functions can introspect them to tell the difference (if the argument
- *    is null return early, else if its an object mutate it).
+ *     The justification is that immutable and mutable values are different types,
+ *     and functions can introspect them to tell the difference (if the argument
+ *     is null return early, else if its an object mutate it).
  * - frozen | mutable => maybe-frozen
- *    Frozen values are indistinguishable from mutable values at runtime, so callers
- *    cannot dynamically avoid mutation of "frozen" values. If a value could be
- *    frozen we have to distinguish it from a mutable value. But it also isn't known
- *    frozen yet, so we distinguish as maybe-frozen.
+ *     Frozen values are indistinguishable from mutable values at runtime, so callers
+ *     cannot dynamically avoid mutation of "frozen" values. If a value could be
+ *     frozen we have to distinguish it from a mutable value. But it also isn't known
+ *     frozen yet, so we distinguish as maybe-frozen.
  * - immutable | frozen => frozen
- *    This is subtle and falls out of the above rules. If a value could be any of
- *    immutable, mutable, or frozen, then at runtime it could either be a primitive
- *    or a reference type, and callers can't distinguish frozen or not for reference
- *    types. To ensure that any sequence of joins btw those three states yields the
- *    correct maybe-frozen, these two have to produce a frozen value.
+ *     This is subtle and falls out of the above rules. If a value could be any of
+ *     immutable, mutable, or frozen, then at runtime it could either be a primitive
+ *     or a reference type, and callers can't distinguish frozen or not for reference
+ *     types. To ensure that any sequence of joins btw those three states yields the
+ *     correct maybe-frozen, these two have to produce a frozen value.
  * - <any> | maybe-frozen => maybe-frozen
  * - immutable | context => context
  * - mutable | context => context
@@ -606,13 +606,13 @@ class InferenceState {
  * ┌──────────────────────────┐
  * │        Immutable         │───┐
  * └──────────────────────────┘   │
- *                                │    ┌─────────────────────────┐
- *                                ├───▶│         Frozen          │──┐
+ *                                 │    ┌─────────────────────────┐
+ *                                 ├───▶│         Frozen          │──┐
  * ┌──────────────────────────┐   │    └─────────────────────────┘  │
  * │          Frozen          │───┤                                 │  ┌─────────────────────────┐
  * └──────────────────────────┘   │                                 ├─▶│       MaybeFrozen       │
- *                                │    ┌─────────────────────────┐  │  └─────────────────────────┘
- *                                ├───▶│       MaybeFrozen       │──┘
+ *                                 │    ┌─────────────────────────┐  │  └─────────────────────────┘
+ *                                 ├───▶│       MaybeFrozen       │──┘
  * ┌──────────────────────────┐   │    └─────────────────────────┘
  * │         Mutable          │───┘
  * └──────────────────────────┘
@@ -648,7 +648,7 @@ function mergeValues(a: ValueKind, b: ValueKind): ValueKind {
   }
 }
 
-/**
+/*
  * Iterates over the given @param block, defining variables and
  * recording references on the @param state according to JS semantics.
  */
@@ -721,8 +721,10 @@ function inferBlock(
         break;
       }
       case "TemplateLiteral": {
-        // template literal (with no tag function) always produces
-        // an immutable string
+        /*
+         * template literal (with no tag function) always produces
+         * an immutable string
+         */
         valueKind = ValueKind.Immutable;
         effectKind = Effect.Read;
         break;
@@ -750,8 +752,10 @@ function inferBlock(
           );
           hasMutableOperand ||= isMutableEffect(operand.effect, operand.loc);
         }
-        // If a closure did not capture any mutable values, then we can consider it to be
-        // frozen, which allows it to be independently memoized.
+        /*
+         * If a closure did not capture any mutable values, then we can consider it to be
+         * frozen, which allows it to be independently memoized.
+         */
         state.initialize(
           instrValue,
           hasMutableOperand ? ValueKind.Mutable : ValueKind.Frozen
@@ -811,8 +815,10 @@ function inferBlock(
           const arg = instrValue.args[i];
           const place = arg.kind === "Identifier" ? arg : arg.place;
           if (effects !== null) {
-            // If effects are inferred for an argument, we should fail invalid
-            // mutating effects
+            /*
+             * If effects are inferred for an argument, we should fail invalid
+             * mutating effects
+             */
             state.reference(place, effects[i]);
           } else {
             state.reference(place, Effect.ConditionallyMutate);
@@ -889,9 +895,11 @@ function inferBlock(
       }
       case "Await": {
         state.initialize(instrValue, state.kind(instrValue.value));
-        // Awaiting a value causes it to change state (go from unresolved to resolved or error)
-        // It also means that any side-effects which would occur as part of the promise evaluation
-        // will occur.
+        /*
+         * Awaiting a value causes it to change state (go from unresolved to resolved or error)
+         * It also means that any side-effects which would occur as part of the promise evaluation
+         * will occur.
+         */
         state.reference(instrValue.value, Effect.ConditionallyMutate);
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
@@ -899,12 +907,14 @@ function inferBlock(
         continue;
       }
       case "TypeCastExpression": {
-        // A type cast expression has no effect at runtime, so it's equivalent to a raw
-        // identifier:
-        // ```
-        // x = (y: type)  // is equivalent to...
-        // x = y
-        // ```
+        /*
+         * A type cast expression has no effect at runtime, so it's equivalent to a raw
+         * identifier:
+         * ```
+         * x = (y: type)  // is equivalent to...
+         * x = y
+         * ```
+         */
         state.initialize(instrValue, state.kind(instrValue.value));
         state.reference(instrValue.value, Effect.Read);
         const lvalue = instr.lvalue;
@@ -973,10 +983,12 @@ function inferBlock(
         state.alias(lvalue, instrValue.value);
         lvalue.effect = Effect.Store;
         state.alias(instrValue.lvalue, instrValue.value);
-        // NOTE: *not* using state.reference since this is an assignment.
-        // reference() checks if the effect is valid given the value kind,
-        // but here the previous value kind doesn't matter since we are
-        // replacing it
+        /*
+         * NOTE: *not* using state.reference since this is an assignment.
+         * reference() checks if the effect is valid given the value kind,
+         * but here the previous value kind doesn't matter since we are
+         * replacing it
+         */
         instrValue.lvalue.effect = Effect.Store;
         continue;
       }
@@ -992,10 +1004,12 @@ function inferBlock(
         state.alias(lvalue, instrValue.value);
         lvalue.effect = Effect.Store;
         state.alias(instrValue.lvalue.place, instrValue.value);
-        // NOTE: *not* using state.reference since this is an assignment.
-        // reference() checks if the effect is valid given the value kind,
-        // but here the previous value kind doesn't matter since we are
-        // replacing it
+        /*
+         * NOTE: *not* using state.reference since this is an assignment.
+         * reference() checks if the effect is valid given the value kind,
+         * but here the previous value kind doesn't matter since we are
+         * replacing it
+         */
         instrValue.lvalue.place.effect = Effect.Store;
         continue;
       }
@@ -1026,10 +1040,12 @@ function inferBlock(
         lvalue.effect = Effect.Store;
         for (const place of eachPatternOperand(instrValue.lvalue.pattern)) {
           state.alias(place, instrValue.value);
-          // NOTE: *not* using state.reference since this is an assignment.
-          // reference() checks if the effect is valid given the value kind,
-          // but here the previous value kind doesn't matter since we are
-          // replacing it
+          /*
+           * NOTE: *not* using state.reference since this is an assignment.
+           * reference() checks if the effect is valid given the value kind,
+           * but here the previous value kind doesn't matter since we are
+           * replacing it
+           */
           place.effect = Effect.Store;
         }
         continue;
@@ -1106,7 +1122,7 @@ export function getFunctionCallSignature(
   return env.getFunctionSignature(type);
 }
 
-/**
+/*
  * Make a best attempt at matching arguments of a {@link MethodCall} to parameter effects.
  * defined in its {@link FunctionSignature}.
  *
@@ -1122,8 +1138,10 @@ function getFunctionEffects(
   for (let i = 0; i < fn.args.length; i++) {
     const arg = fn.args[i];
     if (i < sig.positionalParams.length) {
-      // Only infer effects when there is a direct mapping positional arg --> positional param
-      // Otherwise, return null to indicate inference failed
+      /*
+       * Only infer effects when there is a direct mapping positional arg --> positional param
+       * Otherwise, return null to indicate inference failed
+       */
       if (arg.kind === "Identifier") {
         results.push(sig.positionalParams[i]);
       } else {
@@ -1132,8 +1150,10 @@ function getFunctionEffects(
     } else if (sig.restParam !== null) {
       results.push(sig.restParam);
     } else {
-      // If there are more arguments than positional arguments and a rest parameter is not
-      // defined, we'll also assume that inference failed
+      /*
+       * If there are more arguments than positional arguments and a rest parameter is not
+       * defined, we'll also assume that inference failed
+       */
       return null;
     }
   }

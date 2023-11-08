@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -22,17 +22,17 @@ import { eachInstructionLValue } from "../HIR/visitors";
 import { assertExhaustive } from "../Utils/utils";
 import { eachReactiveValueOperand, mapTerminalBlocks } from "./visitors";
 
-/**
+/*
  * Note: this is the 4th of 4 passes that determine how to break a function into discrete
  * reactive scopes (independently memoizeable units of code):
  * 1. InferReactiveScopeVariables (on HIR) determines operands that mutate together and assigns
- *    them a unique reactive scope.
+ *     them a unique reactive scope.
  * 2. AlignReactiveScopesToBlockScopes (on ReactiveFunction) aligns reactive scopes
- *    to block scopes.
+ *     to block scopes.
  * 3. MergeOverlappingReactiveScopes (this pass, on ReactiveFunction) ensures that reactive
- *    scopes do not overlap, merging any such scopes.
+ *     scopes do not overlap, merging any such scopes.
  * 4. BuildReactiveBlocks (on ReactiveFunction) groups the statements for each scope into
- *    a ReactiveScopeBlock.
+ *     a ReactiveScopeBlock.
  *
  * Given a function where the reactive scopes have been correctly aligned and merged,
  * this pass groups the instructions for each reactive scope into ReactiveBlocks.
@@ -134,11 +134,13 @@ class Builder {
   }
 
   complete(): ReactiveBlock {
-    // TODO: @josephsavona debug violations of this invariant
-    // invariant(
-    //   this.#stack.length === 1,
-    //   "Expected all scopes to be closed when exiting a block"
-    // );
+    /*
+     * TODO: @josephsavona debug violations of this invariant
+     * invariant(
+     *   this.#stack.length === 1,
+     *   "Expected all scopes to be closed when exiting a block"
+     * );
+     */
     const first = this.#stack[0]!;
     CompilerError.invariant(first.kind === "block", {
       reason: "Expected first stack item to be a basic block",

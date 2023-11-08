@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -33,8 +33,10 @@ export function addInstrumentForget(
     body = t.blockStatement([t.expressionStatement(body)]);
   }
 
-  // Technically, this is a conditional hook call. However, we expect
-  // __DEV__ and gatingIdentifier to be runtime constants
+  /*
+   * Technically, this is a conditional hook call. However, we expect
+   * __DEV__ and gatingIdentifier to be runtime constants
+   */
   const test: t.IfStatement = t.ifStatement(
     t.identifier("__DEV__"),
     t.expressionStatement(

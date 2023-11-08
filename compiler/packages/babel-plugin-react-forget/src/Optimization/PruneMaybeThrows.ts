@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -24,7 +24,7 @@ import {
 } from "../HIR/HIRBuilder";
 import { eliminateRedundantPhi } from "../SSA";
 
-/**
+/*
  * This pass prunes `maybe-throw` terminals for blocks that can provably *never* throw.
  * For now this is very conservative, and only affects blocks with primitives or
  * array/object literals. Even a variable reference could throw bc of the TDZ.
@@ -32,8 +32,10 @@ import { eliminateRedundantPhi } from "../SSA";
 export function pruneMaybeThrows(fn: HIRFunction): void {
   const didPrune = pruneMaybeThrowsImpl(fn);
   if (didPrune) {
-    // If terminals have changed then blocks may have become newly unreachable.
-    // Re-run minification of the graph (incl reordering instruction ids)
+    /*
+     * If terminals have changed then blocks may have become newly unreachable.
+     * Re-run minification of the graph (incl reordering instruction ids)
+     */
     reversePostorderBlocks(fn.body);
     removeUnreachableFallthroughs(fn.body);
     removeUnreachableForUpdates(fn.body);
@@ -52,11 +54,15 @@ export function pruneMaybeThrows(fn: HIRFunction): void {
         }
       }
     }
-    // By removing some phi operands, there may be phis that were not previously
-    // redundant but now are
+    /*
+     * By removing some phi operands, there may be phis that were not previously
+     * redundant but now are
+     */
     eliminateRedundantPhi(fn);
-    // Finally, merge together any blocks that are now guaranteed to execute
-    // consecutively
+    /*
+     * Finally, merge together any blocks that are now guaranteed to execute
+     * consecutively
+     */
     mergeConsecutiveBlocks(fn);
 
     assertConsistentIdentifiers(fn);

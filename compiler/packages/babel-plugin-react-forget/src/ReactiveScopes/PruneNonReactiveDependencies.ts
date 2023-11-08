@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -14,7 +14,7 @@ import {
 import { collectReactiveIdentifiers } from "./CollectReactiveIdentifiers";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
-/**
+/*
  * PropagateScopeDependencies infers dependencies without considering whether dependencies
  * are actually reactive or not (ie, whether their value can change over time).
  *

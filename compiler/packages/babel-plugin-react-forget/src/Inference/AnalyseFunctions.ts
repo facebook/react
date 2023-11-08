@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -25,9 +25,7 @@ import { inferMutableContextVariables } from "./InferMutableContextVariables";
 import { inferMutableRanges } from "./InferMutableRanges";
 import inferReferenceEffects from "./InferReferenceEffects";
 
-/**
- * Helper class to track indirections such as LoadLocal and PropertyLoad.
- */
+// Helper class to track indirections such as LoadLocal and PropertyLoad.
 export class IdentifierState {
   properties: Map<Identifier, ReactiveScopeDependency> = new Map();
 
@@ -85,8 +83,10 @@ export default function analyseFunctions(func: HIRFunction): void {
           break;
         }
         case "ComputedLoad": {
-          // The path is set to an empty string as the path doesn't really
-          // matter for a computed load.
+          /*
+           * The path is set to an empty string as the path doesn't really
+           * matter for a computed load.
+           */
           state.declareProperty(instr.lvalue, instr.value.object, "");
           break;
         }
@@ -144,11 +144,13 @@ function infer(
       isRefValueType(dep.identifier) ||
       isSetStateType(dep.identifier)
     ) {
-      // TODO: this is a hack to ensure we treat functions which reference refs
-      // as having a capture and therefore being considered mutable. this ensures
-      // the function gets a mutable range which accounts for anywhere that it
-      // could be called, and allows us to help ensure it isn't called during
-      // render
+      /*
+       * TODO: this is a hack to ensure we treat functions which reference refs
+       * as having a capture and therefore being considered mutable. this ensures
+       * the function gets a mutable range which accounts for anywhere that it
+       * could be called, and allows us to help ensure it isn't called during
+       * render
+       */
       dep.effect = Effect.Capture;
     } else if (name !== null) {
       const effect = mutations.get(name);
@@ -158,12 +160,14 @@ function infer(
     }
   }
 
-  // This could potentially add duplicate deps to mutatedDeps in the case of
-  // mutating a context ref in the child function and in this parent function.
-  // It might be useful to dedupe this.
-  //
-  // In practice this never really matters because the Component function has no
-  // context refs, so it will never have duplicate deps.
+  /*
+   * This could potentially add duplicate deps to mutatedDeps in the case of
+   * mutating a context ref in the child function and in this parent function.
+   * It might be useful to dedupe this.
+   *
+   * In practice this never really matters because the Component function has no
+   * context refs, so it will never have duplicate deps.
+   */
   for (const place of context) {
     CompilerError.invariant(place.identifier.name !== null, {
       reason: "context refs should always have a name",
@@ -181,11 +185,13 @@ function infer(
 }
 
 function isMutatedOrReassigned(id: Identifier): boolean {
-  // This check checks for mutation and reassingnment, so the usual check for
-  // mutation (ie, `mutableRange.end - mutableRange.start > 1`) isn't quite
-  // enough.
-  //
-  // We need to track re-assignments in context refs as we need to reflect the
-  // re-assignment back to the captured refs.
+  /*
+   * This check checks for mutation and reassingnment, so the usual check for
+   * mutation (ie, `mutableRange.end - mutableRange.start > 1`) isn't quite
+   * enough.
+   *
+   * We need to track re-assignments in context refs as we need to reflect the
+   * re-assignment back to the captured refs.
+   */
   return id.mutableRange.end > id.mutableRange.start;
 }

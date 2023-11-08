@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -27,7 +27,7 @@ import { markInstructionIds, markPredecessors } from "../HIR/HIRBuilder";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { retainWhere } from "../Utils/utils";
 
-/**
+/*
  * Inlines immediately invoked function expressions (IIFEs) to allow more fine-grained memoization
  * of the values they produce.
  *
@@ -35,41 +35,41 @@ import { retainWhere } from "../Utils/utils";
  *
  * ```
  * const x = (() => {
- *   const x = [];
- *   x.push(foo());
- *   return x;
+ *    const x = [];
+ *    x.push(foo());
+ *    return x;
  * })();
  *
  * =>
  *
  * bb0:
- *    // placeholder for the result, all return statements will assign here
- *   let t0;
- *   // Label allows using a goto (break) to exit out of the body
- *   Label block=bb1 fallthrough=bb2
+ *     // placeholder for the result, all return statements will assign here
+ *    let t0;
+ *    // Label allows using a goto (break) to exit out of the body
+ *    Label block=bb1 fallthrough=bb2
  * bb1:
- *   // code within the function expression
- *   const x0 = [];
- *   x0.push(foo());
- *   // return is replaced by assignment to the result variable...
- *   t0 = x0;
- *   // ...and a goto to the code after the function expression invocation
- *   Goto bb2
+ *    // code within the function expression
+ *    const x0 = [];
+ *    x0.push(foo());
+ *    // return is replaced by assignment to the result variable...
+ *    t0 = x0;
+ *    // ...and a goto to the code after the function expression invocation
+ *    Goto bb2
  * bb2:
- *   // code after the IIFE call
- *   const x = t0;
+ *    // code after the IIFE call
+ *    const x = t0;
  * ```
  *
  * The implementation relies on HIR's ability to support labeled blocks:
  * - We terminate the basic block just prior to the CallExpression of the IIFE
- *   with a LabelTerminal whose fallback is the code following the CallExpression.
- *   Just prior to the terminal we also create a named temporary variable which
- *   will hold the result.
+ *    with a LabelTerminal whose fallback is the code following the CallExpression.
+ *    Just prior to the terminal we also create a named temporary variable which
+ *    will hold the result.
  * - We then inline the contents of the function "in between" (conceptually) those
- *   two blocks.
+ *    two blocks.
  * - All return statements in the original function expression are replaced with a
- *   StoreLocal to the temporary we allocated before plus a Goto to the fallthrough
- *   block (code following the CallExpression).
+ *    StoreLocal to the temporary we allocated before plus a Goto to the fallthrough
+ *    block (code following the CallExpression).
  */
 export function inlineImmediatelyInvokedFunctionExpressions(
   fn: HIRFunction
@@ -79,11 +79,13 @@ export function inlineImmediatelyInvokedFunctionExpressions(
   // Functions that are inlined
   const inlinedFunctions = new Set<IdentifierId>();
 
-  // Iterate the *existing* blocks from the outer component to find IIFEs
-  // and inline them. During iteration we will modify `fn` (by inlining the CFG
-  // of IIFEs) so we explicitly copy references to just the original
-  // function's blocks first. As blocks are split to make room for IIFE calls,
-  // the split portions of the blocks will be added to this queue.
+  /*
+   * Iterate the *existing* blocks from the outer component to find IIFEs
+   * and inline them. During iteration we will modify `fn` (by inlining the CFG
+   * of IIFEs) so we explicitly copy references to just the original
+   * function's blocks first. As blocks are split to make room for IIFE calls,
+   * the split portions of the blocks will be added to this queue.
+   */
   const queue = Array.from(fn.body.blocks.values());
   queue: for (const block of queue) {
     for (let ii = 0; ii < block.instructions.length; ii++) {
@@ -130,13 +132,17 @@ export function inlineImmediatelyInvokedFunctionExpressions(
           };
           fn.body.blocks.set(continuationBlockId, continuationBlock);
 
-          // Trim the original block to contain instructions up to (but not including)
-          // the IIFE
+          /*
+           * Trim the original block to contain instructions up to (but not including)
+           * the IIFE
+           */
           block.instructions.length = ii;
 
-          // To account for complex control flow within the lambda, we treat the lambda
-          // as if it were a single labeled statement, and replace all returns with gotos
-          // to the label fallthrough.
+          /*
+           * To account for complex control flow within the lambda, we treat the lambda
+           * as if it were a single labeled statement, and replace all returns with gotos
+           * to the label fallthrough.
+           */
           const newTerminal: LabelTerminal = {
             block: body.loweredFunc.func.body.entry,
             id: makeInstructionId(0),
@@ -155,16 +161,20 @@ export function inlineImmediatelyInvokedFunctionExpressions(
           // Promote the temporary with a name as we require this to persist
           promoteTemporary(result.identifier);
 
-          // Rewrite blocks from the lambda to replace any `return` with a
-          // store to the result and `goto` the continuation block
+          /*
+           * Rewrite blocks from the lambda to replace any `return` with a
+           * store to the result and `goto` the continuation block
+           */
           for (const [id, block] of body.loweredFunc.func.body.blocks) {
             block.preds.clear();
             rewriteBlock(fn.env, block, continuationBlockId, result);
             fn.body.blocks.set(id, block);
           }
 
-          // Ensure we visit the continuation block, since there may have been
-          // sequential IIFEs that need to be visited.
+          /*
+           * Ensure we visit the continuation block, since there may have been
+           * sequential IIFEs that need to be visited.
+           */
           queue.push(continuationBlock);
           continue queue;
         }
@@ -187,15 +197,17 @@ export function inlineImmediatelyInvokedFunctionExpressions(
       );
     }
 
-    // If terminals have changed then blocks may have become newly unreachable.
-    // Re-run minification of the graph (incl reordering instruction ids)
+    /*
+     * If terminals have changed then blocks may have become newly unreachable.
+     * Re-run minification of the graph (incl reordering instruction ids)
+     */
     reversePostorderBlocks(fn.body);
     markInstructionIds(fn.body);
     markPredecessors(fn.body);
   }
 }
 
-/**
+/*
  * Rewrites the block so that all `return` terminals are replaced:
  * * Add a StoreLocal <returnValue> = <terminal.value>
  * * Replace the terminal with a Goto to <returnTarget>

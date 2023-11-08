@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -12,7 +12,7 @@ import {
 } from "../HIR/visitors";
 import { IdentifierState } from "./AnalyseFunctions";
 
-/**
+/*
  * This pass infers which of the given function's context (free) variables
  * are definitively mutated by the function. This analysis is *partial*,
  * and only annotates provable mutations, and may miss mutations via indirections.
@@ -28,9 +28,9 @@ import { IdentifierState } from "./AnalyseFunctions";
  * ```
  * const [x, setX] = useState(null); // x is frozen
  * const fn = () => { // context=[x]
- *   const z = {}; // z is mutable
- *   foo(z, x); // potentially mutate z and x
- *   z.a = true; // definitively mutate z
+ *    const z = {}; // z is mutable
+ *    foo(z, x); // potentially mutate z and x
+ *    z.a = true; // definitively mutate z
  * }
  * fn();
  * ```
@@ -49,8 +49,8 @@ import { IdentifierState } from "./AnalyseFunctions";
  * ```
  * const [x, setX] = useState(null); // x is frozen
  * const fn = () => { // context=[x]
- *   const z = x;
- *   z.a = true; // ERROR: mutates x
+ *    const z = x;
+ *    z.a = true; // ERROR: mutates x
  * }
  * fn();
  * ```
@@ -70,8 +70,10 @@ export function inferMutableContextVariables(fn: HIRFunction): void {
           break;
         }
         case "ComputedLoad": {
-          // The path is set to an empty string as the path doesn't really
-          // matter for a computed load.
+          /*
+           * The path is set to an empty string as the path doesn't really
+           * matter for a computed load.
+           */
           state.declareProperty(instr.lvalue, instr.value.object, "");
           break;
         }

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -171,9 +171,11 @@ function* generateInstructionTypes(
     }
 
     case "CallExpression": {
-      // TODO: callee could be a hook or a function, so this type equation isn't correct.
-      // We should change Hook to a subtype of Function or change unifier logic.
-      // (see https://github.com/facebook/react-forget/pull/1427)
+      /*
+       * TODO: callee could be a hook or a function, so this type equation isn't correct.
+       * We should change Hook to a subtype of Function or change unifier logic.
+       * (see https://github.com/facebook/react-forget/pull/1427)
+       */
       yield equation(value.callee.identifier.type, {
         kind: "Function",
         shapeId: null,
@@ -308,8 +310,10 @@ class Unifier {
       if (propertyType !== null) {
         this.unify(tA, propertyType);
       }
-      // We do not error if tB is not a known object or function (even if it
-      // is a primitive), since JS implicit conversion to objects
+      /*
+       * We do not error if tB is not a known object or function (even if it
+       * is a primitive), since JS implicit conversion to objects
+       */
       return;
     }
 

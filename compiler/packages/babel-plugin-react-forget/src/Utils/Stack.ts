@@ -1,13 +1,11 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 
-/**
- * An immutable stack data structure supporting O(1) push/pop operations.
- */
+// An immutable stack data structure supporting O(1) push/pop operations.
 export type Stack<T> = Node<T> | Empty<T>;
 
 // Static assertion that Stack<T> is a StackInterface<T>
@@ -15,10 +13,12 @@ function _assertStackInterface<T>(stack: Stack<T>): void {
   let _: StackInterface<T> = stack;
 }
 
-// Internal interface to enforce consistent behavior btw Node/Empty variants
-// Note that we export a union rather than the interface so that it is impossible
-// to create additional variants: a Stack should always be exactly a Node or Empty
-// instance.
+/*
+ * Internal interface to enforce consistent behavior btw Node/Empty variants
+ * Note that we export a union rather than the interface so that it is impossible
+ * to create additional variants: a Stack should always be exactly a Node or Empty
+ * instance.
+ */
 interface StackInterface<T> {
   push(value: T): StackInterface<T>;
 

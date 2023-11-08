@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -19,7 +19,7 @@ import {
   visitReactiveFunction,
 } from "./visitors";
 
-/**
+/*
  * This pass supports the `fbt` translation system (https://facebook.github.io/fbt/).
  * FBT provides the `<fbt>` JSX element and `fbt()` calls (which take params in the
  * form of `<fbt:param>` children or `fbt.param()` arguments, respectively). These
@@ -48,8 +48,10 @@ export const FBT_TAGS: Set<string> = new Set(["fbt", "fbt:param"]);
 export const SINGLE_CHILD_FBT_TAGS: Set<string> = new Set(["fbt:param"]);
 
 class Transform extends ReactiveFunctionVisitor<void> {
-  // Values that represent *potential* references of `fbt` as a JSX tag name
-  // or as a callee.
+  /*
+   * Values that represent *potential* references of `fbt` as a JSX tag name
+   * or as a callee.
+   */
   fbtValues: Set<IdentifierId> = new Set();
 
   override visitInstruction(
@@ -65,8 +67,10 @@ class Transform extends ReactiveFunctionVisitor<void> {
       typeof value.value === "string" &&
       FBT_TAGS.has(value.value)
     ) {
-      // We don't distinguish between tag names and strings, so record
-      // all `fbt` string literals in case they are used as a jsx tag.
+      /*
+       * We don't distinguish between tag names and strings, so record
+       * all `fbt` string literals in case they are used as a jsx tag.
+       */
       this.fbtValues.add(lvalue.identifier.id);
     } else if (value.kind === "LoadGlobal" && FBT_TAGS.has(value.name)) {
       // Record references to `fbt` as a global
@@ -77,9 +81,11 @@ class Transform extends ReactiveFunctionVisitor<void> {
         return;
       }
 
-      // if the JSX element's tag was `fbt`, mark all its operands
-      // to ensure that they end up in the same scope as the jsx element
-      // itself.
+      /*
+       * if the JSX element's tag was `fbt`, mark all its operands
+       * to ensure that they end up in the same scope as the jsx element
+       * itself.
+       */
       for (const operand of eachReactiveValueOperand(value)) {
         operand.identifier.scope = fbtScope;
 
@@ -97,9 +103,11 @@ class Transform extends ReactiveFunctionVisitor<void> {
         return;
       }
 
-      // if the JSX element's tag was `fbt`, mark all its operands
-      // to ensure that they end up in the same scope as the jsx element
-      // itself.
+      /*
+       * if the JSX element's tag was `fbt`, mark all its operands
+       * to ensure that they end up in the same scope as the jsx element
+       * itself.
+       */
       for (const operand of eachReactiveValueOperand(value)) {
         operand.identifier.scope = fbtScope;
 
@@ -108,8 +116,10 @@ class Transform extends ReactiveFunctionVisitor<void> {
           Math.min(fbtScope.range.start, operand.identifier.mutableRange.start)
         );
 
-        // NOTE: we add the operands as fbt values so that they are also
-        // grouped with this expression
+        /*
+         * NOTE: we add the operands as fbt values so that they are also
+         * grouped with this expression
+         */
         this.fbtValues.add(operand.identifier.id);
       }
     }

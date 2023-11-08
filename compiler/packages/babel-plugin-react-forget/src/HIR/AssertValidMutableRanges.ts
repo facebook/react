@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -13,7 +13,7 @@ import {
   eachTerminalOperand,
 } from "./visitors";
 
-/**
+/*
  * Checks that all mutable ranges in the function are well-formed, with
  * start === end === 0 OR end > start.
  */

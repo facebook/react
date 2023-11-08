@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -36,7 +36,7 @@ import {
 } from "./DeriveMinimalDependencies";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
-/**
+/*
  * Infers the dependencies of each scope to include variables whose values
  * are non-stable and created prior to the start of the scope. Also propagates
  * dependencies upwards, so that parent scope dependencies are the union of
@@ -67,8 +67,10 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
 }
 
 type TemporariesUsedOutsideDefiningScope = {
-  // tracks all relevant temporary declarations (currently LoadLocal and PropertyLoad)
-  // and the scope where they are defined
+  /*
+   * tracks all relevant temporary declarations (currently LoadLocal and PropertyLoad)
+   * and the scope where they are defined
+   */
   declarations: Map<IdentifierId, ReactiveScope>;
   // temporaries used outside of their defining scope
   usedOutsideDeclaringScope: Set<IdentifierId>;
@@ -136,18 +138,22 @@ class Context {
   // Reactive dependencies used in the current reactive scope.
   #dependencies: ReactiveScopeDependencyTree =
     new ReactiveScopeDependencyTree();
-  // We keep a sidemap for temporaries created by PropertyLoads, and do
-  // not store any control flow (i.e. #inConditionalWithinScope) here.
-  //  - a ReactiveScope (A) containing a PropertyLoad may differ from the
-  //    ReactiveScope (B) that uses the produced temporary.
-  //  - codegen will inline these PropertyLoads back into scope (B)
+  /*
+   * We keep a sidemap for temporaries created by PropertyLoads, and do
+   * not store any control flow (i.e. #inConditionalWithinScope) here.
+   *  - a ReactiveScope (A) containing a PropertyLoad may differ from the
+   *    ReactiveScope (B) that uses the produced temporary.
+   *  - codegen will inline these PropertyLoads back into scope (B)
+   */
   #properties: Map<Identifier, ReactiveScopePropertyDependency> = new Map();
   #temporaries: Map<Identifier, Place> = new Map();
   #inConditionalWithinScope: boolean = false;
-  // Reactive dependencies used unconditionally in the current conditional.
-  // Composed of dependencies:
-  //  - directly accessed within block (added in visitDep)
-  //  - accessed by all cfg branches (added through promoteDeps)
+  /*
+   * Reactive dependencies used unconditionally in the current conditional.
+   * Composed of dependencies:
+   *  - directly accessed within block (added in visitDep)
+   *  - accessed by all cfg branches (added through promoteDeps)
+   */
   #depsInCurrentConditional: ReactiveScopeDependencyTree =
     new ReactiveScopeDependencyTree();
   #scopes: Stack<ReactiveScope> = empty();
@@ -161,10 +167,12 @@ class Context {
     const prevInConditional = this.#inConditionalWithinScope;
     const previousDependencies = this.#dependencies;
 
-    // Set context for new scope
-    // A nested scope should add all deps it directly uses as its own
-    // unconditional deps, regardless of whether the nested scope is itself
-    // within a conditional
+    /*
+     * Set context for new scope
+     * A nested scope should add all deps it directly uses as its own
+     * unconditional deps, regardless of whether the nested scope is itself
+     * within a conditional
+     */
     const scopedDependencies = new ReactiveScopeDependencyTree();
     this.#inConditionalWithinScope = false;
     this.#dependencies = scopedDependencies;
@@ -181,10 +189,12 @@ class Context {
     const minInnerScopeDependencies =
       scopedDependencies.deriveMinimalDependencies();
 
-    // propagate dependencies upward using the same rules as normal dependency
-    // collection. child scopes may have dependencies on values created within
-    // the outer scope, which necessarily cannot be dependencies of the outer
-    // scope
+    /*
+     * propagate dependencies upward using the same rules as normal dependency
+     * collection. child scopes may have dependencies on values created within
+     * the outer scope, which necessarily cannot be dependencies of the outer
+     * scope
+     */
     this.#dependencies.addDepsFromInnerScope(
       scopedDependencies,
       this.#inConditionalWithinScope,
@@ -197,7 +207,7 @@ class Context {
     return this.#temporariesUsedOutsideScope.has(place.identifier.id);
   }
 
-  /**
+  /*
    * Prints dependency tree to string for debugging.
    * @param includeAccesses
    * @returns string representation of DependencyTree
@@ -206,7 +216,7 @@ class Context {
     return this.#dependencies.printDeps(includeAccesses);
   }
 
-  /**
+  /*
    * We track and return unconditional accesses / deps within this conditional.
    * If an object property is always used (i.e. in every conditional path), we
    * want to promote it to an unconditional access / dependency.
@@ -215,11 +225,11 @@ class Context {
    * i.e. call promoteDepsFromExhaustiveConditionals to merge returned results.
    *
    * e.g. we want to mark props.a.b as an unconditional dep here
-   *  if (foo(...)) {
-   *    access(props.a.b);
-   *  } else {
-   *    access(props.a.b);
-   *  }
+   *   if (foo(...)) {
+   *     access(props.a.b);
+   *   } else {
+   *     access(props.a.b);
+   *   }
    */
   enterConditional(fn: () => void): ReactiveScopeDependencyTree {
     const prevInConditional = this.#inConditionalWithinScope;
@@ -233,7 +243,7 @@ class Context {
     return result;
   }
 
-  /**
+  /*
    * Add dependencies from exhaustive CFG paths into the current ReactiveDeps
    * tree. If a property is used in every CFG path, it is promoted to an
    * unconditional access / dependency here.
@@ -250,7 +260,7 @@ class Context {
     );
   }
 
-  /**
+  /*
    * Records where a value was declared, and optionally, the scope where the value originated from.
    * This is later used to determine if a dependency should be added to a scope; if the current
    * scope we are visiting is the same scope where the value originates, it can't be a dependency
@@ -279,8 +289,10 @@ class Context {
     const resolvedObject = this.resolveTemporary(object);
     const resolvedDependency = this.#properties.get(resolvedObject.identifier);
     let objectDependency: ReactiveScopePropertyDependency;
-    // (1) Create the base property dependency as either a LoadLocal (from a temporary)
-    // or a deep copy of an existing property dependency.
+    /*
+     * (1) Create the base property dependency as either a LoadLocal (from a temporary)
+     * or a deep copy of an existing property dependency.
+     */
     if (resolvedDependency === undefined) {
       objectDependency = {
         identifier: resolvedObject.identifier,
@@ -297,10 +309,12 @@ class Context {
 
     // (2) Determine whether property is an optional access
     if (objectDependency.optionalPath.length > 0) {
-      // If the base property dependency represents a optional member expression,
-      // property is on the optionalPath (regardless of whether this PropertyLoad
-      // itself was conditional)
-      // e.g. for `a.b?.c.d`, `d` should be added to optionalPath
+      /*
+       * If the base property dependency represents a optional member expression,
+       * property is on the optionalPath (regardless of whether this PropertyLoad
+       * itself was conditional)
+       * e.g. for `a.b?.c.d`, `d` should be added to optionalPath
+       */
       objectDependency.optionalPath.push(property);
     } else if (isConditional) {
       objectDependency.optionalPath.push(property);
@@ -331,15 +345,19 @@ class Context {
       return false;
     }
 
-    // object methods are not deps because they will be codegen'ed back in to
-    // the object literal.
+    /*
+     * object methods are not deps because they will be codegen'ed back in to
+     * the object literal.
+     */
     if (isObjectMethodType(maybeDependency.identifier)) {
       return false;
     }
 
     const identifier = maybeDependency.identifier;
-    // If this operand is used in a scope, has a dynamic value, and was defined
-    // before this scope, then its a dependency of the scope.
+    /*
+     * If this operand is used in a scope, has a dynamic value, and was defined
+     * before this scope, then its a dependency of the scope.
+     */
     const currentDeclaration =
       this.#reassignments.get(identifier) ??
       this.#declarations.get(identifier.id);
@@ -366,8 +384,10 @@ class Context {
 
   visitOperand(place: Place): void {
     const resolved = this.resolveTemporary(place);
-    // if this operand is a temporary created for a property load, try to resolve it to
-    // the expanded Place. Fall back to using the operand as-is.
+    /*
+     * if this operand is a temporary created for a property load, try to resolve it to
+     * the expanded Place. Fall back to using the operand as-is.
+     */
 
     let dependency: ReactiveScopePropertyDependency = {
       identifier: resolved.identifier,
@@ -389,14 +409,18 @@ class Context {
   }
 
   visitDependency(maybeDependency: ReactiveScopePropertyDependency): void {
-    // Any value used after its originally defining scope has concluded must be added as an
-    // output of its defining scope. Regardless of whether its a const or not,
-    // some later code needs access to the value. If the current
-    // scope we are visiting is the same scope where the value originates, it can't be a dependency
-    // on itself.
+    /*
+     * Any value used after its originally defining scope has concluded must be added as an
+     * output of its defining scope. Regardless of whether its a const or not,
+     * some later code needs access to the value. If the current
+     * scope we are visiting is the same scope where the value originates, it can't be a dependency
+     * on itself.
+     */
 
-    // if originalDeclaration is undefined here, then this is a free var
-    //  (all other decls e.g. `let x;` should be initialized in BuildHIR)
+    /*
+     * if originalDeclaration is undefined here, then this is a free var
+     *  (all other decls e.g. `let x;` should be initialized in BuildHIR)
+     */
     const originalDeclaration = this.#declarations.get(
       maybeDependency.identifier.id
     );
@@ -416,13 +440,15 @@ class Context {
 
     if (this.#checkValidDependency(maybeDependency)) {
       this.#depsInCurrentConditional.add(maybeDependency, true);
-      // Add info about this dependency to the existing tree
-      // We do not try to join/reduce dependencies here due to missing info
+      /*
+       * Add info about this dependency to the existing tree
+       * We do not try to join/reduce dependencies here due to missing info
+       */
       this.#dependencies.add(maybeDependency, this.#inConditionalWithinScope);
     }
   }
 
-  /**
+  /*
    * Record a variable that is declared in some other scope and that is being reassigned in the
    * current one as a {@link ReactiveScope.reassignments}
    */
@@ -470,9 +496,11 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
     switch (value.kind) {
       case "OptionalExpression": {
         const inner = value.value;
-        // OptionalExpression value is a SequenceExpression where the instructions
-        // represent the code prior to the `?` and the final value represents the
-        // conditional code that follows.
+        /*
+         * OptionalExpression value is a SequenceExpression where the instructions
+         * represent the code prior to the `?` and the final value represents the
+         * conditional code that follows.
+         */
         CompilerError.invariant(inner.kind === "SequenceExpression", {
           reason:
             "Expected OptionalExpression value to be a SequenceExpression",
@@ -562,14 +590,18 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
       value.kind === "DeclareLocal" ||
       value.kind === "DeclareContext"
     ) {
-      // Some variables may be declared and never initialized. We need
-      // to retain (and hoist) these declarations if they are included
-      // in a reactive scope. One approach is to simply add all `DeclareLocal`s
-      // as scope declarations.
+      /*
+       * Some variables may be declared and never initialized. We need
+       * to retain (and hoist) these declarations if they are included
+       * in a reactive scope. One approach is to simply add all `DeclareLocal`s
+       * as scope declarations.
+       */
 
-      // We add context variable declarations here, not at `StoreContext`, since
-      // context Store / Loads are modeled as reads and mutates to the underlying
-      // variable reference (instead of through intermediate / inlined temporaries)
+      /*
+       * We add context variable declarations here, not at `StoreContext`, since
+       * context Store / Loads are modeled as reads and mutates to the underlying
+       * variable reference (instead of through intermediate / inlined temporaries)
+       */
       context.declare(value.lvalue.place.identifier, {
         id,
         scope: context.currentScope,
@@ -665,9 +697,11 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         context.visitOperand(terminal.test);
         const depsInCases = [];
         let foundDefault = false;
-        // This can underestimate unconditional accesses due to the current
-        // CFG representation for fallthrough. This is safe. It only
-        // reduces granularity of dependencies.
+        /*
+         * This can underestimate unconditional accesses due to the current
+         * CFG representation for fallthrough. This is safe. It only
+         * reduces granularity of dependencies.
+         */
         for (const { test, block } of terminal.cases) {
           if (test !== null) {
             context.visitOperand(test);

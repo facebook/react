@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -23,17 +23,17 @@ import {
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
 
-/**
+/*
  * Note: this is the 1st of 4 passes that determine how to break a function into discrete
  * reactive scopes (independently memoizeable units of code):
  * 1. InferReactiveScopeVariables (this pass, on HIR) determines operands that mutate
- *    together and assigns them a unique reactive scope.
+ *     together and assigns them a unique reactive scope.
  * 2. AlignReactiveScopesToBlockScopes (on ReactiveFunction) aligns reactive scopes
- *    to block scopes.
+ *     to block scopes.
  * 3. MergeOverlappingReactiveScopes (on ReactiveFunction) ensures that reactive
- *    scopes do not overlap, merging any such scopes.
+ *     scopes do not overlap, merging any such scopes.
  * 4. BuildReactiveBlocks (on ReactiveFunction) groups the statements for each scope into
- *    a ReactiveScopeBlock.
+ *     a ReactiveScopeBlock.
  *
  * For each mutable variable, infers a reactive scope which will construct that
  * variable. Variables that co-mutate are assigned to the same reactive scope.
@@ -63,10 +63,10 @@ import { assertExhaustive } from "../Utils/utils";
  * ## Implementation
  *
  * 1. Iterate over all instructions in all blocks (order does not matter, single pass),
- *    and create disjoint sets ({@link DisjointSet}) for each set of operands that
- *    mutate together per above rules.
+ *     and create disjoint sets ({@link DisjointSet}) for each set of operands that
+ *     mutate together per above rules.
  * 2. Iterate the contents of each set, and assign a new {@link ScopeId} to each set,
- *    and update the `scope` property of each item in that set to that scope id.
+ *     and update the `scope` property of each item in that set to that scope id.
  *
  * ## Other Issues Uncovered
  *
@@ -80,12 +80,16 @@ import { assertExhaustive } from "../Utils/utils";
  * ```
  */
 export function inferReactiveScopeVariables(fn: HIRFunction): void {
-  // Represents the set of reactive scopes as disjoint sets of identifiers
-  // that mutate together.
+  /*
+   * Represents the set of reactive scopes as disjoint sets of identifiers
+   * that mutate together.
+   */
   const scopeIdentifiers = new DisjointSet<Identifier>();
   for (const [_, block] of fn.body.blocks) {
-    // If a phi is mutated after creation, then we need to alias all of its operands such that they
-    // are assigned to the same scope.
+    /*
+     * If a phi is mutated after creation, then we need to alias all of its operands such that they
+     * are assigned to the same scope.
+     */
     for (const phi of block.phis) {
       if (
         // The phi was reset because it was not mutated after creation
@@ -141,22 +145,28 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
         for (const operand of eachInstructionOperand(instr)) {
           if (
             isMutable(instr, operand) &&
-            // exclude global variables from being added to scopes, we can't recreate them!
-            // TODO: improve handling of module-scoped variables and globals
+            /*
+             * exclude global variables from being added to scopes, we can't recreate them!
+             * TODO: improve handling of module-scoped variables and globals
+             */
             operand.identifier.mutableRange.start > 0
           ) {
             operands.push(operand.identifier);
           }
         }
-        // Ensure that the ComputedLoad to resolve the method is in the same scope as the
-        // call itself
+        /*
+         * Ensure that the ComputedLoad to resolve the method is in the same scope as the
+         * call itself
+         */
         operands.push(instr.value.property.identifier);
       } else {
         for (const operand of eachInstructionOperand(instr)) {
           if (
             isMutable(instr, operand) &&
-            // exclude global variables from being added to scopes, we can't recreate them!
-            // TODO: improve handling of module-scoped variables and globals
+            /*
+             * exclude global variables from being added to scopes, we can't recreate them!
+             * TODO: improve handling of module-scoped variables and globals
+             */
             operand.identifier.mutableRange.start > 0
           ) {
             operands.push(operand.identifier);
@@ -172,7 +182,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
   // Maps each scope (by its identifying member) to a ScopeId value
   const scopes: Map<Identifier, ReactiveScope> = new Map();
 
-  /**
+  /*
    * Iterate over all the identifiers and assign a unique ScopeId
    * for each scope (based on the set identifier).
    *

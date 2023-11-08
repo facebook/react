@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -17,7 +17,7 @@ import {
   eachTerminalOperand,
 } from "../HIR/visitors";
 
-/**
+/*
  * Validates that ref values (the `current` property) are not accessed during render.
  * This validation is conservative and only rejects accesses of known ref values:
  *
@@ -47,9 +47,11 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
         case "LoadLocal":
         case "StoreLocal":
         case "Destructure": {
-          // These instructions are necessary for storing the results of a useRef into
-          // a variable and referencing them in functions. We can propagate type info
-          // for these instructions so they ensure we have a complete analysis.
+          /*
+           * These instructions are necessary for storing the results of a useRef into
+           * a variable and referencing them in functions. We can propagate type info
+           * for these instructions so they ensure we have a complete analysis.
+           */
           break;
         }
         case "JsxExpression": {
@@ -61,10 +63,12 @@ export function validateNoRefAccessInRender(fn: HIRFunction): void {
         }
         case "ObjectMethod":
         case "FunctionExpression": {
-          // functions are allowed to capture refs, so long as the function is not called
-          // during render. see AnalyzeFunctions for how we ensure that functions which
-          // capture refs get assigned a mutable range so we know here whether the function
-          // is called or not
+          /*
+           * functions are allowed to capture refs, so long as the function is not called
+           * during render. see AnalyzeFunctions for how we ensure that functions which
+           * capture refs get assigned a mutable range so we know here whether the function
+           * is called or not
+           */
           const mutableRange = instr.lvalue.identifier.mutableRange;
           if (mutableRange.end > mutableRange.start + 1) {
             for (const operand of eachInstructionValueOperand(instr.value)) {

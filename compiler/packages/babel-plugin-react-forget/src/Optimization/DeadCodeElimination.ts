@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -23,7 +23,7 @@ import {
 } from "../HIR/visitors";
 import { assertExhaustive, retainWhere } from "../Utils/utils";
 
-/**
+/*
  * Implements dead-code elimination, eliminating instructions whose values are unused.
  *
  * Note that unreachable blocks are already pruned during HIR construction.
@@ -31,8 +31,10 @@ import { assertExhaustive, retainWhere } from "../Utils/utils";
 export function deadCodeElimination(fn: HIRFunction): void {
   const state = new State();
 
-  // If there are no back-edges the algorithm can terminate after a single iteration
-  // of the blocks
+  /*
+   * If there are no back-edges the algorithm can terminate after a single iteration
+   * of the blocks
+   */
   const hasLoop = hasBackEdge(fn);
 
   const reversedBlocks = [...fn.body.blocks.values()].reverse();
@@ -40,8 +42,10 @@ export function deadCodeElimination(fn: HIRFunction): void {
   do {
     size = state.count;
 
-    // Iterate blocks in postorder (successors before predecessors, excepting loops)
-    // to find usages before declarations
+    /*
+     * Iterate blocks in postorder (successors before predecessors, excepting loops)
+     * to find usages before declarations
+     */
     for (const block of reversedBlocks) {
       for (const operand of eachTerminalOperand(block.terminal)) {
         state.reference(operand.identifier);
@@ -59,8 +63,10 @@ export function deadCodeElimination(fn: HIRFunction): void {
         }
         state.reference(instr.lvalue.identifier);
 
-        // For the last value of a value block, if it's not pruneable we can't
-        // rewrite it. This is necessary to preserve unused value blocks
+        /*
+         * For the last value of a value block, if it's not pruneable we can't
+         * rewrite it. This is necessary to preserve unused value blocks
+         */
         if (block.kind !== "block" && i === block.instructions.length - 1) {
           for (const place of eachInstructionValueOperand(instr.value)) {
             state.reference(place.identifier);
@@ -103,9 +109,11 @@ class State {
     }
   }
 
-  // Check if any version of the given identifier is used somewhere.
-  // This checks both for usage of this specific identifer id (ssa id)
-  // and (for named identifiers) for any usages of that identifier name.
+  /*
+   * Check if any version of the given identifier is used somewhere.
+   * This checks both for usage of this specific identifer id (ssa id)
+   * and (for named identifiers) for any usages of that identifier name.
+   */
   isIdOrNameUsed(identifier: Identifier): boolean {
     return (
       this.identifiers.has(identifier.id) ||
@@ -113,8 +121,10 @@ class State {
     );
   }
 
-  // Like `used()`, but only checks for usages of this specific identifier id
-  // (ssa id).
+  /*
+   * Like `used()`, but only checks for usages of this specific identifier id
+   * (ssa id).
+   */
   isIdUsed(identifier: Identifier): boolean {
     return this.identifiers.has(identifier.id);
   }
@@ -131,9 +141,11 @@ function visitInstruction(instr: Instruction, state: State): void {
     // Remove unused lvalues
     switch (instr.value.lvalue.pattern.kind) {
       case "ArrayPattern": {
-        // For arrays, we can only eliminate unused items from the end of the array,
-        // so we iterate from the end and break once we find a used item. Note that
-        // we already know at least one item is used, from the pruneableValue check.
+        /*
+         * For arrays, we can only eliminate unused items from the end of the array,
+         * so we iterate from the end and break once we find a used item. Note that
+         * we already know at least one item is used, from the pruneableValue check.
+         */
         let nextItems: ArrayPattern["items"] | null = null;
         const originalItems = instr.value.lvalue.pattern.items;
         for (let i = originalItems.length - 1; i >= 0; i--) {
@@ -156,11 +168,13 @@ function visitInstruction(instr: Instruction, state: State): void {
         break;
       }
       case "ObjectPattern": {
-        // For objects we can prune any unused properties so long as there is no used rest element
-        // (`const {x, ...y} = z`). If a rest element exists and is used, then nothing can be pruned
-        // because it would change the set of properties which are copied into the rest value.
-        // In the `const {x, ...y} = z` example, removing the `x` property would mean that `y` now
-        // has an `x` property, changing the semantics.
+        /*
+         * For objects we can prune any unused properties so long as there is no used rest element
+         * (`const {x, ...y} = z`). If a rest element exists and is used, then nothing can be pruned
+         * because it would change the set of properties which are copied into the rest value.
+         * In the `const {x, ...y} = z` example, removing the `x` property would mean that `y` now
+         * has an `x` property, changing the semantics.
+         */
         let nextProperties: ObjectPattern["properties"] | null = null;
         for (const property of instr.value.lvalue.pattern.properties) {
           if (property.kind === "ObjectProperty") {
@@ -194,18 +208,22 @@ function visitInstruction(instr: Instruction, state: State): void {
       instr.value.lvalue.kind !== InstructionKind.Reassign &&
       !state.isIdUsed(instr.value.lvalue.place.identifier)
     ) {
-      // This is a const/let declaration where the variable is accessed later,
-      // but where the value is always overwritten before being read. Ie the
-      // initializer value is never read. We rewrite to a DeclareLocal so
-      // that the initializer value can be DCE'd
+      /*
+       * This is a const/let declaration where the variable is accessed later,
+       * but where the value is always overwritten before being read. Ie the
+       * initializer value is never read. We rewrite to a DeclareLocal so
+       * that the initializer value can be DCE'd
+       */
       instr.value = {
         kind: "DeclareLocal",
         lvalue: instr.value.lvalue,
         loc: instr.value.loc,
       };
     } else {
-      // Else we mark the initializer as referenced, since the variable itself is
-      // referenced
+      /*
+       * Else we mark the initializer as referenced, since the variable itself is
+       * referenced
+       */
       state.reference(instr.value.value.identifier);
     }
   } else {
@@ -215,7 +233,7 @@ function visitInstruction(instr: Instruction, state: State): void {
   }
 }
 
-/**
+/*
  * Returns true if it is safe to prune an instruction with the given value.
  * Functions which may have side-
  */
@@ -268,9 +286,11 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
     case "PropertyDelete":
     case "MethodCall":
     case "PropertyStore": {
-      // Mutating instructions are not safe to prune.
-      // TODO: we could be more precise and make this conditional on whether
-      // any arguments are actually modified
+      /*
+       * Mutating instructions are not safe to prune.
+       * TODO: we could be more precise and make this conditional on whether
+       * any arguments are actually modified
+       */
       return false;
     }
     case "NewExpression":
@@ -281,9 +301,11 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
     }
     case "NextPropertyOf":
     case "NextIterableOf": {
-      // Technically a NextIterableOf/NextPropertyOf will never be unused because it's
-      // always used later by another StoreLocal or Destructure instruction, but conceptually
-      // we can't prune
+      /*
+       * Technically a NextIterableOf/NextPropertyOf will never be unused because it's
+       * always used later by another StoreLocal or Destructure instruction, but conceptually
+       * we can't prune
+       */
       return false;
     }
     case "LoadContext":

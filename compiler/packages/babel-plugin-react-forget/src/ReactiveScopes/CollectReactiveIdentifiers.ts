@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -14,8 +14,10 @@ import {
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
-  // Visitors don't visit lvalues as places by default, but we want to visit all places to
-  // check for reactivity
+  /*
+   * Visitors don't visit lvalues as places by default, but we want to visit all places to
+   * check for reactivity
+   */
   override visitLValue(
     id: InstructionId,
     lvalue: Place,
@@ -24,9 +26,11 @@ class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
     this.visitPlace(id, lvalue, state);
   }
 
-  // This visitor only infers data dependencies and does not account for control dependencies
-  // where a variable may be assigned a different value based on some conditional, eg via two
-  // different paths of an if statement.
+  /*
+   * This visitor only infers data dependencies and does not account for control dependencies
+   * where a variable may be assigned a different value based on some conditional, eg via two
+   * different paths of an if statement.
+   */
   override visitPlace(
     _id: InstructionId,
     place: Place,
@@ -38,7 +42,7 @@ class Visitor extends ReactiveFunctionVisitor<Set<IdentifierId>> {
   }
 }
 
-/**
+/*
  * Computes a set of identifiers which are reactive, using the analysis previously performed
  * in `InferReactivePlaces`.
  */
