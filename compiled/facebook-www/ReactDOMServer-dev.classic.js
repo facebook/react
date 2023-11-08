@@ -20,7 +20,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-264fe41e";
+    var ReactVersion = "18.3.0-www-classic-af99950a";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -2114,9 +2114,6 @@ if (__DEV__) {
     function createRenderState$1(
       resumableState,
       nonce,
-      bootstrapScriptContent,
-      bootstrapScripts,
-      bootstrapModules,
       externalRuntimeConfig,
       importMap,
       onHeaders,
@@ -2131,6 +2128,9 @@ if (__DEV__) {
       var idPrefix = resumableState.idPrefix;
       var bootstrapChunks = [];
       var externalRuntimeScript = null;
+      var bootstrapScriptContent = resumableState.bootstrapScriptContent,
+        bootstrapScripts = resumableState.bootstrapScripts,
+        bootstrapModules = resumableState.bootstrapModules;
 
       if (bootstrapScriptContent !== undefined) {
         bootstrapChunks.push(
@@ -2388,7 +2388,13 @@ if (__DEV__) {
 
       return renderState;
     }
-    function createResumableState(identifierPrefix, externalRuntimeConfig) {
+    function createResumableState(
+      identifierPrefix,
+      externalRuntimeConfig,
+      bootstrapScriptContent,
+      bootstrapScripts,
+      bootstrapModules
+    ) {
       var idPrefix = identifierPrefix === undefined ? "" : identifierPrefix;
       var streamingFormat = ScriptStreamingFormat;
 
@@ -2402,6 +2408,9 @@ if (__DEV__) {
         idPrefix: idPrefix,
         nextFormID: 0,
         streamingFormat: streamingFormat,
+        bootstrapScriptContent: bootstrapScriptContent,
+        bootstrapScripts: bootstrapScripts,
+        bootstrapModules: bootstrapModules,
         instructions: NothingSent,
         hasBody: false,
         hasHtml: false,
@@ -5337,7 +5346,10 @@ if (__DEV__) {
       target.push(endChunkForTag(type));
     }
 
-    function writeBootstrap(destination, renderState) {
+    function writeBootstrap(destination, renderState, resumableState) {
+      resumableState.bootstrapScriptContent = undefined;
+      resumableState.bootstrapScripts = undefined;
+      resumableState.bootstrapModules = undefined;
       var bootstrapChunks = renderState.bootstrapChunks;
       var i = 0;
 
@@ -5354,8 +5366,8 @@ if (__DEV__) {
       return true;
     }
 
-    function writeCompletedRoot(destination, renderState) {
-      return writeBootstrap(destination, renderState);
+    function writeCompletedRoot(destination, renderState, resumableState) {
+      return writeBootstrap(destination, renderState, resumableState);
     } // Structural Nodes
     // A placeholder is a node inside a hidden partial tree that can be filled in later, but before
     // display. It's never visible to users. We use the template tag because it can be used in every
@@ -5797,7 +5809,9 @@ if (__DEV__) {
         writeMore = writeChunkAndReturn(destination, completeBoundaryDataEnd);
       }
 
-      return writeBootstrap(destination, renderState) && writeMore;
+      return (
+        writeBootstrap(destination, renderState, resumableState) && writeMore
+      );
     }
     var clientRenderScript1Full = stringToPrecomputedChunk(
       clientRenderBoundary + ';$RX("'
@@ -7781,8 +7795,6 @@ if (__DEV__) {
     function createRenderState(resumableState, generateStaticMarkup) {
       var renderState = createRenderState$1(
         resumableState,
-        undefined,
-        undefined,
         undefined,
         undefined,
         undefined,
@@ -13946,7 +13958,11 @@ if (__DEV__) {
 
             flushSegment(request, destination, completedRootSegment);
             request.completedRootSegment = null;
-            writeCompletedRoot(destination, request.renderState);
+            writeCompletedRoot(
+              destination,
+              request.renderState,
+              request.resumableState
+            );
           } else {
             // We haven't flushed the root yet so we don't need to check any other branches further down
             return;

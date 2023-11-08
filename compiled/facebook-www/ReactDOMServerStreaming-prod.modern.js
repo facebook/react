@@ -1620,14 +1620,21 @@ function endChunkForTag(tag) {
   void 0 === chunk && ((chunk = "</" + tag + ">"), endTagCache.set(tag, chunk));
   return chunk;
 }
-function writeBootstrap(destination, renderState) {
+function writeBootstrap(destination, renderState, resumableState) {
+  resumableState.bootstrapScriptContent = void 0;
+  resumableState.bootstrapScripts = void 0;
+  resumableState.bootstrapModules = void 0;
   renderState = renderState.bootstrapChunks;
-  for (var i = 0; i < renderState.length - 1; i++)
-    destination.buffer += renderState[i];
-  return i < renderState.length
-    ? ((i = renderState[i]),
+  for (
+    resumableState = 0;
+    resumableState < renderState.length - 1;
+    resumableState++
+  )
+    destination.buffer += renderState[resumableState];
+  return resumableState < renderState.length
+    ? ((resumableState = renderState[resumableState]),
       (renderState.length = 0),
-      writeChunkAndReturn(destination, i))
+      writeChunkAndReturn(destination, resumableState))
     : !0;
 }
 function writeStartPendingSuspenseBoundary(destination, renderState, id) {
@@ -4538,14 +4545,14 @@ function flushCompletedBoundary(request, destination, boundary) {
     : requiresStyleInsertion
     ? writeChunk(destination, '<template data-rri="" data-bid="')
     : writeChunk(destination, '<template data-rci="" data-bid="');
-  completedSegments = i.toString(16);
+  i = i.toString(16);
   writeChunk(destination, request.boundaryPrefix);
-  writeChunk(destination, completedSegments);
+  writeChunk(destination, i);
   scriptFormat
     ? writeChunk(destination, '","')
     : writeChunk(destination, '" data-sid="');
   writeChunk(destination, request.segmentPrefix);
-  writeChunk(destination, completedSegments);
+  writeChunk(destination, i);
   requiresStyleInsertion
     ? scriptFormat
       ? (writeChunk(destination, '",'),
@@ -4553,10 +4560,10 @@ function flushCompletedBoundary(request, destination, boundary) {
       : (writeChunk(destination, '" data-sty="'),
         writeStyleResourceDependenciesInAttr(destination, boundary))
     : scriptFormat && writeChunk(destination, '"');
-  completedSegments = scriptFormat
+  boundary = scriptFormat
     ? writeChunkAndReturn(destination, ")\x3c/script>")
     : writeChunkAndReturn(destination, '"></template>');
-  return writeBootstrap(destination, request) && completedSegments;
+  return writeBootstrap(destination, request, completedSegments) && boundary;
 }
 function flushPartiallyCompletedSegment(
   request,
@@ -4705,7 +4712,11 @@ function flushCompletedQueues(request, destination) {
           writeChunk(destination, endChunkForTag("head"));
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
-        writeBootstrap(destination, request.renderState);
+        writeBootstrap(
+          destination,
+          request.renderState,
+          request.resumableState
+        );
       } else return;
     var renderState$jscomp$0 = request.renderState;
     completedRootSegment = 0;
@@ -5129,6 +5140,9 @@ exports.renderToStream = function (children, options) {
       void 0 === JSCompiler_inline_result ? "" : JSCompiler_inline_result,
     nextFormID: 0,
     streamingFormat: streamingFormat,
+    bootstrapScriptContent: options ? options.bootstrapScriptContent : void 0,
+    bootstrapScripts: options ? options.bootstrapScripts : void 0,
+    bootstrapModules: options ? options.bootstrapModules : void 0,
     instructions: 0,
     hasBody: !1,
     hasHtml: !1,
@@ -5141,38 +5155,33 @@ exports.renderToStream = function (children, options) {
     moduleUnknownResources: {},
     moduleScriptResources: {}
   };
-  streamingFormat = options ? options.bootstrapScriptContent : void 0;
-  var bootstrapScripts = options ? options.bootstrapScripts : void 0,
-    bootstrapModules = options ? options.bootstrapModules : void 0,
-    externalRuntimeConfig = options
-      ? options.unstable_externalRuntimeSrc
-      : void 0,
-    idPrefix = JSCompiler_inline_result.idPrefix,
+  streamingFormat = options ? options.unstable_externalRuntimeSrc : void 0;
+  var idPrefix = JSCompiler_inline_result.idPrefix,
     bootstrapChunks = [],
-    externalRuntimeScript = null;
-  void 0 !== streamingFormat &&
+    externalRuntimeScript = null,
+    bootstrapScriptContent = JSCompiler_inline_result.bootstrapScriptContent,
+    bootstrapScripts = JSCompiler_inline_result.bootstrapScripts,
+    bootstrapModules = JSCompiler_inline_result.bootstrapModules;
+  void 0 !== bootstrapScriptContent &&
     bootstrapChunks.push(
       "<script>",
-      ("" + streamingFormat).replace(scriptRegex, scriptReplacer),
+      ("" + bootstrapScriptContent).replace(scriptRegex, scriptReplacer),
       "\x3c/script>"
     );
-  void 0 !== externalRuntimeConfig &&
-    ("string" === typeof externalRuntimeConfig
-      ? ((externalRuntimeScript = { src: externalRuntimeConfig, chunks: [] }),
+  void 0 !== streamingFormat &&
+    ("string" === typeof streamingFormat
+      ? ((externalRuntimeScript = { src: streamingFormat, chunks: [] }),
         pushScriptImpl(externalRuntimeScript.chunks, {
-          src: externalRuntimeConfig,
+          src: streamingFormat,
           async: !0,
           integrity: void 0,
           nonce: void 0
         }))
-      : ((externalRuntimeScript = {
-          src: externalRuntimeConfig.src,
-          chunks: []
-        }),
+      : ((externalRuntimeScript = { src: streamingFormat.src, chunks: [] }),
         pushScriptImpl(externalRuntimeScript.chunks, {
-          src: externalRuntimeConfig.src,
+          src: streamingFormat.src,
           async: !0,
-          integrity: externalRuntimeConfig.integrity,
+          integrity: streamingFormat.integrity,
           nonce: void 0
         })));
   streamingFormat = {
@@ -5216,13 +5225,9 @@ exports.renderToStream = function (children, options) {
     stylesToHoist: !1
   };
   if (void 0 !== bootstrapScripts)
-    for (
-      externalRuntimeConfig = 0;
-      externalRuntimeConfig < bootstrapScripts.length;
-      externalRuntimeConfig++
-    ) {
-      var scriptConfig = bootstrapScripts[externalRuntimeConfig],
-        integrity = (externalRuntimeScript = void 0),
+    for (idPrefix = 0; idPrefix < bootstrapScripts.length; idPrefix++) {
+      var scriptConfig = bootstrapScripts[idPrefix],
+        integrity = (bootstrapScriptContent = void 0),
         props = {
           rel: "preload",
           as: "script",
@@ -5230,32 +5235,35 @@ exports.renderToStream = function (children, options) {
           nonce: void 0
         };
       "string" === typeof scriptConfig
-        ? (props.href = idPrefix = scriptConfig)
-        : ((props.href = idPrefix = scriptConfig.src),
+        ? (props.href = externalRuntimeScript = scriptConfig)
+        : ((props.href = externalRuntimeScript = scriptConfig.src),
           (props.integrity = integrity =
             "string" === typeof scriptConfig.integrity
               ? scriptConfig.integrity
               : void 0),
-          (props.crossOrigin = externalRuntimeScript =
+          (props.crossOrigin = bootstrapScriptContent =
             "string" === typeof scriptConfig || null == scriptConfig.crossOrigin
               ? void 0
               : "use-credentials" === scriptConfig.crossOrigin
               ? "use-credentials"
               : ""));
       scriptConfig = JSCompiler_inline_result;
-      var href = idPrefix;
+      var href = externalRuntimeScript;
       scriptConfig.scriptResources[href] = null;
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
       streamingFormat.bootstrapScripts.add(scriptConfig);
-      bootstrapChunks.push('<script src="', escapeTextForBrowser(idPrefix));
+      bootstrapChunks.push(
+        '<script src="',
+        escapeTextForBrowser(externalRuntimeScript)
+      );
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
-      "string" === typeof externalRuntimeScript &&
+      "string" === typeof bootstrapScriptContent &&
         bootstrapChunks.push(
           '" crossorigin="',
-          escapeTextForBrowser(externalRuntimeScript)
+          escapeTextForBrowser(bootstrapScriptContent)
         );
       bootstrapChunks.push('" async="">\x3c/script>');
     }
@@ -5266,25 +5274,25 @@ exports.renderToStream = function (children, options) {
       bootstrapScripts++
     )
       (props = bootstrapModules[bootstrapScripts]),
-        (externalRuntimeScript = idPrefix = void 0),
+        (bootstrapScriptContent = externalRuntimeScript = void 0),
         (integrity = {
           rel: "modulepreload",
           fetchPriority: "low",
           nonce: void 0
         }),
         "string" === typeof props
-          ? (integrity.href = externalRuntimeConfig = props)
-          : ((integrity.href = externalRuntimeConfig = props.src),
-            (integrity.integrity = externalRuntimeScript =
+          ? (integrity.href = idPrefix = props)
+          : ((integrity.href = idPrefix = props.src),
+            (integrity.integrity = bootstrapScriptContent =
               "string" === typeof props.integrity ? props.integrity : void 0),
-            (integrity.crossOrigin = idPrefix =
+            (integrity.crossOrigin = externalRuntimeScript =
               "string" === typeof props || null == props.crossOrigin
                 ? void 0
                 : "use-credentials" === props.crossOrigin
                 ? "use-credentials"
                 : "")),
         (props = JSCompiler_inline_result),
-        (scriptConfig = externalRuntimeConfig),
+        (scriptConfig = idPrefix),
         (props.scriptResources[scriptConfig] = null),
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
@@ -5292,31 +5300,31 @@ exports.renderToStream = function (children, options) {
         streamingFormat.bootstrapScripts.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
-          escapeTextForBrowser(externalRuntimeConfig)
+          escapeTextForBrowser(idPrefix)
         ),
-        "string" === typeof externalRuntimeScript &&
+        "string" === typeof bootstrapScriptContent &&
           bootstrapChunks.push(
             '" integrity="',
-            escapeTextForBrowser(externalRuntimeScript)
+            escapeTextForBrowser(bootstrapScriptContent)
           ),
-        "string" === typeof idPrefix &&
+        "string" === typeof externalRuntimeScript &&
           bootstrapChunks.push(
             '" crossorigin="',
-            escapeTextForBrowser(idPrefix)
+            escapeTextForBrowser(externalRuntimeScript)
           ),
         bootstrapChunks.push('" async="">\x3c/script>');
-  bootstrapModules = createFormatContext(0, null, 0);
+  bootstrapChunks = createFormatContext(0, null, 0);
   bootstrapScripts = options ? options.progressiveChunkSize : void 0;
-  externalRuntimeConfig = options.onError;
+  idPrefix = options.onError;
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
   options = [];
-  bootstrapChunks = new Set();
+  bootstrapModules = new Set();
   JSCompiler_inline_result = {
     destination: null,
     flushScheduled: !1,
     resumableState: JSCompiler_inline_result,
     renderState: streamingFormat,
-    rootFormatContext: bootstrapModules,
+    rootFormatContext: bootstrapChunks,
     progressiveChunkSize:
       void 0 === bootstrapScripts ? 12800 : bootstrapScripts,
     status: 0,
@@ -5325,16 +5333,13 @@ exports.renderToStream = function (children, options) {
     allPendingTasks: 0,
     pendingRootTasks: 0,
     completedRootSegment: null,
-    abortableTasks: bootstrapChunks,
+    abortableTasks: bootstrapModules,
     pingedTasks: options,
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
     trackedPostpones: null,
-    onError:
-      void 0 === externalRuntimeConfig
-        ? defaultErrorHandler
-        : externalRuntimeConfig,
+    onError: void 0 === idPrefix ? defaultErrorHandler : idPrefix,
     onPostpone: noop,
     onAllReady: noop,
     onShellReady: noop,
@@ -5346,7 +5351,7 @@ exports.renderToStream = function (children, options) {
     JSCompiler_inline_result,
     0,
     null,
-    bootstrapModules,
+    bootstrapChunks,
     !1,
     !1
   );
@@ -5358,9 +5363,9 @@ exports.renderToStream = function (children, options) {
     -1,
     null,
     streamingFormat,
-    bootstrapChunks,
-    null,
     bootstrapModules,
+    null,
+    bootstrapChunks,
     emptyContextObject,
     null,
     emptyTreeContext
