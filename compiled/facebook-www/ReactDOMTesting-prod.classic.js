@@ -881,67 +881,121 @@ function describeNativeComponentFrame(fn, construct) {
   reentry = !0;
   var previousPrepareStackTrace = Error.prepareStackTrace;
   Error.prepareStackTrace = void 0;
-  try {
-    if (construct)
-      if (
-        ((construct = function () {
-          throw Error();
-        }),
-        Object.defineProperty(construct.prototype, "props", {
-          set: function () {
-            throw Error();
-          }
-        }),
-        "object" === typeof Reflect && Reflect.construct)
-      ) {
-        try {
-          Reflect.construct(construct, []);
-        } catch (x) {
-          var control = x;
-        }
-        Reflect.construct(fn, [], construct);
-      } else {
-        try {
-          construct.call();
-        } catch (x$11) {
-          control = x$11;
-        }
-        fn.call(construct.prototype);
-      }
-    else {
+  var RunInRootFrame = {
+    DetermineComponentFrameRoot: function () {
       try {
-        throw Error();
-      } catch (x$12) {
-        control = x$12;
+        if (construct) {
+          var Fake = function () {
+            throw Error();
+          };
+          Object.defineProperty(Fake.prototype, "props", {
+            set: function () {
+              throw Error();
+            }
+          });
+          if ("object" === typeof Reflect && Reflect.construct) {
+            try {
+              Reflect.construct(Fake, []);
+            } catch (x) {
+              var control = x;
+            }
+            Reflect.construct(fn, [], Fake);
+          } else {
+            try {
+              Fake.call();
+            } catch (x$11) {
+              control = x$11;
+            }
+            fn.call(Fake.prototype);
+          }
+        } else {
+          try {
+            throw Error();
+          } catch (x$12) {
+            control = x$12;
+          }
+          (Fake = fn()) &&
+            "function" === typeof Fake.catch &&
+            Fake.catch(function () {});
+        }
+      } catch (sample) {
+        if (sample && control && "string" === typeof sample.stack)
+          return [sample.stack, control.stack];
       }
-      var maybePromise = fn();
-      maybePromise &&
-        "function" === typeof maybePromise.catch &&
-        maybePromise.catch(function () {});
+      return [null, null];
     }
-  } catch (sample) {
-    if (sample && control && "string" === typeof sample.stack) {
+  };
+  RunInRootFrame.DetermineComponentFrameRoot.displayName =
+    "DetermineComponentFrameRoot";
+  var namePropDescriptor = Object.getOwnPropertyDescriptor(
+    RunInRootFrame.DetermineComponentFrameRoot,
+    "name"
+  );
+  namePropDescriptor &&
+    namePropDescriptor.configurable &&
+    Object.defineProperty(RunInRootFrame.DetermineComponentFrameRoot, "name", {
+      value: "DetermineComponentFrameRoot"
+    });
+  try {
+    var _RunInRootFrame$Deter = RunInRootFrame.DetermineComponentFrameRoot(),
+      sampleStack = _RunInRootFrame$Deter[0],
+      controlStack = _RunInRootFrame$Deter[1];
+    if (sampleStack && controlStack) {
+      var sampleLines = sampleStack.split("\n"),
+        controlLines = controlStack.split("\n");
       for (
-        var sampleLines = sample.stack.split("\n"),
-          controlLines = control.stack.split("\n"),
-          s = sampleLines.length - 1,
-          c = controlLines.length - 1;
-        1 <= s && 0 <= c && sampleLines[s] !== controlLines[c];
+        namePropDescriptor = RunInRootFrame = 0;
+        RunInRootFrame < sampleLines.length &&
+        !sampleLines[RunInRootFrame].includes("DetermineComponentFrameRoot");
 
       )
-        c--;
-      for (; 1 <= s && 0 <= c; s--, c--)
-        if (sampleLines[s] !== controlLines[c]) {
-          if (1 !== s || 1 !== c) {
+        RunInRootFrame++;
+      for (
+        ;
+        namePropDescriptor < controlLines.length &&
+        !controlLines[namePropDescriptor].includes(
+          "DetermineComponentFrameRoot"
+        );
+
+      )
+        namePropDescriptor++;
+      if (
+        RunInRootFrame === sampleLines.length ||
+        namePropDescriptor === controlLines.length
+      )
+        for (
+          RunInRootFrame = sampleLines.length - 1,
+            namePropDescriptor = controlLines.length - 1;
+          1 <= RunInRootFrame &&
+          0 <= namePropDescriptor &&
+          sampleLines[RunInRootFrame] !== controlLines[namePropDescriptor];
+
+        )
+          namePropDescriptor--;
+      for (
+        ;
+        1 <= RunInRootFrame && 0 <= namePropDescriptor;
+        RunInRootFrame--, namePropDescriptor--
+      )
+        if (sampleLines[RunInRootFrame] !== controlLines[namePropDescriptor]) {
+          if (1 !== RunInRootFrame || 1 !== namePropDescriptor) {
             do
-              if ((s--, c--, 0 > c || sampleLines[s] !== controlLines[c])) {
-                var frame = "\n" + sampleLines[s].replace(" at new ", " at ");
+              if (
+                (RunInRootFrame--,
+                namePropDescriptor--,
+                0 > namePropDescriptor ||
+                  sampleLines[RunInRootFrame] !==
+                    controlLines[namePropDescriptor])
+              ) {
+                var frame =
+                  "\n" +
+                  sampleLines[RunInRootFrame].replace(" at new ", " at ");
                 fn.displayName &&
                   frame.includes("<anonymous>") &&
                   (frame = frame.replace("<anonymous>", fn.displayName));
                 return frame;
               }
-            while (1 <= s && 0 <= c);
+            while (1 <= RunInRootFrame && 0 <= namePropDescriptor);
           }
           break;
         }
@@ -949,8 +1003,8 @@ function describeNativeComponentFrame(fn, construct) {
   } finally {
     (reentry = !1), (Error.prepareStackTrace = previousPrepareStackTrace);
   }
-  return (fn = fn ? fn.displayName || fn.name : "")
-    ? describeBuiltInComponentFrame(fn)
+  return (previousPrepareStackTrace = fn ? fn.displayName || fn.name : "")
+    ? describeBuiltInComponentFrame(previousPrepareStackTrace)
     : "";
 }
 function describeFiber(fiber) {
@@ -16812,7 +16866,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1825 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-a3c149d0",
+  version: "18.3.0-www-classic-f8cc3c6a",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2176 = {
@@ -16842,7 +16896,7 @@ var internals$jscomp$inline_2176 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-a3c149d0"
+  reconcilerVersion: "18.3.0-www-classic-f8cc3c6a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2177 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17330,4 +17384,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-a3c149d0";
+exports.version = "18.3.0-www-classic-f8cc3c6a";
