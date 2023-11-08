@@ -66,9 +66,9 @@ type CompileResult = {
 };
 
 function handleError(
+  err: CompilerError,
   pass: CompilerPass,
-  fnLoc: t.SourceLocation | null,
-  err: CompilerError
+  fnLoc: t.SourceLocation | null
 ): void {
   if (pass.opts.logger) {
     for (const detail of err.details) {
@@ -237,7 +237,7 @@ export function compileProgram(
        * Report lint suppressions as InvalidReact if we find forget-able
        * functions within the file
        */
-      handleError(pass, fn.node.loc ?? null, lintError);
+      handleError(lintError, pass, fn.node.loc ?? null);
     }
 
     let compiledFn: CodegenFunction;
@@ -256,7 +256,7 @@ export function compileProgram(
       });
     } catch (err) {
       hasCriticalError ||= isCriticalError(err);
-      handleError(pass, fn.node.loc ?? null, err);
+      handleError(err, pass, fn.node.loc ?? null);
       return;
     }
 
@@ -305,7 +305,7 @@ export function compileProgram(
       compiledFns.map(({ originalFn }) => originalFn)
     );
     if (error) {
-      handleError(pass, null, error);
+      handleError(error, pass, null);
       return;
     }
   }
@@ -332,7 +332,7 @@ export function compileProgram(
       externalFunctions.push(enableEmitFreeze);
     }
   } catch (err) {
-    handleError(pass, null, err);
+    handleError(err, pass, null);
     return;
   }
 
