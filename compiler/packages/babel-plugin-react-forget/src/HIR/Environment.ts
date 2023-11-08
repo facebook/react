@@ -312,35 +312,31 @@ export class Environment {
     config: EnvironmentConfig,
     contextIdentifiers: Set<t.Identifier>
   ) {
-    this.#shapes = new Map(DEFAULT_SHAPES);
     this.config = config;
+    this.#shapes = new Map(DEFAULT_SHAPES);
+    this.#globals = new Map(DEFAULT_GLOBALS);
 
-    if (this.config.customHooks.size > 0) {
-      this.#globals = new Map(DEFAULT_GLOBALS);
-      for (const [hookName, hook] of this.config.customHooks) {
-        CompilerError.invariant(!this.#globals.has(hookName), {
-          reason: `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
-          description: null,
-          loc: null,
-          suggestions: null,
-        });
-        this.#globals.set(
-          hookName,
-          addHook(this.#shapes, [], {
-            positionalParams: [],
-            restParam: hook.effectKind,
-            returnType: hook.transitiveMixedData
-              ? { kind: "Object", shapeId: BuiltInMixedReadonlyId }
-              : { kind: "Poly" },
-            returnValueKind: hook.valueKind,
-            calleeEffect: Effect.Read,
-            hookKind: "Custom",
-            noAlias: hook.noAlias ?? false,
-          })
-        );
-      }
-    } else {
-      this.#globals = DEFAULT_GLOBALS;
+    for (const [hookName, hook] of this.config.customHooks) {
+      CompilerError.invariant(!this.#globals.has(hookName), {
+        reason: `[Globals] Found existing definition in global registry for custom hook ${hookName}`,
+        description: null,
+        loc: null,
+        suggestions: null,
+      });
+      this.#globals.set(
+        hookName,
+        addHook(this.#shapes, [], {
+          positionalParams: [],
+          restParam: hook.effectKind,
+          returnType: hook.transitiveMixedData
+            ? { kind: "Object", shapeId: BuiltInMixedReadonlyId }
+            : { kind: "Poly" },
+          returnValueKind: hook.valueKind,
+          calleeEffect: Effect.Read,
+          hookKind: "Custom",
+          noAlias: hook.noAlias ?? false,
+        })
+      );
     }
 
     this.#contextIdentifiers = contextIdentifiers;
