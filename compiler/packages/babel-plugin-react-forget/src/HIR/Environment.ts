@@ -100,7 +100,7 @@ export type Hook = z.infer<typeof HookSchema>;
  */
 
 const EnvironmentConfigSchema = z.object({
-  customHooks: z.map(z.string(), HookSchema).nullish(),
+  customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
 
   // 🌲
   enableForest: z.boolean().default(false),
@@ -315,7 +315,7 @@ export class Environment {
     this.#shapes = new Map(DEFAULT_SHAPES);
     this.config = config;
 
-    if (this.config.customHooks != null && this.config.customHooks.size > 0) {
+    if (this.config.customHooks.size > 0) {
       this.#globals = new Map(DEFAULT_GLOBALS);
       for (const [hookName, hook] of this.config.customHooks) {
         CompilerError.invariant(!this.#globals.has(hookName), {
