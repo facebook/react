@@ -15,7 +15,7 @@ function useFoo(props) {
 ## Error
 
 ```
-[ReactForget] InvalidConfig: Encountered conflicting import specifiers for makeReadOnly in generated program.
+[ReactForget] Invariant: Encountered conflicting import specifiers for makeReadOnly in generated program.
 ```
           
       

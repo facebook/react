@@ -666,7 +666,7 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
               "Rewrite the reference to not use hoisting to fix this issue",
             loc: fn.loc ?? null,
             suggestions: null,
-            severity: ErrorSeverity.InvalidConfig,
+            severity: ErrorSeverity.Invariant,
           })
         );
       }

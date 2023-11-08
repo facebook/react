@@ -23,22 +23,21 @@ export function addImportsToProgram(
      * Codegen currently does not rename import specifiers, so we do additional
      * validation here
      */
-    if (identifiers.has(importSpecifierName)) {
-      CompilerError.throwInvalidConfig({
-        reason: `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
-        description: null,
-        loc: GeneratedSource,
-        suggestions: null,
-      });
-    }
-    if (path.scope.hasBinding(importSpecifierName)) {
-      CompilerError.throwInvalidConfig({
+    CompilerError.invariant(identifiers.has(importSpecifierName) === false, {
+      reason: `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
+      description: null,
+      loc: GeneratedSource,
+      suggestions: null,
+    });
+    CompilerError.invariant(
+      path.scope.hasBinding(importSpecifierName) === false,
+      {
         reason: `Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
         description: null,
         loc: GeneratedSource,
         suggestions: null,
-      });
-    }
+      }
+    );
     identifiers.add(importSpecifierName);
 
     const importSpecifierNameList = getOrInsertDefault(

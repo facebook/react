@@ -14,7 +14,7 @@ function Foo() {}
 ## Error
 
 ```
-[ReactForget] InvalidConfig: Encountered Foo used before declaration which breaks Forget's gating codegen due to hoisting. Rewrite the reference to not use hoisting to fix this issue (5:5)
+[ReactForget] Invariant: Encountered Foo used before declaration which breaks Forget's gating codegen due to hoisting. Rewrite the reference to not use hoisting to fix this issue (5:5)
 ```
           
       
