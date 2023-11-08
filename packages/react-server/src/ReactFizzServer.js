@@ -3968,7 +3968,11 @@ function flushCompletedQueues(
 
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
-        writeCompletedRoot(destination, request.renderState);
+        writeCompletedRoot(
+          destination,
+          request.renderState,
+          request.resumableState,
+        );
       } else {
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;

@@ -245,6 +245,13 @@ export type ResumableState = {
   nextFormID: number,
   streamingFormat: StreamingFormat,
 
+  // We carry the bootstrap intializers in resumable state in case we postpone in the shell
+  // of a prerender. On resume we will reinitialize the bootstrap scripts if necessary.
+  // If we end up flushing the bootstrap scripts we void these on the resumable state
+  bootstrapScriptContent?: string | void,
+  bootstrapScripts?: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
+  bootstrapModules?: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
+
   // state for script streaming format, unused if using external runtime / data
   instructions: InstructionState,
 
@@ -349,9 +356,6 @@ const DEFAULT_HEADERS_CAPACITY_IN_UTF16_CODE_UNITS = 2000;
 export function createRenderState(
   resumableState: ResumableState,
   nonce: string | void,
-  bootstrapScriptContent: string | void,
-  bootstrapScripts: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
-  bootstrapModules: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
   externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
   importMap: ImportMap | void,
   onHeaders: void | ((headers: HeadersDescriptor) => void),
@@ -367,6 +371,8 @@ export function createRenderState(
 
   const bootstrapChunks: Array<Chunk | PrecomputedChunk> = [];
   let externalRuntimeScript: null | ExternalRuntimeScript = null;
+  const {bootstrapScriptContent, bootstrapScripts, bootstrapModules} =
+    resumableState;
   if (bootstrapScriptContent !== undefined) {
     bootstrapChunks.push(
       inlineScriptWithNonce,
@@ -612,9 +618,6 @@ export function resumeRenderState(
   return createRenderState(
     resumableState,
     nonce,
-    // These should have already been flushed in the prerender.
-    undefined,
-    undefined,
     undefined,
     undefined,
     undefined,
@@ -625,6 +628,9 @@ export function resumeRenderState(
 export function createResumableState(
   identifierPrefix: string | void,
   externalRuntimeConfig: string | BootstrapScriptDescriptor | void,
+  bootstrapScriptContent: string | void,
+  bootstrapScripts: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
+  bootstrapModules: $ReadOnlyArray<string | BootstrapScriptDescriptor> | void,
 ): ResumableState {
   const idPrefix = identifierPrefix === undefined ? '' : identifierPrefix;
 
@@ -638,6 +644,9 @@ export function createResumableState(
     idPrefix: idPrefix,
     nextFormID: 0,
     streamingFormat,
+    bootstrapScriptContent,
+    bootstrapScripts,
+    bootstrapModules,
     instructions: NothingSent,
     hasBody: false,
     hasHtml: false,
@@ -3714,7 +3723,11 @@ export function pushEndInstance(
 function writeBootstrap(
   destination: Destination,
   renderState: RenderState,
+  resumableState: ResumableState,
 ): boolean {
+  resumableState.bootstrapScriptContent = undefined;
+  resumableState.bootstrapScripts = undefined;
+  resumableState.bootstrapModules = undefined;
   const bootstrapChunks = renderState.bootstrapChunks;
   let i = 0;
   for (; i < bootstrapChunks.length - 1; i++) {
@@ -3731,8 +3744,9 @@ function writeBootstrap(
 export function writeCompletedRoot(
   destination: Destination,
   renderState: RenderState,
+  resumableState: ResumableState,
 ): boolean {
-  return writeBootstrap(destination, renderState);
+  return writeBootstrap(destination, renderState, resumableState);
 }
 
 // Structural Nodes
@@ -4197,7 +4211,7 @@ export function writeCompletedBoundaryInstruction(
   } else {
     writeMore = writeChunkAndReturn(destination, completeBoundaryDataEnd);
   }
-  return writeBootstrap(destination, renderState) && writeMore;
+  return writeBootstrap(destination, renderState, resumableState) && writeMore;
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
