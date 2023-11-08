@@ -12,6 +12,8 @@ import json from "@rollup/plugin-json";
 import path from "path";
 import process from "process";
 
+const NO_INLINE = new Set([]);
+
 export default {
   input: "src/index.ts",
   output: {
@@ -28,7 +30,7 @@ export default {
     json(),
     nodeResolve({
       preferBuiltins: true,
-      resolveOnly: ["@babel-plugin-react-forget"],
+      resolveOnly: (module) => NO_INLINE.has(module) === false,
       rootDir: path.join(process.cwd(), ".."),
     }),
     commonjs(),
