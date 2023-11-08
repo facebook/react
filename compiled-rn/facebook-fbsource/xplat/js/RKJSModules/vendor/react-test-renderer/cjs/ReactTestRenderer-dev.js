@@ -8,7 +8,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bb5ef5a2f4eb8edaae00d8385d079e76>>
+ * @generated SignedSource<<769546074522c131978074e9337b9413>>
  */
 
 "use strict";
@@ -1078,7 +1078,7 @@ if (__DEV__) {
     var DefaultLane =
       /*                     */
       32;
-    var SyncUpdateLanes = SyncLane;
+    var SyncUpdateLanes = SyncLane | InputContinuousLane | DefaultLane;
     var TransitionHydrationLane =
       /*                */
       64;
@@ -1173,6 +1173,14 @@ if (__DEV__) {
     var nextRetryLane = RetryLane1;
 
     function getHighestPriorityLanes(lanes) {
+      {
+        var pendingSyncLanes = lanes & SyncUpdateLanes;
+
+        if (pendingSyncLanes !== 0) {
+          return pendingSyncLanes;
+        }
+      }
+
       switch (getHighestPriorityLane(lanes)) {
         case SyncHydrationLane:
           return SyncHydrationLane;
@@ -1771,7 +1779,9 @@ if (__DEV__) {
       var renderLane = getHighestPriorityLane(renderLanes);
       var lane;
 
-      {
+      if ((renderLane & SyncUpdateLanes) !== NoLane) {
+        lane = SyncHydrationLane;
+      } else {
         switch (renderLane) {
           case SyncLane:
             lane = SyncHydrationLane;
@@ -25346,7 +25356,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-2c8a139a5-20231107";
+    var ReactVersion = "18.3.0-canary-52d542ad6-20231107";
 
     // Might add PROFILE later.
 

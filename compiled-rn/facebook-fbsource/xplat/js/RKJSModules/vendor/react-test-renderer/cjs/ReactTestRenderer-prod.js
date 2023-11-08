@@ -8,7 +8,7 @@
  @noflow
  @nolint
  @preventMunge
- @generated SignedSource<<42aaf404bbde7ea71491676ec56cb0e1>>
+ @generated SignedSource<<64fea925e1f2075ccf9b0d7a53d3616f>>
 */
 "use strict";
 var React = require("react"),
@@ -302,6 +302,8 @@ function clz32Fallback(x) {
 var nextTransitionLane = 128,
   nextRetryLane = 4194304;
 function getHighestPriorityLanes(lanes) {
+  var pendingSyncLanes = lanes & 42;
+  if (0 !== pendingSyncLanes) return pendingSyncLanes;
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -4357,43 +4359,46 @@ function updateDehydratedSuspenseComponent(
   if (didReceiveUpdate || didSuspend) {
     nextProps = workInProgressRoot;
     if (null !== nextProps) {
-      switch (renderLanes & -renderLanes) {
-        case 2:
-          didSuspend = 1;
-          break;
-        case 8:
-          didSuspend = 4;
-          break;
-        case 32:
-          didSuspend = 16;
-          break;
-        case 128:
-        case 256:
-        case 512:
-        case 1024:
-        case 2048:
-        case 4096:
-        case 8192:
-        case 16384:
-        case 32768:
-        case 65536:
-        case 131072:
-        case 262144:
-        case 524288:
-        case 1048576:
-        case 2097152:
-        case 4194304:
-        case 8388608:
-        case 16777216:
-        case 33554432:
-          didSuspend = 64;
-          break;
-        case 268435456:
-          didSuspend = 134217728;
-          break;
-        default:
-          didSuspend = 0;
-      }
+      didSuspend = renderLanes & -renderLanes;
+      if (0 !== (didSuspend & 42)) didSuspend = 1;
+      else
+        switch (didSuspend) {
+          case 2:
+            didSuspend = 1;
+            break;
+          case 8:
+            didSuspend = 4;
+            break;
+          case 32:
+            didSuspend = 16;
+            break;
+          case 128:
+          case 256:
+          case 512:
+          case 1024:
+          case 2048:
+          case 4096:
+          case 8192:
+          case 16384:
+          case 32768:
+          case 65536:
+          case 131072:
+          case 262144:
+          case 524288:
+          case 1048576:
+          case 2097152:
+          case 4194304:
+          case 8388608:
+          case 16777216:
+          case 33554432:
+            didSuspend = 64;
+            break;
+          case 268435456:
+            didSuspend = 134217728;
+            break;
+          default:
+            didSuspend = 0;
+        }
       didSuspend =
         0 !== (didSuspend & (nextProps.suspendedLanes | renderLanes))
           ? 0
@@ -7717,7 +7722,7 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (lanes & 4194218) && 0 !== (remainingLanes & 2)
+  0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42)
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -9039,7 +9044,7 @@ var devToolsConfig$jscomp$inline_1033 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-2c8a139a5-20231107",
+  version: "18.3.0-canary-52d542ad6-20231107",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1226 = {
@@ -9070,7 +9075,7 @@ var internals$jscomp$inline_1226 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-2c8a139a5-20231107"
+  reconcilerVersion: "18.3.0-canary-52d542ad6-20231107"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1227 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

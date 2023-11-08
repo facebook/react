@@ -8,7 +8,7 @@
  @noflow
  @nolint
  @preventMunge
- @generated SignedSource<<0f7797b47b8b2ddfff6ea9a65887641f>>
+ @generated SignedSource<<9569d52216e41caa6cb3cd4bc81e912e>>
 */
 "use strict";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
@@ -1321,6 +1321,7 @@ function dispatchEvent(target, topLevelType, nativeEvent) {
 var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
+  enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
   alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   useMicrotasksForSchedulingInFabric =
     dynamicFlags.useMicrotasksForSchedulingInFabric,
@@ -1429,6 +1430,7 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
+var SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2;
 function getLabelForLane(lane) {
   if (lane & 1) return "SyncHydrationLane";
   if (lane & 2) return "Sync";
@@ -1448,6 +1450,10 @@ function getLabelForLane(lane) {
 var nextTransitionLane = 128,
   nextRetryLane = 4194304;
 function getHighestPriorityLanes(lanes) {
+  if (enableUnifiedSyncLane) {
+    var pendingSyncLanes = lanes & SyncUpdateLanes;
+    if (0 !== pendingSyncLanes) return pendingSyncLanes;
+  }
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -5651,43 +5657,47 @@ function updateDehydratedSuspenseComponent(
   if (didReceiveUpdate || didSuspend) {
     nextProps = workInProgressRoot;
     if (null !== nextProps) {
-      switch (renderLanes & -renderLanes) {
-        case 2:
-          didSuspend = 1;
-          break;
-        case 8:
-          didSuspend = 4;
-          break;
-        case 32:
-          didSuspend = 16;
-          break;
-        case 128:
-        case 256:
-        case 512:
-        case 1024:
-        case 2048:
-        case 4096:
-        case 8192:
-        case 16384:
-        case 32768:
-        case 65536:
-        case 131072:
-        case 262144:
-        case 524288:
-        case 1048576:
-        case 2097152:
-        case 4194304:
-        case 8388608:
-        case 16777216:
-        case 33554432:
-          didSuspend = 64;
-          break;
-        case 268435456:
-          didSuspend = 134217728;
-          break;
-        default:
-          didSuspend = 0;
-      }
+      didSuspend = renderLanes & -renderLanes;
+      if (enableUnifiedSyncLane && 0 !== (didSuspend & SyncUpdateLanes))
+        didSuspend = 1;
+      else
+        switch (didSuspend) {
+          case 2:
+            didSuspend = 1;
+            break;
+          case 8:
+            didSuspend = 4;
+            break;
+          case 32:
+            didSuspend = 16;
+            break;
+          case 128:
+          case 256:
+          case 512:
+          case 1024:
+          case 2048:
+          case 4096:
+          case 8192:
+          case 16384:
+          case 32768:
+          case 65536:
+          case 131072:
+          case 262144:
+          case 524288:
+          case 1048576:
+          case 2097152:
+          case 4194304:
+          case 8388608:
+          case 16777216:
+          case 33554432:
+            didSuspend = 64;
+            break;
+          case 268435456:
+            didSuspend = 134217728;
+            break;
+          default:
+            didSuspend = 0;
+        }
       didSuspend =
         0 !== (didSuspend & (nextProps.suspendedLanes | renderLanes))
           ? 0
@@ -9027,7 +9037,7 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (transitions & 4194218) && 0 !== (remainingLanes & 2)
+  0 !== (transitions & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes)
     ? ((nestedUpdateScheduled = !0),
       root === rootWithNestedUpdates
         ? nestedUpdateCount++
@@ -10237,7 +10247,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1126 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-42042f68",
+    version: "18.3.0-canary-491a84d2",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10293,7 +10303,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-42042f68"
+  reconcilerVersion: "18.3.0-canary-491a84d2"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
