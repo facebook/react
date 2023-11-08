@@ -334,7 +334,7 @@ export class Environment {
           returnValueKind: hook.valueKind,
           calleeEffect: Effect.Read,
           hookKind: "Custom",
-          noAlias: hook.noAlias ?? false,
+          noAlias: hook.noAlias,
         })
       );
     }
