@@ -1180,7 +1180,7 @@ if (__DEV__) {
     var DefaultLane =
       /*                     */
       32;
-    var SyncUpdateLanes = SyncLane;
+    var SyncUpdateLanes = SyncLane | InputContinuousLane | DefaultLane;
     var TransitionHydrationLane =
       /*                */
       64;
@@ -1275,6 +1275,14 @@ if (__DEV__) {
     var nextRetryLane = RetryLane1;
 
     function getHighestPriorityLanes(lanes) {
+      {
+        var pendingSyncLanes = lanes & SyncUpdateLanes;
+
+        if (pendingSyncLanes !== 0) {
+          return pendingSyncLanes;
+        }
+      }
+
       switch (getHighestPriorityLane(lanes)) {
         case SyncHydrationLane:
           return SyncHydrationLane;
@@ -1873,7 +1881,9 @@ if (__DEV__) {
       var renderLane = getHighestPriorityLane(renderLanes);
       var lane;
 
-      {
+      if ((renderLane & SyncUpdateLanes) !== NoLane) {
+        lane = SyncHydrationLane;
+      } else {
         switch (renderLane) {
           case SyncLane:
             lane = SyncHydrationLane;
@@ -25720,7 +25730,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-aa96362d";
+    var ReactVersion = "18.3.0-www-modern-9a10673b";
 
     // Might add PROFILE later.
 
