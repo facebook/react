@@ -353,7 +353,7 @@ class InferenceState {
         ) {
           effect = Effect.Mutate;
         } else {
-          CompilerError.invalidReact({
+          CompilerError.throwInvalidReact({
             reason: `This mutates a variable after it was passed to React, which means that React cannot observe changes to it`,
             description:
               place.identifier.name !== null
@@ -370,7 +370,7 @@ class InferenceState {
           valueKind !== ValueKind.Mutable &&
           valueKind !== ValueKind.Context
         ) {
-          CompilerError.invalidReact({
+          CompilerError.throwInvalidReact({
             reason: `This mutates a variable after it was passed to React, which means that React cannot observe changes to it`,
             description:
               place.identifier.name !== null

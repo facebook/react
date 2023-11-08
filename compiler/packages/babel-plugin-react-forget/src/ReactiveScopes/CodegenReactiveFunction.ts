@@ -464,7 +464,7 @@ function codegenTerminal(
         suggestions: null,
       });
       if (terminal.init.instructions.length !== 2) {
-        CompilerError.todo({
+        CompilerError.throwTodo({
           reason: "Support non-trivial ForOf inits",
           description: null,
           loc: terminal.init.loc,

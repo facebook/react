@@ -98,7 +98,7 @@ class SSABuilder {
   definePlace(oldPlace: Place): Place {
     const oldId = oldPlace.identifier;
     if (this.#unknown.has(oldId)) {
-      CompilerError.todo({
+      CompilerError.throwTodo({
         reason: `EnterSSA: Expected identifier to be defined before being used`,
         description: `Identifier ${printIdentifier(oldId)} is undefined`,
         loc: oldPlace.loc,

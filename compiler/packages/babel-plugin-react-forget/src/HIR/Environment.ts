@@ -288,7 +288,7 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
   if (config.success) {
     return config.data;
   }
-  CompilerError.invalidConfig({
+  CompilerError.throwInvalidConfig({
     reason: `${fromZodError(config.error)}`,
     description: "Update Forget config to fix the error",
     loc: null,
@@ -456,7 +456,7 @@ export function validateEnvironmentConfig(
     return config.data;
   }
 
-  CompilerError.invalidConfig({
+  CompilerError.throwInvalidConfig({
     reason: `${fromZodError(config.error)}`,
     description: "Update Forget config to fix the error",
     loc: null,
@@ -474,7 +474,7 @@ export function tryParseExternalFunction(
     return externalFunction.data;
   }
 
-  CompilerError.invalidConfig({
+  CompilerError.throwInvalidConfig({
     reason: `${fromZodError(externalFunction.error)}`,
     description: "Update Forget config to fix the error",
     loc: null,

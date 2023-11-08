@@ -61,7 +61,7 @@ export function validateUseMemo(fn: HIRFunction): void {
           }
 
           if (body.loweredFunc.func.params.length > 0) {
-            CompilerError.invalidReact({
+            CompilerError.throwInvalidReact({
               reason: "useMemo callbacks may not accept any arguments",
               description: null,
               loc: body.loc,
@@ -70,7 +70,7 @@ export function validateUseMemo(fn: HIRFunction): void {
           }
 
           if (body.loweredFunc.func.async || body.loweredFunc.func.generator) {
-            CompilerError.invalidReact({
+            CompilerError.throwInvalidReact({
               reason:
                 "useMemo callbacks may not be async or generator functions",
               description: null,

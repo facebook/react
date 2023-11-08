@@ -189,7 +189,7 @@ function handleAssignment(
       break;
     }
     default: {
-      CompilerError.todo({
+      CompilerError.throwTodo({
         reason: `[FindContextIdentifiers] Cannot handle Object destructuring assignment target ${lvalNode.type}`,
         description: null,
         loc: lvalNode.loc ?? GeneratedSource,

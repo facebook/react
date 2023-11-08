@@ -24,7 +24,7 @@ export function addImportsToProgram(
      * validation here
      */
     if (identifiers.has(importSpecifierName)) {
-      CompilerError.invalidConfig({
+      CompilerError.throwInvalidConfig({
         reason: `Encountered conflicting import specifier for ${importSpecifierName} in Forget config.`,
         description: null,
         loc: GeneratedSource,
@@ -32,7 +32,7 @@ export function addImportsToProgram(
       });
     }
     if (path.scope.hasBinding(importSpecifierName)) {
-      CompilerError.invalidConfig({
+      CompilerError.throwInvalidConfig({
         reason: `Encountered conflicting import specifiers for ${importSpecifierName} in generated program.`,
         description: null,
         loc: GeneratedSource,

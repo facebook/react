@@ -116,7 +116,9 @@ export class CompilerError extends Error {
     }
   }
 
-  static todo(options: Omit<CompilerErrorDetailOptions, "severity">): never {
+  static throwTodo(
+    options: Omit<CompilerErrorDetailOptions, "severity">
+  ): never {
     const errors = new CompilerError();
     errors.pushErrorDetail(
       new CompilerErrorDetail({ ...options, severity: ErrorSeverity.Todo })
@@ -124,7 +126,7 @@ export class CompilerError extends Error {
     throw errors;
   }
 
-  static invalidJS(
+  static throwInvalidJS(
     options: Omit<CompilerErrorDetailOptions, "severity">
   ): never {
     const errors = new CompilerError();
@@ -137,7 +139,7 @@ export class CompilerError extends Error {
     throw errors;
   }
 
-  static invalidReact(
+  static throwInvalidReact(
     options: Omit<CompilerErrorDetailOptions, "severity">
   ): never {
     const errors = new CompilerError();
@@ -150,7 +152,7 @@ export class CompilerError extends Error {
     throw errors;
   }
 
-  static invalidConfig(
+  static throwInvalidConfig(
     options: Omit<CompilerErrorDetailOptions, "severity">
   ): never {
     const errors = new CompilerError();
