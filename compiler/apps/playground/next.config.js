@@ -20,12 +20,9 @@ const nextConfig = {
     if (!options.isServer) {
       config.plugins.push(
         new MonacoWebpackPlugin({
-          languages: [
-            "typescript",
-            "javascript",
-          ],
-          filename: "static/[name].worker.js"
-        })
+          languages: ["typescript", "javascript"],
+          filename: "static/[name].worker.js",
+        }),
       );
     }
     return config;
@@ -34,7 +31,6 @@ const nextConfig = {
   // experimental react which has the useMemoCache hook.
   experimental: {
     serverActions: true,
-    ppr: true,
   },
   transpilePackages: ["monaco-editor"],
 };
