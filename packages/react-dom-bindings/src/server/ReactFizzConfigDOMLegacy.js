@@ -92,8 +92,6 @@ export function createRenderState(
     undefined,
     undefined,
     undefined,
-    undefined,
-    undefined,
   );
   return {
     // Keep this in sync with ReactFizzConfigDOM
