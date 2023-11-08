@@ -68,29 +68,14 @@ type CompileResult = {
 function handleError(
   pass: CompilerPass,
   fnLoc: t.SourceLocation | null,
-  err: unknown
+  err: CompilerError
 ): void {
   if (pass.opts.logger) {
-    if (err instanceof CompilerError) {
-      for (const detail of err.details) {
-        pass.opts.logger.logEvent(pass.filename, {
-          kind: "CompileError",
-          fnLoc,
-          detail: detail.options,
-        });
-      }
-    } else {
-      let stringifiedError;
-      if (err instanceof Error) {
-        stringifiedError = err.stack ?? err.message;
-      } else {
-        stringifiedError = err?.toString() ?? "[ null ]";
-      }
-
+    for (const detail of err.details) {
       pass.opts.logger.logEvent(pass.filename, {
-        kind: "PipelineError",
+        kind: "CompileError",
         fnLoc,
-        data: stringifiedError,
+        detail: detail.options,
       });
     }
   }
