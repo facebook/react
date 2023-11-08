@@ -257,7 +257,11 @@ export function compileProgram(
 
     let compiledFn: CodegenFunction;
     try {
-      const config = validateEnvironmentConfig(pass.opts.environment);
+      /*
+       * TODO(lauren): Remove pass.opts.environment nullcheck once PluginOptions
+       * is validated
+       */
+      const config = validateEnvironmentConfig(pass.opts.environment ?? {});
       compiledFn = compileFn(fn, config);
       pass.opts.logger?.logEvent(pass.filename, {
         kind: "CompileSuccess",

@@ -449,7 +449,7 @@ function isHookName(name: string): boolean {
 }
 
 export function validateEnvironmentConfig(
-  partialConfig: PartialEnvironmentConfig | null
+  partialConfig: PartialEnvironmentConfig
 ): EnvironmentConfig {
   const config = EnvironmentConfigSchema.safeParse(partialConfig);
   if (config.success) {
