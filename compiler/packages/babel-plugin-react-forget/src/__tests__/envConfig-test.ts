@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { validateEnvironmentConfig } from "..";
+import { Effect, ValueKind, validateEnvironmentConfig } from "..";
 
 describe("parseConfigPragma()", () => {
   it("passing null throws", () => {
@@ -25,5 +25,19 @@ describe("parseConfigPragma()", () => {
         '[ReactForget] InvalidConfig: Validation error: Expected boolean, received number at "validateHooksUsage". Update Forget config to fix the error'
       );
     }
+  });
+
+  it("can parse stringy enums", () => {
+    const stringyHook = {
+      effectKind: "freeze",
+      valueKind: "frozen",
+    };
+    const env = {
+      customHooks: new Map([["useFoo", stringyHook]]),
+    };
+    const validatedEnv = validateEnvironmentConfig(env as any);
+    const validatedHook = validatedEnv.customHooks.get("useFoo");
+    expect(validatedHook?.effectKind).toBe(Effect.Freeze);
+    expect(validatedHook?.valueKind).toBe(ValueKind.Frozen);
   });
 });
