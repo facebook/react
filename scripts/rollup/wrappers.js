@@ -192,7 +192,6 @@ ${source}`;
   /****************** FB_WWW_DEV ******************/
   [FB_WWW_DEV](source, globalName, filename, moduleType) {
     return `/**
- * @preserve
 ${license}
  *
  * @noflow
@@ -213,7 +212,7 @@ ${source}
   /****************** FB_WWW_PROD ******************/
   [FB_WWW_PROD](source, globalName, filename, moduleType) {
     return `/**
- * @preserve
+ * @license
 ${license}
  *
  * @noflow
@@ -228,7 +227,7 @@ ${source}`;
   /****************** FB_WWW_PROFILING ******************/
   [FB_WWW_PROFILING](source, globalName, filename, moduleType) {
     return `/**
- * @preserve
+ * @license
 ${license}
  *
  * @noflow
@@ -243,7 +242,6 @@ ${source}`;
   /****************** RN_OSS_DEV ******************/
   [RN_OSS_DEV](source, globalName, filename, moduleType) {
     return signFile(`/**
- * @preserve
 ${license}
  *
  * @noflow
@@ -265,7 +263,7 @@ ${source}
   /****************** RN_OSS_PROD ******************/
   [RN_OSS_PROD](source, globalName, filename, moduleType) {
     return signFile(`/**
- * @preserve
+ * @license
 ${license}
  *
  * @noflow
@@ -281,7 +279,7 @@ ${source}`);
   /****************** RN_OSS_PROFILING ******************/
   [RN_OSS_PROFILING](source, globalName, filename, moduleType) {
     return signFile(`/**
- * @preserve
+ * @license
 ${license}
  *
  * @noflow
@@ -297,7 +295,6 @@ ${source}`);
   /****************** RN_FB_DEV ******************/
   [RN_FB_DEV](source, globalName, filename, moduleType) {
     return signFile(`/**
- * @preserve
 ${license}
  *
  * @noflow
@@ -318,7 +315,7 @@ ${source}
   /****************** RN_FB_PROD ******************/
   [RN_FB_PROD](source, globalName, filename, moduleType) {
     return signFile(`/**
- * @preserve
+ * @license
 ${license}
  *
  * @noflow
@@ -333,7 +330,7 @@ ${source}`);
   /****************** RN_FB_PROFILING ******************/
   [RN_FB_PROFILING](source, globalName, filename, moduleType) {
     return signFile(`/**
- * @preserve
+ * @license
 ${license}
  *
  * @noflow
