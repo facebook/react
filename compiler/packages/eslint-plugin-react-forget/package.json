@@ -29,7 +29,7 @@
     "@rollup/plugin-typescript": "^11.1.3",
     "@types/node": "^20.2.5",
     "babel-jest": "^29.0.3",
-    "eslint": "^8.19.0",
+    "eslint": "8.27.0",
     "eslint-doc-generator": "^1.0.0",
     "eslint-plugin-eslint-plugin": "^5.0.0",
     "eslint-plugin-node": "^11.1.0",

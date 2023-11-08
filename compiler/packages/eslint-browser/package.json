@@ -8,7 +8,7 @@
     "test": "echo 'no tests'"
   },
   "dependencies": {
-    "eslint": "^8.25.0",
+    "eslint": "8.27.0",
     "hermes-eslint": "^0.14.0"
   },
   "devDependencies": {
