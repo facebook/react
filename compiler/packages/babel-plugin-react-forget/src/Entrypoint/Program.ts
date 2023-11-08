@@ -356,9 +356,8 @@ export function compileProgram(
   // Forget compiled the component, we need to update existing imports of unstable_useMemoCache
   if (compiledFns.length > 0) {
     updateUseMemoCacheImport(program, options);
+    addImportsToProgram(program, externalFunctions);
   }
-
-  addImportsToProgram(program, externalFunctions);
 }
 
 function shouldVisitNode(

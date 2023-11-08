@@ -476,6 +476,9 @@ const skipFilter = new Set([
   // Tested e2e in forget-feedback repo
   "userspace-use-memo-cache",
   "transitive-freeze-function-expressions",
+
+  // nothing to compile/run
+  "repro-no-gating-import-without-compiled-functions",
 ]);
 
 export default skipFilter;
