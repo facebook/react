@@ -213,13 +213,7 @@ export function compileProgram(
   let hasCriticalError = lintError != null;
   const compiledFns: CompileResult[] = [];
 
-  const traverseFunction = (
-    fn:
-      | NodePath<t.FunctionDeclaration>
-      | NodePath<t.FunctionExpression>
-      | NodePath<t.ArrowFunctionExpression>,
-    pass: CompilerPass
-  ): void => {
+  const traverseFunction = (fn: BabelFn, pass: CompilerPass): void => {
     if (!shouldVisitNode(fn, pass) || ALREADY_COMPILED.has(fn.node)) {
       return;
     }
@@ -365,12 +359,7 @@ export function compileProgram(
   }
 }
 
-function shouldVisitNode(
-  fn: NodePath<
-    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >,
-  pass: CompilerPass
-): boolean {
+function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
   if (hasUseMemoCacheCall(fn)) {
     return false;
   }
