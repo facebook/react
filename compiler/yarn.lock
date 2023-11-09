@@ -2844,6 +2844,13 @@
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.1.tgz#aa22750962f3bf0e79d753d3cc067f010c95f194"
   integrity sha512-LG4opVs2ANWZ1TJoKc937iMmNstM/d0ae1vNbnBvBhqCSezgVUOzcLCqbI5elV8Vy6WKwKjaqR+zO9VKirBBCA==
 
+"@types/fbt@^1.0.4":
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/@types/fbt/-/fbt-1.0.4.tgz#0d9e427f91fcff46bdcf2ca42a63343096565451"
+  integrity sha512-KBaaLu4hEIBaCyQ3L2KP6JujD+tmMuPZ10YpgmGgqMaM8TESYR2TOJNvG+GYiWUhGkp38Y+62VZ1wJ97MPvt+A==
+  dependencies:
+    "@types/react" "*"
+
 "@types/glob@^8.1.0":
   version "8.1.0"
   resolved "https://registry.yarnpkg.com/@types/glob/-/glob-8.1.0.tgz#b63e70155391b0584dce44e7ea25190bbc38f2fc"
@@ -6073,6 +6080,13 @@ fb-watchman@^2.0.0:
   integrity sha512-p5161BqbuCaSnB8jIbzQHOlpgsPmK5rJVDfDKO91Axs5NC1uu3HRQm6wt9cd9/+GtQQIO53JdGXXoyDpTAsgYA==
   dependencies:
     bser "2.1.1"
+
+fbt@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/fbt/-/fbt-1.0.0.tgz#1a7c077ee06675e554061160443ed454933a1b4a"
+  integrity sha512-0LORP21IrBntxDEJOf5Kq4Napf/nsH18EwdMl1AO0clilKjiXBoQUVVY8V2IEgQVT92wBxPtpQfhfC3/EM8QdQ==
+  dependencies:
+    invariant "^2.2.4"
 
 figures@^3.0.0:
   version "3.2.0"

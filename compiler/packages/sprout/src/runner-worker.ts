@@ -52,6 +52,8 @@ type TransformResult =
       value: string;
     };
 
+// Transforms that should run on both forget and non-forget
+// source code.
 function transformAST(
   ast: t.File,
   sourceCode: string,
@@ -59,12 +61,28 @@ function transformAST(
   language: "typescript" | "flow",
   transformJSX: boolean
 ): string {
-  // missing more transforms
   const presets: Array<PluginItem> = [
-    language === "typescript"
-      ? "@babel/preset-typescript"
-      : "@babel/preset-flow",
+    {
+      plugins: ["babel-plugin-fbt", "babel-plugin-fbt-runtime"],
+    },
   ];
+  presets.push(
+    language === "typescript"
+      ? [
+          "@babel/preset-typescript",
+          {
+            /**
+             * onlyRemoveTypeImports needs to be set as fbt imports
+             * would otherwise be removed by this pass.
+             * https://github.com/facebook/fbt/issues/49
+             * https://github.com/facebook/sfbt/issues/72
+             * https://dev.to/retyui/how-to-add-support-typescript-for-fbt-an-internationalization-framework-3lo0
+             */
+            onlyRemoveTypeImports: true,
+          },
+        ]
+      : "@babel/preset-flow"
+  );
 
   if (transformJSX) {
     presets.push({

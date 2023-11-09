@@ -6,6 +6,7 @@
  */
 
 import React from "react";
+import { IntlVariations, IntlViewerContext, init } from "fbt";
 
 /**
  * This file is meant for use by `runner-evaluator` and fixture tests.
@@ -34,6 +35,20 @@ export const CONST_NUMBER2 = 2;
 
 export const CONST_TRUE = true;
 export const CONST_FALSE = false;
+
+export function initFbt() {
+  const viewerContext: IntlViewerContext = {
+    GENDER: IntlVariations.GENDER_UNKNOWN,
+    locale: "en_US",
+  };
+
+  init({
+    translations: {},
+    hooks: {
+      getViewerContext: () => viewerContext,
+    },
+  });
+}
 
 export function mutate(arg: any): void {
   // don't mutate primitive

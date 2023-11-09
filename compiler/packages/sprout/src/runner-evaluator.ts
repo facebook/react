@@ -7,7 +7,7 @@
 
 import { JSDOM } from "jsdom";
 import util from "util";
-import { toJSON } from "./shared-runtime";
+import { initFbt, toJSON } from "./shared-runtime";
 const React = require("react");
 const render = require("@testing-library/react").render;
 
@@ -18,6 +18,7 @@ const { window: testWindow } = new JSDOM(undefined);
 (globalThis as any).navigator = testWindow.navigator;
 (globalThis as any).React = React;
 (globalThis as any).render = render;
+initFbt();
 
 export type EvaluatorResult = {
   kind: "ok" | "exception" | "UnexpectedError";

@@ -16,7 +16,10 @@
     "paths": {
       // Editor integration for sprout shared runtime files
       "shared-runtime": ["../../../../sprout/src/shared-runtime.ts"]
-    }
+    },
+    "verbatimModuleSyntax": true,
+    "module": "ESNext",
+    "allowSyntheticDefaultImports": true
   },
   "include": [
     "./compiler/**/*.js",
