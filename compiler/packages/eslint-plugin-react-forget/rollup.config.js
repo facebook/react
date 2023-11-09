@@ -8,6 +8,7 @@
 import typescript from "@rollup/plugin-typescript";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
 import commonjs from "@rollup/plugin-commonjs";
+import license from "rollup-plugin-license";
 import json from "@rollup/plugin-json";
 import path from "path";
 import process from "process";
@@ -34,5 +35,19 @@ export default {
       rootDir: path.join(process.cwd(), ".."),
     }),
     commonjs(),
+    license({
+      banner: {
+        content: `Copyright (c) Meta Platforms, Inc. and affiliates.
+
+This source code is licensed under the MIT license found in the
+LICENSE file in the root directory of this source tree.
+
+@lightSyntaxTransform
+@noflow
+@nolint
+@preventMunge
+@preserve-invariant-messages`,
+      },
+    }),
   ],
 };
