@@ -7,7 +7,10 @@
 
 import assert from "assert";
 import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from "babel-plugin-react-forget/src/Babel/RunReactForgetBabelPlugin";
-import { CompilationMode } from "babel-plugin-react-forget/src/Entrypoint";
+import {
+  CompilationMode,
+  PanicThresholdOptions,
+} from "babel-plugin-react-forget/src/Entrypoint";
 import type { Effect, ValueKind } from "babel-plugin-react-forget/src/HIR";
 import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-forget/src/HIR/Environment";
 import prettier from "prettier";
@@ -32,6 +35,7 @@ export function transformFixtureInput(
   let enableEmitFreeze = null;
   let compilationMode: CompilationMode = "all";
   let enableUseMemoCachePolyfill = false;
+  let panicThreshold: PanicThresholdOptions = "ALL_ERRORS";
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -69,6 +73,10 @@ export function transformFixtureInput(
   if (firstLine.includes("@enableUseMemoCachePolyfill")) {
     enableUseMemoCachePolyfill = true;
   }
+  if (firstLine.includes("@panicThreshold(NONE)")) {
+    panicThreshold = "NONE";
+  }
+
   const config = parseConfigPragmaFn(firstLine);
   const result = pluginFn(
     input,
@@ -113,7 +121,7 @@ export function transformFixtureInput(
       logger: null,
       gating,
       instrumentForget,
-      panicThreshold: "ALL_ERRORS",
+      panicThreshold,
       noEmit: false,
       enableUseMemoCachePolyfill,
     },
