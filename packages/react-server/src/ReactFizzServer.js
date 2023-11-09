@@ -77,6 +77,7 @@ import {
   pushFormStateMarkerIsMatching,
   pushFormStateMarkerIsNotMatching,
   resetResumableState,
+  completeResumableState,
   emitEarlyPreloads,
 } from './ReactFizzConfig';
 import {
@@ -3968,11 +3969,7 @@ function flushCompletedQueues(
 
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
-        writeCompletedRoot(
-          destination,
-          request.renderState,
-          request.resumableState,
-        );
+        writeCompletedRoot(destination, request.renderState);
       } else {
         // We haven't flushed the root yet so we don't need to check any other branches further down
         return;
@@ -4283,6 +4280,8 @@ export function getPostponedState(request: Request): null | PostponedState {
   ) {
     // We postponed the root so we didn't flush anything.
     resetResumableState(request.resumableState, request.renderState);
+  } else {
+    completeResumableState(request.resumableState);
   }
   return {
     nextSegmentId: request.nextSegmentId,

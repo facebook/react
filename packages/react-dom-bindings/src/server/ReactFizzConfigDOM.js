@@ -690,6 +690,13 @@ export function resetResumableState(
   resumableState.moduleScriptResources = {};
 }
 
+export function completeResumableState(resumableState: ResumableState): void {
+  // This function is called when we have completed a prerender and there is a shell.
+  resumableState.bootstrapScriptContent = undefined;
+  resumableState.bootstrapScripts = undefined;
+  resumableState.bootstrapModules = undefined;
+}
+
 // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
@@ -3723,11 +3730,7 @@ export function pushEndInstance(
 function writeBootstrap(
   destination: Destination,
   renderState: RenderState,
-  resumableState: ResumableState,
 ): boolean {
-  resumableState.bootstrapScriptContent = undefined;
-  resumableState.bootstrapScripts = undefined;
-  resumableState.bootstrapModules = undefined;
   const bootstrapChunks = renderState.bootstrapChunks;
   let i = 0;
   for (; i < bootstrapChunks.length - 1; i++) {
@@ -3744,9 +3747,8 @@ function writeBootstrap(
 export function writeCompletedRoot(
   destination: Destination,
   renderState: RenderState,
-  resumableState: ResumableState,
 ): boolean {
-  return writeBootstrap(destination, renderState, resumableState);
+  return writeBootstrap(destination, renderState);
 }
 
 // Structural Nodes
@@ -4211,7 +4213,7 @@ export function writeCompletedBoundaryInstruction(
   } else {
     writeMore = writeChunkAndReturn(destination, completeBoundaryDataEnd);
   }
-  return writeBootstrap(destination, renderState, resumableState) && writeMore;
+  return writeBootstrap(destination, renderState) && writeMore;
 }
 
 const clientRenderScript1Full = stringToPrecomputedChunk(
