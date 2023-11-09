@@ -1,15 +1,15 @@
-/*
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @generated SignedSource<<685fe42d89ad677c0374d643bebb57cd>>
+ */
 
- Copyright (c) Meta Platforms, Inc. and affiliates.
-
- This source code is licensed under the MIT license found in the
- LICENSE file in the root directory of this source tree.
-
- @noflow
- @nolint
- @preventMunge
- @generated SignedSource<<c37847e2c801e4c7f4884e2675666388>>
-*/
 "use strict";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===

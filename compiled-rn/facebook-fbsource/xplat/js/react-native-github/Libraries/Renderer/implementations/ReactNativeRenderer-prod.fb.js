@@ -1,15 +1,15 @@
-/*
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @generated SignedSource<<c717a197b271547523acdc37aad3106b>>
+ */
 
- Copyright (c) Meta Platforms, Inc. and affiliates.
-
- This source code is licensed under the MIT license found in the
- LICENSE file in the root directory of this source tree.
-
- @noflow
- @nolint
- @preventMunge
- @generated SignedSource<<52fc9242d45c207fb10116d9191e64d9>>
-*/
 "use strict";
 require("react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore");
 var ReactNativePrivateInterface = require("react-native/Libraries/ReactPrivate/ReactNativePrivateInterface"),
@@ -9763,7 +9763,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1111 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-62062aef",
+    version: "18.3.0-canary-d2f6eed8",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9806,7 +9806,7 @@ var internals$jscomp$inline_1367 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-62062aef"
+  reconcilerVersion: "18.3.0-canary-d2f6eed8"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1368 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

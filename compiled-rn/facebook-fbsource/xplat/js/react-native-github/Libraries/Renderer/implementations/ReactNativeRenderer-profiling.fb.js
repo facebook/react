@@ -1,15 +1,15 @@
-/*
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @generated SignedSource<<6957db8e2d9eeb3712055199be5f7f81>>
+ */
 
- Copyright (c) Meta Platforms, Inc. and affiliates.
-
- This source code is licensed under the MIT license found in the
- LICENSE file in the root directory of this source tree.
-
- @noflow
- @nolint
- @preventMunge
- @generated SignedSource<<374307ecedc6420e30fb133c4ca89a82>>
-*/
 "use strict";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
@@ -10465,7 +10465,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1189 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-e75e0b3e",
+    version: "18.3.0-canary-ca7c994e",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10521,7 +10521,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-e75e0b3e"
+  reconcilerVersion: "18.3.0-canary-ca7c994e"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

@@ -1,15 +1,15 @@
-/*
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @generated SignedSource<<82444ded84168f50c5e2d5115e52dac9>>
+ */
 
- Copyright (c) Meta Platforms, Inc. and affiliates.
-
- This source code is licensed under the MIT license found in the
- LICENSE file in the root directory of this source tree.
-
- @noflow
- @nolint
- @preventMunge
- @generated SignedSource<<a868a05aa395fb76d1325ff7beac5592>>
-*/
 "use strict";
 var React = require("react"),
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),

@@ -1,15 +1,15 @@
-/*
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @generated SignedSource<<e041e5da30d79058818a99a722a9010b>>
+ */
 
- Copyright (c) Meta Platforms, Inc. and affiliates.
-
- This source code is licensed under the MIT license found in the
- LICENSE file in the root directory of this source tree.
-
- @noflow
- @nolint
- @preventMunge
- @generated SignedSource<<9569d52216e41caa6cb3cd4bc81e912e>>
-*/
 "use strict";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
@@ -10247,7 +10247,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1126 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-491a84d2",
+    version: "18.3.0-canary-9cfec911",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10303,7 +10303,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-491a84d2"
+  reconcilerVersion: "18.3.0-canary-9cfec911"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

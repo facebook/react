@@ -1,5 +1,4 @@
 /**
- * @preserve
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -8,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7f22529ffde2e0428f1893069684f3e2>>
+ * @generated SignedSource<<ebe223d3b462ba2b21399f81d78fb244>>
  */
 
 "use strict";
@@ -25,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-7bdd7cc2d-20231109";
+    var ReactVersion = "18.3.0-canary-c47c306a7-20231109";
 
     // ATTENTION
     // When adding new symbols to this file,

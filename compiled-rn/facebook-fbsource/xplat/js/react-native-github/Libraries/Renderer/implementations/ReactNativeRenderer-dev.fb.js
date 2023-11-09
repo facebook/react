@@ -1,5 +1,4 @@
 /**
- * @preserve
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -8,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8991b9801f0e6d4eb5dc24aa802bf853>>
+ * @generated SignedSource<<3f04d4c141a81353e6b5863a95a69735>>
  */
 
 "use strict";
@@ -28251,7 +28250,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-600d8797";
+    var ReactVersion = "18.3.0-canary-df5b3b6f";
 
     function createPortal$1(
       children,

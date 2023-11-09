@@ -1,5 +1,4 @@
 /**
- * @preserve
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -8,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e0b1d5c19be55d930c46cd9d9d91fa50>>
+ * @generated SignedSource<<147cb9c49da614e98a9929adc67f6800>>
  */
 
 "use strict";

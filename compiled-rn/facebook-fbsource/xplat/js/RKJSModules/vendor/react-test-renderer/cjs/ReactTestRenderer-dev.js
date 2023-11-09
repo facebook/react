@@ -1,5 +1,4 @@
 /**
- * @preserve
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -8,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<769546074522c131978074e9337b9413>>
+ * @generated SignedSource<<cf7aa70650e042d314e5532e7bbcef6b>>
  */
 
 "use strict";
@@ -25356,7 +25355,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-7bdd7cc2d-20231109";
+    var ReactVersion = "18.3.0-canary-c47c306a7-20231109";
 
     // Might add PROFILE later.
 

@@ -1,15 +1,15 @@
-/*
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @generated SignedSource<<a1310f096190dd3ed0ece3221fcd9bda>>
+ */
 
- Copyright (c) Meta Platforms, Inc. and affiliates.
-
- This source code is licensed under the MIT license found in the
- LICENSE file in the root directory of this source tree.
-
- @noflow
- @nolint
- @preventMunge
- @generated SignedSource<<61b6979329b48da7cd49daaed19bd835>>
-*/
 "use strict";
 var React = require("react"),
   Scheduler = require("scheduler/unstable_mock"),
@@ -9470,7 +9470,7 @@ var devToolsConfig$jscomp$inline_1075 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-7bdd7cc2d-20231109",
+  version: "18.3.0-canary-c47c306a7-20231109",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1267 = {
@@ -9501,7 +9501,7 @@ var internals$jscomp$inline_1267 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-7bdd7cc2d-20231109"
+  reconcilerVersion: "18.3.0-canary-c47c306a7-20231109"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1268 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
