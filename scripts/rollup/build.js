@@ -406,6 +406,10 @@ function getPlugins(
     // UMD builds are rarely used and not worth having sourcemaps.
     const needsSourcemaps =
       needsMinifiedByClosure &&
+      // This will only exclude `unstable_server-external-runtime.js` artifact
+      // To start generating sourcemaps for it, we should stop manually copying it to `facebook-www`
+      // and force `react-dom` to include .map files in npm-package at the root level
+      bundleType !== BROWSER_SCRIPT &&
       !isUMDBundle &&
       !sourcemapPackageExcludes.includes(entry) &&
       !shouldStayReadable;
@@ -470,17 +474,31 @@ function getPlugins(
       // I'm going to port "art" to ES modules to avoid this problem.
       // Please don't enable this for anything else!
       isUMDBundle && entry === 'react-art' && commonjs(),
-      // License and haste headers, top-level `if` blocks.
       {
-        name: 'license-and-headers',
+        name: 'top-level-definitions',
         renderChunk(source) {
-          return Wrappers.wrapBundle(
+          return Wrappers.wrapWithTopLevelDefinitions(
             source,
             bundleType,
             globalName,
             filename,
             moduleType,
             bundle.wrapWithModuleBoundaries
+          );
+        },
+      },
+      // License and haste headers for artifacts with sourcemaps
+      // For artifacts with sourcemaps we apply these headers
+      // before passing sources to the Closure compiler, which will be building sourcemaps
+      needsSourcemaps && {
+        name: 'license-and-signature-header-for-artifacts-with-sourcemaps',
+        renderChunk(source) {
+          return Wrappers.wrapWithLicenseHeader(
+            source,
+            bundleType,
+            globalName,
+            filename,
+            moduleType
           );
         },
       },
@@ -527,7 +545,7 @@ function getPlugins(
         }),
       needsSourcemaps && {
         name: 'generate-prod-bundle-sourcemaps',
-        async renderChunk(codeAfterLicense, chunk, options, meta) {
+        async renderChunk(minifiedCodeWithChangedHeader, chunk, options, meta) {
           // We want to generate a sourcemap that shows the production bundle source
           // as it existed before Closure Compiler minified that chunk, rather than
           // showing the "original" individual source files. This better shows
@@ -583,13 +601,28 @@ function getPlugins(
 
           // Add the sourcemap URL to the actual bundle, so that tools pick it up
           const sourceWithMappingUrl =
-            codeAfterLicense +
+            minifiedCodeWithChangedHeader +
             `\n//# sourceMappingURL=${finalSourcemapFilename}`;
 
           return {
             code: sourceWithMappingUrl,
             map: null,
           };
+        },
+      },
+      // License and haste headers for artifacts without sourcemaps
+      // Primarily used for FB-artifacts, which should preserve specific format of the header
+      // Which potentially can be changed by Closure minification
+      !needsSourcemaps && {
+        name: 'license-and-signature-header-for-artifacts-without-sourcemaps',
+        renderChunk(source) {
+          return Wrappers.wrapWithLicenseHeader(
+            source,
+            bundleType,
+            globalName,
+            filename,
+            moduleType
+          );
         },
       },
       // Record bundle size.

@@ -104,6 +104,9 @@ function renderToReadableStream(
     const resumableState = createResumableState(
       options ? options.identifierPrefix : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
     );
     const request = createRequest(
       children,
@@ -111,9 +114,6 @@ function renderToReadableStream(
       createRenderState(
         resumableState,
         options ? options.nonce : undefined,
-        options ? options.bootstrapScriptContent : undefined,
-        options ? options.bootstrapScripts : undefined,
-        options ? options.bootstrapModules : undefined,
         options ? options.unstable_externalRuntimeSrc : undefined,
         options ? options.importMap : undefined,
         onHeadersImpl,

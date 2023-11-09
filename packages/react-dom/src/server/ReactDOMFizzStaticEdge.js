@@ -93,6 +93,9 @@ function prerender(
     const resources = createResumableState(
       options ? options.identifierPrefix : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
     );
     const request = createPrerenderRequest(
       children,
@@ -100,9 +103,6 @@ function prerender(
       createRenderState(
         resources,
         undefined, // nonce is not compatible with prerendered bootstrap scripts
-        options ? options.bootstrapScriptContent : undefined,
-        options ? options.bootstrapScripts : undefined,
-        options ? options.bootstrapModules : undefined,
         options ? options.unstable_externalRuntimeSrc : undefined,
         options ? options.importMap : undefined,
         onHeadersImpl,

@@ -77,6 +77,7 @@ import {
   pushFormStateMarkerIsMatching,
   pushFormStateMarkerIsNotMatching,
   resetResumableState,
+  completeResumableState,
   emitEarlyPreloads,
 } from './ReactFizzConfig';
 import {
@@ -4279,6 +4280,8 @@ export function getPostponedState(request: Request): null | PostponedState {
   ) {
     // We postponed the root so we didn't flush anything.
     resetResumableState(request.resumableState, request.renderState);
+  } else {
+    completeResumableState(request.resumableState);
   }
   return {
     nextSegmentId: request.nextSegmentId,
