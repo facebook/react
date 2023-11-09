@@ -406,6 +406,10 @@ function getPlugins(
     // UMD builds are rarely used and not worth having sourcemaps.
     const needsSourcemaps =
       needsMinifiedByClosure &&
+      // This will only exclude `unstable_server-external-runtime.js` artifact
+      // To start generating sourcemaps for it, we should stop manually copying it to `facebook-www`
+      // and force `react-dom` to include .map files in npm-package at the root level
+      bundleType !== BROWSER_SCRIPT &&
       !isUMDBundle &&
       !sourcemapPackageExcludes.includes(entry) &&
       !shouldStayReadable;
