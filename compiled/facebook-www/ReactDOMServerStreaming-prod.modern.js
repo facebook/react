@@ -1620,21 +1620,14 @@ function endChunkForTag(tag) {
   void 0 === chunk && ((chunk = "</" + tag + ">"), endTagCache.set(tag, chunk));
   return chunk;
 }
-function writeBootstrap(destination, renderState, resumableState) {
-  resumableState.bootstrapScriptContent = void 0;
-  resumableState.bootstrapScripts = void 0;
-  resumableState.bootstrapModules = void 0;
+function writeBootstrap(destination, renderState) {
   renderState = renderState.bootstrapChunks;
-  for (
-    resumableState = 0;
-    resumableState < renderState.length - 1;
-    resumableState++
-  )
-    destination.buffer += renderState[resumableState];
-  return resumableState < renderState.length
-    ? ((resumableState = renderState[resumableState]),
+  for (var i = 0; i < renderState.length - 1; i++)
+    destination.buffer += renderState[i];
+  return i < renderState.length
+    ? ((i = renderState[i]),
       (renderState.length = 0),
-      writeChunkAndReturn(destination, resumableState))
+      writeChunkAndReturn(destination, i))
     : !0;
 }
 function writeStartPendingSuspenseBoundary(destination, renderState, id) {
@@ -4545,14 +4538,14 @@ function flushCompletedBoundary(request, destination, boundary) {
     : requiresStyleInsertion
     ? writeChunk(destination, '<template data-rri="" data-bid="')
     : writeChunk(destination, '<template data-rci="" data-bid="');
-  i = i.toString(16);
+  completedSegments = i.toString(16);
   writeChunk(destination, request.boundaryPrefix);
-  writeChunk(destination, i);
+  writeChunk(destination, completedSegments);
   scriptFormat
     ? writeChunk(destination, '","')
     : writeChunk(destination, '" data-sid="');
   writeChunk(destination, request.segmentPrefix);
-  writeChunk(destination, i);
+  writeChunk(destination, completedSegments);
   requiresStyleInsertion
     ? scriptFormat
       ? (writeChunk(destination, '",'),
@@ -4560,10 +4553,10 @@ function flushCompletedBoundary(request, destination, boundary) {
       : (writeChunk(destination, '" data-sty="'),
         writeStyleResourceDependenciesInAttr(destination, boundary))
     : scriptFormat && writeChunk(destination, '"');
-  boundary = scriptFormat
+  completedSegments = scriptFormat
     ? writeChunkAndReturn(destination, ")\x3c/script>")
     : writeChunkAndReturn(destination, '"></template>');
-  return writeBootstrap(destination, request, completedSegments) && boundary;
+  return writeBootstrap(destination, request) && completedSegments;
 }
 function flushPartiallyCompletedSegment(
   request,
@@ -4712,11 +4705,7 @@ function flushCompletedQueues(request, destination) {
           writeChunk(destination, endChunkForTag("head"));
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
-        writeBootstrap(
-          destination,
-          request.renderState,
-          request.resumableState
-        );
+        writeBootstrap(destination, request.renderState);
       } else return;
     var renderState$jscomp$0 = request.renderState;
     completedRootSegment = 0;

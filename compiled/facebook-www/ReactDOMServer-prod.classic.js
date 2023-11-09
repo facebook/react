@@ -1623,21 +1623,12 @@ function endChunkForTag(tag) {
   void 0 === chunk && ((chunk = "</" + tag + ">"), endTagCache.set(tag, chunk));
   return chunk;
 }
-function writeBootstrap(destination, renderState, resumableState) {
-  resumableState.bootstrapScriptContent = void 0;
-  resumableState.bootstrapScripts = void 0;
-  resumableState.bootstrapModules = void 0;
+function writeBootstrap(destination, renderState) {
   renderState = renderState.bootstrapChunks;
-  for (
-    resumableState = 0;
-    resumableState < renderState.length - 1;
-    resumableState++
-  )
-    destination.push(renderState[resumableState]);
-  return resumableState < renderState.length
-    ? ((resumableState = renderState[resumableState]),
-      (renderState.length = 0),
-      destination.push(resumableState))
+  for (var i = 0; i < renderState.length - 1; i++)
+    destination.push(renderState[i]);
+  return i < renderState.length
+    ? ((i = renderState[i]), (renderState.length = 0), destination.push(i))
     : !0;
 }
 function writeStartPendingSuspenseBoundary(destination, renderState, id) {
@@ -4948,12 +4939,12 @@ function flushCompletedBoundary(request, destination, boundary) {
     : requiresStyleInsertion
     ? destination.push('<template data-rri="" data-bid="')
     : destination.push('<template data-rci="" data-bid="');
-  i = i.toString(16);
+  completedSegments = i.toString(16);
   destination.push(request.boundaryPrefix);
-  destination.push(i);
+  destination.push(completedSegments);
   scriptFormat ? destination.push('","') : destination.push('" data-sid="');
   destination.push(request.segmentPrefix);
-  destination.push(i);
+  destination.push(completedSegments);
   requiresStyleInsertion
     ? scriptFormat
       ? (destination.push('",'),
@@ -4961,10 +4952,10 @@ function flushCompletedBoundary(request, destination, boundary) {
       : (destination.push('" data-sty="'),
         writeStyleResourceDependenciesInAttr(destination, boundary))
     : scriptFormat && destination.push('"');
-  boundary = scriptFormat
+  completedSegments = scriptFormat
     ? destination.push(")\x3c/script>")
     : destination.push('"></template>');
-  return writeBootstrap(destination, request, completedSegments) && boundary;
+  return writeBootstrap(destination, request) && completedSegments;
 }
 function flushPartiallyCompletedSegment(
   request,
@@ -5111,11 +5102,7 @@ function flushCompletedQueues(request, destination) {
         }
         flushSegment(request, destination, completedRootSegment);
         request.completedRootSegment = null;
-        writeBootstrap(
-          destination,
-          request.renderState,
-          request.resumableState
-        );
+        writeBootstrap(destination, request.renderState);
       } else return;
     var renderState$jscomp$0 = request.renderState;
     completedRootSegment = 0;
@@ -5418,4 +5405,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-d5ca51da";
+exports.version = "18.3.0-www-classic-9f8c3670";
