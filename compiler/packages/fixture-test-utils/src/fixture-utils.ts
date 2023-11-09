@@ -7,6 +7,7 @@
 
 import fs from "fs/promises";
 import glob from "glob";
+import invariant from "invariant";
 import path from "path";
 import { FILTER_PATH, FIXTURES_PATH } from "./constants";
 
@@ -30,6 +31,35 @@ async function exists(file: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+function stripExtension(filename: string, extensions: Array<string>): string {
+  for (const ext of extensions) {
+    if (filename.endsWith(ext)) {
+      return filename.slice(0, -ext.length);
+    }
+  }
+  return filename;
+}
+
+function shouldSkip(
+  filter: TestFilter | null,
+  filterId: string,
+  filename: string
+) {
+  if (filter) {
+    if (filter.kind === "only" && filter.paths.indexOf(filterId) === -1) {
+      return true;
+    } else if (
+      filter.kind === "skip" &&
+      filter.paths.indexOf(filterId) !== -1
+    ) {
+      return true;
+    }
+  } else if (filename.startsWith("todo.")) {
+    return true;
+  }
+  return false;
 }
 
 export async function readTestFilter(): Promise<TestFilter | null> {
@@ -71,71 +101,70 @@ export async function readTestFilter(): Promise<TestFilter | null> {
 
 export type TestFixture = {
   basename: string;
-  inputPath: string;
-  inputExists: boolean;
+  inputPath: string | null;
   outputPath: string;
   outputExists: boolean;
 };
 
+const INPUT_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx"];
+const OUTPUT_EXTENSION = ".expect.md";
 export function getFixtures(
   filter: TestFilter | null
 ): Map<string, TestFixture> {
   // search for fixtures within nested directories
-  const files = glob.sync(`**/*.{js,ts,tsx,md}`, {
+  const inputFiles = glob.sync(`**/*{${INPUT_EXTENSIONS.join(",")}}`, {
     cwd: FIXTURES_PATH,
   });
   const fixtures: Map<string, TestFixture> = new Map();
-
-  for (const filePath of files) {
-    const basename = path.basename(
-      path.basename(
-        path.basename(path.basename(filePath, ".js"), ".ts"),
-        ".tsx"
-      ),
-      ".expect.md"
-    );
-    // "partial" paths do not include suffixes
-    const partialRelativePath = path.join(path.dirname(filePath), basename);
-    // Replicate jest test behavior
-    if (basename.startsWith("todo.")) {
+  for (const filePath of inputFiles) {
+    const filename = path.basename(filePath);
+    // Do not include extensions in unique identifier for fixture
+    const partialPath = stripExtension(filePath, INPUT_EXTENSIONS);
+    if (shouldSkip(filter, partialPath, filename)) {
       continue;
     }
-    if (filter) {
-      if (
-        filter.kind === "only" &&
-        filter.paths.indexOf(partialRelativePath) === -1
-      ) {
-        continue;
-      } else if (
-        filter.kind === "skip" &&
-        filter.paths.indexOf(partialRelativePath) !== -1
-      ) {
-        continue;
-      }
-    }
 
-    let fixtureInfo = fixtures.get(partialRelativePath);
+    const fixtureInfo = fixtures.get(partialPath);
     if (fixtureInfo === undefined) {
-      const partialAbsolutePath = path.join(FIXTURES_PATH, partialRelativePath);
-      fixtureInfo = {
-        basename,
-        inputPath: `${partialAbsolutePath}.js`,
-        inputExists: false,
-        outputPath: `${partialAbsolutePath}.expect.md`,
+      fixtures.set(partialPath, {
+        basename: path.basename(partialPath),
+        inputPath: path.join(FIXTURES_PATH, filePath),
+        outputPath: path.join(FIXTURES_PATH, partialPath) + OUTPUT_EXTENSION,
         outputExists: false,
-      };
-      fixtures.set(partialRelativePath, fixtureInfo);
+      });
+    } else {
+      console.warn(
+        "Found duplicate fixture files: ",
+        fixtureInfo.inputPath,
+        filePath
+      );
+    }
+  }
+
+  const outputFiles = glob.sync(`**/*${OUTPUT_EXTENSION}`, {
+    cwd: FIXTURES_PATH,
+  });
+  for (const filePath of outputFiles) {
+    const filename = path.basename(filePath);
+    // Do not include extensions in unique identifier for fixture
+    const partialPath = stripExtension(filePath, [OUTPUT_EXTENSION]);
+    if (shouldSkip(filter, partialPath, filename)) {
+      continue;
     }
 
-    if (
-      filePath.endsWith(".js") ||
-      filePath.endsWith(".ts") ||
-      filePath.endsWith(".tsx")
-    ) {
-      // inputPath may have a different file extension than the .js default
-      fixtureInfo.inputPath = path.join(FIXTURES_PATH, filePath);
-      fixtureInfo.inputExists = true;
+    const fixtureInfo = fixtures.get(partialPath);
+    if (fixtureInfo === undefined) {
+      fixtures.set(partialPath, {
+        basename: path.basename(partialPath),
+        inputPath: null,
+        outputPath: path.join(FIXTURES_PATH, filePath),
+        outputExists: true,
+      });
     } else {
+      invariant(
+        fixtureInfo.outputPath === path.join(FIXTURES_PATH, filePath),
+        "Unexpected output filepath"
+      );
       fixtureInfo.outputExists = true;
     }
   }

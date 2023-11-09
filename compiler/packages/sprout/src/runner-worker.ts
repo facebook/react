@@ -191,12 +191,12 @@ export async function run(fixture: TestFixture): Promise<TestResult> {
   console.error = (...messages: Array<string>) => {
     seenConsoleErrors.push(...messages);
   };
-  const { inputPath, inputExists } = fixture;
-  if (!inputExists) {
+  const { inputPath } = fixture;
+  if (inputPath == null) {
     return {
       nonForgetResult: null,
       forgetResult: null,
-      unexpectedError: "file did not exist!",
+      unexpectedError: "No input for fixture " + fixture.outputPath,
     };
   }
   const inputRaw = await fs.readFile(inputPath, "utf8");

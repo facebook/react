@@ -30,7 +30,6 @@ export function clearRequireCache() {
 }
 
 export type TestResult = {
-  inputPath: string;
   outputPath: string;
   actual: string | null; // null == input did not exist
   expected: string | null; // null == output did not exist
@@ -54,16 +53,15 @@ export async function compile(
     clearRequireCache();
   }
   version = compilerVersion;
-  const { inputPath, inputExists, outputPath, outputExists, basename } =
+  const { inputPath, outputPath, outputExists, basename } =
     fixture;
-  const input = inputExists ? await fs.readFile(inputPath, "utf8") : null;
+  const input = inputPath != null ? await fs.readFile(inputPath, "utf8") : null;
   const expected = outputExists ? await fs.readFile(outputPath, "utf8") : null;
 
   // Input will be null if the input file did not exist, in which case the output file
   // is stale
   if (input === null) {
     return {
-      inputPath,
       outputPath,
       actual: null,
       expected,
@@ -128,7 +126,6 @@ export async function compile(
   console.error = originalConsoleError;
 
   return {
-    inputPath,
     outputPath,
     actual: output,
     expected,

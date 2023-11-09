@@ -20,6 +20,7 @@
   },
   "include": [
     "./compiler/**/*.js",
+    "./compiler/**/*.jsx",
     "./compiler/**/*.ts",
     "./compiler/**/*.tsx"
   ]
