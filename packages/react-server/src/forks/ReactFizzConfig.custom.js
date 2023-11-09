@@ -41,6 +41,7 @@ export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request> = (null: any);
 
 export const resetResumableState = $$$config.resetResumableState;
+export const completeResumableState = $$$config.completeResumableState;
 export const getChildFormatContext = $$$config.getChildFormatContext;
 export const makeId = $$$config.makeId;
 export const pushTextInstance = $$$config.pushTextInstance;

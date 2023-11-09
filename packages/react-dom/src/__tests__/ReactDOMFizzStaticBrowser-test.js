@@ -1419,4 +1419,80 @@ describe('ReactDOMFizzStaticBrowser', () => {
       '<!DOCTYPE html><html><head></head><body>hello<!--$?--><template id="B:1"></template><!--/$--><div hidden id="S:1">world<!-- --></div><script>$RC',
     );
   });
+
+  // @gate enablePostpone
+  it('does not bootstrap again in a resume if it bootstraps', async () => {
+    let prerendering = true;
+
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return null;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              <Postpone />
+              hello
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    let inits = 0;
+    jest.mock(
+      'init.js',
+      () => {
+        inits++;
+      },
+      {virtual: true},
+    );
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />, {
+      bootstrapScripts: ['init.js'],
+    });
+
+    const postponedSerializedState = JSON.stringify(prerendered.postponed);
+
+    expect(prerendered.postponed).not.toBe(null);
+
+    await readIntoContainer(prerendered.prelude);
+
+    expect(getVisibleChildren(container)).toEqual([
+      <link rel="preload" href="init.js" fetchpriority="low" as="script" />,
+      'loading...',
+    ]);
+
+    expect(inits).toBe(1);
+
+    jest.resetModules();
+    jest.mock(
+      'init.js',
+      () => {
+        inits++;
+      },
+      {virtual: true},
+    );
+
+    prerendering = false;
+
+    const content = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(postponedSerializedState),
+    );
+
+    await readIntoContainer(content);
+
+    expect(inits).toBe(1);
+
+    expect(getVisibleChildren(container)).toEqual([
+      <link rel="preload" href="init.js" fetchpriority="low" as="script" />,
+      'hello',
+    ]);
+  });
 });

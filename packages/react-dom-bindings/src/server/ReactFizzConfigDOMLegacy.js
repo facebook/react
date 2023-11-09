@@ -171,6 +171,7 @@ export {
   setCurrentlyRenderingBoundaryResourcesTarget,
   prepareHostDispatcher,
   resetResumableState,
+  completeResumableState,
   emitEarlyPreloads,
 } from './ReactFizzConfigDOM';
 
