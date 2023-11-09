@@ -1,5 +1,4 @@
 /**
- * @preserve
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -20,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-3ddce8f2";
+    var ReactVersion = "18.3.0-www-classic-af17cc87";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");

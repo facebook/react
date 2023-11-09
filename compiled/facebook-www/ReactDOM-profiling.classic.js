@@ -1,14 +1,16 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
 /*
-
- Copyright (c) Meta Platforms, Inc. and affiliates.
-
- This source code is licensed under the MIT license found in the
- LICENSE file in the root directory of this source tree.
-
- @noflow
- @nolint
- @preventMunge
- @preserve-invariant-messages
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
 "use strict";
@@ -17306,7 +17308,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1881 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-52304ebe",
+  version: "18.3.0-www-classic-30fe3ed5",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17350,7 +17352,7 @@ var devToolsConfig$jscomp$inline_1881 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-52304ebe"
+  reconcilerVersion: "18.3.0-www-classic-30fe3ed5"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17674,7 +17676,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-52304ebe";
+exports.version = "18.3.0-www-classic-30fe3ed5";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

@@ -1,5 +1,4 @@
 /**
- * @preserve
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -25811,7 +25810,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-d1dd6614";
+    var ReactVersion = "18.3.0-www-classic-93c0536e";
 
     // Might add PROFILE later.
 

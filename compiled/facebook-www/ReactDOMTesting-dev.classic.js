@@ -1,5 +1,4 @@
 /**
- * @preserve
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -35506,7 +35505,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-8f92bd93";
+    var ReactVersion = "18.3.0-www-classic-488f91a4";
 
     function createPortal$1(
       children,

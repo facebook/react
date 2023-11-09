@@ -1,14 +1,16 @@
+/**
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @noflow
+ * @nolint
+ * @preventMunge
+ * @preserve-invariant-messages
+ */
+
 /*
-
- Copyright (c) Meta Platforms, Inc. and affiliates.
-
- This source code is licensed under the MIT license found in the
- LICENSE file in the root directory of this source tree.
-
- @noflow
- @nolint
- @preventMunge
- @preserve-invariant-messages
  Modernizr 3.0.0pre (Custom Build) | MIT
 */
 "use strict";
@@ -16826,7 +16828,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1840 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-7803f60b",
+  version: "18.3.0-www-modern-63d98969",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -16871,7 +16873,7 @@ var devToolsConfig$jscomp$inline_1840 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-7803f60b"
+  reconcilerVersion: "18.3.0-www-modern-63d98969"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17123,7 +17125,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-7803f60b";
+exports.version = "18.3.0-www-modern-63d98969";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

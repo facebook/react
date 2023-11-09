@@ -1,5 +1,4 @@
 /**
- * @preserve
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -67,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-12044c87";
+    var ReactVersion = "18.3.0-www-classic-6755280f";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
