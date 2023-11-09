@@ -12,6 +12,11 @@ function Component(props) {
   return <div>{text}</div>;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ count: 2 }],
+};
+
 ```
 
 ## Code
@@ -45,6 +50,11 @@ function Component(props) {
   }
   return t1;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ count: 2 }],
+};
 
 ```
       

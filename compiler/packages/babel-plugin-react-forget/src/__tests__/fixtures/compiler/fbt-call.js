@@ -7,3 +7,8 @@ function Component(props) {
   );
   return <div>{text}</div>;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ count: 2 }],
+};

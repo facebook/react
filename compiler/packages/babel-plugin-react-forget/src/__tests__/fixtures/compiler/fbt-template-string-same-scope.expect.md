@@ -3,6 +3,7 @@
 
 ```javascript
 import fbt from "fbt";
+import { Stringify } from "shared-runtime";
 
 export function Component(props) {
   let count = 0;
@@ -10,15 +11,20 @@ export function Component(props) {
     count = props.items.length;
   }
   return (
-    <View>
+    <Stringify>
       {fbt(
         `for ${fbt.param("count", count)} experiences`,
         `Label for the number of items`,
         { project: "public" }
       )}
-    </View>
+    </Stringify>
   );
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ items: [1, 2, 3] }],
+};
 
 ```
 
@@ -27,6 +33,7 @@ export function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
+import { Stringify } from "shared-runtime";
 
 export function Component(props) {
   const $ = useMemoCache(4);
@@ -46,7 +53,7 @@ export function Component(props) {
   }
   let t1;
   if ($[2] !== t0) {
-    t1 = <View>{t0}</View>;
+    t1 = <Stringify>{t0}</Stringify>;
     $[2] = t0;
     $[3] = t1;
   } else {
@@ -54,6 +61,11 @@ export function Component(props) {
   }
   return t1;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ items: [1, 2, 3] }],
+};
 
 ```
       

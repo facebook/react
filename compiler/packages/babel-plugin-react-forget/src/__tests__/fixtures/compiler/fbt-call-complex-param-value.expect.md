@@ -3,14 +3,20 @@
 
 ```javascript
 import fbt from "fbt";
+import { identity } from "shared-runtime";
 
 function Component(props) {
   const text = fbt(
-    `Hello, ${fbt.param("(key) name", capitalize(props.name))}!`,
+    `Hello, ${fbt.param("(key) name", identity(props.name))}!`,
     "(description) Greeting"
   );
   return <div>{text}</div>;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ name: "Sathya" }],
+};
 
 ```
 
@@ -19,6 +25,7 @@ function Component(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
+import { identity } from "shared-runtime";
 
 function Component(props) {
   const $ = useMemoCache(4);
@@ -26,7 +33,7 @@ function Component(props) {
   if ($[0] !== props.name) {
     t0 = fbt._(
       "Hello, {(key) name}!",
-      [fbt._param("(key) name", capitalize(props.name))],
+      [fbt._param("(key) name", identity(props.name))],
       { hk: "2sOsn5" }
     );
     $[0] = props.name;
@@ -45,6 +52,11 @@ function Component(props) {
   }
   return t1;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ name: "Sathya" }],
+};
 
 ```
       

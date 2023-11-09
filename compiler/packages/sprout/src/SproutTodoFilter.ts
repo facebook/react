@@ -415,9 +415,6 @@ const skipFilter = new Set([
   "multi-arrow-expr-export-default-gating-test",
 
   // TODO: we should be able to support these
-  "fbt-call",
-  "fbt-call-complex-param-value",
-  "fbt-template-string-same-scope",
   "component-declaration-basic.flow",
   "nested-function-with-param-as-captured-dep",
   "readonly-object-method-calls",
