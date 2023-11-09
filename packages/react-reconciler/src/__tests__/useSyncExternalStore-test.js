@@ -294,4 +294,51 @@ describe('useSyncExternalStore', () => {
       );
     },
   );
+
+  test('detecting mutation in previously hidden activity subtree', async () => {
+    const store = createExternalStore('revision:1');
+
+    function App({mode, revision}) {
+      return (
+        <React.unstable_Activity mode={mode}>
+          <Wrapper revision={revision}>
+            <Subscriber />
+          </Wrapper>
+        </React.unstable_Activity>
+      );
+    }
+
+    function Wrapper({children, revision}) {
+      useLayoutEffect(() => {
+        store.set('revision:' + revision);
+      }, [revision]);
+
+      return children;
+    }
+
+    function Subscriber() {
+      const revision = useSyncExternalStore(store.subscribe, store.getState);
+      return <Text text={revision} />;
+    }
+
+    const root = ReactNoop.createRoot();
+
+    // Mount app
+    await act(() => {
+      root.render(<App mode="visible" revision="1" />);
+    });
+    assertLog(['revision:1']);
+
+    // Hide subtree
+    await act(() => {
+      root.render(<App mode="hidden" revision="1" />);
+    });
+    assertLog(['revision:1']);
+
+    // Show subtree (and update mutable store in a layout effect)
+    await act(() => {
+      root.render(<App mode="visible" revision="2" />);
+    });
+    assertLog(['revision:1', 'revision:2']);
+  });
 });
