@@ -107,6 +107,8 @@ function transformAST(
                     // rewrite to use relative import
                     if (arg.value === "shared-runtime") {
                       arg.value = "./shared-runtime";
+                    } else if (arg.value === "ReactForgetFeatureFlag") {
+                      arg.value = "./ReactForgetFeatureFlag";
                     }
                   }
                 }
