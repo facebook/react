@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b0e1d88ed60247f6fdc4d9be0ba441b9>>
+ * @generated SignedSource<<82de3c20128bc9cf9a3e000de26414a9>>
  */
 
 "use strict";
@@ -19178,27 +19178,33 @@ to return true:wantsResponderID|                            |
       } // This function is called when a Suspense boundary suspends. It returns the
     }
 
+    /**
+     * Tag the fiber with an update effect. This turns a Placement into
+     * a PlacementAndUpdate.
+     */
+
     function markUpdate(workInProgress) {
-      // Tag the fiber with an update effect. This turns a Placement into
-      // a PlacementAndUpdate.
       workInProgress.flags |= Update;
     }
 
     function markRef(workInProgress) {
       workInProgress.flags |= Ref | RefStatic;
     }
+    /**
+     * In persistent mode, return whether this update needs to clone the subtree.
+     */
 
-    function hadNoMutationsEffects(current, completedWork) {
+    function doesRequireClone(current, completedWork) {
       var didBailout =
         current !== null && current.child === completedWork.child;
 
       if (didBailout) {
-        return true;
+        return false;
       }
 
       if ((completedWork.flags & ChildDeletion) !== NoFlags$1) {
-        return false;
-      } // TODO: If we move the `hadNoMutationsEffects` call after `bubbleProperties`
+        return true;
+      } // TODO: If we move the `doesRequireClone` call after `bubbleProperties`
       // then we only have to check the `completedWork.subtreeFlags`.
 
       var child = completedWork.child;
@@ -19208,13 +19214,13 @@ to return true:wantsResponderID|                            |
           (child.flags & MutationMask) !== NoFlags$1 ||
           (child.subtreeFlags & MutationMask) !== NoFlags$1
         ) {
-          return false;
+          return true;
         }
 
         child = child.sibling;
       }
 
-      return true;
+      return false;
     }
 
     function appendAllChildren(
@@ -19271,8 +19277,6 @@ to return true:wantsResponderID|                            |
             _node = _node.child;
             continue;
           }
-
-          _node = _node;
 
           if (_node === workInProgress) {
             return;
@@ -19374,11 +19378,8 @@ to return true:wantsResponderID|                            |
 
     function updateHostContainer(current, workInProgress) {
       {
-        var portalOrRoot = workInProgress.stateNode;
-        var childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
-
-        if (childrenUnchanged);
-        else {
+        if (doesRequireClone(current, workInProgress)) {
+          var portalOrRoot = workInProgress.stateNode;
           var container = portalOrRoot.containerInfo;
           var newChildSet = createContainerChildSet(); // If children might have changed, we have to add them all to the set.
 
@@ -19410,9 +19411,9 @@ to return true:wantsResponderID|                            |
         var _oldProps = current.memoizedProps; // If there are no effects associated with this node, then none of our children had any updates.
         // This guarantees that we can reuse all of them.
 
-        var childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
+        var requiresClone = doesRequireClone(current, workInProgress);
 
-        if (childrenUnchanged && _oldProps === newProps) {
+        if (!requiresClone && _oldProps === newProps) {
           // No changes, just reuse the existing instance.
           // Note that this might release a previous clone.
           workInProgress.stateNode = currentInstance;
@@ -19422,7 +19423,7 @@ to return true:wantsResponderID|                            |
         getHostContext();
         var newChildSet = null;
 
-        if (!childrenUnchanged && passChildrenWhenCloningPersistedNodes) {
+        if (requiresClone && passChildrenWhenCloningPersistedNodes) {
           newChildSet = createContainerChildSet(); // If children might have changed, we have to add them all to the set.
 
           appendAllChildrenToContainer(
@@ -19440,7 +19441,7 @@ to return true:wantsResponderID|                            |
           type,
           _oldProps,
           newProps,
-          childrenUnchanged,
+          !requiresClone,
           newChildSet
         );
 
@@ -19453,7 +19454,7 @@ to return true:wantsResponderID|                            |
 
         workInProgress.stateNode = newInstance;
 
-        if (childrenUnchanged) {
+        if (!requiresClone) {
           // If there are no other effects in this tree, we need to flag this node as having one.
           // Even though we're not going to use it for anything.
           // Otherwise parents won't know that there are new children to propagate upwards.
@@ -27804,7 +27805,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-ee665331";
+    var ReactVersion = "18.3.0-canary-8403dc9a";
 
     function createPortal$1(
       children,

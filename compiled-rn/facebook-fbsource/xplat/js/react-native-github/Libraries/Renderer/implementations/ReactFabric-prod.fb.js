@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8eb09ded8c0ed4c7e7737692173dbee9>>
+ * @generated SignedSource<<215b578b886f3eeea52b84f72bb15ec6>>
  */
 
 "use strict";
@@ -5793,15 +5793,15 @@ function readContextForConsumer(consumer, context) {
   return value;
 }
 var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
-function hadNoMutationsEffects(current, completedWork) {
-  if (null !== current && current.child === completedWork.child) return !0;
-  if (0 !== (completedWork.flags & 16)) return !1;
+function doesRequireClone(current, completedWork) {
+  if (null !== current && current.child === completedWork.child) return !1;
+  if (0 !== (completedWork.flags & 16)) return !0;
   for (current = completedWork.child; null !== current; ) {
     if (0 !== (current.flags & 12854) || 0 !== (current.subtreeFlags & 12854))
-      return !1;
+      return !0;
     current = current.sibling;
   }
-  return !0;
+  return !1;
 }
 function appendAllChildren(
   parent,
@@ -5892,16 +5892,16 @@ function appendAllChildrenToContainer(
   }
 }
 function updateHostContainer(current, workInProgress) {
-  var portalOrRoot = workInProgress.stateNode;
-  if (!hadNoMutationsEffects(current, workInProgress)) {
-    current = portalOrRoot.containerInfo;
-    var newChildSet = passChildrenWhenCloningPersistedNodes
-      ? []
-      : createChildNodeSet();
+  if (doesRequireClone(current, workInProgress)) {
+    current = workInProgress.stateNode;
+    var container = current.containerInfo,
+      newChildSet = passChildrenWhenCloningPersistedNodes
+        ? []
+        : createChildNodeSet();
     appendAllChildrenToContainer(newChildSet, workInProgress, !1, !1);
-    portalOrRoot.pendingChildren = newChildSet;
+    current.pendingChildren = newChildSet;
     workInProgress.flags |= 4;
-    completeRoot(current, newChildSet);
+    completeRoot(container, newChildSet);
   }
 }
 function scheduleRetryEffect(workInProgress, retryQueue) {
@@ -6009,12 +6009,10 @@ function completeWork(current, workInProgress, renderLanes) {
       if (null !== current && null != workInProgress.stateNode) {
         renderLanes = current.stateNode;
         var oldProps = current.memoizedProps,
-          childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
-        if (childrenUnchanged && oldProps === newProps)
-          workInProgress.stateNode = renderLanes;
-        else {
+          requiresClone = doesRequireClone(current, workInProgress);
+        if (requiresClone || oldProps !== newProps) {
           var newChildSet = null;
-          !childrenUnchanged &&
+          requiresClone &&
             passChildrenWhenCloningPersistedNodes &&
             ((newChildSet = passChildrenWhenCloningPersistedNodes
               ? []
@@ -6029,14 +6027,7 @@ function completeWork(current, workInProgress, renderLanes) {
             );
             renderLanes.canonical.currentProps = newProps;
             newProps = renderLanes.node;
-            if (childrenUnchanged)
-              if (null !== oldProps)
-                newProps = cloneNodeWithNewProps(newProps, oldProps);
-              else {
-                newProps = renderLanes;
-                break b;
-              }
-            else
+            if (requiresClone)
               newProps =
                 null != newChildSet
                   ? null !== oldProps
@@ -6049,16 +6040,22 @@ function completeWork(current, workInProgress, renderLanes) {
                   : null !== oldProps
                   ? cloneNodeWithNewChildrenAndProps(newProps, oldProps)
                   : cloneNodeWithNewChildren(newProps);
+            else if (null !== oldProps)
+              newProps = cloneNodeWithNewProps(newProps, oldProps);
+            else {
+              newProps = renderLanes;
+              break b;
+            }
             newProps = { node: newProps, canonical: renderLanes.canonical };
           }
           newProps === renderLanes
             ? (workInProgress.stateNode = renderLanes)
             : ((workInProgress.stateNode = newProps),
-              childrenUnchanged
-                ? (workInProgress.flags |= 4)
-                : passChildrenWhenCloningPersistedNodes ||
-                  appendAllChildren(newProps, workInProgress, !1, !1));
-        }
+              requiresClone
+                ? passChildrenWhenCloningPersistedNodes ||
+                  appendAllChildren(newProps, workInProgress, !1, !1)
+                : (workInProgress.flags |= 4));
+        } else workInProgress.stateNode = renderLanes;
         current.ref !== workInProgress.ref && (workInProgress.flags |= 2097664);
       } else {
         if (!newProps) {
@@ -6069,7 +6066,7 @@ function completeWork(current, workInProgress, renderLanes) {
           bubbleProperties(workInProgress);
           return null;
         }
-        childrenUnchanged = rootInstanceStackCursor.current;
+        requiresClone = rootInstanceStackCursor.current;
         current = nextReactTag;
         nextReactTag += 2;
         renderLanes = getViewConfigForType(renderLanes);
@@ -6079,10 +6076,10 @@ function completeWork(current, workInProgress, renderLanes) {
           newProps,
           renderLanes.validAttributes
         );
-        childrenUnchanged = createNode(
+        requiresClone = createNode(
           current,
           renderLanes.uiViewClassName,
-          childrenUnchanged,
+          requiresClone,
           newChildSet,
           workInProgress
         );
@@ -6092,7 +6089,7 @@ function completeWork(current, workInProgress, renderLanes) {
           workInProgress
         );
         current = {
-          node: childrenUnchanged,
+          node: requiresClone,
           canonical: {
             nativeTag: current,
             viewConfig: renderLanes,
@@ -6154,12 +6151,12 @@ function completeWork(current, workInProgress, renderLanes) {
             (workInProgress.memoizedState = null);
           workInProgress.flags |= 4;
           bubbleProperties(workInProgress);
-          childrenUnchanged = !1;
+          requiresClone = !1;
         } else
           null !== hydrationErrors &&
             (queueRecoverableErrors(hydrationErrors), (hydrationErrors = null)),
-            (childrenUnchanged = !0);
-        if (!childrenUnchanged)
+            (requiresClone = !0);
+        if (!requiresClone)
           return workInProgress.flags & 256 ? workInProgress : null;
       }
       if (0 !== (workInProgress.flags & 128))
@@ -6192,13 +6189,12 @@ function completeWork(current, workInProgress, renderLanes) {
       );
     case 19:
       pop(suspenseStackCursor);
-      childrenUnchanged = workInProgress.memoizedState;
-      if (null === childrenUnchanged)
-        return bubbleProperties(workInProgress), null;
+      requiresClone = workInProgress.memoizedState;
+      if (null === requiresClone) return bubbleProperties(workInProgress), null;
       newProps = 0 !== (workInProgress.flags & 128);
-      newChildSet = childrenUnchanged.rendering;
+      newChildSet = requiresClone.rendering;
       if (null === newChildSet)
-        if (newProps) cutOffTailIfNeeded(childrenUnchanged, !1);
+        if (newProps) cutOffTailIfNeeded(requiresClone, !1);
         else {
           if (
             0 !== workInProgressRootExitStatus ||
@@ -6208,7 +6204,7 @@ function completeWork(current, workInProgress, renderLanes) {
               newChildSet = findFirstSuspended(current);
               if (null !== newChildSet) {
                 workInProgress.flags |= 128;
-                cutOffTailIfNeeded(childrenUnchanged, !1);
+                cutOffTailIfNeeded(requiresClone, !1);
                 current = newChildSet.updateQueue;
                 workInProgress.updateQueue = current;
                 scheduleRetryEffect(workInProgress, current);
@@ -6225,11 +6221,11 @@ function completeWork(current, workInProgress, renderLanes) {
               }
               current = current.sibling;
             }
-          null !== childrenUnchanged.tail &&
+          null !== requiresClone.tail &&
             now() > workInProgressRootRenderTargetTime &&
             ((workInProgress.flags |= 128),
             (newProps = !0),
-            cutOffTailIfNeeded(childrenUnchanged, !1),
+            cutOffTailIfNeeded(requiresClone, !1),
             (workInProgress.lanes = 4194304));
         }
       else {
@@ -6241,35 +6237,35 @@ function completeWork(current, workInProgress, renderLanes) {
               (current = current.updateQueue),
               (workInProgress.updateQueue = current),
               scheduleRetryEffect(workInProgress, current),
-              cutOffTailIfNeeded(childrenUnchanged, !0),
-              null === childrenUnchanged.tail &&
-                "hidden" === childrenUnchanged.tailMode &&
+              cutOffTailIfNeeded(requiresClone, !0),
+              null === requiresClone.tail &&
+                "hidden" === requiresClone.tailMode &&
                 !newChildSet.alternate)
             )
               return bubbleProperties(workInProgress), null;
           } else
-            2 * now() - childrenUnchanged.renderingStartTime >
+            2 * now() - requiresClone.renderingStartTime >
               workInProgressRootRenderTargetTime &&
               536870912 !== renderLanes &&
               ((workInProgress.flags |= 128),
               (newProps = !0),
-              cutOffTailIfNeeded(childrenUnchanged, !1),
+              cutOffTailIfNeeded(requiresClone, !1),
               (workInProgress.lanes = 4194304));
-        childrenUnchanged.isBackwards
+        requiresClone.isBackwards
           ? ((newChildSet.sibling = workInProgress.child),
             (workInProgress.child = newChildSet))
-          : ((current = childrenUnchanged.last),
+          : ((current = requiresClone.last),
             null !== current
               ? (current.sibling = newChildSet)
               : (workInProgress.child = newChildSet),
-            (childrenUnchanged.last = newChildSet));
+            (requiresClone.last = newChildSet));
       }
-      if (null !== childrenUnchanged.tail)
+      if (null !== requiresClone.tail)
         return (
-          (workInProgress = childrenUnchanged.tail),
-          (childrenUnchanged.rendering = workInProgress),
-          (childrenUnchanged.tail = workInProgress.sibling),
-          (childrenUnchanged.renderingStartTime = now()),
+          (workInProgress = requiresClone.tail),
+          (requiresClone.rendering = workInProgress),
+          (requiresClone.tail = workInProgress.sibling),
+          (requiresClone.renderingStartTime = now()),
           (workInProgress.sibling = null),
           (current = suspenseStackCursor.current),
           push(suspenseStackCursor, newProps ? (current & 1) | 2 : current & 1),
@@ -9545,7 +9541,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1048 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-db5f33be",
+    version: "18.3.0-canary-1b86ce9f",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9588,7 +9584,7 @@ var internals$jscomp$inline_1290 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-db5f33be"
+  reconcilerVersion: "18.3.0-canary-1b86ce9f"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1291 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

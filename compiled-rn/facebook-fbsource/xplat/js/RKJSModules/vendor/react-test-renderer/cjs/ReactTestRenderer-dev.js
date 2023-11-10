@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cf7aa70650e042d314e5532e7bbcef6b>>
+ * @generated SignedSource<<13c422e8868327c7f616f089da284539>>
  */
 
 "use strict";
@@ -16180,9 +16180,12 @@ if (__DEV__) {
       };
     }
 
+    /**
+     * Tag the fiber with an update effect. This turns a Placement into
+     * a PlacementAndUpdate.
+     */
+
     function markUpdate(workInProgress) {
-      // Tag the fiber with an update effect. This turns a Placement into
-      // a PlacementAndUpdate.
       workInProgress.flags |= Update;
     }
 
@@ -25355,7 +25358,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-0e352ea01-20231109";
+    var ReactVersion = "18.3.0-canary-c4c87e049-20231110";
 
     // Might add PROFILE later.
 

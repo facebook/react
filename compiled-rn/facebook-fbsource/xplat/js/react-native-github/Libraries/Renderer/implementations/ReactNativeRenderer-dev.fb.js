@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3f04d4c141a81353e6b5863a95a69735>>
+ * @generated SignedSource<<c54b852b644ab942956e79ee7ac647f1>>
  */
 
 "use strict";
@@ -19456,9 +19456,12 @@ to return true:wantsResponderID|                            |
       } // This function is called when a Suspense boundary suspends. It returns the
     }
 
+    /**
+     * Tag the fiber with an update effect. This turns a Placement into
+     * a PlacementAndUpdate.
+     */
+
     function markUpdate(workInProgress) {
-      // Tag the fiber with an update effect. This turns a Placement into
-      // a PlacementAndUpdate.
       workInProgress.flags |= Update;
     }
 
@@ -28250,7 +28253,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-df5b3b6f";
+    var ReactVersion = "18.3.0-canary-31271153";
 
     function createPortal$1(
       children,
