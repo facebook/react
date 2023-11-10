@@ -31,28 +31,19 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import { makeObject_Primitives, mutate } from "shared-runtime";
 
 function Component() {
-  const $ = useMemoCache(3);
-  let x;
-  let a;
+  const $ = useMemoCache(1);
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    a = makeObject_Primitives();
+    const a = makeObject_Primitives();
 
-    x = [];
+    const x = [];
     x.push(a);
 
     mutate(x);
-    $[0] = x;
-    $[1] = a;
-  } else {
-    x = $[0];
-    a = $[1];
-  }
-  let t0;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = [x, a];
-    $[2] = t0;
+    $[0] = t0;
   } else {
-    t0 = $[2];
+    t0 = $[0];
   }
   return t0;
 }

@@ -232,7 +232,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
              */
             current.lvalues.clear();
 
-            if (!scopeAlwaysInvalidatesOnDependencyChanges(instr)) {
+            if (!scopeIsEligibleForMerging(instr)) {
               /*
                * The subsequent scope that we just merged isn't guaranteed to invalidate if its
                * inputs change, so it is not a candidate for future merging
@@ -252,7 +252,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
               reset();
             }
             // Only set a new merge candidate if the scope is guaranteed to invalidate on changes
-            if (scopeAlwaysInvalidatesOnDependencyChanges(instr)) {
+            if (scopeIsEligibleForMerging(instr)) {
               current = {
                 scope: instr,
                 from: i,
@@ -432,9 +432,24 @@ function areEqualPaths(a: Array<string>, b: Array<string>): boolean {
   return a.length === b.length && a.every((item, ix) => item === b[ix]);
 }
 
-function scopeAlwaysInvalidatesOnDependencyChanges(
-  scope: ReactiveScopeBlock
-): boolean {
+/**
+ * Is this scope eligible for merging with subsequent scopes? In general this
+ * is only true if the scope's output values are guaranteed to change when its
+ * input changes. When the output may not change, it's better to avoid merging
+ * with subsequent scopes so that they can compare the input and avoid updating
+ * when there are no changes.
+ *
+ * A special-case is if the scope has no dependencies, then its output will
+ * *never* change and it's also eligible for merging.
+ */
+function scopeIsEligibleForMerging(scope: ReactiveScopeBlock): boolean {
+  if (scope.scope.dependencies.size === 0) {
+    /*
+     * Regardless of the type of value produced, if the scope has no dependencies
+     * then its value will never change.
+     */
+    return true;
+  }
   const visitor = new DeclarationTypeVisitor(scope.scope);
   visitor.visitScope(scope, undefined);
   return visitor.alwaysInvalidatesOnInputChange;

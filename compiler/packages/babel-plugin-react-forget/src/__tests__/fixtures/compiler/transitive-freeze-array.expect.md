@@ -29,31 +29,19 @@ import { unstable_useMemoCache as useMemoCache } from "react"; // @enableTransit
 const { mutate } = require("shared-runtime");
 
 function Component(props) {
-  const $ = useMemoCache(4);
-  let x;
-  let y;
-  let items;
+  const $ = useMemoCache(1);
+  let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    x = {};
-    y = {};
-    items = [x, y];
+    const x = {};
+    const y = {};
+    const items = [x, y];
     items.pop();
 
     mutate(y);
-    $[0] = x;
-    $[1] = y;
-    $[2] = items;
-  } else {
-    x = $[0];
-    y = $[1];
-    items = $[2];
-  }
-  let t0;
-  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = [x, y, items];
-    $[3] = t0;
+    $[0] = t0;
   } else {
-    t0 = $[3];
+    t0 = $[0];
   }
   return t0;
 }
