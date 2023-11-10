@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-6755280f";
+    var ReactVersion = "18.3.0-www-classic-845b4481";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -18667,9 +18667,12 @@ if (__DEV__) {
       };
     }
 
+    /**
+     * Tag the fiber with an update effect. This turns a Placement into
+     * a PlacementAndUpdate.
+     */
+
     function markUpdate(workInProgress) {
-      // Tag the fiber with an update effect. This turns a Placement into
-      // a PlacementAndUpdate.
       workInProgress.flags |= Update;
     }
 

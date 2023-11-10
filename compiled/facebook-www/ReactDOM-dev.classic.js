@@ -23663,9 +23663,12 @@ if (__DEV__) {
       };
     }
 
+    /**
+     * Tag the fiber with an update effect. This turns a Placement into
+     * a PlacementAndUpdate.
+     */
+
     function markUpdate(workInProgress) {
-      // Tag the fiber with an update effect. This turns a Placement into
-      // a PlacementAndUpdate.
       workInProgress.flags |= Update;
     }
 
@@ -34881,7 +34884,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-a5cdf515";
+    var ReactVersion = "18.3.0-www-classic-d456dfab";
 
     function createPortal$1(
       children,
