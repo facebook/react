@@ -2542,15 +2542,22 @@ function trackPostpone(
 
     const children: Array<ReplayNode> = [];
     if (boundaryKeyPath === keyPath && task.childIndex === -1) {
-      // Since we postponed directly in the Suspense boundary we can't have written anything
-      // to its segment. Therefore this will end up becoming the root segment.
-      segment.id = boundary.rootSegmentID;
+      // Assign ID
+      if (segment.id === -1) {
+        if (segment.parentFlushed) {
+          // If this segment's parent was already flushed, it means we really just
+          // skipped the parent and this segment is now the root.
+          segment.id = boundary.rootSegmentID;
+        } else {
+          segment.id = request.nextSegmentId++;
+        }
+      }
       // We postponed directly inside the Suspense boundary so we mark this for resuming.
       const boundaryNode: ReplaySuspenseBoundary = [
         boundaryKeyPath[1],
         boundaryKeyPath[2],
         children,
-        boundary.rootSegmentID,
+        segment.id,
         fallbackReplayNode,
         boundary.rootSegmentID,
       ];
@@ -3264,7 +3271,8 @@ function queueCompletedSegment(
   if (
     segment.chunks.length === 0 &&
     segment.children.length === 1 &&
-    segment.children[0].boundary === null
+    segment.children[0].boundary === null &&
+    segment.children[0].id === -1
   ) {
     // This is an empty segment. There's nothing to write, so we can instead transfer the ID
     // to the child. That way any existing references point to the child.

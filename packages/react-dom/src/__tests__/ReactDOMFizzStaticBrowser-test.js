@@ -1495,4 +1495,51 @@ describe('ReactDOMFizzStaticBrowser', () => {
       'hello',
     ]);
   });
+
+  // @gate enablePostpone
+  it('can render a deep list of single components where one postpones', async () => {
+    let isPrerendering = true;
+    function Outer({children}) {
+      return children;
+    }
+
+    function Middle({children}) {
+      return children;
+    }
+
+    function Inner() {
+      if (isPrerendering) {
+        React.unstable_postpone();
+      }
+      return 'hello';
+    }
+
+    function App() {
+      return (
+        <Suspense fallback="loading...">
+          <Outer>
+            <Middle>
+              <Inner />
+            </Middle>
+          </Outer>
+        </Suspense>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<App />);
+    const postponedState = JSON.stringify(prerendered.postponed);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual('loading...');
+
+    isPrerendering = false;
+
+    const dynamic = await ReactDOMFizzServer.resume(
+      <App />,
+      JSON.parse(postponedState),
+    );
+
+    await readIntoContainer(dynamic);
+    expect(getVisibleChildren(container)).toEqual('hello');
+  });
 });
