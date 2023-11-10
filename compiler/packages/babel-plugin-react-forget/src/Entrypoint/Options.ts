@@ -127,6 +127,19 @@ export type CompilationMode =
   // Compile all top-level functions
   | "all";
 
+/**
+ * Represents 'events' that may occur during compilation. Events are only
+ * recorded when a logger is set (through the config).
+ * These are the different types of events:
+ * CompileError:
+ *   Forget skipped compilation of a function / file due to a known todo,
+ *   invalid input, or compiler invariant being broken.
+ * CompileSuccess:
+ *   Forget successfully compiled a function.
+ * PipelineError:
+ *   Unexpected errors that occurred during compilation (e.g. failures in
+ *   babel or other unhandled exceptions).
+ */
 export type LoggerEvent =
   | {
       kind: "CompileError";
@@ -142,7 +155,7 @@ export type LoggerEvent =
   | {
       kind: "PipelineError";
       fnLoc: t.SourceLocation | null;
-      data: any;
+      data: string;
     };
 
 export type Logger = {
