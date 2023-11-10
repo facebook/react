@@ -47,8 +47,9 @@ export function getClientReferenceKey<T>(
 ): ClientReferenceKey {
   const record = registeredClientReferences.get(clientReference);
   if (record != null) {
-    return record[0];
+    return record.moduleId;
   }
+
   throw new Error(
     'Expected client reference ' + clientReference + ' to be registered.',
   );

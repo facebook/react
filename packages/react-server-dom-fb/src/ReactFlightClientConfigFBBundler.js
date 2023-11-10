@@ -35,7 +35,7 @@ import type {
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {
-  moduleName: string,
+  moduleId: string,
   exportName: string,
   loadModule: () => Thenable<T>,
 };
@@ -73,7 +73,7 @@ const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 export function preloadModule<T>(
   clientReference: ClientReference<T>,
 ): null | Thenable<any> {
-  const existingPromise = asyncModuleCache.get(clientReference.moduleName);
+  const existingPromise = asyncModuleCache.get(clientReference.moduleId);
   if (existingPromise) {
     if (existingPromise.status === 'fulfilled') {
       return null;
@@ -94,7 +94,7 @@ export function preloadModule<T>(
         rejectedThenable.reason = reason;
       },
     );
-    asyncModuleCache.set(clientReference.moduleName, modulePromise);
+    asyncModuleCache.set(clientReference.moduleId, modulePromise);
     return modulePromise;
   }
 }
@@ -103,7 +103,7 @@ export function requireModule<T>(metadata: ClientReference<T>): T {
   let module;
   // We assume that preloadModule has been called before, which
   // should have added something to the module cache.
-  const promise: any = asyncModuleCache.get(metadata.moduleName);
+  const promise: any = asyncModuleCache.get(metadata.moduleId);
   if (promise.status === 'fulfilled') {
     module = promise.value;
   } else {
