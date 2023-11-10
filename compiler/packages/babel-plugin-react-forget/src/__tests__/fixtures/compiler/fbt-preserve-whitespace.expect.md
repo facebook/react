@@ -3,10 +3,8 @@
 
 ```javascript
 import fbt from "fbt";
-/**
- * TODO: remove this from SproutTodoFilter when fixed.
- */
 
+const _ = fbt;
 function Component({ value }: { value: string }) {
   return (
     <fbt desc="descdesc">
@@ -28,17 +26,15 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
-/**
- * TODO: remove this from SproutTodoFilter when fixed.
- */
 
-function Component(t11) {
+const _ = fbt;
+function Component(t12) {
   const $ = useMemoCache(2);
-  const { value } = t11;
+  const { value } = t12;
   let t0;
   if ($[0] !== value) {
     t0 = fbt._(
-      "Before text{paramName}",
+      "Before text {paramName}",
       [
         fbt._param(
           "paramName",
@@ -46,7 +42,7 @@ function Component(t11) {
           value
         ),
       ],
-      { hk: "3DIRxJ" }
+      { hk: "3z5SVE" }
     );
     $[0] = value;
     $[1] = t0;

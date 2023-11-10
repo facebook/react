@@ -1,8 +1,6 @@
 import fbt from "fbt";
-/**
- * TODO: remove this from SproutTodoFilter when fixed.
- */
 
+const _ = fbt;
 function Component({ value }: { value: string }) {
   return (
     <fbt desc="descdesc">

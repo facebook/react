@@ -469,7 +469,6 @@ const skipFilter = new Set([
 
   // Bug in Forget output
   "todo-rename-source-variables",
-  "bug-fbt-preserve-whitespace",
 
   // Tested e2e in forget-feedback repo
   "userspace-use-memo-cache",

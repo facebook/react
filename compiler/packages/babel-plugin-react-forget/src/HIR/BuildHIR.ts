@@ -1902,10 +1902,6 @@ function lowerExpression(
       const expr = exprPath as NodePath<t.JSXElement>;
       const opening = expr.get("openingElement");
       const tag = lowerJsxElementName(builder, opening.get("name"));
-      const children: Array<Place> = expr
-        .get("children")
-        .map((child) => lowerJsxElement(builder, child))
-        .filter(notNull);
       const props: Array<JsxAttribute> = [];
       for (const attribute of opening.get("attributes")) {
         if (attribute.isJSXSpreadAttribute()) {
@@ -1981,6 +1977,32 @@ function lowerExpression(
           value = lowerExpressionToTemporary(builder, expression);
         }
         props.push({ kind: "JsxAttribute", name: propName, place: value });
+      }
+      let children: Array<Place>;
+      if (tag.kind === "BuiltinTag" && tag.name === "fbt") {
+        children = expr
+          .get("children")
+          .map((child) => {
+            if (child.isJSXText()) {
+              /*
+               * FBT whitespace normalization differs from standard JSX:
+               * https://github.com/facebook/fbt/blob/0b4e0d13c30bffd0daa2a75715d606e3587b4e40/packages/babel-plugin-fbt/src/FbtUtil.js#L76-L87
+               */
+              const text = child.node.value.replace(/[^\S\u00A0]+/g, " ");
+              return lowerValueToTemporary(builder, {
+                kind: "JSXText",
+                value: text,
+                loc: exprLoc,
+              });
+            }
+            return lowerJsxElement(builder, child);
+          })
+          .filter(notNull);
+      } else {
+        children = expr
+          .get("children")
+          .map((child) => lowerJsxElement(builder, child))
+          .filter(notNull);
       }
       return {
         kind: "JsxExpression",

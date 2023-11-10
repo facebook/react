@@ -28,9 +28,9 @@ function Component({ name, data, icon }) {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import fbt from "fbt";
 
-function Component(t29) {
+function Component(t33) {
   const $ = useMemoCache(4);
-  const { name, data, icon } = t29;
+  const { name, data, icon } = t33;
   let t0;
   if ($[0] !== name || $[1] !== icon || $[2] !== data) {
     t0 = (
