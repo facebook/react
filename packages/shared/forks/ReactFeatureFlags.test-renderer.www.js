@@ -42,7 +42,7 @@ export const disableModulePatternComponents = true;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
-export const enableUseMemoCacheHook = false;
+export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = false;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = true;
@@ -57,7 +57,7 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = false;
+export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = false;
 

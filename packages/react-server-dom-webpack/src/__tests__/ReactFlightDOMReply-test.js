@@ -231,4 +231,14 @@ describe('ReactFlightDOMReply', () => {
     expect(s2.has('hi')).toBe(true);
     expect(s2).toEqual(s);
   });
+
+  it('does not hang indefinitely when calling decodeReply with FormData', async () => {
+    let error;
+    try {
+      await ReactServerDOMServer.decodeReply(new FormData(), webpackServerMap);
+    } catch (e) {
+      error = e;
+    }
+    expect(error.message).toBe('Connection closed.');
+  });
 });

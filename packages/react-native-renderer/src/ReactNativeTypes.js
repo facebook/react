@@ -245,7 +245,7 @@ export type ReactFabricType = {
   ): ?Node,
   getPublicInstanceFromInternalInstanceHandle(
     internalInstanceHandle: InternalInstanceHandle,
-  ): PublicInstance | PublicTextInstance,
+  ): PublicInstance | PublicTextInstance | null,
   ...
 };
 

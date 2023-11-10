@@ -16,7 +16,7 @@ let useDeferredValue;
 let useMemo;
 let useState;
 let Suspense;
-let Offscreen;
+let Activity;
 let assertLog;
 let waitForPaint;
 let textCache;
@@ -34,7 +34,7 @@ describe('ReactDeferredValue', () => {
     useMemo = React.useMemo;
     useState = React.useState;
     Suspense = React.Suspense;
-    Offscreen = React.unstable_Offscreen;
+    Activity = React.unstable_Activity;
 
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
@@ -569,7 +569,7 @@ describe('ReactDeferredValue', () => {
   });
 
   // @gate enableUseDeferredValueInitialArg
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('useDeferredValue can spawn a deferred task while prerendering a hidden tree', async () => {
     function App() {
       const text = useDeferredValue('Final', 'Preview');
@@ -585,9 +585,7 @@ describe('ReactDeferredValue', () => {
       const [shouldShow, setState] = useState(false);
       revealContent = () => setState(true);
       return (
-        <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
-          {children}
-        </Offscreen>
+        <Activity mode={shouldShow ? 'visible' : 'hidden'}>{children}</Activity>
       );
     }
 
@@ -618,7 +616,7 @@ describe('ReactDeferredValue', () => {
   });
 
   // @gate enableUseDeferredValueInitialArg
-  // @gate enableOffscreen
+  // @gate enableActivity
   it('useDeferredValue can prerender the initial value inside a hidden tree', async () => {
     function App({text}) {
       const renderedText = useDeferredValue(text, `Preview [${text}]`);
@@ -634,9 +632,7 @@ describe('ReactDeferredValue', () => {
       const [shouldShow, setState] = useState(false);
       revealContent = () => setState(true);
       return (
-        <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
-          {children}
-        </Offscreen>
+        <Activity mode={shouldShow ? 'visible' : 'hidden'}>{children}</Activity>
       );
     }
 
@@ -679,7 +675,7 @@ describe('ReactDeferredValue', () => {
   });
 
   // @gate enableUseDeferredValueInitialArg
-  // @gate enableOffscreen
+  // @gate enableActivity
   it(
     'useDeferredValue skips the preview state when revealing a hidden tree ' +
       'if the final value is referentially identical',
@@ -695,9 +691,9 @@ describe('ReactDeferredValue', () => {
 
       function Container({text, shouldShow}) {
         return (
-          <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+          <Activity mode={shouldShow ? 'visible' : 'hidden'}>
             <App text={text} />
-          </Offscreen>
+          </Activity>
         );
       }
 
@@ -720,7 +716,7 @@ describe('ReactDeferredValue', () => {
   );
 
   // @gate enableUseDeferredValueInitialArg
-  // @gate enableOffscreen
+  // @gate enableActivity
   it(
     'useDeferredValue does not skip the preview state when revealing a ' +
       'hidden tree if the final value is different from the currently rendered one',
@@ -736,9 +732,9 @@ describe('ReactDeferredValue', () => {
 
       function Container({text, shouldShow}) {
         return (
-          <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+          <Activity mode={shouldShow ? 'visible' : 'hidden'}>
             <App text={text} />
-          </Offscreen>
+          </Activity>
         );
       }
 
@@ -765,7 +761,7 @@ describe('ReactDeferredValue', () => {
     },
   );
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   it(
     'useDeferredValue does not show "previous" value when revealing a hidden ' +
       'tree (no initial value)',
@@ -781,9 +777,9 @@ describe('ReactDeferredValue', () => {
 
       function Container({text, shouldShow}) {
         return (
-          <Offscreen mode={shouldShow ? 'visible' : 'hidden'}>
+          <Activity mode={shouldShow ? 'visible' : 'hidden'}>
             <App text={text} />
-          </Offscreen>
+          </Activity>
         );
       }
 

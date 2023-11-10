@@ -32,6 +32,7 @@ export opaque type RenderState = mixed;
 export opaque type ResumableState = mixed;
 export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
+export opaque type HeadersDescriptor = mixed;
 export type {TransitionStatus};
 
 export const isPrimaryRenderer = false;
@@ -40,6 +41,7 @@ export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request> = (null: any);
 
 export const resetResumableState = $$$config.resetResumableState;
+export const completeResumableState = $$$config.completeResumableState;
 export const getChildFormatContext = $$$config.getChildFormatContext;
 export const makeId = $$$config.makeId;
 export const pushTextInstance = $$$config.pushTextInstance;
@@ -91,3 +93,4 @@ export const createBoundaryResources = $$$config.createBoundaryResources;
 export const setCurrentlyRenderingBoundaryResourcesTarget =
   $$$config.setCurrentlyRenderingBoundaryResourcesTarget;
 export const writeResourcesForBoundary = $$$config.writeResourcesForBoundary;
+export const emitEarlyPreloads = $$$config.emitEarlyPreloads;

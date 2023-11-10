@@ -122,7 +122,7 @@ export default function Element({data, index, style}: Props): React.Node {
     isStrictModeNonCompliant,
     key,
     type,
-  } = ((element: any): ElementType);
+  } = element;
 
   // Only show strict mode non-compliance badges for top level elements.
   // Showing an inline badge for every element in the tree would be noisy.
@@ -173,17 +173,16 @@ export default function Element({data, index, style}: Props): React.Node {
             "
           </Fragment>
         )}
+
         {hocDisplayNames !== null && hocDisplayNames.length > 0 ? (
           <Badge
             className={styles.Badge}
             hocDisplayNames={hocDisplayNames}
             type={type}>
-            <DisplayName
-              displayName={hocDisplayNames[0]}
-              id={((id: any): number)}
-            />
+            <DisplayName displayName={hocDisplayNames[0]} id={id} />
           </Badge>
         ) : null}
+
         {showInlineWarningsAndErrors && errorCount > 0 && (
           <Icon
             type="error"

@@ -22,6 +22,7 @@ import typeof * as DynamicFlagsType from 'ReactNativeInternalFeatureFlags';
 
 export const enableUseRefAccessWarning = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
+export const enableUnifiedSyncLane = __VARIANT__;
 export const alwaysThrottleRetries = __VARIANT__;
 export const useMicrotasksForSchedulingInFabric = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;

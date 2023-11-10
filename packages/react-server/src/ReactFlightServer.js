@@ -1790,15 +1790,27 @@ export function abort(request: Request, reason: mixed): void {
     if (abortableTasks.size > 0) {
       // We have tasks to abort. We'll emit one error row and then emit a reference
       // to that row from every row that's still remaining.
-      const error =
-        reason === undefined
-          ? new Error('The render was aborted by the server without a reason.')
-          : reason;
-
-      const digest = logRecoverableError(request, error);
       request.pendingChunks++;
       const errorId = request.nextChunkId++;
-      emitErrorChunk(request, errorId, digest, error);
+      if (
+        enablePostpone &&
+        typeof reason === 'object' &&
+        reason !== null &&
+        (reason: any).$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (reason: any);
+        logPostpone(request, postponeInstance.message);
+        emitPostponeChunk(request, errorId, postponeInstance);
+      } else {
+        const error =
+          reason === undefined
+            ? new Error(
+                'The render was aborted by the server without a reason.',
+              )
+            : reason;
+        const digest = logRecoverableError(request, error);
+        emitErrorChunk(request, errorId, digest, error);
+      }
       abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
     }
