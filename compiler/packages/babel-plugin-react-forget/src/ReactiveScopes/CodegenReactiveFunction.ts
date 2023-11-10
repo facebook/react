@@ -240,9 +240,12 @@ function codegenMemoBlockForReactiveScope(
   const cacheStoreStatements: Array<t.Statement> = [];
   const cacheLoadStatements: Array<t.Statement> = [];
   const changeExpressions: Array<t.Expression> = [];
+  const changeExpressionComments: Array<string> = [];
+  const outputComments: Array<string> = [];
   for (const dep of scope.dependencies) {
     const index = cx.nextCacheIndex;
     const depValue = codegenDependency(cx, dep);
+    changeExpressionComments.push(printDependencyComment(dep));
     const comparison = t.binaryExpression(
       "!==",
       t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
@@ -285,6 +288,7 @@ function codegenMemoBlockForReactiveScope(
     });
 
     const name = convertIdentifier(identifier);
+    outputComments.push(name.name);
     if (!cx.hasDeclared(identifier)) {
       statements.push(
         t.variableDeclaration("let", [t.variableDeclarator(name)])
@@ -316,6 +320,7 @@ function codegenMemoBlockForReactiveScope(
       firstOutputIndex = index;
     }
     const name = convertIdentifier(reassignment);
+    outputComments.push(name.name);
 
     cacheStoreStatements.push(
       t.expressionStatement(
@@ -369,7 +374,60 @@ function codegenMemoBlockForReactiveScope(
   const computationBlock = codegenBlock(cx, block);
   computationBlock.body.push(...cacheStoreStatements);
   const memoBlock = t.blockStatement(cacheLoadStatements);
-  statements.push(t.ifStatement(testCondition, computationBlock, memoBlock));
+  const memoStatement = t.ifStatement(
+    testCondition,
+    computationBlock,
+    memoBlock
+  );
+  if (cx.env.config.enableMemoizationComments) {
+    if (changeExpressionComments.length) {
+      t.addComment(
+        memoStatement,
+        "leading",
+        ` check if ${printDelimitedCommentList(
+          changeExpressionComments,
+          "or"
+        )} changed`,
+        true
+      );
+      t.addComment(
+        memoStatement,
+        "leading",
+        ` "useMemo" for ${printDelimitedCommentList(outputComments, "and")}:`,
+        true
+      );
+    } else {
+      t.addComment(
+        memoStatement,
+        "leading",
+        " cache value with no dependencies",
+        true
+      );
+      t.addComment(
+        memoStatement,
+        "leading",
+        ` "useMemo" for ${printDelimitedCommentList(outputComments, "and")}:`,
+        true
+      );
+    }
+    if (computationBlock.body.length > 0) {
+      t.addComment(
+        computationBlock.body[0]!,
+        "leading",
+        ` Inputs changed, recompute`,
+        true
+      );
+    }
+    if (memoBlock.body.length > 0) {
+      t.addComment(
+        memoBlock.body[0]!,
+        "leading",
+        ` Inputs did not change, use cached value`,
+        true
+      );
+    }
+  }
+  statements.push(memoStatement);
 }
 
 function codegenSignalBlockForReactiveScope(
@@ -787,6 +845,41 @@ function codegenForInit(
   } else {
     return codegenInstructionValueToExpression(cx, init);
   }
+}
+
+function printDependencyComment(dependency: ReactiveScopeDependency): string {
+  const identifier = convertIdentifier(dependency.identifier);
+  let name = identifier.name;
+  if (dependency.path !== null) {
+    for (const path of dependency.path) {
+      name += `.${path}`;
+    }
+  }
+  return name;
+}
+
+function printDelimitedCommentList(
+  items: Array<string>,
+  finalCompletion: string
+): string {
+  if (items.length === 2) {
+    return items.join(` ${finalCompletion} `);
+  } else if (items.length <= 1) {
+    return items.join("");
+  }
+
+  let output = [];
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i]!;
+    if (i < items.length - 2) {
+      output.push(`${item}, `);
+    } else if (i === items.length - 2) {
+      output.push(`${item}, ${finalCompletion} `);
+    } else {
+      output.push(item);
+    }
+  }
+  return output.join("");
 }
 
 function codegenDependency(

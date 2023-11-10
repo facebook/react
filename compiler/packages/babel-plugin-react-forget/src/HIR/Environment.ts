@@ -257,6 +257,14 @@ const EnvironmentConfigSchema = z.object({
    * ```
    */
   enableChangeVariableCodegen: z.boolean().default(false),
+
+  /**
+   * Enable emitting comments that explain Forget's output, and which
+   * values are being checked and which values produced by each memo block.
+   *
+   * Intended for use in demo purposes (incl playground)
+   */
+  enableMemoizationComments: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
