@@ -4506,7 +4506,8 @@ function queueCompletedSegment(boundary, segment) {
   if (
     0 === segment.chunks.length &&
     1 === segment.children.length &&
-    null === segment.children[0].boundary
+    null === segment.children[0].boundary &&
+    -1 === segment.children[0].id
   ) {
     var childSegment = segment.children[0];
     childSegment.id = segment.id;
@@ -5342,4 +5343,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-15ac94d7";
+exports.version = "18.3.0-www-modern-d15e6948";

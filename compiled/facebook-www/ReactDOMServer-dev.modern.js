@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-a2bd2f78";
+    var ReactVersion = "18.3.0-www-modern-adf7c13c";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -12996,7 +12996,8 @@ if (__DEV__) {
       if (
         segment.chunks.length === 0 &&
         segment.children.length === 1 &&
-        segment.children[0].boundary === null
+        segment.children[0].boundary === null &&
+        segment.children[0].id === -1
       ) {
         // This is an empty segment. There's nothing to write, so we can instead transfer the ID
         // to the child. That way any existing references point to the child.

@@ -12875,7 +12875,8 @@ if (__DEV__) {
       if (
         segment.chunks.length === 0 &&
         segment.children.length === 1 &&
-        segment.children[0].boundary === null
+        segment.children[0].boundary === null &&
+        segment.children[0].id === -1
       ) {
         // This is an empty segment. There's nothing to write, so we can instead transfer the ID
         // to the child. That way any existing references point to the child.

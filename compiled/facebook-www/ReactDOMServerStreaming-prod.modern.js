@@ -4343,7 +4343,8 @@ function queueCompletedSegment(boundary, segment) {
   if (
     0 === segment.chunks.length &&
     1 === segment.children.length &&
-    null === segment.children[0].boundary
+    null === segment.children[0].boundary &&
+    -1 === segment.children[0].id
   ) {
     var childSegment = segment.children[0];
     childSegment.id = segment.id;
