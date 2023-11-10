@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<215b578b886f3eeea52b84f72bb15ec6>>
+ * @generated SignedSource<<c45396dc1efd10a6033e0b1852b0fe7f>>
  */
 
 "use strict";
@@ -9541,7 +9541,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1048 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-1b86ce9f",
+    version: "18.3.0-canary-8f9ce9e2",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9584,7 +9584,7 @@ var internals$jscomp$inline_1290 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-1b86ce9f"
+  reconcilerVersion: "18.3.0-canary-8f9ce9e2"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1291 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9643,16 +9643,17 @@ exports.getNodeFromInternalInstanceHandle = function (internalInstanceHandle) {
 exports.getPublicInstanceFromInternalInstanceHandle = function (
   internalInstanceHandle
 ) {
-  if (6 === internalInstanceHandle.tag) {
-    var textInstance = internalInstanceHandle.stateNode;
-    null == textInstance.publicInstance &&
-      (textInstance.publicInstance =
-        ReactNativePrivateInterface.createPublicTextInstance(
-          internalInstanceHandle
-        ));
-    return textInstance.publicInstance;
-  }
-  return getPublicInstance(internalInstanceHandle.stateNode);
+  var instance = internalInstanceHandle.stateNode;
+  return null == instance
+    ? null
+    : 6 === internalInstanceHandle.tag
+    ? (null == instance.publicInstance &&
+        (instance.publicInstance =
+          ReactNativePrivateInterface.createPublicTextInstance(
+            internalInstanceHandle
+          )),
+      instance.publicInstance)
+    : getPublicInstance(internalInstanceHandle.stateNode);
 };
 exports.render = function (element, containerTag, callback, concurrentRoot) {
   var root = roots.get(containerTag);

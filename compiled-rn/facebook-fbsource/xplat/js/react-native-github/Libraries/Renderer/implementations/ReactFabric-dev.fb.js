@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<82de3c20128bc9cf9a3e000de26414a9>>
+ * @generated SignedSource<<35562a820289897947536c61435e3dcd>>
  */
 
 "use strict";
@@ -5111,13 +5111,20 @@ to return true:wantsResponderID|                            |
     function getPublicInstanceFromInternalInstanceHandle(
       internalInstanceHandle
     ) {
+      var instance = internalInstanceHandle.stateNode; // React resets all the fields in the fiber when the component is unmounted
+      // to prevent memory leaks.
+
+      if (instance == null) {
+        return null;
+      }
+
       if (internalInstanceHandle.tag === HostText) {
-        var textInstance = internalInstanceHandle.stateNode;
+        var textInstance = instance;
         return getPublicTextInstance(textInstance, internalInstanceHandle);
       }
 
-      var instance = internalInstanceHandle.stateNode;
-      return getPublicInstance(instance);
+      var elementInstance = internalInstanceHandle.stateNode;
+      return getPublicInstance(elementInstance);
     }
     function shouldSetTextContent(type, props) {
       // TODO (bvaughn) Revisit this decision.
@@ -27805,7 +27812,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-8403dc9a";
+    var ReactVersion = "18.3.0-canary-884b3517";
 
     function createPortal$1(
       children,

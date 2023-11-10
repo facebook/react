@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<443d6fa46938bdd4041f48305e367a13>>
+ * @generated SignedSource<<cb300ed80629ca9a73c08e9fcad07bd0>>
  */
 
 "use strict";
@@ -10243,7 +10243,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1126 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-5ad064e7",
+    version: "18.3.0-canary-8a2d4f06",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10299,7 +10299,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-5ad064e7"
+  reconcilerVersion: "18.3.0-canary-8a2d4f06"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
@@ -10345,16 +10345,17 @@ exports.getNodeFromInternalInstanceHandle = function (internalInstanceHandle) {
 exports.getPublicInstanceFromInternalInstanceHandle = function (
   internalInstanceHandle
 ) {
-  if (6 === internalInstanceHandle.tag) {
-    var textInstance = internalInstanceHandle.stateNode;
-    null == textInstance.publicInstance &&
-      (textInstance.publicInstance =
-        ReactNativePrivateInterface.createPublicTextInstance(
-          internalInstanceHandle
-        ));
-    return textInstance.publicInstance;
-  }
-  return getPublicInstance(internalInstanceHandle.stateNode);
+  var instance = internalInstanceHandle.stateNode;
+  return null == instance
+    ? null
+    : 6 === internalInstanceHandle.tag
+    ? (null == instance.publicInstance &&
+        (instance.publicInstance =
+          ReactNativePrivateInterface.createPublicTextInstance(
+            internalInstanceHandle
+          )),
+      instance.publicInstance)
+    : getPublicInstance(internalInstanceHandle.stateNode);
 };
 exports.render = function (element, containerTag, callback, concurrentRoot) {
   var root = roots.get(containerTag);

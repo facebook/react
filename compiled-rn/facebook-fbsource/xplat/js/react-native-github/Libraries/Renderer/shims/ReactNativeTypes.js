@@ -7,7 +7,7 @@
  * @noformat
  * @flow strict
  * @nolint
- * @generated SignedSource<<652b117c94307244bcf5e4af18928903>>
+ * @generated SignedSource<<1836a1b6639552dce12199ef2c85f63d>>
  */
 
 import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';
@@ -247,7 +247,7 @@ export type ReactFabricType = {
   ): ?Node,
   getPublicInstanceFromInternalInstanceHandle(
     internalInstanceHandle: InternalInstanceHandle,
-  ): PublicInstance | PublicTextInstance,
+  ): PublicInstance | PublicTextInstance | null,
   ...
 };
 
