@@ -13,7 +13,11 @@ import json from "@rollup/plugin-json";
 import path from "path";
 import process from "process";
 
-const NO_INLINE = new Set([]);
+const NO_INLINE = new Set([
+  "@babel/core",
+  "@babel/plugin-proposal-private-methods",
+  "hermes-parser",
+]);
 
 export default {
   input: "src/index.ts",
