@@ -198,6 +198,7 @@ if (__DEV__) {
     var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
     var REACT_CACHE_TYPE = Symbol.for("react.cache");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
+    var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
     var FAUX_ITERATOR_SYMBOL = "@@iterator";
     function getIteratorFn(maybeIterable) {
@@ -7827,7 +7828,8 @@ if (__DEV__) {
         return {
           lastEffect: null,
           events: null,
-          stores: null
+          stores: null,
+          memoCache: null
         };
       };
     }
@@ -7880,6 +7882,73 @@ if (__DEV__) {
       throw new Error(
         "An unsupported type was passed to use(): " + String(usable)
       );
+    }
+
+    function useMemoCache(size) {
+      var memoCache = null; // Fast-path, load memo cache from wip fiber if already prepared
+
+      var updateQueue = currentlyRenderingFiber$1.updateQueue;
+
+      if (updateQueue !== null) {
+        memoCache = updateQueue.memoCache;
+      } // Otherwise clone from the current fiber
+
+      if (memoCache == null) {
+        var current = currentlyRenderingFiber$1.alternate;
+
+        if (current !== null) {
+          var currentUpdateQueue = current.updateQueue;
+
+          if (currentUpdateQueue !== null) {
+            var currentMemoCache = currentUpdateQueue.memoCache;
+
+            if (currentMemoCache != null) {
+              memoCache = {
+                data: currentMemoCache.data.map(function (array) {
+                  return array.slice();
+                }),
+                index: 0
+              };
+            }
+          }
+        }
+      } // Finally fall back to allocating a fresh instance of the cache
+
+      if (memoCache == null) {
+        memoCache = {
+          data: [],
+          index: 0
+        };
+      }
+
+      if (updateQueue === null) {
+        updateQueue = createFunctionComponentUpdateQueue();
+        currentlyRenderingFiber$1.updateQueue = updateQueue;
+      }
+
+      updateQueue.memoCache = memoCache;
+      var data = memoCache.data[memoCache.index];
+
+      if (data === undefined) {
+        data = memoCache.data[memoCache.index] = new Array(size);
+
+        for (var i = 0; i < size; i++) {
+          data[i] = REACT_MEMO_CACHE_SENTINEL;
+        }
+      } else if (data.length !== size) {
+        // TODO: consider warning or throwing here
+        {
+          error(
+            "Expected a constant size argument for each invocation of useMemoCache. " +
+              "The previous cache was allocated with size %s but size %s was requested.",
+            data.length,
+            size
+          );
+        }
+      }
+
+      memoCache.index++;
+      return data;
     }
 
     function basicStateReducer(state, action) {
@@ -9633,6 +9702,10 @@ if (__DEV__) {
     }
 
     {
+      ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
+    }
+
+    {
       ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
       ContextOnlyDispatcher.useFormState = throwInvalidHookError;
     }
@@ -9794,6 +9867,10 @@ if (__DEV__) {
       }
 
       {
+        HooksDispatcherOnMountInDEV.useMemoCache = useMemoCache;
+      }
+
+      {
         HooksDispatcherOnMountInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -9939,6 +10016,10 @@ if (__DEV__) {
       }
 
       {
+        HooksDispatcherOnMountWithHookTypesInDEV.useMemoCache = useMemoCache;
+      }
+
+      {
         HooksDispatcherOnMountWithHookTypesInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -10076,6 +10157,10 @@ if (__DEV__) {
             updateHookTypesDev();
             return updateRefresh();
           };
+      }
+
+      {
+        HooksDispatcherOnUpdateInDEV.useMemoCache = useMemoCache;
       }
 
       {
@@ -10221,6 +10306,10 @@ if (__DEV__) {
             updateHookTypesDev();
             return updateRefresh();
           };
+      }
+
+      {
+        HooksDispatcherOnRerenderInDEV.useMemoCache = useMemoCache;
       }
 
       {
@@ -10388,6 +10477,15 @@ if (__DEV__) {
       }
 
       {
+        InvalidNestedHooksDispatcherOnMountInDEV.useMemoCache = function (
+          size
+        ) {
+          warnInvalidHookAccess();
+          return useMemoCache(size);
+        };
+      }
+
+      {
         InvalidNestedHooksDispatcherOnMountInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -10549,6 +10647,15 @@ if (__DEV__) {
       }
 
       {
+        InvalidNestedHooksDispatcherOnUpdateInDEV.useMemoCache = function (
+          size
+        ) {
+          warnInvalidHookAccess();
+          return useMemoCache(size);
+        };
+      }
+
+      {
         InvalidNestedHooksDispatcherOnUpdateInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -10707,6 +10814,15 @@ if (__DEV__) {
             updateHookTypesDev();
             return updateRefresh();
           };
+      }
+
+      {
+        InvalidNestedHooksDispatcherOnRerenderInDEV.useMemoCache = function (
+          size
+        ) {
+          warnInvalidHookAccess();
+          return useMemoCache(size);
+        };
       }
 
       {
@@ -25813,7 +25929,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-b6e8ec88";
+    var ReactVersion = "18.3.0-www-classic-2869b479";
 
     // Might add PROFILE later.
 
