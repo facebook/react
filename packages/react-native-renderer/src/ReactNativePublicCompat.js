@@ -142,11 +142,12 @@ export function findNodeHandle(componentOrHandle: any): ?number {
   }
 
   if (hostInstance == null) {
+    // $FlowFixMe[incompatible-return] Flow limitation in refining an opaque type
     return hostInstance;
   }
 
-  // $FlowFixMe[incompatible-type] For compatibility with legacy renderer instances
   if (hostInstance._nativeTag != null) {
+    // $FlowFixMe[incompatible-return] For compatibility with legacy renderer instances
     return hostInstance._nativeTag;
   }
 
