@@ -178,9 +178,11 @@ import {
 } from './ReactFiberTracingMarkerComponent';
 import {suspendCommit} from './ReactFiberThenable';
 
+/**
+ * Tag the fiber with an update effect. This turns a Placement into
+ * a PlacementAndUpdate.
+ */
 function markUpdate(workInProgress: Fiber) {
-  // Tag the fiber with an update effect. This turns a Placement into
-  // a PlacementAndUpdate.
   workInProgress.flags |= Update;
 }
 
@@ -188,17 +190,20 @@ function markRef(workInProgress: Fiber) {
   workInProgress.flags |= Ref | RefStatic;
 }
 
-function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
+/**
+ * In persistent mode, return whether this update needs to clone the subtree.
+ */
+function doesRequireClone(current: null | Fiber, completedWork: Fiber) {
   const didBailout = current !== null && current.child === completedWork.child;
   if (didBailout) {
-    return true;
-  }
-
-  if ((completedWork.flags & ChildDeletion) !== NoFlags) {
     return false;
   }
 
-  // TODO: If we move the `hadNoMutationsEffects` call after `bubbleProperties`
+  if ((completedWork.flags & ChildDeletion) !== NoFlags) {
+    return true;
+  }
+
+  // TODO: If we move the `doesRequireClone` call after `bubbleProperties`
   // then we only have to check the `completedWork.subtreeFlags`.
   let child = completedWork.child;
   while (child !== null) {
@@ -206,11 +211,11 @@ function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
       (child.flags & MutationMask) !== NoFlags ||
       (child.subtreeFlags & MutationMask) !== NoFlags
     ) {
-      return false;
+      return true;
     }
     child = child.sibling;
   }
-  return true;
+  return false;
 }
 
 function appendAllChildren(
@@ -303,7 +308,6 @@ function appendAllChildren(
         node = node.child;
         continue;
       }
-      node = (node: Fiber);
       if (node === workInProgress) {
         return;
       }
@@ -400,15 +404,12 @@ function appendAllChildrenToContainer(
 
 function updateHostContainer(current: null | Fiber, workInProgress: Fiber) {
   if (supportsPersistence) {
-    const portalOrRoot: {
-      containerInfo: Container,
-      pendingChildren: ChildSet,
-      ...
-    } = workInProgress.stateNode;
-    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
-    if (childrenUnchanged) {
-      // No changes, just reuse the existing instance.
-    } else {
+    if (doesRequireClone(current, workInProgress)) {
+      const portalOrRoot: {
+        containerInfo: Container,
+        pendingChildren: ChildSet,
+        ...
+      } = workInProgress.stateNode;
       const container = portalOrRoot.containerInfo;
       const newChildSet = createContainerChildSet();
       // If children might have changed, we have to add them all to the set.
@@ -449,8 +450,8 @@ function updateHostComponent(
     const oldProps = current.memoizedProps;
     // If there are no effects associated with this node, then none of our children had any updates.
     // This guarantees that we can reuse all of them.
-    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
-    if (childrenUnchanged && oldProps === newProps) {
+    const requiresClone = doesRequireClone(current, workInProgress);
+    if (!requiresClone && oldProps === newProps) {
       // No changes, just reuse the existing instance.
       // Note that this might release a previous clone.
       workInProgress.stateNode = currentInstance;
@@ -459,7 +460,7 @@ function updateHostComponent(
     const currentHostContext = getHostContext();
 
     let newChildSet = null;
-    if (!childrenUnchanged && passChildrenWhenCloningPersistedNodes) {
+    if (requiresClone && passChildrenWhenCloningPersistedNodes) {
       newChildSet = createContainerChildSet();
       // If children might have changed, we have to add them all to the set.
       appendAllChildrenToContainer(
@@ -475,7 +476,7 @@ function updateHostComponent(
       type,
       oldProps,
       newProps,
-      childrenUnchanged,
+      !requiresClone,
       newChildSet,
     );
     if (newInstance === currentInstance) {
@@ -494,7 +495,7 @@ function updateHostComponent(
       markUpdate(workInProgress);
     }
     workInProgress.stateNode = newInstance;
-    if (childrenUnchanged) {
+    if (!requiresClone) {
       // If there are no other effects in this tree, we need to flag this node as having one.
       // Even though we're not going to use it for anything.
       // Otherwise parents won't know that there are new children to propagate upwards.
