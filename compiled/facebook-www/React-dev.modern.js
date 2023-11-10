@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-a41cc3f4";
+    var ReactVersion = "18.3.0-www-modern-29d5b246";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1232,6 +1232,7 @@ if (__DEV__) {
 
     function mapChildren(children, func, context) {
       if (children == null) {
+        // $FlowFixMe limitation refining abstract types in Flow
         return children;
       }
 
