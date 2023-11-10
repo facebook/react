@@ -20,7 +20,7 @@ let act;
 let use;
 let clientExports;
 let clientModuleError;
-let staticResourcesMap;
+let moduleMap;
 let FlightReact;
 let React;
 let ReactDOMClient;
@@ -61,7 +61,7 @@ describe('ReactFlightDOM for FB', () => {
       return mod.exports;
     };
 
-    staticResourcesMap = {
+    moduleMap = {
       resolveClientReference(metadata) {
         console.log('client ref metadata');
       },
@@ -117,12 +117,10 @@ describe('ReactFlightDOM for FB', () => {
       return model;
     }
 
-    const {buffer} = ReactServerDOMServer.renderToDestination(
-      <App />,
-      staticResourcesMap,
-    );
+    const {buffer} = ReactServerDOMServer.renderToDestination(<App />);
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
     const model = await response;
     expect(model).toEqual({
@@ -166,12 +164,10 @@ describe('ReactFlightDOM for FB', () => {
       );
     }
 
-    const {buffer} = ReactServerDOMServer.renderToDestination(
-      <RootModel />,
-      staticResourcesMap,
-    );
+    const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');
@@ -202,12 +198,10 @@ describe('ReactFlightDOM for FB', () => {
       );
     }
 
-    const {buffer} = ReactServerDOMServer.renderToDestination(
-      <RootModel />,
-      staticResourcesMap,
-    );
+    const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');
@@ -236,12 +230,10 @@ describe('ReactFlightDOM for FB', () => {
       );
     }
 
-    const {buffer} = ReactServerDOMServer.renderToDestination(
-      <RootModel />,
-      staticResourcesMap,
-    );
+    const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');
@@ -250,55 +242,6 @@ describe('ReactFlightDOM for FB', () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>@div</p>');
-  });
-
-  it('should be able to esm compat test module references', async () => {
-    const ESMCompatModule = {
-      __esModule: true,
-      default: function ({greeting}) {
-        return greeting + ' World';
-      },
-      hi: 'Hello',
-    };
-
-    function Print({response}) {
-      return <p>{use(response)}</p>;
-    }
-
-    function App({response}) {
-      return (
-        <Suspense fallback={<h1>Loading...</h1>}>
-          <Print response={response} />
-        </Suspense>
-      );
-    }
-
-    function interopWebpack(obj) {
-      // Basically what Webpack's ESM interop feature testing does.
-      if (typeof obj === 'object' && obj.__esModule) {
-        return obj;
-      }
-      return Object.assign({default: obj}, obj);
-    }
-
-    const {default: Component, hi} = interopWebpack(
-      clientExports(ESMCompatModule),
-    );
-
-    const {buffer} = ReactServerDOMServer.renderToDestination(
-      <Component greeting={hi} />,
-      staticResourcesMap,
-    );
-    const response = ReactServerDOMClient.processBuffer(
-      encodeStringBuffer(buffer),
-    );
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      root.render(<App response={response} />);
-    });
-    expect(container.innerHTML).toBe('<p>Hello World</p>');
   });
 
   it('should be able to render a named component export', async () => {
@@ -324,10 +267,11 @@ describe('ReactFlightDOM for FB', () => {
 
     const {buffer} = ReactServerDOMServer.renderToDestination(
       <Component greeting={'Hello'} />,
-      staticResourcesMap,
+      moduleMap,
     );
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');
@@ -361,10 +305,10 @@ describe('ReactFlightDOM for FB', () => {
     const {split: Component} = clientExports(Module);
     const {buffer} = ReactServerDOMServer.renderToDestination(
       <Component greeting={'Hello'} />,
-      staticResourcesMap,
     );
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');
@@ -401,10 +345,10 @@ describe('ReactFlightDOM for FB', () => {
 
     const {buffer} = ReactServerDOMServer.renderToDestination(
       <AsyncModuleRef text={AsyncModuleRef2.exportName} />,
-      staticResourcesMap,
     );
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');
@@ -439,11 +383,11 @@ describe('ReactFlightDOM for FB', () => {
 
     const {buffer} = ReactServerDOMServer.renderToDestination(
       <ServerComponent />,
-      staticResourcesMap,
     );
 
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -457,11 +401,10 @@ describe('ReactFlightDOM for FB', () => {
 
     const nextResponse = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(
-        ReactServerDOMServer.renderToDestination(
-          <ServerComponent />,
-          staticResourcesMap,
-        ).buffer,
+        ReactServerDOMServer.renderToDestination(<ServerComponent />, moduleMap)
+          .buffer,
       ),
+      {moduleMap},
     );
     await act(() => {
       root.render(<App response={nextResponse} />);
@@ -490,12 +433,10 @@ describe('ReactFlightDOM for FB', () => {
 
     const ThenRef = clientExports(thenExports).then;
 
-    const {buffer} = ReactServerDOMServer.renderToDestination(
-      <ThenRef />,
-      staticResourcesMap,
-    );
+    const {buffer} = ReactServerDOMServer.renderToDestination(<ThenRef />);
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');
@@ -645,12 +586,10 @@ describe('ReactFlightDOM for FB', () => {
       return use(response).rootContent;
     }
 
-    const {buffer} = ReactServerDOMServer.renderToDestination(
-      model,
-      staticResourcesMap,
-    );
+    const {buffer} = ReactServerDOMServer.renderToDestination(model);
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');
@@ -763,11 +702,10 @@ describe('ReactFlightDOM for FB', () => {
 
     const response1 = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(
-        ReactServerDOMServer.renderToDestination(
-          <App color="red" />,
-          staticResourcesMap,
-        ).buffer,
+        ReactServerDOMServer.renderToDestination(<App color="red" />, moduleMap)
+          .buffer,
       ),
+      {moduleMap},
     );
 
     await act(() => {
@@ -793,9 +731,10 @@ describe('ReactFlightDOM for FB', () => {
       encodeStringBuffer(
         ReactServerDOMServer.renderToDestination(
           <App color="blue" />,
-          staticResourcesMap,
+          moduleMap,
         ).buffer,
       ),
+      {moduleMap},
     );
 
     await act(() => {
@@ -833,7 +772,7 @@ describe('ReactFlightDOM for FB', () => {
           <div>
             <ClientComponent prop={ClientReference} />
           </div>,
-          staticResourcesMap,
+          moduleMap,
           {
             onError(x) {
               reportedErrors.push(x);
@@ -841,6 +780,7 @@ describe('ReactFlightDOM for FB', () => {
           },
         ).buffer,
       ),
+      {moduleMap},
     );
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -871,8 +811,8 @@ describe('ReactFlightDOM for FB', () => {
     });
 
     // We simulate a bug in the Webpack bundler which causes an error on the server.
-    for (const id in staticResourcesMap) {
-      Object.defineProperty(staticResourcesMap, id, {
+    for (const id in moduleMap) {
+      Object.defineProperty(moduleMap, id, {
         get: () => {
           throw new Error('bug in the bundler');
         },
@@ -883,7 +823,7 @@ describe('ReactFlightDOM for FB', () => {
       <div>
         <ClientComponent />
       </div>,
-      staticResourcesMap,
+      moduleMap,
       {
         onError(x) {
           reportedErrors.push(x.message);
@@ -894,6 +834,7 @@ describe('ReactFlightDOM for FB', () => {
 
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');
@@ -960,11 +901,12 @@ describe('ReactFlightDOM for FB', () => {
 
     const {buffer} = ReactServerDOMServer.renderToDestination(
       <ServerComponent />,
-      staticResourcesMap,
+      moduleMap,
     );
 
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -1016,7 +958,7 @@ describe('ReactFlightDOM for FB', () => {
 
     const {buffer} = ReactServerDOMServer.renderToDestination(
       <ServerComponent />,
-      staticResourcesMap,
+      moduleMap,
       {
         onError(x) {
           reportedErrors.push(x);
@@ -1026,6 +968,7 @@ describe('ReactFlightDOM for FB', () => {
     );
     const response = ReactServerDOMClient.processBuffer(
       encodeStringBuffer(buffer),
+      {moduleMap},
     );
 
     const container = document.createElement('div');

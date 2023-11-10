@@ -14,24 +14,29 @@ import type {
 } from 'shared/ReactTypes';
 
 export type ModuleLoading = mixed;
-export type SSRModuleMap = mixed;
-export type ServerManifest = string; // Module root path
+
+type ResolveClientReferenceFn<T> =
+  ClientReferenceMetadata => ClientReference<T>;
+
+export opaque type SSRModuleMap = {
+  resolveClientReference?: ResolveClientReferenceFn<any>,
+};
+export type ServerManifest = string;
 export type {
   ClientManifest,
   ServerReferenceId,
+  ClientReferenceMetadata,
 } from './ReactFlightReferencesFB';
 
-import type {ServerReferenceId} from './ReactFlightReferencesFB';
-
-export opaque type ClientReferenceMetadata = [
-  string, // module path
-  string, // export name
-];
+import type {
+  ServerReferenceId,
+  ClientReferenceMetadata,
+} from './ReactFlightReferencesFB';
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {
-  specifier: string,
-  name: string,
+  moduleName: string,
+  exportName: string,
   loadModule: () => Thenable<T>,
 };
 
@@ -44,15 +49,14 @@ export function prepareDestinationForModule(
 }
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRModuleMap,
+  moduleMap: SSRModuleMap,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  // $FlowFixMe
-  if (typeof bundlerConfig.resolveClientReference === 'function') {
-    return bundlerConfig.resolveClientReference(metadata);
+  if (typeof moduleMap.resolveClientReference === 'function') {
+    return moduleMap.resolveClientReference(metadata);
   } else {
     throw new Error(
-      'Expected `resolveClientReference` to be defined on the bundlerConfig.',
+      'Expected `resolveClientReference` to be defined on the moduleMap.',
     );
   }
 }
@@ -69,7 +73,7 @@ const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 export function preloadModule<T>(
   clientReference: ClientReference<T>,
 ): null | Thenable<any> {
-  const existingPromise = asyncModuleCache.get(clientReference.specifier);
+  const existingPromise = asyncModuleCache.get(clientReference.moduleName);
   if (existingPromise) {
     if (existingPromise.status === 'fulfilled') {
       return null;
@@ -90,20 +94,20 @@ export function preloadModule<T>(
         rejectedThenable.reason = reason;
       },
     );
-    asyncModuleCache.set(clientReference.specifier, modulePromise);
+    asyncModuleCache.set(clientReference.moduleName, modulePromise);
     return modulePromise;
   }
 }
 
 export function requireModule<T>(metadata: ClientReference<T>): T {
-  let moduleExports;
+  let module;
   // We assume that preloadModule has been called before, which
   // should have added something to the module cache.
-  const promise: any = asyncModuleCache.get(metadata.specifier);
+  const promise: any = asyncModuleCache.get(metadata.moduleName);
   if (promise.status === 'fulfilled') {
-    moduleExports = promise.value;
+    module = promise.value;
   } else {
     throw promise.reason;
   }
-  return moduleExports[metadata.name];
+  return module[metadata.exportName];
 }

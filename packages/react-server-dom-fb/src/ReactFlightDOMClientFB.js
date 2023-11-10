@@ -22,16 +22,16 @@ import {
 import type {SSRModuleMap} from './ReactFlightClientConfigFBBundler';
 
 type Options = {
-  ssrModuleMap: SSRModuleMap,
+  moduleMap: SSRModuleMap,
 };
 
 function createResponseFromOptions(options: void | Options) {
-  return createResponse(
-    options && options.ssrModuleMap,
-    null,
-    undefined,
-    undefined,
-  );
+  const moduleMap = options && options.moduleMap;
+  if (moduleMap == null) {
+    throw new Error('Expected `moduleMap` to be defined.');
+  }
+
+  return createResponse(moduleMap, null, undefined, undefined);
 }
 
 function startReadingFromStream(

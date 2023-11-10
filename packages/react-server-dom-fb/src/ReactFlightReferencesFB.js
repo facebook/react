@@ -18,16 +18,22 @@ export type ClientReference<T> = string;
 const registeredClientReferences = new Map<mixed, ClientReferenceMetadata>();
 
 export type ClientReferenceKey = string;
-export type ClientReferenceMetadata = [ClientReferenceKey, string];
+export type ClientReferenceMetadata = {
+  moduleId: ClientReferenceKey,
+  exportName: string,
+};
 
 export type ServerReferenceId = string;
 
 export function registerClientReference<T>(
   clientReference: ClientReference<T>,
-  referenceKey: ClientReferenceKey,
+  moduleId: ClientReferenceKey,
   exportName: string,
 ): ClientReference<T> {
-  registeredClientReferences.set(clientReference, [referenceKey, exportName]);
+  registeredClientReferences.set(clientReference, {
+    moduleId,
+    exportName,
+  });
 
   return clientReference;
 }
