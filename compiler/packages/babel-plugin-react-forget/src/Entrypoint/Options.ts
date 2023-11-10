@@ -138,6 +138,11 @@ export type LoggerEvent =
       fnLoc: t.SourceLocation | null;
       fnName: string | null;
       memoSlots: number;
+    }
+  | {
+      kind: "PipelineError";
+      fnLoc: t.SourceLocation | null;
+      data: any;
     };
 
 export type Logger = {
