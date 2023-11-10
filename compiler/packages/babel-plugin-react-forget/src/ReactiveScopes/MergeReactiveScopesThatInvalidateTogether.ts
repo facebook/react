@@ -110,15 +110,15 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
   }
 
   override transformScope(
-    scope: ReactiveScopeBlock,
+    scopeBlock: ReactiveScopeBlock,
     state: ReactiveScopeDependencies | null
   ): Transformed<ReactiveStatement> {
-    this.visitScope(scope, scope.scope.dependencies);
+    this.visitScope(scopeBlock, scopeBlock.scope.dependencies);
     if (
       state !== null &&
-      areEqualDependencies(state, scope.scope.dependencies)
+      areEqualDependencies(state, scopeBlock.scope.dependencies)
     ) {
-      return { kind: "replace-many", value: scope.instructions };
+      return { kind: "replace-many", value: scopeBlock.instructions };
     } else {
       return { kind: "keep" };
     }
@@ -133,7 +133,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
 
     // Pass 2: identify scopes for merging
     type MergedScope = {
-      scope: ReactiveScopeBlock;
+      block: ReactiveScopeBlock;
       from: number;
       to: number;
       lvalues: Set<IdentifierId>;
@@ -160,7 +160,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
           // For now we don't merge across terminals
           if (current !== null) {
             log(
-              `Reset scope @${current.scope.scope.id} from terminal [${instr.terminal.id}]`
+              `Reset scope @${current.block.scope.id} from terminal [${instr.terminal.id}]`
             );
             reset();
           }
@@ -190,7 +190,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
               // Other instructions are known to prevent merging, so we reset the scope if present
               if (current !== null) {
                 log(
-                  `Reset scope @${current.scope.scope.id} from instruction [${instr.instruction.id}]`
+                  `Reset scope @${current.block.scope.id} from instruction [${instr.instruction.id}]`
                 );
                 reset();
               }
@@ -201,7 +201,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
         case "scope": {
           if (
             current !== null &&
-            canMergeScopes(current.scope, instr) &&
+            canMergeScopes(current.block, instr) &&
             areLValuesLastUsedByScope(
               instr.scope,
               current.lvalues,
@@ -210,21 +210,21 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
           ) {
             // The current and next scopes can merge!
             log(
-              `Can merge scope @${current.scope.scope.id} with @${instr.scope.id}`
+              `Can merge scope @${current.block.scope.id} with @${instr.scope.id}`
             );
             // Update the merged scope's range
-            current.scope.scope.range.end = makeInstructionId(
-              Math.max(current.scope.scope.range.end, instr.scope.range.end)
+            current.block.scope.range.end = makeInstructionId(
+              Math.max(current.block.scope.range.end, instr.scope.range.end)
             );
             // Add declarations
             for (const [key, value] of instr.scope.declarations) {
-              current.scope.scope.declarations.set(key, value);
+              current.block.scope.declarations.set(key, value);
             }
             /*
              * Then prune declarations - this removes declarations from the earlier
              * scope that are last-used at or before the newly merged subsequent scope
              */
-            updateScopeDeclarations(current.scope.scope, this.lastUsage);
+            updateScopeDeclarations(current.block.scope, this.lastUsage);
             current.to = i + 1;
             /*
              * We already checked that intermediate values were used at-or-before the merged
@@ -247,14 +247,14 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
             if (current !== null) {
               // Reset if necessary
               log(
-                `Reset scope @${current.scope.scope.id}, not mergeable with subsequent scope @${instr.scope.id}`
+                `Reset scope @${current.block.scope.id}, not mergeable with subsequent scope @${instr.scope.id}`
               );
               reset();
             }
             // Only set a new merge candidate if the scope is guaranteed to invalidate on changes
             if (scopeIsEligibleForMerging(instr)) {
               current = {
-                scope: instr,
+                block: instr,
                 from: i,
                 to: i + 1,
                 lvalues: new Set(),
@@ -282,7 +282,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
       log(`merged ${merged.length} scopes:`);
       for (const entry of merged) {
         log(
-          printReactiveScopeSummary(entry.scope.scope) +
+          printReactiveScopeSummary(entry.block.scope) +
             ` from=${entry.from} to=${entry.to}`
         );
       }
@@ -363,14 +363,22 @@ function areLValuesLastUsedByScope(
   return true;
 }
 
-function canMergeScopes(a: ReactiveScopeBlock, b: ReactiveScopeBlock): boolean {
+function canMergeScopes(
+  current: ReactiveScopeBlock,
+  next: ReactiveScopeBlock
+): boolean {
   // Don't merge scopes with reassignments
-  if (a.scope.reassignments.size !== 0 || b.scope.reassignments.size !== 0) {
+  if (
+    current.scope.reassignments.size !== 0 ||
+    next.scope.reassignments.size !== 0
+  ) {
     log(`  cannot merge, has reassignments`);
     return false;
   }
   // Merge scopes whose dependencies are identical
-  if (areEqualDependencies(a.scope.dependencies, b.scope.dependencies)) {
+  if (
+    areEqualDependencies(current.scope.dependencies, next.scope.dependencies)
+  ) {
     log(`  canMergeScopes: dependencies are equal`);
     return true;
   }
@@ -386,20 +394,20 @@ function canMergeScopes(a: ReactiveScopeBlock, b: ReactiveScopeBlock): boolean {
   if (
     areEqualDependencies(
       new Set(
-        [...a.scope.declarations.values()].map((declaration) => ({
+        [...current.scope.declarations.values()].map((declaration) => ({
           identifier: declaration.identifier,
           path: [],
         }))
       ),
-      b.scope.dependencies
+      next.scope.dependencies
     )
   ) {
     log(`  outputs of prev are input to current`);
     return true;
   }
   log(`  cannot merge scopes:`);
-  log(`  ${printReactiveScopeSummary(a.scope)}`);
-  log(`  ${printReactiveScopeSummary(b.scope)}`);
+  log(`  ${printReactiveScopeSummary(current.scope)}`);
+  log(`  ${printReactiveScopeSummary(next.scope)}`);
   return false;
 }
 
@@ -442,16 +450,16 @@ function areEqualPaths(a: Array<string>, b: Array<string>): boolean {
  * A special-case is if the scope has no dependencies, then its output will
  * *never* change and it's also eligible for merging.
  */
-function scopeIsEligibleForMerging(scope: ReactiveScopeBlock): boolean {
-  if (scope.scope.dependencies.size === 0) {
+function scopeIsEligibleForMerging(scopeBlock: ReactiveScopeBlock): boolean {
+  if (scopeBlock.scope.dependencies.size === 0) {
     /*
      * Regardless of the type of value produced, if the scope has no dependencies
      * then its value will never change.
      */
     return true;
   }
-  const visitor = new DeclarationTypeVisitor(scope.scope);
-  visitor.visitScope(scope, undefined);
+  const visitor = new DeclarationTypeVisitor(scopeBlock.scope);
+  visitor.visitScope(scopeBlock, undefined);
   return visitor.alwaysInvalidatesOnInputChange;
 }
 
@@ -464,11 +472,11 @@ class DeclarationTypeVisitor extends ReactiveFunctionVisitor<void> {
     this.scope = scope;
   }
 
-  override visitScope(scope: ReactiveScopeBlock, state: void): void {
-    if (scope.scope.id !== this.scope.id) {
+  override visitScope(scopeBlock: ReactiveScopeBlock, state: void): void {
+    if (scopeBlock.scope.id !== this.scope.id) {
       return;
     }
-    this.traverseScope(scope, state);
+    this.traverseScope(scopeBlock, state);
   }
 
   override visitInstruction(
