@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ebe223d3b462ba2b21399f81d78fb244>>
+ * @generated SignedSource<<30dfd0a48c1491cc7311d26c4bb6319c>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-6b3834a45-20231110";
+    var ReactVersion = "18.3.0-canary-432b9f1d9-20231110";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1302,6 +1302,7 @@ if (__DEV__) {
 
     function mapChildren(children, func, context) {
       if (children == null) {
+        // $FlowFixMe limitation refining abstract types in Flow
         return children;
       }
 

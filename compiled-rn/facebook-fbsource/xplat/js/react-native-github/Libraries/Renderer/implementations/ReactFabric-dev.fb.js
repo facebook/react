@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<35562a820289897947536c61435e3dcd>>
+ * @generated SignedSource<<aaac73d7cc89a43a1238c55b03c67a4e>>
  */
 
 "use strict";
@@ -27812,7 +27812,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-884b3517";
+    var ReactVersion = "18.3.0-canary-a3a54342";
 
     function createPortal$1(
       children,
@@ -28465,10 +28465,12 @@ to return true:wantsResponderID|                            |
       }
 
       if (hostInstance == null) {
+        // $FlowFixMe[incompatible-return] Flow limitation in refining an opaque type
         return hostInstance;
-      } // $FlowFixMe[incompatible-type] For compatibility with legacy renderer instances
+      }
 
       if (hostInstance._nativeTag != null) {
+        // $FlowFixMe[incompatible-return] For compatibility with legacy renderer instances
         return hostInstance._nativeTag;
       } // $FlowFixMe[incompatible-call] Necessary when running Flow on the legacy renderer
 
