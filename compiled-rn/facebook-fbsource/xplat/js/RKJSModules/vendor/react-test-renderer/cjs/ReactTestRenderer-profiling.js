@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a1310f096190dd3ed0ece3221fcd9bda>>
+ * @generated SignedSource<<9c511bbcbb96d7f0fe52befe1fc1cbec>>
  */
 
 "use strict";
@@ -50,7 +50,8 @@ var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_CACHE_TYPE = Symbol.for("react.cache");
 Symbol.for("react.tracing_marker");
-var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
+  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
   if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
   maybeIterable =
@@ -2462,7 +2463,7 @@ function updateWorkInProgressHook() {
 }
 var createFunctionComponentUpdateQueue;
 createFunctionComponentUpdateQueue = function () {
-  return { lastEffect: null, events: null, stores: null };
+  return { lastEffect: null, events: null, stores: null, memoCache: null };
 };
 function useThenable(thenable) {
   var index = thenableIndexCounter;
@@ -2486,6 +2487,40 @@ function use(usable) {
       return readContext(usable);
   }
   throw Error("An unsupported type was passed to use(): " + String(usable));
+}
+function useMemoCache(size) {
+  var memoCache = null,
+    updateQueue = currentlyRenderingFiber$1.updateQueue;
+  null !== updateQueue && (memoCache = updateQueue.memoCache);
+  if (null == memoCache) {
+    var current = currentlyRenderingFiber$1.alternate;
+    null !== current &&
+      ((current = current.updateQueue),
+      null !== current &&
+        ((current = current.memoCache),
+        null != current &&
+          (memoCache = {
+            data: current.data.map(function (array) {
+              return array.slice();
+            }),
+            index: 0
+          })));
+  }
+  null == memoCache && (memoCache = { data: [], index: 0 });
+  null === updateQueue &&
+    ((updateQueue = createFunctionComponentUpdateQueue()),
+    (currentlyRenderingFiber$1.updateQueue = updateQueue));
+  updateQueue.memoCache = memoCache;
+  updateQueue = memoCache.data[memoCache.index];
+  if (void 0 === updateQueue)
+    for (
+      updateQueue = memoCache.data[memoCache.index] = Array(size), current = 0;
+      current < size;
+      current++
+    )
+      updateQueue[current] = REACT_MEMO_CACHE_SENTINEL;
+  memoCache.index++;
+  return updateQueue;
 }
 function basicStateReducer(state, action) {
   return "function" === typeof action ? action(state) : action;
@@ -3098,6 +3133,7 @@ var ContextOnlyDispatcher = {
   useId: throwInvalidHookError
 };
 ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
+ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
 ContextOnlyDispatcher.useFormState = throwInvalidHookError;
 ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
@@ -3225,6 +3261,7 @@ var HooksDispatcherOnMount = {
     ));
   }
 };
+HooksDispatcherOnMount.useMemoCache = useMemoCache;
 HooksDispatcherOnMount.useHostTransitionStatus = useHostTransitionStatus;
 HooksDispatcherOnMount.useFormState = function (action, initialStateProp) {
   var stateHook = mountWorkInProgressHook();
@@ -3315,6 +3352,7 @@ var HooksDispatcherOnUpdate = {
   useId: updateId
 };
 HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
+HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
 HooksDispatcherOnUpdate.useHostTransitionStatus = useHostTransitionStatus;
 HooksDispatcherOnUpdate.useFormState = function (action) {
   var stateHook = updateWorkInProgressHook();
@@ -3360,6 +3398,7 @@ var HooksDispatcherOnRerender = {
   useId: updateId
 };
 HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
+HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 HooksDispatcherOnRerender.useHostTransitionStatus = useHostTransitionStatus;
 HooksDispatcherOnRerender.useFormState = function (action) {
   var stateHook = updateWorkInProgressHook(),
@@ -9470,7 +9509,7 @@ var devToolsConfig$jscomp$inline_1075 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-c4c87e049-20231110",
+  version: "18.3.0-canary-6a7f3aa85-20231110",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1267 = {
@@ -9501,7 +9540,7 @@ var internals$jscomp$inline_1267 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-c4c87e049-20231110"
+  reconcilerVersion: "18.3.0-canary-6a7f3aa85-20231110"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1268 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
