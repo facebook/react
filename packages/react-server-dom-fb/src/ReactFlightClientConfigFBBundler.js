@@ -33,11 +33,9 @@ import type {
   ClientReferenceMetadata,
 } from './ReactFlightReferencesFB';
 
-// eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = {
-  moduleId: string,
-  exportName: string,
-  loadModule: () => Thenable<T>,
+  getModuleId: () => string,
+  load: () => Thenable<T>,
 };
 
 export function prepareDestinationForModule(
@@ -73,14 +71,14 @@ const asyncModuleCache: Map<string, Thenable<any>> = new Map();
 export function preloadModule<T>(
   clientReference: ClientReference<T>,
 ): null | Thenable<any> {
-  const existingPromise = asyncModuleCache.get(clientReference.moduleId);
+  const existingPromise = asyncModuleCache.get(clientReference.getModuleId());
   if (existingPromise) {
     if (existingPromise.status === 'fulfilled') {
       return null;
     }
     return existingPromise;
   } else {
-    const modulePromise: Thenable<T> = clientReference.loadModule();
+    const modulePromise: Thenable<T> = clientReference.load();
     modulePromise.then(
       value => {
         const fulfilledThenable: FulfilledThenable<mixed> =
@@ -94,20 +92,21 @@ export function preloadModule<T>(
         rejectedThenable.reason = reason;
       },
     );
-    asyncModuleCache.set(clientReference.moduleId, modulePromise);
+    asyncModuleCache.set(clientReference.getModuleId(), modulePromise);
     return modulePromise;
   }
 }
 
-export function requireModule<T>(metadata: ClientReference<T>): T {
+export function requireModule<T>(clientReference: ClientReference<T>): T {
   let module;
   // We assume that preloadModule has been called before, which
   // should have added something to the module cache.
-  const promise: any = asyncModuleCache.get(metadata.moduleId);
+  const promise: any = asyncModuleCache.get(clientReference.getModuleId());
   if (promise.status === 'fulfilled') {
     module = promise.value;
   } else {
     throw promise.reason;
   }
-  return module[metadata.exportName];
+  // We are currently only support default exports for client components
+  return module;
 }
