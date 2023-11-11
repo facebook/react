@@ -1,3 +1,4 @@
+// @validateRefAccessDuringRender:false
 function Foo({ a }) {
   const ref = useRef();
   const val = ref.current;

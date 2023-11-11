@@ -122,6 +122,14 @@ const EnvironmentConfigSchema = z.object({
   // Validate that ref values (`ref.current`) are not accessed during render.
   validateRefAccessDuringRender: z.boolean().default(false),
 
+  /**
+   * Extension of validateRefAccessDuringRender that validates that refs are not accessed during
+   * render indirectly by calling function expressions which access the ref.
+   *
+   * This validation has known issues and is not yet recommended
+   */
+  validateRefAccessDuringRenderFunctionExpressions: z.boolean().default(false),
+
   /*
    * Validate that mutable lambdas are not passed where a frozen value is expected, since mutable
    * lambdas cannot be frozen. The only mutation allowed inside a frozen lambda is of ref values.

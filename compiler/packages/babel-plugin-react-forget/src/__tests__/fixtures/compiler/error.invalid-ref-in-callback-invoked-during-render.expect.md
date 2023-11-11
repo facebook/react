@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateRefAccessDuringRender
+// @validateRefAccessDuringRender @validateRefAccessDuringRenderFunctionExpressions
 function Component(props) {
   const ref = useRef(null);
   const renderItem = (item) => {
