@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoSetStateInRender
+// @validateNoSetStateInRenderFunctionExpressions
 function Component(props) {
   let y = 0;
   const [x, setX] = useState(0);

@@ -132,7 +132,15 @@ const EnvironmentConfigSchema = z.object({
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
    */
-  validateNoSetStateInRender: z.boolean().default(false),
+  validateNoSetStateInRender: z.boolean().default(true),
+
+  /**
+   * Extension of validateNoSetStateInRender which also validates that setState is not
+   * called indirectly via a function expression.
+   *
+   * NOTE: this validation has known issues and is not yet recommended.
+   */
+  validateNoSetStateInRenderFunctionExpressions: z.boolean().default(false),
 
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:

@@ -45,15 +45,19 @@ export function validateNoSetStateInRender(
         switch (instr.value.kind) {
           case "ObjectMethod":
           case "FunctionExpression": {
-            /*
-             * TODO: setState's return value is considered Frozen, so the lambda's mutable range
-             * does not get extended even if the lambda is called in render. The below only catches
-             * setStates where the lambda has another instruction that extends its mutable range
-             */
-            const mutableRange = instr.lvalue.identifier.mutableRange;
-            if (mutableRange.end > mutableRange.start + 1) {
-              for (const operand of eachInstructionValueOperand(instr.value)) {
-                validateNonSetState(errors, operand);
+            if (fn.env.config.validateNoSetStateInRenderFunctionExpressions) {
+              /*
+               * TODO: setState's return value is considered Frozen, so the lambda's mutable range
+               * does not get extended even if the lambda is called in render. The below only catches
+               * setStates where the lambda has another instruction that extends its mutable range
+               */
+              const mutableRange = instr.lvalue.identifier.mutableRange;
+              if (mutableRange.end > mutableRange.start + 1) {
+                for (const operand of eachInstructionValueOperand(
+                  instr.value
+                )) {
+                  validateNonSetState(errors, operand);
+                }
               }
             }
             break;
