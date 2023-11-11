@@ -65,6 +65,7 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
     validateHooksUsage: true,
     validateFrozenLambdas: false,
     validateRefAccessDuringRender: true,
+    validateNoSetStateInRender: true,
   },
 };
 
