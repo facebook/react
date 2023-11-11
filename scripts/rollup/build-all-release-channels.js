@@ -8,7 +8,7 @@ const fse = require('fs-extra');
 const {spawnSync} = require('child_process');
 const path = require('path');
 const tmp = require('tmp');
-
+const isWindows = require('is-windows');
 const {
   ReactVersion,
   stablePackages,
@@ -74,7 +74,11 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   buildForChannel('stable', '', '');
   const stableDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', stableDir);
-  processStable(stableDir);
+  try {
+    processStable(stableDir);
+  } catch (err) {
+    console.log(err);
+  }
   buildForChannel('experimental', '', '');
   const experimentalDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', experimentalDir);
@@ -115,11 +119,20 @@ function processStable(buildDir) {
   if (fs.existsSync(buildDir + '/node_modules')) {
     // Identical to `oss-stable` but with real, semver versions. This is what
     // will get published to @latest.
-    spawnSync('cp', [
-      '-r',
-      buildDir + '/node_modules',
-      buildDir + '/oss-stable-semver',
-    ]);
+    if (isWindows()) {
+      spawnSync('xcopy', [
+        '/s',
+        '/i',
+        buildDir + '/node_modules',
+        buildDir + '/oss-stable-semver',
+      ]);
+    } else {
+      spawnSync('cp', [
+        '-r',
+        buildDir + '/node_modules',
+        buildDir + '/oss-stable-semver',
+      ]);
+    }
 
     const defaultVersionIfNotFound = '0.0.0' + '-' + sha + '-' + dateString;
     const versionsMap = new Map();
