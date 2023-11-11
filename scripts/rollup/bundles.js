@@ -106,7 +106,7 @@ const bundles = [
 
   /******* Isomorphic Shared Subset for FB *******/
   {
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: ISOMORPHIC,
     entry: 'react/src/ReactSharedSubsetFB.js',
     global: 'ReactSharedSubset',
@@ -587,7 +587,7 @@ const bundles = [
 
   /******* React Server DOM FB Server *******/
   {
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: RENDERER,
     entry: 'react-server-dom-fb/src/ReactFlightDOMServerFB.js',
     global: 'ReactFlightDOMServer',
@@ -598,7 +598,7 @@ const bundles = [
 
   /******* React Server DOM FB Client *******/
   {
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: RENDERER,
     entry: 'react-server-dom-fb/src/ReactFlightDOMClientFB.js',
     global: 'ReactFlightDOMClient',
