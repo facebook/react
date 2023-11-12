@@ -20,7 +20,6 @@ let act;
 let use;
 let clientExports;
 let moduleMap;
-let FlightReact;
 let React;
 let ReactDOMClient;
 let ReactServerDOMServer;
@@ -60,7 +59,6 @@ describe('ReactFlightDOM for FB', () => {
     };
 
     ReactServerDOMServer = require('../ReactFlightDOMServerFB');
-    FlightReact = require('react');
 
     // This reset is to load modules for the SSR/Browser scope.
     jest.resetModules();
