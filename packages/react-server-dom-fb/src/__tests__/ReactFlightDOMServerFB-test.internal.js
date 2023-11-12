@@ -27,12 +27,9 @@ let ReactServerDOMClient;
 let Suspense;
 let registerClientReference;
 
-function encodeStringBuffer(buffer) {
+function encodeString(string) {
   const textEncoder = new TextEncoder();
-  const utf8 = new Uint8Array(buffer.length);
-  // $FlowFixMe
-  textEncoder.encodeInto(buffer, utf8);
-  return utf8;
+  return textEncoder.encode(string);
 }
 
 describe('ReactFlightDOM for FB', () => {
@@ -92,10 +89,9 @@ describe('ReactFlightDOM for FB', () => {
     }
 
     const {buffer} = ReactServerDOMServer.renderToDestination(<App />);
-    const response = ReactServerDOMClient.processBuffer(
-      encodeStringBuffer(buffer),
-      {moduleMap},
-    );
+    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+      moduleMap,
+    });
     const model = await response;
     expect(model).toEqual({
       html: (
@@ -139,10 +135,9 @@ describe('ReactFlightDOM for FB', () => {
     }
 
     const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
-    const response = ReactServerDOMClient.processBuffer(
-      encodeStringBuffer(buffer),
-      {moduleMap},
-    );
+    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+      moduleMap,
+    });
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -173,10 +168,9 @@ describe('ReactFlightDOM for FB', () => {
     }
 
     const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
-    const response = ReactServerDOMClient.processBuffer(
-      encodeStringBuffer(buffer),
-      {moduleMap},
-    );
+    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+      moduleMap,
+    });
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -205,10 +199,9 @@ describe('ReactFlightDOM for FB', () => {
     }
 
     const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
-    const response = ReactServerDOMClient.processBuffer(
-      encodeStringBuffer(buffer),
-      {moduleMap},
-    );
+    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+      moduleMap,
+    });
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -241,23 +234,20 @@ describe('ReactFlightDOM for FB', () => {
       <ClientComponent greeting={'Hello'} />,
       moduleMap,
     );
-    const response = ReactServerDOMClient.processBuffer(
-      encodeStringBuffer(buffer),
-      {
-        moduleMap: {
-          resolveClientReference(metadata) {
-            return {
-              getModuleId() {
-                return metadata.moduleId;
-              },
-              load() {
-                return Promise.resolve(Component);
-              },
-            };
-          },
+    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+      moduleMap: {
+        resolveClientReference(metadata) {
+          return {
+            getModuleId() {
+              return metadata.moduleId;
+            },
+            load() {
+              return Promise.resolve(Component);
+            },
+          };
         },
       },
-    );
+    });
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
