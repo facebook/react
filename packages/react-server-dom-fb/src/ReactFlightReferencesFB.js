@@ -28,8 +28,8 @@ export type ServerReferenceId = string;
 export function registerClientReference<T>(
   clientReference: ClientReference<T>,
   moduleId: ClientReferenceKey,
-  exportName: string,
 ): ClientReference<T> {
+  const exportName = 'default'; // Currently, we only support modules with `default` export
   registeredClientReferences.set(clientReference, {
     moduleId,
     exportName,
