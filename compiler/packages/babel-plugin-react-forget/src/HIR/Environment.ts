@@ -281,6 +281,12 @@ const EnvironmentConfigSchema = z.object({
    * Intended for use in demo purposes (incl playground)
    */
   enableMemoizationComments: z.boolean().default(false),
+
+  /**
+   * [TESTING ONLY] Throw an unknown exception during compilation to
+   * simulate unexpected exceptions e.g. errors from babel functions.
+   */
+  throwUnknownException__testonly: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
