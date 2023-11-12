@@ -5,26 +5,27 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Effect, ValueKind, validateEnvironmentConfig } from "..";
+import {
+  CompilerError,
+  Effect,
+  ValueKind,
+  validateEnvironmentConfig,
+} from "..";
 
 describe("parseConfigPragma()", () => {
   it("passing null throws", () => {
     expect(() => validateEnvironmentConfig(null as any)).toThrow();
   });
 
-  // tests that the errror message remains useful
+  // tests that the error message remains useful
   it("passing incorrect value throws", () => {
-    expect.assertions(1);
-
-    try {
+    expect(() => {
       validateEnvironmentConfig({
         validateHooksUsage: 1,
       } as any);
-    } catch (err) {
-      expect(err.message).toBe(
-        '[ReactForget] InvalidConfig: Validation error: Expected boolean, received number at "validateHooksUsage". Update Forget config to fix the error'
-      );
-    }
+    }).toThrowErrorMatchingInlineSnapshot(
+      `"[ReactForget] InvalidConfig: Validation error: Expected boolean, received number at "validateHooksUsage". Update Forget config to fix the error"`
+    );
   });
 
   it("can parse stringy enums", () => {

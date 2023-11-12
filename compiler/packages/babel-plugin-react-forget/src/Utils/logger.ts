@@ -52,7 +52,18 @@ export function logCodegenFunction(step: string, fn: CodegenFunction): void {
       const ast = generate(node);
       printed = ast.code;
     } catch (e) {
-      console.log("Error formatting AST: " + e.message);
+      let errMsg: string;
+      if (
+        typeof e === "object" &&
+        e != null &&
+        "message" in e &&
+        typeof e.message === "string"
+      ) {
+        errMsg = e.message.toString();
+      } else {
+        errMsg = "[empty]";
+      }
+      console.log("Error formatting AST: " + errMsg);
     }
     if (printed === null) {
       return;

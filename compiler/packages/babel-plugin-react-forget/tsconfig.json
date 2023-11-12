@@ -14,7 +14,7 @@
     "importsNotUsedAsValues": "remove",
     "noUncheckedIndexedAccess": false,
     "noUnusedParameters": false,
-    "useUnknownInCatchVariables": false,
+    "useUnknownInCatchVariables": true,
     "target": "ES2015",
     // ideally turn off only during dev, or on a per-file basis
     "noUnusedLocals": false,
