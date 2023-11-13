@@ -181,6 +181,7 @@ const skipFilter = new Set([
   "while-conditional-continue",
   "while-logical",
   "while-property",
+  "validate-no-set-state-in-render-uncalled-function-with-mutable-range-is-valid",
   // Category B with multiple entrypoints,
   "conditional-break",
 

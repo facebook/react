@@ -1,18 +1,14 @@
-
-## Input
-
-```javascript
 // @validateNoSetStateInRenderFunctionExpressions
 function Component(props) {
   const logEvent = useLogging(props.appId);
   const [currentStep, setCurrentStep] = useState(0);
 
+  // onSubmit gets the same mutable range as `logEvent`, since that is called
+  // later. however, our validation uses direct aliasing to track function
+  // expressions which are invoked, and understands that this function isn't
+  // called during render:
   const onSubmit = (errorEvent) => {
-    // 2. onSubmit inherits the mutable range of logEvent
     logEvent(errorEvent);
-    // 3. this call then triggers the ValidateNoSetStateInRender check incorrectly, even though
-    //    onSubmit is not called during render (although it _could_ be, if OtherComponent does so.
-    //    but we can't tell without x-file analysis)
     setCurrentStep(1);
   };
 
@@ -27,14 +23,3 @@ function Component(props) {
       return <OtherComponent data={null} />;
   }
 }
-
-```
-
-
-## Error
-
-```
-[ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (12:12)
-```
-          
-      

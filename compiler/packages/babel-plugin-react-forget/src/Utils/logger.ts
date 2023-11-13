@@ -22,7 +22,7 @@ export function toggleLogging(enabled: boolean): void {
 
 export function logDebug(step: string, value: string): void {
   if (ENABLED) {
-    process.stdout.write(`${chalk.gray(step)}:\n${value}\n\n`);
+    process.stdout.write(`${chalk.green(step)}:\n${value}\n\n`);
   }
 }
 

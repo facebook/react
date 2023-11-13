@@ -9,6 +9,7 @@ import { CompilerError, ErrorSeverity } from "../CompilerError";
 import {
   BlockId,
   HIRFunction,
+  IdentifierId,
   Place,
   computePostDominatorTree,
   isSetStateType,
@@ -18,8 +19,44 @@ import { eachInstructionValueOperand } from "../HIR/visitors";
 import { findBlocksWithBackEdges } from "../Optimization/DeadCodeElimination";
 import { Err, Ok, Result } from "../Utils/Result";
 
+/**
+ * Validates that the given function does not have an infinite update loop
+ * caused by unconditionally calling setState during render. This validation
+ * is conservative and cannot catch all cases of unconditional setState in
+ * render, but avoids false positives. Examples of cases that are caught:
+ *
+ * ```javascript
+ * // Direct call of setState:
+ * const [state, setState] = useState(false);
+ * setState(true);
+ *
+ * // Indirect via a function:
+ * const [state, setState] = useState(false);
+ * const setTrue = () => setState(true);
+ * setTrue();
+ * ```
+ *
+ * However, storing setState inside another value and accessing it is not yet
+ * validated:
+ *
+ * ```
+ * // false negative, not detected but will cause an infinite render loop
+ * const [state, setState] = useState(false);
+ * const x = [setState];
+ * const y = x.pop();
+ * y();
+ * ```
+ */
 export function validateNoSetStateInRender(
   fn: HIRFunction
+): Result<PostDominator<BlockId>, CompilerError> {
+  const unconditionalSetStateFunctions: Set<IdentifierId> = new Set();
+  return validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions);
+}
+
+function validateNoSetStateInRenderImpl(
+  fn: HIRFunction,
+  unconditionalSetStateFunctions: Set<IdentifierId>
 ): Result<PostDominator<BlockId>, CompilerError> {
   // Construct the set of blocks that is always reachable from the entry block.
   const unconditionalBlocks = new Set<BlockId>();
@@ -43,27 +80,57 @@ export function validateNoSetStateInRender(
     if (unconditionalBlocks.has(block.id)) {
       for (const instr of block.instructions) {
         switch (instr.value.kind) {
+          case "LoadLocal": {
+            if (
+              unconditionalSetStateFunctions.has(
+                instr.value.place.identifier.id
+              )
+            ) {
+              unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
+            }
+            break;
+          }
+          case "StoreLocal": {
+            if (
+              unconditionalSetStateFunctions.has(
+                instr.value.value.identifier.id
+              )
+            ) {
+              unconditionalSetStateFunctions.add(
+                instr.value.lvalue.place.identifier.id
+              );
+              unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
+            }
+            break;
+          }
           case "ObjectMethod":
           case "FunctionExpression": {
             if (fn.env.config.validateNoSetStateInRenderFunctionExpressions) {
-              /*
-               * TODO: setState's return value is considered Frozen, so the lambda's mutable range
-               * does not get extended even if the lambda is called in render. The below only catches
-               * setStates where the lambda has another instruction that extends its mutable range
-               */
-              const mutableRange = instr.lvalue.identifier.mutableRange;
-              if (mutableRange.end > mutableRange.start + 1) {
-                for (const operand of eachInstructionValueOperand(
-                  instr.value
-                )) {
-                  validateNonSetState(errors, operand);
-                }
+              if (
+                // faster-path to check if the function expression references a setState
+                [...eachInstructionValueOperand(instr.value)].some(
+                  (operand) =>
+                    isSetStateType(operand.identifier) ||
+                    unconditionalSetStateFunctions.has(operand.identifier.id)
+                ) &&
+                // if yes, does it unconditonally call it?
+                validateNoSetStateInRenderImpl(
+                  instr.value.loweredFunc.func,
+                  unconditionalSetStateFunctions
+                ).isErr()
+              ) {
+                // This function expression unconditionally calls a setState
+                unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
               }
             }
             break;
           }
           case "CallExpression": {
-            validateNonSetState(errors, instr.value.callee);
+            validateNonSetState(
+              errors,
+              unconditionalSetStateFunctions,
+              instr.value.callee
+            );
             break;
           }
         }
@@ -78,8 +145,15 @@ export function validateNoSetStateInRender(
   }
 }
 
-function validateNonSetState(errors: CompilerError, operand: Place): void {
-  if (isSetStateType(operand.identifier)) {
+function validateNonSetState(
+  errors: CompilerError,
+  unconditionalSetStateFunctions: Set<IdentifierId>,
+  operand: Place
+): void {
+  if (
+    isSetStateType(operand.identifier) ||
+    unconditionalSetStateFunctions.has(operand.identifier.id)
+  ) {
     errors.push({
       reason:
         "This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState)",
