@@ -2687,7 +2687,6 @@ describe('ReactIncremental', () => {
   it('does not break with a bad Map polyfill', async () => {
     const realMapSet = Map.prototype.set;
 
-
     async function triggerCodePathThatUsesFibersAsMapKeys() {
       function Thing() {
         throw new Error('No.');
@@ -2777,10 +2776,12 @@ describe('ReactIncremental', () => {
       ReactNoop = require('react-noop-renderer');
       // ... any other relevant code ...
     }).toWarnDev(
-      ['Detected a bad Map/Set polyfill. Consider using a reliable polyfill or updating the current one.'],
-      { withoutStack: true }
+      [
+        'Detected a bad Map/Set polyfill. Consider using a reliable polyfill or updating the current one.',
+      ],
+      {withoutStack: true},
     );
-    
+
     try {
       await triggerCodePathThatUsesFibersAsMapKeys();
     } finally {
