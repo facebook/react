@@ -297,7 +297,7 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
     addHook(DEFAULT_SHAPES, [], {
       positionalParams: [],
       restParam: Effect.Freeze,
-      returnType: { kind: "Poly" },
+      returnType: { kind: "Primitive" },
       calleeEffect: Effect.Read,
       hookKind: "useEffect",
       returnValueKind: ValueKind.Frozen,
