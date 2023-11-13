@@ -73,6 +73,11 @@ export function mutateAndReturn<T>(arg: T): T {
   return arg;
 }
 
+export function mutateAndReturnNewValue<T>(arg: T): string {
+  mutate(arg);
+  return "hello!";
+}
+
 export function setProperty(arg: any, property: any): void {
   // don't mutate primitive
   if (typeof arg === null || typeof arg !== "object") {
