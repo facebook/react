@@ -15,6 +15,7 @@ import {
   enableBinaryFlight,
   enablePostpone,
   enableTaint,
+  enableServerContext,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -111,9 +112,12 @@ import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactServerSharedInternals from './ReactServerSharedInternals';
 import isArray from 'shared/isArray';
+import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
+
+const ObjectPrototype = Object.prototype;
 
 type JSONValue =
   | string
@@ -177,6 +181,8 @@ type Task = {
   thenableState: ThenableState | null,
 };
 
+interface Reference {}
+
 export type Request = {
   status: 0 | 1 | 2,
   flushScheduled: boolean,
@@ -197,6 +203,7 @@ export type Request = {
   writtenClientReferences: Map<ClientReferenceKey, number>,
   writtenServerReferences: Map<ServerReference<any>, number>,
   writtenProviders: Map<string, number>,
+  writtenObjects: WeakMap<Reference, number>, // -1 means "seen" but not outlined.
   identifierPrefix: string,
   identifierCount: number,
   taintCleanupQueue: Array<string | bigint>,
@@ -295,6 +302,7 @@ export function createRequest(
     writtenClientReferences: new Map(),
     writtenServerReferences: new Map(),
     writtenProviders: new Map(),
+    writtenObjects: new WeakMap(),
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
     taintCleanupQueue: cleanupQueue,
@@ -578,28 +586,31 @@ function attemptResolveElement(
         );
       }
       case REACT_PROVIDER_TYPE: {
-        pushProvider(type._context, props.value);
-        if (__DEV__) {
-          const extraKeys = Object.keys(props).filter(value => {
-            if (value === 'children' || value === 'value') {
-              return false;
+        if (enableServerContext) {
+          pushProvider(type._context, props.value);
+          if (__DEV__) {
+            const extraKeys = Object.keys(props).filter(value => {
+              if (value === 'children' || value === 'value') {
+                return false;
+              }
+              return true;
+            });
+            if (extraKeys.length !== 0) {
+              console.error(
+                'ServerContext can only have a value prop and children. Found: %s',
+                JSON.stringify(extraKeys),
+              );
             }
-            return true;
-          });
-          if (extraKeys.length !== 0) {
-            console.error(
-              'ServerContext can only have a value prop and children. Found: %s',
-              JSON.stringify(extraKeys),
-            );
           }
+          return [
+            REACT_ELEMENT_TYPE,
+            type,
+            key,
+            // Rely on __popProvider being serialized last to pop the provider.
+            {value: props.value, children: props.children, __pop: POP},
+          ];
         }
-        return [
-          REACT_ELEMENT_TYPE,
-          type,
-          key,
-          // Rely on __popProvider being serialized last to pop the provider.
-          {value: props.value, children: props.children, __pop: POP},
-        ];
+        // Fallthrough
       }
     }
   }
@@ -756,10 +767,14 @@ function serializeClientReference(
 
 function outlineModel(request: Request, value: any): number {
   request.pendingChunks++;
-  const outlinedId = request.nextChunkId++;
-  // We assume that this object doesn't suspend, but a child might.
-  emitModelChunk(request, outlinedId, value);
-  return outlinedId;
+  const newTask = createTask(
+    request,
+    value,
+    getActiveContext(),
+    request.abortableTasks,
+  );
+  retryTask(request, newTask);
+  return newTask.id;
 }
 
 function serializeServerReference(
@@ -807,12 +822,36 @@ function serializeMap(
   request: Request,
   map: Map<ReactClientValue, ReactClientValue>,
 ): string {
-  const id = outlineModel(request, Array.from(map));
+  const entries = Array.from(map);
+  for (let i = 0; i < entries.length; i++) {
+    const key = entries[i][0];
+    if (typeof key === 'object' && key !== null) {
+      const writtenObjects = request.writtenObjects;
+      const existingId = writtenObjects.get(key);
+      if (existingId === undefined) {
+        // Mark all object keys as seen so that they're always outlined.
+        writtenObjects.set(key, -1);
+      }
+    }
+  }
+  const id = outlineModel(request, entries);
   return '$Q' + id.toString(16);
 }
 
 function serializeSet(request: Request, set: Set<ReactClientValue>): string {
-  const id = outlineModel(request, Array.from(set));
+  const entries = Array.from(set);
+  for (let i = 0; i < entries.length; i++) {
+    const key = entries[i];
+    if (typeof key === 'object' && key !== null) {
+      const writtenObjects = request.writtenObjects;
+      const existingId = writtenObjects.get(key);
+      if (existingId === undefined) {
+        // Mark all object keys as seen so that they're always outlined.
+        writtenObjects.set(key, -1);
+      }
+    }
+  }
+  const id = outlineModel(request, entries);
   return '$W' + id.toString(16);
 }
 
@@ -857,6 +896,7 @@ function escapeStringValue(value: string): string {
 
 let insideContextProps = null;
 let isInsideContextValue = false;
+let modelRoot: null | ReactClientValue = false;
 
 function resolveModelToJSON(
   request: Request,
@@ -910,6 +950,7 @@ function resolveModelToJSON(
 
   if (__DEV__) {
     if (
+      enableServerContext &&
       parent[0] === REACT_ELEMENT_TYPE &&
       parent[1] &&
       (parent[1]: any).$$typeof === REACT_PROVIDER_TYPE &&
@@ -931,7 +972,7 @@ function resolveModelToJSON(
       (value: any).$$typeof === REACT_LAZY_TYPE)
   ) {
     if (__DEV__) {
-      if (isInsideContextValue) {
+      if (enableServerContext && isInsideContextValue) {
         console.error('React elements are not allowed in ServerContext');
       }
     }
@@ -939,6 +980,28 @@ function resolveModelToJSON(
     try {
       switch ((value: any).$$typeof) {
         case REACT_ELEMENT_TYPE: {
+          const writtenObjects = request.writtenObjects;
+          const existingId = writtenObjects.get(value);
+          if (existingId !== undefined) {
+            if (existingId === -1) {
+              // Seen but not yet outlined.
+              const newId = outlineModel(request, value);
+              return serializeByValueID(newId);
+            } else if (modelRoot === value) {
+              // This is the ID we're currently emitting so we need to write it
+              // once but if we discover it again, we refer to it by id.
+              modelRoot = null;
+            } else {
+              // We've already emitted this as an outlined object, so we can
+              // just refer to that by its existing ID.
+              return serializeByValueID(existingId);
+            }
+          } else {
+            // This is the first time we've seen this object. We may never see it again
+            // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
+            writtenObjects.set(value, -1);
+          }
+
           // TODO: Concatenate keys of parents onto children.
           const element: React$Element<any> = (value: any);
           // Attempt to render the Server Component.
@@ -1019,31 +1082,75 @@ function resolveModelToJSON(
     }
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
-      // $FlowFixMe[method-unbinding]
-    } else if (typeof value.then === 'function') {
+    }
+
+    const writtenObjects = request.writtenObjects;
+    const existingId = writtenObjects.get(value);
+    // $FlowFixMe[method-unbinding]
+    if (typeof value.then === 'function') {
+      if (existingId !== undefined) {
+        if (modelRoot === value) {
+          // This is the ID we're currently emitting so we need to write it
+          // once but if we discover it again, we refer to it by id.
+          modelRoot = null;
+        } else {
+          // We've seen this promise before, so we can just refer to the same result.
+          return serializePromiseID(existingId);
+        }
+      }
       // We assume that any object with a .then property is a "Thenable" type,
       // or a Promise type. Either of which can be represented by a Promise.
       const promiseId = serializeThenable(request, (value: any));
+      writtenObjects.set(value, promiseId);
       return serializePromiseID(promiseId);
-    } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
-      const providerKey = ((value: any): ReactProviderType<any>)._context
-        ._globalName;
-      const writtenProviders = request.writtenProviders;
-      let providerId = writtenProviders.get(key);
-      if (providerId === undefined) {
-        request.pendingChunks++;
-        providerId = request.nextChunkId++;
-        writtenProviders.set(providerKey, providerId);
-        emitProviderChunk(request, providerId, providerKey);
+    }
+
+    if (enableServerContext) {
+      if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
+        const providerKey = ((value: any): ReactProviderType<any>)._context
+          ._globalName;
+        const writtenProviders = request.writtenProviders;
+        let providerId = writtenProviders.get(key);
+        if (providerId === undefined) {
+          request.pendingChunks++;
+          providerId = request.nextChunkId++;
+          writtenProviders.set(providerKey, providerId);
+          emitProviderChunk(request, providerId, providerKey);
+        }
+        return serializeByValueID(providerId);
+      } else if (value === POP) {
+        popProvider();
+        if (__DEV__) {
+          insideContextProps = null;
+          isInsideContextValue = false;
+        }
+        return (undefined: any);
       }
-      return serializeByValueID(providerId);
-    } else if (value === POP) {
-      popProvider();
-      if (__DEV__) {
-        insideContextProps = null;
-        isInsideContextValue = false;
+    }
+
+    if (existingId !== undefined) {
+      if (existingId === -1) {
+        // Seen but not yet outlined.
+        const newId = outlineModel(request, value);
+        return serializeByValueID(newId);
+      } else if (modelRoot === value) {
+        // This is the ID we're currently emitting so we need to write it
+        // once but if we discover it again, we refer to it by id.
+        modelRoot = null;
+      } else {
+        // We've already emitted this as an outlined object, so we can
+        // just refer to that by its existing ID.
+        return serializeByValueID(existingId);
       }
-      return (undefined: any);
+    } else {
+      // This is the first time we've seen this object. We may never see it again
+      // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
+      writtenObjects.set(value, -1);
+    }
+
+    if (isArray(value)) {
+      // $FlowFixMe[incompatible-return]
+      return value;
     }
 
     if (value instanceof Map) {
@@ -1107,39 +1214,45 @@ function resolveModelToJSON(
       }
     }
 
-    if (!isArray(value)) {
-      const iteratorFn = getIteratorFn(value);
-      if (iteratorFn) {
-        return Array.from((value: any));
-      }
+    const iteratorFn = getIteratorFn(value);
+    if (iteratorFn) {
+      return Array.from((value: any));
     }
 
+    // Verify that this is a simple plain object.
+    const proto = getPrototypeOf(value);
+    if (
+      proto !== ObjectPrototype &&
+      (proto === null || getPrototypeOf(proto) !== null)
+    ) {
+      throw new Error(
+        'Only plain objects, and a few built-ins, can be passed to Client Components ' +
+          'from Server Components. Classes or null prototypes are not supported.',
+      );
+    }
     if (__DEV__) {
-      if (value !== null && !isArray(value)) {
-        // Verify that this is a simple plain object.
-        if (objectName(value) !== 'Object') {
+      if (objectName(value) !== 'Object') {
+        console.error(
+          'Only plain objects can be passed to Client Components from Server Components. ' +
+            '%s objects are not supported.%s',
+          objectName(value),
+          describeObjectForErrorMessage(parent, key),
+        );
+      } else if (!isSimpleObject(value)) {
+        console.error(
+          'Only plain objects can be passed to Client Components from Server Components. ' +
+            'Classes or other objects with methods are not supported.%s',
+          describeObjectForErrorMessage(parent, key),
+        );
+      } else if (Object.getOwnPropertySymbols) {
+        const symbols = Object.getOwnPropertySymbols(value);
+        if (symbols.length > 0) {
           console.error(
             'Only plain objects can be passed to Client Components from Server Components. ' +
-              '%s objects are not supported.%s',
-            objectName(value),
+              'Objects with symbol properties like %s are not supported.%s',
+            symbols[0].description,
             describeObjectForErrorMessage(parent, key),
           );
-        } else if (!isSimpleObject(value)) {
-          console.error(
-            'Only plain objects can be passed to Client Components from Server Components. ' +
-              'Classes or other objects with methods are not supported.%s',
-            describeObjectForErrorMessage(parent, key),
-          );
-        } else if (Object.getOwnPropertySymbols) {
-          const symbols = Object.getOwnPropertySymbols(value);
-          if (symbols.length > 0) {
-            console.error(
-              'Only plain objects can be passed to Client Components from Server Components. ' +
-                'Objects with symbol properties like %s are not supported.%s',
-              symbols[0].description,
-              describeObjectForErrorMessage(parent, key),
-            );
-          }
         }
       }
     }
@@ -1387,6 +1500,10 @@ function emitModelChunk(
   id: number,
   model: ReactClientValue,
 ): void {
+  // Track the root so we know that we have to emit this object even though it
+  // already has an ID. This is needed because we might see this object twice
+  // in the same toJSON if it is cyclic.
+  modelRoot = model;
   // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(model, request.toJSON);
   const row = id.toString(16) + ':' + json + '\n';
@@ -1408,6 +1525,8 @@ function retryTask(request: Request, task: Task): void {
       value !== null &&
       (value: any).$$typeof === REACT_ELEMENT_TYPE
     ) {
+      request.writtenObjects.set(value, task.id);
+
       // TODO: Concatenate keys of parents onto children.
       const element: React$Element<any> = (value: any);
 
@@ -1440,6 +1559,7 @@ function retryTask(request: Request, task: Task): void {
         value !== null &&
         (value: any).$$typeof === REACT_ELEMENT_TYPE
       ) {
+        request.writtenObjects.set(value, task.id);
         // TODO: Concatenate keys of parents onto children.
         const nextElement: React$Element<any> = (value: any);
         task.model = value;
@@ -1452,6 +1572,11 @@ function retryTask(request: Request, task: Task): void {
           null,
         );
       }
+    }
+
+    // Track that this object is outlined and has an id.
+    if (typeof value === 'object' && value !== null) {
+      request.writtenObjects.set(value, task.id);
     }
 
     emitModelChunk(request, task.id, value);
@@ -1665,15 +1790,27 @@ export function abort(request: Request, reason: mixed): void {
     if (abortableTasks.size > 0) {
       // We have tasks to abort. We'll emit one error row and then emit a reference
       // to that row from every row that's still remaining.
-      const error =
-        reason === undefined
-          ? new Error('The render was aborted by the server without a reason.')
-          : reason;
-
-      const digest = logRecoverableError(request, error);
       request.pendingChunks++;
       const errorId = request.nextChunkId++;
-      emitErrorChunk(request, errorId, digest, error);
+      if (
+        enablePostpone &&
+        typeof reason === 'object' &&
+        reason !== null &&
+        (reason: any).$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (reason: any);
+        logPostpone(request, postponeInstance.message);
+        emitPostponeChunk(request, errorId, postponeInstance);
+      } else {
+        const error =
+          reason === undefined
+            ? new Error(
+                'The render was aborted by the server without a reason.',
+              )
+            : reason;
+        const digest = logRecoverableError(request, error);
+        emitErrorChunk(request, errorId, digest, error);
+      }
       abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
     }
@@ -1689,7 +1826,7 @@ export function abort(request: Request, reason: mixed): void {
 function importServerContexts(
   contexts?: Array<[string, ServerContextJSONValue]>,
 ) {
-  if (contexts) {
+  if (enableServerContext && contexts) {
     const prevContext = getActiveContext();
     switchContext(rootContextSnapshot);
     for (let i = 0; i < contexts.length; i++) {

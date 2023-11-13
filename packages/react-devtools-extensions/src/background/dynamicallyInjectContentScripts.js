@@ -1,10 +1,8 @@
 /* global chrome */
 
-import {IS_FIREFOX} from '../utils';
-
 // Firefox doesn't support ExecutionWorld.MAIN yet
 // equivalent logic for Firefox is in prepareInjection.js
-const contentScriptsToInject = IS_FIREFOX
+const contentScriptsToInject = __IS_FIREFOX__
   ? [
       {
         id: '@react-devtools/proxy',

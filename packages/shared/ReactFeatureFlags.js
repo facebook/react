@@ -124,6 +124,10 @@ export const alwaysThrottleRetries = true;
 
 export const useMicrotasksForSchedulingInFabric = false;
 
+export const passChildrenWhenCloningPersistedNodes = false;
+
+export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
@@ -147,7 +151,7 @@ export const enableUseRefAccessWarning = false;
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const forceConcurrentByDefaultForTesting = false;
 
-export const enableUnifiedSyncLane = __EXPERIMENTAL__;
+export const enableUnifiedSyncLane = true;
 
 // Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
 export const allowConcurrentByDefault = false;
@@ -222,7 +226,7 @@ export const enableDebugTracing = false;
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableServerContext = true;
+export const enableServerContext = __EXPERIMENTAL__;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;

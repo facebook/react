@@ -15,6 +15,7 @@ import type {
   Wakeable,
   Usable,
   ReactFormState,
+  Awaited,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -399,7 +400,7 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useDeferredValue<T>(value: T): T,
+  useDeferredValue<T>(value: T, initialValue?: T): T,
   useTransition(): [
     boolean,
     (callback: () => void, options?: StartTransitionOptions) => void,
@@ -418,10 +419,10 @@ export type Dispatcher = {
     reducer: ?(S, A) => S,
   ) => [S, (A) => void],
   useFormState?: <S, P>(
-    action: (S, P) => Promise<S>,
-    initialState: S,
+    action: (Awaited<S>, P) => S,
+    initialState: Awaited<S>,
     permalink?: string,
-  ) => [S, (P) => void],
+  ) => [Awaited<S>, (P) => void],
 };
 
 export type CacheDispatcher = {

@@ -57,12 +57,12 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = false;
+export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = true;
+export const enableServerContext = false;
 
 export const enableTransitionTracing = false;
 
@@ -79,6 +79,8 @@ export const enableAsyncActions = false;
 export const alwaysThrottleRetries = true;
 
 export const useMicrotasksForSchedulingInFabric = false;
+export const passChildrenWhenCloningPersistedNodes = false;
+export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

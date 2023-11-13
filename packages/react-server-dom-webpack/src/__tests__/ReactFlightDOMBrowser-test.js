@@ -618,6 +618,7 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('ABC');
   });
 
+  // @gate enableServerContext
   it('basic use(context)', async () => {
     let ContextA;
     let ContextB;
@@ -1307,5 +1308,63 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
     ]);
+  });
+
+  // @gate enablePostpone
+  it('postpones when abort passes a postpone signal', async () => {
+    const infinitePromise = new Promise(() => {});
+    function Server() {
+      return infinitePromise;
+    }
+
+    let postponed = null;
+    let error = null;
+
+    const controller = new AbortController();
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Suspense fallback="Loading...">
+        <Server />
+      </Suspense>,
+      null,
+      {
+        onError(x) {
+          error = x;
+        },
+        onPostpone(reason) {
+          postponed = reason;
+        },
+        signal: controller.signal,
+      },
+    );
+
+    try {
+      React.unstable_postpone('testing postpone');
+    } catch (reason) {
+      controller.abort(reason);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+
+    function Client() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <div>
+          Shell: <Client />
+        </div>,
+      );
+    });
+    // We should have reserved the shell already. Which means that the Server
+    // Component should've been a lazy component.
+    expect(container.innerHTML).toContain('Shell:');
+    expect(container.innerHTML).toContain('Loading...');
+    expect(container.innerHTML).not.toContain('Not shown');
+
+    expect(postponed).toBe('testing postpone');
+    expect(error).toBe(null);
   });
 });

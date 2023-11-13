@@ -76,6 +76,9 @@ import {
   requestStorage,
   pushFormStateMarkerIsMatching,
   pushFormStateMarkerIsNotMatching,
+  resetResumableState,
+  completeResumableState,
+  emitEarlyPreloads,
 } from './ReactFizzConfig';
 import {
   constructClassInstance,
@@ -454,6 +457,7 @@ export function createPrerenderRequest(
     onShellError,
     onFatalError,
     onPostpone,
+    undefined,
   );
   // Start tracking postponed holes during this render.
   request.trackedPostpones = {
@@ -505,6 +509,39 @@ export function resumeRequest(
     onFatalError: onFatalError === undefined ? noop : onFatalError,
     formState: null,
   };
+  if (typeof postponedState.replaySlots === 'number') {
+    const resumedId = postponedState.replaySlots;
+    // We have a resume slot at the very root. This is effectively just a full rerender.
+    const rootSegment = createPendingSegment(
+      request,
+      0,
+      null,
+      postponedState.rootFormatContext,
+      // Root segments are never embedded in Text on either edge
+      false,
+      false,
+    );
+    rootSegment.id = resumedId;
+    // There is no parent so conceptually, we're unblocked to flush this segment.
+    rootSegment.parentFlushed = true;
+    const rootTask = createRenderTask(
+      request,
+      null,
+      children,
+      -1,
+      null,
+      rootSegment,
+      abortSet,
+      null,
+      postponedState.rootFormatContext,
+      emptyContextObject,
+      rootContextSnapshot,
+      emptyTreeContext,
+    );
+    pingedTasks.push(rootTask);
+    return request;
+  }
+
   const replay: ReplaySet = {
     nodes: postponedState.replayNodes,
     slots: postponedState.replaySlots,
@@ -1967,6 +2004,7 @@ function replayElement(
       }
       const childNodes = node[2];
       const childSlots = node[3];
+      const currentNode = task.node;
       task.replay = {nodes: childNodes, slots: childSlots, pendingTasks: 1};
       try {
         renderElement(
@@ -1988,6 +2026,7 @@ function replayElement(
               "The tree doesn't match so React will fallback to client rendering.",
           );
         }
+        task.replay.pendingTasks--;
       } catch (x) {
         if (
           typeof x === 'object' &&
@@ -1995,18 +2034,21 @@ function replayElement(
           (x === SuspenseException || typeof x.then === 'function')
         ) {
           // Suspend
+          if (task.node === currentNode) {
+            // This same element suspended so we need to pop the replay we just added.
+            task.replay = replay;
+          }
           throw x;
         }
+        task.replay.pendingTasks--;
         // Unlike regular render, we don't terminate the siblings if we error
         // during a replay. That's because this component didn't actually error
         // in the original prerender. What's unable to complete is the child
         // replay nodes which might be Suspense boundaries which are able to
         // absorb the error and we can still continue with siblings.
         erroredReplay(request, task.blockedBoundary, x, childNodes, childSlots);
-      } finally {
-        task.replay.pendingTasks--;
-        task.replay = replay;
       }
+      task.replay = replay;
     } else {
       // Let's double check that the component type matches.
       if (type !== REACT_SUSPENSE_TYPE) {
@@ -2145,7 +2187,7 @@ function renderNodeDestructiveImpl(
   if (typeof node === 'object' && node !== null) {
     switch ((node: any).$$typeof) {
       case REACT_ELEMENT_TYPE: {
-        const element: React$Element<any> = (node: any);
+        const element: any = node;
         const type = element.type;
         const key = element.key;
         const props = element.props;
@@ -2370,6 +2412,7 @@ function replayFragment(
             "The tree doesn't match so React will fallback to client rendering.",
         );
       }
+      task.replay.pendingTasks--;
     } catch (x) {
       if (
         typeof x === 'object' &&
@@ -2379,6 +2422,7 @@ function replayFragment(
         // Suspend
         throw x;
       }
+      task.replay.pendingTasks--;
       // Unlike regular render, we don't terminate the siblings if we error
       // during a replay. That's because this component didn't actually error
       // in the original prerender. What's unable to complete is the child
@@ -2386,10 +2430,8 @@ function replayFragment(
       // absorb the error and we can still continue with siblings.
       // This is an error, stash the component stack if it is null.
       erroredReplay(request, task.blockedBoundary, x, childNodes, childSlots);
-    } finally {
-      task.replay.pendingTasks--;
-      task.replay = replay;
     }
+    task.replay = replay;
     // We finished rendering this node, so now we can consume this
     // slot. This must happen after in case we rerender this task.
     replayNodes.splice(j, 1);
@@ -2432,6 +2474,7 @@ function renderChildrenArray(
         // We need to use the non-destructive form so that we can safely pop back
         // up and render the sibling if something suspends.
         const resumeSegmentID = resumeSlots[i];
+        // TODO: If this errors we should still continue with the next sibling.
         if (typeof resumeSegmentID === 'number') {
           resumeNode(request, task, resumeSegmentID, node, i);
           // We finished rendering this node, so now we can consume this
@@ -2471,6 +2514,17 @@ function trackPostpone(
 
   const keyPath = task.keyPath;
   const boundary = task.blockedBoundary;
+
+  if (boundary === null) {
+    segment.id = request.nextSegmentId++;
+    trackedPostpones.rootSlots = segment.id;
+    if (request.completedRootSegment !== null) {
+      // Postpone the root if this was a deeper segment.
+      request.completedRootSegment.status = POSTPONED;
+    }
+    return;
+  }
+
   if (boundary !== null && boundary.status === PENDING) {
     boundary.status = POSTPONED;
     // We need to eagerly assign it an ID because we'll need to refer to
@@ -2488,15 +2542,22 @@ function trackPostpone(
 
     const children: Array<ReplayNode> = [];
     if (boundaryKeyPath === keyPath && task.childIndex === -1) {
-      // Since we postponed directly in the Suspense boundary we can't have written anything
-      // to its segment. Therefore this will end up becoming the root segment.
-      segment.id = boundary.rootSegmentID;
+      // Assign ID
+      if (segment.id === -1) {
+        if (segment.parentFlushed) {
+          // If this segment's parent was already flushed, it means we really just
+          // skipped the parent and this segment is now the root.
+          segment.id = boundary.rootSegmentID;
+        } else {
+          segment.id = request.nextSegmentId++;
+        }
+      }
       // We postponed directly inside the Suspense boundary so we mark this for resuming.
       const boundaryNode: ReplaySuspenseBoundary = [
         boundaryKeyPath[1],
         boundaryKeyPath[2],
         children,
-        boundary.rootSegmentID,
+        segment.id,
         fallbackReplayNode,
         boundary.rootSegmentID,
       ];
@@ -2829,7 +2890,7 @@ function renderNode(
           enablePostpone &&
           request.trackedPostpones !== null &&
           x.$$typeof === REACT_POSTPONE_TYPE &&
-          task.blockedBoundary !== null // TODO: Support holes in the shell
+          task.blockedBoundary !== null // bubble if we're postponing in the shell
         ) {
           // If we're tracking postpones, we inject a hole here and continue rendering
           // sibling. Similar to suspending. If we're not tracking, we treat it more like
@@ -2965,8 +3026,7 @@ function erroredTask(
 
   request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
-    const onAllReady = request.onAllReady;
-    onAllReady();
+    completeAll(request);
   }
 }
 
@@ -3114,9 +3174,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         }
         request.pendingRootTasks--;
         if (request.pendingRootTasks === 0) {
-          request.onShellError = noop;
-          const onShellReady = request.onShellReady;
-          onShellReady();
+          completeShell(request);
         }
       }
     }
@@ -3158,9 +3216,52 @@ function abortTask(task: Task, request: Request, error: mixed): void {
 
   request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
-    const onAllReady = request.onAllReady;
-    onAllReady();
+    completeAll(request);
   }
+}
+
+// I extracted this function out because we want to ensure we consistently emit preloads before
+// transitioning to the next request stage and this transition can happen in multiple places in this
+// implementation.
+function completeShell(request: Request) {
+  if (request.trackedPostpones === null) {
+    // We only emit early preloads on shell completion for renders. For prerenders
+    // we wait for the entire Request to finish because we are not responding to a
+    // live request and can wait for as much data as possible.
+
+    // we should only be calling completeShell when the shell is complete so we
+    // just use a literal here
+    const shellComplete = true;
+    emitEarlyPreloads(
+      request.renderState,
+      request.resumableState,
+      shellComplete,
+    );
+  }
+  // We have completed the shell so the shell can't error anymore.
+  request.onShellError = noop;
+  const onShellReady = request.onShellReady;
+  onShellReady();
+}
+
+// I extracted this function out because we want to ensure we consistently emit preloads before
+// transitioning to the next request stage and this transition can happen in multiple places in this
+// implementation.
+function completeAll(request: Request) {
+  // During a render the shell must be complete if the entire request is finished
+  // however during a Prerender it is possible that the shell is incomplete because
+  // it postponed. We cannot use rootPendingTasks in the prerender case because
+  // those hit zero even when the shell postpones. Instead we look at the completedRootSegment
+  const shellComplete =
+    request.trackedPostpones === null
+      ? // Render, we assume it is completed
+        true
+      : // Prerender Request, we use the state of the root segment
+        request.completedRootSegment === null ||
+        request.completedRootSegment.status !== POSTPONED;
+  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
+  const onAllReady = request.onAllReady;
+  onAllReady();
 }
 
 function queueCompletedSegment(
@@ -3170,7 +3271,8 @@ function queueCompletedSegment(
   if (
     segment.chunks.length === 0 &&
     segment.children.length === 1 &&
-    segment.children[0].boundary === null
+    segment.children[0].boundary === null &&
+    segment.children[0].id === -1
   ) {
     // This is an empty segment. There's nothing to write, so we can instead transfer the ID
     // to the child. That way any existing references point to the child.
@@ -3203,10 +3305,7 @@ function finishedTask(
     }
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
-      // We have completed the shell so the shell can't error anymore.
-      request.onShellError = noop;
-      const onShellReady = request.onShellReady;
-      onShellReady();
+      completeShell(request);
     }
   } else {
     boundary.pendingTasks--;
@@ -3262,10 +3361,7 @@ function finishedTask(
 
   request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
-    // This needs to be called at the very end so that we can synchronously write the result
-    // in the callback if needed.
-    const onAllReady = request.onAllReady;
-    onAllReady();
+    completeAll(request);
   }
 }
 
@@ -3370,8 +3466,7 @@ function retryRenderTask(
       } else if (
         enablePostpone &&
         request.trackedPostpones !== null &&
-        x.$$typeof === REACT_POSTPONE_TYPE &&
-        task.blockedBoundary !== null // TODO: Support holes in the shell
+        x.$$typeof === REACT_POSTPONE_TYPE
       ) {
         // If we're tracking postpones, we mark this segment as postponed and finish
         // the task without filling it in. If we're not tracking, we treat it more like
@@ -3426,7 +3521,13 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     const prevThenableState = task.thenableState;
     task.thenableState = null;
 
-    renderNodeDestructive(request, task, prevThenableState, task.node, -1);
+    renderNodeDestructive(
+      request,
+      task,
+      prevThenableState,
+      task.node,
+      task.childIndex,
+    );
 
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
       throw new Error(
@@ -3472,14 +3573,11 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     );
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
-      request.onShellError = noop;
-      const onShellReady = request.onShellReady;
-      onShellReady();
+      completeShell(request);
     }
     request.allPendingTasks--;
     if (request.allPendingTasks === 0) {
-      const onAllReady = request.onAllReady;
-      onAllReady();
+      completeAll(request);
     }
     return;
   } finally {
@@ -3864,7 +3962,10 @@ function flushCompletedQueues(
     let i;
     const completedRootSegment = request.completedRootSegment;
     if (completedRootSegment !== null) {
-      if (request.pendingRootTasks === 0) {
+      if (completedRootSegment.status === POSTPONED) {
+        // We postponed the root, so we write nothing.
+        return;
+      } else if (request.pendingRootTasks === 0) {
         if (enableFloat) {
           writePreamble(
             destination,
@@ -3980,6 +4081,9 @@ function flushCompletedQueues(
       }
       // We're done.
       close(destination);
+      // We need to stop flowing now because we do not want any async contexts which might call
+      // float methods to initiate any flushes after this point
+      stopFlowing(request);
     } else {
       completeWriting(destination);
       flushBuffered(destination);
@@ -3994,6 +4098,33 @@ export function startWork(request: Request): void {
   } else {
     scheduleWork(() => performWork(request));
   }
+  if (request.trackedPostpones === null) {
+    // this is either a regular render or a resume. For regular render we want
+    // to call emitEarlyPreloads after the first performWork because we want
+    // are responding to a live request and need to balance sending something early
+    // (i.e. don't want for the shell to finish) but we need something to send.
+    // The only implementation of this is for DOM at the moment and during resumes nothing
+    // actually emits but the code paths here are the same.
+    // During a prerender we don't want to be too aggressive in emitting early preloads
+    // because we aren't responding to a live request and we can wait for the prerender to
+    // postpone before we emit anything.
+    if (supportsRequestStorage) {
+      scheduleWork(() =>
+        requestStorage.run(
+          request,
+          enqueueEarlyPreloadsAfterInitialWork,
+          request,
+        ),
+      );
+    } else {
+      scheduleWork(() => enqueueEarlyPreloadsAfterInitialWork(request));
+    }
+  }
+}
+
+function enqueueEarlyPreloadsAfterInitialWork(request: Request) {
+  const shellComplete = request.pendingRootTasks === 0;
+  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
 }
 
 function enqueueFlush(request: Request): void {
@@ -4005,10 +4136,39 @@ function enqueueFlush(request: Request): void {
     // happen when we start flowing again
     request.destination !== null
   ) {
-    const destination = request.destination;
     request.flushScheduled = true;
-    scheduleWork(() => flushCompletedQueues(request, destination));
+    scheduleWork(() => {
+      // We need to existence check destination again here because it might go away
+      // in between the enqueueFlush call and the work execution
+      const destination = request.destination;
+      if (destination) {
+        flushCompletedQueues(request, destination);
+      } else {
+        request.flushScheduled = false;
+      }
+    });
   }
+}
+
+// This function is intented to only be called during the pipe function for the Node builds.
+// The reason we need this is because `renderToPipeableStream` is the only API which allows
+// you to start flowing before the shell is complete and we've had a chance to emit early
+// preloads already. This is really just defensive programming to ensure that we give hosts an
+// opportunity to flush early preloads before streaming begins in case they are in an environment
+// that only supports a single call to emitEarlyPreloads like the DOM renderers. It's unfortunate
+// to put this Node only function directly in ReactFizzServer but it'd be more ackward to factor it
+// by moving the implementation into ReactServerStreamConfigNode and even then we may not be able to
+// eliminate all the wasted branching.
+export function prepareForStartFlowingIfBeforeAllReady(request: Request) {
+  const shellComplete =
+    request.trackedPostpones === null
+      ? // Render Request, we define shell complete by the pending root tasks
+        request.pendingRootTasks === 0
+      : // Prerender Request, we define shell complete by completedRootSegemtn
+      request.completedRootSegment === null
+      ? request.pendingRootTasks === 0
+      : request.completedRootSegment.status !== POSTPONED;
+  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
 }
 
 export function startFlowing(request: Request, destination: Destination): void {
@@ -4025,6 +4185,7 @@ export function startFlowing(request: Request, destination: Destination): void {
     return;
   }
   request.destination = destination;
+
   try {
     flushCompletedQueues(request, destination);
   } catch (error) {
@@ -4120,6 +4281,15 @@ export function getPostponedState(request: Request): null | PostponedState {
     // Reset. Let the flushing behave as if we completed the whole document.
     request.trackedPostpones = null;
     return null;
+  }
+  if (
+    request.completedRootSegment !== null &&
+    request.completedRootSegment.status === POSTPONED
+  ) {
+    // We postponed the root so we didn't flush anything.
+    resetResumableState(request.resumableState, request.renderState);
+  } else {
+    completeResumableState(request.resumableState);
   }
   return {
     nextSegmentId: request.nextSegmentId,

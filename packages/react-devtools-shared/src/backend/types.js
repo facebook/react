@@ -21,14 +21,14 @@ import type {
   ComponentFilter,
   ElementType,
   Plugins,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import type {
   ResolveNativeStyle,
   SetupNativeStyleEditor,
 } from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 import type {InitBackend} from 'react-devtools-shared/src/backend';
 import type {TimelineDataExport} from 'react-devtools-timeline/src/types';
-import type {BrowserTheme} from 'react-devtools-shared/src/types';
+import type {BrowserTheme} from 'react-devtools-shared/src/frontend/types';
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
 import type Agent from './agent';
 

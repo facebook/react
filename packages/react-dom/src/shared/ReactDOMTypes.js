@@ -17,7 +17,7 @@ export type PreloadOptions = {
   integrity?: string,
   type?: string,
   nonce?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
+  fetchPriority?: FetchPriorityEnum,
   imageSrcSet?: string,
   imageSizes?: string,
   referrerPolicy?: string,
@@ -34,7 +34,7 @@ export type PreinitOptions = {
   crossOrigin?: string,
   integrity?: string,
   nonce?: string,
-  fetchPriority?: 'high' | 'low' | 'auto',
+  fetchPriority?: FetchPriorityEnum,
 };
 export type PreinitModuleOptions = {
   as?: string,
@@ -51,10 +51,11 @@ export type PreloadImplOptions = {
   integrity?: ?string,
   nonce?: ?string,
   type?: ?string,
-  fetchPriority?: ?FetchPriorityEnum,
+  fetchPriority?: ?string,
   referrerPolicy?: ?string,
   imageSrcSet?: ?string,
   imageSizes?: ?string,
+  media?: ?string,
 };
 export type PreloadModuleImplOptions = {
   as?: ?string,
@@ -65,12 +66,12 @@ export type PreloadModuleImplOptions = {
 export type PreinitStyleOptions = {
   crossOrigin?: ?CrossOriginEnum,
   integrity?: ?string,
-  fetchPriority?: ?FetchPriorityEnum,
+  fetchPriority?: ?string,
 };
 export type PreinitScriptOptions = {
   crossOrigin?: ?CrossOriginEnum,
   integrity?: ?string,
-  fetchPriority?: ?FetchPriorityEnum,
+  fetchPriority?: ?string,
   nonce?: ?string,
 };
 export type PreinitModuleScriptOptions = {

@@ -137,24 +137,24 @@ describe('ReactDOMTextarea', () => {
 
     let counter = 0;
     const originalCreateElement = document.createElement;
-    spyOnDevAndProd(document, 'createElement').mockImplementation(function (
-      type,
-    ) {
-      const el = originalCreateElement.apply(this, arguments);
-      let value = '';
-      if (type === 'textarea') {
-        Object.defineProperty(el, 'value', {
-          get: function () {
-            return value;
-          },
-          set: function (val) {
-            value = String(val);
-            counter++;
-          },
-        });
-      }
-      return el;
-    });
+    spyOnDevAndProd(document, 'createElement').mockImplementation(
+      function (type) {
+        const el = originalCreateElement.apply(this, arguments);
+        let value = '';
+        if (type === 'textarea') {
+          Object.defineProperty(el, 'value', {
+            get: function () {
+              return value;
+            },
+            set: function (val) {
+              value = String(val);
+              counter++;
+            },
+          });
+        }
+        return el;
+      },
+    );
 
     ReactDOM.render(<textarea value="" readOnly={true} />, container);
 
@@ -251,7 +251,7 @@ describe('ReactDOMTextarea', () => {
       expect(test).toThrowError(new TypeError('prod message')),
     ).toErrorDev(
       'Form field values (value, checked, defaultValue, or defaultChecked props) must be ' +
-        'strings, not TemporalLike. This value must be coerced to a string before before using it here.',
+        'strings, not TemporalLike. This value must be coerced to a string before using it here.',
     );
   });
 

@@ -42,7 +42,7 @@ import {createRegExp} from '../utils';
 import {BridgeContext, StoreContext} from '../context';
 import Store from '../../store';
 
-import type {Element} from './types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 export type StateContext = {
   // Tree

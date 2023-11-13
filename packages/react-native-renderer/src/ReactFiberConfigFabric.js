@@ -47,7 +47,10 @@ const {
   unstable_getCurrentEventPriority: fabricGetCurrentEventPriority,
 } = nativeFabricUIManager;
 
-import {useMicrotasksForSchedulingInFabric} from 'shared/ReactFeatureFlags';
+import {
+  useMicrotasksForSchedulingInFabric,
+  passChildrenWhenCloningPersistedNodes,
+} from 'shared/ReactFeatureFlags';
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -87,7 +90,7 @@ export type TextInstance = {
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactNativePublicInstance;
 export type Container = number;
-export type ChildSet = Object;
+export type ChildSet = Object | Array<Node>;
 export type HostContext = $ReadOnly<{
   isInAParentText: boolean,
 }>;
@@ -275,13 +278,21 @@ function getPublicTextInstance(
 export function getPublicInstanceFromInternalInstanceHandle(
   internalInstanceHandle: InternalInstanceHandle,
 ): null | PublicInstance | PublicTextInstance {
+  const instance = internalInstanceHandle.stateNode;
+
+  // React resets all the fields in the fiber when the component is unmounted
+  // to prevent memory leaks.
+  if (instance == null) {
+    return null;
+  }
+
   if (internalInstanceHandle.tag === HostText) {
-    const textInstance: TextInstance = internalInstanceHandle.stateNode;
+    const textInstance: TextInstance = instance;
     return getPublicTextInstance(textInstance, internalInstanceHandle);
   }
 
-  const instance: Instance = internalInstanceHandle.stateNode;
-  return getPublicInstance(instance);
+  const elementInstance: Instance = internalInstanceHandle.stateNode;
+  return getPublicInstance(elementInstance);
 }
 
 export function prepareForCommit(containerInfo: Container): null | Object {
@@ -346,9 +357,8 @@ export function cloneInstance(
   type: string,
   oldProps: Props,
   newProps: Props,
-  internalInstanceHandle: InternalInstanceHandle,
   keepChildren: boolean,
-  recyclableInstance: null | Instance,
+  newChildSet: ?ChildSet,
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
   const updatePayload = diff(oldProps, newProps, viewConfig.validAttributes);
@@ -367,12 +377,26 @@ export function cloneInstance(
       return instance;
     }
   } else {
-    if (updatePayload !== null) {
-      clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+    // If passChildrenWhenCloningPersistedNodes is enabled, children will be non-null
+    if (newChildSet != null) {
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(
+          node,
+          newChildSet,
+          updatePayload,
+        );
+      } else {
+        clone = cloneNodeWithNewChildren(node, newChildSet);
+      }
     } else {
-      clone = cloneNodeWithNewChildren(node);
+      if (updatePayload !== null) {
+        clone = cloneNodeWithNewChildrenAndProps(node, updatePayload);
+      } else {
+        clone = cloneNodeWithNewChildren(node);
+      }
     }
   }
+
   return {
     node: clone,
     canonical: instance.canonical,
@@ -383,7 +407,6 @@ export function cloneHiddenInstance(
   instance: Instance,
   type: string,
   props: Props,
-  internalInstanceHandle: InternalInstanceHandle,
 ): Instance {
   const viewConfig = instance.canonical.viewConfig;
   const node = instance.node;
@@ -400,20 +423,27 @@ export function cloneHiddenInstance(
 export function cloneHiddenTextInstance(
   instance: Instance,
   text: string,
-  internalInstanceHandle: InternalInstanceHandle,
 ): TextInstance {
   throw new Error('Not yet implemented.');
 }
 
-export function createContainerChildSet(container: Container): ChildSet {
-  return createChildNodeSet(container);
+export function createContainerChildSet(): ChildSet {
+  if (passChildrenWhenCloningPersistedNodes) {
+    return [];
+  } else {
+    return createChildNodeSet();
+  }
 }
 
 export function appendChildToContainerChildSet(
   childSet: ChildSet,
   child: Instance | TextInstance,
 ): void {
-  appendChildNodeToSet(childSet, child.node);
+  if (passChildrenWhenCloningPersistedNodes) {
+    childSet.push(child.node);
+  } else {
+    appendChildNodeToSet(childSet, child.node);
+  }
 }
 
 export function finalizeContainerChildren(
@@ -426,7 +456,9 @@ export function finalizeContainerChildren(
 export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
-): void {}
+): void {
+  // Noop - children will be replaced in finalizeContainerChildren
+}
 
 export function getInstanceFromNode(node: any): empty {
   throw new Error('Not yet implemented.');

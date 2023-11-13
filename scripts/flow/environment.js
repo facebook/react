@@ -30,6 +30,19 @@ declare module 'create-react-class' {
   declare var exports: React$CreateClass;
 }
 
+// Flow hides the props of React$Element, this overrides it to unhide
+// them for React internals.
+// prettier-ignore
+declare opaque type React$Element<
+  +ElementType: React$ElementType,
+  +P = React$ElementProps<ElementType>,
+>: {
+  +type: ElementType,
+  +props: P,
+  +key: React$Key | null,
+  +ref: any,
+};
+
 declare var trustedTypes: {
   isHTML: (value: any) => boolean,
   isScript: (value: any) => boolean,

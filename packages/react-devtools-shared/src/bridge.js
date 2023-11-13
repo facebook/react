@@ -9,7 +9,7 @@
 
 import EventEmitter from './events';
 
-import type {ComponentFilter, Wall} from './types';
+import type {ComponentFilter, Wall} from './frontend/types';
 import type {
   InspectedElementPayload,
   OwnersList,

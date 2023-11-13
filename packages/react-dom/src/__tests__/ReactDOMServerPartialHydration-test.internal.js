@@ -10,15 +10,15 @@
 
 'use strict';
 
+let Activity;
 let React = require('react');
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
-let Scheduler;
 let ReactFeatureFlags;
+let Scheduler;
 let Suspense;
 let SuspenseList;
-let Offscreen;
 let useSyncExternalStore;
 let act;
 let IdleEventPriority;
@@ -112,8 +112,8 @@ describe('ReactDOMServerPartialHydration', () => {
     act = require('internal-test-utils').act;
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
+    Activity = React.unstable_Activity;
     Suspense = React.Suspense;
-    Offscreen = React.unstable_Offscreen;
     useSyncExternalStore = React.useSyncExternalStore;
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.unstable_SuspenseList;
@@ -778,7 +778,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span).not.toBe(span2);
 
     if (gate(flags => flags.dfsEffectsRefactor)) {
-      // The effects list refactor causes this to be null because the Suspense Offscreen's child
+      // The effects list refactor causes this to be null because the Suspense Activity's child
       // is null. However, since we can't hydrate Suspense in legacy this change in behavior is ok
       expect(ref.current).toBe(null);
     } else {
@@ -3151,15 +3151,15 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current.innerHTML).toBe('Hidden child');
   });
 
-  // @gate enableOffscreen
-  it('a visible Offscreen component acts like a fragment', async () => {
+  // @gate enableActivity
+  it('a visible Activity component acts like a fragment', async () => {
     const ref = React.createRef();
 
     function App() {
       return (
-        <Offscreen mode="visible">
+        <Activity mode="visible">
           <span ref={ref}>Child</span>
-        </Offscreen>
+        </Activity>
       );
     }
 
@@ -3169,7 +3169,7 @@ describe('ReactDOMServerPartialHydration', () => {
     const container = document.createElement('div');
     container.innerHTML = finalHTML;
 
-    // Visible Offscreen boundaries behave exactly like fragments: a
+    // Visible Activity boundaries behave exactly like fragments: a
     // pure indirection.
     expect(container).toMatchInlineSnapshot(`
       <div>
@@ -3187,8 +3187,8 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).toBe(span);
   });
 
-  // @gate enableOffscreen
-  it('a hidden Offscreen component is skipped over during server rendering', async () => {
+  // @gate enableActivity
+  it('a hidden Activity component is skipped over during server rendering', async () => {
     const visibleRef = React.createRef();
 
     function HiddenChild() {
@@ -3201,9 +3201,9 @@ describe('ReactDOMServerPartialHydration', () => {
       return (
         <>
           <span ref={visibleRef}>Visible</span>
-          <Offscreen mode="hidden">
+          <Activity mode="hidden">
             <HiddenChild />
-          </Offscreen>
+          </Activity>
         </>
       );
     }

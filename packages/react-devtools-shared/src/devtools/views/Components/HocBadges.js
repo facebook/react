@@ -10,7 +10,7 @@
 import * as React from 'react';
 import styles from './HocBadges.css';
 
-import type {Element} from './types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
 type Props = {
   element: Element,
@@ -25,12 +25,11 @@ export default function HocBadges({element}: Props): React.Node {
 
   return (
     <div className={styles.HocBadges}>
-      {hocDisplayNames !== null &&
-        hocDisplayNames.map(hocDisplayName => (
-          <div key={hocDisplayName} className={styles.Badge}>
-            {hocDisplayName}
-          </div>
-        ))}
+      {hocDisplayNames.map(hocDisplayName => (
+        <div key={hocDisplayName} className={styles.Badge}>
+          {hocDisplayName}
+        </div>
+      ))}
     </div>
   );
 }

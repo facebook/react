@@ -3624,6 +3624,223 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // bugfix: https://github.com/facebook/react/issues/27286 affecting enableCustomElementPropertySupport flag
+  it('can render custom elements with children on ther server', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <my-element>
+              <div>foo</div>
+            </my-element>
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <my-element>
+            <div>foo</div>
+          </my-element>
+        </body>
+      </html>,
+    );
+  });
+
+  // https://github.com/facebook/react/issues/27540
+  // This test is not actually asserting much because there is possibly a bug in the closeing logic for the
+  // Node implementation of Fizz. The close leads to an abort which sets the destination to null before the Float
+  // method has an opportunity to schedule a write. We should fix this probably and once we do this test will start
+  // to fail if the underyling issue of writing after stream completion isn't fixed
+  it('does not try to write to the stream after it has been closed', async () => {
+    async function preloadLate() {
+      await 1;
+      ReactDOM.preconnect('foo');
+    }
+
+    function Preload() {
+      preloadLate();
+      return null;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <main>hello</main>
+            <Preload />
+          </body>
+        </html>
+      );
+    }
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <main>hello</main>
+        </body>
+      </html>,
+    );
+  });
+
+  it('provides headers after initial work if onHeaders option used', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function Preloads() {
+      ReactDOM.preload('font2', {as: 'font'});
+      ReactDOM.preload('imagepre2', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preconnect('pre2', {crossOrigin: 'use-credentials'});
+      ReactDOM.prefetchDNS('dns2');
+    }
+
+    function Blocked() {
+      readText('blocked');
+      return (
+        <>
+          <Preloads />
+          <img src="image2" />
+        </>
+      );
+    }
+
+    function App() {
+      ReactDOM.preload('font', {as: 'font'});
+      ReactDOM.preload('imagepre', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preconnect('pre', {crossOrigin: 'use-credentials'});
+      ReactDOM.prefetchDNS('dns');
+      return (
+        <html>
+          <body>
+            <img src="image" />
+            <Blocked />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<pre>; rel=preconnect; crossorigin="use-credentials",
+ <dns>; rel=dns-prefetch,
+ <font>; rel=preload; as="font"; crossorigin="",
+ <imagepre>; rel=preload; as="image"; fetchpriority="high",
+ <image>; rel=preload; as="image"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
+  it('encodes img srcset and sizes into preload header params', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('presrc', {
+        as: 'image',
+        fetchPriority: 'high',
+        imageSrcSet: 'presrcset',
+        imageSizes: 'presizes',
+      });
+      return (
+        <html>
+          <body>
+            <img src="src" srcSet="srcset" sizes="sizes" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<presrc>; rel=preload; as="image"; fetchpriority="high"; imagesrcset="presrcset"; imagesizes="presizes",
+ <src>; rel=preload; as="image"; imagesrcset="srcset"; imagesizes="sizes"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
+  it('emits nothing for headers if you pipe before work begins', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('presrc', {
+        as: 'image',
+        fetchPriority: 'high',
+        imageSrcSet: 'presrcset',
+        imageSizes: 'presizes',
+      });
+      return (
+        <html>
+          <body>
+            <img src="src" srcSet="srcset" sizes="sizes" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders}).pipe(writable);
+    });
+
+    expect(headers).toEqual({});
+  });
+
+  it('stops accumulating new headers once the maxHeadersLength limit is satisifed', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preconnect('foo');
+      ReactDOM.preconnect('bar');
+      ReactDOM.preconnect('baz');
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders, maxHeadersLength: 44});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<foo>; rel=preconnect,
+ <bar>; rel=preconnect
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};
@@ -5608,6 +5825,7 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('ABC');
   });
 
+  // @gate enableServerContext
   it('basic use(context)', async () => {
     const ContextA = React.createContext('default');
     const ContextB = React.createContext('B');

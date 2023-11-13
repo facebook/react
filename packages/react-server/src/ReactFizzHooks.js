@@ -15,6 +15,7 @@ import type {
   Thenable,
   Usable,
   ReactCustomFormAction,
+  Awaited,
 } from 'shared/ReactTypes';
 
 import type {ResumableState} from './ReactFizzConfig';
@@ -35,6 +36,7 @@ import {
   enableUseMemoCacheHook,
   enableAsyncActions,
   enableFormActions,
+  enableUseDeferredValueInitialArg,
 } from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 import {
@@ -553,9 +555,13 @@ function useSyncExternalStore<T>(
   return getServerSnapshot();
 }
 
-function useDeferredValue<T>(value: T): T {
+function useDeferredValue<T>(value: T, initialValue?: T): T {
   resolveCurrentlyRenderingComponent();
-  return value;
+  if (enableUseDeferredValueInitialArg) {
+    return initialValue !== undefined ? initialValue : value;
+  } else {
+    return value;
+  }
 }
 
 function unsupportedStartTransition() {
@@ -607,10 +613,10 @@ function createPostbackFormStateKey(
 }
 
 function useFormState<S, P>(
-  action: (S, P) => Promise<S>,
-  initialState: S,
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
   permalink?: string,
-): [S, (P) => void] {
+): [Awaited<S>, (P) => void] {
   resolveCurrentlyRenderingComponent();
 
   // Count the number of useFormState hooks per component. We also use this to

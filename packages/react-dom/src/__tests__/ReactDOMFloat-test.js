@@ -2852,6 +2852,84 @@ body {
     ]);
   });
 
+  // https://github.com/facebook/react/issues/27585
+  it('does not reinsert already inserted stylesheets during a delayed commit', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <link rel="stylesheet" href="first" precedence="default" />
+            <link rel="stylesheet" href="second" precedence="default" />
+            server
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="first" data-precedence="default" />
+          <link rel="stylesheet" href="second" data-precedence="default" />
+        </head>
+        <body>server</body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.createRoot(document.body);
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    root.render(
+      <>
+        <link rel="stylesheet" href="first" precedence="default" />
+        <link rel="stylesheet" href="third" precedence="default" />
+        <div>client</div>
+      </>,
+    );
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="first" data-precedence="default" />
+          <link rel="stylesheet" href="second" data-precedence="default" />
+          <link rel="stylesheet" href="third" data-precedence="default" />
+          <link rel="preload" href="third" as="style" />
+        </head>
+        <body>
+          <div>client</div>
+        </body>
+      </html>,
+    );
+
+    // In a transition we add another reference to an already loaded resource
+    // https://github.com/facebook/react/issues/27585
+    React.startTransition(() => {
+      root.render(
+        <>
+          <link rel="stylesheet" href="first" precedence="default" />
+          <link rel="stylesheet" href="third" precedence="default" />
+          <div>client</div>
+          <link rel="stylesheet" href="first" precedence="default" />
+        </>,
+      );
+    });
+    await waitForAll([]);
+    // In https://github.com/facebook/react/issues/27585 the order updated
+    // to second, third, first
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="first" data-precedence="default" />
+          <link rel="stylesheet" href="second" data-precedence="default" />
+          <link rel="stylesheet" href="third" data-precedence="default" />
+          <link rel="preload" href="third" as="style" />
+        </head>
+        <body>
+          <div>client</div>
+        </body>
+      </html>,
+    );
+  });
+
   xit('can delay commit until css resources error', async () => {
     // TODO: This test fails and crashes jest. need to figure out why before unskipping.
     const root = ReactDOMClient.createRoot(container);
