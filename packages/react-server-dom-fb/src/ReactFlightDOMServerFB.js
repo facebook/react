@@ -27,16 +27,11 @@ type Options = {
 };
 
 function renderToDestination(
+  destination: Destination,
   model: ReactClientValue,
   bundlerConfig: ClientManifest,
   options?: Options,
-): Destination {
-  const destination: Destination = {
-    buffer: '',
-    done: false,
-    fatal: false,
-    error: null,
-  };
+): void {
   const request = createRequest(
     model,
     bundlerConfig,
@@ -44,7 +39,6 @@ function renderToDestination(
   );
   startWork(request);
   startFlowing(request, destination);
-  return destination;
 }
 
 export {renderToDestination};

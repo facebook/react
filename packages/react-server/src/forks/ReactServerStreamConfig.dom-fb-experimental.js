@@ -9,6 +9,50 @@
 
 export * from '../ReactServerStreamConfigFB';
 
+import type {
+  PrecomputedChunk,
+  Chunk,
+  BinaryChunk,
+} from '../ReactServerStreamConfigFB';
+
+export type Destination = {
+  write(chunk: Chunk | PrecomputedChunk | BinaryChunk): void,
+  onComplete(): void,
+  onError(error: mixed): void,
+  close(): void,
+};
+
 export function scheduleWork(callback: () => void) {
   callback();
+}
+
+export function flushBuffered(destination: Destination) {}
+export function beginWriting(destination: Destination) {}
+
+export function writeChunk(
+  destination: Destination,
+  chunk: Chunk | PrecomputedChunk | BinaryChunk,
+): void {
+  destination.write(chunk);
+}
+
+export function writeChunkAndReturn(
+  destination: Destination,
+  chunk: Chunk | PrecomputedChunk | BinaryChunk,
+): boolean {
+  destination.write(chunk);
+  return true;
+}
+
+export function completeWriting(destination: Destination) {
+  destination.onComplete();
+}
+
+export function close(destination: Destination) {
+  destination.close();
+}
+
+export function closeWithError(destination: Destination, error: mixed): void {
+  destination.onError(error);
+  destination.close();
 }

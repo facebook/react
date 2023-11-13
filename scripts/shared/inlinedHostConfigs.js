@@ -401,6 +401,7 @@ module.exports = [
     ],
     isFlowTyped: true,
     isServerSupported: true,
+    isFlightSupported: false,
   },
   {
     shortName: 'dom-fb-experimental',
@@ -416,6 +417,7 @@ module.exports = [
     ],
     isFlowTyped: true,
     isServerSupported: true,
+    isFlightSupported: true,
   },
   {
     shortName: 'native',
