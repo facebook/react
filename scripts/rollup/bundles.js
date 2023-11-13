@@ -589,7 +589,7 @@ const bundles = [
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: RENDERER,
-    entry: 'react-server-dom-fb/src/flight/ReactFlightDOMServerFB.js',
+    entry: 'react-server-dom-fb/src/ReactFlightDOMServerFB.js',
     global: 'ReactFlightDOMServer',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -600,7 +600,7 @@ const bundles = [
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: RENDERER,
-    entry: 'react-server-dom-fb/src/flight/ReactFlightDOMClientFB.js',
+    entry: 'react-server-dom-fb/src/ReactFlightDOMClientFB.js',
     global: 'ReactFlightDOMClient',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,

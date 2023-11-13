@@ -7,7 +7,7 @@
  * @flow
  */
 
-export type ClientManifest = {[string]: mixed};
+export opaque type ClientManifest = {[string]: mixed};
 
 // eslint-disable-next-line no-unused-vars
 export type ServerReference<T> = string;
