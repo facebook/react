@@ -20,7 +20,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] Invariant: Expected value kind to be initialized at '8:25:8:33' (8:8)
+[ReactForget] Invariant: [hoisting] Expected value kind to be initialized. read pathname_0$12 (8:8)
 ```
           
       

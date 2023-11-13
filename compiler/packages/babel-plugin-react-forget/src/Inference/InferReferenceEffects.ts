@@ -27,6 +27,7 @@ import {
 } from "../HIR/HIR";
 import { FunctionSignature } from "../HIR/ObjectShape";
 import {
+  printIdentifier,
   printMixedHIR,
   printPlace,
   printSourceLocation,
@@ -231,10 +232,8 @@ class InferenceState {
   kind(place: Place): ValueKind {
     const values = this.#variables.get(place.identifier.id);
     CompilerError.invariant(values != null, {
-      reason: `Expected value kind to be initialized at '${printSourceLocation(
-        place.loc
-      )}'`,
-      description: null,
+      reason: `[hoisting] Expected value kind to be initialized`,
+      description: `${printPlace(place)}`,
       loc: place.loc,
       suggestions: null,
     });
@@ -256,8 +255,8 @@ class InferenceState {
   alias(place: Place, value: Place): void {
     const values = this.#variables.get(value.identifier.id);
     CompilerError.invariant(values != null, {
-      reason: `Expected value for identifier \`${value.identifier.id}\` to be initialized.`,
-      description: null,
+      reason: `[hoisting] Expected value for identifier to be initialized`,
+      description: `${printIdentifier(value.identifier)}`,
       loc: value.loc,
       suggestions: null,
     });

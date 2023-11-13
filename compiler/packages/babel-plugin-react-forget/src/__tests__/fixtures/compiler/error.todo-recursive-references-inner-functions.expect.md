@@ -25,7 +25,7 @@ export const FIXTURE_ENTRYPONT = {
 ## Error
 
 ```
-[ReactForget] Todo: EnterSSA: Expected identifier to be defined before being used. Identifier factorial$3 is undefined (2:8)
+[ReactForget] Todo: [hoisting] EnterSSA: Expected identifier to be defined before being used. Identifier factorial$3 is undefined (2:8)
 ```
           
       

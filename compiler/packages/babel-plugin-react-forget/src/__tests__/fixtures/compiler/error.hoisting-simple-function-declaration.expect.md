@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-[ReactForget] Invariant: Expected value for identifier `5` to be initialized. (5:5)
+[ReactForget] Invariant: [hoisting] Expected value for identifier to be initialized. baz$5 (5:5)
 ```
           
       

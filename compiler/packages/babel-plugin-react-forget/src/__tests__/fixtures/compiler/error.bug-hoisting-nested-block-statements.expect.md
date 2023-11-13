@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-[ReactForget] Invariant: Expected value kind to be initialized at '8:6:8:7' (8:8)
+[ReactForget] Invariant: [hoisting] Expected value kind to be initialized. read x_0$10 (8:8)
 ```
           
       
