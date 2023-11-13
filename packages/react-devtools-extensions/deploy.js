@@ -5,7 +5,7 @@
 const {exec, execSync} = require('child_process');
 const {readFileSync, writeFileSync} = require('fs');
 const {join} = require('path');
-const isWindows = require('is-windows');
+const shell = require('shelljs');
 const main = async buildId => {
   const root = join(__dirname, buildId);
   const buildPath = join(root, 'build');
@@ -18,19 +18,9 @@ const main = async buildId => {
     },
     stdio: 'inherit',
   });
-
-  if (isWindows()) {
-    await exec(
-      `copy ${join(root, 'now.json')} ${join(buildPath, 'now.json')}`,
-      {
-        cwd: root,
-      },
-    );
-  } else {
-    await exec(`cp ${join(root, 'now.json')} ${join(buildPath, 'now.json')}`, {
-      cwd: root,
-    });
-  }
+  shell.pushd(root);
+  shell.cp(join(root, 'now.json'), join(buildPath, 'now.json'));
+  shell.popd();
   const file = readFileSync(join(root, 'now.json'));
   const json = JSON.parse(file);
   const alias = json.alias[0];

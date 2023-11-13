@@ -78,6 +78,7 @@
     "jest-environment-jsdom": "^29.4.2",
     "jest-snapshot-serializer-raw": "^1.2.0",
     "minimatch": "^3.0.4",
+    "shelljs":"^0.8.5",
     "minimist": "^1.2.3",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
@@ -108,8 +109,7 @@
   "scripts": {
     "build": "node ./scripts/rollup/build-all-release-channels.js",
     "build-combined": "echo 'build-combined is deprecated. yarn build instead.'",
-    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom/index,react-dom/unstable_testing,react-dom/test-utils,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh,react-art --type=NODE && cp -r ./build/node_modules build/oss-experimental/",
-    "build-for-devtools-windows": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom/index,react-dom/unstable_testing,react-dom/test-utils,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh,react-art --type=NODE -and xcopy /s /i build\\node_modules build\\oss-experimental/",
+    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom/index,react-dom/unstable_testing,react-dom/test-utils,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh,react-art --type=NODE",
     "build-for-devtools-dev": "yarn build-for-devtools --type=NODE_DEV",
     "build-for-devtools-prod": "yarn build-for-devtools --type=NODE_PROD",
     "linc": "node ./scripts/tasks/linc.js",
