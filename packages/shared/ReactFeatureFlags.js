@@ -128,6 +128,11 @@ export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
+/**
+ * Enables an expiration time for retry lanes to avoid starvation.
+ */
+export const enableRetryLaneExpiration = false;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
