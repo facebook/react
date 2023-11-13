@@ -27,11 +27,6 @@ let ReactServerDOMClient;
 let Suspense;
 let registerClientReference;
 
-function encodeString(string) {
-  const textEncoder = new TextEncoder();
-  return textEncoder.encode(string);
-}
-
 describe('ReactFlightDOM for FB', () => {
   beforeEach(() => {
     // For this first reset we are going to load the dom-node version of react-server-dom-turbopack/server
@@ -41,8 +36,16 @@ describe('ReactFlightDOM for FB', () => {
     registerClientReference =
       require('../ReactFlightReferencesFB').registerClientReference;
 
-    // Set
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/src/ReactSharedSubsetFB'));
+
+    jest.mock('shared/ReactFeatureFlags', () => {
+      jest.mock(
+        'ReactFeatureFlags',
+        () => jest.requireActual('shared/forks/ReactFeatureFlags.www-dynamic'),
+        {virtual: true},
+      );
+      return jest.requireActual('shared/forks/ReactFeatureFlags.www');
+    });
 
     clientExports = value => {
       registerClientReference(value, value.name);
@@ -89,7 +92,7 @@ describe('ReactFlightDOM for FB', () => {
     }
 
     const {buffer} = ReactServerDOMServer.renderToDestination(<App />);
-    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+    const response = ReactServerDOMClient.processChunk(buffer, {
       moduleMap,
     });
     const model = await response;
@@ -135,7 +138,7 @@ describe('ReactFlightDOM for FB', () => {
     }
 
     const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
-    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+    const response = ReactServerDOMClient.processChunk(buffer, {
       moduleMap,
     });
 
@@ -168,7 +171,7 @@ describe('ReactFlightDOM for FB', () => {
     }
 
     const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
-    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+    const response = ReactServerDOMClient.processChunk(buffer, {
       moduleMap,
     });
 
@@ -199,7 +202,7 @@ describe('ReactFlightDOM for FB', () => {
     }
 
     const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
-    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+    const response = ReactServerDOMClient.processChunk(buffer, {
       moduleMap,
     });
 
@@ -234,7 +237,7 @@ describe('ReactFlightDOM for FB', () => {
       <ClientComponent greeting={'Hello'} />,
       moduleMap,
     );
-    const response = ReactServerDOMClient.processBuffer(encodeString(buffer), {
+    const response = ReactServerDOMClient.processChunk(buffer, {
       moduleMap: {
         resolveClientReference(metadata) {
           return {

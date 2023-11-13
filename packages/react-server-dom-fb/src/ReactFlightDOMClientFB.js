@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes.js';
-
+import {enableBinaryFlight} from 'shared/ReactFeatureFlags';
+import type {Thenable} from 'shared/ReactTypes';
 import type {Response as FlightResponse} from 'react-client/src/ReactFlightClient';
 
 import {
@@ -70,11 +70,27 @@ function createFromReadableStream<T>(
   return getRoot(response);
 }
 
-function processBuffer<T>(buffer: Uint8Array, options?: Options): Thenable<T> {
+function processChunk<T>(
+  chunk: string | Uint8Array,
+  options?: Options,
+): Thenable<T> {
+  if (enableBinaryFlight) {
+    if (typeof chunk === 'string') {
+      throw new Error(
+        '`enableBinaryFlight` flag is enabled, expected a Uint8Array as input, got string.',
+      );
+    }
+  }
   const response: FlightResponse = createResponseFromOptions(options);
+  const buffer = typeof chunk !== 'string' ? chunk : encodeString(chunk);
 
   processBinaryChunk(response, buffer);
   return getRoot(response);
 }
 
-export {createFromReadableStream, processBuffer};
+function encodeString(string: string) {
+  const textEncoder = new TextEncoder();
+  return textEncoder.encode(string);
+}
+
+export {createFromReadableStream, processChunk};
