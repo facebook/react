@@ -9,4 +9,6 @@
 
 export * from '../ReactServerStreamConfigFB';
 
-export function scheduleWork(callback: () => void) {}
+export function scheduleWork(callback: () => void) {
+  callback();
+}

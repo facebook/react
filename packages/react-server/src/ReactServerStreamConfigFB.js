@@ -18,10 +18,6 @@ export opaque type PrecomputedChunk = string;
 export opaque type Chunk = string;
 export opaque type BinaryChunk = string;
 
-export function scheduleWork(callback: () => void) {
-  callback();
-}
-
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;

@@ -9,6 +9,6 @@
 
 export * from 'react-client/src/ReactFlightClientConfigBrowser';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
-export * from 'react-server-dom-fb/src/ReactFlightClientConfigFBBundler';
+export * from 'react-server-dom-fb/src/flight/ReactFlightClientConfigFBBundler';
 
 export const usedWithSSR = false;

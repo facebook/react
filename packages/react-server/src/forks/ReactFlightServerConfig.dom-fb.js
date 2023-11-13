@@ -9,7 +9,7 @@
 
 import type {Request} from 'react-server/src/ReactFlightServer';
 
-export * from 'react-server-dom-fb/src/ReactFlightServerConfigFBBundler';
+export * from 'react-server-dom-fb/src/flight/ReactFlightServerConfigFBBundler';
 export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 
 export const supportsRequestStorage = false;

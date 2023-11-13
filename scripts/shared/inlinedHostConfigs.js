@@ -391,26 +391,30 @@ module.exports = [
   },
   {
     shortName: 'dom-fb',
-    entryPoints: [
-      'react-server-dom-fb/src/ReactDOMServerFB.js',
-      'react-server-dom-fb/src/ReactFlightDOMClientFB.js',
-      'react-server-dom-fb/src/ReactFlightDOMServerFB.js',
-    ],
+    entryPoints: ['react-server-dom-fb/src/ReactDOMServerFB.js'],
     paths: [
       'react-dom',
-      'react-dom/client',
-      'react-dom/server',
-      'react-dom/server.node',
       'react-dom/src/ReactDOMSharedSubset.js',
-      'react-server-dom-fb/src/ReactFlightDOMClientFB.js',
-      'react-server-dom-fb/src/ReactFlightDOMServerFB.js',
-      'react-server-dom-db/src/ReactFlightServerConfigFBBundler.js',
       'react-dom-bindings',
-      'react-server-dom-fb',
       'shared/ReactDOMSharedInternals',
     ],
     isFlowTyped: true,
     isServerSupported: true,
+  },
+  {
+    shortName: 'dom-fb-experimental',
+    entryPoints: [
+      'react-server-dom-fb/src/flight/ReactFlightDOMClientFB.js',
+      'react-server-dom-fb/src/flight/ReactFlightDOMServerFB.js',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+    isFlightSupported: true,
   },
   {
     shortName: 'native',
