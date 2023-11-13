@@ -7,32 +7,5 @@
  * @flow
  */
 
-export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './ReactSharedInternalsServer';
-
-export {default as __SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './ReactServerSharedInternals';
-
-export {
-  Children,
-  Fragment,
-  Profiler,
-  StrictMode,
-  Suspense,
-  cloneElement,
-  createElement,
-  createRef,
-  createServerContext,
-  use,
-  forwardRef,
-  isValidElement,
-  lazy,
-  memo,
-  cache,
-  startTransition,
-  useId,
-  useCallback,
-  useContext,
-  useDebugValue,
-  useMemo,
-  version,
-} from './React';
+export * from './ReactSharedSubset';
 export {jsx, jsxs, jsxDEV} from './jsx/ReactJSX';
