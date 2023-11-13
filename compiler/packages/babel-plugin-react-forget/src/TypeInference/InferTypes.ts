@@ -185,6 +185,16 @@ function* generateInstructionTypes(
     }
 
     case "ObjectExpression": {
+      for (const property of value.properties) {
+        if (
+          property.kind === "ObjectProperty" &&
+          property.key.kind === "computed"
+        ) {
+          yield equation(property.key.name.identifier.type, {
+            kind: "Primitive",
+          });
+        }
+      }
       yield equation(left, { kind: "Object", shapeId: BuiltInObjectId });
       break;
     }
@@ -235,11 +245,16 @@ function* generateInstructionTypes(
       } else {
         for (const property of pattern.properties) {
           if (property.kind === "ObjectProperty") {
-            yield equation(property.place.identifier.type, {
-              kind: "Property",
-              object: value.value.identifier.type,
-              propertyName: property.key.name,
-            });
+            if (
+              property.key.kind === "identifier" ||
+              property.key.kind === "string"
+            ) {
+              yield equation(property.place.identifier.type, {
+                kind: "Property",
+                object: value.value.identifier.type,
+                propertyName: property.key.name,
+              });
+            }
           }
         }
       }

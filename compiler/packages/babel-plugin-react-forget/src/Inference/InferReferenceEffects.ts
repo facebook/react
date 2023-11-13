@@ -690,10 +690,35 @@ function inferBlock(
           ? ValueKind.Context
           : ValueKind.Mutable;
 
-        // Object construction captures but does not modify the key/property values
-        effectKind = Effect.Capture;
-        lvalueEffect = Effect.Store;
-        break;
+        for (const property of instrValue.properties) {
+          switch (property.kind) {
+            case "ObjectProperty": {
+              if (property.key.kind === "computed") {
+                // Object keys must be primitives, so we know they're frozen at this point
+                state.reference(property.key.name, Effect.Freeze);
+              }
+              // Object construction captures but does not modify the key/property values
+              state.reference(property.place, Effect.Capture);
+              break;
+            }
+            case "Spread": {
+              // Object construction captures but does not modify the key/property values
+              state.reference(property.place, Effect.Capture);
+              break;
+            }
+            default: {
+              assertExhaustive(
+                property,
+                `Unexpected property kind '${(property as any).kind}'`
+              );
+            }
+          }
+        }
+
+        state.initialize(instrValue, valueKind);
+        state.define(instr.lvalue, instrValue);
+        instr.lvalue.effect = Effect.Store;
+        continue;
       }
       case "UnaryExpression": {
         valueKind = ValueKind.Immutable;

@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from "react";
 import { IntlVariations, IntlViewerContext, init } from "fbt";
+import React from "react";
 
 /**
  * This file is meant for use by `runner-evaluator` and fixture tests.
@@ -66,6 +66,11 @@ export function mutate(arg: any): void {
     }
     count++;
   }
+}
+
+export function mutateAndReturn<T>(arg: T): T {
+  mutate(arg);
+  return arg;
 }
 
 export function setProperty(arg: any, property: any): void {

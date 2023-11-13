@@ -264,11 +264,14 @@ function printHole(): string {
 }
 
 function printObjectPropertyKey(key: ObjectPropertyKey): string {
-  switch (key.type) {
+  switch (key.kind) {
     case "identifier":
       return key.name;
     case "string":
-      return `'${key.name}'`;
+      return `"${key.name}"`;
+    case "computed": {
+      return `[${printPlace(key.name)}]`;
+    }
   }
 }
 

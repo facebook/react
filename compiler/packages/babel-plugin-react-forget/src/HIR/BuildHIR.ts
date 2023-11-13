@@ -1321,26 +1321,45 @@ function lowerObjectMethod(
 
 function lowerObjectPropertyKey(
   builder: HIRBuilder,
-  key: t.PrivateName | t.Expression
+  property: NodePath<t.ObjectProperty | t.ObjectMethod>
 ): ObjectPropertyKey | null {
-  if (key.type === "Identifier") {
+  const key = property.get("key");
+  if (key.isStringLiteral()) {
     return {
-      name: key.name,
-      type: "identifier",
+      kind: "string",
+      name: key.node.value,
     };
-  }
-
-  if (key.type === "StringLiteral") {
+  } else if (property.node.computed && key.isExpression()) {
+    if (!key.isIdentifier()) {
+      /*
+       * NOTE: allowing complex key expressions can trigger a bug where a mutation is made conditional
+       * see fixture
+       * error.object-expression-computed-key-modified-during-after-construction.js
+       */
+      builder.errors.push({
+        reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
+        severity: ErrorSeverity.Todo,
+        loc: key.node.loc ?? null,
+        suggestions: null,
+      });
+      return null;
+    }
+    const place = lowerExpressionToTemporary(builder, key);
     return {
-      name: key.value,
-      type: "string",
+      kind: "computed",
+      name: place,
+    };
+  } else if (key.isIdentifier()) {
+    return {
+      kind: "identifier",
+      name: key.node.name,
     };
   }
 
   builder.errors.push({
     reason: `(BuildHIR::lowerExpression) Expected Identifier, got ${key.type} key in ObjectExpression`,
     severity: ErrorSeverity.Todo,
-    loc: key.loc ?? null,
+    loc: key.node.loc ?? null,
     suggestions: null,
   });
   return null;
@@ -1388,10 +1407,7 @@ function lowerExpression(
       const properties: Array<ObjectProperty | SpreadPattern> = [];
       for (const propertyPath of propertyPaths) {
         if (propertyPath.isObjectProperty()) {
-          const loweredKey = lowerObjectPropertyKey(
-            builder,
-            propertyPath.node.key
-          );
+          const loweredKey = lowerObjectPropertyKey(builder, propertyPath);
           if (!loweredKey) {
             continue;
           }
@@ -1424,10 +1440,7 @@ function lowerExpression(
         } else if (propertyPath.isObjectMethod()) {
           const method = lowerObjectMethod(builder, propertyPath);
           const place = lowerValueToTemporary(builder, method);
-          const loweredKey = lowerObjectPropertyKey(
-            builder,
-            propertyPath.node.key
-          );
+          const loweredKey = lowerObjectPropertyKey(builder, propertyPath);
           if (!loweredKey) {
             continue;
           }
@@ -3443,7 +3456,7 @@ function lowerAssignment(
             });
             continue;
           }
-          const loweredKey = lowerObjectPropertyKey(builder, property.node.key);
+          const loweredKey = lowerObjectPropertyKey(builder, property);
           if (!loweredKey) {
             continue;
           }

@@ -155,6 +155,12 @@ export function* eachInstructionValueOperand(
     }
     case "ObjectExpression": {
       for (const property of instrValue.properties) {
+        if (
+          property.kind === "ObjectProperty" &&
+          property.key.kind === "computed"
+        ) {
+          yield property.key.name;
+        }
         yield property.place;
       }
       break;
@@ -436,6 +442,12 @@ export function mapInstructionOperands(
     }
     case "ObjectExpression": {
       for (const property of instrValue.properties) {
+        if (
+          property.kind === "ObjectProperty" &&
+          property.key.kind === "computed"
+        ) {
+          property.key.name = fn(property.key.name);
+        }
         property.place = fn(property.place);
       }
       break;

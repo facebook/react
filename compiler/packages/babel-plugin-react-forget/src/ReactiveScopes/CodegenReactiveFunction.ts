@@ -534,11 +534,11 @@ function codegenTerminal(
       let lval: t.LVal;
       switch (iterableItem.value.kind) {
         case "StoreLocal": {
-          lval = codegenLValue(iterableItem.value.lvalue.place);
+          lval = codegenLValue(cx, iterableItem.value.lvalue.place);
           break;
         }
         case "Destructure": {
-          lval = codegenLValue(iterableItem.value.lvalue.pattern);
+          lval = codegenLValue(cx, iterableItem.value.lvalue.pattern);
           break;
         }
         default:
@@ -748,7 +748,7 @@ function codegenInstructionNullable(
           suggestions: null,
         });
         return createVariableDeclaration(instr.loc, "const", [
-          t.variableDeclarator(codegenLValue(lvalue), value),
+          t.variableDeclarator(codegenLValue(cx, lvalue), value),
         ]);
       }
       case InstructionKind.Let: {
@@ -759,7 +759,7 @@ function codegenInstructionNullable(
           suggestions: null,
         });
         return createVariableDeclaration(instr.loc, "let", [
-          t.variableDeclarator(codegenLValue(lvalue), value),
+          t.variableDeclarator(codegenLValue(cx, lvalue), value),
         ]);
       }
       case InstructionKind.Reassign: {
@@ -769,7 +769,11 @@ function codegenInstructionNullable(
           loc: instr.value.loc,
           suggestions: null,
         });
-        const expr = t.assignmentExpression("=", codegenLValue(lvalue), value);
+        const expr = t.assignmentExpression(
+          "=",
+          codegenLValue(cx, lvalue),
+          value
+        );
         if (instr.lvalue !== null) {
           if (instr.value.kind !== "StoreContext") {
             cx.temp.set(instr.lvalue.identifier.id, expr);
@@ -1132,7 +1136,7 @@ function codegenInstructionValue(
       const properties = [];
       for (const property of instrValue.properties) {
         if (property.kind === "ObjectProperty") {
-          const key = codegenObjectPropertyKey(property.key);
+          const key = codegenObjectPropertyKey(cx, property.key);
 
           switch (property.type) {
             case "property": {
@@ -1141,9 +1145,10 @@ function codegenInstructionValue(
                 t.objectProperty(
                   key,
                   value,
-                  false,
-                  value.type === "Identifier" &&
-                    value.name === property.key.name
+                  property.key.kind === "computed",
+                  key.type === "Identifier" &&
+                    value.type === "Identifier" &&
+                    value.name === key.name
                 )
               );
               break;
@@ -1645,17 +1650,31 @@ function convertMemberExpressionToJsx(
 }
 
 function codegenObjectPropertyKey(
+  cx: Context,
   key: ObjectPropertyKey
-): t.StringLiteral | t.Identifier {
-  switch (key.type) {
-    case "identifier":
-      return t.identifier(key.name);
-    case "string":
+): t.Expression {
+  switch (key.kind) {
+    case "string": {
       return t.stringLiteral(key.name);
+    }
+    case "identifier": {
+      return t.identifier(key.name);
+    }
+    case "computed": {
+      const expr = codegenPlace(cx, key.name);
+      CompilerError.invariant(t.isExpression(expr), {
+        reason: "Expected object property key to be an expression",
+        description: null,
+        loc: key.name.loc,
+        suggestions: null,
+      });
+      return expr;
+    }
   }
 }
 
 function codegenLValue(
+  cx: Context,
   pattern: Pattern | Place | SpreadPattern
 ): t.ArrayPattern | t.ObjectPattern | t.RestElement | t.Identifier {
   switch (pattern.kind) {
@@ -1665,7 +1684,7 @@ function codegenLValue(
           if (item.kind === "Hole") {
             return null;
           }
-          return codegenLValue(item);
+          return codegenLValue(cx, item);
         })
       );
     }
@@ -1673,22 +1692,24 @@ function codegenLValue(
       return t.objectPattern(
         pattern.properties.map((property) => {
           if (property.kind === "ObjectProperty") {
-            const key = codegenObjectPropertyKey(property.key);
-            const value = codegenLValue(property.place);
+            const key = codegenObjectPropertyKey(cx, property.key);
+            const value = codegenLValue(cx, property.place);
             return t.objectProperty(
               key,
               value,
-              false,
-              value.type === "Identifier" && value.name === property.key.name
+              property.key.kind === "computed",
+              key.type === "Identifier" &&
+                value.type === "Identifier" &&
+                value.name === key.name
             );
           } else {
-            return t.restElement(codegenLValue(property.place));
+            return t.restElement(codegenLValue(cx, property.place));
           }
         })
       );
     }
     case "Spread": {
-      return t.restElement(codegenLValue(pattern.place));
+      return t.restElement(codegenLValue(cx, pattern.place));
     }
     case "Identifier": {
       return convertIdentifier(pattern.identifier);

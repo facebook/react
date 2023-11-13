@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import prettyFormat from "pretty-format";
 import { CompilerError } from "../CompilerError";
 import {
   Environment,
@@ -25,7 +24,6 @@ import {
   isMutableEffect,
 } from "../HIR";
 import { getFunctionCallSignature } from "../Inference/InferReferenceEffects";
-import { log } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import { getPlaceScope } from "./BuildReactiveBlocks";
 import {
@@ -131,7 +129,7 @@ export function pruneNonEscapingScopes(
     state
   );
 
-  log(() => prettyFormat(state));
+  // log(() => prettyFormat(state));
 
   /*
    * Then walk outward from the returned values and find all captured operands.
@@ -139,7 +137,8 @@ export function pruneNonEscapingScopes(
    */
   const memoized = computeMemoizedIdentifiers(state);
 
-  log(() => prettyFormat(memoized));
+  // log(() => prettyFormat(memoized));
+
   // log(() => printReactiveFunction(fn));
 
   // Prune scopes that do not declare/reassign any escaping values

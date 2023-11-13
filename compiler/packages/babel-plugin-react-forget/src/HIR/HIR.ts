@@ -548,10 +548,19 @@ export type ObjectPattern = {
   properties: Array<ObjectProperty | SpreadPattern>;
 };
 
-export type ObjectPropertyKey = {
-  type: "string" | "identifier";
-  name: string; // TODO: make a Place
-};
+export type ObjectPropertyKey =
+  | {
+      kind: "string";
+      name: string;
+    }
+  | {
+      kind: "identifier";
+      name: string;
+    }
+  | {
+      kind: "computed";
+      name: Place;
+    };
 
 export type ObjectProperty = {
   kind: "ObjectProperty";
