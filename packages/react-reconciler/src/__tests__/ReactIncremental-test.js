@@ -2687,16 +2687,6 @@ describe('ReactIncremental', () => {
   it('does not break with a bad Map polyfill', async () => {
     const realMapSet = Map.prototype.set;
 
-    const capturedWarnings = [];
-    const originalWarn = console.warn;
-    // Override console.warn temporarily
-    console.warn = (message, ...rest) => {
-      if (message.includes('Detected a bad Map/Set polyfill')) {
-          capturedWarnings.push(message);
-          return;
-      }
-      originalWarn.call(console, message, ...rest);
-    };
 
     async function triggerCodePathThatUsesFibersAsMapKeys() {
       function Thing() {
@@ -2776,7 +2766,6 @@ describe('ReactIncremental', () => {
       return realMapSet.apply(this, arguments);
     };
     React = require('react');
-    ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
@@ -2784,6 +2773,14 @@ describe('ReactIncremental', () => {
     waitForThrow = InternalTestUtils.waitForThrow;
     assertLog = InternalTestUtils.assertLog;
 
+    await expect(async () => {
+      ReactNoop = require('react-noop-renderer');
+      // ... any other relevant code ...
+    }).toWarnDev(
+      ['Detected a bad Map/Set polyfill. Consider using a reliable polyfill or updating the current one.'],
+      { withoutStack: true }
+    );
+    
     try {
       await triggerCodePathThatUsesFibersAsMapKeys();
     } finally {
@@ -2791,8 +2788,6 @@ describe('ReactIncremental', () => {
       Map.prototype.set = realMapSet;
     }
 
-    expect(capturedWarnings).toContain('Warning: Detected a bad Map/Set polyfill. Consider using a reliable polyfill or updating the current one.');
-    console.warn = originalWarn;
     // If we got this far, our feature detection worked.
     // We knew that Map#set() throws for non-extensible objects,
     // so we didn't set them as non-extensible for that reason.
