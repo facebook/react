@@ -32,5 +32,5 @@ export function getServerReferenceBoundArguments<T>(
   config: ClientManifest,
   serverReference: ServerReference<T>,
 ): null | Array<ReactClientValue> {
-  throw new Error('Not Implemented.');
+  throw new Error('getServerReferenceBoundArguments: Not Implemented.');
 }

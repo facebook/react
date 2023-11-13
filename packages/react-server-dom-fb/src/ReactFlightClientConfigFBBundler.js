@@ -18,7 +18,7 @@ export type ModuleLoading = mixed;
 type ResolveClientReferenceFn<T> =
   ClientReferenceMetadata => ClientReference<T>;
 
-export opaque type SSRModuleMap = {
+export type SSRModuleMap = {
   resolveClientReference?: ResolveClientReferenceFn<any>,
 };
 export type ServerManifest = string;
@@ -33,7 +33,7 @@ import type {
   ClientReferenceMetadata,
 } from './ReactFlightReferencesFB';
 
-export opaque type ClientReference<T> = {
+export type ClientReference<T> = {
   getModuleId: () => string,
   load: () => Thenable<T>,
 };

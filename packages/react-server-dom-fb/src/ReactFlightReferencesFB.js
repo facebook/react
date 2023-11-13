@@ -7,7 +7,7 @@
  * @flow
  */
 
-export opaque type ClientManifest = {[string]: mixed};
+export type ClientManifest = {[string]: mixed};
 
 // eslint-disable-next-line no-unused-vars
 export type ServerReference<T> = string;
@@ -56,7 +56,7 @@ export function getClientReferenceKey<T>(
 }
 
 export function resolveClientReferenceMetadata<T>(
-  _config: ClientManifest,
+  config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
   const metadata = registeredClientReferences.get(clientReference);
@@ -73,16 +73,16 @@ export function registerServerReference<T>(
   serverReference: ServerReference<T>,
   exportName: string,
 ): ServerReference<T> {
-  throw new Error('Not Implemented.');
+  throw new Error('registerServerReference: Not Implemented.');
 }
 
 export function isServerReference<T>(reference: T): boolean {
-  throw new Error('Not Implemented.');
+  throw new Error('isServerReference: Not Implemented.');
 }
 
 export function getServerReferenceId<T>(
   config: ClientManifest,
   serverReference: ServerReference<T>,
 ): ServerReferenceId {
-  throw new Error('Not Implemented.');
+  throw new Error('getServerReferenceId: Not Implemented.');
 }
