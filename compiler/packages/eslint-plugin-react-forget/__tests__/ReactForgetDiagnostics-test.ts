@@ -79,9 +79,9 @@ const tests: ForgetTestCases = {
         }
       `,
     },
-  ],
-  invalid: [
     {
+      // TODO(gsn): Move this to invalid test suite, when we turn on
+      // validateRefAccessDuringRender validation
       name: "[InvalidInput] Ref access during render",
       code: normalizeIndent`
         function Component(props) {
@@ -90,17 +90,9 @@ const tests: ForgetTestCases = {
           return value;
         }
       `,
-      errors: [
-        {
-          message:
-            "[ReactForget] Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef)",
-          line: 5,
-          column: 10,
-          endColumn: 15,
-          endLine: 5,
-        },
-      ],
     },
+  ],
+  invalid: [
     {
       name: "[InvalidReact] ESlint suppression",
       // Indentation is intentionally weird so it doesn't add extra whitespace
