@@ -2765,6 +2765,7 @@ describe('InspectedElement', () => {
     expect(inspectedElement.owners).toMatchInlineSnapshot(`
       [
         {
+          "compiledWithForget": false,
           "displayName": "Child",
           "hocDisplayNames": null,
           "id": 3,
@@ -2772,6 +2773,7 @@ describe('InspectedElement', () => {
           "type": 5,
         },
         {
+          "compiledWithForget": false,
           "displayName": "App",
           "hocDisplayNames": null,
           "id": 2,
