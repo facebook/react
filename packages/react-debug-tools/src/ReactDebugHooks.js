@@ -26,6 +26,7 @@ import {
   ContextProvider,
   ForwardRef,
 } from 'react-reconciler/src/ReactWorkTags';
+import {REACT_MEMO_CACHE_SENTINEL} from 'shared/ReactSymbols';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -93,7 +94,9 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
   return primitiveStackCache;
 }
 
+let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
+
 function nextHook(): null | Hook {
   const hook = currentHook;
   if (hook !== null) {
@@ -319,9 +322,31 @@ function useId(): string {
 
 // useMemoCache is an implementation detail of Forget's memoization
 // it should not be called directly in user-generated code
-// we keep it as a stub for dispatcher
 function useMemoCache(size: number): Array<any> {
-  return [];
+  const fiber = currentFiber;
+  // Don't throw, in case this is called from getPrimitiveStackCache
+  if (fiber == null) {
+    return [];
+  }
+
+  // $FlowFixMe[incompatible-use]: updateQueue is mixed
+  const memoCache = fiber.updateQueue?.memoCache;
+  if (memoCache == null) {
+    return [];
+  }
+
+  let data = memoCache.data[memoCache.index];
+  if (data === undefined) {
+    data = memoCache.data[memoCache.index] = new Array(size);
+    for (let i = 0; i < size; i++) {
+      data[i] = REACT_MEMO_CACHE_SENTINEL;
+    }
+  }
+
+  // We don't write anything to hookLog on purpose, so this hook remains invisible to users.
+
+  memoCache.index++;
+  return data;
 }
 
 const Dispatcher: DispatcherType = {
@@ -699,9 +724,11 @@ export function inspectHooks<Props>(
   }
 
   const previousDispatcher = currentDispatcher.current;
-  let readHookLog;
   currentDispatcher.current = DispatcherProxy;
+
+  let readHookLog;
   let ancestorStackError;
+
   try {
     ancestorStackError = new Error();
     renderFunction(props);
@@ -798,19 +825,25 @@ export function inspectHooksOfFiber(
       'Unknown Fiber. Needs to be a function component to inspect hooks.',
     );
   }
+
   // Warm up the cache so that it doesn't consume the currentHook.
   getPrimitiveStackCache();
+
+  // Set up the current hook so that we can step through and read the
+  // current state from them.
+  currentHook = (fiber.memoizedState: Hook);
+  currentFiber = fiber;
+
   const type = fiber.type;
   let props = fiber.memoizedProps;
   if (type !== fiber.elementType) {
     props = resolveDefaultProps(type, props);
   }
-  // Set up the current hook so that we can step through and read the
-  // current state from them.
-  currentHook = (fiber.memoizedState: Hook);
-  const contextMap = new Map<ReactContext<$FlowFixMe>, $FlowFixMe>();
+
+  const contextMap = new Map<ReactContext<any>, any>();
   try {
     setupContexts(contextMap, fiber);
+
     if (fiber.tag === ForwardRef) {
       return inspectHooksOfForwardRef(
         type.render,
@@ -820,9 +853,12 @@ export function inspectHooksOfFiber(
         includeHooksSource,
       );
     }
+
     return inspectHooks(type, props, currentDispatcher, includeHooksSource);
   } finally {
+    currentFiber = null;
     currentHook = null;
+
     restoreContexts(contextMap);
   }
 }
