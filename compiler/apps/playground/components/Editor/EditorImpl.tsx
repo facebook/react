@@ -9,7 +9,10 @@ import { parse, ParserPlugin } from "@babel/parser";
 import traverse, { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import {
+  CompilerError,
+  CompilerErrorDetail,
   Effect,
+  ErrorSeverity,
   Hook,
   parseConfigPragma,
   printHIR,
@@ -40,8 +43,16 @@ import {
 
 function parseFunctions(
   source: string,
-): Array<NodePath<t.FunctionDeclaration>> {
-  const items: Array<NodePath<t.FunctionDeclaration>> = [];
+): Array<
+  NodePath<
+    t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+  >
+> {
+  const items: Array<
+    NodePath<
+      t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
+    >
+  > = [];
   try {
     const isFlow = source
       .trim()
@@ -58,11 +69,17 @@ function parseFunctions(
       sourceType: "module",
     });
     traverse(ast, {
-      FunctionDeclaration: {
-        enter(nodePath) {
-          items.push(nodePath);
-          nodePath.skip();
-        },
+      FunctionDeclaration(nodePath) {
+        items.push(nodePath);
+        nodePath.skip();
+      },
+      ArrowFunctionExpression(nodePath) {
+        items.push(nodePath);
+        nodePath.skip();
+      },
+      FunctionExpression(nodePath) {
+        items.push(nodePath);
+        nodePath.skip();
       },
     });
   } catch (e) {
@@ -121,6 +138,7 @@ const COMMON_HOOKS: Array<[string, Hook]> = [
 
 function compile(source: string): CompilerOutput {
   const results = new Map<string, PrintedCompilerPipelineValue[]>();
+  const error = new CompilerError();
   const upsert = (result: PrintedCompilerPipelineValue) => {
     const entry = results.get(result.name);
     if (Array.isArray(entry)) {
@@ -135,6 +153,20 @@ function compile(source: string): CompilerOutput {
     const config = parseConfigPragma(pragma);
 
     for (const fn of parseFunctions(source)) {
+      if (!fn.isFunctionDeclaration()) {
+        error.pushErrorDetail(
+          new CompilerErrorDetail({
+            reason: `Unexpected function type ${fn.node.type}`,
+            description:
+              "Playground only supports parsing function declarations",
+            severity: ErrorSeverity.Todo,
+            loc: fn.node.loc ?? null,
+            suggestions: null,
+          }),
+        );
+        continue;
+      }
+
       for (const result of run(fn, {
         ...config,
         customHooks: new Map([...COMMON_HOOKS]),
@@ -191,15 +223,17 @@ function compile(source: string): CompilerOutput {
         }
       }
     }
-    return { kind: "ok", results };
-  } catch (error: any) {
+  } catch (err: any) {
     // error might be an invariant violation or other runtime error
     // (i.e. object shape that is not CompilerError)
-    if (error.details == null) {
-      error.details = [];
+    if (err.details !== null) {
+      error.details.push(...err.details);
     }
-    return { kind: "err", results, error };
   }
+  if (error.hasErrors()) {
+    return { kind: "err", results, error: error };
+  }
+  return { kind: "ok", results };
 }
 
 export default function Editor() {
