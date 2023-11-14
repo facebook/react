@@ -6,16 +6,19 @@
  */
 
 import chalk from "chalk";
-import { TestFixture } from "fixture-test-utils";
-import { getFixtures, readTestFilter } from "fixture-test-utils";
+import {
+  FILTER_FILENAME,
+  TestFixture,
+  getFixtures,
+  readTestFilter,
+} from "fixture-test-utils";
 import { Worker } from "jest-worker";
 import process from "process";
 import * as readline from "readline";
-import * as RunnerWorker from "./runner-worker";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import SproutTodoFilter from "./SproutTodoFilter";
-import { FILTER_FILENAME } from "fixture-test-utils";
+import * as RunnerWorker from "./runner-worker";
 
 const WORKER_PATH = require.resolve("./runner-worker");
 readline.emitKeypressEvents(process.stdin);
@@ -186,7 +189,10 @@ export async function main(opts: RunnerOptions): Promise<void> {
 
   const validFixtures = new Map();
   for (const [name, fixture] of allFixtures) {
-    if (fixture.basename.startsWith("error.")) {
+    if (
+      fixture.basename.startsWith("error.") ||
+      fixture.basename.startsWith("todo.error.")
+    ) {
       // skip
       continue;
     }

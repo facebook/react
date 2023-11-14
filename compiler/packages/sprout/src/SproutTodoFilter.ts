@@ -477,6 +477,37 @@ const skipFilter = new Set([
 
   // nothing to compile/run
   "repro-no-gating-import-without-compiled-functions",
+
+  // TODOs
+  "rules-of-hooks/todo.bail.rules-of-hooks-279ac76f53af",
+  "rules-of-hooks/todo.bail.rules-of-hooks-28a78701970c",
+  "rules-of-hooks/todo.bail.rules-of-hooks-3d692676194b",
+  "rules-of-hooks/todo.bail.rules-of-hooks-6949b255e7eb",
+  "rules-of-hooks/todo.bail.rules-of-hooks-8503ca76d6f8",
+  "rules-of-hooks/todo.bail.rules-of-hooks-e0a5db3ae21e",
+  "rules-of-hooks/todo.bail.rules-of-hooks-e9f9bac89f8f",
+  "rules-of-hooks/todo.bail.rules-of-hooks-fadd52c1e460",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-0a1dbff27ba0",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-0de1224ce64b",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-191029ac48c8",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-206e2811c87c",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-28a7111f56a7",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-2c51251df67a",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-449a37146a83",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-5a7ac9a6e8fa",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-76a74b4666e9",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-8303403b8e4c",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-99b5c750d1d1",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-9c79feec4b9b",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-a63fd4f9dcc0",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-acb56658fe7e",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-c59788ef5676",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-d842d36db450",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-d952b82c2597",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-ddeca9708b63",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-e675f0a672d8",
+  "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-e69ffce323c3",
+  "todo.unnecessary-lambda-memoization",
 ]);
 
 export default skipFilter;

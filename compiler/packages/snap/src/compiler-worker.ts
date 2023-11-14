@@ -53,8 +53,7 @@ export async function compile(
     clearRequireCache();
   }
   version = compilerVersion;
-  const { inputPath, outputPath, outputExists, basename } =
-    fixture;
+  const { inputPath, outputPath, outputExists, basename } = fixture;
   const input = inputPath != null ? await fs.readFile(inputPath, "utf8") : null;
   const expected = outputExists ? await fs.readFile(outputPath, "utf8") : null;
 
@@ -109,7 +108,8 @@ export async function compile(
   }
 
   const output = writeOutputToString(input, code, error);
-  const expectError = basename.startsWith("error.");
+  const expectError =
+    basename.startsWith("error.") || basename.startsWith("todo.error");
   let unexpectedError: string | null = null;
   if (expectError) {
     if (error === null) {

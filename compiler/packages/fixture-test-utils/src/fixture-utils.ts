@@ -42,11 +42,7 @@ function stripExtension(filename: string, extensions: Array<string>): string {
   return filename;
 }
 
-function shouldSkip(
-  filter: TestFilter | null,
-  filterId: string,
-  filename: string
-) {
+function shouldSkip(filter: TestFilter | null, filterId: string) {
   if (filter) {
     if (filter.kind === "only" && filter.paths.indexOf(filterId) === -1) {
       return true;
@@ -56,8 +52,6 @@ function shouldSkip(
     ) {
       return true;
     }
-  } else if (filename.startsWith("todo.")) {
-    return true;
   }
   return false;
 }
@@ -117,10 +111,9 @@ export function getFixtures(
   });
   const fixtures: Map<string, TestFixture> = new Map();
   for (const filePath of inputFiles) {
-    const filename = path.basename(filePath);
     // Do not include extensions in unique identifier for fixture
     const partialPath = stripExtension(filePath, INPUT_EXTENSIONS);
-    if (shouldSkip(filter, partialPath, filename)) {
+    if (shouldSkip(filter, partialPath)) {
       continue;
     }
 
@@ -145,10 +138,9 @@ export function getFixtures(
     cwd: FIXTURES_PATH,
   });
   for (const filePath of outputFiles) {
-    const filename = path.basename(filePath);
     // Do not include extensions in unique identifier for fixture
     const partialPath = stripExtension(filePath, [OUTPUT_EXTENSION]);
-    if (shouldSkip(filter, partialPath, filename)) {
+    if (shouldSkip(filter, partialPath)) {
       continue;
     }
 

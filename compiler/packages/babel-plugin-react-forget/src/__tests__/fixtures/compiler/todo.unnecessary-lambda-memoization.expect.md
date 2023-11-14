@@ -26,9 +26,8 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(5);
   const data = useFreeze();
-  const c_0 = $[0] !== data.items;
   let t1;
-  if (c_0) {
+  if ($[0] !== data.items) {
     let t0;
     if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
       t0 = (item) => <Item item={item} />;
@@ -43,9 +42,8 @@ function Component(props) {
     t1 = $[1];
   }
   const items = t1;
-  const c_3 = $[3] !== items;
   let t2;
-  if (c_3) {
+  if ($[3] !== items) {
     t2 = <div>{items}</div>;
     $[3] = items;
     $[4] = t2;
