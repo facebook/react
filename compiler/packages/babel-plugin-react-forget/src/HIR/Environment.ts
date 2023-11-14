@@ -140,7 +140,7 @@ const EnvironmentConfigSchema = z.object({
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
    */
-  validateNoSetStateInRender: z.boolean().default(true),
+  validateNoSetStateInRender: z.boolean().default(false),
 
   /**
    * Extension of validateNoSetStateInRender which also validates that setState is not
