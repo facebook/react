@@ -66,6 +66,7 @@ export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const enableGetInspectorDataForInstanceInProduction = true;
+export const enableRetryLaneExpiration = false;
 
 export const createRootStrictEffectsByDefault = false;
 

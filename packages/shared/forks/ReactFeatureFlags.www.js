@@ -24,6 +24,7 @@ export const {
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
+  enableRetryLaneExpiration,
   enableTransitionTracing,
   enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
