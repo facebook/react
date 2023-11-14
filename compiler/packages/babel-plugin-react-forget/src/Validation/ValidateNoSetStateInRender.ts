@@ -16,7 +16,6 @@ import {
 } from "../HIR";
 import { PostDominator } from "../HIR/Dominator";
 import { eachInstructionValueOperand } from "../HIR/visitors";
-import { findBlocksWithBackEdges } from "../Optimization/DeadCodeElimination";
 import { Err, Ok, Result } from "../Utils/Result";
 
 /**
@@ -60,17 +59,19 @@ function validateNoSetStateInRenderImpl(
 ): Result<PostDominator<BlockId>, CompilerError> {
   // Construct the set of blocks that is always reachable from the entry block.
   const unconditionalBlocks = new Set<BlockId>();
-  const blocksWithBackEdges = findBlocksWithBackEdges(fn);
   const dominators = computePostDominatorTree(fn, {
     includeThrowsAsExitNode: false,
   });
   const exit = dominators.exit;
   let current: BlockId | null = fn.body.entry;
-  while (
-    current !== null &&
-    current !== exit &&
-    !blocksWithBackEdges.has(current)
-  ) {
+  while (current !== null && current !== exit) {
+    CompilerError.invariant(!unconditionalBlocks.has(current), {
+      reason:
+        "Internal error: non-terminating loop in ValidateNoSetStateInRender",
+      loc: null,
+      suggestions: null,
+      description: null,
+    });
     unconditionalBlocks.add(current);
     current = dominators.get(current);
   }
