@@ -47,15 +47,18 @@ export function registerClientReference<T>(
 const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
-function bind(this: ServerReference<any>) {
+function bind(this: ServerReference<any>): any {
   // $FlowFixMe[unsupported-syntax]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
     // $FlowFixMe[method-unbinding]
     const args = ArraySlice.call(arguments, 1);
-    newFn.$$typeof = SERVER_REFERENCE_TAG;
-    newFn.$$id = this.$$id;
-    newFn.$$bound = this.$$bound ? this.$$bound.concat(args) : args;
+    return Object.defineProperties((newFn: any), {
+      $$typeof: {value: SERVER_REFERENCE_TAG},
+      $$id: {value: this.$$id},
+      $$bound: {value: this.$$bound ? this.$$bound.concat(args) : args},
+      bind: {value: bind},
+    });
   }
   return newFn;
 }
