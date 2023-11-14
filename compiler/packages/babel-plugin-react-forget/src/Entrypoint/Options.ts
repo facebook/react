@@ -114,7 +114,7 @@ export type PluginOptions = {
   enableUseMemoCachePolyfill: boolean;
 };
 
-export type CompilationMode =
+const CompilationModeSchema = z.enum([
   /*
    * Compiles functions annotated with "use forget" or component/hook-like functions.
    * This latter includes:
@@ -125,11 +125,14 @@ export type CompilationMode =
    *     false positives, since compilation has a greater impact than linting.
    * This is the default mode
    */
-  | "infer"
+  "infer",
   // Compile only functions which are explicitly annotated with "use forget"
-  | "annotation"
+  "annotation",
   // Compile all top-level functions
-  | "all";
+  "all",
+]);
+
+export type CompilationMode = z.infer<typeof CompilationModeSchema>;
 
 /**
  * Represents 'events' that may occur during compilation. Events are only
