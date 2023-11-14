@@ -74,11 +74,7 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   buildForChannel('stable', '', '');
   const stableDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', stableDir);
-  try {
-    processStable(stableDir);
-  } catch (err) {
-    console.log(err);
-  }
+  processStable(stableDir);
   buildForChannel('experimental', '', '');
   const experimentalDir = tmp.dirSync().name;
   crossDeviceRenameSync('./build', experimentalDir);

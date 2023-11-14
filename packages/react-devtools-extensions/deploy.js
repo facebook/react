@@ -18,9 +18,7 @@ const main = async buildId => {
     },
     stdio: 'inherit',
   });
-  shell.pushd(root);
   shell.cp(join(root, 'now.json'), join(buildPath, 'now.json'));
-  shell.popd();
   const file = readFileSync(join(root, 'now.json'));
   const json = JSON.parse(file);
   const alias = json.alias[0];
