@@ -508,6 +508,8 @@ const skipFilter = new Set([
   "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-e675f0a672d8",
   "rules-of-hooks/todo.invalid.invalid-rules-of-hooks-e69ffce323c3",
   "todo.unnecessary-lambda-memoization",
+  "rules-of-hooks/rules-of-hooks-93dc5d5e538a",
+  "rules-of-hooks/rules-of-hooks-69521d94fa03"
 ]);
 
 export default skipFilter;

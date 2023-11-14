@@ -12,7 +12,6 @@ import {
 } from "../CompilerError";
 import { PostDominator, computePostDominatorTree } from "../HIR/Dominator";
 import { BlockId, HIRFunction, SourceLocation, getHookKind } from "../HIR/HIR";
-import { findBlocksWithBackEdges } from "../Optimization/DeadCodeElimination";
 import { Err, Ok, Result } from "../Utils/Result";
 
 /*
@@ -60,7 +59,6 @@ export function validateUnconditionalHooks(
 ): Result<PostDominator<BlockId>, CompilerError> {
   // Construct the set of blocks that is always reachable from the entry block.
   const unconditionalBlocks = new Set<BlockId>();
-  const blocksWithBackEdges = findBlocksWithBackEdges(fn);
   const dominators = computePostDominatorTree(fn, {
     /*
      * Hooks must only be in a consistent order for executions that return normally,
@@ -70,11 +68,13 @@ export function validateUnconditionalHooks(
   });
   const exit = dominators.exit;
   let current: BlockId | null = fn.body.entry;
-  while (
-    current !== null &&
-    current !== exit &&
-    !blocksWithBackEdges.has(current)
-  ) {
+  while (current !== null && current !== exit) {
+    CompilerError.invariant(!unconditionalBlocks.has(current), {
+      reason:
+        "Internal error: non-terminating loop in ValidateUnconditionalHooks",
+      loc: null,
+      suggestions: null,
+    });
     unconditionalBlocks.add(current);
     current = dominators.get(current);
   }

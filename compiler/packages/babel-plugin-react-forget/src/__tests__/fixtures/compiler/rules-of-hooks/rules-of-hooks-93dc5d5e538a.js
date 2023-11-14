@@ -1,6 +1,3 @@
-// @skip
-// Unsupported input
-
 // Valid because the loop doesn't change the order of hooks calls.
 function RegressionTest() {
   const res = [];
