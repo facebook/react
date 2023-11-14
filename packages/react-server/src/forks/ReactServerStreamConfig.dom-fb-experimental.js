@@ -15,19 +15,25 @@ import type {
   BinaryChunk,
 } from '../ReactServerStreamConfigFB';
 
-export type Destination = {
-  write(chunk: Chunk | PrecomputedChunk | BinaryChunk): void,
-  onComplete(): void,
-  onError(error: mixed): void,
-  close(): void,
-};
+export interface Destination {
+  write(chunk: Chunk | PrecomputedChunk | BinaryChunk): void;
+  close(): void;
+  flush(): void;
+  onStart(): void;
+  onComplete(): void;
+  onError(error: mixed): void;
+}
 
 export function scheduleWork(callback: () => void) {
   callback();
 }
 
-export function flushBuffered(destination: Destination) {}
-export function beginWriting(destination: Destination) {}
+export function flushBuffered(destination: Destination) {
+  destination.flush();
+}
+export function beginWriting(destination: Destination) {
+  destination.onStart();
+}
 
 export function writeChunk(
   destination: Destination,

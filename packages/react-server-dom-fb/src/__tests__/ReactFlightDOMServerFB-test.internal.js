@@ -9,6 +9,9 @@
 
 'use strict';
 
+// Polyfills for test environment
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 
@@ -26,6 +29,25 @@ let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Suspense;
 let registerClientReference;
+
+class Destination {
+  constructor() {
+    const self = this;
+    this.stream = new ReadableStream({
+      start(controller) {
+        self._controller = controller;
+      },
+    });
+  }
+  write(chunk) {
+    this._controller.enqueue(chunk);
+  }
+  close() {}
+  flush() {}
+  onStart() {}
+  onComplete() {}
+  onError() {}
+}
 
 describe('ReactFlightDOM for FB', () => {
   beforeEach(() => {
@@ -90,11 +112,14 @@ describe('ReactFlightDOM for FB', () => {
       };
       return model;
     }
-
-    const {buffer} = ReactServerDOMServer.renderToDestination(<App />);
-    const response = ReactServerDOMClient.processChunk(buffer, {
-      moduleMap,
-    });
+    const destination = new Destination();
+    ReactServerDOMServer.renderToDestination(destination, <App />);
+    const response = ReactServerDOMClient.createFromReadableStream(
+      destination.stream,
+      {
+        moduleMap,
+      },
+    );
     const model = await response;
     expect(model).toEqual({
       html: (
@@ -137,10 +162,14 @@ describe('ReactFlightDOM for FB', () => {
       );
     }
 
-    const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
-    const response = ReactServerDOMClient.processChunk(buffer, {
-      moduleMap,
-    });
+    const destination = new Destination();
+    ReactServerDOMServer.renderToDestination(destination, <RootModel />);
+    const response = ReactServerDOMClient.createFromReadableStream(
+      destination.stream,
+      {
+        moduleMap,
+      },
+    );
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -169,11 +198,14 @@ describe('ReactFlightDOM for FB', () => {
         </Suspense>
       );
     }
-
-    const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
-    const response = ReactServerDOMClient.processChunk(buffer, {
-      moduleMap,
-    });
+    const destination = new Destination();
+    ReactServerDOMServer.renderToDestination(destination, <RootModel />);
+    const response = ReactServerDOMClient.createFromReadableStream(
+      destination.stream,
+      {
+        moduleMap,
+      },
+    );
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -200,11 +232,14 @@ describe('ReactFlightDOM for FB', () => {
         </Suspense>
       );
     }
-
-    const {buffer} = ReactServerDOMServer.renderToDestination(<RootModel />);
-    const response = ReactServerDOMClient.processChunk(buffer, {
-      moduleMap,
-    });
+    const destination = new Destination();
+    ReactServerDOMServer.renderToDestination(destination, <RootModel />);
+    const response = ReactServerDOMClient.createFromReadableStream(
+      destination.stream,
+      {
+        moduleMap,
+      },
+    );
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -233,24 +268,29 @@ describe('ReactFlightDOM for FB', () => {
 
     const ClientComponent = clientExports(Component);
 
-    const {buffer} = ReactServerDOMServer.renderToDestination(
+    const destination = new Destination();
+    ReactServerDOMServer.renderToDestination(
+      destination,
       <ClientComponent greeting={'Hello'} />,
       moduleMap,
     );
-    const response = ReactServerDOMClient.processChunk(buffer, {
-      moduleMap: {
-        resolveClientReference(metadata) {
-          return {
-            getModuleId() {
-              return metadata.moduleId;
-            },
-            load() {
-              return Promise.resolve(Component);
-            },
-          };
+    const response = ReactServerDOMClient.createFromReadableStream(
+      destination.stream,
+      {
+        moduleMap: {
+          resolveClientReference(metadata) {
+            return {
+              getModuleId() {
+                return metadata.moduleId;
+              },
+              load() {
+                return Promise.resolve(Component);
+              },
+            };
+          },
         },
       },
-    });
+    );
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
