@@ -68,6 +68,7 @@ var ReactSharedInternals =
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
+  enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
@@ -393,7 +394,7 @@ function computeExpirationTime(lane, currentTime) {
     case 8388608:
     case 16777216:
     case 33554432:
-      return -1;
+      return enableRetryLaneExpiration ? currentTime + 5e3 : -1;
     case 67108864:
     case 134217728:
     case 268435456:
@@ -9904,7 +9905,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-d15e6948",
+    version: "18.3.0-www-modern-fc53dc79",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1302 = {
@@ -9935,7 +9936,7 @@ var internals$jscomp$inline_1302 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-d15e6948"
+  reconcilerVersion: "18.3.0-www-modern-fc53dc79"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1303 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

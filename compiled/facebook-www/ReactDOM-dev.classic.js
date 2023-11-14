@@ -135,6 +135,7 @@ if (__DEV__) {
       enableLazyContextPropagation =
         dynamicFeatureFlags.enableLazyContextPropagation,
       enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
+      enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableCustomElementPropertySupport =
         dynamicFeatureFlags.enableCustomElementPropertySupport,
@@ -2174,7 +2175,7 @@ if (__DEV__) {
           // crashes. There must be some other underlying bug; not super urgent but
           // ideally should figure out why and fix it. Unfortunately we don't have
           // a repro for the crashes, only detected via production metrics.
-          return NoTimestamp;
+          return enableRetryLaneExpiration ? currentTime + 5000 : NoTimestamp;
 
         case SelectiveHydrationLane:
         case IdleHydrationLane:
@@ -34884,7 +34885,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-d456dfab";
+    var ReactVersion = "18.3.0-www-classic-b7cd3754";
 
     function createPortal$1(
       children,

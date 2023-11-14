@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-b4d8ae24";
+    var ReactVersion = "18.3.0-www-modern-7ac3e370";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -170,6 +170,7 @@ if (__DEV__) {
       enableLazyContextPropagation =
         dynamicFeatureFlags.enableLazyContextPropagation,
       enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
+      enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableDeferRootSchedulingToMicrotask =
         dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
@@ -2001,7 +2002,7 @@ if (__DEV__) {
           // crashes. There must be some other underlying bug; not super urgent but
           // ideally should figure out why and fix it. Unfortunately we don't have
           // a repro for the crashes, only detected via production metrics.
-          return NoTimestamp;
+          return enableRetryLaneExpiration ? currentTime + 5000 : NoTimestamp;
 
         case SelectiveHydrationLane:
         case IdleHydrationLane:

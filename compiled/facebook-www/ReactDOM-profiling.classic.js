@@ -51,6 +51,7 @@ var ReactSharedInternals =
   enableLazyContextPropagation =
     dynamicFeatureFlags.enableLazyContextPropagation,
   enableUnifiedSyncLane = dynamicFeatureFlags.enableUnifiedSyncLane,
+  enableRetryLaneExpiration = dynamicFeatureFlags.enableRetryLaneExpiration,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableCustomElementPropertySupport =
     dynamicFeatureFlags.enableCustomElementPropertySupport,
@@ -657,7 +658,7 @@ function computeExpirationTime(lane, currentTime) {
     case 8388608:
     case 16777216:
     case 33554432:
-      return -1;
+      return enableRetryLaneExpiration ? currentTime + 5e3 : -1;
     case 67108864:
     case 134217728:
     case 268435456:
@@ -17308,7 +17309,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1881 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-30fe3ed5",
+  version: "18.3.0-www-classic-48ec6736",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17352,7 +17353,7 @@ var devToolsConfig$jscomp$inline_1881 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-30fe3ed5"
+  reconcilerVersion: "18.3.0-www-classic-48ec6736"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17676,7 +17677,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-30fe3ed5";
+exports.version = "18.3.0-www-classic-48ec6736";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
