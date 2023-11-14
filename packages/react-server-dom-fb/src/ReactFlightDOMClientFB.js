@@ -34,6 +34,24 @@ function createResponseFromOptions(options: void | Options) {
   return createResponse(moduleMap, null, undefined, undefined);
 }
 
+function processChunk(response: FlightResponse, chunk: string | Uint8Array) {
+  if (enableBinaryFlight) {
+    if (typeof chunk === 'string') {
+      throw new Error(
+        '`enableBinaryFlight` flag is enabled, expected a Uint8Array as input, got string.',
+      );
+    }
+  }
+  const buffer = typeof chunk !== 'string' ? chunk : encodeString(chunk);
+
+  processBinaryChunk(response, buffer);
+}
+
+function encodeString(string: string) {
+  const textEncoder = new TextEncoder();
+  return textEncoder.encode(string);
+}
+
 function startReadingFromStream(
   response: FlightResponse,
   stream: ReadableStream,
@@ -52,7 +70,7 @@ function startReadingFromStream(
       return;
     }
     const buffer: Uint8Array = (value: any);
-    processBinaryChunk(response, buffer);
+    processChunk(response, buffer);
     return reader.read().then(progress).catch(error);
   }
   function error(e: any) {
@@ -70,27 +88,4 @@ function createFromReadableStream<T>(
   return getRoot(response);
 }
 
-function processChunk<T>(
-  chunk: string | Uint8Array,
-  options?: Options,
-): Thenable<T> {
-  if (enableBinaryFlight) {
-    if (typeof chunk === 'string') {
-      throw new Error(
-        '`enableBinaryFlight` flag is enabled, expected a Uint8Array as input, got string.',
-      );
-    }
-  }
-  const response: FlightResponse = createResponseFromOptions(options);
-  const buffer = typeof chunk !== 'string' ? chunk : encodeString(chunk);
-
-  processBinaryChunk(response, buffer);
-  return getRoot(response);
-}
-
-function encodeString(string: string) {
-  const textEncoder = new TextEncoder();
-  return textEncoder.encode(string);
-}
-
-export {createFromReadableStream, processChunk};
+export {createFromReadableStream};
