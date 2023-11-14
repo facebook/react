@@ -84,6 +84,12 @@ function parseFunctions(
     });
   } catch (e) {
     console.error(e);
+    CompilerError.throwInvalidJS({
+      reason: String(e),
+      description: null,
+      loc: null,
+      suggestions: null,
+    });
   }
   return items;
 }
