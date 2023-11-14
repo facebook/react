@@ -18,7 +18,6 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 
 import ErrorStackParser from 'error-stack-parser';
-import assign from 'shared/assign';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   FunctionComponent,
@@ -793,7 +792,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
 function resolveDefaultProps(Component: any, baseProps: any) {
   if (Component && Component.defaultProps) {
     // Resolve default props. Taken from ReactElement
-    const props = assign({}, baseProps);
+    const props = Object.assign({}, baseProps);
     const defaultProps = Component.defaultProps;
     for (const propName in defaultProps) {
       if (props[propName] === undefined) {

@@ -26,7 +26,6 @@ import {
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
 import {enableFloat, enableHostSingletons} from 'shared/ReactFeatureFlags';
-import assign from 'shared/assign';
 import isArray from 'shared/isArray';
 
 // Keep in sync with ReactDOM.js:
@@ -608,7 +607,7 @@ function makeSimulator(eventType) {
     // Since we aren't using pooling, always persist the event. This will make
     // sure it's marked and won't warn when setting additional properties.
     event.persist();
-    assign(event, eventData);
+    Object.assign(event, eventData);
 
     if (directDispatchEventTypes.has(eventType)) {
       accumulateDirectDispatchesSingle(event);

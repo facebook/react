@@ -10,8 +10,6 @@
 /* eslint valid-typeof: 0 */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-
-import assign from 'shared/assign';
 import getEventCharCode from './getEventCharCode';
 
 type EventInterfaceType = {
@@ -83,7 +81,7 @@ function createSyntheticEvent(Interface: EventInterfaceType) {
   }
 
   // $FlowFixMe[prop-missing] found when upgrading Flow
-  assign(SyntheticBaseEvent.prototype, {
+  Object.assign(SyntheticBaseEvent.prototype, {
     // $FlowFixMe[missing-this-annot]
     preventDefault: function () {
       this.defaultPrevented = true;

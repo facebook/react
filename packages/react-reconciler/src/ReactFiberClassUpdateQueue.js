@@ -124,8 +124,6 @@ import {
 } from './ReactFiberConcurrentUpdates';
 import {setIsStrictModeForDevtools} from './ReactFiberDevToolsHook';
 
-import assign from 'shared/assign';
-
 export type Update<State> = {
   lane: Lane,
 
@@ -453,7 +451,7 @@ function getStateFromUpdate<State>(
         return prevState;
       }
       // Merge the partial state and the previous state.
-      return assign({}, prevState, partialState);
+      return Object.assign({}, prevState, partialState);
     }
     case ForceUpdate: {
       hasForceUpdate = true;
