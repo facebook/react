@@ -7,7 +7,7 @@
  * @flow
  */
 
-export type ClientManifest = {[string]: mixed};
+export opaque type ClientManifest = mixed;
 
 // eslint-disable-next-line no-unused-vars
 export type ServerReference<T> = string;
@@ -16,6 +16,7 @@ export type ServerReference<T> = string;
 export type ClientReference<T> = string;
 
 const registeredClientReferences = new Map<mixed, ClientReferenceMetadata>();
+const requestedClientReferencesKeys = new Set<ClientReferenceKey>();
 
 export type ClientReferenceKey = string;
 export type ClientReferenceMetadata = {
@@ -45,9 +46,10 @@ export function isClientReference<T>(reference: T): boolean {
 export function getClientReferenceKey<T>(
   clientReference: ClientReference<T>,
 ): ClientReferenceKey {
-  const record = registeredClientReferences.get(clientReference);
-  if (record != null) {
-    return record.moduleId;
+  const reference = registeredClientReferences.get(clientReference);
+  if (reference != null) {
+    requestedClientReferencesKeys.add(reference.moduleId);
+    return reference.moduleId;
   }
 
   throw new Error(
@@ -85,4 +87,12 @@ export function getServerReferenceId<T>(
   serverReference: ServerReference<T>,
 ): ServerReferenceId {
   throw new Error('getServerReferenceId: Not Implemented.');
+}
+
+export function getRequestedClientReferencesKeys(): $ReadOnlyArray<ClientReferenceKey> {
+  return Array.from(requestedClientReferencesKeys);
+}
+
+export function clearRequestedClientReferencesKeysSet(): void {
+  requestedClientReferencesKeys.clear();
 }
