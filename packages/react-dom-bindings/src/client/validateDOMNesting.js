@@ -288,6 +288,7 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
       return (
         tag === 'caption' ||
         tag === 'colgroup' ||
+        tag === 'tr' ||
         tag === 'tbody' ||
         tag === 'tfoot' ||
         tag === 'thead' ||

@@ -4,8 +4,8 @@
   "description": "A basic cache for React applications",
   "version": "2.0.0-alpha.0",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/facebook/react.git",
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
     "directory": "packages/react-cache"
   },
   "files": [
