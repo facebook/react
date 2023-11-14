@@ -6,25 +6,29 @@
  */
 
 import * as t from "@babel/types";
+import { z } from "zod";
 import { CompilerErrorDetailOptions } from "../CompilerError";
 import { ExternalFunction, PartialEnvironmentConfig } from "../HIR/Environment";
 
-export type PanicThresholdOptions =
+const PanicThresholdOptionsSchema = z.enum([
   /*
    * Any errors will panic the compiler by throwing an exception, which will
    * bubble up to the nearest exception handler above the Forget transform.
    * If Forget is invoked through `ReactForgetBabelPlugin`, this will at the least
    * skip Forget compilation for the rest of current file.
    */
-  | "ALL_ERRORS"
+  "ALL_ERRORS",
   /*
    * Panic by throwing an exception only on critical or unrecognized errors.
    * For all other errors, skip the erroring function without inserting
    * a Forget-compiled version (i.e. same behavior as noEmit).
    */
-  | "CRITICAL_ERRORS"
+  "CRITICAL_ERRORS",
   // Never panic by throwing an exception.
-  | "NONE";
+  "NONE",
+]);
+
+export type PanicThresholdOptions = z.infer<typeof PanicThresholdOptionsSchema>;
 
 export type PluginOptions = {
   environment: PartialEnvironmentConfig | null;
