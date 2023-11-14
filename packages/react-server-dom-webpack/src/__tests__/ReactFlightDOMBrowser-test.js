@@ -1011,7 +1011,7 @@ describe('ReactFlightDOMBrowser', () => {
     const ClientRef = clientExports(Client);
 
     const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={greet.bind(null, 'Hello', 'World')} />,
+      <ClientRef action={greet.bind(null, 'Hello').bind(null, 'World')} />,
       webpackMap,
     );
 
