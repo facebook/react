@@ -20,6 +20,8 @@ import {
 export {
   registerClientReference,
   registerServerReference,
+  getRequestedClientReferencesKeys,
+  clearRequestedClientReferencesKeysSet,
 } from './ReactFlightReferencesFB';
 
 type Options = {
