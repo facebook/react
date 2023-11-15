@@ -1420,6 +1420,28 @@ describe('ReactDOMFizzStaticBrowser', () => {
     );
   });
 
+  // @gate experimental
+  it('logs an error if onHeaders throws but continues the prerender', async () => {
+    const errors = [];
+    function onError(error) {
+      errors.push(error.message);
+    }
+
+    function onHeaders(x) {
+      throw new Error('bad onHeaders');
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerender(<div>hello</div>, {
+      onHeaders,
+      onError,
+    });
+    expect(prerendered.postponed).toBe(null);
+    expect(errors).toEqual(['bad onHeaders']);
+
+    await readIntoContainer(prerendered.prelude);
+    expect(getVisibleChildren(container)).toEqual(<div>hello</div>);
+  });
+
   // @gate enablePostpone
   it('does not bootstrap again in a resume if it bootstraps', async () => {
     let prerendering = true;

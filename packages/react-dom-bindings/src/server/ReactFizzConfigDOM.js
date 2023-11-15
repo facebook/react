@@ -6131,6 +6131,10 @@ export function emitEarlyPreloads(
   if (onHeaders) {
     const headers = renderState.headers;
     if (headers) {
+      // Even if onHeaders throws we don't want to call this again so
+      // we drop the headers state from this point onwards.
+      renderState.headers = null;
+
       let linkHeader = headers.preconnects;
       if (headers.fontPreloads) {
         if (linkHeader) {
@@ -6205,7 +6209,6 @@ export function emitEarlyPreloads(
         // it React will not provide any headers
         onHeaders({});
       }
-      renderState.headers = null;
       return;
     }
   }

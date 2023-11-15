@@ -3220,6 +3220,22 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 }
 
+function safelyEmitEarlyPreloads(
+  request: Request,
+  shellComplete: boolean,
+): void {
+  try {
+    emitEarlyPreloads(
+      request.renderState,
+      request.resumableState,
+      shellComplete,
+    );
+  } catch (error) {
+    // We assume preloads are optimistic and thus non-fatal if errored.
+    logRecoverableError(request, error);
+  }
+}
+
 // I extracted this function out because we want to ensure we consistently emit preloads before
 // transitioning to the next request stage and this transition can happen in multiple places in this
 // implementation.
@@ -3232,11 +3248,7 @@ function completeShell(request: Request) {
     // we should only be calling completeShell when the shell is complete so we
     // just use a literal here
     const shellComplete = true;
-    emitEarlyPreloads(
-      request.renderState,
-      request.resumableState,
-      shellComplete,
-    );
+    safelyEmitEarlyPreloads(request, shellComplete);
   }
   // We have completed the shell so the shell can't error anymore.
   request.onShellError = noop;
@@ -3259,7 +3271,7 @@ function completeAll(request: Request) {
       : // Prerender Request, we use the state of the root segment
         request.completedRootSegment === null ||
         request.completedRootSegment.status !== POSTPONED;
-  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
+  safelyEmitEarlyPreloads(request, shellComplete);
   const onAllReady = request.onAllReady;
   onAllReady();
 }
@@ -4124,7 +4136,7 @@ export function startWork(request: Request): void {
 
 function enqueueEarlyPreloadsAfterInitialWork(request: Request) {
   const shellComplete = request.pendingRootTasks === 0;
-  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
+  safelyEmitEarlyPreloads(request, shellComplete);
 }
 
 function enqueueFlush(request: Request): void {
@@ -4168,7 +4180,7 @@ export function prepareForStartFlowingIfBeforeAllReady(request: Request) {
       request.completedRootSegment === null
       ? request.pendingRootTasks === 0
       : request.completedRootSegment.status !== POSTPONED;
-  emitEarlyPreloads(request.renderState, request.resumableState, shellComplete);
+  safelyEmitEarlyPreloads(request, shellComplete);
 }
 
 export function startFlowing(request: Request, destination: Destination): void {
