@@ -3841,6 +3841,30 @@ describe('ReactDOMFizzServer', () => {
     });
   });
 
+  it('logs an error if onHeaders throws but continues the render', async () => {
+    const errors = [];
+    function onError(error) {
+      errors.push(error.message);
+    }
+
+    function onHeaders(x) {
+      throw new Error('bad onHeaders');
+    }
+
+    let pipe;
+    await act(() => {
+      ({pipe} = renderToPipeableStream(<div>hello</div>, {onHeaders, onError}));
+    });
+
+    expect(errors).toEqual(['bad onHeaders']);
+
+    await act(() => {
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>hello</div>);
+  });
+
   describe('error escaping', () => {
     it('escapes error hash, message, and component stack values in directly flushed errors (html escaping)', async () => {
       window.__outlet = {};
