@@ -367,22 +367,22 @@ describe('ReactDOMComponent', () => {
       ).toBe(false);
     });
 
-    it('should skip dangerouslySetInnerHTML on web components', () => {
+    it('should skip bravelySetInnerHTML on web components', () => {
       const container = document.createElement('div');
 
       ReactDOM.render(
-        <my-component dangerouslySetInnerHTML={{__html: 'hi'}} />,
+        <my-component bravelySetInnerHTML={{__html: 'hi'}} />,
         container,
       );
-      expect(container.firstChild.hasAttribute('dangerouslySetInnerHTML')).toBe(
+      expect(container.firstChild.hasAttribute('bravelySetInnerHTML')).toBe(
         false,
       );
 
       ReactDOM.render(
-        <my-component dangerouslySetInnerHTML={{__html: 'bye'}} />,
+        <my-component bravelySetInnerHTML={{__html: 'bye'}} />,
         container,
       );
-      expect(container.firstChild.hasAttribute('dangerouslySetInnerHTML')).toBe(
+      expect(container.firstChild.hasAttribute('bravelySetInnerHTML')).toBe(
         false,
       );
     });
@@ -391,34 +391,34 @@ describe('ReactDOMComponent', () => {
       const container = document.createElement('div');
 
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: 'textContent'}} />,
+        <div bravelySetInnerHTML={{__html: 'textContent'}} />,
         container,
       );
       expect(container.textContent).toEqual('textContent');
 
-      ReactDOM.render(<div dangerouslySetInnerHTML={{__html: 0}} />, container);
+      ReactDOM.render(<div bravelySetInnerHTML={{__html: 0}} />, container);
       expect(container.textContent).toEqual('0');
 
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: false}} />,
+        <div bravelySetInnerHTML={{__html: false}} />,
         container,
       );
       expect(container.textContent).toEqual('false');
 
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: ''}} />,
+        <div bravelySetInnerHTML={{__html: ''}} />,
         container,
       );
       expect(container.textContent).toEqual('');
 
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: null}} />,
+        <div bravelySetInnerHTML={{__html: null}} />,
         container,
       );
       expect(container.textContent).toEqual('');
 
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: undefined}} />,
+        <div bravelySetInnerHTML={{__html: undefined}} />,
         container,
       );
       expect(container.textContent).toEqual('');
@@ -889,7 +889,7 @@ describe('ReactDOMComponent', () => {
     it('should empty element when removing innerHTML', () => {
       const container = document.createElement('div');
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: ':)'}} />,
+        <div bravelySetInnerHTML={{__html: ':)'}} />,
         container,
       );
 
@@ -904,7 +904,7 @@ describe('ReactDOMComponent', () => {
 
       expect(container.firstChild.innerHTML).toEqual('hello');
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: 'goodbye'}} />,
+        <div bravelySetInnerHTML={{__html: 'goodbye'}} />,
         container,
       );
       expect(container.firstChild.innerHTML).toEqual('goodbye');
@@ -913,7 +913,7 @@ describe('ReactDOMComponent', () => {
     it('should transition from innerHTML to string content', () => {
       const container = document.createElement('div');
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />,
+        <div bravelySetInnerHTML={{__html: 'bonjour'}} />,
         container,
       );
 
@@ -926,7 +926,7 @@ describe('ReactDOMComponent', () => {
       const container = document.createElement('div');
       ReactDOM.render(
         <div>
-          <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+          <div bravelySetInnerHTML={{__html: 'bonjour'}} />
         </div>,
         container,
       );
@@ -957,7 +957,7 @@ describe('ReactDOMComponent', () => {
       expect(container.textContent).toEqual('adieu');
       ReactDOM.render(
         <div>
-          <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+          <div bravelySetInnerHTML={{__html: 'bonjour'}} />
         </div>,
         container,
       );
@@ -1233,11 +1233,11 @@ describe('ReactDOMComponent', () => {
       return new RegExp(re).test(actual);
     }
 
-    it('should handle dangerouslySetInnerHTML', () => {
+    it('should handle bravelySetInnerHTML', () => {
       const innerHTML = {__html: 'testContent'};
       expect(
         toHaveInnerhtml(
-          genMarkup({dangerouslySetInnerHTML: innerHTML}),
+          genMarkup({bravelySetInnerHTML: innerHTML}),
           'testContent',
         ),
       ).toBe(true);
@@ -1364,20 +1364,20 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<input>children</input>, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` nor ' +
-          'use `dangerouslySetInnerHTML`.',
+          'use `bravelySetInnerHTML`.',
       );
     });
 
-    it('should throw on dangerouslySetInnerHTML for void elements', () => {
+    it('should throw on bravelySetInnerHTML for void elements', () => {
       const container = document.createElement('div');
       expect(() => {
         ReactDOM.render(
-          <input dangerouslySetInnerHTML={{__html: 'content'}} />,
+          <input bravelySetInnerHTML={{__html: 'content'}} />,
           container,
         );
       }).toThrowError(
         'input is a void element tag and must neither have `children` nor ' +
-          'use `dangerouslySetInnerHTML`.',
+          'use `bravelySetInnerHTML`.',
       );
     });
 
@@ -1404,15 +1404,15 @@ describe('ReactDOMComponent', () => {
         }).toErrorDev('The tag <menuitem> is unrecognized in this browser.');
       }).toThrowError(
         'menuitem is a void element tag and must neither have `children` nor use ' +
-          '`dangerouslySetInnerHTML`.',
+          '`bravelySetInnerHTML`.',
       );
     });
 
     it('should validate against multiple children props', () => {
       expect(function () {
-        mountComponent({children: '', dangerouslySetInnerHTML: ''});
+        mountComponent({children: '', bravelySetInnerHTML: ''});
       }).toThrowError(
-        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        '`props.bravelySetInnerHTML` must be in the form `{__html: ...}`. ' +
           'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
@@ -1429,27 +1429,27 @@ describe('ReactDOMComponent', () => {
       ).toErrorDev('Directly setting property `innerHTML` is not permitted. ');
     });
 
-    it('should validate use of dangerouslySetInnerHTML', () => {
+    it('should validate use of bravelySetInnerHTML', () => {
       expect(function () {
-        mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
+        mountComponent({bravelySetInnerHTML: '<span>Hi Jim!</span>'});
       }).toThrowError(
-        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        '`props.bravelySetInnerHTML` must be in the form `{__html: ...}`. ' +
           'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 
-    it('should validate use of dangerouslySetInnerHTML', () => {
+    it('should validate use of bravelySetInnerHTML', () => {
       expect(function () {
-        mountComponent({dangerouslySetInnerHTML: {foo: 'bar'}});
+        mountComponent({bravelySetInnerHTML: {foo: 'bar'}});
       }).toThrowError(
-        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        '`props.bravelySetInnerHTML` must be in the form `{__html: ...}`. ' +
           'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 
     it('should allow {__html: null}', () => {
       expect(function () {
-        mountComponent({dangerouslySetInnerHTML: {__html: null}});
+        mountComponent({bravelySetInnerHTML: {__html: null}});
       }).not.toThrow();
     });
 
@@ -1494,7 +1494,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<X />, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` ' +
-          'nor use `dangerouslySetInnerHTML`.',
+          'nor use `bravelySetInnerHTML`.',
       );
     });
 
@@ -1588,21 +1588,21 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<input>children</input>, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` nor use ' +
-          '`dangerouslySetInnerHTML`.',
+          '`bravelySetInnerHTML`.',
       );
     });
 
-    it('should warn against dangerouslySetInnerHTML for void elements', () => {
+    it('should warn against bravelySetInnerHTML for void elements', () => {
       ReactDOM.render(<input />, container);
 
       expect(function () {
         ReactDOM.render(
-          <input dangerouslySetInnerHTML={{__html: 'content'}} />,
+          <input bravelySetInnerHTML={{__html: 'content'}} />,
           container,
         );
       }).toThrowError(
         'input is a void element tag and must neither have `children` nor use ' +
-          '`dangerouslySetInnerHTML`.',
+          '`bravelySetInnerHTML`.',
       );
     });
 
@@ -1611,11 +1611,11 @@ describe('ReactDOMComponent', () => {
 
       expect(function () {
         ReactDOM.render(
-          <div children="" dangerouslySetInnerHTML={{__html: ''}} />,
+          <div children="" bravelySetInnerHTML={{__html: ''}} />,
           container,
         );
       }).toThrowError(
-        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+        'Can only set one of `children` or `props.bravelySetInnerHTML`.',
       );
     });
 
@@ -2372,7 +2372,7 @@ describe('ReactDOMComponent', () => {
     it('renders innerHTML and preserves whitespace', () => {
       const container = document.createElement('div');
       const html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
-      const elem = <div dangerouslySetInnerHTML={{__html: html}} />;
+      const elem = <div bravelySetInnerHTML={{__html: html}} />;
 
       ReactDOM.render(elem, container);
       expect(container.firstChild.innerHTML).toBe(html);
@@ -2381,11 +2381,11 @@ describe('ReactDOMComponent', () => {
     it('render and then updates innerHTML and preserves whitespace', () => {
       const container = document.createElement('div');
       const html = '\n  \t  <span>  \n  testContent1  \t  </span>  \n  \t';
-      const elem = <div dangerouslySetInnerHTML={{__html: html}} />;
+      const elem = <div bravelySetInnerHTML={{__html: html}} />;
       ReactDOM.render(elem, container);
 
       const html2 = '\n  \t  <div>  \n  testContent2  \t  </div>  \n  \t';
-      const elem2 = <div dangerouslySetInnerHTML={{__html: html2}} />;
+      const elem2 = <div bravelySetInnerHTML={{__html: html2}} />;
       ReactDOM.render(elem2, container);
 
       expect(container.firstChild.innerHTML).toBe(html2);
@@ -2533,11 +2533,11 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      // `dangerouslySetInnerHTML` is never coerced to a string, so won't throw
+      // `bravelySetInnerHTML` is never coerced to a string, so won't throw
       // even with a Temporal-like object.
       const container = document.createElement('div');
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: new TemporalLike()}} />,
+        <div bravelySetInnerHTML={{__html: new TemporalLike()}} />,
         container,
       );
       expect(container.firstChild.innerHTML).toEqual('2020-01-01');

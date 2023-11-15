@@ -406,28 +406,28 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     // Markup Mismatches: misc
-    it('should error reconnecting a div with different dangerouslySetInnerHTML', () =>
+    it('should error reconnecting a div with different bravelySetInnerHTML', () =>
       expectMarkupMismatch(
-        <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
-        <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
+        <div bravelySetInnerHTML={{__html: "<span id='child1'/>"}} />,
+        <div bravelySetInnerHTML={{__html: "<span id='child2'/>"}} />,
       ));
 
-    it('should error reconnecting a div with different text dangerouslySetInnerHTML', () =>
+    it('should error reconnecting a div with different text bravelySetInnerHTML', () =>
       expectMarkupMismatch(
-        <div dangerouslySetInnerHTML={{__html: 'foo'}} />,
-        <div dangerouslySetInnerHTML={{__html: 'bar'}} />,
+        <div bravelySetInnerHTML={{__html: 'foo'}} />,
+        <div bravelySetInnerHTML={{__html: 'bar'}} />,
       ));
 
-    it('should error reconnecting a div with different number dangerouslySetInnerHTML', () =>
+    it('should error reconnecting a div with different number bravelySetInnerHTML', () =>
       expectMarkupMismatch(
-        <div dangerouslySetInnerHTML={{__html: 10}} />,
-        <div dangerouslySetInnerHTML={{__html: 20}} />,
+        <div bravelySetInnerHTML={{__html: 10}} />,
+        <div bravelySetInnerHTML={{__html: 20}} />,
       ));
 
-    it('should error reconnecting a div with different object dangerouslySetInnerHTML', () =>
+    it('should error reconnecting a div with different object bravelySetInnerHTML', () =>
       expectMarkupMismatch(
         <div
-          dangerouslySetInnerHTML={{
+          bravelySetInnerHTML={{
             __html: {
               toString() {
                 return 'hi';
@@ -436,7 +436,7 @@ describe('ReactDOMServerIntegration', () => {
           }}
         />,
         <div
-          dangerouslySetInnerHTML={{
+          bravelySetInnerHTML={{
             __html: {
               toString() {
                 return 'bye';
@@ -446,11 +446,11 @@ describe('ReactDOMServerIntegration', () => {
         />,
       ));
 
-    it('can explicitly ignore reconnecting a div with different dangerouslySetInnerHTML', () =>
+    it('can explicitly ignore reconnecting a div with different bravelySetInnerHTML', () =>
       expectMarkupMatch(
-        <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
+        <div bravelySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div
-          dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}}
+          bravelySetInnerHTML={{__html: "<span id='child2'/>"}}
           suppressHydrationWarning={true}
         />,
       ));

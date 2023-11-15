@@ -114,7 +114,7 @@ export type Props = {
   disabled?: boolean,
   hidden?: boolean,
   suppressHydrationWarning?: boolean,
-  dangerouslySetInnerHTML?: mixed,
+  bravelySetInnerHTML?: mixed,
   style?: {display?: string, ...},
   bottom?: null | number,
   left?: null | number,
@@ -549,9 +549,9 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
     type === 'noscript' ||
     typeof props.children === 'string' ||
     typeof props.children === 'number' ||
-    (typeof props.dangerouslySetInnerHTML === 'object' &&
-      props.dangerouslySetInnerHTML !== null &&
-      props.dangerouslySetInnerHTML.__html != null)
+    (typeof props.bravelySetInnerHTML === 'object' &&
+      props.bravelySetInnerHTML !== null &&
+      props.bravelySetInnerHTML.__html != null)
   );
 }
 

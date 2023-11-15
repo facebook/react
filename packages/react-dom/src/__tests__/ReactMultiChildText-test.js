@@ -177,7 +177,7 @@ describe('ReactMultiChildText', () => {
   it('should throw if rendering both HTML and children', () => {
     expect(function () {
       ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
+        <div bravelySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
       );
     }).toThrow();
   });

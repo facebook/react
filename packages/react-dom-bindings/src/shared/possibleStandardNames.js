@@ -45,7 +45,7 @@ const possibleStandardNames = {
   controlslist: 'controlsList',
   coords: 'coords',
   crossorigin: 'crossOrigin',
-  dangerouslysetinnerhtml: 'dangerouslySetInnerHTML',
+  bravelySetInnerHTML: 'bravelySetInnerHTML',
   data: 'data',
   datetime: 'dateTime',
   default: 'default',

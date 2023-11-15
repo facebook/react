@@ -78,7 +78,7 @@ describe('ReactDOMComponentTree', () => {
           <div
             id={closestInstanceID}
             onClick={this._onClick}
-            dangerouslySetInnerHTML={innerHTML}
+            bravelySetInnerHTML={innerHTML}
           />
         );
       }

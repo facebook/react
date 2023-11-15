@@ -6381,17 +6381,17 @@ describe('ReactDOMFizzServer', () => {
       if (__DEV__) {
         expect(mockError.mock.calls.length).toBe(3);
         expect(mockError.mock.calls[0]).toEqual([
-          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using bravelySetInnerHTML or passing a plain string as children.%s',
           'a number for children',
           componentStack(['script', 'body', 'html']),
         ]);
         expect(mockError.mock.calls[1]).toEqual([
-          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using bravelySetInnerHTML or passing a plain string as children.%s',
           'an array for children',
           componentStack(['script', 'body', 'html']),
         ]);
         expect(mockError.mock.calls[2]).toEqual([
-          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using dangerouslySetInnerHTML or passing a plain string as children.%s',
+          'Warning: A script element was rendered with %s. If script element has children it must be a single string. Consider using bravelySetInnerHTML or passing a plain string as children.%s',
           'something unexpected for children',
           componentStack(['script', 'body', 'html']),
         ]);

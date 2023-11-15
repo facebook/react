@@ -623,7 +623,7 @@ describe('ReactDOMForm', () => {
       root.render(
         <form
           action={action}
-          dangerouslySetInnerHTML={{
+          bravelySetInnerHTML={{
             __html: `
             <input
               type="submit"

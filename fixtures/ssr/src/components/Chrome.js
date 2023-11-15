@@ -19,7 +19,7 @@ export default class Chrome extends Component {
         </head>
         <body className={this.state.theme}>
           <noscript
-            dangerouslySetInnerHTML={{
+            bravelySetInnerHTML={{
               __html: `<b>Enable JavaScript to run this app.</b>`,
             }}
           />
@@ -38,7 +38,7 @@ export default class Chrome extends Component {
             </Theme.Provider>
           </Suspense>
           <script
-            dangerouslySetInnerHTML={{
+            bravelySetInnerHTML={{
               __html: `assetManifest = ${JSON.stringify(assets)};`,
             }}
           />

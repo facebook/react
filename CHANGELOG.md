@@ -257,7 +257,7 @@ Today, we are releasing React 17!
 * Keep `onTouchStart`, `onTouchMove`, and `onWheel` passive. ([@gaearon](https://github.com/gaearon) in [#19654](https://github.com/facebook/react/pull/19654))
 * Fix `setState` hanging in development inside a closed iframe. ([@gaearon](https://github.com/gaearon) in [#19220](https://github.com/facebook/react/pull/19220))
 * Fix rendering bailout for lazy components with `defaultProps`. ([@jddxf](https://github.com/jddxf) in [#18539](https://github.com/facebook/react/pull/18539))
-* Fix a false positive warning when `dangerouslySetInnerHTML` is `undefined`. ([@eps1lon](https://github.com/eps1lon) in [#18676](https://github.com/facebook/react/pull/18676))
+* Fix a false positive warning when `bravelySetInnerHTML` is `undefined`. ([@eps1lon](https://github.com/eps1lon) in [#18676](https://github.com/facebook/react/pull/18676))
 * Fix Test Utils with non-standard `require` implementation. ([@just-boris](https://github.com/just-boris) in [#18632](https://github.com/facebook/react/pull/18632))
 * Fix `onBeforeInput` reporting an incorrect `event.type`. ([@eps1lon](https://github.com/eps1lon) in [#19561](https://github.com/facebook/react/pull/19561))
 * Fix `event.relatedTarget` reported as `undefined` in Firefox. ([@claytercek](https://github.com/claytercek) in [#19607](https://github.com/facebook/react/pull/19607))
@@ -330,7 +330,7 @@ Today, we are releasing React 17!
 * Fix `onMouseEnter` being fired on disabled buttons ([@AlfredoGJ](https://github.com/AlfredoGJ) in [#17675](https://github.com/facebook/react/pull/17675))
 * Call `shouldComponentUpdate` twice when developing in `StrictMode` ([@bvaughn](https://github.com/bvaughn) in [#17942](https://github.com/facebook/react/pull/17942))
 * Add `version` property to ReactDOM ([@ealush](https://github.com/ealush) in [#15780](https://github.com/facebook/react/pull/15780))
-* Don't call `toString()` of `dangerouslySetInnerHTML` ([@sebmarkbage](https://github.com/sebmarkbage) in [#17773](https://github.com/facebook/react/pull/17773))
+* Don't call `toString()` of `bravelySetInnerHTML` ([@sebmarkbage](https://github.com/sebmarkbage) in [#17773](https://github.com/facebook/react/pull/17773))
 * Show component stacks in more warnings ([@gaearon](https://github.com/gaearon) in [#17922](https://github.com/facebook/react/pull/17922), [#17586](https://github.com/facebook/react/pull/17586))
 
 ### Concurrent Mode (Experimental)
@@ -672,7 +672,7 @@ This release was published in a broken state and should be skipped.
 * Fix incorrect data in `compositionend` event when typing Korean on IE11 ([@crux153](https://github.com/crux153) in [#12563](https://github.com/facebook/react/issues/12563))
 * Fix a crash when using dynamic `children` in the `<option>` tag ([@Slowyn](https://github.com/Slowyn) in [#13261](https://github.com/facebook/react/issues/13261), [@gaearon](https://github.com/gaearon) in [#13465](https://github.com/facebook/react/pull/13465))
 * Fix the `checked` attribute not getting initially set on the `input` ([@dilidili](https://github.com/dilidili) in [#13114](https://github.com/facebook/react/issues/13114))
-* Fix hydration of `dangerouslySetInnerHTML` when `__html` is not a string ([@gaearon](https://github.com/gaearon) in [#13353](https://github.com/facebook/react/issues/13353))
+* Fix hydration of `bravelySetInnerHTML` when `__html` is not a string ([@gaearon](https://github.com/gaearon) in [#13353](https://github.com/facebook/react/issues/13353))
 * Fix a warning about missing controlled `onChange` to fire on falsy values too ([@nicolevy](https://github.com/nicolevy) in [#12628](https://github.com/facebook/react/issues/12628))
 * Fix `submit` and `reset` buttons getting an empty label ([@ellsclytn](https://github.com/ellsclytn) in [#12780](https://github.com/facebook/react/issues/12780))
 * Fix the `onSelect` event not being triggered after drag and drop ([@gaearon](https://github.com/gaearon) in [#13422](https://github.com/facebook/react/issues/13422))
@@ -699,7 +699,7 @@ This release was published in a broken state and should be skipped.
 
 ### React DOM Server
 
-* Fix crash with nullish children when using `dangerouslySetInnerHtml` in a selected `<option>` ([@mridgway](https://github.com/mridgway) in [#13078](https://github.com/facebook/react/issues/13078))
+* Fix crash with nullish children when using `bravelySetInnerHTML` in a selected `<option>` ([@mridgway](https://github.com/mridgway) in [#13078](https://github.com/facebook/react/issues/13078))
 * Fix crash when `setTimeout` is missing ([@dustinsoftware](https://github.com/dustinsoftware) in [#13088](https://github.com/facebook/react/issues/13088))
 
 ### React Test Renderer and Test Utils
@@ -981,7 +981,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 * Fix `null` showing up in a warning instead of the component stack. ([@gaearon](https://github.com/gaearon) in [#10915](https://github.com/facebook/react/pull/10915))
 * Fix IE11 crash in development mode. ([@leidegre](https://github.com/leidegre) in [#10921](https://github.com/facebook/react/pull/10921))
 * Fix `tabIndex` not getting applied to SVG elements. ([@gaearon](https://github.com/gaearon) in [#11034](https://github.com/facebook/react/pull/11034))
-* Fix SVG children not getting cleaned up on `dangerouslySetInnerHTML` in IE. ([@OriR](https://github.com/OriR) in [#11108](https://github.com/facebook/react/pull/11108))
+* Fix SVG children not getting cleaned up on `bravelySetInnerHTML` in IE. ([@OriR](https://github.com/OriR) in [#11108](https://github.com/facebook/react/pull/11108))
 * Fix false positive text mismatch warning caused by newline normalization. ([@gaearon](https://github.com/gaearon) in [#11119](https://github.com/facebook/react/pull/11119))
 * Fix `form.reset()` to respect `defaultValue` on uncontrolled `<select>`. ([@aweary](https://github.com/aweary) in [#11057](https://github.com/facebook/react/pull/11057))
 * Fix `<textarea>` placeholder not rendering on IE11. ([@gaearon](https://github.com/gaearon) in [#11177](https://github.com/facebook/react/pull/11177))
@@ -1261,7 +1261,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 - Improve robustness of `document.documentMode` checks to handle Google Tag Manager. ([@SchleyB](https://github.com/SchleyB) in [#7594](https://github.com/facebook/react/pull/7594))
 - Add more cases to controlled inputs warning. ([@marcin-mazurek](https://github.com/marcin-mazurek) in [#7544](https://github.com/facebook/react/pull/7544))
 - Handle case of popup blockers overriding `document.createEvent`. ([@Andarist](https://github.com/Andarist) in [#7621](https://github.com/facebook/react/pull/7621))
-- Fix issue with `dangerouslySetInnerHTML` and SVG in Internet Explorer. ([@zpao](https://github.com/zpao) in [#7618](https://github.com/facebook/react/pull/7618))
+- Fix issue with `bravelySetInnerHTML` and SVG in Internet Explorer. ([@zpao](https://github.com/zpao) in [#7618](https://github.com/facebook/react/pull/7618))
 - Improve handling of Japanese IME on Internet Explorer. ([@msmania](https://github.com/msmania) in [#7107](https://github.com/facebook/react/pull/7107))
 
 ### React Test Renderer
@@ -1377,7 +1377,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 - Fix events issue in environments with mutated `Object.prototype`. ([@Weizenlol](https://github.com/Weizenlol) in [#6886](https://github.com/facebook/react/pull/6886))
 - Fix issue where `is="null"` ended up in the DOM in Firefox. ([@darobin](https://github.com/darobin) in [#6896](https://github.com/facebook/react/pull/6896))
 - Improved performance of text escaping by using [escape-html](https://github.com/component/escape-html). ([@aickin](https://github.com/aickin) in [#6862](https://github.com/facebook/react/pull/6862))
-- Fix issue with `dangerouslySetInnerHTML` and SVG in Internet Explorer. ([@joshhunt](https://github.com/joshhunt) in [#6982](https://github.com/facebook/react/pull/6982))
+- Fix issue with `bravelySetInnerHTML` and SVG in Internet Explorer. ([@joshhunt](https://github.com/joshhunt) in [#6982](https://github.com/facebook/react/pull/6982))
 - Fix issue with `<textarea>` placeholders. ([@jimfb](https://github.com/jimfb) in [#7002](https://github.com/facebook/react/pull/7002))
 - Fix controlled vs uncontrolled detection of `<input type="radio"/>`. ([@jimfb](https://github.com/jimfb) in [#7003](https://github.com/facebook/react/pull/7003))
 - Improve performance of updating text content. ([@trueadm](https://github.com/trueadm) in [#7005](https://github.com/facebook/react/pull/7005))
@@ -1551,7 +1551,7 @@ Each of these changes will continue to work as before with a new warning until t
 ## 0.14.7 (January 28, 2016)
 
 ### React
-- Fixed bug with `<option>` tags when using `dangerouslySetInnerHTML`
+- Fixed bug with `<option>` tags when using `bravelySetInnerHTML`
 - Fixed memory leak in synthetic event system
 
 ### React TestUtils Add-on
@@ -1613,7 +1613,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 ### React DOM
 - Fixed bug where events wouldn't fire in old browsers when using React in development mode
-- Fixed bug preventing use of `dangerouslySetInnerHTML` with Closure Compiler Advanced mode
+- Fixed bug preventing use of `bravelySetInnerHTML` with Closure Compiler Advanced mode
 - Added support for `srcLang`, `default`, and `kind` attributes for `<track>` elements
 - Added support for `color` attribute
 - Ensured legacy `.props` access on DOM nodes is updated on re-renders
@@ -1713,7 +1713,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 #### Bug Fixes
 
-* Loosened `dangerouslySetInnerHTML` restrictions so `{__html: undefined}` will no longer throw
+* Loosened `bravelySetInnerHTML` restrictions so `{__html: undefined}` will no longer throw
 * Fixed extraneous context warning with non-pure `getChildContext`
 * Ensure `replaceState(obj)` retains prototype of `obj`
 

@@ -394,12 +394,12 @@ const attributes = [
     read: getSVGAttribute('d'),
   },
   {
-    name: 'dangerouslySetInnerHTML',
-    read: getAttribute('dangerouslySetInnerHTML'),
+    name: 'bravelySetInnerHTML',
+    read: getAttribute('bravelySetInnerHTML'),
   },
   {
-    name: 'DangerouslySetInnerHTML',
-    read: getAttribute('DangerouslySetInnerHTML'),
+    name: 'bravelySetInnerHTML',
+    read: getAttribute('bravelySetInnerHTML'),
   },
   {name: 'data', read: getAttribute('data')},
   {name: 'data-', read: getAttribute('data-')},

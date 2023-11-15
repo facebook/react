@@ -479,26 +479,26 @@ describe('ReactDOMSelect', () => {
     expect(options[2].selected).toBe(false);
   });
 
-  it('should support server-side rendering with dangerouslySetInnerHTML', () => {
+  it('should support server-side rendering with bravelySetInnerHTML', () => {
     const stub = (
       <select defaultValue="giraffe">
         <option
           value="monkey"
-          dangerouslySetInnerHTML={{
+          bravelySetInnerHTML={{
             __html: 'A monkey!',
           }}>
           {undefined}
         </option>
         <option
           value="giraffe"
-          dangerouslySetInnerHTML={{
+          bravelySetInnerHTML={{
             __html: 'A giraffe!',
           }}>
           {null}
         </option>
         <option
           value="gorilla"
-          dangerouslySetInnerHTML={{
+          bravelySetInnerHTML={{
             __html: 'A gorilla!',
           }}
         />

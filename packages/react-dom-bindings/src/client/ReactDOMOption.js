@@ -37,7 +37,7 @@ export function validateOptionProps(element: Element, props: Object) {
             );
           }
         });
-      } else if (props.dangerouslySetInnerHTML != null) {
+      } else if (props.bravelySetInnerHTML != null) {
         if (!didWarnInvalidInnerHTML) {
           didWarnInvalidInnerHTML = true;
           console.error(

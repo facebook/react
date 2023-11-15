@@ -28,7 +28,7 @@ describe('ReactEventIndependence', () => {
       const div = ReactDOM.render(
         <div
           onClick={() => clicks++}
-          dangerouslySetInnerHTML={{
+          bravelySetInnerHTML={{
             __html: '<button data-reactid=".z">click me</div>',
           }}
         />,

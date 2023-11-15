@@ -934,7 +934,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
             onMouseEnter={() => {
               Scheduler.log('Outer Mouse Enter');
             }}
-            dangerouslySetInnerHTML={{
+            bravelySetInnerHTML={{
               __html: innerRoot ? innerRoot.innerHTML : '',
             }}
           />

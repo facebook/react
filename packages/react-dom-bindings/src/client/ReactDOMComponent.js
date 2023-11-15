@@ -597,11 +597,11 @@ function setProp(
       }
       break;
     }
-    case 'dangerouslySetInnerHTML': {
+    case 'bravelySetInnerHTML': {
       if (value != null) {
         if (typeof value !== 'object' || !('__html' in value)) {
           throw new Error(
-            '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+            '`props.bravelySetInnerHTML` must be in the form `{__html: ...}`. ' +
               'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
               'for more information.',
           );
@@ -610,7 +610,7 @@ function setProp(
         if (nextHtml != null) {
           if (props.children != null) {
             throw new Error(
-              'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+              'Can only set one of `children` or `props.bravelySetInnerHTML`.',
             );
           }
           if (disableIEWorkarounds) {
@@ -923,11 +923,11 @@ function setPropOnCustomElement(
       setValueForStyles(domElement, value, prevValue);
       break;
     }
-    case 'dangerouslySetInnerHTML': {
+    case 'bravelySetInnerHTML': {
       if (value != null) {
         if (typeof value !== 'object' || !('__html' in value)) {
           throw new Error(
-            '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+            '`props.bravelySetInnerHTML` must be in the form `{__html: ...}`. ' +
               'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
               'for more information.',
           );
@@ -936,7 +936,7 @@ function setPropOnCustomElement(
         if (nextHtml != null) {
           if (props.children != null) {
             throw new Error(
-              'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+              'Can only set one of `children` or `props.bravelySetInnerHTML`.',
             );
           }
           if (disableIEWorkarounds) {
@@ -1087,11 +1087,11 @@ export function setInitialProperties(
             break;
           }
           case 'children':
-          case 'dangerouslySetInnerHTML': {
+          case 'bravelySetInnerHTML': {
             if (propValue != null) {
               throw new Error(
                 `${tag} is a void element tag and must neither have \`children\` nor ` +
-                  'use `dangerouslySetInnerHTML`.',
+                  'use `bravelySetInnerHTML`.',
               );
             }
             break;
@@ -1194,11 +1194,11 @@ export function setInitialProperties(
             // Handled by initTextarea above.
             break;
           }
-          case 'dangerouslySetInnerHTML': {
+          case 'bravelySetInnerHTML': {
             if (propValue != null) {
               // TODO: Do we really need a special error message for this. It's also pretty blunt.
               throw new Error(
-                '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
+                '`bravelySetInnerHTML` does not make sense on <textarea>.',
               );
             }
             break;
@@ -1306,11 +1306,11 @@ export function setInitialProperties(
         }
         switch (propKey) {
           case 'children':
-          case 'dangerouslySetInnerHTML': {
+          case 'bravelySetInnerHTML': {
             // TODO: Can we make this a DEV warning to avoid this deny list?
             throw new Error(
               `${tag} is a void element tag and must neither have \`children\` nor ` +
-                'use `dangerouslySetInnerHTML`.',
+                'use `bravelySetInnerHTML`.',
             );
           }
           // defaultChecked and defaultValue are ignored by setProp
@@ -1443,11 +1443,11 @@ export function updateProperties(
               break;
             }
             case 'children':
-            case 'dangerouslySetInnerHTML': {
+            case 'bravelySetInnerHTML': {
               if (nextProp != null) {
                 throw new Error(
                   `${tag} is a void element tag and must neither have \`children\` nor ` +
-                    'use `dangerouslySetInnerHTML`.',
+                    'use `bravelySetInnerHTML`.',
                 );
               }
               break;
@@ -1636,11 +1636,11 @@ export function updateProperties(
               // TODO: This doesn't actually do anything if it updates.
               break;
             }
-            case 'dangerouslySetInnerHTML': {
+            case 'bravelySetInnerHTML': {
               if (nextProp != null) {
                 // TODO: Do we really need a special error message for this. It's also pretty blunt.
                 throw new Error(
-                  '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
+                  '`bravelySetInnerHTML` does not make sense on <textarea>.',
                 );
               }
               break;
@@ -1743,12 +1743,12 @@ export function updateProperties(
         ) {
           switch (propKey) {
             case 'children':
-            case 'dangerouslySetInnerHTML': {
+            case 'bravelySetInnerHTML': {
               if (nextProp != null) {
                 // TODO: Can we make this a DEV warning to avoid this deny list?
                 throw new Error(
                   `${tag} is a void element tag and must neither have \`children\` nor ` +
-                    'use `dangerouslySetInnerHTML`.',
+                    'use `bravelySetInnerHTML`.',
                 );
               }
               break;
@@ -2194,7 +2194,7 @@ function diffHydratedCustomComponent(
       case 'innerHTML':
         // Noop
         continue;
-      case 'dangerouslySetInnerHTML':
+      case 'bravelySetInnerHTML':
         const serverHTML = domElement.innerHTML;
         const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {
@@ -2307,7 +2307,7 @@ function diffHydratedGenericElement(
       case 'innerHTML':
         // Noop
         continue;
-      case 'dangerouslySetInnerHTML':
+      case 'bravelySetInnerHTML':
         const serverHTML = domElement.innerHTML;
         const nextHtml = value ? value.__html : undefined;
         if (nextHtml != null) {

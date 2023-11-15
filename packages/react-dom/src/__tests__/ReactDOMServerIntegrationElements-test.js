@@ -466,14 +466,14 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.tagName).toBe('BUTTON');
     });
 
-    itRenders('a div with dangerouslySetInnerHTML number', async render => {
-      // Put dangerouslySetInnerHTML one level deeper because otherwise
+    itRenders('a div with bravelySetInnerHTML number', async render => {
+      // Put bravelySetInnerHTML one level deeper because otherwise
       // hydrating from a bad markup would cause a mismatch (since we don't
-      // patch dangerouslySetInnerHTML as text content).
+      // patch bravelySetInnerHTML as text content).
       const e = (
         await render(
           <div>
-            <span dangerouslySetInnerHTML={{__html: 0}} />
+            <span bravelySetInnerHTML={{__html: 0}} />
           </div>,
         )
       ).firstChild;
@@ -482,14 +482,14 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.textContent).toBe('0');
     });
 
-    itRenders('a div with dangerouslySetInnerHTML boolean', async render => {
-      // Put dangerouslySetInnerHTML one level deeper because otherwise
+    itRenders('a div with bravelySetInnerHTML boolean', async render => {
+      // Put bravelySetInnerHTML one level deeper because otherwise
       // hydrating from a bad markup would cause a mismatch (since we don't
-      // patch dangerouslySetInnerHTML as text content).
+      // patch bravelySetInnerHTML as text content).
       const e = (
         await render(
           <div>
-            <span dangerouslySetInnerHTML={{__html: false}} />
+            <span bravelySetInnerHTML={{__html: false}} />
           </div>,
         )
       ).firstChild;
@@ -499,15 +499,15 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders(
-      'a div with dangerouslySetInnerHTML text string',
+      'a div with bravelySetInnerHTML text string',
       async render => {
-        // Put dangerouslySetInnerHTML one level deeper because otherwise
+        // Put bravelySetInnerHTML one level deeper because otherwise
         // hydrating from a bad markup would cause a mismatch (since we don't
-        // patch dangerouslySetInnerHTML as text content).
+        // patch bravelySetInnerHTML as text content).
         const e = (
           await render(
             <div>
-              <span dangerouslySetInnerHTML={{__html: 'hello'}} />
+              <span bravelySetInnerHTML={{__html: 'hello'}} />
             </div>,
           )
         ).firstChild;
@@ -518,10 +518,10 @@ describe('ReactDOMServerIntegration', () => {
     );
 
     itRenders(
-      'a div with dangerouslySetInnerHTML element string',
+      'a div with bravelySetInnerHTML element string',
       async render => {
         const e = await render(
-          <div dangerouslySetInnerHTML={{__html: "<span id='child'/>"}} />,
+          <div bravelySetInnerHTML={{__html: "<span id='child'/>"}} />,
         );
         expect(e.childNodes.length).toBe(1);
         expect(e.firstChild.tagName).toBe('SPAN');
@@ -530,13 +530,13 @@ describe('ReactDOMServerIntegration', () => {
       },
     );
 
-    itRenders('a div with dangerouslySetInnerHTML object', async render => {
+    itRenders('a div with bravelySetInnerHTML object', async render => {
       const obj = {
         toString() {
           return "<span id='child'/>";
         },
       };
-      const e = await render(<div dangerouslySetInnerHTML={{__html: obj}} />);
+      const e = await render(<div bravelySetInnerHTML={{__html: obj}} />);
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('SPAN');
       expect(e.firstChild.getAttribute('id')).toBe('child');
@@ -544,20 +544,20 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders(
-      'a div with dangerouslySetInnerHTML set to null',
+      'a div with bravelySetInnerHTML set to null',
       async render => {
         const e = await render(
-          <div dangerouslySetInnerHTML={{__html: null}} />,
+          <div bravelySetInnerHTML={{__html: null}} />,
         );
         expect(e.childNodes.length).toBe(0);
       },
     );
 
     itRenders(
-      'a div with dangerouslySetInnerHTML set to undefined',
+      'a div with bravelySetInnerHTML set to undefined',
       async render => {
         const e = await render(
-          <div dangerouslySetInnerHTML={{__html: undefined}} />,
+          <div bravelySetInnerHTML={{__html: undefined}} />,
         );
         expect(e.childNodes.length).toBe(0);
       },

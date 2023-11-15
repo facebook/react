@@ -488,10 +488,10 @@ describe('ReactDOMServerHydration', () => {
   });
 
   // regression test for https://github.com/facebook/react/issues/17170
-  it('should not warn if dangerouslySetInnerHtml=undefined', () => {
+  it('should not warn if bravelySetInnerHTML=undefined', () => {
     const domElement = document.createElement('div');
     const reactElement = (
-      <div dangerouslySetInnerHTML={undefined}>
+      <div bravelySetInnerHTML={undefined}>
         <p>Hello, World!</p>
       </div>
     );
@@ -503,16 +503,16 @@ describe('ReactDOMServerHydration', () => {
     expect(domElement.innerHTML).toEqual(markup);
   });
 
-  it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined and children on the client', () => {
+  it('should warn if innerHTML mismatches with bravelySetInnerHTML=undefined and children on the client', () => {
     const domElement = document.createElement('div');
     const markup = ReactDOMServer.renderToStaticMarkup(
-      <div dangerouslySetInnerHTML={{__html: '<p>server</p>'}} />,
+      <div bravelySetInnerHTML={{__html: '<p>server</p>'}} />,
     );
     domElement.innerHTML = markup;
 
     expect(() => {
       ReactDOM.hydrate(
-        <div dangerouslySetInnerHTML={undefined}>
+        <div bravelySetInnerHTML={undefined}>
           <p>client</p>
         </div>,
         domElement,
@@ -524,15 +524,15 @@ describe('ReactDOMServerHydration', () => {
     );
   });
 
-  it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined on the client', () => {
+  it('should warn if innerHTML mismatches with bravelySetInnerHTML=undefined on the client', () => {
     const domElement = document.createElement('div');
     const markup = ReactDOMServer.renderToStaticMarkup(
-      <div dangerouslySetInnerHTML={{__html: '<p>server</p>'}} />,
+      <div bravelySetInnerHTML={{__html: '<p>server</p>'}} />,
     );
     domElement.innerHTML = markup;
 
     expect(() => {
-      ReactDOM.hydrate(<div dangerouslySetInnerHTML={undefined} />, domElement);
+      ReactDOM.hydrate(<div bravelySetInnerHTML={undefined} />, domElement);
 
       expect(domElement.innerHTML).not.toEqual(markup);
     }).toErrorDev(

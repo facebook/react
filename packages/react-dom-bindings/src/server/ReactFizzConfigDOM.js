@@ -1228,7 +1228,7 @@ function pushAttribute(
     }
     case 'defaultValue':
     case 'defaultChecked': // These shouldn't be set as attributes on generic HTML elements.
-    case 'innerHTML': // Must use dangerouslySetInnerHTML instead.
+    case 'innerHTML': // Must use bravelySetInnerHTML instead.
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
       // Ignored. These are built-in to React on the client.
@@ -1450,13 +1450,13 @@ function pushInnerHTML(
   if (innerHTML != null) {
     if (children != null) {
       throw new Error(
-        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+        'Can only set one of `children` or `props.bravelySetInnerHTML`.',
       );
     }
 
     if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
       throw new Error(
-        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        '`props.bravelySetInnerHTML` must be in the form `{__html: ...}`. ' +
           'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
           'for more information.',
       );
@@ -1548,7 +1548,7 @@ function pushStartSelect(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           // TODO: This doesn't really make sense for select since it can't use the controlled
           // value in the innerHTML.
           innerHTML = propValue;
@@ -1634,7 +1634,7 @@ function pushStartOption(
             }
           }
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
         case 'value':
@@ -1760,7 +1760,7 @@ function pushStartForm(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
         case 'action':
@@ -1900,10 +1900,10 @@ function pushInput(
       }
       switch (propKey) {
         case 'children':
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           throw new Error(
             `${'input'} is a self-closing tag and must neither have \`children\` nor ` +
-              'use `dangerouslySetInnerHTML`.',
+              'use `bravelySetInnerHTML`.',
           );
         case 'name':
           name = propValue;
@@ -2038,7 +2038,7 @@ function pushStartButton(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
         case 'name':
@@ -2147,9 +2147,9 @@ function pushStartTextArea(
         case 'defaultValue':
           defaultValue = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           throw new Error(
-            '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
+            '`bravelySetInnerHTML` does not make sense on <textarea>.',
           );
         default:
           pushAttribute(target, propKey, propValue);
@@ -2451,10 +2451,10 @@ function pushLinkImpl(
       }
       switch (propKey) {
         case 'children':
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           throw new Error(
             `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
-              'use `dangerouslySetInnerHTML`.',
+              'use `bravelySetInnerHTML`.',
           );
         default:
           pushAttribute(target, propKey, propValue);
@@ -2604,7 +2604,7 @@ function pushStyleImpl(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
         default:
@@ -2650,7 +2650,7 @@ function pushStyleContents(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
       }
@@ -2834,10 +2834,10 @@ function pushSelfClosing(
       }
       switch (propKey) {
         case 'children':
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           throw new Error(
             `${tag} is a self-closing tag and must neither have \`children\` nor ` +
-              'use `dangerouslySetInnerHTML`.',
+              'use `bravelySetInnerHTML`.',
           );
         default:
           pushAttribute(target, propKey, propValue);
@@ -2864,9 +2864,9 @@ function pushStartMenuItem(
       }
       switch (propKey) {
         case 'children':
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           throw new Error(
-            'menuitems cannot have `children` nor `dangerouslySetInnerHTML`.',
+            'menuitems cannot have `children` nor `bravelySetInnerHTML`.',
           );
         default:
           pushAttribute(target, propKey, propValue);
@@ -2968,7 +2968,7 @@ function pushTitleImpl(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
         default:
@@ -3015,9 +3015,9 @@ function pushStartTitle(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           throw new Error(
-            '`dangerouslySetInnerHTML` does not make sense on <title>.',
+            '`bravelySetInnerHTML` does not make sense on <title>.',
           );
         default:
           pushAttribute(target, propKey, propValue);
@@ -3220,7 +3220,7 @@ function pushScriptImpl(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
         default:
@@ -3241,7 +3241,7 @@ function pushScriptImpl(
           : 'something unexpected for children';
       console.error(
         'A script element was rendered with %s. If script element has children it must be a single string.' +
-          ' Consider using dangerouslySetInnerHTML or passing a plain string as children.',
+          ' Consider using bravelySetInnerHTML or passing a plain string as children.',
         descriptiveStatement,
       );
     }
@@ -3274,7 +3274,7 @@ function pushStartGenericElement(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
         default:
@@ -3315,7 +3315,7 @@ function pushStartCustomElement(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
         case 'style':
@@ -3386,7 +3386,7 @@ function pushStartPreformattedElement(
         case 'children':
           children = propValue;
           break;
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           innerHTML = propValue;
           break;
         default:
@@ -3413,13 +3413,13 @@ function pushStartPreformattedElement(
   if (innerHTML != null) {
     if (children != null) {
       throw new Error(
-        'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+        'Can only set one of `children` or `props.bravelySetInnerHTML`.',
       );
     }
 
     if (typeof innerHTML !== 'object' || !('__html' in innerHTML)) {
       throw new Error(
-        '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        '`props.bravelySetInnerHTML` must be in the form `{__html: ...}`. ' +
           'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
           'for more information.',
       );
@@ -4861,10 +4861,10 @@ function writeStyleResourceDependencyInJS(
           break;
         }
         case 'children':
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           throw new Error(
             `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
-              'use `dangerouslySetInnerHTML`.',
+              'use `bravelySetInnerHTML`.',
           );
         default:
           writeStyleResourceAttributeInJS(destination, propKey, propValue);
@@ -4891,7 +4891,7 @@ function writeStyleResourceAttributeInJS(
   switch (name) {
     // Reserved names
     case 'innerHTML':
-    case 'dangerouslySetInnerHTML':
+    case 'bravelySetInnerHTML':
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
     case 'style':
@@ -5054,10 +5054,10 @@ function writeStyleResourceDependencyInAttr(
           break;
         }
         case 'children':
-        case 'dangerouslySetInnerHTML':
+        case 'bravelySetInnerHTML':
           throw new Error(
             `${'link'} is a self-closing tag and must neither have \`children\` nor ` +
-              'use `dangerouslySetInnerHTML`.',
+              'use `bravelySetInnerHTML`.',
           );
         default:
           writeStyleResourceAttributeInAttr(destination, propKey, propValue);
@@ -5084,7 +5084,7 @@ function writeStyleResourceAttributeInAttr(
   switch (name) {
     // Reserved names
     case 'innerHTML':
-    case 'dangerouslySetInnerHTML':
+    case 'bravelySetInnerHTML':
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
     case 'style':

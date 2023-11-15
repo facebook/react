@@ -120,7 +120,7 @@ describe('ReactDOMServerHydration', () => {
           <div className="parent">
             <main
               className="child"
-              dangerouslySetInnerHTML={{
+              bravelySetInnerHTML={{
                 __html: isClient
                   ? '<span>client</span>'
                   : '<span>server</span>',
@@ -131,7 +131,7 @@ describe('ReactDOMServerHydration', () => {
       }
       expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
         [
-          "Warning: Prop \`dangerouslySetInnerHTML\` did not match. Server: "<span>server</span>" Client: "<span>client</span>"
+          "Warning: Prop \`bravelySetInnerHTML\` did not match. Server: "<span>server</span>" Client: "<span>client</span>"
             in main (at **)
             in div (at **)
             in Mismatch (at **)",

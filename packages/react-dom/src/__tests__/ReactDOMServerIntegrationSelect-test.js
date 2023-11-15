@@ -132,14 +132,14 @@ describe('ReactDOMServerIntegrationSelect', () => {
   });
 
   itRenders(
-    'a select with options that use dangerouslySetInnerHTML',
+    'a select with options that use bravelySetInnerHTML',
     async render => {
       const e = await render(
         <select defaultValue="baz" value="bar" readOnly={true}>
           <option
             id="foo"
             value="foo"
-            dangerouslySetInnerHTML={{
+            bravelySetInnerHTML={{
               __html: 'Foo',
             }}>
             {undefined}
@@ -147,14 +147,14 @@ describe('ReactDOMServerIntegrationSelect', () => {
           <option
             id="bar"
             value="bar"
-            dangerouslySetInnerHTML={{
+            bravelySetInnerHTML={{
               __html: 'Bar',
             }}>
             {null}
           </option>
           <option
             id="baz"
-            dangerouslySetInnerHTML={{
+            bravelySetInnerHTML={{
               __html: 'Baz', // This warns because no value prop is passed.
             }}
           />
@@ -166,14 +166,14 @@ describe('ReactDOMServerIntegrationSelect', () => {
   );
 
   itThrowsWhenRendering(
-    'a select with option that uses dangerouslySetInnerHTML and 0 as child',
+    'a select with option that uses bravelySetInnerHTML and 0 as child',
     async render => {
       await render(
         <select defaultValue="baz" value="foo" readOnly={true}>
           <option
             id="foo"
             value="foo"
-            dangerouslySetInnerHTML={{
+            bravelySetInnerHTML={{
               __html: 'Foo',
             }}>
             {0}
@@ -182,18 +182,18 @@ describe('ReactDOMServerIntegrationSelect', () => {
         1,
       );
     },
-    'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+    'Can only set one of `children` or `props.bravelySetInnerHTML`.',
   );
 
   itThrowsWhenRendering(
-    'a select with option that uses dangerouslySetInnerHTML and empty string as child',
+    'a select with option that uses bravelySetInnerHTML and empty string as child',
     async render => {
       await render(
         <select defaultValue="baz" value="foo" readOnly={true}>
           <option
             id="foo"
             value="foo"
-            dangerouslySetInnerHTML={{
+            bravelySetInnerHTML={{
               __html: 'Foo',
             }}>
             {''}
@@ -202,7 +202,7 @@ describe('ReactDOMServerIntegrationSelect', () => {
         1,
       );
     },
-    'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+    'Can only set one of `children` or `props.bravelySetInnerHTML`.',
   );
 
   itRenders(

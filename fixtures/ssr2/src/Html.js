@@ -18,13 +18,13 @@ export default function Html({assets, children, title}) {
       </head>
       <body>
         <noscript
-          dangerouslySetInnerHTML={{
+          bravelySetInnerHTML={{
             __html: `<b>Enable JavaScript to run this app.</b>`,
           }}
         />
         {children}
         <script
-          dangerouslySetInnerHTML={{
+          bravelySetInnerHTML={{
             __html: `assetManifest = ${JSON.stringify(assets)};`,
           }}
         />

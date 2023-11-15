@@ -511,7 +511,7 @@ describe('ReactDOMServer', () => {
               <img src="foo-bar.jpg" />
             </div>,
           );
-          return <div dangerouslySetInnerHTML={{__html: staticContent}} />;
+          return <div bravelySetInnerHTML={{__html: staticContent}} />;
         }
       }
 

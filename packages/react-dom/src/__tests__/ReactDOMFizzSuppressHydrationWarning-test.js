@@ -664,7 +664,7 @@ describe('ReactDOMFizzServerHydrationWarning', () => {
         <div>
           <p
             suppressHydrationWarning={true}
-            dangerouslySetInnerHTML={{
+            bravelySetInnerHTML={{
               __html: isClient ? 'Client HTML' : 'Server HTML',
             }}
           />

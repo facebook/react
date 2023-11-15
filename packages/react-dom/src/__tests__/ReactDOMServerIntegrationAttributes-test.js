@@ -351,11 +351,11 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('key')).toBe(null);
       });
 
-      itRenders('no dangerouslySetInnerHTML attribute', async render => {
+      itRenders('no bravelySetInnerHTML attribute', async render => {
         const e = await render(
-          <div dangerouslySetInnerHTML={{__html: '<foo />'}} />,
+          <div bravelySetInnerHTML={{__html: '<foo />'}} />,
         );
-        expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
+        expect(e.getAttribute('bravelySetInnerHTML')).toBe(null);
       });
 
       itRenders('no suppressContentEditableWarning attribute', async render => {

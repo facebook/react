@@ -12,12 +12,12 @@
 const React = require('react');
 const ReactDOM = require('react-dom');
 
-describe('dangerouslySetInnerHTML', () => {
+describe('bravelySetInnerHTML', () => {
   describe('when the node has innerHTML property', () => {
     it('sets innerHTML on it', () => {
       const container = document.createElement('div');
       const node = ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: '<h1>Hello</h1>'}} />,
+        <div bravelySetInnerHTML={{__html: '<h1>Hello</h1>'}} />,
         container,
       );
       expect(node.innerHTML).toBe('<h1>Hello</h1>');
@@ -63,7 +63,7 @@ describe('dangerouslySetInnerHTML', () => {
         'svg',
       );
       ReactDOM.render(
-        <g dangerouslySetInnerHTML={{__html: html}} />,
+        <g bravelySetInnerHTML={{__html: html}} />,
         container,
       );
       const circle = container.firstChild.firstChild;
@@ -80,13 +80,13 @@ describe('dangerouslySetInnerHTML', () => {
         'svg',
       );
       ReactDOM.render(
-        <g dangerouslySetInnerHTML={{__html: firstHtml}} />,
+        <g bravelySetInnerHTML={{__html: firstHtml}} />,
         container,
       );
       const rect = container.firstChild.firstChild;
       expect(rect.tagName).toBe('rect');
       ReactDOM.render(
-        <g dangerouslySetInnerHTML={{__html: secondHtml}} />,
+        <g bravelySetInnerHTML={{__html: secondHtml}} />,
         container,
       );
       const circle = container.firstChild.firstChild;

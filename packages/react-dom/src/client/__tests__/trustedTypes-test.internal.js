@@ -53,7 +53,7 @@ describe('when Trusted Types are available in global object', () => {
     delete window.trustedTypes;
   });
 
-  it('should not stringify trusted values for dangerouslySetInnerHTML', () => {
+  it('should not stringify trusted values for bravelySetInnerHTML', () => {
     const innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
       Element.prototype,
       'innerHTML',
@@ -70,7 +70,7 @@ describe('when Trusted Types are available in global object', () => {
         },
       });
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: ttObject1}} />,
+        <div bravelySetInnerHTML={{__html: ttObject1}} />,
         container,
       );
       expect(container.innerHTML).toBe('<div><b>Hi</b></div>');
@@ -80,7 +80,7 @@ describe('when Trusted Types are available in global object', () => {
 
       innerHTMLCalls.length = 0;
       ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: ttObject2}} />,
+        <div bravelySetInnerHTML={{__html: ttObject2}} />,
         container,
       );
       expect(container.innerHTML).toBe('<div><b>Bye</b></div>');
@@ -182,7 +182,7 @@ describe('when Trusted Types are available in global object', () => {
     }
   });
 
-  describe('dangerouslySetInnerHTML in svg elements in Internet Explorer', () => {
+  describe('bravelySetInnerHTML in svg elements in Internet Explorer', () => {
     let innerHTMLDescriptor;
 
     // simulate svg elements in Internet Explorer which don't have 'innerHTML' property
@@ -212,17 +212,17 @@ describe('when Trusted Types are available in global object', () => {
     it('should log a warning', () => {
       class Component extends React.Component {
         render() {
-          return <svg dangerouslySetInnerHTML={{__html: 'unsafe html'}} />;
+          return <svg bravelySetInnerHTML={{__html: 'unsafe html'}} />;
         }
       }
       expect(() => {
         ReactDOM.render(<Component />, container);
       }).toErrorDev(
-        "Warning: Using 'dangerouslySetInnerHTML' in an svg element with " +
+        "Warning: Using 'bravelySetInnerHTML' in an svg element with " +
           'Trusted Types enabled in an Internet Explorer will cause ' +
           'the trusted value to be converted to string. Assigning string ' +
           "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
-          "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
+          "You can try to wrap your svg element inside a div and use 'bravelySetInnerHTML' " +
           'on the enclosing div instead.',
       );
       expect(container.innerHTML).toBe('<svg>unsafe html</svg>');

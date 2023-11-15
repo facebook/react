@@ -108,7 +108,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
     if (lowerCasedName === 'innerhtml') {
       console.error(
         'Directly setting property `innerHTML` is not permitted. ' +
-          'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
+          'For more information, lookup documentation on `bravelySetInnerHTML`.',
       );
       warnedProperties[name] = true;
       return true;
@@ -179,7 +179,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
     // Now that we've validated casing, do not validate
     // data types for reserved props
     switch (name) {
-      case 'dangerouslySetInnerHTML':
+      case 'bravelySetInnerHTML':
       case 'children':
       case 'style':
       case 'suppressContentEditableWarning':

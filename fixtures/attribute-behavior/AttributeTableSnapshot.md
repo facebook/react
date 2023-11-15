@@ -2298,55 +2298,55 @@
 | `d=(null)`| (initial)| `<null>` |
 | `d=(undefined)`| (initial)| `<null>` |
 
-## `dangerouslySetInnerHTML` (on `<div>` inside `<div>`)
+## `bravelySetInnerHTML` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `dangerouslySetInnerHTML=(string)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(empty string)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(array with string)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(empty array)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(object)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(numeric string)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(-1)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(0)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(integer)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(NaN)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(float)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(true)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(false)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(string 'true')`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(string 'false')`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(string 'on')`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(string 'off')`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(symbol)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(function)`| (changed, error, warning, ssr error)| `` |
-| `dangerouslySetInnerHTML=(null)`| (initial)| `<null>` |
-| `dangerouslySetInnerHTML=(undefined)`| (initial)| `<null>` |
+| `bravelySetInnerHTML=(string)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(empty string)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(array with string)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(empty array)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(object)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(numeric string)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(-1)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(0)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(integer)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(NaN)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(float)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(true)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(false)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(string 'true')`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(string 'false')`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(string 'on')`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(string 'off')`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(symbol)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(function)`| (changed, error, warning, ssr error)| `` |
+| `bravelySetInnerHTML=(null)`| (initial)| `<null>` |
+| `bravelySetInnerHTML=(undefined)`| (initial)| `<null>` |
 
-## `DangerouslySetInnerHTML` (on `<div>` inside `<div>`)
+## `bravelySetInnerHTML` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `DangerouslySetInnerHTML=(string)`| (changed, warning)| `"a string"` |
-| `DangerouslySetInnerHTML=(empty string)`| (changed, warning)| `<empty string>` |
-| `DangerouslySetInnerHTML=(array with string)`| (changed, warning)| `"string"` |
-| `DangerouslySetInnerHTML=(empty array)`| (changed, warning)| `<empty string>` |
-| `DangerouslySetInnerHTML=(object)`| (changed, warning)| `"result of toString()"` |
-| `DangerouslySetInnerHTML=(numeric string)`| (changed, warning)| `"42"` |
-| `DangerouslySetInnerHTML=(-1)`| (changed, warning)| `"-1"` |
-| `DangerouslySetInnerHTML=(0)`| (changed, warning)| `"0"` |
-| `DangerouslySetInnerHTML=(integer)`| (changed, warning)| `"1"` |
-| `DangerouslySetInnerHTML=(NaN)`| (changed, warning)| `"NaN"` |
-| `DangerouslySetInnerHTML=(float)`| (changed, warning)| `"99.99"` |
-| `DangerouslySetInnerHTML=(true)`| (initial, warning)| `<null>` |
-| `DangerouslySetInnerHTML=(false)`| (initial, warning)| `<null>` |
-| `DangerouslySetInnerHTML=(string 'true')`| (changed, warning)| `"true"` |
-| `DangerouslySetInnerHTML=(string 'false')`| (changed, warning)| `"false"` |
-| `DangerouslySetInnerHTML=(string 'on')`| (changed, warning)| `"on"` |
-| `DangerouslySetInnerHTML=(string 'off')`| (changed, warning)| `"off"` |
-| `DangerouslySetInnerHTML=(symbol)`| (initial, warning)| `<null>` |
-| `DangerouslySetInnerHTML=(function)`| (initial, warning)| `<null>` |
-| `DangerouslySetInnerHTML=(null)`| (initial, warning)| `<null>` |
-| `DangerouslySetInnerHTML=(undefined)`| (initial, warning)| `<null>` |
+| `bravelySetInnerHTML=(string)`| (changed, warning)| `"a string"` |
+| `bravelySetInnerHTML=(empty string)`| (changed, warning)| `<empty string>` |
+| `bravelySetInnerHTML=(array with string)`| (changed, warning)| `"string"` |
+| `bravelySetInnerHTML=(empty array)`| (changed, warning)| `<empty string>` |
+| `bravelySetInnerHTML=(object)`| (changed, warning)| `"result of toString()"` |
+| `bravelySetInnerHTML=(numeric string)`| (changed, warning)| `"42"` |
+| `bravelySetInnerHTML=(-1)`| (changed, warning)| `"-1"` |
+| `bravelySetInnerHTML=(0)`| (changed, warning)| `"0"` |
+| `bravelySetInnerHTML=(integer)`| (changed, warning)| `"1"` |
+| `bravelySetInnerHTML=(NaN)`| (changed, warning)| `"NaN"` |
+| `bravelySetInnerHTML=(float)`| (changed, warning)| `"99.99"` |
+| `bravelySetInnerHTML=(true)`| (initial, warning)| `<null>` |
+| `bravelySetInnerHTML=(false)`| (initial, warning)| `<null>` |
+| `bravelySetInnerHTML=(string 'true')`| (changed, warning)| `"true"` |
+| `bravelySetInnerHTML=(string 'false')`| (changed, warning)| `"false"` |
+| `bravelySetInnerHTML=(string 'on')`| (changed, warning)| `"on"` |
+| `bravelySetInnerHTML=(string 'off')`| (changed, warning)| `"off"` |
+| `bravelySetInnerHTML=(symbol)`| (initial, warning)| `<null>` |
+| `bravelySetInnerHTML=(function)`| (initial, warning)| `<null>` |
+| `bravelySetInnerHTML=(null)`| (initial, warning)| `<null>` |
+| `bravelySetInnerHTML=(undefined)`| (initial, warning)| `<null>` |
 
 ## `data` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |

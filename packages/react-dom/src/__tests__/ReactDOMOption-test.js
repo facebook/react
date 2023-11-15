@@ -169,8 +169,8 @@ describe('ReactDOMOption', () => {
     expect(node.value).toBe('hello');
   });
 
-  it('should be able to use dangerouslySetInnerHTML on option', () => {
-    const stub = <option dangerouslySetInnerHTML={{__html: 'foobar'}} />;
+  it('should be able to use bravelySetInnerHTML on option', () => {
+    const stub = <option bravelySetInnerHTML={{__html: 'foobar'}} />;
     let node;
     expect(() => {
       node = ReactTestUtils.renderIntoDocument(stub);
