@@ -353,7 +353,7 @@ class InferenceState {
           effect = Effect.Mutate;
         } else {
           CompilerError.throwInvalidReact({
-            reason: `This mutates a variable after it was passed to React, which means that React cannot observe changes to it`,
+            reason: `This mutates a global or a variable after it was passed to React, which means that React cannot observe changes to it`,
             description:
               place.identifier.name !== null
                 ? `Found mutation of ${place.identifier.name}`
@@ -370,7 +370,7 @@ class InferenceState {
           valueKind !== ValueKind.Context
         ) {
           CompilerError.throwInvalidReact({
-            reason: `This mutates a variable after it was passed to React, which means that React cannot observe changes to it`,
+            reason: `This mutates a global or a variable after it was passed to React, which means that React cannot observe changes to it`,
             description:
               place.identifier.name !== null
                 ? `Found mutation of ${place.identifier.name}`
