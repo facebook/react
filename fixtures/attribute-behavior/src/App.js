@@ -1,15 +1,8 @@
 import React from 'react';
-import {createElement} from 'glamor/react'; // eslint-disable-line
-/* @jsx createElement */
 
 import {MultiGrid, AutoSizer} from 'react-virtualized';
 import 'react-virtualized/styles.css';
 import FileSaver from 'file-saver';
-
-import {
-  inject as injectErrorOverlay,
-  uninject as uninjectErrorOverlay,
-} from 'react-error-overlay/lib/overlay';
 
 import attributes from './attributes';
 
@@ -444,8 +437,6 @@ function prepareState(initGlobals) {
   const table = new Map();
   const rowPatternHashes = new Map();
 
-  // Disable error overlay while testing each attribute
-  uninjectErrorOverlay();
   for (let attribute of attributes) {
     const results = new Map();
     let hasSameBehaviorForAll = true;
@@ -479,9 +470,6 @@ function prepareState(initGlobals) {
     rowPatternHashes.set(rowPatternHash, rowGroup);
     table.set(attribute, row);
   }
-
-  // Renable error overlay
-  injectErrorOverlay();
 
   return {
     table,
@@ -829,7 +817,7 @@ class App extends React.Component {
     });
   }
 
-  componentWillUpdate(nextProps, nextState) {
+  UNSAFE_componentWillUpdate(nextProps, nextState) {
     if (
       nextState.sortOrder !== this.state.sortOrder ||
       nextState.filter !== this.state.filter ||
