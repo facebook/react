@@ -16,11 +16,11 @@ import type {
 } from '../ReactServerStreamConfigFB';
 
 export interface Destination {
+  beginWriting(): void;
   write(chunk: Chunk | PrecomputedChunk | BinaryChunk): void;
+  completeWriting(): void;
+  flushBuffered(): void;
   close(): void;
-  flush(): void;
-  onStart(): void;
-  onComplete(): void;
   onError(error: mixed): void;
 }
 
@@ -28,11 +28,8 @@ export function scheduleWork(callback: () => void) {
   callback();
 }
 
-export function flushBuffered(destination: Destination) {
-  destination.flush();
-}
 export function beginWriting(destination: Destination) {
-  destination.onStart();
+  destination.beginWriting();
 }
 
 export function writeChunk(
@@ -51,7 +48,11 @@ export function writeChunkAndReturn(
 }
 
 export function completeWriting(destination: Destination) {
-  destination.onComplete();
+  destination.completeWriting();
+}
+
+export function flushBuffered(destination: Destination) {
+  destination.flushBuffered();
 }
 
 export function close(destination: Destination) {

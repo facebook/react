@@ -31,21 +31,29 @@ let Suspense;
 let registerClientReference;
 
 class Destination {
+  #buffer = '';
+  #controller = null;
   constructor() {
     const self = this;
     this.stream = new ReadableStream({
       start(controller) {
-        self._controller = controller;
+        self.#controller = controller;
       },
     });
   }
   write(chunk) {
-    this._controller.enqueue(chunk);
+    this.#buffer += chunk;
+  }
+  beginWriting() {}
+  completeWriting() {}
+  flushBuffered() {
+    if (!this.#controller) {
+      throw new Error('Expected a controller.');
+    }
+    this.#controller.enqueue(this.#buffer);
+    this.#buffer = '';
   }
   close() {}
-  flush() {}
-  onStart() {}
-  onComplete() {}
   onError() {}
 }
 
