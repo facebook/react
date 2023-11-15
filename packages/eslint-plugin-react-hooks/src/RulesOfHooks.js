@@ -485,6 +485,17 @@ export default {
             // Pick a special message depending on the scope this hook was
             // called in.
             if (isDirectlyInsideComponentOrHook) {
+              // Report an error if the hook is called inside an async function.
+              const isAsyncFunction = codePathNode.async;
+              if (isAsyncFunction) {
+                context.report({
+                  node: hook,
+                  message:
+                    `React Hook "${context.getSource(hook)}" cannot be ` +
+                    'called in an async function.',
+                });
+              }
+
               // Report an error if a hook does not reach all finalizing code
               // path segments.
               //

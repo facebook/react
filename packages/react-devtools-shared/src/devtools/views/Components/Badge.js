@@ -11,7 +11,7 @@ import * as React from 'react';
 import {Fragment} from 'react';
 import styles from './Badge.css';
 
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/frontend/types';
 
 type Props = {
   className?: string,

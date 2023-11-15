@@ -177,7 +177,7 @@ export default {
         if (init == null) {
           return false;
         }
-        while (init.type === 'TSAsExpression') {
+        while (init.type === 'TSAsExpression' || init.type === 'AsExpression') {
           init = init.expression;
         }
         // Detect primitive constants
@@ -1161,7 +1161,12 @@ export default {
       const callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
-      const declaredDependenciesNode = node.arguments[callbackIndex + 1];
+      const maybeNode = node.arguments[callbackIndex + 1];
+      const declaredDependenciesNode =
+        maybeNode &&
+        !(maybeNode.type === 'Identifier' && maybeNode.name === 'undefined')
+          ? maybeNode
+          : undefined;
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
       // Check whether a callback is supplied. If there is no callback supplied
@@ -1520,7 +1525,7 @@ function getConstructionExpressionType(node) {
       }
       return null;
     case 'TypeCastExpression':
-      return getConstructionExpressionType(node.expression);
+    case 'AsExpression':
     case 'TSAsExpression':
       return getConstructionExpressionType(node.expression);
   }

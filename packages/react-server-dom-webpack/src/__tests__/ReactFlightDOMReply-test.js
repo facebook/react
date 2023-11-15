@@ -23,10 +23,16 @@ let ReactServerDOMClient;
 describe('ReactFlightDOMReply', () => {
   beforeEach(() => {
     jest.resetModules();
+    // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.browser'),
+    );
     const WebpackMock = require('./utils/WebpackMock');
     // serverExports = WebpackMock.serverExports;
     webpackServerMap = WebpackMock.webpackServerMap;
     ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
+    jest.resetModules();
     ReactServerDOMClient = require('react-server-dom-webpack/client');
   });
 
@@ -224,5 +230,15 @@ describe('ReactFlightDOMReply', () => {
     expect(s2.size).toBe(2);
     expect(s2.has('hi')).toBe(true);
     expect(s2).toEqual(s);
+  });
+
+  it('does not hang indefinitely when calling decodeReply with FormData', async () => {
+    let error;
+    try {
+      await ReactServerDOMServer.decodeReply(new FormData(), webpackServerMap);
+    } catch (e) {
+      error = e;
+    }
+    expect(error.message).toBe('Connection closed.');
   });
 });

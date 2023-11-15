@@ -28,11 +28,11 @@ import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 
 declare var $$$config: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
-export opaque type ResponseState = mixed;
-export opaque type Resources = mixed;
+export opaque type RenderState = mixed;
+export opaque type ResumableState = mixed;
 export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
-export opaque type SuspenseBoundaryID = mixed;
+export opaque type HeadersDescriptor = mixed;
 export type {TransitionStatus};
 
 export const isPrimaryRenderer = false;
@@ -40,10 +40,9 @@ export const isPrimaryRenderer = false;
 export const supportsRequestStorage = false;
 export const requestStorage: AsyncLocalStorage<Request> = (null: any);
 
+export const resetResumableState = $$$config.resetResumableState;
+export const completeResumableState = $$$config.completeResumableState;
 export const getChildFormatContext = $$$config.getChildFormatContext;
-export const UNINITIALIZED_SUSPENSE_BOUNDARY_ID =
-  $$$config.UNINITIALIZED_SUSPENSE_BOUNDARY_ID;
-export const assignSuspenseBoundaryID = $$$config.assignSuspenseBoundaryID;
 export const makeId = $$$config.makeId;
 export const pushTextInstance = $$$config.pushTextInstance;
 export const pushStartInstance = $$$config.pushStartInstance;
@@ -53,6 +52,10 @@ export const pushStartCompletedSuspenseBoundary =
 export const pushEndCompletedSuspenseBoundary =
   $$$config.pushEndCompletedSuspenseBoundary;
 export const pushSegmentFinale = $$$config.pushSegmentFinale;
+export const pushFormStateMarkerIsMatching =
+  $$$config.pushFormStateMarkerIsMatching;
+export const pushFormStateMarkerIsNotMatching =
+  $$$config.pushFormStateMarkerIsNotMatching;
 export const writeCompletedRoot = $$$config.writeCompletedRoot;
 export const writePlaceholder = $$$config.writePlaceholder;
 export const writeStartCompletedSuspenseBoundary =
@@ -90,3 +93,4 @@ export const createBoundaryResources = $$$config.createBoundaryResources;
 export const setCurrentlyRenderingBoundaryResourcesTarget =
   $$$config.setCurrentlyRenderingBoundaryResourcesTarget;
 export const writeResourcesForBoundary = $$$config.writeResourcesForBoundary;
+export const emitEarlyPreloads = $$$config.emitEarlyPreloads;

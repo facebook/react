@@ -23,13 +23,13 @@ import type {SuspenseState, RetryQueue} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Wakeable} from 'shared/ReactTypes';
-import {isOffscreenManual} from './ReactFiberOffscreenComponent';
+import {isOffscreenManual} from './ReactFiberActivityComponent';
 import type {
   OffscreenState,
   OffscreenInstance,
   OffscreenQueue,
   OffscreenProps,
-} from './ReactFiberOffscreenComponent';
+} from './ReactFiberActivityComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {RootState} from './ReactFiberRoot';
@@ -54,7 +54,6 @@ import {
   enableFloat,
   enableLegacyHidden,
   enableHostSingletons,
-  diffInCommitPhase,
   alwaysThrottleRetries,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -210,7 +209,7 @@ import {
   OffscreenVisible,
   OffscreenDetached,
   OffscreenPassiveEffectsConnected,
-} from './ReactFiberOffscreenComponent';
+} from './ReactFiberActivityComponent';
 import {
   TransitionRoot,
   TransitionTracingMarker,
@@ -1697,6 +1696,7 @@ function detachFiberAfterEffects(fiber: Fiber) {
   fiber.stateNode = null;
 
   if (__DEV__) {
+    fiber._debugSource = null;
     fiber._debugOwner = null;
   }
 
@@ -1724,7 +1724,7 @@ function emptyPortalContainer(current: Fiber) {
     ...
   } = current.stateNode;
   const {containerInfo} = portal;
-  const emptyChildSet = createContainerChildSet(containerInfo);
+  const emptyChildSet = createContainerChildSet();
   replaceContainerChildren(containerInfo, emptyChildSet);
 }
 
@@ -2692,23 +2692,17 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
-            if (updatePayload !== null || diffInCommitPhase) {
-              try {
-                commitUpdate(
-                  finishedWork.stateNode,
-                  updatePayload,
-                  finishedWork.type,
-                  current.memoizedProps,
-                  finishedWork.memoizedProps,
-                  finishedWork,
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error,
-                );
-              }
+            try {
+              commitUpdate(
+                finishedWork.stateNode,
+                updatePayload,
+                finishedWork.type,
+                current.memoizedProps,
+                finishedWork.memoizedProps,
+                finishedWork,
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }
@@ -2776,23 +2770,17 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
-            if (updatePayload !== null || diffInCommitPhase) {
-              try {
-                commitUpdate(
-                  instance,
-                  updatePayload,
-                  type,
-                  oldProps,
-                  newProps,
-                  finishedWork,
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error,
-                );
-              }
+            try {
+              commitUpdate(
+                instance,
+                updatePayload,
+                type,
+                oldProps,
+                newProps,
+                finishedWork,
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }

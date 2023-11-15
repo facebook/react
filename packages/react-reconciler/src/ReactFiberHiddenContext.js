@@ -13,7 +13,10 @@ import type {Lanes} from './ReactFiberLane';
 
 import {createCursor, push, pop} from './ReactFiberStack';
 
-import {getRenderLanes, setRenderLanes} from './ReactFiberWorkLoop';
+import {
+  getEntangledRenderLanes,
+  setEntangledRenderLanes,
+} from './ReactFiberWorkLoop';
 import {NoLanes, mergeLanes} from './ReactFiberLane';
 
 // TODO: Remove `renderLanes` context in favor of hidden context
@@ -29,26 +32,28 @@ type HiddenContext = {
 // InvisibleParentContext that is currently managed by SuspenseContext.
 export const currentTreeHiddenStackCursor: StackCursor<HiddenContext | null> =
   createCursor(null);
-export const prevRenderLanesStackCursor: StackCursor<Lanes> =
+export const prevEntangledRenderLanesCursor: StackCursor<Lanes> =
   createCursor(NoLanes);
 
 export function pushHiddenContext(fiber: Fiber, context: HiddenContext): void {
-  const prevRenderLanes = getRenderLanes();
-  push(prevRenderLanesStackCursor, prevRenderLanes, fiber);
+  const prevEntangledRenderLanes = getEntangledRenderLanes();
+  push(prevEntangledRenderLanesCursor, prevEntangledRenderLanes, fiber);
   push(currentTreeHiddenStackCursor, context, fiber);
 
   // When rendering a subtree that's currently hidden, we must include all
   // lanes that would have rendered if the hidden subtree hadn't been deferred.
   // That is, in order to reveal content from hidden -> visible, we must commit
   // all the updates that we skipped when we originally hid the tree.
-  setRenderLanes(mergeLanes(prevRenderLanes, context.baseLanes));
+  setEntangledRenderLanes(
+    mergeLanes(prevEntangledRenderLanes, context.baseLanes),
+  );
 }
 
 export function reuseHiddenContextOnStack(fiber: Fiber): void {
   // This subtree is not currently hidden, so we don't need to add any lanes
   // to the render lanes. But we still need to push something to avoid a
   // context mismatch. Reuse the existing context on the stack.
-  push(prevRenderLanesStackCursor, getRenderLanes(), fiber);
+  push(prevEntangledRenderLanesCursor, getEntangledRenderLanes(), fiber);
   push(
     currentTreeHiddenStackCursor,
     currentTreeHiddenStackCursor.current,
@@ -58,10 +63,10 @@ export function reuseHiddenContextOnStack(fiber: Fiber): void {
 
 export function popHiddenContext(fiber: Fiber): void {
   // Restore the previous render lanes from the stack
-  setRenderLanes(prevRenderLanesStackCursor.current);
+  setEntangledRenderLanes(prevEntangledRenderLanesCursor.current);
 
   pop(currentTreeHiddenStackCursor, fiber);
-  pop(prevRenderLanesStackCursor, fiber);
+  pop(prevEntangledRenderLanesCursor, fiber);
 }
 
 export function isCurrentTreeHidden(): boolean {

@@ -461,10 +461,6 @@ describe('InspectedElement', () => {
     // This test causes an intermediate error to be logged but we can ignore it.
     jest.spyOn(console, 'error').mockImplementation(() => {});
 
-    // Wait for our check-for-updates poll to get the new data.
-    jest.runOnlyPendingTimers();
-    await Promise.resolve();
-
     // Clear the frontend cache to simulate DevTools being closed and re-opened.
     // The backend still thinks the most recently-inspected element is still cached,
     // so the frontend needs to tell it to resend a full value.
@@ -1072,7 +1068,6 @@ describe('InspectedElement', () => {
       await TestUtilsAct(async () => {
         await TestRendererAct(async () => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1227,7 +1222,6 @@ describe('InspectedElement', () => {
       await TestUtilsAct(async () => {
         await TestRendererAct(async () => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1309,7 +1303,6 @@ describe('InspectedElement', () => {
       await TestUtilsAct(async () => {
         await TestRendererAct(async () => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1470,9 +1463,8 @@ describe('InspectedElement', () => {
 
     async function loadPath(path) {
       await TestUtilsAct(async () => {
-        await TestRendererAct(async () => {
+        await TestRendererAct(() => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1597,9 +1589,8 @@ describe('InspectedElement', () => {
 
     async function loadPath(path) {
       await TestUtilsAct(async () => {
-        await TestRendererAct(async () => {
+        await TestRendererAct(() => {
           inspectElementPath(path);
-          jest.runOnlyPendingTimers();
         });
       });
 
@@ -1640,9 +1631,11 @@ describe('InspectedElement', () => {
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       {
         "nestedObject": {
-          "a": Dehydrated {
-            "preview_short": {…},
-            "preview_long": {b: {…}, value: 2},
+          "a": {
+            "b": {
+              "value": 2,
+            },
+            "value": 2,
           },
           "value": 2,
         },

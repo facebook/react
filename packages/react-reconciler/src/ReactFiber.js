@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactElement} from 'shared/ReactElementType';
+import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
@@ -18,7 +18,7 @@ import type {SuspenseInstance} from './ReactFiberConfig';
 import type {
   OffscreenProps,
   OffscreenInstance,
-} from './ReactFiberOffscreenComponent';
+} from './ReactFiberActivityComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
 import {
@@ -71,7 +71,7 @@ import {
   CacheComponent,
   TracingMarkerComponent,
 } from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberOffscreenComponent';
+import {OffscreenVisible} from './ReactFiberActivityComponent';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {
@@ -490,6 +490,7 @@ export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
   pendingProps: any,
+  source: null | Source,
   owner: null | Fiber,
   mode: TypeOfMode,
   lanes: Lanes,
@@ -643,6 +644,7 @@ export function createFiberFromTypeAndProps(
   fiber.lanes = lanes;
 
   if (__DEV__) {
+    fiber._debugSource = source;
     fiber._debugOwner = owner;
   }
 
@@ -654,8 +656,10 @@ export function createFiberFromElement(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
+  let source = null;
   let owner = null;
   if (__DEV__) {
+    source = element._source;
     owner = element._owner;
   }
   const type = element.type;
@@ -665,6 +669,7 @@ export function createFiberFromElement(
     type,
     key,
     pendingProps,
+    source,
     owner,
     mode,
     lanes,

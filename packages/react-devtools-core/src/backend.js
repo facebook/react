@@ -22,7 +22,7 @@ import {
 } from './cachedSettings';
 
 import type {BackendBridge} from 'react-devtools-shared/src/bridge';
-import type {ComponentFilter} from 'react-devtools-shared/src/types';
+import type {ComponentFilter} from 'react-devtools-shared/src/frontend/types';
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
 

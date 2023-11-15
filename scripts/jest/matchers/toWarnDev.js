@@ -69,16 +69,12 @@ const createMatcherFor = (consoleMethod, matcherName) =>
         (message.includes('\n    in ') || message.includes('\n    at '));
 
       const consoleSpy = (format, ...args) => {
+        // Ignore uncaught errors reported by jsdom
+        // and React addendums because they're too noisy.
         if (
-          // Ignore uncaught errors reported by jsdom
-          // and React addendums because they're too noisy.
-          (!logAllErrors &&
-            consoleMethod === 'error' &&
-            shouldIgnoreConsoleError(format, args)) ||
-          // Ignore error objects passed to console.error, which we sometimes
-          // use as a fallback behavior, like when reportError
-          // isn't available.
-          typeof format !== 'string'
+          !logAllErrors &&
+          consoleMethod === 'error' &&
+          shouldIgnoreConsoleError(format, args)
         ) {
           return;
         }

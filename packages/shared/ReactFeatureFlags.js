@@ -31,6 +31,8 @@ export const enableComponentStackLocations = true;
 
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
+export const enableFormActions = true;
+export const enableAsyncActions = true;
 
 // Not sure if www still uses this. We don't have a replacement but whatever we
 // replace it with will likely be different than what's already there, so we
@@ -82,7 +84,11 @@ export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableCacheElement = __EXPERIMENTAL__;
 export const enableFetchInstrumentation = true;
 
-export const enableFormActions = __EXPERIMENTAL__;
+export const enableBinaryFlight = __EXPERIMENTAL__;
+
+export const enableTaint = __EXPERIMENTAL__;
+
+export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableTransitionTracing = false;
 
@@ -114,12 +120,18 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = true;
 
-// Performance related test
-export const diffInCommitPhase = __EXPERIMENTAL__;
-
-export const enableAsyncActions = __EXPERIMENTAL__;
-
 export const alwaysThrottleRetries = true;
+
+export const useMicrotasksForSchedulingInFabric = false;
+
+export const passChildrenWhenCloningPersistedNodes = false;
+
+export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+
+/**
+ * Enables an expiration time for retry lanes to avoid starvation.
+ */
+export const enableRetryLaneExpiration = false;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -144,7 +156,7 @@ export const enableUseRefAccessWarning = false;
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const forceConcurrentByDefaultForTesting = false;
 
-export const enableUnifiedSyncLane = __EXPERIMENTAL__;
+export const enableUnifiedSyncLane = true;
 
 // Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
 export const allowConcurrentByDefault = false;
@@ -219,7 +231,7 @@ export const enableDebugTracing = false;
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableServerContext = true;
+export const enableServerContext = __EXPERIMENTAL__;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;

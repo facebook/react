@@ -61,11 +61,6 @@ export type RendererInspectionConfig = $ReadOnly<{
   ) => void,
 }>;
 
-const UPDATE_SIGNAL = {};
-if (__DEV__) {
-  Object.freeze(UPDATE_SIGNAL);
-}
-
 // Counter for uniquely identifying views.
 // % 10 === 1 means it is a rootTag.
 // % 2 === 0 means it is a Fabric tag.
@@ -235,16 +230,6 @@ export function getPublicInstance(instance: Instance): PublicInstance {
 export function prepareForCommit(containerInfo: Container): null | Object {
   // Noop
   return null;
-}
-
-export function prepareUpdate(
-  instance: Instance,
-  type: string,
-  oldProps: Props,
-  newProps: Props,
-  hostContext: HostContext,
-): null | Object {
-  return UPDATE_SIGNAL;
 }
 
 export function resetAfterCommit(containerInfo: Container): void {

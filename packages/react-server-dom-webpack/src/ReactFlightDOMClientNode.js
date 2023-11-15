@@ -11,7 +11,15 @@ import type {Thenable} from 'shared/ReactTypes.js';
 
 import type {Response} from 'react-client/src/ReactFlightClient';
 
-import type {SSRManifest} from 'react-client/src/ReactFlightClientConfig';
+import type {
+  SSRModuleMap,
+  ModuleLoading,
+} from 'react-client/src/ReactFlightClientConfig';
+
+type SSRManifest = {
+  moduleMap: SSRModuleMap,
+  moduleLoading: ModuleLoading,
+};
 
 import type {Readable} from 'stream';
 
@@ -22,6 +30,8 @@ import {
   processBinaryChunk,
   close,
 } from 'react-client/src/ReactFlightClient';
+
+import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
 
 function noServerCall() {
   throw new Error(
@@ -35,14 +45,24 @@ export function createServerReference<A: Iterable<any>, T>(
   id: any,
   callServer: any,
 ): (...A) => Promise<T> {
-  return noServerCall;
+  return createServerReferenceImpl(id, noServerCall);
 }
+
+export type Options = {
+  nonce?: string,
+};
 
 function createFromNodeStream<T>(
   stream: Readable,
-  moduleMap: $NonMaybeType<SSRManifest>,
+  ssrManifest: SSRManifest,
+  options?: Options,
 ): Thenable<T> {
-  const response: Response = createResponse(moduleMap, noServerCall);
+  const response: Response = createResponse(
+    ssrManifest.moduleMap,
+    ssrManifest.moduleLoading,
+    noServerCall,
+    options && typeof options.nonce === 'string' ? options.nonce : undefined,
+  );
   stream.on('data', chunk => {
     processBinaryChunk(response, chunk);
   });

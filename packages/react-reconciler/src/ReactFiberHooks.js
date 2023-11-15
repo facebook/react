@@ -13,6 +13,7 @@ import type {
   Usable,
   Thenable,
   RejectedThenable,
+  Awaited,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -41,6 +42,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   enableAsyncActions,
   enableFormActions,
+  enableUseDeferredValueInitialArg,
 } from 'shared/ReactFeatureFlags';
 import {
   REACT_CONTEXT_TYPE,
@@ -60,16 +62,17 @@ import {
   NoLane,
   SyncLane,
   OffscreenLane,
+  DeferredLane,
   NoLanes,
   isSubsetOfLanes,
   includesBlockingLane,
   includesOnlyNonUrgentLanes,
-  claimNextTransitionLane,
   mergeLanes,
   removeLanes,
   intersectLanes,
   isTransitionLane,
   markRootEntangled,
+  includesSomeLane,
 } from './ReactFiberLane';
 import {
   ContinuousEventPriority,
@@ -100,6 +103,7 @@ import {
   getWorkInProgressRootRenderLanes,
   scheduleUpdateOnFiber,
   requestUpdateLane,
+  requestDeferredLane,
   markSkippedUpdateLanes,
   isInvalidExecutionContextForEventFunction,
 } from './ReactFiberWorkLoop';
@@ -111,7 +115,10 @@ import {
   markWorkInProgressReceivedUpdate,
   checkIfWorkInProgressReceivedUpdate,
 } from './ReactFiberBeginWork';
-import {getIsHydrating} from './ReactFiberHydrationContext';
+import {
+  getIsHydrating,
+  tryToClaimNextHydratableFormMarkerInstance,
+} from './ReactFiberHydrationContext';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {
   markStateUpdateScheduled,
@@ -137,9 +144,14 @@ import {
 } from './ReactFiberThenable';
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
-import {requestAsyncActionContext} from './ReactFiberAsyncAction';
+import {
+  requestAsyncActionContext,
+  requestSyncActionContext,
+  peekEntangledActionLane,
+} from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
+import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -163,9 +175,11 @@ export type UpdateQueue<S, A> = {
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnUncachedGetSnapshot: void | true;
 let didWarnAboutUseWrappedInTryCatch;
+let didWarnAboutAsyncClientComponent;
 if (__DEV__) {
   didWarnAboutMismatchedHooksForComponent = new Set<string | null>();
   didWarnAboutUseWrappedInTryCatch = new Set<string | null>();
+  didWarnAboutAsyncClientComponent = new Set<string | null>();
 }
 
 export type Hook = {
@@ -370,6 +384,59 @@ function warnOnHookMismatchInDev(currentHookName: HookType): void {
   }
 }
 
+function warnIfAsyncClientComponent(
+  Component: Function,
+  componentDoesIncludeHooks: boolean,
+) {
+  if (__DEV__) {
+    // This dev-only check only works for detecting native async functions,
+    // not transpiled ones. There's also a prod check that we use to prevent
+    // async client components from crashing the app; the prod one works even
+    // for transpiled async functions. Neither mechanism is completely
+    // bulletproof but together they cover the most common cases.
+    const isAsyncFunction =
+      // $FlowIgnore[method-unbinding]
+      Object.prototype.toString.call(Component) === '[object AsyncFunction]';
+    if (isAsyncFunction) {
+      // Encountered an async Client Component. This is not yet supported,
+      // except in certain constrained cases, like during a route navigation.
+      const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
+      if (!didWarnAboutAsyncClientComponent.has(componentName)) {
+        didWarnAboutAsyncClientComponent.add(componentName);
+
+        // Check if this is a sync update. We use the "root" render lanes here
+        // because the "subtree" render lanes may include additional entangled
+        // lanes related to revealing previously hidden content.
+        const root = getWorkInProgressRoot();
+        const rootRenderLanes = getWorkInProgressRootRenderLanes();
+        if (root !== null && includesBlockingLane(root, rootRenderLanes)) {
+          console.error(
+            'async/await is not yet supported in Client Components, only ' +
+              'Server Components. This error is often caused by accidentally ' +
+              "adding `'use client'` to a module that was originally written " +
+              'for the server.',
+          );
+        } else {
+          // This is a concurrent (Transition, Retry, etc) render. We don't
+          // warn in these cases.
+          //
+          // However, Async Components are forbidden to include hooks, even
+          // during a transition, so let's check for that here.
+          //
+          // TODO: Add a corresponding warning to Server Components runtime.
+          if (componentDoesIncludeHooks) {
+            console.error(
+              'Hooks are not supported inside an async component. This ' +
+                "error is often caused by accidentally adding `'use client'` " +
+                'to a module that was originally written for the server.',
+            );
+          }
+        }
+      }
+    }
+  }
+}
+
 function throwInvalidHookError() {
   throw new Error(
     'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
@@ -554,19 +621,27 @@ export function renderWithHooks<Props, SecondArg>(
     }
   }
 
-  finishRenderingHooks(current, workInProgress);
+  finishRenderingHooks(current, workInProgress, Component);
 
   return children;
 }
 
-function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
+function finishRenderingHooks<Props, SecondArg>(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  Component: (p: Props, arg: SecondArg) => any,
+): void {
+  if (__DEV__) {
+    workInProgress._debugHookTypes = hookTypesDev;
+
+    const componentDoesIncludeHooks =
+      workInProgressHook !== null || thenableIndexCounter !== 0;
+    warnIfAsyncClientComponent(Component, componentDoesIncludeHooks);
+  }
+
   // We can assume the previous dispatcher is always this one, since we set it
   // at the beginning of the render phase and there's no re-entrance.
   ReactCurrentDispatcher.current = ContextOnlyDispatcher;
-
-  if (__DEV__) {
-    workInProgress._debugHookTypes = hookTypesDev;
-  }
 
   // This check uses currentHook so that it works the same in DEV and prod bundles.
   // hookTypesDev could catch more cases (e.g. context) but only in DEV bundles.
@@ -645,7 +720,13 @@ function finishRenderingHooks(current: Fiber | null, workInProgress: Fiber) {
     if (checkIfUseWrappedInTryCatch()) {
       const componentName =
         getComponentNameFromFiber(workInProgress) || 'Unknown';
-      if (!didWarnAboutUseWrappedInTryCatch.has(componentName)) {
+      if (
+        !didWarnAboutUseWrappedInTryCatch.has(componentName) &&
+        // This warning also fires if you suspend with `use` inside an
+        // async component. Since we warn for that above, we'll silence this
+        // second warning by checking here.
+        !didWarnAboutAsyncClientComponent.has(componentName)
+      ) {
         didWarnAboutUseWrappedInTryCatch.add(componentName);
         console.error(
           '`use` was called from inside a try/catch block. This is not allowed ' +
@@ -683,7 +764,7 @@ export function replaySuspendedComponentWithHooks<Props, SecondArg>(
     props,
     secondArg,
   );
-  finishRenderingHooks(current, workInProgress);
+  finishRenderingHooks(current, workInProgress, Component);
   return children;
 }
 
@@ -1448,7 +1529,8 @@ function mountSyncExternalStore<T>(
       );
     }
 
-    if (!includesBlockingLane(root, renderLanes)) {
+    const rootRenderLanes = getWorkInProgressRootRenderLanes();
+    if (!includesBlockingLane(root, rootRenderLanes)) {
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     }
   }
@@ -1724,14 +1806,27 @@ function updateOptimistic<S, A>(
   reducer: ?(S, A) => S,
 ): [S, (A) => void] {
   const hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(
+    hook,
+    ((currentHook: any): Hook),
+    passthrough,
+    reducer,
+  );
+}
 
+function updateOptimisticImpl<S, A>(
+  hook: Hook,
+  current: Hook | null,
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
   // Optimistic updates are always rebased on top of the latest value passed in
   // as an argument. It's called a passthrough because if there are no pending
   // updates, it will be returned as-is.
   //
-  // Reset the base state and memoized state to the passthrough. Future
-  // updates will be applied on top of this.
-  hook.baseState = hook.memoizedState = passthrough;
+  // Reset the base state to the passthrough. Future updates will be applied
+  // on top of this.
+  hook.baseState = passthrough;
 
   // If a reducer is not provided, default to the same one used by useState.
   const resolvedReducer: (S, A) => S =
@@ -1751,19 +1846,357 @@ function rerenderOptimistic<S, A>(
   // So instead of a forked re-render implementation that knows how to handle
   // render phase udpates, we can use the same implementation as during a
   // regular mount or update.
+  const hook = updateWorkInProgressHook();
 
   if (currentHook !== null) {
     // This is an update. Process the update queue.
-    return updateOptimistic(passthrough, reducer);
+    return updateOptimisticImpl(
+      hook,
+      ((currentHook: any): Hook),
+      passthrough,
+      reducer,
+    );
   }
 
   // This is a mount. No updates to process.
-  const hook = updateWorkInProgressHook();
-  // Reset the base state and memoized state to the passthrough. Future
-  // updates will be applied on top of this.
-  hook.baseState = hook.memoizedState = passthrough;
+
+  // Reset the base state to the passthrough. Future updates will be applied
+  // on top of this.
+  hook.baseState = passthrough;
   const dispatch = hook.queue.dispatch;
   return [passthrough, dispatch];
+}
+
+// useFormState actions run sequentially, because each action receives the
+// previous state as an argument. We store pending actions on a queue.
+type FormStateActionQueue<S, P> = {
+  // This is the most recent state returned from an action. It's updated as
+  // soon as the action finishes running.
+  state: Awaited<S>,
+  // A stable dispatch method, passed to the user.
+  dispatch: Dispatch<P>,
+  // This is the most recent action function that was rendered. It's updated
+  // during the commit phase.
+  action: (Awaited<S>, P) => S,
+  // This is a circular linked list of pending action payloads. It incudes the
+  // action that is currently running.
+  pending: FormStateActionQueueNode<P> | null,
+};
+
+type FormStateActionQueueNode<P> = {
+  payload: P,
+  // This is never null because it's part of a circular linked list.
+  next: FormStateActionQueueNode<P>,
+};
+
+function dispatchFormState<S, P>(
+  fiber: Fiber,
+  actionQueue: FormStateActionQueue<S, P>,
+  setState: Dispatch<S | Awaited<S>>,
+  payload: P,
+): void {
+  if (isRenderPhaseUpdate(fiber)) {
+    throw new Error('Cannot update form state while rendering.');
+  }
+  const last = actionQueue.pending;
+  if (last === null) {
+    // There are no pending actions; this is the first one. We can run
+    // it immediately.
+    const newLast: FormStateActionQueueNode<P> = {
+      payload,
+      next: (null: any), // circular
+    };
+    newLast.next = actionQueue.pending = newLast;
+
+    runFormStateAction(actionQueue, (setState: any), payload);
+  } else {
+    // There's already an action running. Add to the queue.
+    const first = last.next;
+    const newLast: FormStateActionQueueNode<P> = {
+      payload,
+      next: first,
+    };
+    actionQueue.pending = last.next = newLast;
+  }
+}
+
+function runFormStateAction<S, P>(
+  actionQueue: FormStateActionQueue<S, P>,
+  setState: Dispatch<S | Awaited<S>>,
+  payload: P,
+) {
+  const action = actionQueue.action;
+  const prevState = actionQueue.state;
+
+  // This is a fork of startTransition
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
+  const currentTransition = ReactCurrentBatchConfig.transition;
+  if (__DEV__) {
+    ReactCurrentBatchConfig.transition._updatedFibers = new Set();
+  }
+  try {
+    const returnValue = action(prevState, payload);
+    if (
+      returnValue !== null &&
+      typeof returnValue === 'object' &&
+      // $FlowFixMe[method-unbinding]
+      typeof returnValue.then === 'function'
+    ) {
+      const thenable = ((returnValue: any): Thenable<Awaited<S>>);
+
+      // Attach a listener to read the return state of the action. As soon as
+      // this resolves, we can run the next action in the sequence.
+      thenable.then(
+        (nextState: Awaited<S>) => {
+          actionQueue.state = nextState;
+          finishRunningFormStateAction(actionQueue, (setState: any));
+        },
+        () => finishRunningFormStateAction(actionQueue, (setState: any)),
+      );
+
+      const entangledResult = requestAsyncActionContext<S>(thenable, null);
+      setState((entangledResult: any));
+    } else {
+      // This is either `returnValue` or a thenable that resolves to
+      // `returnValue`, depending on whether we're inside an async action scope.
+      const entangledResult = requestSyncActionContext<S>(returnValue, null);
+      setState((entangledResult: any));
+
+      const nextState = ((returnValue: any): Awaited<S>);
+      actionQueue.state = nextState;
+      finishRunningFormStateAction(actionQueue, (setState: any));
+    }
+  } catch (error) {
+    // This is a trick to get the `useFormState` hook to rethrow the error.
+    // When it unwraps the thenable with the `use` algorithm, the error
+    // will be thrown.
+    const rejectedThenable: S = ({
+      then() {},
+      status: 'rejected',
+      reason: error,
+      // $FlowFixMe: Not sure why this doesn't work
+    }: RejectedThenable<Awaited<S>>);
+    setState(rejectedThenable);
+    finishRunningFormStateAction(actionQueue, (setState: any));
+  } finally {
+    ReactCurrentBatchConfig.transition = prevTransition;
+
+    if (__DEV__) {
+      if (prevTransition === null && currentTransition._updatedFibers) {
+        const updatedFibersCount = currentTransition._updatedFibers.size;
+        currentTransition._updatedFibers.clear();
+        if (updatedFibersCount > 10) {
+          console.warn(
+            'Detected a large number of updates inside startTransition. ' +
+              'If this is due to a subscription please re-write it to use React provided hooks. ' +
+              'Otherwise concurrent mode guarantees are off the table.',
+          );
+        }
+      }
+    }
+  }
+}
+
+function finishRunningFormStateAction<S, P>(
+  actionQueue: FormStateActionQueue<S, P>,
+  setState: Dispatch<S | Awaited<S>>,
+) {
+  // The action finished running. Pop it from the queue and run the next pending
+  // action, if there are any.
+  const last = actionQueue.pending;
+  if (last !== null) {
+    const first = last.next;
+    if (first === last) {
+      // This was the last action in the queue.
+      actionQueue.pending = null;
+    } else {
+      // Remove the first node from the circular queue.
+      const next = first.next;
+      last.next = next;
+
+      // Run the next action.
+      runFormStateAction(actionQueue, (setState: any), next.payload);
+    }
+  }
+}
+
+function formStateReducer<S>(oldState: S, newState: S): S {
+  return newState;
+}
+
+function mountFormState<S, P>(
+  action: (Awaited<S>, P) => S,
+  initialStateProp: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void] {
+  let initialState: Awaited<S> = initialStateProp;
+  if (getIsHydrating()) {
+    const root: FiberRoot = (getWorkInProgressRoot(): any);
+    const ssrFormState = root.formState;
+    // If a formState option was passed to the root, there are form state
+    // markers that we need to hydrate. These indicate whether the form state
+    // matches this hook instance.
+    if (ssrFormState !== null) {
+      const isMatching = tryToClaimNextHydratableFormMarkerInstance(
+        currentlyRenderingFiber,
+      );
+      if (isMatching) {
+        initialState = ssrFormState[0];
+      }
+    }
+  }
+
+  // State hook. The state is stored in a thenable which is then unwrapped by
+  // the `use` algorithm during render.
+  const stateHook = mountWorkInProgressHook();
+  stateHook.memoizedState = stateHook.baseState = initialState;
+  // TODO: Typing this "correctly" results in recursion limit errors
+  // const stateQueue: UpdateQueue<S | Awaited<S>, S | Awaited<S>> = {
+  const stateQueue = {
+    pending: null,
+    lanes: NoLanes,
+    dispatch: (null: any),
+    lastRenderedReducer: formStateReducer,
+    lastRenderedState: initialState,
+  };
+  stateHook.queue = stateQueue;
+  const setState: Dispatch<S | Awaited<S>> = (dispatchSetState.bind(
+    null,
+    currentlyRenderingFiber,
+    ((stateQueue: any): UpdateQueue<S | Awaited<S>, S | Awaited<S>>),
+  ): any);
+  stateQueue.dispatch = setState;
+
+  // Action queue hook. This is used to queue pending actions. The queue is
+  // shared between all instances of the hook. Similar to a regular state queue,
+  // but different because the actions are run sequentially, and they run in
+  // an event instead of during render.
+  const actionQueueHook = mountWorkInProgressHook();
+  const actionQueue: FormStateActionQueue<S, P> = {
+    state: initialState,
+    dispatch: (null: any), // circular
+    action,
+    pending: null,
+  };
+  actionQueueHook.queue = actionQueue;
+  const dispatch = (dispatchFormState: any).bind(
+    null,
+    currentlyRenderingFiber,
+    actionQueue,
+    setState,
+  );
+  actionQueue.dispatch = dispatch;
+
+  // Stash the action function on the memoized state of the hook. We'll use this
+  // to detect when the action function changes so we can update it in
+  // an effect.
+  actionQueueHook.memoizedState = action;
+
+  return [initialState, dispatch];
+}
+
+function updateFormState<S, P>(
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void] {
+  const stateHook = updateWorkInProgressHook();
+  const currentStateHook = ((currentHook: any): Hook);
+  return updateFormStateImpl(
+    stateHook,
+    currentStateHook,
+    action,
+    initialState,
+    permalink,
+  );
+}
+
+function updateFormStateImpl<S, P>(
+  stateHook: Hook,
+  currentStateHook: Hook,
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void] {
+  const [actionResult] = updateReducerImpl<S | Thenable<S>, S | Thenable<S>>(
+    stateHook,
+    currentStateHook,
+    formStateReducer,
+  );
+
+  // This will suspend until the action finishes.
+  const state: Awaited<S> =
+    typeof actionResult === 'object' &&
+    actionResult !== null &&
+    // $FlowFixMe[method-unbinding]
+    typeof actionResult.then === 'function'
+      ? useThenable(((actionResult: any): Thenable<Awaited<S>>))
+      : (actionResult: any);
+
+  const actionQueueHook = updateWorkInProgressHook();
+  const actionQueue = actionQueueHook.queue;
+  const dispatch = actionQueue.dispatch;
+
+  // Check if a new action was passed. If so, update it in an effect.
+  const prevAction = actionQueueHook.memoizedState;
+  if (action !== prevAction) {
+    currentlyRenderingFiber.flags |= PassiveEffect;
+    pushEffect(
+      HookHasEffect | HookPassive,
+      formStateActionEffect.bind(null, actionQueue, action),
+      createEffectInstance(),
+      null,
+    );
+  }
+
+  return [state, dispatch];
+}
+
+function formStateActionEffect<S, P>(
+  actionQueue: FormStateActionQueue<S, P>,
+  action: (Awaited<S>, P) => S,
+): void {
+  actionQueue.action = action;
+}
+
+function rerenderFormState<S, P>(
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void] {
+  // Unlike useState, useFormState doesn't support render phase updates.
+  // Also unlike useState, we need to replay all pending updates again in case
+  // the passthrough value changed.
+  //
+  // So instead of a forked re-render implementation that knows how to handle
+  // render phase udpates, we can use the same implementation as during a
+  // regular mount or update.
+  const stateHook = updateWorkInProgressHook();
+  const currentStateHook = currentHook;
+
+  if (currentStateHook !== null) {
+    // This is an update. Process the update queue.
+    return updateFormStateImpl(
+      stateHook,
+      currentStateHook,
+      action,
+      initialState,
+      permalink,
+    );
+  }
+
+  // This is a mount. No updates to process.
+  const state: Awaited<S> = stateHook.memoizedState;
+
+  const actionQueueHook = updateWorkInProgressHook();
+  const actionQueue = actionQueueHook.queue;
+  const dispatch = actionQueue.dispatch;
+
+  // This may have changed during the rerender.
+  actionQueueHook.memoizedState = action;
+
+  return [state, dispatch];
 }
 
 function pushEffect(
@@ -2223,74 +2656,110 @@ function updateMemo<T>(
   return nextValue;
 }
 
-function mountDeferredValue<T>(value: T): T {
+function mountDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = mountWorkInProgressHook();
-  hook.memoizedState = value;
-  return value;
+  return mountDeferredValueImpl(hook, value, initialValue);
 }
 
-function updateDeferredValue<T>(value: T): T {
+function updateDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = updateWorkInProgressHook();
   const resolvedCurrentHook: Hook = (currentHook: any);
   const prevValue: T = resolvedCurrentHook.memoizedState;
-  return updateDeferredValueImpl(hook, prevValue, value);
+  return updateDeferredValueImpl(hook, prevValue, value, initialValue);
 }
 
-function rerenderDeferredValue<T>(value: T): T {
+function rerenderDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = updateWorkInProgressHook();
   if (currentHook === null) {
     // This is a rerender during a mount.
-    hook.memoizedState = value;
-    return value;
+    return mountDeferredValueImpl(hook, value, initialValue);
   } else {
     // This is a rerender during an update.
     const prevValue: T = currentHook.memoizedState;
-    return updateDeferredValueImpl(hook, prevValue, value);
+    return updateDeferredValueImpl(hook, prevValue, value, initialValue);
   }
 }
 
-function updateDeferredValueImpl<T>(hook: Hook, prevValue: T, value: T): T {
-  const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
-  if (shouldDeferValue) {
-    // This is an urgent update. If the value has changed, keep using the
-    // previous value and spawn a deferred render to update it later.
+function mountDeferredValueImpl<T>(hook: Hook, value: T, initialValue?: T): T {
+  if (
+    enableUseDeferredValueInitialArg &&
+    // When `initialValue` is provided, we defer the initial render even if the
+    // current render is not synchronous.
+    initialValue !== undefined &&
+    // However, to avoid waterfalls, we do not defer if this render
+    // was itself spawned by an earlier useDeferredValue. Check if DeferredLane
+    // is part of the render lanes.
+    !includesSomeLane(renderLanes, DeferredLane)
+  ) {
+    // Render with the initial value
+    hook.memoizedState = initialValue;
 
-    if (!is(value, prevValue)) {
+    // Schedule a deferred render to switch to the final value.
+    const deferredLane = requestDeferredLane();
+    currentlyRenderingFiber.lanes = mergeLanes(
+      currentlyRenderingFiber.lanes,
+      deferredLane,
+    );
+    markSkippedUpdateLanes(deferredLane);
+
+    return initialValue;
+  } else {
+    hook.memoizedState = value;
+    return value;
+  }
+}
+
+function updateDeferredValueImpl<T>(
+  hook: Hook,
+  prevValue: T,
+  value: T,
+  initialValue?: T,
+): T {
+  if (is(value, prevValue)) {
+    // The incoming value is referentially identical to the currently rendered
+    // value, so we can bail out quickly.
+    return value;
+  } else {
+    // Received a new value that's different from the current value.
+
+    // Check if we're inside a hidden tree
+    if (isCurrentTreeHidden()) {
+      // Revealing a prerendered tree is considered the same as mounting new
+      // one, so we reuse the "mount" path in this case.
+      const resultValue = mountDeferredValueImpl(hook, value, initialValue);
+      // Unlike during an actual mount, we need to mark this as an update if
+      // the value changed.
+      if (!is(resultValue, prevValue)) {
+        markWorkInProgressReceivedUpdate();
+      }
+      return resultValue;
+    }
+
+    const shouldDeferValue = !includesOnlyNonUrgentLanes(renderLanes);
+    if (shouldDeferValue) {
+      // This is an urgent update. Since the value has changed, keep using the
+      // previous value and spawn a deferred render to update it later.
+
       // Schedule a deferred render
-      const deferredLane = claimNextTransitionLane();
+      const deferredLane = requestDeferredLane();
       currentlyRenderingFiber.lanes = mergeLanes(
         currentlyRenderingFiber.lanes,
         deferredLane,
       );
       markSkippedUpdateLanes(deferredLane);
 
-      // Set this to true to indicate that the rendered value is inconsistent
-      // from the latest value. The name "baseState" doesn't really match how we
-      // use it because we're reusing a state hook field instead of creating a
-      // new one.
-      hook.baseState = true;
-    }
+      // Reuse the previous value. We do not need to mark this as an update,
+      // because we did not render a new value.
+      return prevValue;
+    } else {
+      // This is not an urgent update, so we can use the latest value regardless
+      // of what it is. No need to defer it.
 
-    // Reuse the previous value
-    return prevValue;
-  } else {
-    // This is not an urgent update, so we can use the latest value regardless
-    // of what it is. No need to defer it.
-
-    // However, if we're currently inside a spawned render, then we need to mark
-    // this as an update to prevent the fiber from bailing out.
-    //
-    // `baseState` is true when the current value is different from the rendered
-    // value. The name doesn't really match how we use it because we're reusing
-    // a state hook field instead of creating a new one.
-    if (hook.baseState) {
-      // Flip this back to false.
-      hook.baseState = false;
+      // Mark this as an update to prevent the fiber from bailing out.
       markWorkInProgressReceivedUpdate();
+      hook.memoizedState = value;
+      return value;
     }
-
-    hook.memoizedState = value;
-    return value;
   }
 }
 
@@ -2308,6 +2777,7 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactCurrentBatchConfig.transition;
+  const currentTransition: BatchConfigTransition = {};
 
   if (enableAsyncActions) {
     // We don't really need to use an optimistic update here, because we
@@ -2316,14 +2786,13 @@ function startTransition<S>(
     // optimistic update anyway to make it less likely the behavior accidentally
     // diverges; for example, both an optimistic update and this one should
     // share the same lane.
+    ReactCurrentBatchConfig.transition = currentTransition;
     dispatchOptimisticSetState(fiber, false, queue, pendingState);
   } else {
     ReactCurrentBatchConfig.transition = null;
     dispatchSetState(fiber, queue, pendingState);
+    ReactCurrentBatchConfig.transition = currentTransition;
   }
-
-  const currentTransition = (ReactCurrentBatchConfig.transition =
-    ({}: BatchConfigTransition));
 
   if (enableTransitionTracing) {
     if (options !== undefined && options.name !== undefined) {
@@ -2340,15 +2809,37 @@ function startTransition<S>(
     if (enableAsyncActions) {
       const returnValue = callback();
 
-      // This is either `finishedState` or a thenable that resolves to
-      // `finishedState`, depending on whether the action scope is an async
-      // function. In the async case, the resulting render will suspend until
-      // the async action scope has finished.
-      const maybeThenable = requestAsyncActionContext(
-        returnValue,
-        finishedState,
-      );
-      dispatchSetState(fiber, queue, maybeThenable);
+      // Check if we're inside an async action scope. If so, we'll entangle
+      // this new action with the existing scope.
+      //
+      // If we're not already inside an async action scope, and this action is
+      // async, then we'll create a new async scope.
+      //
+      // In the async case, the resulting render will suspend until the async
+      // action scope has finished.
+      if (
+        returnValue !== null &&
+        typeof returnValue === 'object' &&
+        typeof returnValue.then === 'function'
+      ) {
+        const thenable = ((returnValue: any): Thenable<mixed>);
+        // This is a thenable that resolves to `finishedState` once the async
+        // action scope has finished.
+        const entangledResult = requestAsyncActionContext(
+          thenable,
+          finishedState,
+        );
+        dispatchSetState(fiber, queue, entangledResult);
+      } else {
+        // This is either `finishedState` or a thenable that resolves to
+        // `finishedState`, depending on whether we're inside an async
+        // action scope.
+        const entangledResult = requestSyncActionContext(
+          returnValue,
+          finishedState,
+        );
+        dispatchSetState(fiber, queue, entangledResult);
+      }
     } else {
       // Async actions are not enabled.
       dispatchSetState(fiber, queue, finishedState);
@@ -2765,14 +3256,48 @@ function dispatchOptimisticSetState<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ): void {
+  if (__DEV__) {
+    if (ReactCurrentBatchConfig.transition === null) {
+      // An optimistic update occurred, but startTransition is not on the stack.
+      // There are two likely scenarios.
+
+      // One possibility is that the optimistic update is triggered by a regular
+      // event handler (e.g. `onSubmit`) instead of an action. This is a mistake
+      // and we will warn.
+
+      // The other possibility is the optimistic update is inside an async
+      // action, but after an `await`. In this case, we can make it "just work"
+      // by associating the optimistic update with the pending async action.
+
+      // Technically it's possible that the optimistic update is unrelated to
+      // the pending action, but we don't have a way of knowing this for sure
+      // because browsers currently do not provide a way to track async scope.
+      // (The AsyncContext proposal, if it lands, will solve this in the
+      // future.) However, this is no different than the problem of unrelated
+      // transitions being grouped together — it's not wrong per se, but it's
+      // not ideal.
+
+      // Once AsyncContext starts landing in browsers, we will provide better
+      // warnings in development for these cases.
+      if (peekEntangledActionLane() !== NoLane) {
+        // There is a pending async action. Don't warn.
+      } else {
+        // There's no pending async action. The most likely cause is that we're
+        // inside a regular event handler (e.g. onSubmit) instead of an action.
+        console.error(
+          'An optimistic state update occurred outside a transition or ' +
+            'action. To fix, move the update to an action, or wrap ' +
+            'with startTransition.',
+        );
+      }
+    }
+  }
+
   const update: Update<S, A> = {
     // An optimistic update commits synchronously.
     lane: SyncLane,
     // After committing, the optimistic update is "reverted" using the same
     // lane as the transition it's associated with.
-    //
-    // TODO: Warn if there's no transition/action associated with this
-    // optimistic update.
     revertLane: requestTransitionLane(),
     action,
     hasEagerState: false,
@@ -2912,6 +3437,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useHostTransitionStatus =
     throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useFormState = throwInvalidHookError;
 }
 if (enableAsyncActions) {
   (ContextOnlyDispatcher: Dispatcher).useOptimistic = throwInvalidHookError;
@@ -2949,6 +3475,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnMount: Dispatcher).useFormState = mountFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnMount: Dispatcher).useOptimistic = mountOptimistic;
@@ -2986,6 +3513,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnUpdate: Dispatcher).useFormState = updateFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnUpdate: Dispatcher).useOptimistic = updateOptimistic;
@@ -3023,6 +3551,7 @@ if (enableUseEffectEventHook) {
 if (enableFormActions && enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useHostTransitionStatus =
     useHostTransitionStatus;
+  (HooksDispatcherOnRerender: Dispatcher).useFormState = rerenderFormState;
 }
 if (enableAsyncActions) {
   (HooksDispatcherOnRerender: Dispatcher).useOptimistic = rerenderOptimistic;
@@ -3158,10 +3687,10 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       mountHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -3207,6 +3736,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnMountInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        mountHookTypesDev();
+        return mountFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
@@ -3317,10 +3856,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -3367,6 +3906,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return mountFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useOptimistic =
@@ -3480,10 +4029,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return updateDeferredValue(value);
+      return updateDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -3529,6 +4078,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return updateFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -3642,10 +4201,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return rerenderDeferredValue(value);
+      return rerenderDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -3691,6 +4250,16 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
@@ -3816,11 +4385,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountDeferredValue(value);
+      return mountDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -3874,6 +4443,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        mountHookTypesDev();
+        return mountFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useOptimistic =
@@ -4003,11 +4583,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateDeferredValue(value);
+      return updateDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4061,6 +4641,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return updateFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useOptimistic =
@@ -4190,11 +4781,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T): T {
+    useDeferredValue<T>(value: T, initialValue?: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderDeferredValue(value);
+      return rerenderDeferredValue(value, initialValue);
     },
     useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
@@ -4248,6 +4839,17 @@ if (__DEV__) {
   if (enableFormActions && enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useHostTransitionStatus =
       useHostTransitionStatus;
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useFormState =
+      function useFormState<S, P>(
+        action: (Awaited<S>, P) => S,
+        initialState: Awaited<S>,
+        permalink?: string,
+      ): [Awaited<S>, (P) => void] {
+        currentHookNameInDev = 'useFormState';
+        warnInvalidHookAccess();
+        updateHookTypesDev();
+        return rerenderFormState(action, initialState, permalink);
+      };
   }
   if (enableAsyncActions) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useOptimistic =
