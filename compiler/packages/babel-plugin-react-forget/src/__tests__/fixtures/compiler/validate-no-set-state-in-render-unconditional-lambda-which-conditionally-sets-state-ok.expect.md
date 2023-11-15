@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoSetStateInRender @validateNoSetStateInRenderFunctionExpressions
+// @validateNoSetStateInRender
 function Component(props) {
   const [x, setX] = useState(0);
 
@@ -35,7 +35,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @validateNoSetStateInRender @validateNoSetStateInRenderFunctionExpressions
+import { unstable_useMemoCache as useMemoCache } from "react"; // @validateNoSetStateInRender
 function Component(props) {
   const $ = useMemoCache(2);
   const [x, setX] = useState(0);

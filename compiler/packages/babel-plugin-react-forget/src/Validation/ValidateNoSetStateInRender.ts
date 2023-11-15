@@ -106,23 +106,21 @@ function validateNoSetStateInRenderImpl(
           }
           case "ObjectMethod":
           case "FunctionExpression": {
-            if (fn.env.config.validateNoSetStateInRenderFunctionExpressions) {
-              if (
-                // faster-path to check if the function expression references a setState
-                [...eachInstructionValueOperand(instr.value)].some(
-                  (operand) =>
-                    isSetStateType(operand.identifier) ||
-                    unconditionalSetStateFunctions.has(operand.identifier.id)
-                ) &&
-                // if yes, does it unconditonally call it?
-                validateNoSetStateInRenderImpl(
-                  instr.value.loweredFunc.func,
-                  unconditionalSetStateFunctions
-                ).isErr()
-              ) {
-                // This function expression unconditionally calls a setState
-                unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
-              }
+            if (
+              // faster-path to check if the function expression references a setState
+              [...eachInstructionValueOperand(instr.value)].some(
+                (operand) =>
+                  isSetStateType(operand.identifier) ||
+                  unconditionalSetStateFunctions.has(operand.identifier.id)
+              ) &&
+              // if yes, does it unconditonally call it?
+              validateNoSetStateInRenderImpl(
+                instr.value.loweredFunc.func,
+                unconditionalSetStateFunctions
+              ).isErr()
+            ) {
+              // This function expression unconditionally calls a setState
+              unconditionalSetStateFunctions.add(instr.lvalue.identifier.id);
             }
             break;
           }

@@ -1,4 +1,4 @@
-// @validateNoSetStateInRenderFunctionExpressions
+//
 function Component(props) {
   const logEvent = useLogging(props.appId);
   const [currentStep, setCurrentStep] = useState(0);

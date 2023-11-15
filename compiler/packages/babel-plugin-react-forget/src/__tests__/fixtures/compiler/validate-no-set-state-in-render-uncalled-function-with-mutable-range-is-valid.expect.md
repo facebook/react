@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoSetStateInRenderFunctionExpressions
+//
 function Component(props) {
   const logEvent = useLogging(props.appId);
   const [currentStep, setCurrentStep] = useState(0);
@@ -33,7 +33,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @validateNoSetStateInRenderFunctionExpressions
+import { unstable_useMemoCache as useMemoCache } from "react"; //
 function Component(props) {
   const $ = useMemoCache(3);
   const logEvent = useLogging(props.appId);

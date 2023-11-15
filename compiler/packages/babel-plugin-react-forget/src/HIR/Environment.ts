@@ -142,14 +142,6 @@ const EnvironmentConfigSchema = z.object({
    */
   validateNoSetStateInRender: z.boolean().default(false),
 
-  /**
-   * Extension of validateNoSetStateInRender which also validates that setState is not
-   * called indirectly via a function expression.
-   *
-   * NOTE: this validation has known issues and is not yet recommended.
-   */
-  validateNoSetStateInRenderFunctionExpressions: z.boolean().default(false),
-
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
    * - Hooks may memoize computation based on any of their parameters, thus
