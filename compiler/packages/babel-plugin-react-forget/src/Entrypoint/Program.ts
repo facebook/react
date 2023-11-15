@@ -398,7 +398,7 @@ function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
         // Component declarations are known components
         (fn.isFunctionDeclaration() && isComponentDeclaration(fn.node)) ||
         // Otherwise check if this is a component or hook-like function
-        isReactFunctionLike(fn)
+        isComponentOrHookLike(fn)
       );
     }
     case "all": {
@@ -466,7 +466,7 @@ function isComponentName(path: NodePath<t.Expression>): boolean {
   return path.isIdentifier() && /^[A-Z]/.test(path.node.name);
 }
 
-function isReactFunction(
+function isReactAPI(
   path: NodePath<t.Expression | t.PrivateName | t.V8IntrinsicIdentifier>,
   functionName: string
 ): boolean {
@@ -490,7 +490,7 @@ function isForwardRefCallback(path: NodePath<t.Expression>): boolean {
   return !!(
     path.parentPath.isCallExpression() &&
     path.parentPath.get("callee").isExpression() &&
-    isReactFunction(path.parentPath.get("callee"), "forwardRef")
+    isReactAPI(path.parentPath.get("callee"), "forwardRef")
   );
 }
 
@@ -503,7 +503,7 @@ function isMemoCallback(path: NodePath<t.Expression>): boolean {
   return (
     path.parentPath.isCallExpression() &&
     path.parentPath.get("callee").isExpression() &&
-    isReactFunction(path.parentPath.get("callee"), "memo")
+    isReactAPI(path.parentPath.get("callee"), "memo")
   );
 }
 
@@ -511,7 +511,7 @@ function isMemoCallback(path: NodePath<t.Expression>): boolean {
  * Adapted from the ESLint rule at
  * https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#L90-L103
  */
-function isReactFunctionLike(
+function isComponentOrHookLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
   >
