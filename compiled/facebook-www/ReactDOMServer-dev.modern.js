@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-7ac3e370";
+    var ReactVersion = "18.3.0-www-modern-b8021dcf";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -7698,6 +7698,9 @@ if (__DEV__) {
         var headers = renderState.headers;
 
         if (headers) {
+          // Even if onHeaders throws we don't want to call this again so
+          // we drop the headers state from this point onwards.
+          renderState.headers = null;
           var linkHeader = headers.preconnects;
 
           if (headers.fontPreloads) {
@@ -7780,7 +7783,6 @@ if (__DEV__) {
             onHeaders({});
           }
 
-          renderState.headers = null;
           return;
         }
       }
@@ -12947,6 +12949,19 @@ if (__DEV__) {
       if (request.allPendingTasks === 0) {
         completeAll(request);
       }
+    }
+
+    function safelyEmitEarlyPreloads(request, shellComplete) {
+      try {
+        emitEarlyPreloads(
+          request.renderState,
+          request.resumableState,
+          shellComplete
+        );
+      } catch (error) {
+        // We assume preloads are optimistic and thus non-fatal if errored.
+        logRecoverableError(request, error);
+      }
     } // I extracted this function out because we want to ensure we consistently emit preloads before
     // transitioning to the next request stage and this transition can happen in multiple places in this
     // implementation.
@@ -12959,11 +12974,7 @@ if (__DEV__) {
         // we should only be calling completeShell when the shell is complete so we
         // just use a literal here
         var shellComplete = true;
-        emitEarlyPreloads(
-          request.renderState,
-          request.resumableState,
-          shellComplete
-        );
+        safelyEmitEarlyPreloads(request, shellComplete);
       } // We have completed the shell so the shell can't error anymore.
 
       request.onShellError = noop;
@@ -12983,11 +12994,7 @@ if (__DEV__) {
           ? true // Prerender Request, we use the state of the root segment
           : request.completedRootSegment === null ||
             request.completedRootSegment.status !== POSTPONED;
-      emitEarlyPreloads(
-        request.renderState,
-        request.resumableState,
-        shellComplete
-      );
+      safelyEmitEarlyPreloads(request, shellComplete);
       var onAllReady = request.onAllReady;
       onAllReady();
     }
@@ -13830,11 +13837,7 @@ if (__DEV__) {
 
     function enqueueEarlyPreloadsAfterInitialWork(request) {
       var shellComplete = request.pendingRootTasks === 0;
-      emitEarlyPreloads(
-        request.renderState,
-        request.resumableState,
-        shellComplete
-      );
+      safelyEmitEarlyPreloads(request, shellComplete);
     }
 
     function enqueueFlush(request) {

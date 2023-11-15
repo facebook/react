@@ -2486,62 +2486,6 @@ function hoistStyleQueueDependency(styleQueue) {
 function hoistStylesheetDependency(stylesheet) {
   this.stylesheets.add(stylesheet);
 }
-function emitEarlyPreloads(renderState, resumableState, shellComplete) {
-  if ((resumableState = renderState.onHeaders)) {
-    var headers = renderState.headers;
-    if (headers) {
-      var linkHeader = headers.preconnects;
-      headers.fontPreloads &&
-        (linkHeader && (linkHeader += ", "),
-        (linkHeader += headers.fontPreloads));
-      headers.highImagePreloads &&
-        (linkHeader && (linkHeader += ", "),
-        (linkHeader += headers.highImagePreloads));
-      if (!shellComplete) {
-        shellComplete = renderState.styles.values();
-        var queueStep = shellComplete.next();
-        a: for (
-          ;
-          0 < headers.remainingCapacity && !queueStep.done;
-          queueStep = shellComplete.next()
-        ) {
-          queueStep = queueStep.value.sheets.values();
-          for (
-            var sheetStep = queueStep.next();
-            0 < headers.remainingCapacity && !sheetStep.done;
-            sheetStep = queueStep.next()
-          ) {
-            var sheet = sheetStep.value;
-            sheetStep = sheet.props;
-            var key = sheetStep.href;
-            sheet = sheet.props;
-            sheet = getPreloadAsHeader(sheet.href, "style", {
-              crossOrigin: sheet.crossOrigin,
-              integrity: sheet.integrity,
-              nonce: sheet.nonce,
-              type: sheet.type,
-              fetchPriority: sheet.fetchPriority,
-              referrerPolicy: sheet.referrerPolicy,
-              media: sheet.media
-            });
-            if (2 <= (headers.remainingCapacity -= sheet.length))
-              (renderState.resets.style[key] = PRELOAD_NO_CREDS),
-                linkHeader && (linkHeader += ", "),
-                (linkHeader += sheet),
-                (renderState.resets.style[key] =
-                  "string" === typeof sheetStep.crossOrigin ||
-                  "string" === typeof sheetStep.integrity
-                    ? [sheetStep.crossOrigin, sheetStep.integrity]
-                    : PRELOAD_NO_CREDS);
-            else break a;
-          }
-        }
-      }
-      linkHeader ? resumableState({ Link: linkHeader }) : resumableState({});
-      renderState.headers = null;
-    }
-  }
-}
 var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -4320,17 +4264,76 @@ function abortTask(task, request, error) {
   request.allPendingTasks--;
   0 === request.allPendingTasks && completeAll(request);
 }
+function safelyEmitEarlyPreloads(request, shellComplete) {
+  try {
+    var renderState = request.renderState,
+      onHeaders = renderState.onHeaders;
+    if (onHeaders) {
+      var headers = renderState.headers;
+      if (headers) {
+        renderState.headers = null;
+        var linkHeader = headers.preconnects;
+        headers.fontPreloads &&
+          (linkHeader && (linkHeader += ", "),
+          (linkHeader += headers.fontPreloads));
+        headers.highImagePreloads &&
+          (linkHeader && (linkHeader += ", "),
+          (linkHeader += headers.highImagePreloads));
+        if (!shellComplete) {
+          var queueIter = renderState.styles.values(),
+            queueStep = queueIter.next();
+          b: for (
+            ;
+            0 < headers.remainingCapacity && !queueStep.done;
+            queueStep = queueIter.next()
+          )
+            for (
+              var sheetIter = queueStep.value.sheets.values(),
+                sheetStep = sheetIter.next();
+              0 < headers.remainingCapacity && !sheetStep.done;
+              sheetStep = sheetIter.next()
+            ) {
+              var sheet = sheetStep.value,
+                props = sheet.props,
+                key = props.href,
+                props$jscomp$0 = sheet.props,
+                header = getPreloadAsHeader(props$jscomp$0.href, "style", {
+                  crossOrigin: props$jscomp$0.crossOrigin,
+                  integrity: props$jscomp$0.integrity,
+                  nonce: props$jscomp$0.nonce,
+                  type: props$jscomp$0.type,
+                  fetchPriority: props$jscomp$0.fetchPriority,
+                  referrerPolicy: props$jscomp$0.referrerPolicy,
+                  media: props$jscomp$0.media
+                });
+              if (2 <= (headers.remainingCapacity -= header.length))
+                (renderState.resets.style[key] = PRELOAD_NO_CREDS),
+                  linkHeader && (linkHeader += ", "),
+                  (linkHeader += header),
+                  (renderState.resets.style[key] =
+                    "string" === typeof props.crossOrigin ||
+                    "string" === typeof props.integrity
+                      ? [props.crossOrigin, props.integrity]
+                      : PRELOAD_NO_CREDS);
+              else break b;
+            }
+        }
+        linkHeader ? onHeaders({ Link: linkHeader }) : onHeaders({});
+      }
+    }
+  } catch (error) {
+    logRecoverableError(request, error);
+  }
+}
 function completeShell(request) {
-  null === request.trackedPostpones &&
-    emitEarlyPreloads(request.renderState, request.resumableState, !0);
+  null === request.trackedPostpones && safelyEmitEarlyPreloads(request, !0);
   request.onShellError = noop;
   request = request.onShellReady;
   request();
 }
 function completeAll(request) {
-  emitEarlyPreloads(
-    request.renderState,
-    request.resumableState,
+  safelyEmitEarlyPreloads(
+    request,
     null === request.trackedPostpones
       ? !0
       : null === request.completedRootSegment ||

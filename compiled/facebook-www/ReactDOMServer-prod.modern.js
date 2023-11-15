@@ -2470,62 +2470,6 @@ function hoistStyleQueueDependency(styleQueue) {
 function hoistStylesheetDependency(stylesheet) {
   this.stylesheets.add(stylesheet);
 }
-function emitEarlyPreloads(renderState, resumableState, shellComplete) {
-  if ((resumableState = renderState.onHeaders)) {
-    var headers = renderState.headers;
-    if (headers) {
-      var linkHeader = headers.preconnects;
-      headers.fontPreloads &&
-        (linkHeader && (linkHeader += ", "),
-        (linkHeader += headers.fontPreloads));
-      headers.highImagePreloads &&
-        (linkHeader && (linkHeader += ", "),
-        (linkHeader += headers.highImagePreloads));
-      if (!shellComplete) {
-        shellComplete = renderState.styles.values();
-        var queueStep = shellComplete.next();
-        a: for (
-          ;
-          0 < headers.remainingCapacity && !queueStep.done;
-          queueStep = shellComplete.next()
-        ) {
-          queueStep = queueStep.value.sheets.values();
-          for (
-            var sheetStep = queueStep.next();
-            0 < headers.remainingCapacity && !sheetStep.done;
-            sheetStep = queueStep.next()
-          ) {
-            var sheet = sheetStep.value;
-            sheetStep = sheet.props;
-            var key = sheetStep.href;
-            sheet = sheet.props;
-            sheet = getPreloadAsHeader(sheet.href, "style", {
-              crossOrigin: sheet.crossOrigin,
-              integrity: sheet.integrity,
-              nonce: sheet.nonce,
-              type: sheet.type,
-              fetchPriority: sheet.fetchPriority,
-              referrerPolicy: sheet.referrerPolicy,
-              media: sheet.media
-            });
-            if (2 <= (headers.remainingCapacity -= sheet.length))
-              (renderState.resets.style[key] = PRELOAD_NO_CREDS),
-                linkHeader && (linkHeader += ", "),
-                (linkHeader += sheet),
-                (renderState.resets.style[key] =
-                  "string" === typeof sheetStep.crossOrigin ||
-                  "string" === typeof sheetStep.integrity
-                    ? [sheetStep.crossOrigin, sheetStep.integrity]
-                    : PRELOAD_NO_CREDS);
-            else break a;
-          }
-        }
-      }
-      linkHeader ? resumableState({ Link: linkHeader }) : resumableState({});
-      renderState.headers = null;
-    }
-  }
-}
 function createRenderState(resumableState, generateStaticMarkup) {
   var idPrefix = resumableState.idPrefix,
     bootstrapChunks = [],
@@ -2539,16 +2483,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     );
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1573 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1589 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1588 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1589 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1590 = new Set(),
-    JSCompiler_object_inline_styles_1591 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1592 = new Set(),
-    JSCompiler_object_inline_scripts_1593 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1594 = new Set(),
-    JSCompiler_object_inline_preloads_1595 = {
+  var JSCompiler_object_inline_preconnects_1604 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1605 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1606 = new Set(),
+    JSCompiler_object_inline_styles_1607 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1608 = new Set(),
+    JSCompiler_object_inline_scripts_1609 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1610 = new Set(),
+    JSCompiler_object_inline_preloads_1611 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2585,7 +2529,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1592.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1608.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src));
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
@@ -2626,7 +2570,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1592.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1608.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i)
@@ -2641,7 +2585,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push('" async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1573,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1589,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2662,14 +2606,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     importMapChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1588,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1589,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1590,
-    styles: JSCompiler_object_inline_styles_1591,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1592,
-    scripts: JSCompiler_object_inline_scripts_1593,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1594,
-    preloads: JSCompiler_object_inline_preloads_1595,
+    preconnects: JSCompiler_object_inline_preconnects_1604,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1605,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1606,
+    styles: JSCompiler_object_inline_styles_1607,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1608,
+    scripts: JSCompiler_object_inline_scripts_1609,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1610,
+    preloads: JSCompiler_object_inline_preloads_1611,
     boundaryResources: null,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -4483,17 +4427,76 @@ function abortTask(task, request, error) {
   request.allPendingTasks--;
   0 === request.allPendingTasks && completeAll(request);
 }
+function safelyEmitEarlyPreloads(request, shellComplete) {
+  try {
+    var renderState = request.renderState,
+      onHeaders = renderState.onHeaders;
+    if (onHeaders) {
+      var headers = renderState.headers;
+      if (headers) {
+        renderState.headers = null;
+        var linkHeader = headers.preconnects;
+        headers.fontPreloads &&
+          (linkHeader && (linkHeader += ", "),
+          (linkHeader += headers.fontPreloads));
+        headers.highImagePreloads &&
+          (linkHeader && (linkHeader += ", "),
+          (linkHeader += headers.highImagePreloads));
+        if (!shellComplete) {
+          var queueIter = renderState.styles.values(),
+            queueStep = queueIter.next();
+          b: for (
+            ;
+            0 < headers.remainingCapacity && !queueStep.done;
+            queueStep = queueIter.next()
+          )
+            for (
+              var sheetIter = queueStep.value.sheets.values(),
+                sheetStep = sheetIter.next();
+              0 < headers.remainingCapacity && !sheetStep.done;
+              sheetStep = sheetIter.next()
+            ) {
+              var sheet = sheetStep.value,
+                props = sheet.props,
+                key = props.href,
+                props$jscomp$0 = sheet.props,
+                header = getPreloadAsHeader(props$jscomp$0.href, "style", {
+                  crossOrigin: props$jscomp$0.crossOrigin,
+                  integrity: props$jscomp$0.integrity,
+                  nonce: props$jscomp$0.nonce,
+                  type: props$jscomp$0.type,
+                  fetchPriority: props$jscomp$0.fetchPriority,
+                  referrerPolicy: props$jscomp$0.referrerPolicy,
+                  media: props$jscomp$0.media
+                });
+              if (2 <= (headers.remainingCapacity -= header.length))
+                (renderState.resets.style[key] = PRELOAD_NO_CREDS),
+                  linkHeader && (linkHeader += ", "),
+                  (linkHeader += header),
+                  (renderState.resets.style[key] =
+                    "string" === typeof props.crossOrigin ||
+                    "string" === typeof props.integrity
+                      ? [props.crossOrigin, props.integrity]
+                      : PRELOAD_NO_CREDS);
+              else break b;
+            }
+        }
+        linkHeader ? onHeaders({ Link: linkHeader }) : onHeaders({});
+      }
+    }
+  } catch (error) {
+    logRecoverableError(request, error);
+  }
+}
 function completeShell(request) {
-  null === request.trackedPostpones &&
-    emitEarlyPreloads(request.renderState, request.resumableState, !0);
+  null === request.trackedPostpones && safelyEmitEarlyPreloads(request, !0);
   request.onShellError = noop;
   request = request.onShellReady;
   request();
 }
 function completeAll(request) {
-  emitEarlyPreloads(
-    request.renderState,
-    request.resumableState,
+  safelyEmitEarlyPreloads(
+    request,
     null === request.trackedPostpones
       ? !0
       : null === request.completedRootSegment ||
@@ -5300,11 +5303,7 @@ function renderToStringImpl(
   children.flushScheduled = null !== children.destination;
   performWork(children);
   null === children.trackedPostpones &&
-    emitEarlyPreloads(
-      children.renderState,
-      children.resumableState,
-      0 === children.pendingRootTasks
-    );
+    safelyEmitEarlyPreloads(children, 0 === children.pendingRootTasks);
   abort(children, abortReason);
   if (1 === children.status)
     (children.status = 2), destination.destroy(children.fatalError);
@@ -5343,4 +5342,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-fc53dc79";
+exports.version = "18.3.0-www-modern-88df5dd9";
