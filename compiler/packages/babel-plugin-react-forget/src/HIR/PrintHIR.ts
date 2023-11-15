@@ -9,16 +9,16 @@ import generate from "@babel/generator";
 import { CompilerError } from "../CompilerError";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
-import {
-  GotoVariant,
+import type {
+  FunctionExpression,
   HIR,
   HIRFunction,
   Identifier,
   Instruction,
-  InstructionKind,
   InstructionValue,
   LValue,
   MutableRange,
+  ObjectMethod,
   ObjectPropertyKey,
   Pattern,
   Phi,
@@ -31,6 +31,7 @@ import {
   Terminal,
   Type,
 } from "./HIR";
+import { GotoVariant, InstructionKind } from "./HIR";
 
 export type Options = {
   indent: number;
@@ -470,6 +471,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "ObjectMethod":
     case "FunctionExpression": {
+      const name = getFunctionName(instrValue, "");
       const fn = printFunction(instrValue.loweredFunc.func)
         .split("\n")
         .map((line) => `      ${line}`)
@@ -480,7 +482,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       const context = instrValue.loweredFunc.func.context
         .map((dep) => printPlace(dep))
         .join(",");
-      value = `Function @deps[${deps}] @context[${context}]:\n${fn}`;
+      value = `Function ${name} @deps[${deps}] @context[${context}]:\n${fn}`;
       break;
     }
     case "TaggedTemplateExpression": {
@@ -725,4 +727,16 @@ export function printAliases(aliases: DisjointSet<Identifier>): string {
   }
 
   return items.join("\n");
+}
+
+function getFunctionName(
+  instrValue: ObjectMethod | FunctionExpression,
+  defaultValue: string
+): string {
+  switch (instrValue.kind) {
+    case "FunctionExpression":
+      return instrValue.name ?? defaultValue;
+    case "ObjectMethod":
+      return defaultValue;
+  }
 }
