@@ -375,7 +375,7 @@ describe('ReactDOMRoot', () => {
     await waitForAll([]);
     container.innerHTML = '';
 
-    if (gate(flags => flags.enableFloat || flags.enableHostSingletons)) {
+    if (gate(flags => flags.enableFloat)) {
       // When either of these flags are on this validation is turned off so we
       // expect there to be no warnings
       root.render(<div>Hi</div>);

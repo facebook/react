@@ -54,7 +54,6 @@ export const enableCPUSuspense = true;
 export const enableFloat = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
-export const enableHostSingletons = true;
 export const enableClientRenderFallbackOnTextMismatch = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 

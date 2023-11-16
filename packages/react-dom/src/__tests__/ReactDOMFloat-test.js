@@ -6202,7 +6202,7 @@ body {
       );
     });
 
-    // @gate enableFloat && enableHostSingletons && enableClientRenderFallbackOnTextMismatch
+    // @gate enableFloat && enableClientRenderFallbackOnTextMismatch
     it('retains styles even when a new html, head, and/body mount', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6254,58 +6254,7 @@ body {
       );
     });
 
-    // @gate enableFloat && !enableHostSingletons
-    it('retains styles even when a new html, head, and/body mount - without HostSingleton', async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <head />
-            <body>
-              <link rel="stylesheet" href="foo" precedence="foo" />
-              <link rel="stylesheet" href="bar" precedence="bar" />
-              server
-            </body>
-          </html>,
-        );
-        pipe(writable);
-      });
-      const errors = [];
-      ReactDOMClient.hydrateRoot(
-        document,
-        <html>
-          <head>
-            <link rel="stylesheet" href="qux" precedence="qux" />
-            <link rel="stylesheet" href="foo" precedence="foo" />
-          </head>
-          <body>client</body>
-        </html>,
-        {
-          onRecoverableError(error) {
-            errors.push(error.message);
-          },
-        },
-      );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        [
-          'Warning: Text content did not match. Server: "server" Client: "client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-        ],
-        {withoutStack: 1},
-      );
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <link rel="stylesheet" href="qux" data-precedence="qux" />
-            <link rel="stylesheet" href="foo" data-precedence="foo" />
-          </head>
-          <body>client</body>
-        </html>,
-      );
-    });
-
-    // @gate enableFloat && enableHostSingletons
+    // @gate enableFloat
     it('retains styles in head through head remounts', async () => {
       const root = ReactDOMClient.createRoot(document);
       root.render(
@@ -8114,7 +8063,7 @@ background-color: green;
       ]);
     });
 
-    // @gate enableFloat && enableHostSingletons && (enableClientRenderFallbackOnTextMismatch || !__DEV__)
+    // @gate enableFloat && (enableClientRenderFallbackOnTextMismatch || !__DEV__)
     it('can render a title before a singleton even if that singleton clears its contents', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(

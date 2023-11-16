@@ -105,8 +105,6 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-export const enableHostSingletons = true;
-
 export const enableFloat = true;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for

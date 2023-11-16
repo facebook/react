@@ -18,7 +18,6 @@ import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactD
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {
   enableFloat,
-  enableHostSingletons,
   allowConcurrentByDefault,
   disableCommentsAsDOMContainers,
   enableAsyncActions,
@@ -78,7 +77,6 @@ import {
   createContainer,
   createHydrationContainer,
   updateContainer,
-  findHostInstanceWithNoPortals,
   flushSync,
   isAlreadyRendering,
 } from 'react-reconciler/src/ReactFiberReconciler';
@@ -126,26 +124,6 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
           'You passed a second argument to root.render(...) but it only accepts ' +
             'one argument.',
         );
-      }
-
-      const container = root.containerInfo;
-
-      if (
-        !enableFloat &&
-        !enableHostSingletons &&
-        container.nodeType !== COMMENT_NODE
-      ) {
-        const hostInstance = findHostInstanceWithNoPortals(root.current);
-        if (hostInstance) {
-          if (hostInstance.parentNode !== container) {
-            console.error(
-              'render(...): It looks like the React-rendered content of the ' +
-                'root container was removed without using React. This is not ' +
-                'supported and will cause errors. Instead, call ' +
-                "root.unmount() to empty a root's container.",
-            );
-          }
-        }
       }
     }
     updateContainer(children, root, null, null);
@@ -381,20 +359,6 @@ export function isValidContainerLegacy(node: any): boolean {
 
 function warnIfReactDOMContainerInDEV(container: any) {
   if (__DEV__) {
-    if (
-      !enableHostSingletons &&
-      container.nodeType === ELEMENT_NODE &&
-      ((container: any): Element).tagName &&
-      ((container: any): Element).tagName.toUpperCase() === 'BODY'
-    ) {
-      console.error(
-        'createRoot(): Creating roots directly with document.body is ' +
-          'discouraged, since its children are often manipulated by third-party ' +
-          'scripts and browser extensions. This may lead to subtle ' +
-          'reconciliation issues. Try using a container element created ' +
-          'for your app.',
-      );
-    }
     if (isContainerMarkedAsRoot(container)) {
       if (container._reactRootContainer) {
         console.error(

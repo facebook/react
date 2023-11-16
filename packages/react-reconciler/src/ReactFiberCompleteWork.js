@@ -33,7 +33,6 @@ import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import {
   enableLegacyHidden,
-  enableHostSingletons,
   enableSuspenseCallback,
   enableScopeAPI,
   enableProfilerTimer,
@@ -233,9 +232,7 @@ function appendAllChildren(
         appendInitialChild(parent, node.stateNode);
       } else if (
         node.tag === HostPortal ||
-        (enableHostSingletons && supportsSingletons
-          ? node.tag === HostSingleton
-          : false)
+        (supportsSingletons ? node.tag === HostSingleton : false)
       ) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -1177,7 +1174,7 @@ function completeWork(
       // Fall through
     }
     case HostSingleton: {
-      if (enableHostSingletons && supportsSingletons) {
+      if (supportsSingletons) {
         popHostContext(workInProgress);
         const rootContainerInstance = getRootHostContainer();
         const type = workInProgress.type;
