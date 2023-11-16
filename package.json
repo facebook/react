@@ -91,6 +91,7 @@
     "rollup-plugin-prettier": "^4.1.1",
     "rollup-plugin-strip-banner": "^3.0.0",
     "semver": "^7.1.1",
+    "shelljs":"^0.8.5",
     "signedsource": "^2.0.0",
     "targz": "^1.0.1",
     "through2": "^3.0.1",
@@ -108,7 +109,7 @@
   "scripts": {
     "build": "node ./scripts/rollup/build-all-release-channels.js",
     "build-combined": "echo 'build-combined is deprecated. yarn build instead.'",
-    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom/index,react-dom/unstable_testing,react-dom/test-utils,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh,react-art --type=NODE && cp -r ./build/node_modules build/oss-experimental/",
+    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react/jsx,react-dom/index,react-dom/unstable_testing,react-dom/test-utils,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh,react-art --type=NODE",
     "build-for-devtools-dev": "yarn build-for-devtools --type=NODE_DEV",
     "build-for-devtools-prod": "yarn build-for-devtools --type=NODE_PROD",
     "linc": "node ./scripts/tasks/linc.js",
