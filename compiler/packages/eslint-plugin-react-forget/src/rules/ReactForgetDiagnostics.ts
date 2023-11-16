@@ -63,6 +63,7 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   panicThreshold: "CRITICAL_ERRORS",
   environment: {
     validateHooksUsage: false,
+    validateNoSetStateInRender: true,
   },
 };
 
