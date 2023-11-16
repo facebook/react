@@ -930,36 +930,18 @@ function lowerStatement(
       });
       const id = stmt.get("id") as NodePath<t.Identifier>;
 
-      /*
-       * Desugar FunctionDeclaration to FunctionExpression.
-       *
-       * For example:
-       *   function foo() {};
-       * becomes
-       *   let foo = function foo() {};
-       */
-      const desugared = stmt.replaceWith(
-        t.variableDeclaration("let", [
-          t.variableDeclarator(
-            id.node,
-            t.functionExpression(
-              id.node,
-              stmt.node.params,
-              stmt.node.body,
-              stmt.node.generator,
-              stmt.node.async
-            )
-          ),
-        ])
+      const fn = lowerValueToTemporary(
+        builder,
+        lowerFunctionToValue(builder, stmt)
       );
-      CompilerError.invariant(desugared.length === 1, {
-        reason:
-          "only one declaration is created from desugaring function declaration",
-        description: null,
-        loc: stmt.node.loc ?? null,
-        suggestions: null,
-      });
-      lowerStatement(builder, desugared.at(0)!);
+      lowerAssignment(
+        builder,
+        stmt.node.loc ?? GeneratedSource,
+        InstructionKind.Let,
+        id,
+        fn
+      );
+
       return;
     }
     case "ForOfStatement": {
@@ -2042,7 +2024,7 @@ function lowerExpression(
       const expr = exprPath as NodePath<
         t.FunctionExpression | t.ArrowFunctionExpression
       >;
-      return lowerFunctionExpression(builder, expr);
+      return lowerFunctionToValue(builder, expr);
     }
     case "TaggedTemplateExpression": {
       const expr = exprPath as NodePath<t.TaggedTemplateExpression>;
@@ -2990,9 +2972,11 @@ function trimJsxText(original: string): string | null {
   }
 }
 
-function lowerFunctionExpression(
+function lowerFunctionToValue(
   builder: HIRBuilder,
-  expr: NodePath<t.FunctionExpression | t.ArrowFunctionExpression>
+  expr: NodePath<
+    t.FunctionExpression | t.ArrowFunctionExpression | t.FunctionDeclaration
+  >
 ): InstructionValue {
   const exprNode = expr.node;
   const exprLoc = exprNode.loc ?? GeneratedSource;
@@ -3016,7 +3000,10 @@ function lowerFunctionExpression(
 function lowerFunction(
   builder: HIRBuilder,
   expr: NodePath<
-    t.FunctionExpression | t.ArrowFunctionExpression | t.ObjectMethod
+    | t.FunctionExpression
+    | t.ArrowFunctionExpression
+    | t.FunctionDeclaration
+    | t.ObjectMethod
   >
 ): LoweredFunction | null {
   const componentScope: Scope = builder.parentFunction.scope;
@@ -3638,7 +3625,10 @@ function captureScopes({ from, to }: { from: Scope; to: Scope }): Set<Scope> {
 function gatherCapturedDeps(
   builder: HIRBuilder,
   fn: NodePath<
-    t.FunctionExpression | t.ArrowFunctionExpression | t.ObjectMethod
+    | t.FunctionExpression
+    | t.ArrowFunctionExpression
+    | t.FunctionDeclaration
+    | t.ObjectMethod
   >,
   componentScope: Scope
 ): { identifiers: t.Identifier[]; refs: Place[] } {

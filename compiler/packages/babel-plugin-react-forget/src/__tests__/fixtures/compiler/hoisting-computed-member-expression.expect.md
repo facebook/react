@@ -34,6 +34,7 @@ function hoisting() {
     onClick = function onClick(x) {
       return x + bar.baz;
     };
+
     onClick2 = function onClick2(x_0) {
       return x_0 + bar[baz];
     };
