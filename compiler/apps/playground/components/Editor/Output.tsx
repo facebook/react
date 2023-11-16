@@ -17,7 +17,7 @@ import { type CompilerError } from "babel-plugin-react-forget";
 import parserBabel from "prettier/plugins/babel";
 import * as prettierPluginEstree from "prettier/plugins/estree";
 import * as prettier from "prettier/standalone";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { type Store } from "../../lib/stores";
 import TabbedWindow from "../TabbedWindow";
 import { monacoOptions } from "./monacoOptions";
@@ -187,12 +187,6 @@ function Output({ store, compilerOutput }: Props) {
     });
   }, [store.source, compilerOutput]);
 
-  const consoleLogError = useCallback(() => {
-    if (compilerOutput.kind === "err") {
-      console.error(compilerOutput.error);
-    }
-  }, [compilerOutput]);
-
   return (
     <>
       <TabbedWindow
@@ -213,13 +207,7 @@ function Output({ store, compilerOutput }: Props) {
             className="p-4 basis-full text-red-600 overflow-y-scroll whitespace-pre-wrap"
             style={{ width: "calc(100vw - 650px)", height: "150px" }}
           >
-            <button
-              className="text-left"
-              title="Log error to console"
-              onClick={() => consoleLogError()}
-            >
-              <code>{compilerOutput.error.toString()}</code>
-            </button>
+            <code>{compilerOutput.error.toString()}</code>
           </pre>
         </div>
       ) : null}
