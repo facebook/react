@@ -25474,7 +25474,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-2c338b16f-20231116";
+    var ReactVersion = "18.3.0-canary-0de5b1148-20231116";
 
     // Might add PROFILE later.
 
