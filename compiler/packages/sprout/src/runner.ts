@@ -216,6 +216,12 @@ export async function main(opts: RunnerOptions): Promise<void> {
   }
 
   const isSuccess = reportResults(results, opts.verbose);
+  /**
+   * This is important, as we're using jsdom (which seems to be attaching some
+   * tasks that require force exiting. If we do not await workers terminating,
+   * we may miss some console logs from jest workers.
+   */
+  await worker.end();
   process.exit(isSuccess ? 0 : 1);
 }
 

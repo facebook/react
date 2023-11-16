@@ -13,5 +13,4 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ wat: "/dev/null", itemID: 42 }],
-  isComponent: "Component",
 };

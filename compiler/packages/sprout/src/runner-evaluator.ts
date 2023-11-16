@@ -5,14 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import { render } from "@testing-library/react";
 import { JSDOM } from "jsdom";
 import util from "util";
+import { z } from "zod";
+import { fromZodError } from "zod-validation-error";
 import { initFbt, toJSON } from "./shared-runtime";
 const React = require("react");
-const render = require("@testing-library/react").render;
 
+/**
+ * Set up the global environment for JSDOM tests.
+ * This is a hack to let us share code and setup between the test
+ * and runner environments. As an alternative, we could evaluate all setup
+ * in the jsdom test environment (which provides more isolation), but that
+ * may be slower.
+ */
 const { window: testWindow } = new JSDOM(undefined);
-
 (globalThis as any).document = testWindow.document;
 (globalThis as any).window = testWindow.window;
 (globalThis as any).navigator = testWindow.navigator;
@@ -20,20 +28,29 @@ const { window: testWindow } = new JSDOM(undefined);
 (globalThis as any).render = render;
 initFbt();
 
+(globalThis as any).placeholderFn = function (..._args: Array<any>) {
+  throw new Error("Fixture not implemented!");
+};
+
 export type EvaluatorResult = {
   kind: "ok" | "exception" | "UnexpectedError";
   value: string;
   logs: Array<string>;
 };
 
-const PLACEHOLDER_VALUE = Symbol();
-(globalThis as any).placeholderFn = function (..._args: Array<any>) {
-  throw PLACEHOLDER_VALUE;
-};
-(globalThis as any).WrapperTestComponent = function (props: {
-  fn: any;
-  params: Array<any>;
-}) {
+/**
+ * Define types and schemas for fixture entrypoint
+ */
+const EntrypointSchema = z.strictObject({
+  fn: z.union([z.function(), z.object({})]),
+  params: z.array(z.any()),
+  isComponent: z.optional(z.boolean()),
+});
+const ExportSchema = z.object({
+  FIXTURE_ENTRYPOINT: EntrypointSchema,
+});
+
+function WrapperTestComponent(props: { fn: any; params: Array<any> }) {
   const result = props.fn(...props.params);
   // Hacky solution to determine whether the fixture returned jsx (which
   // needs to passed through to React's runtime as-is) or a non-jsx value
@@ -43,24 +60,44 @@ const PLACEHOLDER_VALUE = Symbol();
   } else {
     return toJSON(result);
   }
-};
-
-function validateEntrypoint(entrypoint: object) {
-  if (!("params" in entrypoint)) {
-    return "missing `params` property";
-  } else if (!Array.isArray(entrypoint.params)) {
-    return "unexpected type for `params` property";
-  } else if (!(`fn` in entrypoint) || entrypoint == null) {
-    return "missing `fn` property";
-  } else if (
-    typeof entrypoint.fn !== "function" &&
-    typeof entrypoint.fn !== "object"
-  ) {
-    return "expected `fn` property to be a function or React object";
-  } else {
-    return null;
-  }
 }
+type FixtureEvaluatorResult = Omit<EvaluatorResult, "logs">;
+(globalThis as any).evaluateFixtureExport = function (
+  exports: unknown
+): FixtureEvaluatorResult {
+  const parsedExportResult = ExportSchema.safeParse(exports);
+  if (!parsedExportResult.success) {
+    const exportDetail =
+      typeof exports === "object" && exports != null
+        ? `object ${util.inspect(exports)}`
+        : `${exports}`;
+    return {
+      kind: "UnexpectedError",
+      value: `${fromZodError(parsedExportResult.error)}\nFound ` + exportDetail,
+    };
+  }
+  const entrypoint = parsedExportResult.data.FIXTURE_ENTRYPOINT;
+  if (typeof entrypoint.fn === "object") {
+    // Try to run fixture as a react component. This is necessary because not
+    // all components are functions (some are ForwardRef or Memo objects).
+    const result = render(
+      React.createElement(entrypoint.fn, entrypoint.params[0])
+    ).container.innerHTML;
+
+    return {
+      kind: "ok",
+      value: result ?? "null",
+    };
+  } else {
+    const result = render(React.createElement(WrapperTestComponent, entrypoint))
+      .container.innerHTML;
+
+    return {
+      kind: "ok",
+      value: result ?? "null",
+    };
+  }
+};
 
 export function doEval(source: string): EvaluatorResult {
   "use strict";
@@ -95,49 +132,7 @@ export function doEval(source: string): EvaluatorResult {
         // run in an iife to avoid naming collisions
         (() => {${source}})();
         reachedInvoke = true;
-        if (exports.FIXTURE_ENTRYPOINT == null ||
-          exports.FIXTURE_ENTRYPOINT.fn === globalThis.placeholderFn
-        ) {
-          return {
-            kind: "UnexpectedError",
-            value: 'FIXTURE_ENTRYPOINT not exported! Found {'
-              + Object.keys(exports).filter(e => e !== 'FIXTURE_ENTRYPOINT').toString()
-              + '}',
-          };
-        }
-        const validationError = validateEntrypoint(exports.FIXTURE_ENTRYPOINT);
-        if (validationError) {
-          return {
-            kind: "UnexpectedError",
-            value: 'Bad shape for FIXTURE_ENTRYPOINT (' + validationError + ').',
-          };
-        }
-
-        if (typeof exports.FIXTURE_ENTRYPOINT.fn === 'object') {
-          // try to run fixture as a react component
-          const result = render(
-            React.createElement(
-              exports.FIXTURE_ENTRYPOINT.fn,
-              exports.FIXTURE_ENTRYPOINT.params[0])
-          ).container.innerHTML;
-
-          return {
-            kind: "ok",
-            value: result ?? 'null',
-          };
-        } else {
-          const result = render(
-            React.createElement(
-              WrapperTestComponent,
-              exports.FIXTURE_ENTRYPOINT
-            )
-          ).container.innerHTML;
-
-          return {
-            kind: "ok",
-            value: result ?? 'null',
-          };
-        }
+        return evaluateFixtureExport(exports);
       } catch (e) {
         if (!reachedInvoke) {
           return {

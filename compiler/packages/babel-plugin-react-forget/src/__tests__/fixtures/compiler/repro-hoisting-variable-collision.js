@@ -7,5 +7,4 @@ function Component(props) {
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ items: [0, 42, null, undefined, { object: true }] }],
-  isComponent: "Component",
 };
