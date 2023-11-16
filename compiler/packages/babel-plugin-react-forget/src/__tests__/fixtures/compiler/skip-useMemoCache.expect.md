@@ -2,6 +2,8 @@
 ## Input
 
 ```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+
 function Component(props) {
   const $ = useMemoCache();
   let x;
@@ -24,6 +26,8 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+
 function Component(props) {
   const $ = useMemoCache();
   let x;
@@ -44,10 +48,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) useMemoCache is not defined
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:50:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) [42]

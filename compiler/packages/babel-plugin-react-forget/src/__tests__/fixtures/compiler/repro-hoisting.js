@@ -5,7 +5,7 @@ function Component(props) {
   };
 
   const pathname = props.wat;
-  const deeplinkItemId = pathname ? itemID : null;
+  const deeplinkItemId = pathname ? props.itemID : null;
 
   return <button onClick={() => wat()}>{deeplinkItemId}</button>;
 }

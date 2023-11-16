@@ -1,9 +1,11 @@
+import { StaticText1, Stringify, Text } from "shared-runtime";
+
 function Component(props) {
   const { buttons } = props;
   const [primaryButton, ...nonPrimaryButtons] = buttons;
 
   const renderedNonPrimaryButtons = nonPrimaryButtons.map((buttonProps, i) => (
-    <Button
+    <Stringify
       {...buttonProps}
       key={`button-${i}`}
       style={
@@ -12,7 +14,7 @@ function Component(props) {
     />
   ));
 
-  return <View>{renderedNonPrimaryButtons}</View>;
+  return <StaticText1>{renderedNonPrimaryButtons}</StaticText1>;
 }
 
 const styles = {

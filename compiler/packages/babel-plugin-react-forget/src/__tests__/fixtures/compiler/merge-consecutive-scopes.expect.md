@@ -2,12 +2,15 @@
 ## Input
 
 ```javascript
+import { useState } from "react";
+import { Stringify } from "shared-runtime";
+
 // @enableMergeConsecutiveScopes
 function Component() {
   let [state, setState] = useState(0);
   return (
     <div>
-      <Title text="Counter" />
+      <Stringify text="Counter" />
       <span>{state}</span>
       <button data-testid="button" onClick={() => setState(state + 1)}>
         increment
@@ -26,13 +29,16 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableMergeConsecutiveScopes
+import { useState, unstable_useMemoCache as useMemoCache } from "react";
+import { Stringify } from "shared-runtime";
+
+// @enableMergeConsecutiveScopes
 function Component() {
   const $ = useMemoCache(8);
   const [state, setState] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Title text="Counter" />;
+    t0 = <Stringify text="Counter" />;
     $[0] = t0;
   } else {
     t0 = $[0];
@@ -83,10 +89,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) useState is not defined
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:50:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) <div><div>{"text":"Counter"}</div><span>0</span><button data-testid="button">increment</button></div>

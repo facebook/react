@@ -1,3 +1,5 @@
+import { unstable_useMemoCache as useMemoCache } from "react";
+
 function Component(props) {
   const $ = useMemoCache();
   let x;

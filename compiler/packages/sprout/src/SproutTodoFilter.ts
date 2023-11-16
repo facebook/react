@@ -510,15 +510,6 @@ const skipFilter = new Set([
   "todo.unnecessary-lambda-memoization",
   "rules-of-hooks/rules-of-hooks-93dc5d5e538a",
   "rules-of-hooks/rules-of-hooks-69521d94fa03",
-
-  // TODO: remove
-  "capture_mutate-across-fns-iife",
-  "capture-indirect-mutate-alias-iife",
-  "capturing-function-alias-computed-load-3-iife",
-  "capturing-function-alias-computed-load-iife",
-  "repro-undefined-expression-of-jsxexpressioncontainer",
-  "repro-hoisting",
-  "hoisting-nested-block-statements"
 ]);
 
 export default skipFilter;

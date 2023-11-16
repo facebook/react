@@ -2,6 +2,9 @@
 ## Input
 
 ```javascript
+import { useState } from "react";
+import { Stringify } from "shared-runtime";
+
 // @enableMergeConsecutiveScopes
 // This is a translation of the original merge-consecutive-scopes which uses plain objects
 // to describe the UI instead of JSX. The JSXText elements in that fixture happen to
@@ -10,7 +13,7 @@
 function Component(props) {
   let [state, setState] = useState(0);
   return [
-    { component: Title, props: { text: "Counter" } },
+    { component: Stringify, props: { text: "Counter" } },
     { component: "span", props: { children: [state] } },
     {
       component: "button",
@@ -33,7 +36,10 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableMergeConsecutiveScopes
+import { useState, unstable_useMemoCache as useMemoCache } from "react";
+import { Stringify } from "shared-runtime";
+
+// @enableMergeConsecutiveScopes
 // This is a translation of the original merge-consecutive-scopes which uses plain objects
 // to describe the UI instead of JSX. The JSXText elements in that fixture happen to
 // prevent scome scopes from merging, which concealed a bug with the merging logic.
@@ -43,7 +49,7 @@ function Component(props) {
   const [state, setState] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = { component: Title, props: { text: "Counter" } };
+    t0 = { component: Stringify, props: { text: "Counter" } };
     $[0] = t0;
   } else {
     t0 = $[0];
@@ -102,10 +108,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) useState is not defined
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:50:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) [{"component":"[[ function params=1 ]]","props":{"text":"Counter"}},{"component":"span","props":{"children":[0]}},{"component":"button","props":{"data-testid":"button","onClick":"[[ function params=0 ]]","children":["increment"]}}]

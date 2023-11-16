@@ -1,4 +1,5 @@
 import { createContext, useContext } from "react";
+import { Stringify } from "shared-runtime";
 
 const FooContext = createContext({ current: true });
 
@@ -14,7 +15,7 @@ function Component(props) {
   };
   const value = getValue();
 
-  return <Child value={value} />;
+  return <Stringify value={value} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {

@@ -1,3 +1,8 @@
+// These variables are unknown to useFoo, as they are
+// defined at module scope or implicit globals
+const isSelected = false;
+const isCurrent = true;
+
 function useFoo() {
   for (let i = 0; i <= 5; i++) {
     let color;

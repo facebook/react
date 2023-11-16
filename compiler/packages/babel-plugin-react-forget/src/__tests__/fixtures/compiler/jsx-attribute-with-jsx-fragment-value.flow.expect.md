@@ -3,6 +3,8 @@
 
 ```javascript
 // @flow
+import { Stringify } from "shared-runtime";
+
 function Component({items}) {
     // Per the spec, <Foo value=<>{...}</> /> is valid.
     // But many tools don't allow fragments as jsx attribute values,
@@ -10,14 +12,14 @@ function Component({items}) {
     return items.length > 0
         ? (
             <Foo value={
-                <>{items.map(item => <Bar key={item.id} item={item} />)}</>
+                <>{items.map(item => <Stringify key={item.id} item={item} />)}</>
             }></Foo>
         )
         : null;
 }
 
-function Foo({item}) {
-    return <div>{item.name}</div>;
+function Foo({value}) {
+    return <div>{value}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -30,6 +32,8 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { Stringify } from "shared-runtime";
+
 function Component(t26) {
   const $ = useMemoCache(2);
   const { items } = t26;
@@ -41,7 +45,7 @@ function Component(t26) {
           value={
             <>
               {items.map((item) => (
-                <Bar key={item.id} item={item} />
+                <Stringify key={item.id} item={item} />
               ))}
             </>
           }
@@ -55,13 +59,13 @@ function Component(t26) {
   return t0;
 }
 
-function Foo(t7) {
+function Foo(t6) {
   const $ = useMemoCache(2);
-  const { item } = t7;
+  const { value } = t6;
   let t0;
-  if ($[0] !== item.name) {
-    t0 = <div>{item.name}</div>;
-    $[0] = item.name;
+  if ($[0] !== value) {
+    t0 = <div>{value}</div>;
+    $[0] = value;
     $[1] = t0;
   } else {
     t0 = $[1];
@@ -77,10 +81,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) Bar is not defined
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:50:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) <div><div>{"item":{"id":1,"name":"One!"}}</div></div>

@@ -2,20 +2,21 @@
 ## Input
 
 ```javascript
+import { print } from "shared-runtime";
+
 function hoisting(cond) {
   if (cond) {
     const x = 1;
-    foo(x);
+    print(x);
   }
 
   const x = 2;
-  foo(x);
+  print(x);
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: hoisting,
   params: [false],
-  isComponent: false,
 };
 
 ```
@@ -23,19 +24,23 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+import { print } from "shared-runtime";
+
 function hoisting(cond) {
   if (cond) {
-    foo(1);
+    print(1);
   }
 
-  foo(2);
+  print(2);
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: hoisting,
   params: [false],
-  isComponent: false,
 };
 
 ```
       
+### Eval output
+(kind: ok) 
+logs: [2]

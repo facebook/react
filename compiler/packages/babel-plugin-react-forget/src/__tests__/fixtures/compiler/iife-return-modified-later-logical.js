@@ -1,6 +1,8 @@
+import { getNull } from "shared-runtime";
+
 function Component(props) {
   const items = (() => {
-    return foo() ?? [];
+    return getNull() ?? [];
   })();
   items.push(props.a);
   return items;

@@ -3,20 +3,22 @@
 
 ```javascript
 // @enableMergeConsecutiveScopes
-function Component(id) {
+import { Stringify } from "shared-runtime";
+
+function Component({ id }) {
   const bar = (() => {})();
 
   return (
     <>
-      <Bar title={bar} />
-      <Bar title={id ? true : false} />
+      <Stringify title={bar} />
+      <Stringify title={id ? true : false} />
     </>
   );
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [null],
+  params: [{}],
 };
 
 ```
@@ -25,11 +27,14 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react"; // @enableMergeConsecutiveScopes
-function Component(id) {
+import { Stringify } from "shared-runtime";
+
+function Component(t23) {
   const $ = useMemoCache(3);
+  const { id } = t23;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Bar title={undefined} />;
+    t0 = <Stringify title={undefined} />;
     $[0] = t0;
   } else {
     t0 = $[0];
@@ -40,7 +45,7 @@ function Component(id) {
     t2 = (
       <>
         {t0}
-        <Bar title={t1} />
+        <Stringify title={t1} />
       </>
     );
     $[1] = t1;
@@ -53,16 +58,10 @@ function Component(id) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [null],
+  params: [{}],
 };
 
 ```
       
 ### Eval output
-(kind: exception) Bar is not defined
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:50:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) <div>{}</div><div>{"title":false}</div>

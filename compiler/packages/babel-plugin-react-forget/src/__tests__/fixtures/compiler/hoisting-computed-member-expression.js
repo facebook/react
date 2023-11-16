@@ -14,5 +14,4 @@ function hoisting() {
 export const FIXTURE_ENTRYPOINT = {
   fn: hoisting,
   params: [],
-  isComponent: false,
 };

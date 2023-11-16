@@ -3,6 +3,7 @@
 
 ```javascript
 import { createContext, useContext } from "react";
+import { Stringify } from "shared-runtime";
 
 const FooContext = createContext({ current: true });
 
@@ -18,7 +19,7 @@ function Component(props) {
   };
   const value = getValue();
 
-  return <Child value={value} />;
+  return <Stringify value={value} />;
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -36,6 +37,7 @@ import {
   useContext,
   unstable_useMemoCache as useMemoCache,
 } from "react";
+import { Stringify } from "shared-runtime";
 
 const FooContext = createContext({ current: true });
 
@@ -68,7 +70,7 @@ function Component(props) {
   const value = t1;
   let t2;
   if ($[4] !== value) {
-    t2 = <Child value={value} />;
+    t2 = <Stringify value={value} />;
     $[4] = value;
     $[5] = t2;
   } else {
@@ -85,10 +87,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) Child is not defined
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:50:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) <div>{"value":{}}</div>

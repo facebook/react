@@ -2,6 +2,11 @@
 ## Input
 
 ```javascript
+// These variables are unknown to useFoo, as they are
+// defined at module scope or implicit globals
+const isSelected = false;
+const isCurrent = true;
+
 function useFoo() {
   for (let i = 0; i <= 5; i++) {
     let color;
@@ -24,6 +29,11 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+// These variables are unknown to useFoo, as they are
+// defined at module scope or implicit globals
+const isSelected = false;
+const isCurrent = true;
+
 function useFoo() {
   for (let i = 0; i <= 5; i++) {
     let color;
@@ -45,10 +55,5 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) isSelected is not defined
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:50:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) 
+logs: ['#CCFF03','#CCFF03','#CCFF03','#CCFF03','#CCFF03','#CCFF03']

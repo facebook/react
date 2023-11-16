@@ -14,8 +14,7 @@ function component(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [2],
 };
 
 ```
@@ -43,9 +42,10 @@ function component(a) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: component,
-  params: ["TodoAdd"],
-  isComponent: "TodoAdd",
+  params: [2],
 };
 
 ```
       
+### Eval output
+(kind: ok) {"a":2,"b":1}

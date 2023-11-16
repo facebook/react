@@ -2,12 +2,14 @@
 ## Input
 
 ```javascript
+import { StaticText1, Stringify, Text } from "shared-runtime";
+
 function Component(props) {
   const { buttons } = props;
   const [primaryButton, ...nonPrimaryButtons] = buttons;
 
   const renderedNonPrimaryButtons = nonPrimaryButtons.map((buttonProps, i) => (
-    <Button
+    <Stringify
       {...buttonProps}
       key={`button-${i}`}
       style={
@@ -16,7 +18,7 @@ function Component(props) {
     />
   ));
 
-  return <View>{renderedNonPrimaryButtons}</View>;
+  return <StaticText1>{renderedNonPrimaryButtons}</StaticText1>;
 }
 
 const styles = {
@@ -43,6 +45,8 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { StaticText1, Stringify, Text } from "shared-runtime";
+
 function Component(props) {
   const $ = useMemoCache(7);
   const { buttons } = props;
@@ -60,7 +64,7 @@ function Component(props) {
     let t0;
     if ($[4] === Symbol.for("react.memo_cache_sentinel")) {
       t0 = (buttonProps, i) => (
-        <Button
+        <Stringify
           {...buttonProps}
           key={`button-${i}`}
           style={
@@ -83,7 +87,7 @@ function Component(props) {
   const renderedNonPrimaryButtons = t1;
   let t2;
   if ($[5] !== renderedNonPrimaryButtons) {
-    t2 = <View>{renderedNonPrimaryButtons}</View>;
+    t2 = <StaticText1>{renderedNonPrimaryButtons}</StaticText1>;
     $[5] = renderedNonPrimaryButtons;
     $[6] = t2;
   } else {
@@ -112,3 +116,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <div>StaticText1<div>{"type":"submit","children":["Submit!"],"style":{"left":true}}</div><div>{"type":"button","children":["Reset"],"style":{"right":true}}</div></div>

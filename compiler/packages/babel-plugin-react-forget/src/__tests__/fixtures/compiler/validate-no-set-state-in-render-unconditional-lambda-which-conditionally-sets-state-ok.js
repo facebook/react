@@ -1,4 +1,6 @@
 // @validateNoSetStateInRender
+import { useState } from "react";
+
 function Component(props) {
   const [x, setX] = useState(0);
 

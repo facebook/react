@@ -2,7 +2,7 @@ const { ObjectWithHooks } = require("shared-runtime");
 
 function Component(props) {
   const x = [];
-  const [y] = ObjectWithHooks.useFoo();
+  const [y] = ObjectWithHooks.useMakeArray();
   x.push(y);
   return y;
 }

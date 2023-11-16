@@ -1,9 +1,12 @@
+import { useState } from "react";
+import { Stringify } from "shared-runtime";
+
 // @enableMergeConsecutiveScopes
 function Component() {
   let [state, setState] = useState(0);
   return (
     <div>
-      <Title text="Counter" />
+      <Stringify text="Counter" />
       <span>{state}</span>
       <button data-testid="button" onClick={() => setState(state + 1)}>
         increment

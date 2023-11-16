@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { Stringify } from "shared-runtime";
+
 // @enableMergeConsecutiveScopes
 // This is a translation of the original merge-consecutive-scopes which uses plain objects
 // to describe the UI instead of JSX. The JSXText elements in that fixture happen to
@@ -6,7 +9,7 @@
 function Component(props) {
   let [state, setState] = useState(0);
   return [
-    { component: Title, props: { text: "Counter" } },
+    { component: Stringify, props: { text: "Counter" } },
     { component: "span", props: { children: [state] } },
     {
       component: "button",

@@ -108,6 +108,10 @@ export function getNumber(): number {
   return 4;
 }
 
+export function getNull(): null {
+  return null;
+}
+
 export function calculateExpensiveNumber(x: number): number {
   return x;
 }
@@ -125,6 +129,12 @@ export function makeObject_Primitives(): StringKeyedObject {
 
 export function addOne(value: number): number {
   return value + 1;
+}
+
+// Alias console.log, as it is defined as a global and may have
+// different compiler handling than unknown functions
+export function print(...args: Array<unknown>) {
+  console.log(...args);
 }
 
 export function sum(...args: Array<number>): number {
@@ -215,5 +225,8 @@ export function toJSON(value: any) {
 export const ObjectWithHooks = {
   useFoo(): number {
     return 0;
+  },
+  useMakeArray(): Array<number> {
+    return [1, 2, 3];
   },
 };

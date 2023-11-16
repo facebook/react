@@ -1,4 +1,6 @@
 // @flow
+import { Stringify } from "shared-runtime";
+
 function Component({items}) {
     // Per the spec, <Foo value=<>{...}</> /> is valid.
     // But many tools don't allow fragments as jsx attribute values,
@@ -6,14 +8,14 @@ function Component({items}) {
     return items.length > 0
         ? (
             <Foo value={
-                <>{items.map(item => <Bar key={item.id} item={item} />)}</>
+                <>{items.map(item => <Stringify key={item.id} item={item} />)}</>
             }></Foo>
         )
         : null;
 }
 
-function Foo({item}) {
-    return <div>{item.name}</div>;
+function Foo({value}) {
+    return <div>{value}</div>;
 }
 
 export const FIXTURE_ENTRYPOINT = {

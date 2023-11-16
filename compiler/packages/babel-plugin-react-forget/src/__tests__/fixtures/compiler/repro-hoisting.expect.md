@@ -9,7 +9,7 @@ function Component(props) {
   };
 
   const pathname = props.wat;
-  const deeplinkItemId = pathname ? itemID : null;
+  const deeplinkItemId = pathname ? props.itemID : null;
 
   return <button onClick={() => wat()}>{deeplinkItemId}</button>;
 }
@@ -37,7 +37,7 @@ function Component(props) {
   const wat = t0;
 
   const pathname_0 = props.wat;
-  const deeplinkItemId = pathname_0 ? itemID : null;
+  const deeplinkItemId = pathname_0 ? props.itemID : null;
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = () => wat();
@@ -63,3 +63,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <button>42</button>
