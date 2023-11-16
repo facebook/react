@@ -155,7 +155,6 @@ if (__DEV__) {
     var enableProfilerNestedUpdateScheduledHook =
       dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
     var createRootStrictEffectsByDefault = false;
-    var enableHostSingletons = true;
     var enableClientRenderFallbackOnTextMismatch = false;
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
@@ -34885,7 +34884,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-b7cd3754";
+    var ReactVersion = "18.3.0-www-classic-c4c3bba3";
 
     function createPortal$1(
       children,
@@ -43168,22 +43167,20 @@ if (__DEV__) {
       textInstance.nodeValue = text;
     }
     function clearContainer(container) {
-      {
-        var nodeType = container.nodeType;
+      var nodeType = container.nodeType;
 
-        if (nodeType === DOCUMENT_NODE) {
-          clearContainerSparingly(container);
-        } else if (nodeType === ELEMENT_NODE) {
-          switch (container.nodeName) {
-            case "HEAD":
-            case "HTML":
-            case "BODY":
-              clearContainerSparingly(container);
-              return;
+      if (nodeType === DOCUMENT_NODE) {
+        clearContainerSparingly(container);
+      } else if (nodeType === ELEMENT_NODE) {
+        switch (container.nodeName) {
+          case "HEAD":
+          case "HTML":
+          case "BODY":
+            clearContainerSparingly(container);
+            return;
 
-            default: {
-              container.textContent = "";
-            }
+          default: {
+            container.textContent = "";
           }
         }
       }
@@ -43254,13 +43251,13 @@ if (__DEV__) {
         var anyProps = props;
 
         if (element.nodeName.toLowerCase() !== type.toLowerCase()) {
-          if (!inRootOrSingleton || !enableHostSingletons) {
+          if (!inRootOrSingleton) {
             // Usually we error for mismatched tags.
             {
               return null;
             }
           } // In root or singleton parents we skip past mismatched instances.
-        } else if (!inRootOrSingleton || !enableHostSingletons) {
+        } else if (!inRootOrSingleton) {
           // Match
           {
             return element;
@@ -43390,7 +43387,7 @@ if (__DEV__) {
       if (text === "") return null;
 
       while (instance.nodeType !== TEXT_NODE) {
-        if (!inRootOrSingleton || !enableHostSingletons) {
+        if (!inRootOrSingleton) {
           return null;
         }
 
@@ -43407,7 +43404,7 @@ if (__DEV__) {
     }
     function canHydrateSuspenseInstance(instance, inRootOrSingleton) {
       while (instance.nodeType !== COMMENT_NODE) {
-        if (!inRootOrSingleton || !enableHostSingletons) {
+        if (!inRootOrSingleton) {
           return null;
         }
 
