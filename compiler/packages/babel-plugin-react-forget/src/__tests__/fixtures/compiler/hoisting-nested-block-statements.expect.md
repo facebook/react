@@ -20,11 +20,22 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 
+## Code
 
-## Error
+```javascript
+function hoisting(cond) {
+  if (cond) {
+    foo(1);
+  }
+
+  foo(2);
+}
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: hoisting,
+  params: [false],
+  isComponent: false,
+};
 
 ```
-[ReactForget] Invariant: [hoisting] Expected value kind to be initialized. read x_0$10 (8:8)
-```
-          
       

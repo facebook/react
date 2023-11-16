@@ -1,7 +1,3 @@
-
-## Input
-
-```javascript
 function Component(props) {
   const wat = () => {
     const pathname = "wat";
@@ -14,13 +10,8 @@ function Component(props) {
   return <button onClick={() => wat()}>{deeplinkItemId}</button>;
 }
 
-```
-
-
-## Error
-
-```
-[ReactForget] Invariant: [hoisting] Expected value kind to be initialized. read pathname_0$12 (8:8)
-```
-          
-      
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ wat: "/dev/null", itemID: 42 }],
+  isComponent: "Component",
+};

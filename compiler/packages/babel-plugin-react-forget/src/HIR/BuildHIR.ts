@@ -369,7 +369,7 @@ function lowerStatement(
          */
         s.traverse({
           Identifier(id: NodePath<t.Identifier>) {
-            const binding = stmt.scope.getBinding(id.node.name);
+            const binding = id.scope.getBinding(id.node.name);
             if (binding != null && hoistableBindings.has(binding)) {
               if (
                 id.parentPath.isVariableDeclarator() ||
