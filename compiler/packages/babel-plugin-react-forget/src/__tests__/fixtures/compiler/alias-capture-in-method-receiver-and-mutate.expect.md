@@ -56,3 +56,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) [[{"a":0,"b":"value1","c":true}],"[[ cyclic ref *2 ]]"]

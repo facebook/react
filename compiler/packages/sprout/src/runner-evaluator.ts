@@ -6,6 +6,7 @@
  */
 
 import { render } from "@testing-library/react";
+import { PROJECT_ROOT } from "fixture-test-utils";
 import { JSDOM } from "jsdom";
 import util from "util";
 import { z } from "zod";
@@ -105,7 +106,13 @@ export function doEval(source: string): EvaluatorResult {
   const originalConsole = globalThis.console;
   const logs: Array<string> = [];
   const mockedLog = (...args: Array<any>) => {
-    logs.push(`${args.map((arg) => util.inspect(arg))}`);
+    // Some hackery: React will use the JS engine to log source location,
+    // which doesn't play well with snapshot files.
+    logs.push(
+      `${args.map((arg) =>
+        util.inspect(arg).replaceAll(PROJECT_ROOT, "<project_root>")
+      )}`
+    );
   };
 
   (globalThis.console as any) = {

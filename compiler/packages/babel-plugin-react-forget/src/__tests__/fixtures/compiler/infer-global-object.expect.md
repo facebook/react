@@ -69,3 +69,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) {"primitiveVal1":2,"primitiveVal2":null,"primitiveVal3":null}

@@ -61,3 +61,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) {"f":"[[ function params=0 ]]"}
+logs: ['A','arg','original']

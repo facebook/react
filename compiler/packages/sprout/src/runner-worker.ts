@@ -17,9 +17,8 @@ import {
   parseLanguage,
   transformFixtureInput,
 } from "fixture-test-utils";
-import fs from "fs/promises";
-import path from "path";
 import { EvaluatorResult, doEval } from "./runner-evaluator";
+import path from "path";
 
 const { runReactForgetBabelPlugin } = require(COMPILER_PATH) as {
   runReactForgetBabelPlugin: typeof RunReactForgetBabelPlugin;
@@ -29,17 +28,20 @@ const { parseConfigPragma } = require(PARSE_CONFIG_PRAGMA_PATH) as {
   parseConfigPragma: typeof ParseConfigPragma;
 };
 
-// TODO: save output in .sprout.md files
-export type TestResult =
+export type SproutFixtureResult =
   | {
       nonForgetResult: EvaluatorResult;
       forgetResult: EvaluatorResult;
       unexpectedError: null;
+      snapshot: string | null;
+      snapshotPath: string;
     }
   | {
       nonForgetResult: null;
       forgetResult: null;
       unexpectedError: string;
+      snapshot: string | null;
+      snapshotPath: string;
     };
 
 type TransformResult =
@@ -206,30 +208,33 @@ function transformFixtureNoForget(
   }
 }
 
-export async function run(fixture: TestFixture): Promise<TestResult> {
+export async function run(fixture: TestFixture): Promise<SproutFixtureResult> {
   const seenConsoleErrors: Array<string> = [];
   console.error = (...messages: Array<string>) => {
     seenConsoleErrors.push(...messages);
   };
-  const { inputPath } = fixture;
-  if (inputPath == null) {
+  const { input, inputPath, snapshot, snapshotPath } = fixture;
+  if (input == null) {
     return {
       nonForgetResult: null,
       forgetResult: null,
-      unexpectedError: "No input for fixture " + fixture.outputPath,
+      unexpectedError: "No input for fixture " + fixture.snapshotPath,
+      snapshot,
+      snapshotPath,
     };
   }
-  const inputRaw = await fs.readFile(inputPath, "utf8");
   // We need to include the file extension as it determines typescript
   // babel plugin's mode (e.g. stripping types, parsing rules for brackets)
   const filename = path.basename(inputPath);
-  const forgetCode = transformFixtureForget(inputRaw, filename);
-  const noForgetCode = transformFixtureNoForget(inputRaw, filename);
+  const forgetCode = transformFixtureForget(input, filename);
+  const noForgetCode = transformFixtureNoForget(input, filename);
   if (forgetCode.type === "UnexpectedError") {
     return {
       nonForgetResult: null,
       forgetResult: null,
       unexpectedError: forgetCode.value,
+      snapshot,
+      snapshotPath,
     };
   }
   if (noForgetCode.type === "UnexpectedError") {
@@ -237,6 +242,8 @@ export async function run(fixture: TestFixture): Promise<TestResult> {
       nonForgetResult: null,
       forgetResult: null,
       unexpectedError: noForgetCode.value,
+      snapshot,
+      snapshotPath,
     };
   }
   const nonForgetResult = doEval(noForgetCode.value);
@@ -245,5 +252,7 @@ export async function run(fixture: TestFixture): Promise<TestResult> {
     nonForgetResult,
     forgetResult,
     unexpectedError: null,
+    snapshot,
+    snapshotPath,
   };
 }

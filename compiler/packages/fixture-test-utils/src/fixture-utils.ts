@@ -7,11 +7,12 @@
 
 import fs from "fs/promises";
 import glob from "glob";
-import invariant from "invariant";
 import path from "path";
-import { FILTER_PATH, FIXTURES_PATH } from "./constants";
+import { FILTER_PATH, FIXTURES_PATH, SNAPSHOT_EXTENSION } from "./constants";
 
 const KIND_DEFAULT = "only";
+const INPUT_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx"];
+
 export type TestFilter =
   | {
       kind: "only";
@@ -93,113 +94,110 @@ export async function readTestFilter(): Promise<TestFilter | null> {
   };
 }
 
-export type TestFixture = {
-  basename: string;
-  inputPath: string | null;
-  outputPath: string;
-  outputExists: boolean;
-};
+export function getBasename(fixture: TestFixture): string {
+  return stripExtension(path.basename(fixture.inputPath), INPUT_EXTENSIONS);
+}
+export function isExpectError(fixture: TestFixture): boolean {
+  const basename = getBasename(fixture);
+  return basename.startsWith("error.") || basename.startsWith("todo.error");
+}
 
-const INPUT_EXTENSIONS = [".js", ".ts", ".jsx", ".tsx"];
-const OUTPUT_EXTENSION = ".expect.md";
-export function getFixtures(
+export type TestFixture =
+  | {
+      input: string | null;
+      inputPath: string;
+      snapshot: string | null;
+      snapshotPath: string;
+    }
+  | {
+      input: null;
+      inputPath: string;
+      snapshot: string;
+      snapshotPath: string;
+    };
+
+async function readInputFixtures(
+  rootDir: string,
   filter: TestFilter | null
-): Map<string, TestFixture> {
-  // search for fixtures within nested directories
+): Promise<Map<string, { value: string; filepath: string }>> {
   const inputFiles = glob.sync(`**/*{${INPUT_EXTENSIONS.join(",")}}`, {
-    cwd: FIXTURES_PATH,
+    cwd: rootDir,
   });
-  const fixtures: Map<string, TestFixture> = new Map();
+  const inputs: Array<Promise<[string, { value: string; filepath: string }]>> =
+    [];
   for (const filePath of inputFiles) {
     // Do not include extensions in unique identifier for fixture
     const partialPath = stripExtension(filePath, INPUT_EXTENSIONS);
     if (shouldSkip(filter, partialPath)) {
       continue;
     }
-
-    const fixtureInfo = fixtures.get(partialPath);
-    if (fixtureInfo === undefined) {
-      fixtures.set(partialPath, {
-        basename: path.basename(partialPath),
-        inputPath: path.join(FIXTURES_PATH, filePath),
-        outputPath: path.join(FIXTURES_PATH, partialPath) + OUTPUT_EXTENSION,
-        outputExists: false,
-      });
-    } else {
-      console.warn(
-        "Found duplicate fixture files: ",
-        fixtureInfo.inputPath,
-        filePath
-      );
-    }
+    inputs.push(
+      fs.readFile(path.join(rootDir, filePath), "utf8").then((input) => {
+        return [
+          partialPath,
+          {
+            value: input,
+            filepath: filePath,
+          },
+        ];
+      })
+    );
   }
-
-  const outputFiles = glob.sync(`**/*${OUTPUT_EXTENSION}`, {
-    cwd: FIXTURES_PATH,
+  return new Map(await Promise.all(inputs));
+}
+async function readOutputFixtures(
+  rootDir: string,
+  filter: TestFilter | null
+): Promise<Map<string, string>> {
+  const outputFiles = glob.sync(`**/*${SNAPSHOT_EXTENSION}`, {
+    cwd: rootDir,
   });
+  const outputs: Array<Promise<[string, string]>> = [];
   for (const filePath of outputFiles) {
     // Do not include extensions in unique identifier for fixture
-    const partialPath = stripExtension(filePath, [OUTPUT_EXTENSION]);
+    const partialPath = stripExtension(filePath, [SNAPSHOT_EXTENSION]);
     if (shouldSkip(filter, partialPath)) {
       continue;
     }
 
-    const fixtureInfo = fixtures.get(partialPath);
-    if (fixtureInfo === undefined) {
-      fixtures.set(partialPath, {
-        basename: path.basename(partialPath),
-        inputPath: null,
-        outputPath: path.join(FIXTURES_PATH, filePath),
-        outputExists: true,
+    const outputPath = path.join(rootDir, filePath);
+    const output: Promise<[string, string]> = fs
+      .readFile(outputPath, "utf8")
+      .then((output) => {
+        return [partialPath, output];
       });
-    } else {
-      invariant(
-        fixtureInfo.outputPath === path.join(FIXTURES_PATH, filePath),
-        "Unexpected output filepath"
-      );
-      fixtureInfo.outputExists = true;
+    outputs.push(output);
+  }
+  return new Map(await Promise.all(outputs));
+}
+
+export async function getFixtures(
+  filter: TestFilter | null
+): Promise<Map<string, TestFixture>> {
+  const inputs = await readInputFixtures(FIXTURES_PATH, filter);
+  const outputs = await readOutputFixtures(FIXTURES_PATH, filter);
+
+  const fixtures: Map<string, TestFixture> = new Map();
+  for (const [partialPath, { value, filepath }] of inputs) {
+    const output = outputs.get(partialPath) ?? null;
+    fixtures.set(partialPath, {
+      input: value,
+      inputPath: filepath,
+      snapshot: output,
+      snapshotPath: path.join(FIXTURES_PATH, partialPath) + SNAPSHOT_EXTENSION,
+    });
+  }
+
+  for (const [partialPath, output] of outputs) {
+    if (!fixtures.has(partialPath)) {
+      fixtures.set(partialPath, {
+        input: null,
+        inputPath: "none",
+        snapshot: output,
+        snapshotPath:
+          path.join(FIXTURES_PATH, partialPath) + SNAPSHOT_EXTENSION,
+      });
     }
   }
-
   return fixtures;
-}
-
-function wrapWithTripleBackticks(s: string, ext: string | null = null): string {
-  return `\`\`\`${ext ?? ""}
-${s}
-\`\`\``;
-}
-
-export function writeOutputToString(
-  input: string,
-  output: string | null,
-  error: Error | null
-) {
-  // leading newline intentional
-  let result = `
-## Input
-
-${wrapWithTripleBackticks(input, "javascript")}
-`; // trailing newline + space internional
-
-  if (output != null) {
-    result += `
-## Code
-
-${output == null ? "[ none ]" : wrapWithTripleBackticks(output, "javascript")}
-`;
-  } else {
-    result += "\n";
-  }
-
-  if (error != null) {
-    const errorMessage = error.message.replace(/^\/.*?:\s/, "");
-
-    result += `
-## Error
-
-${wrapWithTripleBackticks(errorMessage)}
-          \n`;
-  }
-  return result + `      `;
 }

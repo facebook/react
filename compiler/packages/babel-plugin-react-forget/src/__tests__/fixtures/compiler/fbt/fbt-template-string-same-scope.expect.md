@@ -69,3 +69,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <div>{"children":"for 3 experiences"}</div>

@@ -106,5 +106,5 @@ function customHelper(val1, val2) {
 - [✅] Enable Sprout by default and run it in the Github Actions pipeline.
 - [🚧] Make all existing test fixtures Sprout compatible (see `SproutTodoFilter.ts`). This involves each fixture being annotated with `FIXTURE_ENTRYPOINT` and using shared functions and/or defining its own helpers.
   - 77 done, ~410 to go
-- [ ] *(optional)* Store Sprout output as snapshot files. i.e. each fixture could have a `fixture.js`, `fixture.snap.md`, and `fixture.sprout.md`.
-- [ ] Add support for `fbt`.
+- [✅] *(optional)* Store Sprout output as snapshot files. i.e. each fixture could have a `fixture.js`, `fixture.snap.md`, and `fixture.sprout.md`.
+- [✅] Add support for `fbt`.

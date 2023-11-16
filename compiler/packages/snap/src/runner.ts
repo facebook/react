@@ -6,7 +6,6 @@
  */
 
 import watcher from "@parcel/watcher";
-import chalk from "chalk";
 import {
   COMPILER_PATH,
   FILTER_FILENAME,
@@ -15,12 +14,13 @@ import {
   LOGGER_PATH,
   PARSE_CONFIG_PRAGMA_PATH,
   TestFilter,
+  TestResult,
+  TestResults,
   getFixtures,
   readTestFilter,
+  report,
+  update,
 } from "fixture-test-utils";
-import fs from "fs";
-import invariant from "invariant";
-import { diff } from "jest-diff";
 import { Worker } from "jest-worker";
 import path from "path";
 import process from "process";
@@ -29,7 +29,6 @@ import ts from "typescript";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import * as compiler from "./compiler-worker";
-import { TestResult } from "./compiler-worker";
 
 const WORKER_PATH = require.resolve("./compiler-worker.js");
 
@@ -49,7 +48,6 @@ process.on("SIGTERM", function () {
   cleanup(-1);
 });
 
-type Results = Map<string, TestResult>;
 type RunnerOptions = {
   sync: boolean;
   workerThreads: boolean;
@@ -110,11 +108,11 @@ async function run(
   opts: RunnerOptions,
   filter: TestFilter | null,
   compilerVersion: number
-): Promise<Results> {
+): Promise<TestResults> {
   // We could in theory be fancy about tracking the contents of the fixtures
   // directory via our file subscription, but it's simpler to just re-read
   // the directory each time.
-  const fixtures = getFixtures(filter);
+  const fixtures = await getFixtures(filter);
   const isOnlyFixture = filter !== null && fixtures.size === 1;
 
   let entries: Array<[string, TestResult]>;
@@ -155,113 +153,6 @@ async function run(
   }
 
   return new Map(entries);
-}
-
-/**
- * Report test results to the user
- * @returns boolean indicatig whether all tests passed
- */
-function report(results: Results): boolean {
-  const failures: Array<[string, TestResult]> = [];
-  for (const [basename, result] of results) {
-    if (result.actual === result.expected && result.unexpectedError == null) {
-      console.log(
-        chalk.green.inverse.bold(" PASS ") + " " + chalk.dim(basename)
-      );
-    } else {
-      console.log(chalk.red.inverse.bold(" FAIL ") + " " + chalk.dim(basename));
-      failures.push([basename, result]);
-    }
-  }
-
-  if (failures.length !== 0) {
-    console.log("\n" + chalk.red.bold("Failures:") + "\n");
-
-    for (const [basename, result] of failures) {
-      console.log(chalk.red.bold("FAIL:") + " " + basename);
-      if (result.unexpectedError != null) {
-        console.log(
-          ` >> Unexpected error during test: \n${result.unexpectedError}`
-        );
-      } else {
-        if (result.expected == null) {
-          invariant(result.actual != null, "[Snap tester] Internal failure.");
-          console.log(
-            chalk.red("[ expected fixture output is absent ]") + "\n"
-          );
-        } else if (result.actual == null) {
-          invariant(result.expected != null, "[Snap tester] Internal failure.");
-          console.log(
-            chalk.red("[ fixture input (test.js) is absent ]") + "\n"
-          );
-        } else {
-          console.log(diff(result.expected, result.actual) + "\n");
-        }
-      }
-    }
-  }
-
-  console.log(
-    `${results.size} Tests, ${results.size - failures.length} Passed, ${
-      failures.length
-    } Failed`
-  );
-  return failures.length === 0;
-}
-
-/**
- * Update the fixtures directory given the compilation results
- */
-async function update(results: Results): Promise<void> {
-  let deleted = 0;
-  let updated = 0;
-  let created = 0;
-  const failed = [];
-  for (const [basename, result] of results) {
-    if (result.unexpectedError != null) {
-      console.log(
-        chalk.red.inverse.bold(" FAILED ") + " " + chalk.dim(basename)
-      );
-      failed.push([basename, result.unexpectedError]);
-    } else if (result.actual == null) {
-      // Input was deleted but the expect file still existed, remove it
-      console.log(
-        chalk.red.inverse.bold(" REMOVE ") + " " + chalk.dim(basename)
-      );
-      try {
-        fs.unlinkSync(result.outputPath);
-        console.log(" remove  " + result.outputPath);
-        deleted++;
-      } catch (e) {
-        console.error(
-          "[Snap tester error]: failed to remove " + result.outputPath
-        );
-        failed.push([basename, result.unexpectedError]);
-      }
-    } else if (result.actual !== result.expected) {
-      // Expected output has changed
-      console.log(
-        chalk.blue.inverse.bold(" UPDATE ") + " " + chalk.dim(basename)
-      );
-      fs.writeFileSync(result.outputPath, result.actual, "utf8");
-      if (result.expected == null) {
-        created++;
-      } else {
-        updated++;
-      }
-    } else {
-      // Expected output is current
-      console.log(
-        chalk.green.inverse.bold("  OKAY  ") + " " + chalk.dim(basename)
-      );
-    }
-  }
-  console.log(
-    `${deleted} Deleted, ${created} Created, ${updated} Updated, ${failed.length} Failed`
-  );
-  for (const [basename, errorMsg] of failed) {
-    console.log(`${chalk.red.bold("Fail:")} ${basename}\n${errorMsg}`);
-  }
 }
 
 function watchSrc(

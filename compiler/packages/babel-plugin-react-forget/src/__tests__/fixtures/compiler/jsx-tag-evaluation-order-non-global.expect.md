@@ -106,3 +106,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <div>StaticText1<div>StaticText2</div></div>

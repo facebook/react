@@ -59,3 +59,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) {"a":1,"b":2}
+logs: [{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 },{ a: 1, b: 2 }]

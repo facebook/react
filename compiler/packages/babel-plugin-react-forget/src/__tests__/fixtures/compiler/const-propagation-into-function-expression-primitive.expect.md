@@ -39,3 +39,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) 42
+logs: [42]

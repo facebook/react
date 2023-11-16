@@ -44,3 +44,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <div>HigherOrderComponent<div>StaticText2</div></div>

@@ -56,3 +56,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) {"a":[[1,2],2,"hello"],"x":3,"y":"[[ function params=1 ]]","z":"[[ function params=1 ]]"}

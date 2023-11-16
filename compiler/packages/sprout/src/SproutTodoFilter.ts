@@ -516,6 +516,9 @@ const skipFilter = new Set([
   "capture-indirect-mutate-alias-iife",
   "capturing-function-alias-computed-load-3-iife",
   "capturing-function-alias-computed-load-iife",
+  "repro-undefined-expression-of-jsxexpressioncontainer",
+  "repro-hoisting",
+  "hoisting-nested-block-statements"
 ]);
 
 export default skipFilter;

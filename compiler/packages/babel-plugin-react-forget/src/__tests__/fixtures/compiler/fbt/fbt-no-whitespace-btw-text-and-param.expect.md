@@ -52,3 +52,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) Before texthello worldAfter text

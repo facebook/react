@@ -52,3 +52,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) {"x":{"a":"foo"},"wat0":"joe"}

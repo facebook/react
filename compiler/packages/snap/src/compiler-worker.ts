@@ -9,10 +9,14 @@ import type { runReactForgetBabelPlugin as RunReactForgetBabelPlugin } from "bab
 import type { parseConfigPragma as ParseConfigPragma } from "babel-plugin-react-forget/src/HIR/Environment";
 import {
   TestFixture,
+  TestResult,
+  UpdateSnapshotKind,
+  getBasename,
+  getUpdatedSnapshot,
+  isExpectError,
   transformFixtureInput,
   writeOutputToString,
 } from "fixture-test-utils";
-import fs from "fs/promises";
 
 const originalConsoleError = console.error;
 
@@ -28,13 +32,6 @@ export function clearRequireCache() {
     }
   });
 }
-
-export type TestResult = {
-  outputPath: string;
-  actual: string | null; // null == input did not exist
-  expected: string | null; // null == output did not exist
-  unexpectedError: string | null;
-};
 
 export async function compile(
   compilerPath: string,
@@ -53,9 +50,8 @@ export async function compile(
     clearRequireCache();
   }
   version = compilerVersion;
-  const { inputPath, outputPath, outputExists, basename } = fixture;
-  const input = inputPath != null ? await fs.readFile(inputPath, "utf8") : null;
-  const expected = outputExists ? await fs.readFile(outputPath, "utf8") : null;
+  const { input, snapshot: expected, snapshotPath: outputPath } = fixture;
+  const basename = getBasename(fixture);
 
   // Input will be null if the input file did not exist, in which case the output file
   // is stale
@@ -107,11 +103,8 @@ export async function compile(
     }
   }
 
-  const output = writeOutputToString(input, code, error);
-  const expectError =
-    basename.startsWith("error.") || basename.startsWith("todo.error");
   let unexpectedError: string | null = null;
-  if (expectError) {
+  if (isExpectError(fixture)) {
     if (error === null) {
       unexpectedError = `Expected an error to be thrown for fixture: '${basename}', remove the 'error.' prefix if an error is not expected.`;
     }
@@ -124,10 +117,10 @@ export async function compile(
   }
 
   console.error = originalConsoleError;
-
+  const output = writeOutputToString(input, code, error);
   return {
     outputPath,
-    actual: output,
+    actual: getUpdatedSnapshot(expected, output, UpdateSnapshotKind.Snap),
     expected,
     unexpectedError,
   };

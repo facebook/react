@@ -78,3 +78,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) <div>Before text<div>StaticText1</div>Middle text<div>StaticText1Inner before text<div>StaticText1</div>Inner middle text<div>StaticText1</div>Inner after text</div>After text</div>

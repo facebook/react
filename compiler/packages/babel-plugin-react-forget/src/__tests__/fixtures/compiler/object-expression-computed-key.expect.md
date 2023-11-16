@@ -60,3 +60,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) {"Sathya":["Compiler",2]}
