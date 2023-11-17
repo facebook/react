@@ -217,7 +217,7 @@ const forks = Object.freeze({
     }
   },
 
-  './packages/react/src/ReactSharedInternals.js': (bundleType, entry) => {
+  './packages/react/src/ReactSharedInternalsClient.js': (bundleType, entry) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
