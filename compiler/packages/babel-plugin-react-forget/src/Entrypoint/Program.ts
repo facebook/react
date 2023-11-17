@@ -59,6 +59,15 @@ function isCriticalError(err: unknown): boolean {
   return !(err instanceof CompilerError) || err.isCritical();
 }
 
+function isConfigError(err: unknown): boolean {
+  if (err instanceof CompilerError) {
+    return err.details.some(
+      (detail) => detail.severity === ErrorSeverity.InvalidConfig
+    );
+  }
+  return false;
+}
+
 type BabelFn =
   | NodePath<t.FunctionDeclaration>
   | NodePath<t.FunctionExpression>
@@ -98,15 +107,10 @@ function handleError(
       });
     }
   }
-  /*
-   * Always throw if the flag is enabled, otherwise we only throw if the error is critical
-   * (eg an invariant is broken, meaning the compiler may be buggy). See
-   * {@link CompilerError.isCritical} for mappings.
-   *
-   */
   if (
     pass.opts.panicThreshold === "ALL_ERRORS" ||
-    (pass.opts.panicThreshold === "CRITICAL_ERRORS" && isCriticalError(err))
+    (pass.opts.panicThreshold === "CRITICAL_ERRORS" && isCriticalError(err)) ||
+    isConfigError(err) // Always throws regardless of panic threshold
   ) {
     throw err;
   }
