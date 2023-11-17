@@ -38,7 +38,6 @@ export const enableSuspenseCallback = false;
 export const disableLegacyContext = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
-export const disableModulePatternComponents = false;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;

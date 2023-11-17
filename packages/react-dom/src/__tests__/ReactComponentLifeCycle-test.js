@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
-let PropTypes;
 
 const clone = function (o) {
   return JSON.parse(JSON.stringify(o));
@@ -91,7 +90,6 @@ describe('ReactComponentLifeCycle', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    PropTypes = require('prop-types');
   });
 
   it('should not reuse an instance when it has been unmounted', () => {
@@ -982,67 +980,6 @@ describe('ReactComponentLifeCycle', () => {
       withoutStack: true,
     });
   });
-
-  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('calls effects on module-pattern component', function () {
-      const log = [];
-
-      function Parent() {
-        return {
-          render() {
-            expect(typeof this.props).toBe('object');
-            log.push('render');
-            return <Child />;
-          },
-          UNSAFE_componentWillMount() {
-            log.push('will mount');
-          },
-          componentDidMount() {
-            log.push('did mount');
-          },
-          componentDidUpdate() {
-            log.push('did update');
-          },
-          getChildContext() {
-            return {x: 2};
-          },
-        };
-      }
-      Parent.childContextTypes = {
-        x: PropTypes.number,
-      };
-      function Child(props, context) {
-        expect(context.x).toBe(2);
-        return <div />;
-      }
-      Child.contextTypes = {
-        x: PropTypes.number,
-      };
-
-      const div = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div),
-      ).toErrorDev(
-        'Warning: The <Parent /> component appears to be a function component that returns a class instance. ' +
-          'Change Parent to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Parent.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-      );
-      ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
-
-      expect(log).toEqual([
-        'will mount',
-        'render',
-        'did mount',
-        'ref',
-
-        'render',
-        'did update',
-        'ref',
-      ]);
-    });
-  }
 
   it('should warn if getDerivedStateFromProps returns undefined', () => {
     class MyComponent extends React.Component {

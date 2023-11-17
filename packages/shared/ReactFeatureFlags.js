@@ -145,8 +145,6 @@ export const enableRetryLaneExpiration = false;
 // If FALSE, these trees will be StrictLegacyMode.
 export const createRootStrictEffectsByDefault = false;
 
-export const disableModulePatternComponents = false;
-
 export const disableLegacyContext = false;
 
 export const enableUseRefAccessWarning = false;

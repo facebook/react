@@ -17,7 +17,6 @@ import {
   SuspenseComponent,
   SuspenseListComponent,
   FunctionComponent,
-  IndeterminateComponent,
   ForwardRef,
   SimpleMemoComponent,
   ClassComponent,
@@ -47,7 +46,6 @@ function describeFiber(fiber: Fiber): string {
     case SuspenseListComponent:
       return describeBuiltInComponentFrame('SuspenseList', source, owner);
     case FunctionComponent:
-    case IndeterminateComponent:
     case SimpleMemoComponent:
       return describeFunctionComponentFrame(fiber.type, source, owner);
     case ForwardRef:

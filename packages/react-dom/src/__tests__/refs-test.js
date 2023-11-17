@@ -11,7 +11,6 @@
 
 let React = require('react');
 let ReactDOM = require('react-dom');
-let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 let ReactTestUtils = require('react-dom/test-utils');
 
 // This is testing if string refs are deleted from `instance.refs`
@@ -24,7 +23,6 @@ describe('reactiverefs', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
   });
 
@@ -183,33 +181,6 @@ describe('reactiverefs', () => {
   });
 });
 
-if (!ReactFeatureFlags.disableModulePatternComponents) {
-  describe('factory components', () => {
-    it('Should correctly get the ref', () => {
-      function Comp() {
-        return {
-          elemRef: React.createRef(),
-          render() {
-            return <div ref={this.elemRef} />;
-          },
-        };
-      }
-
-      let inst;
-      expect(
-        () => (inst = ReactTestUtils.renderIntoDocument(<Comp />)),
-      ).toErrorDev(
-        'Warning: The <Comp /> component appears to be a function component that returns a class instance. ' +
-          'Change Comp to a class that extends React.Component instead. ' +
-          "If you can't use a class try assigning the prototype on the function as a workaround. " +
-          '`Comp.prototype = React.Component.prototype`. ' +
-          "Don't use an arrow function since it cannot be called with `new` by React.",
-      );
-      expect(inst.elemRef.current.tagName).toBe('DIV');
-    });
-  });
-}
-
 /**
  * Tests that when a ref hops around children, we can track that correctly.
  */
@@ -219,7 +190,6 @@ describe('ref swapping', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
 
     RefHopsAround = class extends React.Component {

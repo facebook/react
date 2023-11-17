@@ -15,7 +15,6 @@ import {enableLegacyHidden} from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
   ClassComponent,
-  IndeterminateComponent,
   HostRoot,
   HostPortal,
   HostComponent,
@@ -115,7 +114,6 @@ export default function getComponentNameFromFiber(fiber: Fiber): string | null {
     case ClassComponent:
     case FunctionComponent:
     case IncompleteClassComponent:
-    case IndeterminateComponent:
     case MemoComponent:
     case SimpleMemoComponent:
       if (typeof type === 'function') {

@@ -21,7 +21,6 @@ import typeof * as DynamicFlagsType from 'ReactNativeInternalFeatureFlags';
 // update the test configuration.
 
 export const alwaysThrottleRetries = __VARIANT__;
-export const disableModulePatternComponents = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const enableUnifiedSyncLane = __VARIANT__;
 export const enableUseRefAccessWarning = __VARIANT__;

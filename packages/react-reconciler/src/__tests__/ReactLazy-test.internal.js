@@ -854,6 +854,7 @@ describe('ReactLazy', () => {
     }).toErrorDev(
       'Invalid prop `inner` of type `boolean` supplied to `Add`, expected `number`.',
     );
+
     expect(root).toMatchRenderedOutput('0');
   }
 

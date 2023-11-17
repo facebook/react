@@ -86,8 +86,6 @@ export const disableJavaScriptURLs = true;
 // Need to remove it.
 export const disableCommentsAsDOMContainers = false;
 
-export const disableModulePatternComponents = true;
-
 export const enableCreateEventHandleAPI = true;
 
 export const enableScopeAPI = true;
