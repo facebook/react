@@ -10,7 +10,6 @@ import * as t from "@babel/types";
 import {
   CompilerError,
   CompilerErrorDetail,
-  CompilerSuggestionOperation,
   ErrorSeverity,
 } from "../CompilerError";
 import {
@@ -21,6 +20,11 @@ import {
 import { CodegenFunction } from "../ReactiveScopes";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
 import { assertExhaustive } from "../Utils/utils";
+import {
+  filterEslintSuppressionsThatAffectFunction,
+  findProgramEslintSuppressions,
+  suppressionsToCompilerError,
+} from "./EslintSuppression";
 import { insertGatedFunctionDeclaration } from "./Gating";
 import { addImportsToProgram, updateUseMemoCacheImport } from "./Imports";
 import { addInstrumentForget } from "./Instrumentation";
@@ -163,50 +167,6 @@ function createNewFunctionNode(
   return transformedFn;
 }
 
-function findEslintSuppressions(
-  fileComments: Array<t.CommentBlock | t.CommentLine>
-): CompilerError | null {
-  const violations: Array<t.CommentBlock | t.CommentLine> = [];
-
-  if (Array.isArray(fileComments)) {
-    for (const comment of fileComments) {
-      if (
-        /eslint-disable(-next-line)? react-hooks\/(exhaustive-deps|rules-of-hooks)/.test(
-          comment.value
-        )
-      ) {
-        violations.push(comment);
-      }
-    }
-  }
-
-  if (violations.length > 0) {
-    const reason =
-      "React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior";
-    const error = new CompilerError();
-    for (const violation of violations) {
-      error.pushErrorDetail(
-        new CompilerErrorDetail({
-          reason,
-          description: violation.value.trim(),
-          severity: ErrorSeverity.InvalidReact,
-          loc: violation.loc ?? null,
-          suggestions: [
-            {
-              description: "Remove the eslint disable",
-              range: [violation.start!, violation.end!],
-              op: CompilerSuggestionOperation.Remove,
-            },
-          ],
-        })
-      );
-    }
-    return error;
-  } else {
-    return null;
-  }
-}
-
 /*
  * This is a hack to work around what seems to be a Babel bug. Babel doesn't
  * consistently respect the `skip()` function to avoid revisiting a node within
@@ -224,7 +184,8 @@ export function compileProgram(
    * we may still need to run Forget's analysis on every function (even if we
    * have already encountered errors) for reporting.
    */
-  const lintError = findEslintSuppressions(pass.comments);
+  const eslintSuppressions = findProgramEslintSuppressions(pass.comments);
+  const lintError = suppressionsToCompilerError(eslintSuppressions);
   let hasCriticalError = lintError != null;
   const compiledFns: CompileResult[] = [];
 
@@ -242,11 +203,16 @@ export function compileProgram(
     fn.skip();
 
     if (lintError != null) {
-      /*
-       * Report lint suppressions as InvalidReact if we find forget-able
-       * functions within the file
+      /**
+       * Note that Babel does not attach comment nodes to nodes; they are dangling off of the
+       * Program node itself. We need to figure out whether an eslint suppression range
+       * applies to this function first.
        */
-      handleError(lintError, pass, fn.node.loc ?? null);
+      const eslintSuppressionsInFunction =
+        filterEslintSuppressionsThatAffectFunction(eslintSuppressions, fn);
+      if (eslintSuppressionsInFunction.length > 0) {
+        handleError(lintError, pass, fn.node.loc ?? null);
+      }
     }
 
     let compiledFn: CodegenFunction;
