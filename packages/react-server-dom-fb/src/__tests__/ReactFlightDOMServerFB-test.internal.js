@@ -50,7 +50,6 @@ class Destination {
     if (!this.#controller) {
       throw new Error('Expected a controller.');
     }
-    console.log('flushing', this.#buffer);
     this.#controller.enqueue(this.#buffer);
     this.#buffer = '';
   }
