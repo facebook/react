@@ -30,7 +30,7 @@ function initModules() {
   ReactTestUtils = require('react-dom/test-utils');
   act = require('internal-test-utils').act;
   if (gate(flags => flags.enableSuspenseList)) {
-    SuspenseList = React.SuspenseList;
+    SuspenseList = React.unstable_SuspenseList;
   }
 
   // Make them available to the helpers.

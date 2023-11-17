@@ -938,11 +938,51 @@ describe('ProfilingCache', () => {
     }
   });
 
-  // @reactVersion >= 17
-  // @reactVersion < 18
+  // @reactVersion >= 18.0.0
+  // @reactVersion <= 18.2.0
+  it('should handle unexpectedly shallow suspense trees for react v[18.0.0 - 18.2.0]', () => {
+    const container = document.createElement('div');
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => legacyRender(<React.Suspense />, container));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    const rootID = store.roots[0];
+    const commitData = store.profilerStore.getDataForRoot(rootID).commitData;
+    expect(commitData).toMatchInlineSnapshot(`
+      [
+        {
+          "changeDescriptions": Map {},
+          "duration": 0,
+          "effectDuration": null,
+          "fiberActualDurations": Map {
+            1 => 0,
+            2 => 0,
+          },
+          "fiberSelfDurations": Map {
+            1 => 0,
+            2 => 0,
+          },
+          "passiveEffectDuration": null,
+          "priorityLevel": "Immediate",
+          "timestamp": 0,
+          "updaters": [
+            {
+              "displayName": "render()",
+              "hocDisplayNames": null,
+              "id": 1,
+              "key": null,
+              "type": 11,
+            },
+          ],
+        },
+      ]
+    `);
+  });
+
+  // This test is not gated.
+  // For this test we use the current version of react, built from source.
   it('should handle unexpectedly shallow suspense trees', () => {
-    // This test only runs in v17 because it's a regression test for legacy
-    // Suspense behavior, and the implementation details changed in v18.
     const container = document.createElement('div');
 
     utils.act(() => store.profilerStore.startProfiling());

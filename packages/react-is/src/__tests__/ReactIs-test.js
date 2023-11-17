@@ -23,7 +23,7 @@ describe('ReactIs', () => {
     ReactIs = require('react-is');
 
     if (gate(flags => flags.enableSuspenseList)) {
-      SuspenseList = React.SuspenseList;
+      SuspenseList = React.unstable_SuspenseList;
     }
   });
 

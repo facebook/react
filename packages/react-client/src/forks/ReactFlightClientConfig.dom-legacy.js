@@ -8,5 +8,18 @@
  */
 
 export * from 'react-client/src/ReactFlightClientConfigBrowser';
-export * from 'react-server-dom-webpack/src/ReactFlightClientConfigWebpackBundler';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
+
+export type Response = any;
+export opaque type ModuleLoading = mixed;
+export opaque type SSRModuleMap = mixed;
+export opaque type ServerManifest = mixed;
+export opaque type ServerReferenceId = string;
+export opaque type ClientReferenceMetadata = mixed;
+export opaque type ClientReference<T> = mixed; // eslint-disable-line no-unused-vars
+export const resolveClientReference: any = null;
+export const resolveServerReference: any = null;
+export const preloadModule: any = null;
+export const requireModule: any = null;
+export const prepareDestinationForModule: any = null;
+export const usedWithSSR = true;

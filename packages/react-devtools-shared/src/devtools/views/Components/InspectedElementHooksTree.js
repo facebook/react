@@ -25,11 +25,11 @@ import {getHookSourceLocationKey} from 'react-devtools-shared/src/hookNamesCache
 import HookNamesModuleLoaderContext from 'react-devtools-shared/src/devtools/views/Components/HookNamesModuleLoaderContext';
 import isArray from 'react-devtools-shared/src/isArray';
 
-import type {InspectedElement} from './types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {HookNames} from 'react-devtools-shared/src/types';
-import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {HookNames} from 'react-devtools-shared/src/frontend/types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 import type {ToggleParseHookNames} from './InspectedElementContext';
 
 type HooksTreeViewProps = {

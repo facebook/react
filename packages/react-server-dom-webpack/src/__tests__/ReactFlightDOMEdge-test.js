@@ -22,6 +22,7 @@ global.setTimeout = cb => cb();
 let clientExports;
 let webpackMap;
 let webpackModules;
+let webpackModuleLoading;
 let React;
 let ReactDOMServer;
 let ReactServerDOMServer;
@@ -31,14 +32,31 @@ let use;
 describe('ReactFlightDOMEdge', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    // Simulate the condition resolution
+    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.edge'),
+    );
+
     const WebpackMock = require('./utils/WebpackMock');
+
     clientExports = WebpackMock.clientExports;
     webpackMap = WebpackMock.webpackMap;
     webpackModules = WebpackMock.webpackModules;
+    webpackModuleLoading = WebpackMock.moduleLoading;
+
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
+
+    jest.resetModules();
+    __unmockReact();
+    jest.unmock('react-server-dom-webpack/server');
+    jest.mock('react-server-dom-webpack/client', () =>
+      require('react-server-dom-webpack/client.edge'),
+    );
     React = require('react');
     ReactDOMServer = require('react-dom/server.edge');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.edge');
-    ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
+    ReactServerDOMClient = require('react-server-dom-webpack/client');
     use = React.use;
   });
 
@@ -116,7 +134,10 @@ describe('ReactFlightDOMEdge', () => {
       webpackMap,
     );
     const response = ReactServerDOMClient.createFromReadableStream(stream, {
-      moduleMap: translationMap,
+      ssrManifest: {
+        moduleMap: translationMap,
+        moduleLoading: webpackModuleLoading,
+      },
     });
 
     function ClientRoot() {
@@ -148,9 +169,108 @@ describe('ReactFlightDOMEdge', () => {
     expect(serializedContent).not.toContain('\\"');
     expect(serializedContent).toContain('\t');
 
-    const result = await ReactServerDOMClient.createFromReadableStream(stream2);
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
     // Should still match the result when parsed
     expect(result.text).toBe(testString);
     expect(result.text2).toBe(testString2);
+  });
+
+  it('should encode repeated objects in a compact format by deduping', async () => {
+    const obj = {
+      this: {is: 'a large objected'},
+      with: {many: 'properties in it'},
+    };
+    const props = {
+      items: new Array(30).fill(obj),
+    };
+    const stream = ReactServerDOMServer.renderToReadableStream(props);
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const serializedContent = await readResult(stream1);
+    expect(serializedContent.length).toBeLessThan(400);
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+    // Should still match the result when parsed
+    expect(result).toEqual(props);
+    expect(result.items[5]).toBe(result.items[10]); // two random items are the same instance
+    // TODO: items[0] is not the same as the others in this case
+  });
+
+  it('should execute repeated server components only once', async () => {
+    const str = 'this is a long return value';
+    let timesRendered = 0;
+    function ServerComponent() {
+      timesRendered++;
+      return str;
+    }
+    const element = <ServerComponent />;
+    const children = new Array(30).fill(element);
+    const resolvedChildren = new Array(30).fill(str);
+    const stream = ReactServerDOMServer.renderToReadableStream(children);
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const serializedContent = await readResult(stream1);
+    expect(serializedContent.length).toBeLessThan(400);
+    expect(timesRendered).toBeLessThan(5);
+
+    const result = await ReactServerDOMClient.createFromReadableStream(
+      stream2,
+      {
+        ssrManifest: {
+          moduleMap: null,
+          moduleLoading: null,
+        },
+      },
+    );
+    // Should still match the result when parsed
+    expect(result).toEqual(resolvedChildren);
+  });
+
+  // @gate enableBinaryFlight
+  it('should be able to serialize any kind of typed array', async () => {
+    const buffer = new Uint8Array([
+      123, 4, 10, 5, 100, 255, 244, 45, 56, 67, 43, 124, 67, 89, 100, 20,
+    ]).buffer;
+    const buffers = [
+      buffer,
+      new Int8Array(buffer, 1),
+      new Uint8Array(buffer, 2),
+      new Uint8ClampedArray(buffer, 2),
+      new Int16Array(buffer, 2),
+      new Uint16Array(buffer, 2),
+      new Int32Array(buffer, 4),
+      new Uint32Array(buffer, 4),
+      new Float32Array(buffer, 4),
+      new Float64Array(buffer, 0),
+      new BigInt64Array(buffer, 0),
+      new BigUint64Array(buffer, 0),
+      new DataView(buffer, 3),
+    ];
+    const stream = passThrough(
+      ReactServerDOMServer.renderToReadableStream(buffers),
+    );
+    const result = await ReactServerDOMClient.createFromReadableStream(stream, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+    expect(result).toEqual(buffers);
   });
 });

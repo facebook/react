@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {
   FiberRoot,
   TransitionTracingCallbacks,
@@ -18,9 +18,10 @@ import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactD
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {
   enableFloat,
-  enableHostSingletons,
   allowConcurrentByDefault,
   disableCommentsAsDOMContainers,
+  enableAsyncActions,
+  enableFormActions,
 } from 'shared/ReactFeatureFlags';
 
 import ReactDOMSharedInternals from '../ReactDOMSharedInternals';
@@ -47,7 +48,6 @@ export type CreateRootOptions = {
 
 export type HydrateRootOptions = {
   // Hydration options
-  hydratedSources?: Array<MutableSource<any>>,
   onHydrated?: (suspenseNode: Comment) => void,
   onDeleted?: (suspenseNode: Comment) => void,
   // Options for all roots
@@ -56,6 +56,7 @@ export type HydrateRootOptions = {
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
+  formState?: ReactFormState<any, any> | null,
   ...
 };
 
@@ -76,8 +77,6 @@ import {
   createContainer,
   createHydrationContainer,
   updateContainer,
-  findHostInstanceWithNoPortals,
-  registerMutableSourceForHydration,
   flushSync,
   isAlreadyRendering,
 } from 'react-reconciler/src/ReactFiberReconciler';
@@ -125,26 +124,6 @@ ReactDOMHydrationRoot.prototype.render = ReactDOMRoot.prototype.render =
           'You passed a second argument to root.render(...) but it only accepts ' +
             'one argument.',
         );
-      }
-
-      const container = root.containerInfo;
-
-      if (
-        !enableFloat &&
-        !enableHostSingletons &&
-        container.nodeType !== COMMENT_NODE
-      ) {
-        const hostInstance = findHostInstanceWithNoPortals(root.current);
-        if (hostInstance) {
-          if (hostInstance.parentNode !== container) {
-            console.error(
-              'render(...): It looks like the React-rendered content of the ' +
-                'root container was removed without using React. This is not ' +
-                'supported and will cause errors. Instead, call ' +
-                "root.unmount() to empty a root's container.",
-            );
-          }
-        }
       }
     }
     updateContainer(children, root, null, null);
@@ -298,14 +277,13 @@ export function hydrateRoot(
   // For now we reuse the whole bag of options since they contain
   // the hydration callbacks.
   const hydrationCallbacks = options != null ? options : null;
-  // TODO: Delete this option
-  const mutableSources = (options != null && options.hydratedSources) || null;
 
   let isStrictMode = false;
   let concurrentUpdatesByDefaultOverride = false;
   let identifierPrefix = '';
   let onRecoverableError = defaultOnRecoverableError;
   let transitionCallbacks = null;
+  let formState = null;
   if (options !== null && options !== undefined) {
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -325,6 +303,11 @@ export function hydrateRoot(
     if (options.unstable_transitionCallbacks !== undefined) {
       transitionCallbacks = options.unstable_transitionCallbacks;
     }
+    if (enableAsyncActions && enableFormActions) {
+      if (options.formState !== undefined) {
+        formState = options.formState;
+      }
+    }
   }
 
   const root = createHydrationContainer(
@@ -338,18 +321,12 @@ export function hydrateRoot(
     identifierPrefix,
     onRecoverableError,
     transitionCallbacks,
+    formState,
   );
   markContainerAsRoot(root.current, container);
   Dispatcher.current = ReactDOMClientDispatcher;
   // This can't be a comment node since hydration doesn't work on comment nodes anyway.
   listenToAllSupportedEvents(container);
-
-  if (mutableSources) {
-    for (let i = 0; i < mutableSources.length; i++) {
-      const mutableSource = mutableSources[i];
-      registerMutableSourceForHydration(root, mutableSource);
-    }
-  }
 
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   return new ReactDOMHydrationRoot(root);
@@ -382,20 +359,6 @@ export function isValidContainerLegacy(node: any): boolean {
 
 function warnIfReactDOMContainerInDEV(container: any) {
   if (__DEV__) {
-    if (
-      !enableHostSingletons &&
-      container.nodeType === ELEMENT_NODE &&
-      ((container: any): Element).tagName &&
-      ((container: any): Element).tagName.toUpperCase() === 'BODY'
-    ) {
-      console.error(
-        'createRoot(): Creating roots directly with document.body is ' +
-          'discouraged, since its children are often manipulated by third-party ' +
-          'scripts and browser extensions. This may lead to subtle ' +
-          'reconciliation issues. Try using a container element created ' +
-          'for your app.',
-      );
-    }
     if (isContainerMarkedAsRoot(container)) {
       if (container._reactRootContainer) {
         console.error(

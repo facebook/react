@@ -19,11 +19,12 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import {
-  enableSchedulingProfiler,
-  enableUpdaterTracking,
   allowConcurrentByDefault,
+  enableRetryLaneExpiration,
+  enableSchedulingProfiler,
   enableTransitionTracing,
   enableUnifiedSyncLane,
+  enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook';
 import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
@@ -39,6 +40,7 @@ export const NoLane: Lane = /*                          */ 0b0000000000000000000
 
 export const SyncHydrationLane: Lane = /*               */ 0b0000000000000000000000000000001;
 export const SyncLane: Lane = /*                        */ 0b0000000000000000000000000000010;
+export const SyncLaneIndex: number = 1;
 
 export const InputContinuousHydrationLane: Lane = /*    */ 0b0000000000000000000000000000100;
 export const InputContinuousLane: Lane = /*             */ 0b0000000000000000000000000001000;
@@ -46,10 +48,12 @@ export const InputContinuousLane: Lane = /*             */ 0b0000000000000000000
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000010000;
 export const DefaultLane: Lane = /*                     */ 0b0000000000000000000000000100000;
 
-export const SyncUpdateLanes: Lane = /*                */ 0b0000000000000000000000000101010;
+export const SyncUpdateLanes: Lane = enableUnifiedSyncLane
+  ? SyncLane | InputContinuousLane | DefaultLane
+  : SyncLane;
 
 const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000001000000;
-const TransitionLanes: Lanes = /*                       */ 0b0000000011111111111111110000000;
+const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111110000000;
 const TransitionLane1: Lane = /*                        */ 0b0000000000000000000000010000000;
 const TransitionLane2: Lane = /*                        */ 0b0000000000000000000000100000000;
 const TransitionLane3: Lane = /*                        */ 0b0000000000000000000001000000000;
@@ -65,24 +69,29 @@ const TransitionLane12: Lane = /*                       */ 0b0000000000001000000
 const TransitionLane13: Lane = /*                       */ 0b0000000000010000000000000000000;
 const TransitionLane14: Lane = /*                       */ 0b0000000000100000000000000000000;
 const TransitionLane15: Lane = /*                       */ 0b0000000001000000000000000000000;
-const TransitionLane16: Lane = /*                       */ 0b0000000010000000000000000000000;
 
-const RetryLanes: Lanes = /*                            */ 0b0000111100000000000000000000000;
-const RetryLane1: Lane = /*                             */ 0b0000000100000000000000000000000;
-const RetryLane2: Lane = /*                             */ 0b0000001000000000000000000000000;
-const RetryLane3: Lane = /*                             */ 0b0000010000000000000000000000000;
-const RetryLane4: Lane = /*                             */ 0b0000100000000000000000000000000;
+const RetryLanes: Lanes = /*                            */ 0b0000011110000000000000000000000;
+const RetryLane1: Lane = /*                             */ 0b0000000010000000000000000000000;
+const RetryLane2: Lane = /*                             */ 0b0000000100000000000000000000000;
+const RetryLane3: Lane = /*                             */ 0b0000001000000000000000000000000;
+const RetryLane4: Lane = /*                             */ 0b0000010000000000000000000000000;
 
 export const SomeRetryLane: Lane = RetryLane1;
 
-export const SelectiveHydrationLane: Lane = /*          */ 0b0001000000000000000000000000000;
+export const SelectiveHydrationLane: Lane = /*          */ 0b0000100000000000000000000000000;
 
-const NonIdleLanes: Lanes = /*                          */ 0b0001111111111111111111111111111;
+const NonIdleLanes: Lanes = /*                          */ 0b0000111111111111111111111111111;
 
-export const IdleHydrationLane: Lane = /*               */ 0b0010000000000000000000000000000;
-export const IdleLane: Lane = /*                        */ 0b0100000000000000000000000000000;
+export const IdleHydrationLane: Lane = /*               */ 0b0001000000000000000000000000000;
+export const IdleLane: Lane = /*                        */ 0b0010000000000000000000000000000;
 
-export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
+export const OffscreenLane: Lane = /*                   */ 0b0100000000000000000000000000000;
+export const DeferredLane: Lane = /*                    */ 0b1000000000000000000000000000000;
+
+// Any lane that might schedule an update. This is used to detect infinite
+// update loops, so it doesn't include hydration lanes or retries.
+export const UpdateLanes: Lanes =
+  SyncLane | InputContinuousLane | DefaultLane | TransitionLanes;
 
 // This function is used for the experimental timeline (react-devtools-timeline)
 // It should be kept in sync with the Lanes values above.
@@ -126,6 +135,9 @@ export function getLabelForLane(lane: Lane): string | void {
     }
     if (lane & OffscreenLane) {
       return 'Offscreen';
+    }
+    if (lane & DeferredLane) {
+      return 'Deferred';
     }
   }
 }
@@ -172,7 +184,6 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
     case TransitionLane13:
     case TransitionLane14:
     case TransitionLane15:
-    case TransitionLane16:
       return lanes & TransitionLanes;
     case RetryLane1:
     case RetryLane2:
@@ -187,6 +198,10 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
       return IdleLane;
     case OffscreenLane:
       return OffscreenLane;
+    case DeferredLane:
+      // This shouldn't be reachable because deferred work is always entangled
+      // with something else.
+      return NoLanes;
     default:
       if (__DEV__) {
         console.error(
@@ -267,17 +282,23 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     }
   }
 
+  return nextLanes;
+}
+
+export function getEntangledLanes(root: FiberRoot, renderLanes: Lanes): Lanes {
+  let entangledLanes = renderLanes;
+
   if (
     allowConcurrentByDefault &&
     (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
   ) {
     // Do nothing, use the lanes as they were assigned.
-  } else if ((nextLanes & InputContinuousLane) !== NoLanes) {
+  } else if ((entangledLanes & InputContinuousLane) !== NoLanes) {
     // When updates are sync by default, we entangle continuous priority updates
     // and default updates, so they render in the same batch. The only reason
     // they use separate lanes is because continuous updates should interrupt
     // transitions, but default updates should not.
-    nextLanes |= pendingLanes & DefaultLane;
+    entangledLanes |= entangledLanes & DefaultLane;
   }
 
   // Check for entangled lanes and add them to the batch.
@@ -299,24 +320,24 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // time it takes to show the final state, which is what they are actually
   // waiting for.
   //
-  // For those exceptions where entanglement is semantically important, like
-  // useMutableSource, we should ensure that there is no partial work at the
+  // For those exceptions where entanglement is semantically important,
+  // we should ensure that there is no partial work at the
   // time we apply the entanglement.
-  const entangledLanes = root.entangledLanes;
-  if (entangledLanes !== NoLanes) {
+  const allEntangledLanes = root.entangledLanes;
+  if (allEntangledLanes !== NoLanes) {
     const entanglements = root.entanglements;
-    let lanes = nextLanes & entangledLanes;
+    let lanes = entangledLanes & allEntangledLanes;
     while (lanes > 0) {
       const index = pickArbitraryLaneIndex(lanes);
       const lane = 1 << index;
 
-      nextLanes |= entanglements[index];
+      entangledLanes |= entanglements[index];
 
       lanes &= ~lane;
     }
   }
 
-  return nextLanes;
+  return entangledLanes;
 }
 
 function computeExpirationTime(lane: Lane, currentTime: number) {
@@ -353,7 +374,6 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
     case TransitionLane13:
     case TransitionLane14:
     case TransitionLane15:
-    case TransitionLane16:
       return currentTime + 5000;
     case RetryLane1:
     case RetryLane2:
@@ -364,11 +384,12 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
       // crashes. There must be some other underlying bug; not super urgent but
       // ideally should figure out why and fix it. Unfortunately we don't have
       // a repro for the crashes, only detected via production metrics.
-      return NoTimestamp;
+      return enableRetryLaneExpiration ? currentTime + 5000 : NoTimestamp;
     case SelectiveHydrationLane:
     case IdleHydrationLane:
     case IdleLane:
     case OffscreenLane:
+    case DeferredLane:
       // Anything idle priority or lower should never expire.
       return NoTimestamp;
     default:
@@ -397,6 +418,7 @@ export function markStarvedLanesAsExpired(
   // Iterate through the pending lanes and check if we've reached their
   // expiration time. If so, we'll assume the update is being starved and mark
   // it as expired to force it to finish.
+  // TODO: We should be able to replace this with upgradePendingLanesToSync
   //
   // We exclude retry lanes because those must always be time sliced, in order
   // to unwrap uncached promises.
@@ -601,7 +623,11 @@ export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
   }
 }
 
-export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
+export function markRootSuspended(
+  root: FiberRoot,
+  suspendedLanes: Lanes,
+  spawnedLane: Lane,
+) {
   root.suspendedLanes |= suspendedLanes;
   root.pingedLanes &= ~suspendedLanes;
 
@@ -616,17 +642,21 @@ export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
 
     lanes &= ~lane;
   }
+
+  if (spawnedLane !== NoLane) {
+    markSpawnedDeferredLane(root, spawnedLane, suspendedLanes);
+  }
 }
 
 export function markRootPinged(root: FiberRoot, pingedLanes: Lanes) {
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
 }
 
-export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
-  root.mutableReadLanes |= updateLane & root.pendingLanes;
-}
-
-export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
+export function markRootFinished(
+  root: FiberRoot,
+  remainingLanes: Lanes,
+  spawnedLane: Lane,
+) {
   const noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
 
   root.pendingLanes = remainingLanes;
@@ -636,11 +666,11 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.pingedLanes = NoLanes;
 
   root.expiredLanes &= remainingLanes;
-  root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;
 
   root.errorRecoveryDisabledLanes &= remainingLanes;
+  root.shellSuspendCounter = 0;
 
   const entanglements = root.entanglements;
   const expirationTimes = root.expirationTimes;
@@ -672,6 +702,39 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
 
     lanes &= ~lane;
   }
+
+  if (spawnedLane !== NoLane) {
+    markSpawnedDeferredLane(
+      root,
+      spawnedLane,
+      // This render finished successfully without suspending, so we don't need
+      // to entangle the spawned task with the parent task.
+      NoLanes,
+    );
+  }
+}
+
+function markSpawnedDeferredLane(
+  root: FiberRoot,
+  spawnedLane: Lane,
+  entangledLanes: Lanes,
+) {
+  // This render spawned a deferred task. Mark it as pending.
+  root.pendingLanes |= spawnedLane;
+  root.suspendedLanes &= ~spawnedLane;
+
+  // Entangle the spawned lane with the DeferredLane bit so that we know it
+  // was the result of another render. This lets us avoid a useDeferredValue
+  // waterfall — only the first level will defer.
+  const spawnedLaneIndex = laneToIndex(spawnedLane);
+  root.entangledLanes |= spawnedLane;
+  root.entanglements[spawnedLaneIndex] |=
+    DeferredLane |
+    // If the parent render task suspended, we must also entangle those lanes
+    // with the spawned task, so that the deferred task includes all the same
+    // updates that the parent task did. We can exclude any lane that is not
+    // used for updates (e.g. Offscreen).
+    (entangledLanes & UpdateLanes);
 }
 
 export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
@@ -701,6 +764,34 @@ export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
     ) {
       entanglements[index] |= entangledLanes;
     }
+    lanes &= ~lane;
+  }
+}
+
+export function upgradePendingLaneToSync(root: FiberRoot, lane: Lane) {
+  // Since we're upgrading the priority of the given lane, there is now pending
+  // sync work.
+  root.pendingLanes |= SyncLane;
+
+  // Entangle the sync lane with the lane we're upgrading. This means SyncLane
+  // will not be allowed to finish without also finishing the given lane.
+  root.entangledLanes |= SyncLane;
+  root.entanglements[SyncLaneIndex] |= lane;
+}
+
+export function upgradePendingLanesToSync(
+  root: FiberRoot,
+  lanesToUpgrade: Lanes,
+) {
+  // Same as upgradePendingLaneToSync but accepts multiple lanes, so it's a
+  // bit slower.
+  root.pendingLanes |= SyncLane;
+  root.entangledLanes |= SyncLane;
+  let lanes = lanesToUpgrade;
+  while (lanes) {
+    const index = pickArbitraryLaneIndex(lanes);
+    const lane = 1 << index;
+    root.entanglements[SyncLaneIndex] |= lane;
     lanes &= ~lane;
   }
 }
@@ -756,7 +847,6 @@ export function getBumpedLaneForHydration(
       case TransitionLane13:
       case TransitionLane14:
       case TransitionLane15:
-      case TransitionLane16:
       case RetryLane1:
       case RetryLane2:
       case RetryLane3:
