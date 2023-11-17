@@ -50,6 +50,7 @@ class Destination {
     if (!this.#controller) {
       throw new Error('Expected a controller.');
     }
+    console.log('flushing', this.#buffer);
     this.#controller.enqueue(this.#buffer);
     this.#buffer = '';
   }
@@ -306,6 +307,42 @@ describe('ReactFlightDOM for FB', () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>Hello World</p>');
+  });
+
+  it('should render long strings', async () => {
+    // Model
+    const longString = 'Lorem Ipsum ❤️ '.repeat(100);
+
+    function RootModel() {
+      return {text: longString};
+    }
+
+    // View
+    function Message({response}) {
+      return <p>{use(response).text}</p>;
+    }
+    function App({response}) {
+      return (
+        <Suspense fallback={<h1>Loading...</h1>}>
+          <Message response={response} />
+        </Suspense>
+      );
+    }
+    const destination = new Destination();
+    ReactServerDOMServer.renderToDestination(destination, <RootModel />);
+    const response = ReactServerDOMClient.createFromReadableStream(
+      destination.stream,
+      {
+        moduleMap,
+      },
+    );
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App response={response} />);
+    });
+    expect(container.innerHTML).toBe('<p>' + longString + '</p>');
   });
 
   // TODO: `registerClientComponent` need to be able to support this
