@@ -89,6 +89,9 @@ describe('ReactFlightDOM for FB', () => {
     };
 
     ReactServerDOMServer = require('../ReactFlightDOMServerFB');
+    ReactServerDOMServer.setConfig({
+      byteLength: str => Buffer.byteLength(str),
+    });
 
     // This reset is to load modules for the SSR/Browser scope.
     jest.resetModules();

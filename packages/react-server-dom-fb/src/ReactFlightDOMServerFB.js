@@ -8,7 +8,11 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {Destination} from 'react-server/src/ReactServerStreamConfig';
+import type {
+  Destination,
+  Chunk,
+  PrecomputedChunk,
+} from 'react-server/src/ReactServerStreamConfig';
 import type {ClientManifest} from './ReactFlightReferencesFB';
 
 import {
@@ -16,6 +20,8 @@ import {
   startWork,
   startFlowing,
 } from 'react-server/src/ReactFlightServer';
+
+import {setByteLengthOfChunkImplementation} from 'react-server/src/ReactServerStreamConfig';
 
 export {
   registerClientReference,
@@ -34,6 +40,11 @@ function renderToDestination(
   bundlerConfig: ClientManifest,
   options?: Options,
 ): void {
+  if (!configured) {
+    throw new Error(
+      'Please make sure to call `setConfig(...)` before calling `renderToDestination`.',
+    );
+  }
   const request = createRequest(
     model,
     bundlerConfig,
@@ -43,4 +54,15 @@ function renderToDestination(
   startFlowing(request, destination);
 }
 
-export {renderToDestination};
+type Config = {
+  byteLength: (chunk: Chunk | PrecomputedChunk) => number,
+};
+
+let configured = false;
+
+function setConfig(config: Config): void {
+  setByteLengthOfChunkImplementation(config.byteLength);
+  configured = true;
+}
+
+export {renderToDestination, setConfig};
