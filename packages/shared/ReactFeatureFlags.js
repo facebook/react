@@ -14,6 +14,7 @@
 // -----------------------------------------------------------------------------
 
 export const enableComponentStackLocations = true;
+export const disableModulePatternComponents = true;
 
 // -----------------------------------------------------------------------------
 // Killswitch
@@ -144,8 +145,6 @@ export const enableRetryLaneExpiration = false;
 // If TRUE, trees rendered with createRoot will be StrictEffectsMode.
 // If FALSE, these trees will be StrictLegacyMode.
 export const createRootStrictEffectsByDefault = false;
-
-export const disableModulePatternComponents = false;
 
 export const disableLegacyContext = false;
 
