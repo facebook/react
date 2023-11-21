@@ -510,6 +510,9 @@ const skipFilter = new Set([
   "todo.unnecessary-lambda-memoization",
   "rules-of-hooks/rules-of-hooks-93dc5d5e538a",
   "rules-of-hooks/rules-of-hooks-69521d94fa03",
+
+  // bug
+  "bug-jsx-memberexpr-tag-in-lambda",
 ]);
 
 export default skipFilter;
