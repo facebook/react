@@ -33,13 +33,13 @@ export function saveStore(store: Store) {
  * Check if @param raw is a valid Store by if
  * - it has a `source` property and is a string
  */
-function getValidStore(raw: any): Store | null {
-  const isValidStore = "source" in raw && typeof raw["source"] === "string";
-  if (isValidStore) {
-    return raw;
-  } else {
-    return null;
-  }
+function isValidStore(raw: unknown): raw is Store {
+  return (
+    raw != null &&
+    typeof raw == "object" &&
+    "source" in raw &&
+    typeof raw["source"] === "string"
+  );
 }
 
 /**
@@ -56,7 +56,7 @@ export function initStoreFromUrlOrLocalStorage(): Store {
   if (!encodedSource) return defaultStore;
 
   const raw = JSON.parse(codec.atou(encodedSource));
-  const store = getValidStore(raw);
-  invariant(store != null, "Invalid Store");
+
+  invariant(isValidStore(raw), "Invalid Store");
   return raw;
 }

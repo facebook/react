@@ -229,11 +229,21 @@ function compile(source: string): CompilerOutput {
         }
       }
     }
-  } catch (err: any) {
+  } catch (err) {
     // error might be an invariant violation or other runtime error
     // (i.e. object shape that is not CompilerError)
-    if (err.details !== null) {
+    if (err instanceof CompilerError && err.details.length > 0) {
       error.details.push(...err.details);
+    } else {
+      // Handle unexpected failures by logging (to get a stack trace)
+      // and reporting
+      console.error(err);
+      error.details.push(new CompilerErrorDetail({
+        severity: ErrorSeverity.Invariant,
+        reason: `Unexpected failure when transforming input! ${err}`,
+        loc: null,
+        suggestions: null
+      }));
     }
   }
   if (error.hasErrors()) {
