@@ -513,6 +513,7 @@ const skipFilter = new Set([
 
   // bug
   "bug-jsx-memberexpr-tag-in-lambda",
+  "bug-invalid-code-when-bailout",
 ]);
 
 export default skipFilter;
