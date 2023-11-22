@@ -142,7 +142,8 @@ exports.serverExports = function serverExports(moduleExports) {
       name: 's',
     };
   }
-  const mod = {exports: moduleExports};
+  const mod = new Module(idx);
+  mod.exports = moduleExports;
   nodeCompile.call(mod, '"use server"', idx);
   return mod.exports;
 };
