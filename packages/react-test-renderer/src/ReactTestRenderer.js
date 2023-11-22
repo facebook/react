@@ -60,7 +60,7 @@ const act = React.unstable_act;
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
-  unstable_isConcurrent: boolean,
+  isConcurrent: boolean,
   unstable_strictMode: boolean,
   unstable_concurrentUpdatesByDefault: boolean,
   ...
@@ -468,7 +468,7 @@ function create(
   update(newElement: React$Element<any>): any,
   unmount(): void,
   getInstance(): React$Component<any, any> | PublicInstance | null,
-  unstable_flushSync: typeof flushSync,
+  flushSync: typeof flushSync,
 } {
   let createNodeMock = defaultTestOptions.createNodeMock;
   let isConcurrent = false;
@@ -479,8 +479,15 @@ function create(
       // $FlowFixMe[incompatible-type] found when upgrading Flow
       createNodeMock = options.createNodeMock;
     }
-    if (options.unstable_isConcurrent === true) {
+    if (options.isConcurrent === true) {
       isConcurrent = true;
+    } else {
+      if (__DEV__) {
+        console.warn(
+          'In a future version, ReactTestRenderer will use concurrent rendering. ' +
+            'Opt in with options.isConcurrent=true',
+        );
+      }
     }
     if (options.unstable_strictMode === true) {
       isStrictMode = true;
@@ -581,7 +588,7 @@ function create(
       return getPublicRootInstance(root);
     },
 
-    unstable_flushSync: flushSync,
+    flushSync: flushSync,
   };
 
   Object.defineProperty(

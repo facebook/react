@@ -213,7 +213,7 @@ describe(`onRender`, () => {
           <Yield value="last" />
         </React.Profiler>,
         {
-          unstable_isConcurrent: true,
+          isConcurrent: true,
         },
       );
     });
@@ -543,7 +543,7 @@ describe(`onRender`, () => {
 
     callback.mockReset();
 
-    renderer.unstable_flushSync(() => {
+    renderer.flushSync(() => {
       instance.setState({
         count: 1,
       });
@@ -752,7 +752,7 @@ describe(`onRender`, () => {
             <Yield renderTime={2} />
             <Yield renderTime={3} />
           </React.Profiler>,
-          {unstable_isConcurrent: true},
+          {isConcurrent: true},
         );
       });
 
@@ -793,7 +793,7 @@ describe(`onRender`, () => {
               <Yield renderTime={17} />
             </React.Profiler>
           </React.Profiler>,
-          {unstable_isConcurrent: true},
+          {isConcurrent: true},
         );
       });
 
@@ -844,7 +844,7 @@ describe(`onRender`, () => {
             <Yield renderTime={10} />
             <Yield renderTime={20} />
           </React.Profiler>,
-          {unstable_isConcurrent: true},
+          {isConcurrent: true},
         );
       });
 
@@ -856,7 +856,7 @@ describe(`onRender`, () => {
 
       // Interrupt with higher priority work.
       // The interrupted work simulates an additional 5ms of time.
-      renderer.unstable_flushSync(() => {
+      renderer.flushSync(() => {
         renderer.update(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={5} />
@@ -897,7 +897,7 @@ describe(`onRender`, () => {
           <Yield renderTime={6} />
           <Yield renderTime={15} />
         </React.Profiler>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
 
       // Render everything initially.
@@ -941,7 +941,7 @@ describe(`onRender`, () => {
 
       // Interrupt with higher priority work.
       // The interrupted work simulates an additional 11ms of time.
-      renderer.unstable_flushSync(() => {
+      renderer.flushSync(() => {
         renderer.update(
           <React.Profiler id="test" onRender={callback}>
             <Yield renderTime={11} />
@@ -1002,7 +1002,7 @@ describe(`onRender`, () => {
           <FirstComponent />
           <SecondComponent />
         </React.Profiler>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
 
       // Render everything initially.
@@ -1039,7 +1039,7 @@ describe(`onRender`, () => {
 
       // Interrupt with higher priority work.
       // This simulates a total of 37ms of actual render time.
-      renderer.unstable_flushSync(() => second.setState({renderTime: 30}));
+      renderer.flushSync(() => second.setState({renderTime: 30}));
       assertLog(['SecondComponent:30', 'Yield:7']);
 
       // The actual time should include only the most recent render (37ms),

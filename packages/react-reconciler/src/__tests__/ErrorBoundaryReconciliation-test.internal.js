@@ -52,6 +52,7 @@ describe('ErrorBoundaryReconciliation', () => {
 
   [true, false].forEach(isConcurrent => {
     async function sharedTest(ErrorBoundary, fallbackTagName) {
+      spyOnDev(console, 'warn').mockImplementation(() => {});
       let renderer;
 
       await act(() => {
@@ -59,7 +60,7 @@ describe('ErrorBoundaryReconciliation', () => {
           <ErrorBoundary fallbackTagName={fallbackTagName}>
             <BrokenRender fail={false} />
           </ErrorBoundary>,
-          {unstable_isConcurrent: isConcurrent},
+          {isConcurrent: isConcurrent},
         );
       });
       expect(renderer).toMatchRenderedOutput(<span prop="BrokenRender" />);

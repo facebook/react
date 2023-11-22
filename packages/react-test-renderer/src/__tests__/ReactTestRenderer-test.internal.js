@@ -51,6 +51,10 @@ function cleanNodeOrArray(node) {
 }
 
 describe('ReactTestRenderer', () => {
+  beforeEach(() => {
+    spyOnDev(console, 'warn').mockImplementation(() => {});
+  });
+
   it('renders a simple component', () => {
     function Link() {
       return <a role="link" />;
@@ -771,7 +775,7 @@ describe('ReactTestRenderer', () => {
     let refInst = null;
     const renderer = ReactTestRenderer.create(
       <div ref={ref => (refInst = ref)} />,
-      {createNodeMock},
+      {createNodeMock, isConcurrent: true},
     );
     const root = renderer.getInstance();
     expect(root).toEqual(refInst);

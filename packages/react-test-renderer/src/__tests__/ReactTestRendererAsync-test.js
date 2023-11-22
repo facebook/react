@@ -34,7 +34,7 @@ describe('ReactTestRendererAsync', () => {
       return props.children;
     }
     const renderer = ReactTestRenderer.create(<Foo>Hi</Foo>, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     // Before flushing, nothing has mounted.
@@ -68,7 +68,7 @@ describe('ReactTestRendererAsync', () => {
       );
     }
     const renderer = ReactTestRenderer.create(<Parent step={1} />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['A:1', 'B:1', 'C:1']);
@@ -97,7 +97,7 @@ describe('ReactTestRendererAsync', () => {
     let renderer;
     React.startTransition(() => {
       renderer = ReactTestRenderer.create(<Parent step={1} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -137,7 +137,7 @@ describe('ReactTestRendererAsync', () => {
     let renderer;
     React.startTransition(() => {
       renderer = ReactTestRenderer.create(<Example step={1} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -146,7 +146,7 @@ describe('ReactTestRendererAsync', () => {
     expect(renderer.toJSON()).toEqual(null);
 
     // Interrupt with higher priority properties
-    renderer.unstable_flushSync(() => {
+    renderer.flushSync(() => {
       renderer.update(<Example step={2} />);
     });
 
