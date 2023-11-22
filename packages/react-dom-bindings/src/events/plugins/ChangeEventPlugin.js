@@ -80,7 +80,10 @@ let activeElementInst = null;
  * SECTION: handle `change` event
  */
 function shouldUseChangeEvent(elem: Instance | TextInstance) {
-  const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
+  const nodeName =
+    elem.nodeName &&
+    typeof elem.nodeName === 'string' &&
+    elem.nodeName.toLowerCase();
   return (
     nodeName === 'select' ||
     (nodeName === 'input' && (elem: any).type === 'file')
