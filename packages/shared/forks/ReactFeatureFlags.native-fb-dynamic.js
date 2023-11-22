@@ -20,12 +20,13 @@ import typeof * as DynamicFlagsType from 'ReactNativeInternalFeatureFlags';
 // flag here but it won't be set to `true` in any of our test runs. Need to
 // update the test configuration.
 
-export const enableUseRefAccessWarning = __VARIANT__;
+export const alwaysThrottleRetries = __VARIANT__;
+export const disableModulePatternComponents = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const enableUnifiedSyncLane = __VARIANT__;
-export const alwaysThrottleRetries = __VARIANT__;
-export const useMicrotasksForSchedulingInFabric = __VARIANT__;
+export const enableUseRefAccessWarning = __VARIANT__;
 export const passChildrenWhenCloningPersistedNodes = __VARIANT__;
+export const useMicrotasksForSchedulingInFabric = __VARIANT__;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): DynamicFlagsType): ExportsType);

@@ -18,12 +18,13 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
 export const {
-  enableUseRefAccessWarning,
+  alwaysThrottleRetries,
+  disableModulePatternComponents,
   enableDeferRootSchedulingToMicrotask,
   enableUnifiedSyncLane,
-  alwaysThrottleRetries,
-  useMicrotasksForSchedulingInFabric,
+  enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes,
+  useMicrotasksForSchedulingInFabric,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -55,7 +56,6 @@ export const enableSuspenseCallback = false;
 export const disableLegacyContext = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
-export const disableModulePatternComponents = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
