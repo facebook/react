@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c717a197b271547523acdc37aad3106b>>
+ * @generated SignedSource<<7fdeaf4f918aca9cf091153ffddbae9a>>
  */
 
 "use strict";
@@ -1159,11 +1159,12 @@ ResponderEventPlugin.injection.injectGlobalResponderHandler({
 });
 var ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
+  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+  disableModulePatternComponents = dynamicFlags.disableModulePatternComponents,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
-  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+  enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -8843,11 +8844,16 @@ beginWork = function (current, workInProgress, renderLanes) {
       );
       workInProgress.flags |= 1;
       if (
-        "object" === typeof context &&
-        null !== context &&
-        "function" === typeof context.render &&
-        void 0 === context.$$typeof
-      ) {
+        disableModulePatternComponents ||
+        "object" !== typeof context ||
+        null === context ||
+        "function" !== typeof context.render ||
+        void 0 !== context.$$typeof
+      )
+        (workInProgress.tag = 0),
+          reconcileChildren(null, workInProgress, context, renderLanes),
+          (workInProgress = workInProgress.child);
+      else {
         workInProgress.tag = 1;
         workInProgress.memoizedState = null;
         workInProgress.updateQueue = null;
@@ -8872,10 +8878,7 @@ beginWork = function (current, workInProgress, renderLanes) {
           hasContext,
           renderLanes
         );
-      } else
-        (workInProgress.tag = 0),
-          reconcileChildren(null, workInProgress, context, renderLanes),
-          (workInProgress = workInProgress.child);
+      }
       return workInProgress;
     case 16:
       Component = workInProgress.elementType;
@@ -9763,7 +9766,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1111 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-d2f6eed8",
+    version: "18.3.0-canary-5ba98bbb",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9806,7 +9809,7 @@ var internals$jscomp$inline_1367 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-d2f6eed8"
+  reconcilerVersion: "18.3.0-canary-5ba98bbb"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1368 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

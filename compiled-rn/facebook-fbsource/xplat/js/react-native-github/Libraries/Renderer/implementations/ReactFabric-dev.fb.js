@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aaac73d7cc89a43a1238c55b03c67a4e>>
+ * @generated SignedSource<<aeb13744feb3c4d52877eeb7f7905a51>>
  */
 
 "use strict";
@@ -3232,15 +3232,17 @@ to return true:wantsResponderID|                            |
     // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
     // the exports object every time a flag is read.
 
-    var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
+    var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+      disableModulePatternComponents =
+        dynamicFlags.disableModulePatternComponents,
       enableDeferRootSchedulingToMicrotask =
         dynamicFlags.enableDeferRootSchedulingToMicrotask,
       enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
-      alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
-      useMicrotasksForSchedulingInFabric =
-        dynamicFlags.useMicrotasksForSchedulingInFabric,
+      enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
       passChildrenWhenCloningPersistedNodes =
-        dynamicFlags.passChildrenWhenCloningPersistedNodes; // The rest of the flags are static for better dead code elimination.
+        dynamicFlags.passChildrenWhenCloningPersistedNodes,
+      useMicrotasksForSchedulingInFabric =
+        dynamicFlags.useMicrotasksForSchedulingInFabric; // The rest of the flags are static for better dead code elimination.
     var enableSchedulingProfiler = true;
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
@@ -16795,6 +16797,7 @@ to return true:wantsResponderID|                            |
       if (
         // Run these checks in production only if the flag is off.
         // Eventually we'll delete this branch altogether.
+        !disableModulePatternComponents &&
         typeof value === "object" &&
         value !== null &&
         typeof value.render === "function" &&
@@ -27812,7 +27815,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-a3a54342";
+    var ReactVersion = "18.3.0-canary-c34d6f72";
 
     function createPortal$1(
       children,

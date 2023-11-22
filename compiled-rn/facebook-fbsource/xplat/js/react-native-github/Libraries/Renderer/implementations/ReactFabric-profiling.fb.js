@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cb300ed80629ca9a73c08e9fcad07bd0>>
+ * @generated SignedSource<<c84472616bec5f450a6873c637335a4d>>
  */
 
 "use strict";
@@ -1318,15 +1318,16 @@ function dispatchEvent(target, topLevelType, nativeEvent) {
     }
   });
 }
-var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
+var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+  disableModulePatternComponents = dynamicFlags.disableModulePatternComponents,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
-  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
-  useMicrotasksForSchedulingInFabric =
-    dynamicFlags.useMicrotasksForSchedulingInFabric,
+  enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlags.passChildrenWhenCloningPersistedNodes,
+  useMicrotasksForSchedulingInFabric =
+    dynamicFlags.useMicrotasksForSchedulingInFabric,
   scheduleCallback$2 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
@@ -9299,11 +9300,16 @@ beginWork = function (current, workInProgress, renderLanes) {
       markComponentRenderStopped();
       workInProgress.flags |= 1;
       if (
-        "object" === typeof context &&
-        null !== context &&
-        "function" === typeof context.render &&
-        void 0 === context.$$typeof
-      ) {
+        disableModulePatternComponents ||
+        "object" !== typeof context ||
+        null === context ||
+        "function" !== typeof context.render ||
+        void 0 !== context.$$typeof
+      )
+        (workInProgress.tag = 0),
+          reconcileChildren(null, workInProgress, context, renderLanes),
+          (workInProgress = workInProgress.child);
+      else {
         workInProgress.tag = 1;
         workInProgress.memoizedState = null;
         workInProgress.updateQueue = null;
@@ -9328,10 +9334,7 @@ beginWork = function (current, workInProgress, renderLanes) {
           hasContext,
           renderLanes
         );
-      } else
-        (workInProgress.tag = 0),
-          reconcileChildren(null, workInProgress, context, renderLanes),
-          (workInProgress = workInProgress.child);
+      }
       return workInProgress;
     case 16:
       Component = workInProgress.elementType;
@@ -10243,7 +10246,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1126 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-8a2d4f06",
+    version: "18.3.0-canary-e91c485a",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10299,7 +10302,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-8a2d4f06"
+  reconcilerVersion: "18.3.0-canary-e91c485a"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

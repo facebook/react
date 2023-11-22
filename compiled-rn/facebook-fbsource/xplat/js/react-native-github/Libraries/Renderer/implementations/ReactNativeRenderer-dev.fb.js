@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5c64b11223ba932392928f8c45e304bf>>
+ * @generated SignedSource<<ce5fd2521d2e9fc4c77333a98ac6ecb4>>
  */
 
 "use strict";
@@ -2943,11 +2943,13 @@ to return true:wantsResponderID|                            |
     // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
     // the exports object every time a flag is read.
 
-    var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
+    var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+      disableModulePatternComponents =
+        dynamicFlags.disableModulePatternComponents,
       enableDeferRootSchedulingToMicrotask =
         dynamicFlags.enableDeferRootSchedulingToMicrotask,
       enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
-      alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries;
+      enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning;
     // The rest of the flags are static for better dead code elimination.
     var enableSchedulingProfiler = true;
     var enableProfilerTimer = true;
@@ -17067,6 +17069,7 @@ to return true:wantsResponderID|                            |
       if (
         // Run these checks in production only if the flag is off.
         // Eventually we'll delete this branch altogether.
+        !disableModulePatternComponents &&
         typeof value === "object" &&
         value !== null &&
         typeof value.render === "function" &&
@@ -28253,7 +28256,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-a3e8b15d";
+    var ReactVersion = "18.3.0-canary-285f1cc2";
 
     function createPortal$1(
       children,

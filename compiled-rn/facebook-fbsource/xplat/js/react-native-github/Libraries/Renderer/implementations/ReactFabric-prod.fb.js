@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c45396dc1efd10a6033e0b1852b0fe7f>>
+ * @generated SignedSource<<3d433092fb21fe655546ab8cc86bfe96>>
  */
 
 "use strict";
@@ -1314,15 +1314,16 @@ function dispatchEvent(target, topLevelType, nativeEvent) {
     }
   });
 }
-var enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
+var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+  disableModulePatternComponents = dynamicFlags.disableModulePatternComponents,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
-  alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
-  useMicrotasksForSchedulingInFabric =
-    dynamicFlags.useMicrotasksForSchedulingInFabric,
+  enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes =
     dynamicFlags.passChildrenWhenCloningPersistedNodes,
+  useMicrotasksForSchedulingInFabric =
+    dynamicFlags.useMicrotasksForSchedulingInFabric,
   scheduleCallback$2 = Scheduler.unstable_scheduleCallback,
   cancelCallback$1 = Scheduler.unstable_cancelCallback,
   shouldYield = Scheduler.unstable_shouldYield,
@@ -8628,11 +8629,16 @@ beginWork = function (current, workInProgress, renderLanes) {
       );
       workInProgress.flags |= 1;
       if (
-        "object" === typeof context &&
-        null !== context &&
-        "function" === typeof context.render &&
-        void 0 === context.$$typeof
-      ) {
+        disableModulePatternComponents ||
+        "object" !== typeof context ||
+        null === context ||
+        "function" !== typeof context.render ||
+        void 0 !== context.$$typeof
+      )
+        (workInProgress.tag = 0),
+          reconcileChildren(null, workInProgress, context, renderLanes),
+          (workInProgress = workInProgress.child);
+      else {
         workInProgress.tag = 1;
         workInProgress.memoizedState = null;
         workInProgress.updateQueue = null;
@@ -8657,10 +8663,7 @@ beginWork = function (current, workInProgress, renderLanes) {
           hasContext,
           renderLanes
         );
-      } else
-        (workInProgress.tag = 0),
-          reconcileChildren(null, workInProgress, context, renderLanes),
-          (workInProgress = workInProgress.child);
+      }
       return workInProgress;
     case 16:
       Component = workInProgress.elementType;
@@ -9541,7 +9544,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1048 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-8f9ce9e2",
+    version: "18.3.0-canary-a0c4da55",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9584,7 +9587,7 @@ var internals$jscomp$inline_1290 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-8f9ce9e2"
+  reconcilerVersion: "18.3.0-canary-a0c4da55"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1291 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
