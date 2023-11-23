@@ -968,6 +968,7 @@ describe('ProfilingCache', () => {
           "timestamp": 0,
           "updaters": [
             {
+              "compiledWithForget": false,
               "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,
@@ -1010,6 +1011,7 @@ describe('ProfilingCache', () => {
           "timestamp": 0,
           "updaters": [
             {
+              "compiledWithForget": false,
               "displayName": "render()",
               "hocDisplayNames": null,
               "id": 1,

@@ -424,7 +424,10 @@ export function getInternalReactConstants(version: string): {
   }
 
   // NOTICE Keep in sync with shouldFilterFiber() and other get*ForFiber methods
-  function getDisplayNameForFiber(fiber: Fiber): string | null {
+  function getDisplayNameForFiber(
+    fiber: Fiber,
+    shouldSkipForgetCheck: boolean = false,
+  ): string | null {
     const {elementType, type, tag} = fiber;
 
     let resolvedType = type;
@@ -433,6 +436,18 @@ export function getInternalReactConstants(version: string): {
     }
 
     let resolvedContext: any = null;
+    // $FlowFixMe[incompatible-type] fiber.updateQueue is mixed
+    if (!shouldSkipForgetCheck && fiber.updateQueue?.memoCache != null) {
+      const displayNameWithoutForgetWrapper = getDisplayNameForFiber(
+        fiber,
+        true,
+      );
+      if (displayNameWithoutForgetWrapper == null) {
+        return null;
+      }
+
+      return `Forget(${displayNameWithoutForgetWrapper})`;
+    }
 
     switch (tag) {
       case CacheComponent:
