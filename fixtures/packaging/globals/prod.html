@@ -4,9 +4,9 @@
     <script src="../../../build/oss-experimental/react-dom/umd/react-dom.production.min.js"></script>
     <div id="container"></div>
     <script>
-      ReactDOM.render(
+      const root = ReactDOM.createRoot(document.getElementById("container"));
+      root.render(
         React.createElement('h1', null, 'Hello World!'),
-        document.getElementById('container')
       );
     </script>
   </body>
