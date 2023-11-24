@@ -12,7 +12,7 @@
  * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
  *
  * The functions in this module will throw an easier-to-understand,
- * easier-to-debug exception with a clear errors message message explaining the
+ * easier-to-debug exception with a clear errors message explaining the
  * problem. (Instead of a confusing exception thrown inside the implementation
  * of the `value` object).
  */
