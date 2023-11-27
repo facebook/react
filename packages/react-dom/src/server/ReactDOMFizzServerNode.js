@@ -7,7 +7,12 @@
  * @flow
  */
 
-import type {Request, PostponedState} from 'react-server/src/ReactFizzServer';
+import type {
+  Request,
+  PostponedState,
+  ErrorInfo,
+  PostponeInfo,
+} from 'react-server/src/ReactFizzServer';
 import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
 import type {Writable} from 'stream';
 import type {
@@ -59,8 +64,8 @@ type Options = {
   onShellReady?: () => void,
   onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
-  onError?: (error: mixed) => ?string,
-  onPostpone?: (reason: string) => void,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
+  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
   importMap?: ImportMap,
   formState?: ReactFormState<any, any> | null,
@@ -73,8 +78,8 @@ type ResumeOptions = {
   onShellReady?: () => void,
   onShellError?: (error: mixed) => void,
   onAllReady?: () => void,
-  onError?: (error: mixed) => ?string,
-  onPostpone?: (reason: string) => void,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
+  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
 };
 
 type PipeableStream = {

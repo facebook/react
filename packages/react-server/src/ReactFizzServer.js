@@ -229,7 +229,7 @@ type RenderTask = {
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
-  componentStack: null | ComponentStackNode, // DEV-only component stack
+  componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
 };
 
@@ -254,7 +254,7 @@ type ReplayTask = {
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
   context: ContextSnapshot, // the current new context that this task is executing in
   treeContext: TreeContext, // the current tree context that this task is executing in
-  componentStack: null | ComponentStackNode, // DEV-only component stack
+  componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
 };
 
@@ -312,7 +312,7 @@ export opaque type Request = {
   // onError is called when an error happens anywhere in the tree. It might recover.
   // The return string is used in production  primarily to avoid leaking internals, secondarily to save bytes.
   // Returning null/undefined will cause a defualt error message in production
-  onError: (error: mixed) => ?string,
+  onError: (error: mixed, errorInfo: ThrownInfo) => ?string,
   // onAllReady is called when all pending task is done but it may not have flushed yet.
   // This is a good time to start writing if you want only HTML and no intermediate steps.
   onAllReady: () => void,
@@ -326,7 +326,7 @@ export opaque type Request = {
   onFatalError: (error: mixed) => void,
   // onPostpone is called when postpone() is called anywhere in the tree, which will defer
   // rendering - e.g. to the client. This is considered intentional and not an error.
-  onPostpone: (reason: string) => void,
+  onPostpone: (reason: string, postponeInfo: ThrownInfo) => void,
   // Form state that was the result of an MPA submission, if it was provided.
   formState: null | ReactFormState<any, any>,
 };
@@ -361,12 +361,12 @@ export function createRequest(
   renderState: RenderState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
-  onError: void | ((error: mixed) => ?string),
+  onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string) => void),
+  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
   formState: void | null | ReactFormState<any, any>,
 ): Request {
   prepareHostDispatcher();
@@ -427,6 +427,7 @@ export function createRequest(
     emptyContextObject,
     rootContextSnapshot,
     emptyTreeContext,
+    null,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -438,12 +439,12 @@ export function createPrerenderRequest(
   renderState: RenderState,
   rootFormatContext: FormatContext,
   progressiveChunkSize: void | number,
-  onError: void | ((error: mixed) => ?string),
+  onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string) => void),
+  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
 ): Request {
   const request = createRequest(
     children,
@@ -472,12 +473,12 @@ export function resumeRequest(
   children: ReactNodeList,
   postponedState: PostponedState,
   renderState: RenderState,
-  onError: void | ((error: mixed) => ?string),
+  onError: void | ((error: mixed, errorInfo: ErrorInfo) => ?string),
   onAllReady: void | (() => void),
   onShellReady: void | (() => void),
   onShellError: void | ((error: mixed) => void),
   onFatalError: void | ((error: mixed) => void),
-  onPostpone: void | ((reason: string) => void),
+  onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
 ): Request {
   prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
@@ -537,6 +538,7 @@ export function resumeRequest(
       emptyContextObject,
       rootContextSnapshot,
       emptyTreeContext,
+      null,
     );
     pingedTasks.push(rootTask);
     return request;
@@ -560,6 +562,7 @@ export function resumeRequest(
     emptyContextObject,
     rootContextSnapshot,
     emptyTreeContext,
+    null,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -617,6 +620,7 @@ function createRenderTask(
   legacyContext: LegacyContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
+  componentStack: null | ComponentStackNode,
 ): RenderTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -624,7 +628,7 @@ function createRenderTask(
   } else {
     blockedBoundary.pendingTasks++;
   }
-  const task: RenderTask = ({
+  const task: RenderTask = {
     replay: null,
     node,
     childIndex,
@@ -637,11 +641,9 @@ function createRenderTask(
     legacyContext,
     context,
     treeContext,
+    componentStack,
     thenableState,
-  }: any);
-  if (__DEV__) {
-    task.componentStack = null;
-  }
+  };
   abortSet.add(task);
   return task;
 }
@@ -659,6 +661,7 @@ function createReplayTask(
   legacyContext: LegacyContext,
   context: ContextSnapshot,
   treeContext: TreeContext,
+  componentStack: null | ComponentStackNode,
 ): ReplayTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -667,7 +670,7 @@ function createReplayTask(
     blockedBoundary.pendingTasks++;
   }
   replay.pendingTasks++;
-  const task: ReplayTask = ({
+  const task: ReplayTask = {
     replay,
     node,
     childIndex,
@@ -680,11 +683,9 @@ function createReplayTask(
     legacyContext,
     context,
     treeContext,
+    componentStack,
     thenableState,
-  }: any);
-  if (__DEV__) {
-    task.componentStack = null;
-  }
+  };
   abortSet.add(task);
   return task;
 }
@@ -723,53 +724,70 @@ function getCurrentStackInDEV(): string {
   return '';
 }
 
-function pushBuiltInComponentStackInDEV(task: Task, type: string): void {
-  if (__DEV__) {
-    task.componentStack = {
-      tag: 0,
-      parent: task.componentStack,
-      type,
-    };
-  }
+function getStackFromNode(stackNode: ComponentStackNode): string {
+  return getStackByComponentStackNode(stackNode);
 }
-function pushFunctionComponentStackInDEV(task: Task, type: Function): void {
-  if (__DEV__) {
-    task.componentStack = {
-      tag: 1,
-      parent: task.componentStack,
-      type,
-    };
-  }
+
+function createBuiltInComponentStack(
+  task: Task,
+  type: string,
+): ComponentStackNode {
+  return {
+    tag: 0,
+    parent: task.componentStack,
+    type,
+  };
 }
-function pushClassComponentStackInDEV(task: Task, type: Function): void {
-  if (__DEV__) {
-    task.componentStack = {
-      tag: 2,
-      parent: task.componentStack,
-      type,
-    };
-  }
+function createFunctionComponentStack(
+  task: Task,
+  type: Function,
+): ComponentStackNode {
+  return {
+    tag: 1,
+    parent: task.componentStack,
+    type,
+  };
 }
-function popComponentStackInDEV(task: Task): void {
-  if (__DEV__) {
-    if (task.componentStack === null) {
-      console.error(
-        'Unexpectedly popped too many stack frames. This is a bug in React.',
-      );
-    } else {
-      task.componentStack = task.componentStack.parent;
-    }
+function createClassComponentStack(
+  task: Task,
+  type: Function,
+): ComponentStackNode {
+  return {
+    tag: 2,
+    parent: task.componentStack,
+    type,
+  };
+}
+
+type ThrownInfo = {
+  componentStack?: string,
+};
+export type ErrorInfo = ThrownInfo;
+export type PostponeInfo = ThrownInfo;
+
+// While we track component stacks in prod all the time we only produce a reified stack in dev and
+// during prerender in Prod. The reason for this is that the stack is useful for prerender where the timeliness
+// of the request is less critical than the observability of the execution. For renders and resumes however we
+// prioritize speed of the request.
+function getThrownInfo(node: null | ComponentStackNode): ThrownInfo {
+  if (node) {
+    return {
+      componentStack: getStackFromNode(node),
+    };
+  } else {
+    return {};
   }
 }
 
-// stash the component stack of an unwinding error until it is processed
-let lastBoundaryErrorComponentStackDev: ?string = null;
-
-function captureBoundaryErrorDetailsDev(
+function encodeErrorForBoundary(
   boundary: SuspenseBoundary,
+  digest: ?string,
   error: mixed,
+  thrownInfo: ThrownInfo,
 ) {
+  boundary.errorDigest = digest;
   if (__DEV__) {
+    // In dev we additionally encode the error message and component stack on the boundary
     let errorMessage;
     if (typeof error === 'string') {
       errorMessage = error;
@@ -780,30 +798,39 @@ function captureBoundaryErrorDetailsDev(
       errorMessage = String(error);
     }
 
-    const errorComponentStack =
-      lastBoundaryErrorComponentStackDev || getCurrentStackInDEV();
-    lastBoundaryErrorComponentStackDev = null;
-
     boundary.errorMessage = errorMessage;
-    boundary.errorComponentStack = errorComponentStack;
+    boundary.errorComponentStack = thrownInfo.componentStack;
   }
 }
 
-function logPostpone(request: Request, reason: string): void {
+function logPostpone(
+  request: Request,
+  reason: string,
+  postponeInfo: ThrownInfo,
+): void {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  request.onPostpone(reason);
+  request.onPostpone(reason, postponeInfo);
 }
 
-function logRecoverableError(request: Request, error: any): ?string {
+function logRecoverableError(
+  request: Request,
+  error: any,
+  errorInfo: ThrownInfo,
+): ?string {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  const errorDigest = request.onError(error);
+  const errorDigest = request.onError(error, errorInfo);
   if (errorDigest != null && typeof errorDigest !== 'string') {
-    // eslint-disable-next-line react-internal/prod-error-codes
-    throw new Error(
-      `onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "${typeof errorDigest}" instead`,
-    );
+    // We used to throw here but since this gets called from a variety of unprotected places it
+    // seems better to just warn and discard the returned value.
+    if (__DEV__) {
+      console.error(
+        'onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "%s" instead',
+        typeof errorDigest,
+      );
+    }
+    return;
   }
   return errorDigest;
 }
@@ -848,7 +875,11 @@ function renderSuspenseBoundary(
   // $FlowFixMe: Refined.
   const task: RenderTask = someTask;
 
-  pushBuiltInComponentStackInDEV(task, 'Suspense');
+  const previousComponentStack = task.componentStack;
+  // If we end up creating the fallback task we need it to have the correct stack which is
+  // the stack for the boundary itself. We stash it here so we can use it if needed later
+  const suspenseComponentStack = (task.componentStack =
+    createBuiltInComponentStack(task, 'Suspense'));
 
   const prevKeyPath = task.keyPath;
   const parentBoundary = task.blockedBoundary;
@@ -912,6 +943,7 @@ function renderSuspenseBoundary(
     );
   }
   task.keyPath = keyPath;
+
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
     renderNode(request, task, content, -1);
@@ -924,16 +956,19 @@ function renderSuspenseBoundary(
     contentRootSegment.status = COMPLETED;
     queueCompletedSegment(newBoundary, contentRootSegment);
     if (newBoundary.pendingTasks === 0 && newBoundary.status === PENDING) {
-      newBoundary.status = COMPLETED;
       // This must have been the last segment we were waiting on. This boundary is now complete.
       // Therefore we won't need the fallback. We early return so that we don't have to create
       // the fallback.
-      popComponentStackInDEV(task);
+      newBoundary.status = COMPLETED;
+
+      // We are returning early so we need to restore the
+      task.componentStack = previousComponentStack;
       return;
     }
-  } catch (error) {
+  } catch (error: mixed) {
     contentRootSegment.status = ERRORED;
     newBoundary.status = CLIENT_RENDERED;
+    const thrownInfo = getThrownInfo(task.componentStack);
     let errorDigest;
     if (
       enablePostpone &&
@@ -942,16 +977,13 @@ function renderSuspenseBoundary(
       error.$$typeof === REACT_POSTPONE_TYPE
     ) {
       const postponeInstance: Postpone = (error: any);
-      logPostpone(request, postponeInstance.message);
+      logPostpone(request, postponeInstance.message, thrownInfo);
       // TODO: Figure out a better signal than a magic digest value.
       errorDigest = 'POSTPONE';
     } else {
-      errorDigest = logRecoverableError(request, error);
+      errorDigest = logRecoverableError(request, error, thrownInfo);
     }
-    newBoundary.errorDigest = errorDigest;
-    if (__DEV__) {
-      captureBoundaryErrorDetailsDev(newBoundary, error);
-    }
+    encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo);
 
     // We don't need to decrement any task numbers because we didn't spawn any new task.
     // We don't need to schedule any task because we know the parent has written yet.
@@ -966,6 +998,7 @@ function renderSuspenseBoundary(
     task.blockedBoundary = parentBoundary;
     task.blockedSegment = parentSegment;
     task.keyPath = prevKeyPath;
+    task.componentStack = previousComponentStack;
   }
 
   const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
@@ -1005,15 +1038,13 @@ function renderSuspenseBoundary(
     task.legacyContext,
     task.context,
     task.treeContext,
+    // This stack should be the Suspense boundary stack because while the fallback is actually a child segment
+    // of the parent boundary from a component standpoint the fallback is a child of the Suspense boundary itself
+    suspenseComponentStack,
   );
-  if (__DEV__) {
-    suspendedFallbackTask.componentStack = task.componentStack;
-  }
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
-
-  popComponentStackInDEV(task);
 }
 
 function replaySuspenseBoundary(
@@ -1027,7 +1058,11 @@ function replaySuspenseBoundary(
   fallbackNodes: Array<ReplayNode>,
   fallbackSlots: ResumeSlots,
 ): void {
-  pushBuiltInComponentStackInDEV(task, 'Suspense');
+  const previousComponentStack = task.componentStack;
+  // If we end up creating the fallback task we need it to have the correct stack which is
+  // the stack for the boundary itself. We stash it here so we can use it if needed later
+  const suspenseComponentStack = (task.componentStack =
+    createBuiltInComponentStack(task, 'Suspense'));
 
   const prevKeyPath = task.keyPath;
   const previousReplaySet: ReplaySet = task.replay;
@@ -1054,9 +1089,11 @@ function replaySuspenseBoundary(
       resumedBoundary.resources,
     );
   }
+
   try {
     // We use the safe form because we don't handle suspending here. Only error handling.
     renderNode(request, task, content, -1);
+
     if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
       throw new Error(
         "Couldn't find all resumable slots by key/index during replaying. " +
@@ -1068,16 +1105,19 @@ function replaySuspenseBoundary(
       resumedBoundary.pendingTasks === 0 &&
       resumedBoundary.status === PENDING
     ) {
-      resumedBoundary.status = COMPLETED;
-      request.completedBoundaries.push(resumedBoundary);
       // This must have been the last segment we were waiting on. This boundary is now complete.
       // Therefore we won't need the fallback. We early return so that we don't have to create
       // the fallback.
-      popComponentStackInDEV(task);
+      resumedBoundary.status = COMPLETED;
+      request.completedBoundaries.push(resumedBoundary);
+      // We restore the parent componentStack. Semantically this is the same as
+      // popComponentStack(task) but we do this instead because it should be slightly
+      // faster
       return;
     }
-  } catch (error) {
+  } catch (error: mixed) {
     resumedBoundary.status = CLIENT_RENDERED;
+    const thrownInfo = getThrownInfo(task.componentStack);
     let errorDigest;
     if (
       enablePostpone &&
@@ -1086,16 +1126,13 @@ function replaySuspenseBoundary(
       error.$$typeof === REACT_POSTPONE_TYPE
     ) {
       const postponeInstance: Postpone = (error: any);
-      logPostpone(request, postponeInstance.message);
+      logPostpone(request, postponeInstance.message, thrownInfo);
       // TODO: Figure out a better signal than a magic digest value.
       errorDigest = 'POSTPONE';
     } else {
-      errorDigest = logRecoverableError(request, error);
+      errorDigest = logRecoverableError(request, error, thrownInfo);
     }
-    resumedBoundary.errorDigest = errorDigest;
-    if (__DEV__) {
-      captureBoundaryErrorDetailsDev(resumedBoundary, error);
-    }
+    encodeErrorForBoundary(resumedBoundary, errorDigest, error, thrownInfo);
 
     task.replay.pendingTasks--;
 
@@ -1115,6 +1152,7 @@ function replaySuspenseBoundary(
     task.blockedBoundary = parentBoundary;
     task.replay = previousReplaySet;
     task.keyPath = prevKeyPath;
+    task.componentStack = previousComponentStack;
   }
 
   const fallbackKeyPath = [keyPath[0], 'Suspense Fallback', keyPath[2]];
@@ -1139,15 +1177,13 @@ function replaySuspenseBoundary(
     task.legacyContext,
     task.context,
     task.treeContext,
+    // This stack should be the Suspense boundary stack because while the fallback is actually a child segment
+    // of the parent boundary from a component standpoint the fallback is a child of the Suspense boundary itself
+    suspenseComponentStack,
   );
-  if (__DEV__) {
-    suspendedFallbackTask.componentStack = task.componentStack;
-  }
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
-
-  popComponentStackInDEV(task);
 }
 
 function renderBackupSuspenseBoundary(
@@ -1156,7 +1192,8 @@ function renderBackupSuspenseBoundary(
   keyPath: KeyNode,
   props: Object,
 ) {
-  pushBuiltInComponentStackInDEV(task, 'Suspense');
+  const previousComponentStack = task.componentStack;
+  task.componentStack = createBuiltInComponentStack(task, 'Suspense');
 
   const content = props.children;
   const segment = task.blockedSegment;
@@ -1172,8 +1209,7 @@ function renderBackupSuspenseBoundary(
     pushEndCompletedSuspenseBoundary(segment.chunks);
   }
   task.keyPath = prevKeyPath;
-
-  popComponentStackInDEV(task);
+  task.componentStack = previousComponentStack;
 }
 
 function renderHostElement(
@@ -1183,7 +1219,8 @@ function renderHostElement(
   type: string,
   props: Object,
 ): void {
-  pushBuiltInComponentStackInDEV(task, type);
+  const previousComponentStack = task.componentStack;
+  task.componentStack = createBuiltInComponentStack(task, type);
   const segment = task.blockedSegment;
   if (segment === null) {
     // Replay
@@ -1235,7 +1272,7 @@ function renderHostElement(
     );
     segment.lastPushedText = false;
   }
-  popComponentStackInDEV(task);
+  task.componentStack = previousComponentStack;
 }
 
 function shouldConstruct(Component: any) {
@@ -1316,14 +1353,15 @@ function renderClassComponent(
   Component: any,
   props: any,
 ): void {
-  pushClassComponentStackInDEV(task, Component);
+  const previousComponentStack = task.componentStack;
+  task.componentStack = createClassComponentStack(task, Component);
   const maskedContext = !disableLegacyContext
     ? getMaskedContext(Component, task.legacyContext)
     : undefined;
   const instance = constructClassInstance(Component, props, maskedContext);
   mountClassInstance(instance, Component, props, maskedContext);
   finishClassComponent(request, task, keyPath, instance, Component, props);
-  popComponentStackInDEV(task);
+  task.componentStack = previousComponentStack;
 }
 
 const didWarnAboutBadClass: {[string]: boolean} = {};
@@ -1350,7 +1388,8 @@ function renderIndeterminateComponent(
   if (!disableLegacyContext) {
     legacyContext = getMaskedContext(Component, task.legacyContext);
   }
-  pushFunctionComponentStackInDEV(task, Component);
+  const previousComponentStack = task.componentStack;
+  task.componentStack = createFunctionComponentStack(task, Component);
 
   if (__DEV__) {
     if (
@@ -1462,7 +1501,7 @@ function renderIndeterminateComponent(
       formStateMatchingIndex,
     );
   }
-  popComponentStackInDEV(task);
+  task.componentStack = previousComponentStack;
 }
 
 function finishFunctionComponent(
@@ -1601,7 +1640,8 @@ function renderForwardRef(
   props: Object,
   ref: any,
 ): void {
-  pushFunctionComponentStackInDEV(task, type.render);
+  const previousComponentStack = task.componentStack;
+  task.componentStack = createFunctionComponentStack(task, type.render);
   const children = renderWithHooks(
     request,
     task,
@@ -1623,7 +1663,7 @@ function renderForwardRef(
     formStateCount,
     formStateMatchingIndex,
   );
-  popComponentStackInDEV(task);
+  task.componentStack = previousComponentStack;
 }
 
 function renderMemo(
@@ -1740,7 +1780,8 @@ function renderLazyComponent(
   props: Object,
   ref: any,
 ): void {
-  pushBuiltInComponentStackInDEV(task, 'Lazy');
+  const previousComponentStack = task.componentStack;
+  task.componentStack = createBuiltInComponentStack(task, 'Lazy');
   const payload = lazyComponent._payload;
   const init = lazyComponent._init;
   const Component = init(payload);
@@ -1754,7 +1795,7 @@ function renderLazyComponent(
     resolvedProps,
     ref,
   );
-  popComponentStackInDEV(task);
+  task.componentStack = previousComponentStack;
 }
 
 function renderOffscreen(
@@ -1833,13 +1874,14 @@ function renderElement(
       return;
     }
     case REACT_SUSPENSE_LIST_TYPE: {
-      pushBuiltInComponentStackInDEV(task, 'SuspenseList');
+      const preiousComponentStack = task.componentStack;
+      task.componentStack = createBuiltInComponentStack(task, 'SuspenseList');
       // TODO: SuspenseList should control the boundaries.
       const prevKeyPath = task.keyPath;
       task.keyPath = keyPath;
       renderNodeDestructive(request, task, null, props.children, -1);
       task.keyPath = prevKeyPath;
-      popComponentStackInDEV(task);
+      task.componentStack = preiousComponentStack;
       return;
     }
     case REACT_SCOPE_TYPE: {
@@ -2046,7 +2088,15 @@ function replayElement(
         // in the original prerender. What's unable to complete is the child
         // replay nodes which might be Suspense boundaries which are able to
         // absorb the error and we can still continue with siblings.
-        erroredReplay(request, task.blockedBoundary, x, childNodes, childSlots);
+        const thrownInfo = getThrownInfo(task.componentStack);
+        erroredReplay(
+          request,
+          task.blockedBoundary,
+          x,
+          thrownInfo,
+          childNodes,
+          childSlots,
+        );
       }
       task.replay = replay;
     } else {
@@ -2118,56 +2168,13 @@ function validateIterable(iterable, iteratorFn: Function): void {
   }
 }
 
+// This function by it self renders a node and consumes the task by mutating it
+// to update the current execution state.
 function renderNodeDestructive(
   request: Request,
   task: Task,
   // The thenable state reused from the previous attempt, if any. This is almost
   // always null, except when called by retryTask.
-  prevThenableState: ThenableState | null,
-  node: ReactNodeList,
-  childIndex: number,
-): void {
-  if (__DEV__) {
-    // In Dev we wrap renderNodeDestructiveImpl in a try / catch so we can capture
-    // a component stack at the right place in the tree. We don't do this in renderNode
-    // becuase it is not called at every layer of the tree and we may lose frames
-    try {
-      return renderNodeDestructiveImpl(
-        request,
-        task,
-        prevThenableState,
-        node,
-        childIndex,
-      );
-    } catch (x) {
-      if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-        // This is a Wakable, noop
-      } else {
-        // This is an error, stash the component stack if it is null.
-        lastBoundaryErrorComponentStackDev =
-          lastBoundaryErrorComponentStackDev !== null
-            ? lastBoundaryErrorComponentStackDev
-            : getCurrentStackInDEV();
-      }
-      // rethrow so normal suspense logic can handle thrown value accordingly
-      throw x;
-    }
-  } else {
-    return renderNodeDestructiveImpl(
-      request,
-      task,
-      prevThenableState,
-      node,
-      childIndex,
-    );
-  }
-}
-
-// This function by it self renders a node and consumes the task by mutating it
-// to update the current execution state.
-function renderNodeDestructiveImpl(
-  request: Request,
-  task: Task,
   prevThenableState: ThenableState | null,
   node: ReactNodeList,
   childIndex: number,
@@ -2232,30 +2239,18 @@ function renderNodeDestructiveImpl(
             'Render them conditionally so that they only appear on the client render.',
         );
       case REACT_LAZY_TYPE: {
+        const previousComponentStack = task.componentStack;
+        task.componentStack = createBuiltInComponentStack(task, 'Lazy');
         const lazyNode: LazyComponentType<any, any> = (node: any);
         const payload = lazyNode._payload;
         const init = lazyNode._init;
-        let resolvedNode;
-        if (__DEV__) {
-          try {
-            resolvedNode = init(payload);
-          } catch (x) {
-            if (
-              typeof x === 'object' &&
-              x !== null &&
-              typeof x.then === 'function'
-            ) {
-              // this Lazy initializer is suspending. push a temporary frame onto the stack so it can be
-              // popped off in spawnNewSuspendedTask. This aligns stack behavior between Lazy in element position
-              // vs Component position. We do not want the frame for Errors so we exclusively do this in
-              // the wakeable branch
-              pushBuiltInComponentStackInDEV(task, 'Lazy');
-            }
-            throw x;
-          }
-        } else {
-          resolvedNode = init(payload);
-        }
+        const resolvedNode = init(payload);
+
+        // We restore the stack before rendering the resolved node because once the Lazy
+        // has resolved any future errors
+        task.componentStack = previousComponentStack;
+
+        // Now we render the resolved node
         renderNodeDestructive(request, task, null, resolvedNode, childIndex);
         return;
       }
@@ -2305,7 +2300,7 @@ function renderNodeDestructiveImpl(
     const maybeUsable: Object = node;
     if (typeof maybeUsable.then === 'function') {
       const thenable: Thenable<ReactNodeList> = (maybeUsable: any);
-      return renderNodeDestructiveImpl(
+      return renderNodeDestructive(
         request,
         task,
         null,
@@ -2319,7 +2314,7 @@ function renderNodeDestructiveImpl(
       maybeUsable.$$typeof === REACT_SERVER_CONTEXT_TYPE
     ) {
       const context: ReactContext<ReactNodeList> = (maybeUsable: any);
-      return renderNodeDestructiveImpl(
+      return renderNodeDestructive(
         request,
         task,
         null,
@@ -2429,7 +2424,15 @@ function replayFragment(
       // replay nodes which might be Suspense boundaries which are able to
       // absorb the error and we can still continue with siblings.
       // This is an error, stash the component stack if it is null.
-      erroredReplay(request, task.blockedBoundary, x, childNodes, childSlots);
+      const thrownInfo = getThrownInfo(task.componentStack);
+      erroredReplay(
+        request,
+        task.blockedBoundary,
+        x,
+        thrownInfo,
+        childNodes,
+        childSlots,
+      );
     }
     task.replay = replay;
     // We finished rendering this node, so now we can consume this
@@ -2664,8 +2667,9 @@ function injectPostponedHole(
   request: Request,
   task: RenderTask,
   reason: string,
+  thrownInfo: ThrownInfo,
 ): Segment {
-  logPostpone(request, reason);
+  logPostpone(request, reason, thrownInfo);
   // Something suspended, we'll need to create a new segment and resolve it later.
   const segment = task.blockedSegment;
   const insertionIndex = segment.chunks.length;
@@ -2704,15 +2708,11 @@ function spawnNewSuspendedReplayTask(
     task.legacyContext,
     task.context,
     task.treeContext,
+    // We pop one task off the stack because the node that suspended will be tried again,
+    // which will add it back onto the stack.
+    task.componentStack !== null ? task.componentStack.parent : null,
   );
 
-  if (__DEV__) {
-    if (task.componentStack !== null) {
-      // We pop one task off the stack because the node that suspended will be tried again,
-      // which will add it back onto the stack.
-      newTask.componentStack = task.componentStack.parent;
-    }
-  }
   const ping = newTask.ping;
   x.then(ping, ping);
 }
@@ -2752,15 +2752,11 @@ function spawnNewSuspendedRenderTask(
     task.legacyContext,
     task.context,
     task.treeContext,
+    // We pop one task off the stack because the node that suspended will be tried again,
+    // which will add it back onto the stack.
+    task.componentStack !== null ? task.componentStack.parent : null,
   );
 
-  if (__DEV__) {
-    if (task.componentStack !== null) {
-      // We pop one task off the stack because the node that suspended will be tried again,
-      // which will add it back onto the stack.
-      newTask.componentStack = task.componentStack.parent;
-    }
-  }
   const ping = newTask.ping;
   x.then(ping, ping);
 }
@@ -2780,10 +2776,7 @@ function renderNode(
   const previousContext = task.context;
   const previousKeyPath = task.keyPath;
   const previousTreeContext = task.treeContext;
-  let previousComponentStack = null;
-  if (__DEV__) {
-    previousComponentStack = task.componentStack;
-  }
+  const previousComponentStack = task.componentStack;
   let x;
   // Store how much we've pushed at this point so we can reset it in case something
   // suspended partially through writing something.
@@ -2825,11 +2818,9 @@ function renderNode(
           task.context = previousContext;
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
+          task.componentStack = previousComponentStack;
           // Restore all active ReactContexts to what they were before.
           switchContext(previousContext);
-          if (__DEV__) {
-            task.componentStack = previousComponentStack;
-          }
           return;
         }
       }
@@ -2879,29 +2870,30 @@ function renderNode(
           task.context = previousContext;
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
+          task.componentStack = previousComponentStack;
           // Restore all active ReactContexts to what they were before.
           switchContext(previousContext);
-          if (__DEV__) {
-            task.componentStack = previousComponentStack;
-          }
           return;
         }
         if (
           enablePostpone &&
-          request.trackedPostpones !== null &&
           x.$$typeof === REACT_POSTPONE_TYPE &&
+          request.trackedPostpones !== null &&
           task.blockedBoundary !== null // bubble if we're postponing in the shell
         ) {
           // If we're tracking postpones, we inject a hole here and continue rendering
           // sibling. Similar to suspending. If we're not tracking, we treat it more like
           // an error. Notably this doesn't spawn a new task since nothing will fill it
           // in during this prerender.
-          const postponeInstance: Postpone = (x: any);
           const trackedPostpones = request.trackedPostpones;
+
+          const postponeInstance: Postpone = (x: any);
+          const thrownInfo = getThrownInfo(task.componentStack);
           const postponedSegment = injectPostponedHole(
             request,
             ((task: any): RenderTask), // We don't use ReplayTasks in prerenders.
             postponeInstance.message,
+            thrownInfo,
           );
           trackPostpone(request, trackedPostpones, task, postponedSegment);
 
@@ -2912,17 +2904,15 @@ function renderNode(
           task.context = previousContext;
           task.keyPath = previousKeyPath;
           task.treeContext = previousTreeContext;
+          task.componentStack = previousComponentStack;
           // Restore all active ReactContexts to what they were before.
           switchContext(previousContext);
-          if (__DEV__) {
-            task.componentStack = previousComponentStack;
-          }
-          lastBoundaryErrorComponentStackDev = null;
           return;
         }
       }
     }
   }
+
   // Restore the context. We assume that this will be restored by the inner
   // functions in case nothing throws so we don't use "finally" here.
   task.formatContext = previousFormatContext;
@@ -2930,13 +2920,13 @@ function renderNode(
   task.context = previousContext;
   task.keyPath = previousKeyPath;
   task.treeContext = previousTreeContext;
+  // We intentionally do not restore the component stack on the error pathway
+  // Whatever handles the error needs to use this stack which is the location of the
+  // error. We must restore the stack wherever we handle this
+
   // Restore all active ReactContexts to what they were before.
   switchContext(previousContext);
-  if (__DEV__) {
-    task.componentStack = previousComponentStack;
-  }
-  // We assume that we don't need the correct context.
-  // Let's terminate the rest of the tree and don't render any siblings.
+
   throw x;
 }
 
@@ -2944,6 +2934,7 @@ function erroredReplay(
   request: Request,
   boundary: Root | SuspenseBoundary,
   error: mixed,
+  errorInfo: ThrownInfo,
   replayNodes: ReplayNode[],
   resumeSlots: ResumeSlots,
 ): void {
@@ -2962,11 +2953,11 @@ function erroredReplay(
     error.$$typeof === REACT_POSTPONE_TYPE
   ) {
     const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message);
+    logPostpone(request, postponeInstance.message, errorInfo);
     // TODO: Figure out a better signal than a magic digest value.
     errorDigest = 'POSTPONE';
   } else {
-    errorDigest = logRecoverableError(request, error);
+    errorDigest = logRecoverableError(request, error, errorInfo);
   }
   abortRemainingReplayNodes(
     request,
@@ -2975,6 +2966,7 @@ function erroredReplay(
     resumeSlots,
     error,
     errorDigest,
+    errorInfo,
   );
 }
 
@@ -2982,6 +2974,7 @@ function erroredTask(
   request: Request,
   boundary: Root | SuspenseBoundary,
   error: mixed,
+  errorInfo: ThrownInfo,
 ) {
   // Report the error to a global handler.
   let errorDigest;
@@ -2992,23 +2985,19 @@ function erroredTask(
     error.$$typeof === REACT_POSTPONE_TYPE
   ) {
     const postponeInstance: Postpone = (error: any);
-    logPostpone(request, postponeInstance.message);
+    logPostpone(request, postponeInstance.message, errorInfo);
     // TODO: Figure out a better signal than a magic digest value.
     errorDigest = 'POSTPONE';
   } else {
-    errorDigest = logRecoverableError(request, error);
+    errorDigest = logRecoverableError(request, error, errorInfo);
   }
   if (boundary === null) {
-    lastBoundaryErrorComponentStackDev = null;
     fatalError(request, error);
   } else {
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
-      boundary.errorDigest = errorDigest;
-      if (__DEV__) {
-        captureBoundaryErrorDetailsDev(boundary, error);
-      }
+      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
 
       // Regardless of what happens next, this boundary won't be displayed,
       // so we can flush it, if the parent already flushed.
@@ -3019,8 +3008,6 @@ function erroredTask(
         // We reuse the same queue for errors.
         request.clientRenderedBoundaries.push(boundary);
       }
-    } else {
-      lastBoundaryErrorComponentStackDev = null;
     }
   }
 
@@ -3048,6 +3035,7 @@ function abortRemainingSuspenseBoundary(
   rootSegmentID: number,
   error: mixed,
   errorDigest: ?string,
+  errorInfo: ThrownInfo,
 ): void {
   const resumedBoundary = createSuspenseBoundary(request, new Set());
   resumedBoundary.parentFlushed = true;
@@ -3055,24 +3043,18 @@ function abortRemainingSuspenseBoundary(
   resumedBoundary.rootSegmentID = rootSegmentID;
 
   resumedBoundary.status = CLIENT_RENDERED;
-  resumedBoundary.errorDigest = errorDigest;
+  let errorMessage = error;
   if (__DEV__) {
     const errorPrefix = 'The server did not finish this Suspense boundary: ';
-    let errorMessage;
     if (error && typeof error.message === 'string') {
       errorMessage = errorPrefix + error.message;
     } else {
       // eslint-disable-next-line react-internal/safe-string-coercion
       errorMessage = errorPrefix + String(error);
     }
-    const previousTaskInDev = currentTaskInDEV;
-    currentTaskInDEV = null;
-    try {
-      captureBoundaryErrorDetailsDev(resumedBoundary, errorMessage);
-    } finally {
-      currentTaskInDEV = previousTaskInDev;
-    }
   }
+  encodeErrorForBoundary(resumedBoundary, errorDigest, errorMessage, errorInfo);
+
   if (resumedBoundary.parentFlushed) {
     request.clientRenderedBoundaries.push(resumedBoundary);
   }
@@ -3085,6 +3067,7 @@ function abortRemainingReplayNodes(
   slots: ResumeSlots,
   error: mixed,
   errorDigest: ?string,
+  errorInfo: ThrownInfo,
 ): void {
   for (let i = 0; i < nodes.length; i++) {
     const node = nodes[i];
@@ -3096,6 +3079,7 @@ function abortRemainingReplayNodes(
         node[3],
         error,
         errorDigest,
+        errorInfo,
       );
     } else {
       const boundaryNode: ReplaySuspenseBoundary = node;
@@ -3105,6 +3089,7 @@ function abortRemainingReplayNodes(
         rootSegmentID,
         error,
         errorDigest,
+        errorInfo,
       );
     }
   }
@@ -3121,10 +3106,7 @@ function abortRemainingReplayNodes(
       );
     } else if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
-      boundary.errorDigest = errorDigest;
-      if (__DEV__) {
-        captureBoundaryErrorDetailsDev(boundary, error);
-      }
+      encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
       }
@@ -3148,12 +3130,13 @@ function abortTask(task: Task, request: Request, error: mixed): void {
   }
 
   if (boundary === null) {
+    const errorInfo: ThrownInfo = {};
     if (request.status !== CLOSING && request.status !== CLOSED) {
       const replay: null | ReplaySet = task.replay;
       if (replay === null) {
         // We didn't complete the root so we have nothing to show. We can close
         // the request;
-        logRecoverableError(request, error);
+        logRecoverableError(request, error, errorInfo);
         fatalError(request, error);
         return;
       } else {
@@ -3162,7 +3145,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         // the ReplaySet.
         replay.pendingTasks--;
         if (replay.pendingTasks === 0 && replay.nodes.length > 0) {
-          const errorDigest = logRecoverableError(request, error);
+          const errorDigest = logRecoverableError(request, error, errorInfo);
           abortRemainingReplayNodes(
             request,
             null,
@@ -3170,6 +3153,7 @@ function abortTask(task: Task, request: Request, error: mixed): void {
             replay.slots,
             error,
             errorDigest,
+            errorInfo,
           );
         }
         request.pendingRootTasks--;
@@ -3182,25 +3166,23 @@ function abortTask(task: Task, request: Request, error: mixed): void {
     boundary.pendingTasks--;
     if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
-      boundary.errorDigest = logRecoverableError(request, error);
+      // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
+      // boundary the message is referring to
+      const errorInfo = getThrownInfo(task.componentStack);
+      const errorDigest = logRecoverableError(request, error, errorInfo);
+      let errorMessage = error;
       if (__DEV__) {
         const errorPrefix =
           'The server did not finish this Suspense boundary: ';
-        let errorMessage;
         if (error && typeof error.message === 'string') {
           errorMessage = errorPrefix + error.message;
         } else {
           // eslint-disable-next-line react-internal/safe-string-coercion
           errorMessage = errorPrefix + String(error);
         }
-        const previousTaskInDev = currentTaskInDEV;
-        currentTaskInDEV = task;
-        try {
-          captureBoundaryErrorDetailsDev(boundary, errorMessage);
-        } finally {
-          currentTaskInDEV = previousTaskInDev;
-        }
       }
+      encodeErrorForBoundary(boundary, errorDigest, errorMessage, errorInfo);
+
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
       }
@@ -3232,7 +3214,8 @@ function safelyEmitEarlyPreloads(
     );
   } catch (error) {
     // We assume preloads are optimistic and thus non-fatal if errored.
-    logRecoverableError(request, error);
+    const errorInfo: ThrownInfo = {};
+    logRecoverableError(request, error, errorInfo);
   }
 }
 
@@ -3486,16 +3469,19 @@ function retryRenderTask(
         const trackedPostpones = request.trackedPostpones;
         task.abortSet.delete(task);
         const postponeInstance: Postpone = (x: any);
-        logPostpone(request, postponeInstance.message);
+
+        const postponeInfo = getThrownInfo(task.componentStack);
+        logPostpone(request, postponeInstance.message, postponeInfo);
         trackPostpone(request, trackedPostpones, task, segment);
         finishedTask(request, task.blockedBoundary, segment);
-        lastBoundaryErrorComponentStackDev = null;
         return;
       }
     }
+
+    const errorInfo = getThrownInfo(task.componentStack);
     task.abortSet.delete(task);
     segment.status = ERRORED;
-    erroredTask(request, task.blockedBoundary, x);
+    erroredTask(request, task.blockedBoundary, x, errorInfo);
     return;
   } finally {
     if (enableFloat) {
@@ -3576,10 +3562,12 @@ function retryReplayTask(request: Request, task: ReplayTask): void {
     }
     task.replay.pendingTasks--;
     task.abortSet.delete(task);
+    const errorInfo = getThrownInfo(task.componentStack);
     erroredReplay(
       request,
       task.blockedBoundary,
       x,
+      errorInfo,
       task.replay.nodes,
       task.replay.slots,
     );
@@ -3637,7 +3625,8 @@ export function performWork(request: Request): void {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
-    logRecoverableError(request, error);
+    const errorInfo: ThrownInfo = {};
+    logRecoverableError(request, error, errorInfo);
     fatalError(request, error);
   } finally {
     setCurrentResumableState(prevResumableState);
@@ -4201,7 +4190,8 @@ export function startFlowing(request: Request, destination: Destination): void {
   try {
     flushCompletedQueues(request, destination);
   } catch (error) {
-    logRecoverableError(request, error);
+    const errorInfo: ThrownInfo = {};
+    logRecoverableError(request, error, errorInfo);
     fatalError(request, error);
   }
 }
@@ -4226,7 +4216,8 @@ export function abort(request: Request, reason: mixed): void {
       flushCompletedQueues(request, request.destination);
     }
   } catch (error) {
-    logRecoverableError(request, error);
+    const errorInfo: ThrownInfo = {};
+    logRecoverableError(request, error, errorInfo);
     fatalError(request, error);
   }
 }

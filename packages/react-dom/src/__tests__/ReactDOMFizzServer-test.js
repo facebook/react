@@ -734,7 +734,7 @@ describe('ReactDOMFizzServer', () => {
 
     const theError = new Error('Test');
     const loggedErrors = [];
-    function onError(x) {
+    function onError(x, errorInfo) {
       loggedErrors.push(x);
       return 'Hash of (' + x.message + ')';
     }
@@ -837,7 +837,7 @@ describe('ReactDOMFizzServer', () => {
 
     const theError = new Error('Test');
     const loggedErrors = [];
-    function onError(x) {
+    function onError(x, errorInfo) {
       loggedErrors.push(x);
       return 'hash of (' + x.message + ')';
     }
@@ -898,7 +898,7 @@ describe('ReactDOMFizzServer', () => {
         [
           theError.message,
           expectedDigest,
-          componentStack(['Suspense', 'div', 'App']),
+          componentStack(['Lazy', 'Suspense', 'div', 'App']),
         ],
       ],
       [
@@ -936,7 +936,9 @@ describe('ReactDOMFizzServer', () => {
       return (
         <div>
           <Suspense fallback={<span>loading...</span>}>
-            <Erroring isClient={isClient} />
+            <Indirection level={2}>
+              <Erroring isClient={isClient} />
+            </Indirection>
           </Suspense>
         </div>
       );
@@ -979,7 +981,15 @@ describe('ReactDOMFizzServer', () => {
         [
           theError.message,
           expectedDigest,
-          componentStack(['Erroring', 'Suspense', 'div', 'App']),
+          componentStack([
+            'Erroring',
+            'Indirection',
+            'Indirection',
+            'Indirection',
+            'Suspense',
+            'div',
+            'App',
+          ]),
         ],
       ],
       [
@@ -1330,6 +1340,11 @@ describe('ReactDOMFizzServer', () => {
               <AsyncText text="Hello" />
             </h1>
           </Suspense>
+          <main>
+            <Suspense fallback="loading...">
+              <AsyncText text="World" />
+            </Suspense>
+          </main>
         </div>
       );
     }
@@ -1359,7 +1374,11 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
 
     // We're still loading because we're waiting for the server to stream more content.
-    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Loading...<main>loading...</main>
+      </div>,
+    );
 
     // We abort the server response.
     await act(() => {
@@ -1374,7 +1393,13 @@ describe('ReactDOMFizzServer', () => {
         [
           'The server did not finish this Suspense boundary: The render was aborted by the server without a reason.',
           expectedDigest,
+          // We get the stack of the task when it was aborted which is why we see `h1`
           componentStack(['h1', 'Suspense', 'div', 'App']),
+        ],
+        [
+          'The server did not finish this Suspense boundary: The render was aborted by the server without a reason.',
+          expectedDigest,
+          componentStack(['Suspense', 'main', 'div', 'App']),
         ],
       ],
       [
@@ -1382,18 +1407,30 @@ describe('ReactDOMFizzServer', () => {
           'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
           expectedDigest,
         ],
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          expectedDigest,
+        ],
       ],
     );
-    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Loading...<main>loading...</main>
+      </div>,
+    );
 
     // We now resolve it on the client.
-    await clientAct(() => resolveText('Hello'));
+    await clientAct(() => {
+      resolveText('Hello');
+      resolveText('World');
+    });
     assertLog([]);
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <h1>Hello</h1>
+        <main>World</main>
       </div>,
     );
   });
