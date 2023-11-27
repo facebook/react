@@ -9,6 +9,9 @@ import { Effect, ValueKind } from "./HIR";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
+  BuiltInUseEffectHookId,
+  BuiltInUseInsertionEffectHookId,
+  BuiltInUseLayoutEffectHookId,
   BuiltInUseRefId,
   BuiltInUseStateId,
   ShapeRegistry,
@@ -294,36 +297,51 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
   ],
   [
     "useEffect",
-    addHook(DEFAULT_SHAPES, [], {
-      positionalParams: [],
-      restParam: Effect.Freeze,
-      returnType: { kind: "Primitive" },
-      calleeEffect: Effect.Read,
-      hookKind: "useEffect",
-      returnValueKind: ValueKind.Frozen,
-    }),
+    addHook(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: { kind: "Primitive" },
+        calleeEffect: Effect.Read,
+        hookKind: "useEffect",
+        returnValueKind: ValueKind.Frozen,
+      },
+      BuiltInUseEffectHookId
+    ),
   ],
   [
     "useLayoutEffect",
-    addHook(DEFAULT_SHAPES, [], {
-      positionalParams: [],
-      restParam: Effect.Freeze,
-      returnType: { kind: "Poly" },
-      calleeEffect: Effect.Read,
-      hookKind: "useLayoutEffect",
-      returnValueKind: ValueKind.Frozen,
-    }),
+    addHook(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: { kind: "Poly" },
+        calleeEffect: Effect.Read,
+        hookKind: "useLayoutEffect",
+        returnValueKind: ValueKind.Frozen,
+      },
+      BuiltInUseLayoutEffectHookId
+    ),
   ],
   [
     "useInsertionEffect",
-    addHook(DEFAULT_SHAPES, [], {
-      positionalParams: [],
-      restParam: Effect.Freeze,
-      returnType: { kind: "Poly" },
-      calleeEffect: Effect.Read,
-      hookKind: "useLayoutEffect",
-      returnValueKind: ValueKind.Frozen,
-    }),
+    addHook(
+      DEFAULT_SHAPES,
+      [],
+      {
+        positionalParams: [],
+        restParam: Effect.Freeze,
+        returnType: { kind: "Poly" },
+        calleeEffect: Effect.Read,
+        hookKind: "useLayoutEffect",
+        returnValueKind: ValueKind.Frozen,
+      },
+      BuiltInUseInsertionEffectHookId
+    ),
   ],
 ];
 

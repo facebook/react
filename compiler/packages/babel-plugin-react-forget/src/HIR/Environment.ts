@@ -142,6 +142,16 @@ const EnvironmentConfigSchema = z.object({
    */
   validateNoSetStateInRender: z.boolean().default(false),
 
+  /**
+   * Validates that the dependencies of all effect hooks are memoized. This helps ensure
+   * that Forget does not introduce infinite renders caused by a dependency changing,
+   * triggering an effect, which triggers re-rendering, which causes a dependency to change,
+   * triggering the effect, etc.
+   *
+   * Covers useEffect, useLayoutEffect, useInsertionEffect.
+   */
+  validateMemoizedEffectDependencies: z.boolean().default(false),
+
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
    * - Hooks may memoize computation based on any of their parameters, thus

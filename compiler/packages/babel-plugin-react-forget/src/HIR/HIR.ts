@@ -1126,6 +1126,24 @@ export function isSetStateType(id: Identifier): boolean {
   return id.type.kind === "Function" && id.type.shapeId === "BuiltInSetState";
 }
 
+export function isUseEffectHookType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Function" && id.type.shapeId === "BuiltInUseEffectHook"
+  );
+}
+export function isUseLayoutEffectHookType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Function" &&
+    id.type.shapeId === "BuiltInUseLayoutEffectHook"
+  );
+}
+export function isUseInsertionEffectHookType(id: Identifier): boolean {
+  return (
+    id.type.kind === "Function" &&
+    id.type.shapeId === "BuiltInUseInsertionEffectHook"
+  );
+}
+
 export function getHookKind(env: Environment, id: Identifier): HookKind | null {
   const idType = id.type;
   if (idType.kind === "Function") {

@@ -71,6 +71,7 @@ import { assertExhaustive } from "../Utils/utils";
 import {
   validateFrozenLambdas,
   validateHooksUsage,
+  validateMemoizedEffectDependencies,
   validateNoRefAccessInRender,
   validateNoSetStateInRender,
   validateUnconditionalHooks,
@@ -357,6 +358,10 @@ function* runWithEnvironment(
     name: "PruneHoistedContexts",
     value: reactiveFunction,
   });
+
+  if (env.config.validateMemoizedEffectDependencies) {
+    validateMemoizedEffectDependencies(reactiveFunction);
+  }
 
   const ast = codegenReactiveFunction(reactiveFunction).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
