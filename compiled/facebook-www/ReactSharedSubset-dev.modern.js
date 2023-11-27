@@ -16,56 +16,6 @@ if (__DEV__) {
   (function () {
     "use strict";
 
-    /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-    if (
-      typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined" &&
-      typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart ===
-        "function"
-    ) {
-      __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
-    }
-    var ReactVersion = "18.3.0-www-modern-91ed18e8";
-
-    // ATTENTION
-    // When adding new symbols to this file,
-    // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
-    // The Symbol used to tag the ReactElement-like types.
-    var REACT_ELEMENT_TYPE = Symbol.for("react.element");
-    var REACT_PORTAL_TYPE = Symbol.for("react.portal");
-    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
-    var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
-    var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-    var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
-    var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-    var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
-    var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
-    var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
-    var REACT_MEMO_TYPE = Symbol.for("react.memo");
-    var REACT_LAZY_TYPE = Symbol.for("react.lazy");
-    var REACT_SCOPE_TYPE = Symbol.for("react.scope");
-    var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
-    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
-    var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-    var REACT_CACHE_TYPE = Symbol.for("react.cache");
-    var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
-    var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-    var FAUX_ITERATOR_SYMBOL = "@@iterator";
-    function getIteratorFn(maybeIterable) {
-      if (maybeIterable === null || typeof maybeIterable !== "object") {
-        return null;
-      }
-
-      var maybeIterator =
-        (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
-        maybeIterable[FAUX_ITERATOR_SYMBOL];
-
-      if (typeof maybeIterator === "function") {
-        return maybeIterator;
-      }
-
-      return null;
-    }
-
     // This refers to a WWW module.
     var warningWWW = require("warning");
     function warn(format) {
@@ -125,6 +75,132 @@ if (__DEV__) {
         args.unshift(false);
         warningWWW.apply(null, args);
       }
+    }
+
+    var assign = Object.assign;
+
+    // Re-export dynamic flags from the www version.
+    var dynamicFeatureFlags = require("ReactFeatureFlags");
+
+    var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
+    // On WWW, true is used for a new modern build.
+
+    /**
+     * Keeps track of the current Cache dispatcher.
+     */
+    var ReactCurrentCache = {
+      current: null
+    };
+
+    /**
+     * Keeps track of the current dispatcher.
+     */
+    var ReactCurrentDispatcher$1 = {
+      current: null
+    };
+
+    /**
+     * Keeps track of the current owner.
+     *
+     * The current owner is the component who should own any components that are
+     * currently being constructed.
+     */
+    var ReactCurrentOwner$2 = {
+      /**
+       * @internal
+       * @type {ReactComponent}
+       */
+      current: null
+    };
+
+    var ReactDebugCurrentFrame$2 = {};
+    var currentExtraStackFrame = null;
+    function setExtraStackFrame(stack) {
+      {
+        currentExtraStackFrame = stack;
+      }
+    }
+
+    {
+      ReactDebugCurrentFrame$2.setExtraStackFrame = function (stack) {
+        {
+          currentExtraStackFrame = stack;
+        }
+      }; // Stack implementation injected by the current renderer.
+
+      ReactDebugCurrentFrame$2.getCurrentStack = null;
+
+      ReactDebugCurrentFrame$2.getStackAddendum = function () {
+        var stack = ""; // Add an extra top frame while an element is being validated
+
+        if (currentExtraStackFrame) {
+          stack += currentExtraStackFrame;
+        } // Delegate to the injected renderer-specific implementation
+
+        var impl = ReactDebugCurrentFrame$2.getCurrentStack;
+
+        if (impl) {
+          stack += impl() || "";
+        }
+
+        return stack;
+      };
+    }
+
+    var ReactSharedInternals = {
+      ReactCurrentDispatcher: ReactCurrentDispatcher$1,
+      ReactCurrentOwner: ReactCurrentOwner$2
+    };
+
+    {
+      ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame$2;
+    }
+
+    var ReactServerSharedInternals = {
+      ReactCurrentCache: ReactCurrentCache
+    };
+
+    var ReactVersion = "18.3.0-www-modern-80857f1b";
+
+    // ATTENTION
+    // When adding new symbols to this file,
+    // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
+    // The Symbol used to tag the ReactElement-like types.
+    var REACT_ELEMENT_TYPE = Symbol.for("react.element");
+    var REACT_PORTAL_TYPE = Symbol.for("react.portal");
+    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
+    var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
+    var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
+    var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
+    var REACT_CONTEXT_TYPE = Symbol.for("react.context");
+    var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
+    var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
+    var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
+    var REACT_MEMO_TYPE = Symbol.for("react.memo");
+    var REACT_LAZY_TYPE = Symbol.for("react.lazy");
+    var REACT_SCOPE_TYPE = Symbol.for("react.scope");
+    var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
+    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+    var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
+    var REACT_CACHE_TYPE = Symbol.for("react.cache");
+    var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
+    var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+    var FAUX_ITERATOR_SYMBOL = "@@iterator";
+    function getIteratorFn(maybeIterable) {
+      if (maybeIterable === null || typeof maybeIterable !== "object") {
+        return null;
+      }
+
+      var maybeIterator =
+        (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+        maybeIterable[FAUX_ITERATOR_SYMBOL];
+
+      if (typeof maybeIterator === "function") {
+        return maybeIterator;
+      }
+
+      return null;
     }
 
     var didWarnStateUpdateForUnmountedComponent = {};
@@ -231,8 +307,6 @@ if (__DEV__) {
         warnNoop(publicInstance, "setState");
       }
     };
-
-    var assign = Object.assign;
 
     var emptyObject = {};
 
@@ -468,13 +542,6 @@ if (__DEV__) {
       }
     }
 
-    // Re-export dynamic flags from the www version.
-    var dynamicFeatureFlags = require("ReactFeatureFlags");
-
-    var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
-    // On WWW, true is used for a new modern build.
-
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
 
@@ -587,20 +654,6 @@ if (__DEV__) {
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-    /**
-     * Keeps track of the current owner.
-     *
-     * The current owner is the component who should own any components that are
-     * currently being constructed.
-     */
-    var ReactCurrentOwner$2 = {
-      /**
-       * @internal
-       * @type {ReactComponent}
-       */
-      current: null
-    };
 
     var RESERVED_PROPS$1 = {
       key: true,
@@ -1321,130 +1374,6 @@ if (__DEV__) {
       return children;
     }
 
-    function createContext(defaultValue) {
-      // TODO: Second argument used to be an optional `calculateChangedBits`
-      // function. Warn to reserve for future use?
-      var context = {
-        $$typeof: REACT_CONTEXT_TYPE,
-        // As a workaround to support multiple concurrent renderers, we categorize
-        // some renderers as primary and others as secondary. We only expect
-        // there to be two concurrent renderers at most: React Native (primary) and
-        // Fabric (secondary); React DOM (primary) and React ART (secondary).
-        // Secondary renderers store their context values on separate fields.
-        _currentValue: defaultValue,
-        _currentValue2: defaultValue,
-        // Used to track how many concurrent renderers this context currently
-        // supports within in a single renderer. Such as parallel server rendering.
-        _threadCount: 0,
-        // These are circular
-        Provider: null,
-        Consumer: null,
-        // Add these to use same hidden class in VM as ServerContext
-        _defaultValue: null,
-        _globalName: null
-      };
-      context.Provider = {
-        $$typeof: REACT_PROVIDER_TYPE,
-        _context: context
-      };
-      var hasWarnedAboutUsingNestedContextConsumers = false;
-      var hasWarnedAboutUsingConsumerProvider = false;
-      var hasWarnedAboutDisplayNameOnConsumer = false;
-
-      {
-        // A separate object, but proxies back to the original context object for
-        // backwards compatibility. It has a different $$typeof, so we can properly
-        // warn for the incorrect usage of Context as a Consumer.
-        var Consumer = {
-          $$typeof: REACT_CONTEXT_TYPE,
-          _context: context
-        }; // $FlowFixMe[prop-missing]: Flow complains about not setting a value, which is intentional here
-
-        Object.defineProperties(Consumer, {
-          Provider: {
-            get: function () {
-              if (!hasWarnedAboutUsingConsumerProvider) {
-                hasWarnedAboutUsingConsumerProvider = true;
-
-                error(
-                  "Rendering <Context.Consumer.Provider> is not supported and will be removed in " +
-                    "a future major release. Did you mean to render <Context.Provider> instead?"
-                );
-              }
-
-              return context.Provider;
-            },
-            set: function (_Provider) {
-              context.Provider = _Provider;
-            }
-          },
-          _currentValue: {
-            get: function () {
-              return context._currentValue;
-            },
-            set: function (_currentValue) {
-              context._currentValue = _currentValue;
-            }
-          },
-          _currentValue2: {
-            get: function () {
-              return context._currentValue2;
-            },
-            set: function (_currentValue2) {
-              context._currentValue2 = _currentValue2;
-            }
-          },
-          _threadCount: {
-            get: function () {
-              return context._threadCount;
-            },
-            set: function (_threadCount) {
-              context._threadCount = _threadCount;
-            }
-          },
-          Consumer: {
-            get: function () {
-              if (!hasWarnedAboutUsingNestedContextConsumers) {
-                hasWarnedAboutUsingNestedContextConsumers = true;
-
-                error(
-                  "Rendering <Context.Consumer.Consumer> is not supported and will be removed in " +
-                    "a future major release. Did you mean to render <Context.Consumer> instead?"
-                );
-              }
-
-              return context.Consumer;
-            }
-          },
-          displayName: {
-            get: function () {
-              return context.displayName;
-            },
-            set: function (displayName) {
-              if (!hasWarnedAboutDisplayNameOnConsumer) {
-                warn(
-                  "Setting `displayName` on Context.Consumer has no effect. " +
-                    "You should set it directly on the context with Context.displayName = '%s'.",
-                  displayName
-                );
-
-                hasWarnedAboutDisplayNameOnConsumer = true;
-              }
-            }
-          }
-        }); // $FlowFixMe[prop-missing]: Flow complains about missing properties because it doesn't understand defineProperty
-
-        context.Consumer = Consumer;
-      }
-
-      {
-        context._currentRenderer = null;
-        context._currentRenderer2 = null;
-      }
-
-      return context;
-    }
-
     var Uninitialized = -1;
     var Pending = 0;
     var Resolved = 1;
@@ -1747,13 +1676,6 @@ if (__DEV__) {
       return elementType;
     }
 
-    /**
-     * Keeps track of the current Cache dispatcher.
-     */
-    var ReactCurrentCache = {
-      current: null
-    };
-
     var UNTERMINATED = 0;
     var TERMINATED = 1;
     var ERRORED = 2;
@@ -1861,13 +1783,6 @@ if (__DEV__) {
       };
     }
 
-    /**
-     * Keeps track of the current dispatcher.
-     */
-    var ReactCurrentDispatcher$1 = {
-      current: null
-    };
-
     function resolveDispatcher() {
       var dispatcher = ReactCurrentDispatcher$1.current;
 
@@ -1887,38 +1802,6 @@ if (__DEV__) {
       // Also helps ensure this is inlined.
 
       return dispatcher;
-    }
-
-    function getCacheSignal() {
-      var dispatcher = ReactCurrentCache.current;
-
-      if (!dispatcher) {
-        // If we have no cache to associate with this call, then we don't know
-        // its lifetime. We abort early since that's safer than letting it live
-        // for ever. Unlike just caching which can be a functional noop outside
-        // of React, these should generally always be associated with some React
-        // render but we're not limiting quite as much as making it a Hook.
-        // It's safer than erroring early at runtime.
-        var controller = new AbortController();
-        var reason = new Error(
-          "This CacheSignal was requested outside React which means that it is " +
-            "immediately aborted."
-        );
-        controller.abort(reason);
-        return controller.signal;
-      }
-
-      return dispatcher.getCacheSignal();
-    }
-    function getCacheForType(resourceType) {
-      var dispatcher = ReactCurrentCache.current;
-
-      if (!dispatcher) {
-        // If there is no dispatcher, then we treat this as not being cached.
-        return resourceType();
-      }
-
-      return dispatcher.getCacheForType(resourceType);
     }
     function useContext(Context) {
       var dispatcher = resolveDispatcher();
@@ -1945,30 +1828,6 @@ if (__DEV__) {
 
       return dispatcher.useContext(Context);
     }
-    function useState(initialState) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useState(initialState);
-    }
-    function useReducer(reducer, initialArg, init) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useReducer(reducer, initialArg, init);
-    }
-    function useRef(initialValue) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useRef(initialValue);
-    }
-    function useEffect(create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useEffect(create, deps);
-    }
-    function useInsertionEffect(create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useInsertionEffect(create, deps);
-    }
-    function useLayoutEffect(create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useLayoutEffect(create, deps);
-    }
     function useCallback(callback, deps) {
       var dispatcher = resolveDispatcher();
       return dispatcher.useCallback(callback, deps);
@@ -1977,59 +1836,19 @@ if (__DEV__) {
       var dispatcher = resolveDispatcher();
       return dispatcher.useMemo(create, deps);
     }
-    function useImperativeHandle(ref, create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useImperativeHandle(ref, create, deps);
-    }
     function useDebugValue(value, formatterFn) {
       {
         var dispatcher = resolveDispatcher();
         return dispatcher.useDebugValue(value, formatterFn);
       }
     }
-    function useTransition() {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useTransition();
-    }
-    function useDeferredValue(value, initialValue) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useDeferredValue(value, initialValue);
-    }
     function useId() {
       var dispatcher = resolveDispatcher();
       return dispatcher.useId();
     }
-    function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useSyncExternalStore(
-        subscribe,
-        getSnapshot,
-        getServerSnapshot
-      );
-    }
-    function useCacheRefresh() {
-      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-      return dispatcher.useCacheRefresh();
-    }
     function use(usable) {
       var dispatcher = resolveDispatcher();
       return dispatcher.use(usable);
-    }
-    function useMemoCache(size) {
-      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-      return dispatcher.useMemoCache(size);
-    }
-    function useEffectEvent(callback) {
-      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-      return dispatcher.useEffectEvent(callback);
-    }
-    function useOptimistic(passthrough, reducer) {
-      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-      return dispatcher.useOptimistic(passthrough, reducer);
     }
 
     // Helpers to patch console.logs to avoid logging during side-effect free
@@ -2127,71 +1946,6 @@ if (__DEV__) {
           );
         }
       }
-    }
-
-    /**
-     * Keeps track of the current batch's configuration such as how long an update
-     * should suspend for if it needs to.
-     */
-    var ReactCurrentBatchConfig = {
-      transition: null
-    };
-
-    var ReactCurrentActQueue = {
-      current: null,
-      // Used to reproduce behavior of `batchedUpdates` in legacy mode.
-      isBatchingLegacy: false,
-      didScheduleLegacyUpdate: false,
-      // Tracks whether something called `use` during the current batch of work.
-      // Determines whether we should yield to microtasks to unwrap already resolved
-      // promises without suspending.
-      didUsePromise: false
-    };
-
-    var ReactDebugCurrentFrame$2 = {};
-    var currentExtraStackFrame = null;
-    function setExtraStackFrame(stack) {
-      {
-        currentExtraStackFrame = stack;
-      }
-    }
-
-    {
-      ReactDebugCurrentFrame$2.setExtraStackFrame = function (stack) {
-        {
-          currentExtraStackFrame = stack;
-        }
-      }; // Stack implementation injected by the current renderer.
-
-      ReactDebugCurrentFrame$2.getCurrentStack = null;
-
-      ReactDebugCurrentFrame$2.getStackAddendum = function () {
-        var stack = ""; // Add an extra top frame while an element is being validated
-
-        if (currentExtraStackFrame) {
-          stack += currentExtraStackFrame;
-        } // Delegate to the injected renderer-specific implementation
-
-        var impl = ReactDebugCurrentFrame$2.getCurrentStack;
-
-        if (impl) {
-          stack += impl() || "";
-        }
-
-        return stack;
-      };
-    }
-
-    var ReactSharedInternals = {
-      ReactCurrentDispatcher: ReactCurrentDispatcher$1,
-      ReactCurrentCache: ReactCurrentCache,
-      ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-      ReactCurrentOwner: ReactCurrentOwner$2
-    };
-
-    {
-      ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame$2;
-      ReactSharedInternals.ReactCurrentActQueue = ReactCurrentActQueue;
     }
 
     var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
@@ -3006,6 +2760,20 @@ if (__DEV__) {
       return newElement;
     }
 
+    function createServerContext(globalName, defaultValue) {
+      {
+        throw new Error("Not implemented.");
+      }
+    }
+
+    /**
+     * Keeps track of the current batch's configuration such as how long an update
+     * should suspend for if it needs to.
+     */
+    var ReactCurrentBatchConfig = {
+      transition: null
+    };
+
     function startTransition(scope, options) {
       var prevTransition = ReactCurrentBatchConfig.transition;
       ReactCurrentBatchConfig.transition = {};
@@ -3046,357 +2814,6 @@ if (__DEV__) {
         }
       }
     }
-
-    var didWarnAboutMessageChannel = false;
-    var enqueueTaskImpl = null;
-    function enqueueTask(task) {
-      if (enqueueTaskImpl === null) {
-        try {
-          // read require off the module object to get around the bundlers.
-          // we don't want them to detect a require and bundle a Node polyfill.
-          var requireString = ("require" + Math.random()).slice(0, 7);
-          var nodeRequire = module && module[requireString]; // assuming we're in node, let's try to get node's
-          // version of setImmediate, bypassing fake timers if any.
-
-          enqueueTaskImpl = nodeRequire.call(module, "timers").setImmediate;
-        } catch (_err) {
-          // we're in a browser
-          // we can't use regular timers because they may still be faked
-          // so we try MessageChannel+postMessage instead
-          enqueueTaskImpl = function (callback) {
-            {
-              if (didWarnAboutMessageChannel === false) {
-                didWarnAboutMessageChannel = true;
-
-                if (typeof MessageChannel === "undefined") {
-                  error(
-                    "This browser does not have a MessageChannel implementation, " +
-                      "so enqueuing tasks via await act(async () => ...) will fail. " +
-                      "Please file an issue at https://github.com/facebook/react/issues " +
-                      "if you encounter this warning."
-                  );
-                }
-              }
-            }
-
-            var channel = new MessageChannel();
-            channel.port1.onmessage = callback;
-            channel.port2.postMessage(undefined);
-          };
-        }
-      }
-
-      return enqueueTaskImpl(task);
-    }
-
-    // number of `act` scopes on the stack.
-
-    var actScopeDepth = 0; // We only warn the first time you neglect to await an async `act` scope.
-
-    var didWarnNoAwaitAct = false;
-    function act(callback) {
-      {
-        // When ReactCurrentActQueue.current is not null, it signals to React that
-        // we're currently inside an `act` scope. React will push all its tasks to
-        // this queue instead of scheduling them with platform APIs.
-        //
-        // We set this to an empty array when we first enter an `act` scope, and
-        // only unset it once we've left the outermost `act` scope — remember that
-        // `act` calls can be nested.
-        //
-        // If we're already inside an `act` scope, reuse the existing queue.
-        var prevIsBatchingLegacy = ReactCurrentActQueue.isBatchingLegacy;
-        var prevActQueue = ReactCurrentActQueue.current;
-        var prevActScopeDepth = actScopeDepth;
-        actScopeDepth++;
-        var queue = (ReactCurrentActQueue.current =
-          prevActQueue !== null ? prevActQueue : []); // Used to reproduce behavior of `batchedUpdates` in legacy mode. Only
-        // set to `true` while the given callback is executed, not for updates
-        // triggered during an async event, because this is how the legacy
-        // implementation of `act` behaved.
-
-        ReactCurrentActQueue.isBatchingLegacy = true;
-        var result; // This tracks whether the `act` call is awaited. In certain cases, not
-        // awaiting it is a mistake, so we will detect that and warn.
-
-        var didAwaitActCall = false;
-
-        try {
-          // Reset this to `false` right before entering the React work loop. The
-          // only place we ever read this fields is just below, right after running
-          // the callback. So we don't need to reset after the callback runs.
-          ReactCurrentActQueue.didScheduleLegacyUpdate = false;
-          result = callback();
-          var didScheduleLegacyUpdate =
-            ReactCurrentActQueue.didScheduleLegacyUpdate; // Replicate behavior of original `act` implementation in legacy mode,
-          // which flushed updates immediately after the scope function exits, even
-          // if it's an async function.
-
-          if (!prevIsBatchingLegacy && didScheduleLegacyUpdate) {
-            flushActQueue(queue);
-          } // `isBatchingLegacy` gets reset using the regular stack, not the async
-          // one used to track `act` scopes. Why, you may be wondering? Because
-          // that's how it worked before version 18. Yes, it's confusing! We should
-          // delete legacy mode!!
-
-          ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
-        } catch (error) {
-          // `isBatchingLegacy` gets reset using the regular stack, not the async
-          // one used to track `act` scopes. Why, you may be wondering? Because
-          // that's how it worked before version 18. Yes, it's confusing! We should
-          // delete legacy mode!!
-          ReactCurrentActQueue.isBatchingLegacy = prevIsBatchingLegacy;
-          popActScope(prevActQueue, prevActScopeDepth);
-          throw error;
-        }
-
-        if (
-          result !== null &&
-          typeof result === "object" && // $FlowFixMe[method-unbinding]
-          typeof result.then === "function"
-        ) {
-          // A promise/thenable was returned from the callback. Wait for it to
-          // resolve before flushing the queue.
-          //
-          // If `act` were implemented as an async function, this whole block could
-          // be a single `await` call. That's really the only difference between
-          // this branch and the next one.
-          var thenable = result; // Warn if the an `act` call with an async scope is not awaited. In a
-          // future release, consider making this an error.
-
-          queueSeveralMicrotasks(function () {
-            if (!didAwaitActCall && !didWarnNoAwaitAct) {
-              didWarnNoAwaitAct = true;
-
-              error(
-                "You called act(async () => ...) without await. " +
-                  "This could lead to unexpected testing behaviour, " +
-                  "interleaving multiple act calls and mixing their " +
-                  "scopes. " +
-                  "You should - await act(async () => ...);"
-              );
-            }
-          });
-          return {
-            then: function (resolve, reject) {
-              didAwaitActCall = true;
-              thenable.then(
-                function (returnValue) {
-                  popActScope(prevActQueue, prevActScopeDepth);
-
-                  if (prevActScopeDepth === 0) {
-                    // We're exiting the outermost `act` scope. Flush the queue.
-                    try {
-                      flushActQueue(queue);
-                      enqueueTask(function () {
-                        return (
-                          // Recursively flush tasks scheduled by a microtask.
-                          recursivelyFlushAsyncActWork(
-                            returnValue,
-                            resolve,
-                            reject
-                          )
-                        );
-                      });
-                    } catch (error) {
-                      // `thenable` might not be a real promise, and `flushActQueue`
-                      // might throw, so we need to wrap `flushActQueue` in a
-                      // try/catch.
-                      reject(error);
-                    }
-                  } else {
-                    resolve(returnValue);
-                  }
-                },
-                function (error) {
-                  popActScope(prevActQueue, prevActScopeDepth);
-                  reject(error);
-                }
-              );
-            }
-          };
-        } else {
-          var returnValue = result; // The callback is not an async function. Exit the current
-          // scope immediately.
-
-          popActScope(prevActQueue, prevActScopeDepth);
-
-          if (prevActScopeDepth === 0) {
-            // We're exiting the outermost `act` scope. Flush the queue.
-            flushActQueue(queue); // If the queue is not empty, it implies that we intentionally yielded
-            // to the main thread, because something suspended. We will continue
-            // in an asynchronous task.
-            //
-            // Warn if something suspends but the `act` call is not awaited.
-            // In a future release, consider making this an error.
-
-            if (queue.length !== 0) {
-              queueSeveralMicrotasks(function () {
-                if (!didAwaitActCall && !didWarnNoAwaitAct) {
-                  didWarnNoAwaitAct = true;
-
-                  error(
-                    "A component suspended inside an `act` scope, but the " +
-                      "`act` call was not awaited. When testing React " +
-                      "components that depend on asynchronous data, you must " +
-                      "await the result:\n\n" +
-                      "await act(() => ...)"
-                  );
-                }
-              });
-            } // Like many things in this module, this is next part is confusing.
-            //
-            // We do not currently require every `act` call that is passed a
-            // callback to be awaited, through arguably we should. Since this
-            // callback was synchronous, we need to exit the current scope before
-            // returning.
-            //
-            // However, if thenable we're about to return *is* awaited, we'll
-            // immediately restore the current scope. So it shouldn't observable.
-            //
-            // This doesn't affect the case where the scope callback is async,
-            // because we always require those calls to be awaited.
-            //
-            // TODO: In a future version, consider always requiring all `act` calls
-            // to be awaited, regardless of whether the callback is sync or async.
-
-            ReactCurrentActQueue.current = null;
-          }
-
-          return {
-            then: function (resolve, reject) {
-              didAwaitActCall = true;
-
-              if (prevActScopeDepth === 0) {
-                // If the `act` call is awaited, restore the queue we were
-                // using before (see long comment above) so we can flush it.
-                ReactCurrentActQueue.current = queue;
-                enqueueTask(function () {
-                  return (
-                    // Recursively flush tasks scheduled by a microtask.
-                    recursivelyFlushAsyncActWork(returnValue, resolve, reject)
-                  );
-                });
-              } else {
-                resolve(returnValue);
-              }
-            }
-          };
-        }
-      }
-    }
-
-    function popActScope(prevActQueue, prevActScopeDepth) {
-      {
-        if (prevActScopeDepth !== actScopeDepth - 1) {
-          error(
-            "You seem to have overlapping act() calls, this is not supported. " +
-              "Be sure to await previous act() calls before making a new one. "
-          );
-        }
-
-        actScopeDepth = prevActScopeDepth;
-      }
-    }
-
-    function recursivelyFlushAsyncActWork(returnValue, resolve, reject) {
-      {
-        // Check if any tasks were scheduled asynchronously.
-        var queue = ReactCurrentActQueue.current;
-
-        if (queue !== null) {
-          if (queue.length !== 0) {
-            // Async tasks were scheduled, mostly likely in a microtask.
-            // Keep flushing until there are no more.
-            try {
-              flushActQueue(queue); // The work we just performed may have schedule additional async
-              // tasks. Wait a macrotask and check again.
-
-              enqueueTask(function () {
-                return recursivelyFlushAsyncActWork(
-                  returnValue,
-                  resolve,
-                  reject
-                );
-              });
-            } catch (error) {
-              // Leave remaining tasks on the queue if something throws.
-              reject(error);
-            }
-          } else {
-            // The queue is empty. We can finish.
-            ReactCurrentActQueue.current = null;
-            resolve(returnValue);
-          }
-        } else {
-          resolve(returnValue);
-        }
-      }
-    }
-
-    var isFlushing = false;
-
-    function flushActQueue(queue) {
-      {
-        if (!isFlushing) {
-          // Prevent re-entrance.
-          isFlushing = true;
-          var i = 0;
-
-          try {
-            for (; i < queue.length; i++) {
-              var callback = queue[i];
-
-              do {
-                ReactCurrentActQueue.didUsePromise = false;
-                var continuation = callback(false);
-
-                if (continuation !== null) {
-                  if (ReactCurrentActQueue.didUsePromise) {
-                    // The component just suspended. Yield to the main thread in
-                    // case the promise is already resolved. If so, it will ping in
-                    // a microtask and we can resume without unwinding the stack.
-                    queue[i] = callback;
-                    queue.splice(0, i);
-                    return;
-                  }
-
-                  callback = continuation;
-                } else {
-                  break;
-                }
-              } while (true);
-            } // We flushed the entire queue.
-
-            queue.length = 0;
-          } catch (error) {
-            // If something throws, leave the remaining callbacks on the queue.
-            queue.splice(0, i + 1);
-            throw error;
-          } finally {
-            isFlushing = false;
-          }
-        }
-      }
-    } // Some of our warnings attempt to detect if the `act` call is awaited by
-    // checking in an asynchronous task. Wait a few microtasks before checking. The
-    // only reason one isn't sufficient is we want to accommodate the case where an
-    // `act` call is returned from an async function without first being awaited,
-    // since that's a somewhat common pattern. If you do this too many times in a
-    // nested sequence, you might get a warning, but you can always fix by awaiting
-    // the call.
-    //
-    // A macrotask would also work (and is the fallback) but depending on the test
-    // environment it may cause the warning to fire too late.
-
-    var queueSeveralMicrotasks =
-      typeof queueMicrotask === "function"
-        ? function (callback) {
-            queueMicrotask(function () {
-              return queueMicrotask(callback);
-            });
-          }
-        : enqueueTask;
 
     var createElement = createElementWithValidation;
     var cloneElement = cloneElementWithValidation;
@@ -4154,20 +3571,19 @@ if (__DEV__) {
     var jsxDEV = jsxWithValidation;
 
     exports.Children = Children;
-    exports.Component = Component;
     exports.Fragment = REACT_FRAGMENT_TYPE;
     exports.Profiler = REACT_PROFILER_TYPE;
-    exports.PureComponent = PureComponent;
     exports.StrictMode = REACT_STRICT_MODE_TYPE;
     exports.Suspense = REACT_SUSPENSE_TYPE;
     exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
       ReactSharedInternals;
+    exports.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
+      ReactServerSharedInternals;
     exports.cache = cache;
     exports.cloneElement = cloneElement;
-    exports.createContext = createContext;
     exports.createElement = createElement;
     exports.createRef = createRef;
-    exports.experimental_useEffectEvent = useEffectEvent;
+    exports.createServerContext = createServerContext;
     exports.forwardRef = forwardRef;
     exports.isValidElement = isValidElement$1;
     exports.jsx = jsx;
@@ -4176,42 +3592,12 @@ if (__DEV__) {
     exports.lazy = lazy;
     exports.memo = memo;
     exports.startTransition = startTransition;
-    exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
-    exports.unstable_Cache = REACT_CACHE_TYPE;
-    exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
-    exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
-    exports.unstable_Scope = REACT_SCOPE_TYPE;
-    exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-    exports.unstable_act = act;
-    exports.unstable_getCacheForType = getCacheForType;
-    exports.unstable_getCacheSignal = getCacheSignal;
-    exports.unstable_useCacheRefresh = useCacheRefresh;
-    exports.unstable_useMemoCache = useMemoCache;
     exports.use = use;
     exports.useCallback = useCallback;
     exports.useContext = useContext;
     exports.useDebugValue = useDebugValue;
-    exports.useDeferredValue = useDeferredValue;
-    exports.useEffect = useEffect;
     exports.useId = useId;
-    exports.useImperativeHandle = useImperativeHandle;
-    exports.useInsertionEffect = useInsertionEffect;
-    exports.useLayoutEffect = useLayoutEffect;
     exports.useMemo = useMemo;
-    exports.useOptimistic = useOptimistic;
-    exports.useReducer = useReducer;
-    exports.useRef = useRef;
-    exports.useState = useState;
-    exports.useSyncExternalStore = useSyncExternalStore;
-    exports.useTransition = useTransition;
     exports.version = ReactVersion;
-    /* global __REACT_DEVTOOLS_GLOBAL_HOOK__ */
-    if (
-      typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== "undefined" &&
-      typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop ===
-        "function"
-    ) {
-      __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop(new Error());
-    }
   })();
 }

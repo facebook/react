@@ -11,23 +11,26 @@
  */
 
 "use strict";
-var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var assign = Object.assign,
+  enableTransitionTracing =
+    require("ReactFeatureFlags").enableTransitionTracing,
+  ReactCurrentCache = { current: null },
+  ReactCurrentDispatcher = { current: null },
+  ReactCurrentOwner$1 = { current: null },
+  ReactSharedInternals = {
+    ReactCurrentDispatcher: ReactCurrentDispatcher,
+    ReactCurrentOwner: ReactCurrentOwner$1
+  },
+  ReactServerSharedInternals = { ReactCurrentCache: ReactCurrentCache },
+  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
-  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
-  REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
-  REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-  REACT_SCOPE_TYPE = Symbol.for("react.scope"),
-  REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode"),
-  REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
-  REACT_CACHE_TYPE = Symbol.for("react.cache"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
 function getIteratorFn(maybeIterable) {
   if (null === maybeIterable || "object" !== typeof maybeIterable) return null;
@@ -35,6 +38,22 @@ function getIteratorFn(maybeIterable) {
     (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
+}
+function formatProdErrorMessage(code) {
+  for (
+    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
+      i = 1;
+    i < arguments.length;
+    i++
+  )
+    url += "&args[]=" + encodeURIComponent(arguments[i]);
+  return (
+    "Minified React error #" +
+    code +
+    "; visit " +
+    url +
+    " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  );
 }
 var ReactNoopUpdateQueue = {
     isMounted: function () {
@@ -44,7 +63,6 @@ var ReactNoopUpdateQueue = {
     enqueueReplaceState: function () {},
     enqueueSetState: function () {}
   },
-  assign = Object.assign,
   emptyObject = {};
 function Component(props, context, updater) {
   this.props = props;
@@ -59,9 +77,7 @@ Component.prototype.setState = function (partialState, callback) {
     "function" !== typeof partialState &&
     null != partialState
   )
-    throw Error(
-      "setState(...): takes an object of state variables to update or a function which returns an object of state variables."
-    );
+    throw Error(formatProdErrorMessage(85));
   this.updater.enqueueSetState(this, partialState, callback, "setState");
 };
 Component.prototype.forceUpdate = function (callback) {
@@ -80,10 +96,7 @@ pureComponentPrototype.constructor = PureComponent;
 assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
-  enableTransitionTracing =
-    require("ReactFeatureFlags").enableTransitionTracing,
   hasOwnProperty = Object.prototype.hasOwnProperty,
-  ReactCurrentOwner$1 = { current: null },
   RESERVED_PROPS$1 = { key: !0, ref: !0, __self: !0, __source: !0 };
 function cloneAndReplaceKey(oldElement, newKey) {
   return {
@@ -201,11 +214,12 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
     throw (
       ((array = String(children)),
       Error(
-        "Objects are not valid as a React child (found: " +
-          ("[object Object]" === array
+        formatProdErrorMessage(
+          31,
+          "[object Object]" === array
             ? "object with keys {" + Object.keys(children).join(", ") + "}"
-            : array) +
-          "). If you meant to render a collection of children, use an array instead."
+            : array
+        )
       ))
     );
   return invokeCallback;
@@ -238,21 +252,13 @@ function lazyInitializer(payload) {
   if (1 === payload._status) return payload._result.default;
   throw payload._result;
 }
-var ReactCurrentCache = { current: null };
 function createCacheRoot() {
   return new WeakMap();
 }
 function createCacheNode() {
   return { s: 0, v: void 0, o: null, p: null };
 }
-var ReactCurrentDispatcher = { current: null },
-  ReactCurrentBatchConfig = { transition: null },
-  ReactSharedInternals = {
-    ReactCurrentDispatcher: ReactCurrentDispatcher,
-    ReactCurrentCache: ReactCurrentCache,
-    ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-    ReactCurrentOwner: ReactCurrentOwner$1
-  },
+var ReactCurrentBatchConfig = { transition: null },
   ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
 function jsx$1(type, config, maybeKey) {
@@ -305,21 +311,18 @@ exports.Children = {
     );
   },
   only: function (children) {
-    if (!isValidElement(children))
-      throw Error(
-        "React.Children.only expected to receive a single React element child."
-      );
+    if (!isValidElement(children)) throw Error(formatProdErrorMessage(143));
     return children;
   }
 };
-exports.Component = Component;
 exports.Fragment = REACT_FRAGMENT_TYPE;
 exports.Profiler = REACT_PROFILER_TYPE;
-exports.PureComponent = PureComponent;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
   ReactSharedInternals;
+exports.__SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
+  ReactServerSharedInternals;
 exports.cache = function (fn) {
   return function () {
     var dispatcher = ReactCurrentCache.current;
@@ -362,11 +365,7 @@ exports.cache = function (fn) {
 };
 exports.cloneElement = function (element, config, children) {
   if (null === element || void 0 === element)
-    throw Error(
-      "React.cloneElement(...): The argument must be a React element, but you passed " +
-        element +
-        "."
-    );
+    throw Error(formatProdErrorMessage(267, element));
   var props = assign({}, element.props),
     key = element.key,
     ref = element.ref,
@@ -400,23 +399,6 @@ exports.cloneElement = function (element, config, children) {
     props: props,
     _owner: owner
   };
-};
-exports.createContext = function (defaultValue) {
-  defaultValue = {
-    $$typeof: REACT_CONTEXT_TYPE,
-    _currentValue: defaultValue,
-    _currentValue2: defaultValue,
-    _threadCount: 0,
-    Provider: null,
-    Consumer: null,
-    _defaultValue: null,
-    _globalName: null
-  };
-  defaultValue.Provider = {
-    $$typeof: REACT_PROVIDER_TYPE,
-    _context: defaultValue
-  };
-  return (defaultValue.Consumer = defaultValue);
 };
 exports.createElement = function (type, config, children) {
   var propName,
@@ -453,8 +435,8 @@ exports.createElement = function (type, config, children) {
 exports.createRef = function () {
   return { current: null };
 };
-exports.experimental_useEffectEvent = function (callback) {
-  return ReactCurrentDispatcher.current.useEffectEvent(callback);
+exports.createServerContext = function () {
+  throw Error(formatProdErrorMessage(248));
 };
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
@@ -491,37 +473,6 @@ exports.startTransition = function (scope, options) {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
 };
-exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
-exports.unstable_Cache = REACT_CACHE_TYPE;
-exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
-exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
-exports.unstable_Scope = REACT_SCOPE_TYPE;
-exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-exports.unstable_act = function () {
-  throw Error("act(...) is not supported in production builds of React.");
-};
-exports.unstable_getCacheForType = function (resourceType) {
-  var dispatcher = ReactCurrentCache.current;
-  return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
-};
-exports.unstable_getCacheSignal = function () {
-  var dispatcher = ReactCurrentCache.current;
-  return dispatcher
-    ? dispatcher.getCacheSignal()
-    : ((dispatcher = new AbortController()),
-      dispatcher.abort(
-        Error(
-          "This CacheSignal was requested outside React which means that it is immediately aborted."
-        )
-      ),
-      dispatcher.signal);
-};
-exports.unstable_useCacheRefresh = function () {
-  return ReactCurrentDispatcher.current.useCacheRefresh();
-};
-exports.unstable_useMemoCache = function (size) {
-  return ReactCurrentDispatcher.current.useMemoCache(size);
-};
 exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
 };
@@ -532,51 +483,10 @@ exports.useContext = function (Context) {
   return ReactCurrentDispatcher.current.useContext(Context);
 };
 exports.useDebugValue = function () {};
-exports.useDeferredValue = function (value, initialValue) {
-  return ReactCurrentDispatcher.current.useDeferredValue(value, initialValue);
-};
-exports.useEffect = function (create, deps) {
-  return ReactCurrentDispatcher.current.useEffect(create, deps);
-};
 exports.useId = function () {
   return ReactCurrentDispatcher.current.useId();
-};
-exports.useImperativeHandle = function (ref, create, deps) {
-  return ReactCurrentDispatcher.current.useImperativeHandle(ref, create, deps);
-};
-exports.useInsertionEffect = function (create, deps) {
-  return ReactCurrentDispatcher.current.useInsertionEffect(create, deps);
-};
-exports.useLayoutEffect = function (create, deps) {
-  return ReactCurrentDispatcher.current.useLayoutEffect(create, deps);
 };
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.useOptimistic = function (passthrough, reducer) {
-  return ReactCurrentDispatcher.current.useOptimistic(passthrough, reducer);
-};
-exports.useReducer = function (reducer, initialArg, init) {
-  return ReactCurrentDispatcher.current.useReducer(reducer, initialArg, init);
-};
-exports.useRef = function (initialValue) {
-  return ReactCurrentDispatcher.current.useRef(initialValue);
-};
-exports.useState = function (initialState) {
-  return ReactCurrentDispatcher.current.useState(initialState);
-};
-exports.useSyncExternalStore = function (
-  subscribe,
-  getSnapshot,
-  getServerSnapshot
-) {
-  return ReactCurrentDispatcher.current.useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    getServerSnapshot
-  );
-};
-exports.useTransition = function () {
-  return ReactCurrentDispatcher.current.useTransition();
-};
-exports.version = "18.3.0-www-modern-b4366971";
+exports.version = "18.3.0-www-modern-1669562e";
