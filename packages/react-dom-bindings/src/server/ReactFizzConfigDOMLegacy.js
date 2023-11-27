@@ -10,7 +10,6 @@
 import type {
   RenderState as BaseRenderState,
   ResumableState,
-  BoundaryResources,
   StyleQueue,
   Resource,
   HeadersDescriptor,
@@ -48,6 +47,7 @@ export type RenderState = {
   headChunks: null | Array<Chunk | PrecomputedChunk>,
   externalRuntimeScript: null | any,
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
+  importMapChunks: Array<Chunk | PrecomputedChunk>,
   onHeaders: void | ((headers: HeadersDescriptor) => void),
   headers: null | {
     preconnects: string,
@@ -56,11 +56,6 @@ export type RenderState = {
     remainingCapacity: number,
   },
   resets: BaseRenderState['resets'],
-  charsetChunks: Array<Chunk | PrecomputedChunk>,
-  preconnectChunks: Array<Chunk | PrecomputedChunk>,
-  importMapChunks: Array<Chunk | PrecomputedChunk>,
-  preloadChunks: Array<Chunk | PrecomputedChunk>,
-  hoistableChunks: Array<Chunk | PrecomputedChunk>,
   preconnects: Set<Resource>,
   fontPreloads: Set<Resource>,
   highImagePreloads: Set<Resource>,
@@ -75,7 +70,6 @@ export type RenderState = {
     scripts: Map<string, Resource>,
     moduleScripts: Map<string, Resource>,
   },
-  boundaryResources: ?BoundaryResources,
   stylesToHoist: boolean,
   // This is an extra field for the legacy renderer
   generateStaticMarkup: boolean,
@@ -103,14 +97,10 @@ export function createRenderState(
     headChunks: renderState.headChunks,
     externalRuntimeScript: renderState.externalRuntimeScript,
     bootstrapChunks: renderState.bootstrapChunks,
+    importMapChunks: renderState.importMapChunks,
     onHeaders: renderState.onHeaders,
     headers: renderState.headers,
     resets: renderState.resets,
-    charsetChunks: renderState.charsetChunks,
-    preconnectChunks: renderState.preconnectChunks,
-    importMapChunks: renderState.importMapChunks,
-    preloadChunks: renderState.preloadChunks,
-    hoistableChunks: renderState.hoistableChunks,
     preconnects: renderState.preconnects,
     fontPreloads: renderState.fontPreloads,
     highImagePreloads: renderState.highImagePreloads,
@@ -120,7 +110,6 @@ export function createRenderState(
     scripts: renderState.scripts,
     bulkPreloads: renderState.bulkPreloads,
     preloads: renderState.preloads,
-    boundaryResources: renderState.boundaryResources,
     stylesToHoist: renderState.stylesToHoist,
 
     // This is an extra field for the legacy renderer
@@ -138,6 +127,7 @@ export const doctypeChunk: PrecomputedChunk = stringToPrecomputedChunk('');
 
 export type {
   ResumableState,
+  HoistableState,
   BoundaryResources,
   FormatContext,
 } from './ReactFizzConfigDOM';
@@ -164,11 +154,12 @@ export {
   createRootFormatContext,
   createResumableState,
   createBoundaryResources,
+  createHoistableState,
   writePreamble,
   writeHoistables,
   writePostamble,
-  hoistResources,
-  setCurrentlyRenderingBoundaryResourcesTarget,
+  hoistBoundaryResources,
+  hoistHoistables,
   prepareHostDispatcher,
   resetResumableState,
   completeResumableState,

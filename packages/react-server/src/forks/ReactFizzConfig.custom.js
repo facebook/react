@@ -29,6 +29,7 @@ import type {TransitionStatus} from 'react-reconciler/src/ReactFiberConfig';
 declare var $$$config: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type RenderState = mixed;
+export opaque type HoistableState = mixed;
 export opaque type ResumableState = mixed;
 export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
@@ -87,10 +88,9 @@ export const NotPendingTransition = $$$config.NotPendingTransition;
 export const writePreamble = $$$config.writePreamble;
 export const writeHoistables = $$$config.writeHoistables;
 export const writePostamble = $$$config.writePostamble;
-export const hoistResources = $$$config.hoistResources;
-export const createResources = $$$config.createResources;
+export const hoistBoundaryResources = $$$config.hoistBoundaryResources;
+export const hoistHoistables = $$$config.hoistHoistables;
+export const createHoistableState = $$$config.createHoistableState;
 export const createBoundaryResources = $$$config.createBoundaryResources;
-export const setCurrentlyRenderingBoundaryResourcesTarget =
-  $$$config.setCurrentlyRenderingBoundaryResourcesTarget;
 export const writeResourcesForBoundary = $$$config.writeResourcesForBoundary;
 export const emitEarlyPreloads = $$$config.emitEarlyPreloads;

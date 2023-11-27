@@ -672,60 +672,6 @@ describe('ReactDOMFloat', () => {
   });
 
   // @gate enableFloat
-  it('emits resources before everything else when rendering with no head', async () => {
-    function App() {
-      return (
-        <>
-          <title>foo</title>
-          <link rel="preload" href="foo" as="style" />
-        </>
-      );
-    }
-
-    await act(() => {
-      buffer = `<!DOCTYPE html><html><head>${ReactDOMFizzServer.renderToString(
-        <App />,
-      )}</head><body>foo</body></html>`;
-    });
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="preload" href="foo" as="style" />
-          <title>foo</title>
-        </head>
-        <body>foo</body>
-      </html>,
-    );
-  });
-
-  // @gate enableFloat
-  it('emits resources before everything else when rendering with just a head', async () => {
-    function App() {
-      return (
-        <head>
-          <title>foo</title>
-          <link rel="preload" href="foo" as="style" />
-        </head>
-      );
-    }
-
-    await act(() => {
-      buffer = `<!DOCTYPE html><html>${ReactDOMFizzServer.renderToString(
-        <App />,
-      )}<body>foo</body></html>`;
-    });
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head>
-          <link rel="preload" href="foo" as="style" />
-          <title>foo</title>
-        </head>
-        <body>foo</body>
-      </html>,
-    );
-  });
-
-  // @gate enableFloat
   it('emits an implicit <head> element to hold resources when none is rendered but an <html> is rendered', async () => {
     const chunks = [];
 
@@ -4773,6 +4719,210 @@ body {
     );
   });
 
+  it('does not flush hoistables for fallbacks unless the fallback also flushes', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense
+              fallback={
+                <>
+                  <div>fallback1</div>
+                  <meta name="fallback1" />
+                </>
+              }>
+              <>
+                <div>primary1</div>
+                <meta name="primary1" />
+              </>
+            </Suspense>
+            <Suspense
+              fallback={
+                <>
+                  <div>fallback2</div>
+                  <meta name="fallback2" />
+                </>
+              }>
+              <>
+                <div>primary2</div>
+                <meta name="primary2" />
+                <BlockedOn value="first" />
+              </>
+            </Suspense>
+            <Suspense
+              fallback={
+                <>
+                  <div>fallback3</div>
+                  <meta name="fallback3" />
+                </>
+              }>
+              <>
+                <div>primary3</div>
+                <meta name="primary3" />
+                <BlockedOn value="second" />
+              </>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+      resolveText('first');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta name="primary1" />
+          <meta name="primary2" />
+          <meta name="fallback3" />
+        </head>
+        <body>
+          <div>primary1</div>
+          <div>primary2</div>
+          <div>fallback3</div>
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('second');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta name="primary1" />
+          <meta name="primary2" />
+          <meta name="fallback3" />
+        </head>
+        <body>
+          <div>primary1</div>
+          <div>primary2</div>
+          <div>primary3</div>
+          <meta name="primary3" />
+        </body>
+      </html>,
+    );
+  });
+
+  it('avoids flushing hoistables from completed boundaries nested inside fallbacks', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense
+              fallback={
+                <Suspense
+                  fallback={
+                    <>
+                      <div>nested fallback1</div>
+                      <meta name="nested fallback1" />
+                    </>
+                  }>
+                  <>
+                    <div>nested primary1</div>
+                    <meta name="nested primary1" />
+                  </>
+                </Suspense>
+              }>
+              <BlockedOn value="release" />
+              <>
+                <div>primary1</div>
+                <meta name="primary1" />
+              </>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta name="nested primary1" />
+        </head>
+        <body>
+          <div>nested primary1</div>
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('release');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <meta name="nested primary1" />
+        </head>
+        <body>
+          <div>primary1</div>
+          <meta name="primary1" />
+        </body>
+      </html>,
+    );
+  });
+
+  it('avoid flushing hoistables of completed inner boundaries when inside an incomplete outer boundary', async () => {
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense>
+              <BlockedOn value="release">
+                <div>blocked outer</div>
+                <meta name="blocked outer" />
+              </BlockedOn>
+              <div>outer</div>
+              <meta name="outer" />
+              <Suspense>
+                <div>inner</div>
+                <meta name="inner" />
+              </Suspense>
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body />
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('release');
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <div>blocked outer</div>
+          <div>outer</div>
+          <div>inner</div>
+          <meta name="outer" />
+          <meta name="inner" />
+          <meta name="blocked outer" />
+        </body>
+      </html>,
+    );
+  });
+
   describe('ReactDOM.prefetchDNS(href)', () => {
     it('creates a dns-prefetch resource when called', async () => {
       function App({url}) {
@@ -7746,6 +7896,7 @@ background-color: green;
               <link rel="preload" href="foo" as="style" />
               <link rel="preconnect" href="bar" />
               <link rel="dns-prefetch" href="baz" />
+              <meta name="viewport" />
               <meta charSet="utf-8" />
             </body>
           </html>,
@@ -7758,15 +7909,15 @@ background-color: green;
           <head>
             {/* charset first */}
             <meta charset="utf-8" />
-            {/* preconnect links next */}
-            <link rel="preconnect" href="bar" />
-            <link rel="dns-prefetch" href="baz" />
-            {/* preloads next */}
-            <link rel="preload" href="foo" as="style" />
+            {/* viewport meta next */}
+            <meta name="viewport" />
             {/* Everything else last */}
             <link rel="foo" href="foo" />
             <meta name="bar" />
             <title>a title</title>
+            <link rel="preload" href="foo" as="style" />
+            <link rel="preconnect" href="bar" />
+            <link rel="dns-prefetch" href="baz" />
           </head>
           <body />
         </html>,
@@ -7925,10 +8076,6 @@ background-color: green;
             <link rel="rel2" href="linkhref" />
             <meta name="name1" content="metacontent" />
             <meta name="name2" content="metacontent" />
-            <link rel="rel3" href="linkhref" />
-            <link rel="rel4" href="linkhref" />
-            <meta name="name3" content="metacontent" />
-            <meta name="name4" content="metacontent" />
           </head>
           <body>loading...</body>
         </html>,
@@ -7943,10 +8090,6 @@ background-color: green;
             <link rel="rel2" href="linkhref" />
             <meta name="name1" content="metacontent" />
             <meta name="name2" content="metacontent" />
-            <link rel="rel3" href="linkhref" />
-            <link rel="rel4" href="linkhref" />
-            <meta name="name3" content="metacontent" />
-            <meta name="name4" content="metacontent" />
           </head>
           <body>loading...</body>
         </html>,
@@ -7973,15 +8116,15 @@ background-color: green;
             <link rel="rel2" href="linkhref" />
             <meta name="name1" content="metacontent" />
             <meta name="name2" content="metacontent" />
-            <link rel="rel3" href="linkhref" />
-            <link rel="rel4" href="linkhref" />
-            <meta name="name3" content="metacontent" />
-            <meta name="name4" content="metacontent" />
           </head>
           <body>
             <meta name="3rdparty" content="metacontent" />
             <link rel="3rdparty" href="linkhref" />
             <div>hello world</div>
+            <link rel="rel3" href="linkhref" />
+            <link rel="rel4" href="linkhref" />
+            <meta name="name3" content="metacontent" />
+            <meta name="name4" content="metacontent" />
             <link rel="rel5" href="linkhref" />
             <link rel="rel6" href="linkhref" />
             <meta name="name5" content="metacontent" />
