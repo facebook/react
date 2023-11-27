@@ -11,6 +11,8 @@ import {
   Instruction,
   ReactiveFunction,
   ReactiveInstruction,
+  ReactiveScopeBlock,
+  ScopeId,
   isUseEffectHookType,
   isUseInsertionEffectHookType,
   isUseLayoutEffectHookType,
@@ -22,12 +24,16 @@ import {
 } from "../ReactiveScopes/visitors";
 
 /**
- * Validates that all known effect dependencies are memoized. The algorithm does not directly check
- * for memoization but instead uses an inverted test: it reports any effects whose dependency arrays
- * are mutable for a range that encompasses the effect call. This corresponds to any values which
- * Forget knows may be mutable and may be mutated after the effect. Note that it's possible Forget
- * may miss not memoize a value for some other reason, but in general this is a bug. The only reason
- * Forget would _choose_ to skip memoization of an effect dependency is because it's mutated later.
+ * Validates that all known effect dependencies are memoized. The algorithm checks two things:
+ * - Disallow effect dependencies that should be memoized (have a reactive scope assigned) but
+ *   where that reactive scope does not exist. This checks for cases where a reactive scope was
+ *   pruned for some reason, such as spanning a hook.
+ * - Disallow effect dependencies whose a mutable range that encompasses the effect call.
+ *
+ * This latter check corresponds to any values which Forget knows may be mutable and may be mutated
+ * after the effect. Note that it's possible Forget may miss not memoize a value for some other reason,
+ * but in general this is a bug. The only reason Forget would _choose_ to skip memoization of an
+ * effect dependency is because it's mutated later.
  *
  * Example:
  *
@@ -50,6 +56,36 @@ export function validateMemoizedEffectDependencies(fn: ReactiveFunction): void {
 }
 
 class Visitor extends ReactiveFunctionVisitor<CompilerError> {
+  scopes: Set<ScopeId> = new Set();
+
+  override visitScope(
+    scopeBlock: ReactiveScopeBlock,
+    state: CompilerError
+  ): void {
+    this.traverseScope(scopeBlock, state);
+
+    /*
+     * Record scopes that exist in the AST so we can later check to see if
+     * effect dependencies which should be memoized (have a scope assigned)
+     * actually are memoized (that scope exists).
+     * However, we only record scopes if *their* dependencies are also
+     * memoized, allowing a transitive memoization check.
+     */
+    let areDependenciesMemoized = true;
+    for (const dep of scopeBlock.scope.dependencies) {
+      if (isUnmemoized(dep.identifier, this.scopes)) {
+        areDependenciesMemoized = false;
+        break;
+      }
+    }
+    if (areDependenciesMemoized) {
+      this.scopes.add(scopeBlock.scope.id);
+      for (const id of scopeBlock.scope.merged) {
+        this.scopes.add(id);
+      }
+    }
+  }
+
   override visitInstruction(
     instruction: ReactiveInstruction,
     state: CompilerError
@@ -63,7 +99,8 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
       const deps = instruction.value.args[1]!;
       if (
         deps.kind === "Identifier" &&
-        isMutable(instruction as Instruction, deps)
+        (isMutable(instruction as Instruction, deps) ||
+          isUnmemoized(deps.identifier, this.scopes))
       ) {
         state.push({
           reason:
@@ -76,6 +113,10 @@ class Visitor extends ReactiveFunctionVisitor<CompilerError> {
       }
     }
   }
+}
+
+function isUnmemoized(operand: Identifier, scopes: Set<ScopeId>): boolean {
+  return operand.scope != null && !scopes.has(operand.scope.id);
 }
 
 function isEffectHook(identifier: Identifier): boolean {

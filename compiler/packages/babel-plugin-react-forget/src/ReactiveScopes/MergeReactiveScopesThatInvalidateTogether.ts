@@ -314,6 +314,7 @@ class Transform extends ReactiveFunctionTransform<ReactiveScopeDependencies | nu
         const instr = block[index++]!;
         if (instr.kind === "scope") {
           mergedScope.instructions.push(...instr.instructions);
+          mergedScope.scope.merged.add(instr.scope.id);
         } else {
           mergedScope.instructions.push(instr);
         }

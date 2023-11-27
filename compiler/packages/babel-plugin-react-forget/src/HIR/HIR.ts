@@ -1016,6 +1016,14 @@ export type ReactiveScope = {
   dependencies: ReactiveScopeDependencies;
   declarations: Map<IdentifierId, ReactiveScopeDeclaration>;
   reassignments: Set<Identifier>;
+
+  /*
+   * Some passes may merge scopes together. The merged set contains the
+   * ids of scopes that were merged into this one, for passes that need
+   * to track which scopes are still present (in some form) vs scopes that
+   * no longer exist due to being pruned.
+   */
+  merged: Set<ScopeId>;
 };
 
 export type ReactiveScopeDependencies = Set<ReactiveScopeDependency>;
