@@ -63,7 +63,10 @@ const forks = Object.freeze({
     if (entry === 'react') {
       return './packages/react/src/ReactSharedInternalsClient.js';
     }
-    if (entry === 'react/src/ReactSharedSubset.js') {
+    if (
+      entry === 'react/src/ReactSharedSubset.js' ||
+      entry === 'react/src/ReactSharedSubsetFB.js'
+    ) {
       return './packages/react/src/ReactSharedInternalsServer.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
