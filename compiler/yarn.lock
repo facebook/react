@@ -6718,7 +6718,7 @@ hermes-parser@0.14.0:
   dependencies:
     hermes-estree "0.14.0"
 
-hermes-parser@0.15.1, hermes-parser@^0.15.1:
+hermes-parser@0.15.1:
   version "0.15.1"
   resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.15.1.tgz#f02587be85228b22841d50f6839ae42a308e5100"
   integrity sha512-38Re105dr4UZ0/EPRApWxtIOWWynQpdOYWO+7nFO8ADd2mXdaHKMCFAxIjkqACa1GLrAtrXqqaJdUYHi/QUbkA==
