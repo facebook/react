@@ -34,3 +34,39 @@ it("logs succesful compilation", () => {
     start: { column: 0, line: 1 },
   });
 });
+
+it("logs failed compilation", () => {
+  const logs: [string | null, LoggerEvent][] = [];
+  const logger: Logger = {
+    logEvent(filename, event) {
+      logs.push([filename, event]);
+    },
+  };
+
+  expect(() => {
+    runReactForgetBabelPlugin(
+      "function Component(props) { props.foo = 1; return <div>{props}</div> }",
+      "test.js",
+      "flow",
+      { logger, panicThreshold: "ALL_ERRORS" } as any
+    );
+  }).toThrow();
+
+  const [filename, event] = logs.at(0)!;
+  expect(filename).toContain("test.js");
+  expect(event.kind).toEqual("CompileError");
+  invariant(event.kind === "CompileError", "typescript be smarter");
+
+  expect(event.detail.severity).toEqual("InvalidReact");
+  expect(event.detail.loc).toEqual({
+    end: { column: 33, line: 1 },
+    identifierName: "props",
+    start: { column: 28, line: 1 },
+  });
+
+  // Make sure event.fnLoc is different from event.detail.loc
+  expect(event.fnLoc).toEqual({
+    end: { column: 70, line: 1 },
+    start: { column: 0, line: 1 },
+  });
+});
