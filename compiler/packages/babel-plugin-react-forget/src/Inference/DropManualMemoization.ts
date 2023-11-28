@@ -5,7 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Effect, HIRFunction, IdentifierId } from "../HIR";
+import { CompilerError } from "..";
+import {
+  Effect,
+  HIRFunction,
+  IdentifierId,
+  Place,
+  SpreadPattern,
+} from "../HIR";
 import { HookKind } from "../HIR/ObjectShape";
 
 /*
@@ -53,8 +60,16 @@ export function dropManualMemoization(func: HIRFunction): void {
           const hookKind = hooks.get(id);
           if (hookKind != null) {
             if (hookKind === "useMemo") {
-              const [fn] = instr.value.args;
-
+              const [fn] = instr.value.args as Array<
+                Place | SpreadPattern | undefined
+              >;
+              if (fn == null) {
+                CompilerError.throwInvalidReact({
+                  reason: "Expected useMemo call to pass a callback function",
+                  loc: instr.loc,
+                  suggestions: null,
+                });
+              }
               /*
                * TODO(gsn): Consider inlining the function passed to useMemo,
                * rather than just calling it directly.
@@ -80,7 +95,16 @@ export function dropManualMemoization(func: HIRFunction): void {
                 };
               }
             } else if (hookKind === "useCallback") {
-              const [fn] = instr.value.args;
+              const [fn] = instr.value.args as Array<
+                Place | SpreadPattern | undefined
+              >;
+              if (fn == null) {
+                CompilerError.throwInvalidReact({
+                  reason: "Expected useMemo call to pass a callback function",
+                  loc: instr.loc,
+                  suggestions: null,
+                });
+              }
 
               /*
                * Instead of a Call, just alias the callback directly.
