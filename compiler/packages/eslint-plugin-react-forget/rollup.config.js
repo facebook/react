@@ -28,6 +28,9 @@ export default {
     format: "cjs",
     sourcemap: false,
   },
+  treeshake: {
+    moduleSideEffects: false,
+  },
   plugins: [
     typescript({
       compilerOptions: {
