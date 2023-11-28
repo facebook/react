@@ -618,7 +618,18 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   program.traverse({
     Identifier(id) {
       const fn = fnNames.get(id.node.name);
-      if (fnIds.has(id.node) || !fn) {
+      // We're not tracking this identifier.
+      if (!fn) {
+        return;
+      }
+
+      /*
+       * We've reached the declaration, hoisting is no longer possible, stop
+       * checking for this component name.
+       */
+      if (fnIds.has(id.node)) {
+        fnIds.delete(id.node);
+        fnNames.delete(id.node.name);
         return;
       }
 
@@ -627,12 +638,7 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
        * A null scope means there's no function scope, which means we're at the
        * top level scope.
        */
-      if (
-        scope === null &&
-        id.node.loc &&
-        fn.loc &&
-        occursBefore(id.node.loc, fn.loc)
-      ) {
+      if (scope === null) {
         errors.pushErrorDetail(
           new CompilerErrorDetail({
             reason: `Encountered ${fn.name} used before declaration which breaks Forget's gating codegen due to hoisting`,
@@ -648,16 +654,4 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
   });
 
   return errors.details.length > 0 ? errors : null;
-}
-
-function occursBefore(a: t.SourceLocation, b: t.SourceLocation): boolean {
-  if (a.start.line > b.start.line) {
-    return false;
-  }
-
-  if (a.start.line < b.start.line) {
-    return true;
-  }
-
-  return a.start.column < b.start.column;
 }
