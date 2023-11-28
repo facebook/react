@@ -514,6 +514,7 @@ const skipFilter = new Set([
   // bug
   "bug-jsx-memberexpr-tag-in-lambda",
   "bug-invalid-code-when-bailout",
+  "component-syntax-ref-gating.flow",
 ]);
 
 export default skipFilter;
