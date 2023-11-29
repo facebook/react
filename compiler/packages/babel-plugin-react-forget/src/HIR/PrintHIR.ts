@@ -39,6 +39,27 @@ export type Options = {
 
 export function printFunction(fn: HIRFunction): string {
   const output = [];
+  let definition = "";
+  if (fn.id !== null) {
+    definition += fn.id;
+  }
+  if (fn.params.length !== 0) {
+    definition +=
+      "(" +
+      fn.params
+        .map((param) => {
+          if (param.kind === "Identifier") {
+            return printPlace(param);
+          } else {
+            return `...${printPlace(param.place)}`;
+          }
+        })
+        .join(", ") +
+      ")";
+  }
+  if (definition.length !== 0) {
+    output.push(definition);
+  }
   output.push(printHIR(fn.body));
   return output.join("\n");
 }
