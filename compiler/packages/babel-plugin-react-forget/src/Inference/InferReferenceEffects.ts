@@ -851,16 +851,19 @@ function inferBlock(
         ) {
           /*
            * None of the args are mutable or mutate their params, we can downgrade to
-           * treating as all reads
+           * treating as all reads (except that the receiver may be captured)
            */
           for (const arg of instrValue.args) {
             const place = arg.kind === "Identifier" ? arg : arg.place;
             state.reference(place, Effect.Read);
           }
-          state.reference(instrValue.receiver, Effect.Read);
+          state.reference(instrValue.receiver, Effect.Capture);
           state.initialize(instrValue, signature.returnValueKind);
           state.define(instr.lvalue, instrValue);
-          instr.lvalue.effect = Effect.ConditionallyMutate;
+          instr.lvalue.effect =
+            instrValue.receiver.effect === Effect.Capture
+              ? Effect.Store
+              : Effect.ConditionallyMutate;
           continue;
         }
 
