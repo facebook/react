@@ -971,6 +971,7 @@ export enum Effect {
    * But we do not error if the value is known to be immutable.
    */
   ConditionallyMutate = "mutate?",
+
   /*
    * This reference *does* write to (mutate) the value. It is an error (invalid input)
    * if an immutable value flows into a location with this effect.

@@ -3,25 +3,29 @@
 
 ```javascript
 import { useEffect, useState } from "react";
+import { mutate } from "shared-runtime";
 
 function Component(props) {
-  const x = [props.value];
+  const x = [{ ...props.value }];
   useEffect(() => {}, []);
   const onClick = () => {
     console.log(x.length);
   };
+  let y;
   return (
     <div onClick={onClick}>
       {x.map((item) => {
-        return <span key={item}>{item}</span>;
+        y = item;
+        return <span key={item.id}>{item.text}</span>;
       })}
+      {mutate(y)}
     </div>
   );
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{ value: { id: 0, text: "Hello!" } }],
   isComponent: true,
 };
 
@@ -35,10 +39,11 @@ import {
   useState,
   unstable_useMemoCache as useMemoCache,
 } from "react";
+import { mutate } from "shared-runtime";
 
 function Component(props) {
   const $ = useMemoCache(5);
-  const x = [props.value];
+  const x = [{ ...props.value }];
   let t0;
   let t1;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -55,10 +60,20 @@ function Component(props) {
     console.log(x.length);
   };
 
-  const t2 = x.map((item) => <span key={item}>{item}</span>);
+  let y;
+
+  const t2 = x.map((item) => {
+    y = item;
+    return <span key={item.id}>{item.text}</span>;
+  });
   let t3;
   if ($[2] !== onClick || $[3] !== t2) {
-    t3 = <div onClick={onClick}>{t2}</div>;
+    t3 = (
+      <div onClick={onClick}>
+        {t2}
+        {mutate(y)}
+      </div>
+    );
     $[2] = onClick;
     $[3] = t2;
     $[4] = t3;
@@ -70,11 +85,11 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: 42 }],
+  params: [{ value: { id: 0, text: "Hello!" } }],
   isComponent: true,
 };
 
 ```
       
 ### Eval output
-(kind: ok) <div><span>42</span></div>
+(kind: ok) <div><span>Hello!</span></div>

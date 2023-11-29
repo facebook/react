@@ -228,6 +228,17 @@ class InferenceState {
     this.#values.set(value, kind);
   }
 
+  values(place: Place): Array<InstructionValue> {
+    const values = this.#variables.get(place.identifier.id);
+    CompilerError.invariant(values != null, {
+      reason: `[hoisting] Expected value kind to be initialized`,
+      description: `${printPlace(place)}`,
+      loc: place.loc,
+      suggestions: null,
+    });
+    return Array.from(values);
+  }
+
   // Lookup the kind of the given @param value.
   kind(place: Place): ValueKind {
     const values = this.#variables.get(place.identifier.id);
@@ -833,6 +844,26 @@ function inferBlock(
           instrValue.property.identifier.type
         );
 
+        if (
+          signature !== null &&
+          signature.mutableOnlyIfOperandsAreMutable &&
+          areArgumentsImmutableAndNonMutating(state, instrValue.args)
+        ) {
+          /*
+           * None of the args are mutable or mutate their params, we can downgrade to
+           * treating as all reads
+           */
+          for (const arg of instrValue.args) {
+            const place = arg.kind === "Identifier" ? arg : arg.place;
+            state.reference(place, Effect.Read);
+          }
+          state.reference(instrValue.receiver, Effect.Read);
+          state.initialize(instrValue, signature.returnValueKind);
+          state.define(instr.lvalue, instrValue);
+          instr.lvalue.effect = Effect.ConditionallyMutate;
+          continue;
+        }
+
         const effects =
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
         const returnValueKind =
@@ -1184,4 +1215,49 @@ function getFunctionEffects(
     }
   }
   return results;
+}
+
+/**
+ * Returns true if all of the arguments are both non-mutable (immutable or frozen)
+ * _and_ are not functions which might mutate their arguments. Note that function
+ * expressions count as frozen so long as they do not mutate free variables: this
+ * function checks that such functions also don't mutate their inputs.
+ */
+function areArgumentsImmutableAndNonMutating(
+  state: InferenceState,
+  args: MethodCall["args"]
+): boolean {
+  for (const arg of args) {
+    const place = arg.kind === "Identifier" ? arg : arg.place;
+    const kind = state.kind(place);
+    switch (kind) {
+      case ValueKind.Immutable:
+      case ValueKind.Frozen: {
+        /*
+         * Only immutable values, or frozen lambdas are allowed.
+         * A lambda may appear frozen even if it may mutate its inputs,
+         * so we have a second check even for frozen value types
+         */
+        break;
+      }
+      default: {
+        return false;
+      }
+    }
+    const values = state.values(place);
+    for (const value of values) {
+      if (
+        value.kind === "FunctionExpression" &&
+        value.loweredFunc.func.params.some((param) => {
+          const place = param.kind === "Identifier" ? param : param.place;
+          const range = place.identifier.mutableRange;
+          return range.end > range.start + 1;
+        })
+      ) {
+        // This is a function which may mutate its inputs
+        return false;
+      }
+    }
+  }
+  return true;
 }

@@ -147,6 +147,20 @@ export type FunctionSignature = {
    * may choose not to memoize arguments if they do not otherwise escape.
    */
   noAlias?: boolean;
+
+  /**
+   * Supported only for methods (no-op when used on functions in CallExpression.callee position).
+   *
+   * Indicates that the method can only modify its receiver if any of the arguments
+   * are mutable or are function expressions which mutate their arguments. This is designed
+   * for methods such as Array.prototype.map(), which only mutate the receiver array if they are
+   * passed a callback which has mutable side-effects (including mutating its inputs).
+   *
+   * MethodCalls to such functions will use a different behavior depending on their arguments:
+   * - If arguments are all non-mutable, the arguments get the Read effect and the receiver is Capture.
+   * - Else uses the effects specified by this signature.
+   */
+  mutableOnlyIfOperandsAreMutable?: boolean;
 };
 
 /*
@@ -231,6 +245,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
     }),
   ],
   [
@@ -247,6 +262,70 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       calleeEffect: Effect.ConditionallyMutate,
       returnValueKind: ValueKind.Mutable,
       noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    "every",
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: { kind: "Primitive" },
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Immutable,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    "some",
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: { kind: "Primitive" },
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Immutable,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    "find",
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: { kind: "Poly" },
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Mutable,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
+    }),
+  ],
+  [
+    "findIndex",
+    addFunction(BUILTIN_SHAPES, [], {
+      positionalParams: [],
+      restParam: Effect.ConditionallyMutate,
+      returnType: { kind: "Primitive" },
+      /*
+       * callee is ConditionallyMutate because items of the array
+       * flow into the lambda and may be mutated there, even though
+       * the array object itself is not modified
+       */
+      calleeEffect: Effect.ConditionallyMutate,
+      returnValueKind: ValueKind.Immutable,
+      noAlias: true,
+      mutableOnlyIfOperandsAreMutable: true,
     }),
   ],
   [
