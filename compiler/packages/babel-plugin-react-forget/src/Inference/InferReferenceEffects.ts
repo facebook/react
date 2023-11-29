@@ -809,6 +809,7 @@ function inferBlock(
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
         const returnValueKind =
           signature !== null ? signature.returnValueKind : ValueKind.Mutable;
+        let hasCaptureArgument = false;
         for (let i = 0; i < instrValue.args.length; i++) {
           const arg = instrValue.args[i];
           const place = arg.kind === "Identifier" ? arg : arg.place;
@@ -817,16 +818,20 @@ function inferBlock(
           } else {
             state.reference(place, Effect.ConditionallyMutate);
           }
+          hasCaptureArgument ||= place.effect === Effect.Capture;
         }
         if (signature !== null) {
           state.reference(instrValue.callee, signature.calleeEffect);
         } else {
           state.reference(instrValue.callee, Effect.ConditionallyMutate);
         }
+        hasCaptureArgument ||= instrValue.callee.effect === Effect.Capture;
 
         state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect = Effect.ConditionallyMutate;
+        instr.lvalue.effect = hasCaptureArgument
+          ? Effect.Store
+          : Effect.ConditionallyMutate;
         continue;
       }
       case "MethodCall": {
@@ -871,6 +876,7 @@ function inferBlock(
           signature !== null ? getFunctionEffects(instrValue, signature) : null;
         const returnValueKind =
           signature !== null ? signature.returnValueKind : ValueKind.Mutable;
+        let hasCaptureArgument = false;
         for (let i = 0; i < instrValue.args.length; i++) {
           const arg = instrValue.args[i];
           const place = arg.kind === "Identifier" ? arg : arg.place;
@@ -883,16 +889,20 @@ function inferBlock(
           } else {
             state.reference(place, Effect.ConditionallyMutate);
           }
+          hasCaptureArgument ||= place.effect === Effect.Capture;
         }
         if (signature !== null) {
           state.reference(instrValue.receiver, signature.calleeEffect);
         } else {
           state.reference(instrValue.receiver, Effect.ConditionallyMutate);
         }
+        hasCaptureArgument ||= instrValue.receiver.effect === Effect.Capture;
 
         state.initialize(instrValue, returnValueKind);
         state.define(instr.lvalue, instrValue);
-        instr.lvalue.effect = Effect.ConditionallyMutate;
+        instr.lvalue.effect = hasCaptureArgument
+          ? Effect.Store
+          : Effect.ConditionallyMutate;
         continue;
       }
       case "PropertyStore": {

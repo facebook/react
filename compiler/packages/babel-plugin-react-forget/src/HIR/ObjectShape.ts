@@ -203,7 +203,7 @@ addObject(BUILTIN_SHAPES, BuiltInArrayId, [
       positionalParams: [Effect.Read],
       restParam: null,
       returnType: { kind: "Poly" },
-      calleeEffect: Effect.Read,
+      calleeEffect: Effect.Capture,
       returnValueKind: ValueKind.Mutable,
     }),
   ],
