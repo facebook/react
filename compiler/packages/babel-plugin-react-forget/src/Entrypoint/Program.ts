@@ -232,6 +232,7 @@ export function compileProgram(
         fnLoc: fn.node.loc ?? null,
         fnName: compiledFn.id?.name ?? null,
         memoSlots: compiledFn.memoSlotsUsed,
+        memoBlocks: compiledFn.memoBlocks,
       });
     } catch (err) {
       hasCriticalError ||= isCriticalError(err);

@@ -158,6 +158,7 @@ export type LoggerEvent =
       fnLoc: t.SourceLocation | null;
       fnName: string | null;
       memoSlots: number;
+      memoBlocks: number;
     }
   | {
       kind: "PipelineError";

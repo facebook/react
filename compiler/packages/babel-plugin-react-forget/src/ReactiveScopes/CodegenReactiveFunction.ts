@@ -24,6 +24,7 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScope,
+  ReactiveScopeBlock,
   ReactiveScopeDependency,
   ReactiveTerminal,
   ReactiveValue,
@@ -36,6 +37,7 @@ import { Err, Ok, Result } from "../Utils/Result";
 import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
 import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtOperandsInSameScope";
+import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
 export type CodegenFunction = {
   type: "CodegenFunction";
@@ -46,8 +48,16 @@ export type CodegenFunction = {
   async: boolean;
   loc: SourceLocation;
 
-  // Compiler info for logging and heuristics
+  /*
+   * Compiler info for logging and heuristics
+   * Number of memo slots (value passed to useMemoCache)
+   */
   memoSlotsUsed: number;
+  /*
+   * Number of memo *blocks* (reactive scopes) regardless of
+   * how many inputs/outputs each block has
+   */
+  memoBlocks: number;
 };
 
 export function codegenReactiveFunction(
@@ -90,6 +100,9 @@ export function codegenReactiveFunction(
     return Err(cx.errors);
   }
 
+  const countMemoBlockVisitor = new CountMemoBlockVisitor();
+  visitReactiveFunction(fn, countMemoBlockVisitor, undefined);
+
   return Ok({
     type: "CodegenFunction",
     loc: fn.loc,
@@ -99,7 +112,17 @@ export function codegenReactiveFunction(
     generator: fn.generator,
     async: fn.async,
     memoSlotsUsed: cacheCount,
+    memoBlocks: countMemoBlockVisitor.count,
   });
+}
+
+class CountMemoBlockVisitor extends ReactiveFunctionVisitor<void> {
+  count: number = 0;
+
+  override visitScope(scope: ReactiveScopeBlock, state: void): void {
+    this.count += 1;
+    this.traverseScope(scope, state);
+  }
 }
 
 function convertParameter(
