@@ -7,7 +7,7 @@
  * @flow
  */
 
-export {createRoot, hydrateRoot} from './client.js';
+export * from './ReactDOMFB.modern';
 
 export {
   createComponentSelector,

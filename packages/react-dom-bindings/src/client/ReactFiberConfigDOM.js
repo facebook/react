@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {HostDispatcher} from 'react-dom/src/shared/ReactDOMTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -20,6 +19,7 @@ import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {AncestorInfoDev} from './validateDOMNesting';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import type {
+  HostDispatcher,
   CrossOriginEnum,
   PreloadImplOptions,
   PreloadModuleImplOptions,
@@ -28,6 +28,10 @@ import type {
   PreinitModuleScriptOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
+import {
+  isAlreadyRendering,
+  flushSync as flushSyncWithoutWarningIfAlreadyRendering,
+} from 'react-reconciler/src/ReactFiberReconciler';
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
@@ -105,6 +109,9 @@ import {
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
+
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
 export type Type = string;
 export type Props = {
@@ -2083,10 +2090,7 @@ function getDocumentFromRoot(root: HoistableRoot): Document {
   return root.ownerDocument || root;
 }
 
-// We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
-// internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
-// from Internals -> ReactDOM -> HostConfig -> Internals so this doesn't introduce a new one.
-export const ReactDOMClientDispatcher: HostDispatcher = {
+const ReactDOMClientDispatcher: HostDispatcher = {
   prefetchDNS,
   preconnect,
   preload,
@@ -2094,7 +2098,42 @@ export const ReactDOMClientDispatcher: HostDispatcher = {
   preinitStyle,
   preinitScript,
   preinitModuleScript,
+  flushSync,
+  nextDispatcher: null,
 };
+
+// We register the HostDispatcher on ReactDOMSharedInternals
+// For client builds we always put the dispatcher at the end of the list
+// This is because the implementations on this dispatcher will always forward
+// all calls to subsequent dispatchers whereas the server dispatcher may not.
+// This is a tricky construction but hopefully balances intended semantics for
+// resource APIS and flushSync behavior on both server and client runtimes without
+// adding overhead. One litmust test is can you preload in renderToString on the client
+// without that leaking into the Document.
+if (ReactDOMCurrentDispatcher.current === null) {
+  ReactDOMCurrentDispatcher.current = ReactDOMClientDispatcher;
+} else {
+  ReactDOMCurrentDispatcher.current.nextDispatcher = ReactDOMClientDispatcher;
+}
+
+function flushSync<R>(fn: void | (() => R)): void | R {
+  if (__DEV__) {
+    if (isAlreadyRendering()) {
+      console.error(
+        'flushSync was called from inside a lifecycle method. React cannot ' +
+          'flush when React is already rendering. Consider moving this call to ' +
+          'a scheduler task or micro task.',
+      );
+    }
+  }
+  if (ReactDOMClientDispatcher.nextDispatcher) {
+    return ReactDOMClientDispatcher.nextDispatcher.flushSync(() =>
+      flushSyncWithoutWarningIfAlreadyRendering(fn),
+    );
+  } else {
+    return flushSyncWithoutWarningIfAlreadyRendering(fn);
+  }
+}
 
 // We expect this to get inlined. It is a function mostly to communicate the special nature of
 // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling
@@ -2134,6 +2173,9 @@ function preconnectAs(
 }
 
 function prefetchDNS(href: string) {
+  if (ReactDOMClientDispatcher.nextDispatcher) {
+    ReactDOMClientDispatcher.nextDispatcher.prefetchDNS(href);
+  }
   if (!enableFloat) {
     return;
   }
@@ -2141,6 +2183,9 @@ function prefetchDNS(href: string) {
 }
 
 function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
+  if (ReactDOMClientDispatcher.nextDispatcher) {
+    ReactDOMClientDispatcher.nextDispatcher.preconnect(href, crossOrigin);
+  }
   if (!enableFloat) {
     return;
   }
@@ -2148,6 +2193,9 @@ function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
 }
 
 function preload(href: string, as: string, options?: ?PreloadImplOptions) {
+  if (ReactDOMClientDispatcher.nextDispatcher) {
+    ReactDOMClientDispatcher.nextDispatcher.preload(href, as, options);
+  }
   if (!enableFloat) {
     return;
   }
@@ -2228,6 +2276,9 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
 }
 
 function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
+  if (ReactDOMClientDispatcher.nextDispatcher) {
+    ReactDOMClientDispatcher.nextDispatcher.preloadModule(href, options);
+  }
   if (!enableFloat) {
     return;
   }
@@ -2291,6 +2342,13 @@ function preinitStyle(
   precedence: ?string,
   options?: ?PreinitStyleOptions,
 ) {
+  if (ReactDOMClientDispatcher.nextDispatcher) {
+    ReactDOMClientDispatcher.nextDispatcher.preinitStyle(
+      href,
+      precedence,
+      options,
+    );
+  }
   if (!enableFloat) {
     return;
   }
@@ -2367,6 +2425,9 @@ function preinitStyle(
 }
 
 function preinitScript(src: string, options?: ?PreinitScriptOptions) {
+  if (ReactDOMClientDispatcher.nextDispatcher) {
+    ReactDOMClientDispatcher.nextDispatcher.preinitScript(src, options);
+  }
   if (!enableFloat) {
     return;
   }
@@ -2425,6 +2486,9 @@ function preinitModuleScript(
   src: string,
   options?: ?PreinitModuleScriptOptions,
 ) {
+  if (ReactDOMClientDispatcher.nextDispatcher) {
+    ReactDOMClientDispatcher.nextDispatcher.preinitModuleScript(src, options);
+  }
   if (!enableFloat) {
     return;
   }

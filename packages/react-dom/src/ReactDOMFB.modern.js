@@ -7,15 +7,18 @@
  * @flow
  */
 
-export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/ReactDOMSharedInternals';
+export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './ReactDOMSharedInternals';
 export {
-  createPortal,
   createRoot,
   hydrateRoot,
-  flushSync,
-  unstable_batchedUpdates,
   unstable_createEventHandle,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+} from './client/ReactDOMClientBrowser';
+
+export {
+  createPortal,
+  flushSync,
+  unstable_batchedUpdates,
   useFormStatus,
   useFormState,
   prefetchDNS,
@@ -25,4 +28,4 @@ export {
   preinit,
   preinitModule,
   version,
-} from './src/client/ReactDOM';
+} from './shared/ReactDOM';

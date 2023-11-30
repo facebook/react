@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/dom/create-event-handle/Focus';
+export {createRoot, hydrateRoot} from './src/client/ReactDOMClientBrowser';

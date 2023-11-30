@@ -7,17 +7,34 @@
  * @flow
  */
 
+import {isEnabled} from 'react-dom-bindings/src/events/ReactDOMEventListener';
+
+import Internals from './ReactDOMSharedInternals';
+
+// For classic WWW builds, include a few internals that are already in use.
+Object.assign((Internals: any), {
+  ReactBrowserEventEmitter: {
+    isEnabled,
+  },
+});
+
+export {Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED};
 export {
-  createPortal,
+  createRoot,
+  hydrateRoot,
   findDOMNode,
-  flushSync,
   hydrate,
   render,
   unmountComponentAtNode,
-  unstable_batchedUpdates,
   unstable_createEventHandle,
   unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+} from './client/ReactDOMClientBrowser';
+
+export {
+  createPortal,
+  flushSync,
+  unstable_batchedUpdates,
   useFormStatus,
   useFormState,
   prefetchDNS,
@@ -27,20 +44,4 @@ export {
   preinit,
   preinitModule,
   version,
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-} from './index.classic.fb.js';
-
-export {createRoot, hydrateRoot} from './client.js';
-
-export {
-  createComponentSelector,
-  createHasPseudoClassSelector,
-  createRoleSelector,
-  createTestNameSelector,
-  createTextSelector,
-  getFindAllNodesFailureDescription,
-  findAllNodes,
-  findBoundingRects,
-  focusWithin,
-  observeVisibleRects,
-} from 'react-reconciler/src/ReactFiberReconciler';
+} from './shared/ReactDOM';

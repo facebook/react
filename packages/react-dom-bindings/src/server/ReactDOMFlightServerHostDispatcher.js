@@ -33,7 +33,17 @@ export const ReactDOMFlightServerDispatcher: HostDispatcher = {
   preinitStyle,
   preinitScript,
   preinitModuleScript,
+  flushSync,
+  nextDispatcher: null,
 };
+
+function flushSync<R>(fn: void | (() => R)): void | R {
+  if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+    return ReactDOMFlightServerDispatcher.nextDispatcher.flushSync(fn);
+  } else if (fn) {
+    return fn();
+  }
+}
 
 function prefetchDNS(href: string) {
   if (enableFloat) {
@@ -48,6 +58,8 @@ function prefetchDNS(href: string) {
         }
         hints.add(key);
         emitHint(request, 'D', href);
+      } else if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+        ReactDOMFlightServerDispatcher.nextDispatcher.prefetchDNS(href);
       }
     }
   }
@@ -71,6 +83,11 @@ function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
         } else {
           emitHint(request, 'C', href);
         }
+      } else if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+        ReactDOMFlightServerDispatcher.nextDispatcher.preconnect(
+          href,
+          crossOrigin,
+        );
       }
     }
   }
@@ -104,6 +121,12 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
         } else {
           emitHint(request, 'L', [href, as]);
         }
+      } else if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+        ReactDOMFlightServerDispatcher.nextDispatcher.preload(
+          href,
+          as,
+          options,
+        );
       }
     }
   }
@@ -128,6 +151,11 @@ function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
         } else {
           return emitHint(request, 'm', href);
         }
+      } else if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+        ReactDOMFlightServerDispatcher.nextDispatcher.preloadModule(
+          href,
+          options,
+        );
       }
     }
   }
@@ -162,6 +190,12 @@ function preinitStyle(
         } else {
           return emitHint(request, 'S', href);
         }
+      } else if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+        ReactDOMFlightServerDispatcher.nextDispatcher.preinitStyle(
+          href,
+          precedence,
+          options,
+        );
       }
     }
   }
@@ -186,6 +220,11 @@ function preinitScript(href: string, options?: ?PreinitScriptOptions) {
         } else {
           return emitHint(request, 'X', href);
         }
+      } else if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+        ReactDOMFlightServerDispatcher.nextDispatcher.preinitScript(
+          href,
+          options,
+        );
       }
     }
   }
@@ -213,6 +252,11 @@ function preinitModuleScript(
         } else {
           return emitHint(request, 'M', href);
         }
+      } else if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+        ReactDOMFlightServerDispatcher.nextDispatcher.preinitModuleScript(
+          href,
+          options,
+        );
       }
     }
   }

@@ -78,7 +78,6 @@ export const writeCompletedBoundaryInstruction =
   $$$config.writeCompletedBoundaryInstruction;
 export const writeClientRenderBoundaryInstruction =
   $$$config.writeClientRenderBoundaryInstruction;
-export const prepareHostDispatcher = $$$config.prepareHostDispatcher;
 export const NotPendingTransition = $$$config.NotPendingTransition;
 
 // -------------------------

@@ -7,16 +7,10 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   Container,
   PublicInstance,
 } from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
-import type {
-  RootType,
-  HydrateRootOptions,
-  CreateRootOptions,
-} from './ReactDOMRoot';
 
 import {
   findDOMNode,
@@ -25,21 +19,14 @@ import {
   unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
 } from './ReactDOMLegacy';
-import {
-  createRoot as createRootImpl,
-  hydrateRoot as hydrateRootImpl,
-  isValidContainer,
-} from './ReactDOMRoot';
+import {createRoot, hydrateRoot} from './ReactDOMRoot';
 import {createEventHandle} from 'react-dom-bindings/src/client/ReactDOMEventHandle';
 
 import {
   batchedUpdates,
-  flushSync as flushSyncWithoutWarningIfAlreadyRendering,
-  isAlreadyRendering,
   injectIntoDevTools,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {runWithPriority} from 'react-reconciler/src/ReactEventPriorities';
-import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import ReactVersion from 'shared/ReactVersion';
 
@@ -53,20 +40,7 @@ import {
   enqueueStateRestore,
   restoreStateIfNeeded,
 } from 'react-dom-bindings/src/events/ReactDOMControlledComponent';
-import Internals from '../ReactDOMSharedInternals';
-
-export {
-  prefetchDNS,
-  preconnect,
-  preload,
-  preloadModule,
-  preinit,
-  preinitModule,
-} from '../shared/ReactDOMFloat';
-export {
-  useFormStatus,
-  useFormState,
-} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
+import Internals from 'shared/ReactDOMSharedInternals';
 
 if (__DEV__) {
   if (
@@ -87,20 +61,6 @@ if (__DEV__) {
   }
 }
 
-function createPortal(
-  children: ReactNodeList,
-  container: Element | DocumentFragment,
-  key: ?string = null,
-): React$Portal {
-  if (!isValidContainer(container)) {
-    throw new Error('Target container is not a DOM element.');
-  }
-
-  // TODO: pass ReactDOM portal implementation as third argument
-  // $FlowFixMe[incompatible-return] The Flow type is opaque but there's no way to actually create it.
-  return createPortalImpl(children, container, null, key);
-}
-
 function renderSubtreeIntoContainer(
   parentComponent: React$Component<any, any>,
   element: React$Element<any>,
@@ -115,63 +75,10 @@ function renderSubtreeIntoContainer(
   );
 }
 
-function createRoot(
-  container: Element | Document | DocumentFragment,
-  options?: CreateRootOptions,
-): RootType {
-  if (__DEV__) {
-    if (!Internals.usingClientEntryPoint && !__UMD__) {
-      console.error(
-        'You are importing createRoot from "react-dom" which is not supported. ' +
-          'You should instead import it from "react-dom/client".',
-      );
-    }
-  }
-  return createRootImpl(container, options);
-}
-
-function hydrateRoot(
-  container: Document | Element,
-  initialChildren: ReactNodeList,
-  options?: HydrateRootOptions,
-): RootType {
-  if (__DEV__) {
-    if (!Internals.usingClientEntryPoint && !__UMD__) {
-      console.error(
-        'You are importing hydrateRoot from "react-dom" which is not supported. ' +
-          'You should instead import it from "react-dom/client".',
-      );
-    }
-  }
-  return hydrateRootImpl(container, initialChildren, options);
-}
-
-// Overload the definition to the two valid signatures.
-// Warning, this opts-out of checking the function body.
-declare function flushSync<R>(fn: () => R): R;
-// eslint-disable-next-line no-redeclare
-declare function flushSync(): void;
-// eslint-disable-next-line no-redeclare
-function flushSync<R>(fn: (() => R) | void): R | void {
-  if (__DEV__) {
-    if (isAlreadyRendering()) {
-      console.error(
-        'flushSync was called from inside a lifecycle method. React cannot ' +
-          'flush when React is already rendering. Consider moving this call to ' +
-          'a scheduler task or micro task.',
-      );
-    }
-  }
-  return flushSyncWithoutWarningIfAlreadyRendering(fn);
-}
-
 // Expose findDOMNode on internals
 Internals.findDOMNode = findDOMNode;
 
 export {
-  createPortal,
-  batchedUpdates as unstable_batchedUpdates,
-  flushSync,
   ReactVersion as version,
   // Disabled behind disableLegacyReactDOMAPIs
   findDOMNode,

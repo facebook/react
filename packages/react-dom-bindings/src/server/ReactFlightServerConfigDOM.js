@@ -16,14 +16,21 @@ import type {
   PreinitModuleScriptOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
+import {ReactDOMFlightServerDispatcher} from './ReactDOMFlightServerHostDispatcher';
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
-import {ReactDOMFlightServerDispatcher} from './ReactDOMFlightServerHostDispatcher';
-
-export function prepareHostDispatcher(): void {
-  ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
+// We register the HostDispatcher on ReactDOMSharedInternals
+// For server builds we always put the dispatcher at the head of the list
+// This is because the implementations on this dispatcher may not forward
+// call calls to later dispatchers to implement correct semantics. One litmust test
+// for this is can you preload inside renderToString on the client and avoid that
+// leaking into the Document
+if (ReactDOMCurrentDispatcher.current) {
+  ReactDOMFlightServerDispatcher.nextDispatcher =
+    ReactDOMCurrentDispatcher.current;
 }
+ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
 
 // Used to distinguish these contexts from ones used in other renderers.
 // E.g. this can be used to distinguish legacy renderers from this modern one.

@@ -30,7 +30,6 @@ const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
   'react-dom/server': 'ReactDOMServer',
-  'react-interactions/events/tap': 'ReactEventsTap',
   scheduler: 'Scheduler',
   'scheduler/unstable_mock': 'SchedulerMock',
   ReactNativeInternalFeatureFlags: 'ReactNativeInternalFeatureFlags',
