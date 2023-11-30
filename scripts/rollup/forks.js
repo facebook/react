@@ -225,7 +225,7 @@ const forks = Object.freeze({
       case UMD_DEV:
       case UMD_PROD:
       case UMD_PROFILING:
-        return './packages/react/src/forks/ReactSharedInternals.umd.js';
+        return './packages/react/src/forks/ReactSharedInternalsClient.umd.js';
       default:
         return null;
     }
