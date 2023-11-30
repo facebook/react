@@ -16,12 +16,13 @@ import type {
   PreinitModuleScriptOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
+import {ReactDOMFlightServerDispatcher} from './ReactDOMFlightServerHostDispatcher';
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
-
-import {ReactDOMFlightServerDispatcher} from './ReactDOMFlightServerHostDispatcher';
-
-export function prepareHostDispatcher(): void {
+if (ReactDOMCurrentDispatcher.current) {
+  ReactDOMCurrentDispatcher.current.nextDispatcher =
+    ReactDOMFlightServerDispatcher;
+} else {
   ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
 }
 

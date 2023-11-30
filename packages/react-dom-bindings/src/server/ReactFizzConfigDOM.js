@@ -9,6 +9,7 @@
 
 import type {ReactNodeList, ReactCustomFormAction} from 'shared/ReactTypes';
 import type {
+  HostDispatcher,
   CrossOriginEnum,
   PreloadImplOptions,
   PreloadModuleImplOptions,
@@ -86,10 +87,7 @@ import {getValueDescriptorExpectingObjectForWarning} from '../shared/ReactDOMRes
 
 import {NotPending} from '../shared/ReactDOMFormActions';
 
-import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
-const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
-
-const ReactDOMServerDispatcher = {
+const ReactDOMServerDispatcher: HostDispatcher = {
   prefetchDNS,
   preconnect,
   preload,
@@ -97,10 +95,23 @@ const ReactDOMServerDispatcher = {
   preinitStyle,
   preinitScript,
   preinitModuleScript,
+  flushSync,
+  nextDispatcher: null,
 };
-
-export function prepareHostDispatcher() {
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+if (ReactDOMCurrentDispatcher.current) {
+  ReactDOMCurrentDispatcher.current.nextDispatcher = ReactDOMServerDispatcher;
+} else {
   ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
+}
+
+function flushSync<R>(fn: void | (() => R)): void | R {
+  if (ReactDOMServerDispatcher.nextDispatcher) {
+    return ReactDOMServerDispatcher.nextDispatcher.flushSync(fn);
+  } else if (fn) {
+    return fn();
+  }
 }
 
 // We make every property of the descriptor optional because it is not a contract that

@@ -8,10 +8,10 @@
  */
 
 import * as React from 'react';
-import * as ReactDOM from 'react-dom';
+import * as ReactDOMClient from 'react-dom/client';
 
 const {useLayoutEffect, useRef} = React;
-const {unstable_createEventHandle} = ReactDOM;
+const {unstable_createEventHandle} = ReactDOMClient;
 
 type UseEventHandle = {
   setListener: (

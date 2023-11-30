@@ -9,13 +9,16 @@
 
 export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/ReactDOMSharedInternals';
 export {
-  createPortal,
   createRoot,
   hydrateRoot,
-  flushSync,
-  unstable_batchedUpdates,
   unstable_createEventHandle,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+} from './src/client/ReactDOMClient';
+
+export {
+  createPortal,
+  flushSync,
+  unstable_batchedUpdates,
   useFormStatus,
   useFormState,
   prefetchDNS,
@@ -25,4 +28,4 @@ export {
   preinit,
   preinitModule,
   version,
-} from './src/client/ReactDOM';
+} from './src/shared/ReactDOM';

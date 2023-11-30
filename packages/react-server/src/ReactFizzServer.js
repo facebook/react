@@ -70,7 +70,6 @@ import {
   writePostamble,
   hoistHoistables,
   createHoistableState,
-  prepareHostDispatcher,
   supportsRequestStorage,
   requestStorage,
   pushFormStateMarkerIsMatching,
@@ -372,7 +371,6 @@ export function createRequest(
   onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
   formState: void | null | ReactFormState<any, any>,
 ): Request {
-  prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
   const abortSet: Set<Task> = new Set();
   const request: Request = {
@@ -485,7 +483,6 @@ export function resumeRequest(
   onFatalError: void | ((error: mixed) => void),
   onPostpone: void | ((reason: string, postponeInfo: PostponeInfo) => void),
 ): Request {
-  prepareHostDispatcher();
   const pingedTasks: Array<Task> = [];
   const abortSet: Set<Task> = new Set();
   const request: Request = {

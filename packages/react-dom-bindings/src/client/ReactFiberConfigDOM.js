@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {HostDispatcher} from 'react-dom/src/shared/ReactDOMTypes';
 import type {EventPriority} from 'react-reconciler/src/ReactEventPriorities';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -20,6 +19,7 @@ import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {AncestorInfoDev} from './validateDOMNesting';
 import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import type {
+  HostDispatcher,
   CrossOriginEnum,
   PreloadImplOptions,
   PreloadModuleImplOptions,
@@ -28,6 +28,10 @@ import type {
   PreinitModuleScriptOptions,
 } from 'react-dom/src/shared/ReactDOMTypes';
 
+import {
+  isAlreadyRendering,
+  flushSync as flushSyncWithoutWarningIfAlreadyRendering,
+} from 'react-reconciler/src/ReactFiberReconciler';
 import {NotPending} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 import {getCurrentRootHostContainer} from 'react-reconciler/src/ReactFiberHostContext';
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
@@ -105,6 +109,26 @@ import {
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {validateLinkPropsForStyleResource} from '../shared/ReactDOMResourceValidation';
 import escapeSelectorAttributeValueInsideDoubleQuotes from './escapeSelectorAttributeValueInsideDoubleQuotes';
+
+const ReactDOMClientDispatcher: HostDispatcher = {
+  prefetchDNS,
+  preconnect,
+  preload,
+  preloadModule,
+  preinitStyle,
+  preinitScript,
+  preinitModuleScript,
+  flushSync,
+  nextDispatcher: null,
+};
+
+import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
+const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
+if (ReactDOMCurrentDispatcher.current) {
+  ReactDOMCurrentDispatcher.current.nextDispatcher = ReactDOMClientDispatcher;
+} else {
+  ReactDOMCurrentDispatcher.current = ReactDOMClientDispatcher;
+}
 
 export type Type = string;
 export type Props = {
@@ -2083,18 +2107,24 @@ function getDocumentFromRoot(root: HoistableRoot): Document {
   return root.ownerDocument || root;
 }
 
-// We want this to be the default dispatcher on ReactDOMSharedInternals but we don't want to mutate
-// internals in Module scope. Instead we export it and Internals will import it. There is already a cycle
-// from Internals -> ReactDOM -> HostConfig -> Internals so this doesn't introduce a new one.
-export const ReactDOMClientDispatcher: HostDispatcher = {
-  prefetchDNS,
-  preconnect,
-  preload,
-  preloadModule,
-  preinitStyle,
-  preinitScript,
-  preinitModuleScript,
-};
+function flushSync<R>(fn: void | (() => R)): void | R {
+  if (__DEV__) {
+    if (isAlreadyRendering()) {
+      console.error(
+        'flushSync was called from inside a lifecycle method. React cannot ' +
+          'flush when React is already rendering. Consider moving this call to ' +
+          'a scheduler task or micro task.',
+      );
+    }
+  }
+  if (ReactDOMClientDispatcher.nextDispatcher) {
+    return ReactDOMClientDispatcher.nextDispatcher.flushSync(() =>
+      flushSyncWithoutWarningIfAlreadyRendering(fn),
+    );
+  } else {
+    return flushSyncWithoutWarningIfAlreadyRendering(fn);
+  }
+}
 
 // We expect this to get inlined. It is a function mostly to communicate the special nature of
 // how we resolve the HoistableRoot for ReactDOM.pre*() methods. Because we support calling

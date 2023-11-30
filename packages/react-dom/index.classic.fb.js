@@ -18,19 +18,23 @@ Object.assign((Internals: any), {
   },
 });
 
+export {Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED};
 export {
-  createPortal,
   createRoot,
   hydrateRoot,
   findDOMNode,
-  flushSync,
   hydrate,
   render,
   unmountComponentAtNode,
-  unstable_batchedUpdates,
   unstable_createEventHandle,
   unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+} from './src/client/ReactDOMClient';
+
+export {
+  createPortal,
+  flushSync,
+  unstable_batchedUpdates,
   useFormStatus,
   useFormState,
   prefetchDNS,
@@ -40,6 +44,4 @@ export {
   preinit,
   preinitModule,
   version,
-} from './src/client/ReactDOM';
-
-export {Internals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED};
+} from './src/shared/ReactDOM';

@@ -163,7 +163,6 @@ export {
   writeHoistables,
   writePostamble,
   hoistHoistables,
-  prepareHostDispatcher,
   resetResumableState,
   completeResumableState,
   emitEarlyPreloads,

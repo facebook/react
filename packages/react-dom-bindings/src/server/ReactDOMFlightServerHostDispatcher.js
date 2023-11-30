@@ -33,9 +33,22 @@ export const ReactDOMFlightServerDispatcher: HostDispatcher = {
   preinitStyle,
   preinitScript,
   preinitModuleScript,
+  flushSync,
+  nextDispatcher: null,
 };
 
+function flushSync<R>(fn: void | (() => R)): void | R {
+  if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+    return ReactDOMFlightServerDispatcher.nextDispatcher.flushSync(fn);
+  } else if (fn) {
+    return fn();
+  }
+}
+
 function prefetchDNS(href: string) {
+  if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+    ReactDOMFlightServerDispatcher.nextDispatcher.prefetchDNS(href);
+  }
   if (enableFloat) {
     if (typeof href === 'string' && href) {
       const request = resolveRequest();
@@ -54,6 +67,9 @@ function prefetchDNS(href: string) {
 }
 
 function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
+  if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+    ReactDOMFlightServerDispatcher.nextDispatcher.preconnect(href, crossOrigin);
+  }
   if (enableFloat) {
     if (typeof href === 'string') {
       const request = resolveRequest();
@@ -77,6 +93,9 @@ function preconnect(href: string, crossOrigin?: ?CrossOriginEnum) {
 }
 
 function preload(href: string, as: string, options?: ?PreloadImplOptions) {
+  if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+    ReactDOMFlightServerDispatcher.nextDispatcher.preload(href, as, options);
+  }
   if (enableFloat) {
     if (typeof href === 'string') {
       const request = resolveRequest();
@@ -110,6 +129,9 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
 }
 
 function preloadModule(href: string, options?: ?PreloadModuleImplOptions) {
+  if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+    ReactDOMFlightServerDispatcher.nextDispatcher.preloadModule(href, options);
+  }
   if (enableFloat) {
     if (typeof href === 'string') {
       const request = resolveRequest();
@@ -138,6 +160,13 @@ function preinitStyle(
   precedence: ?string,
   options?: ?PreinitStyleOptions,
 ) {
+  if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+    ReactDOMFlightServerDispatcher.nextDispatcher.preinitStyle(
+      href,
+      precedence,
+      options,
+    );
+  }
   if (enableFloat) {
     if (typeof href === 'string') {
       const request = resolveRequest();
@@ -168,6 +197,9 @@ function preinitStyle(
 }
 
 function preinitScript(href: string, options?: ?PreinitScriptOptions) {
+  if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+    ReactDOMFlightServerDispatcher.nextDispatcher.preinitScript(href, options);
+  }
   if (enableFloat) {
     if (typeof href === 'string') {
       const request = resolveRequest();
@@ -195,6 +227,12 @@ function preinitModuleScript(
   href: string,
   options?: ?PreinitModuleScriptOptions,
 ) {
+  if (ReactDOMFlightServerDispatcher.nextDispatcher) {
+    ReactDOMFlightServerDispatcher.nextDispatcher.preinitModuleScript(
+      href,
+      options,
+    );
+  }
   if (enableFloat) {
     if (typeof href === 'string') {
       const request = resolveRequest();

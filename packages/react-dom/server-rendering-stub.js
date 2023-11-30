@@ -7,55 +7,10 @@
  * @flow
  */
 
-// Export all exports so that they're available in tests.
-// We can't use export * from in Flow for some reason.
+export * from './index.experimental.js';
 
-import ReactVersion from 'shared/ReactVersion';
-export {ReactVersion as version};
-
-export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './src/ReactDOMSharedInternals';
-
-export {
-  createPortal,
-  flushSync,
-  prefetchDNS,
-  preconnect,
-  preload,
-  preloadModule,
-  preinit,
-  preinitModule,
-  useFormStatus,
-  useFormState,
-  unstable_batchedUpdates,
-} from './src/server/ReactDOMServerRenderingStub';
-
-import type {FormStatus} from 'react-dom-bindings/src/shared/ReactDOMFormActions';
-import {
-  useFormStatus,
-  useFormState,
-} from './src/server/ReactDOMServerRenderingStub';
-import type {Awaited} from 'shared/ReactTypes';
-
-export function experimental_useFormStatus(): FormStatus {
-  if (__DEV__) {
-    console.error(
-      'useFormStatus is now in canary. Remove the experimental_ prefix. ' +
-        'The prefixed alias will be removed in an upcoming release.',
-    );
-  }
-  return useFormStatus();
-}
-
-export function experimental_useFormState<S, P>(
-  action: (Awaited<S>, P) => S,
-  initialState: Awaited<S>,
-  permalink?: string,
-): [Awaited<S>, (P) => void] {
-  if (__DEV__) {
-    console.error(
-      'useFormState is now in canary. Remove the experimental_ prefix. ' +
-        'The prefixed alias will be removed in an upcoming release.',
-    );
-  }
-  return useFormState(action, initialState, permalink);
+if (__DEV__) {
+  console.error(
+    'The `react-dom/server-rendering-stub` entrypoint is deprecated and no longer necessary because `react-dom` only includes exports which are appropriate for any environment, Server Components, Server Side Rendering, and the Browser. Update your program to no longer alias `react-dom` to `react-dom/server-rendering-stub`.',
+  );
 }
