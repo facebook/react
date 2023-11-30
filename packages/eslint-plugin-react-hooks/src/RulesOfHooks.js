@@ -16,10 +16,7 @@
  */
 
 function isHookName(s) {
-  if (__EXPERIMENTAL__) {
-    return s === 'use' || /^use[A-Z0-9]/.test(s);
-  }
-  return /^use[A-Z0-9]/.test(s);
+  return s === 'use' || /^use[A-Z0-9]/.test(s);
 }
 
 /**
@@ -111,10 +108,7 @@ function isUseEffectEventIdentifier(node) {
 }
 
 function isUseIdentifier(node) {
-  if (__EXPERIMENTAL__) {
-    return node.type === 'Identifier' && node.name === 'use';
-  }
-  return false;
+  return node.type === 'Identifier' && node.name === 'use';
 }
 
 export default {
