@@ -108,7 +108,17 @@ function isUseEffectEventIdentifier(node) {
 }
 
 function isUseIdentifier(node) {
-  return node.type === 'Identifier' && node.name === 'use';
+  switch (node.type) {
+    case 'Identifier':
+      return node.name === 'use';
+    case 'MemberExpression':
+      return (
+        (node.object.name === 'React' || node.object.name === 'react') &&
+        node.property.name === 'use'
+      );
+    default:
+      return false;
+  }
 }
 
 export default {
