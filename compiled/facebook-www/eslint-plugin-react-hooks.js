@@ -91,9 +91,7 @@ function _createForOfIteratorHelper(o, allowArrayLike) {
 /* global BigInt */
 
 function isHookName(s) {
-  {
-    return s === 'use' || /^use[A-Z0-9]/.test(s);
-  }
+  return s === 'use' || /^use[A-Z0-9]/.test(s);
 }
 /**
  * We consider hooks to be a hook name identifier or a member expression
@@ -171,9 +169,7 @@ function isUseEffectEventIdentifier$1(node) {
 }
 
 function isUseIdentifier(node) {
-  {
-    return node.type === 'Identifier' && node.name === 'use';
-  }
+  return node.type === 'Identifier' && node.name === 'use';
 }
 
 var RulesOfHooks = {
