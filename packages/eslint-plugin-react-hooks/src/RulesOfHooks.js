@@ -87,7 +87,36 @@ function isMemoCallback(node) {
   );
 }
 
-function isInsideComponentOrHook(node) {
+/**
+ * Checks if the node is a callback argument of a custom higher-order-component provided
+ * in options. This anonymous functional component should follow the rules of hooks.
+ */
+
+function isCustomHigherOrderComponent(node, options) {
+  return (
+    options.additionalHigherOrderComponents &&
+    !!(
+      node.parent &&
+      node.parent.callee &&
+      options.additionalHigherOrderComponents.test(node.parent.callee.name)
+    )
+  );
+}
+
+/**
+ * Checks if the node is a callback argument of a higher-order-component. This anonymous
+ * functional component should follow the rules of hooks.
+ */
+
+function isHigherOrderComponentCallback(node, options) {
+  return (
+    isForwardRefCallback(node) ||
+    isMemoCallback(node) ||
+    isCustomHigherOrderComponent(node, options)
+  );
+}
+
+function isInsideComponentOrHook(node, options) {
   while (node) {
     const functionName = getFunctionName(node);
     if (functionName) {
@@ -95,7 +124,7 @@ function isInsideComponentOrHook(node) {
         return true;
       }
     }
-    if (isForwardRefCallback(node) || isMemoCallback(node)) {
+    if (isHigherOrderComponentCallback(node, options)) {
       return true;
     }
     node = node.parent;
@@ -125,8 +154,31 @@ export default {
       recommended: true,
       url: 'https://reactjs.org/docs/hooks-rules.html',
     },
+    schema: [
+      {
+        type: 'object',
+        additionalProperties: false,
+        properties: {
+          additionalHigherOrderComponents: {
+            type: 'string',
+          },
+        },
+      },
+    ],
   },
   create(context) {
+    // Parse the `additionalHigherOrderComponents` regex.
+    const additionalHigherOrderComponents =
+      context.options &&
+      context.options[0] &&
+      context.options[0].additionalHigherOrderComponents
+        ? new RegExp(context.options[0].additionalHigherOrderComponents)
+        : undefined;
+
+    const options = {
+      additionalHigherOrderComponents,
+    };
+
     let lastEffect = null;
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];
@@ -383,12 +435,14 @@ export default {
 
         // This is a valid code path for React hooks if we are directly in a React
         // function component or we are in a hook function.
-        const isSomewhereInsideComponentOrHook =
-          isInsideComponentOrHook(codePathNode);
+        const isSomewhereInsideComponentOrHook = isInsideComponentOrHook(
+          codePathNode,
+          options,
+        );
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
             isHook(codePathFunctionName)
-          : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
+          : isHigherOrderComponentCallback(codePathNode, options);
 
         // Compute the earliest finalizer level using information from the
         // cache. We expect all reachable final segments to have a cache entry
@@ -622,14 +676,14 @@ export default {
 
       FunctionDeclaration(node) {
         // function MyComponent() { const onClick = useEffectEvent(...) }
-        if (isInsideComponentOrHook(node)) {
+        if (isInsideComponentOrHook(node, options)) {
           recordAllUseEffectEventFunctions(context.getScope());
         }
       },
 
       ArrowFunctionExpression(node) {
         // const MyComponent = () => { const onClick = useEffectEvent(...) }
-        if (isInsideComponentOrHook(node)) {
+        if (isInsideComponentOrHook(node, options)) {
           recordAllUseEffectEventFunctions(context.getScope());
         }
       },

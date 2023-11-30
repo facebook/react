@@ -50,6 +50,8 @@ If you want more fine-grained configuration, you can instead add a snippet like 
 
 ## Advanced Configuration
 
+### `exhaustive-deps`
+
 `exhaustive-deps` can be configured to validate dependencies of custom Hooks with the `additionalHooks` option.
 This option accepts a regex to match the names of custom Hooks that have dependencies.
 
@@ -65,6 +67,22 @@ This option accepts a regex to match the names of custom Hooks that have depende
 ```
 
 We suggest to use this option **very sparingly, if at all**. Generally saying, we recommend most custom Hooks to not use the dependencies argument, and instead provide a higher-level API that is more focused around a specific use case.
+
+### `rules-of-hooks`
+
+`rules-of-hooks` can be configured to validate anonymous components that are passed to higher-order components beyond the default of `React.memo` and `React.forwardRef`, by using the `additionalHigherOrderComponents` option.
+This option accepts a regex to match the names of custom higher-order components.
+
+```js
+{
+  "rules": {
+    // ...
+    "react-hooks/rules-of-hooks": ["error", {
+      "additionalHigherOrderComponents": "(myCustomHOC|myOtherCustomHOC)"
+    }]
+  }
+}
+```
 
 ## Valid and Invalid Examples
 

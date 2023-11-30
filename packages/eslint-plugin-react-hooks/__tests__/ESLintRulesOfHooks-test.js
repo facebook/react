@@ -479,6 +479,17 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can be used in anonymous function arguments that
+        // are provided through the additionalHigherOrderComponents option.
+        const MemoizedFunction = customHOC(function (props) {
+          useHook();
+          return <button {...props} />
+        });
+      `,
+      options: [{additionalHigherOrderComponents: 'customHOC'}],
+    },
   ],
   invalid: [
     {
@@ -1057,6 +1068,34 @@ const tests = {
         }
       `,
       errors: [asyncComponentHookError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        const FancyButton = customHOC((props, ref) => {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button ref={ref}>{props.children}</button>;
+        });
+      `,
+      options: [{additionalHigherOrderComponents: 'customHOC'}],
+      errors: [conditionalError('useCustomHook')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because it's dangerous and might not warn otherwise.
+        // This *must* be invalid.
+        const FancyButton = customHOC(function(props, ref) {
+          if (props.fancy) {
+            useCustomHook();
+          }
+          return <button ref={ref}>{props.children}</button>;
+        });
+      `,
+      options: [{additionalHigherOrderComponents: 'customHOC'}],
+      errors: [conditionalError('useCustomHook')],
     },
   ],
 };
