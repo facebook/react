@@ -1479,7 +1479,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.className).toBe('hi');
   });
 
-  // @gate experimental || www
+  // @gate www
   it('blocks updates to hydrate the content first if props changed at idle priority', async () => {
     let suspend = false;
     let resolve;

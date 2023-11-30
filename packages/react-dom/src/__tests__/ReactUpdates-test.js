@@ -24,10 +24,10 @@ describe('ReactUpdates', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     findDOMNode =
       ReactDOM.__DOM_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE
         .findDOMNode;
-    ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 

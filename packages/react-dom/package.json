@@ -31,7 +31,6 @@
     "profiling.js",
     "profiling.react-server.js",
     "react-dom.react-server.js",
-    "server-rendering-stub.js",
     "server.browser.js",
     "server.bun.js",
     "server.edge.js",
@@ -107,7 +106,6 @@
       "react-server": "./static.react-server.js",
       "default": "./static.node.js"
     },
-    "./server-rendering-stub": "./server-rendering-stub.js",
     "./profiling": {
       "react-server": "./profiling.react-server.js",
       "default": "./profiling.js"

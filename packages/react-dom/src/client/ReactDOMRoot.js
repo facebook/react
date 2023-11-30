@@ -13,11 +13,11 @@ import type {
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
 
+import {isValidContainer} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {queueExplicitHydrationTarget} from 'react-dom-bindings/src/events/ReactDOMEventReplaying';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {
   allowConcurrentByDefault,
-  disableCommentsAsDOMContainers,
   enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
 
@@ -82,12 +82,7 @@ import {
   unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
-import {
-  ELEMENT_NODE,
-  COMMENT_NODE,
-  DOCUMENT_NODE,
-  DOCUMENT_FRAGMENT_NODE,
-} from 'react-dom-bindings/src/client/HTMLNodeType';
+import {COMMENT_NODE} from 'react-dom-bindings/src/client/HTMLNodeType';
 
 import {
   createContainer,
@@ -355,31 +350,6 @@ export function hydrateRoot(
 
   // $FlowFixMe[invalid-constructor] Flow no longer supports calling new on functions
   return new ReactDOMHydrationRoot(root);
-}
-
-export function isValidContainer(node: any): boolean {
-  return !!(
-    node &&
-    (node.nodeType === ELEMENT_NODE ||
-      node.nodeType === DOCUMENT_NODE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE ||
-      (!disableCommentsAsDOMContainers &&
-        node.nodeType === COMMENT_NODE &&
-        (node: any).nodeValue === ' react-mount-point-unstable '))
-  );
-}
-
-// TODO: Remove this function which also includes comment nodes.
-// We only use it in places that are currently more relaxed.
-export function isValidContainerLegacy(node: any): boolean {
-  return !!(
-    node &&
-    (node.nodeType === ELEMENT_NODE ||
-      node.nodeType === DOCUMENT_NODE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE ||
-      (node.nodeType === COMMENT_NODE &&
-        (node: any).nodeValue === ' react-mount-point-unstable '))
-  );
 }
 
 function warnIfReactDOMContainerInDEV(container: any) {
