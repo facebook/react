@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-1669562e";
+    var ReactVersion = "18.3.0-www-modern-b404772b";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -579,12 +579,19 @@ if (__DEV__) {
             props.value == null
           )
         ) {
-          error(
-            "You provided a `value` prop to a form field without an " +
-              "`onChange` handler. This will render a read-only field. If " +
-              "the field should be mutable use `defaultValue`. Otherwise, " +
-              "set either `onChange` or `readOnly`."
-          );
+          if (tagName === "select") {
+            error(
+              "You provided a `value` prop to a form field without an " +
+                "`onChange` handler. This will render a read-only field. If " +
+                "the field should be mutable use `defaultValue`. Otherwise, set `onChange`."
+            );
+          } else {
+            error(
+              "You provided a `value` prop to a form field without an " +
+                "`onChange` handler. This will render a read-only field. If " +
+                "the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`."
+            );
+          }
         }
 
         if (

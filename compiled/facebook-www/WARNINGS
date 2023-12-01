@@ -345,6 +345,7 @@
 "You passed a container to the second argument of root.render(...). You don't need to pass it again since you already passed it to create the root."
 "You passed a second argument to root.render(...) but it only accepts one argument."
 "You provided a `checked` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultChecked`. Otherwise, set either `onChange` or `readOnly`."
+"You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set `onChange`."
 "You provided a `value` prop to a form field without an `onChange` handler. This will render a read-only field. If the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`."
 "You seem to have overlapping act() calls, this is not supported. Be sure to await previous act() calls before making a new one. "
 "\"%s\" is not a supported revealOrder on <SuspenseList />. Did you mean \"together\", \"forwards\" or \"backwards\"?"

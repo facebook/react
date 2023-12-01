@@ -2750,12 +2750,19 @@ if (__DEV__) {
             props.value == null
           )
         ) {
-          error(
-            "You provided a `value` prop to a form field without an " +
-              "`onChange` handler. This will render a read-only field. If " +
-              "the field should be mutable use `defaultValue`. Otherwise, " +
-              "set either `onChange` or `readOnly`."
-          );
+          if (tagName === "select") {
+            error(
+              "You provided a `value` prop to a form field without an " +
+                "`onChange` handler. This will render a read-only field. If " +
+                "the field should be mutable use `defaultValue`. Otherwise, set `onChange`."
+            );
+          } else {
+            error(
+              "You provided a `value` prop to a form field without an " +
+                "`onChange` handler. This will render a read-only field. If " +
+                "the field should be mutable use `defaultValue`. Otherwise, set either `onChange` or `readOnly`."
+            );
+          }
         }
 
         if (
@@ -35329,7 +35336,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-16e0053f";
+    var ReactVersion = "18.3.0-www-modern-efdf5fd9";
 
     function createPortal$1(
       children,
