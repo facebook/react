@@ -10,7 +10,7 @@ const babelParser = require('@babel/parser');
 const fs = require('fs');
 const through = require('through2');
 const traverse = require('@babel/traverse').default;
-const gs = require('glob-stream');
+const globStream = require('glob-stream');
 
 const {evalStringConcat} = require('../shared/evalToString');
 
@@ -31,7 +31,7 @@ const parserOptions = {
 
 const warnings = new Set();
 
-function transform(file, enc, cb) {
+const transform = (file, enc, cb) =>{
   fs.readFile(file.path, 'utf8', function (err, source) {
     if (err) {
       cb(err);
@@ -81,7 +81,7 @@ function transform(file, enc, cb) {
   });
 }
 
-gs([
+globStream([
   'packages/**/*.js',
   '!packages/*/npm/**/*.js',
   '!packages/shared/consoleWithStackDev.js',

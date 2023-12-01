@@ -1,4 +1,5 @@
 import React from 'react';
+
 import {createElement} from 'glamor/react'; // eslint-disable-line
 /* @jsx createElement */
 
@@ -13,107 +14,11 @@ import {
 
 import attributes from './attributes';
 
-const types = [
-  {
-    name: 'string',
-    testValue: 'a string',
-    testDisplayValue: "'a string'",
-  },
-  {
-    name: 'empty string',
-    testValue: '',
-    testDisplayValue: "''",
-  },
-  {
-    name: 'array with string',
-    testValue: ['string'],
-    testDisplayValue: "['string']",
-  },
-  {
-    name: 'empty array',
-    testValue: [],
-    testDisplayValue: '[]',
-  },
-  {
-    name: 'object',
-    testValue: {
-      toString() {
-        return 'result of toString()';
-      },
-    },
-    testDisplayValue: "{ toString() { return 'result of toString()'; } }",
-  },
-  {
-    name: 'numeric string',
-    testValue: '42',
-    displayValue: "'42'",
-  },
-  {
-    name: '-1',
-    testValue: -1,
-  },
-  {
-    name: '0',
-    testValue: 0,
-  },
-  {
-    name: 'integer',
-    testValue: 1,
-  },
-  {
-    name: 'NaN',
-    testValue: NaN,
-  },
-  {
-    name: 'float',
-    testValue: 99.99,
-  },
-  {
-    name: 'true',
-    testValue: true,
-  },
-  {
-    name: 'false',
-    testValue: false,
-  },
-  {
-    name: "string 'true'",
-    testValue: 'true',
-    displayValue: "'true'",
-  },
-  {
-    name: "string 'false'",
-    testValue: 'false',
-    displayValue: "'false'",
-  },
-  {
-    name: "string 'on'",
-    testValue: 'on',
-    displayValue: "'on'",
-  },
-  {
-    name: "string 'off'",
-    testValue: 'off',
-    displayValue: "'off'",
-  },
-  {
-    name: 'symbol',
-    testValue: Symbol('foo'),
-    testDisplayValue: "Symbol('foo')",
-  },
-  {
-    name: 'function',
-    testValue: function f() {},
-  },
-  {
-    name: 'null',
-    testValue: null,
-  },
-  {
-    name: 'undefined',
-    testValue: undefined,
-  },
-];
+import types from './types';
+import getCanonicalizedValue from './getCanonicalizedValue';
+import prepareState from './prepareState';
+
+const types = types;
 
 const ALPHABETICAL = 'alphabetical';
 const REV_ALPHABETICAL = 'reverse_alphabetical';
@@ -123,93 +28,7 @@ const ALL = 'all';
 const COMPLETE = 'complete';
 const INCOMPLETE = 'incomplete';
 
-function getCanonicalizedValue(value) {
-  switch (typeof value) {
-    case 'undefined':
-      return '<undefined>';
-    case 'object':
-      if (value === null) {
-        return '<null>';
-      }
-      if ('baseVal' in value) {
-        return getCanonicalizedValue(value.baseVal);
-      }
-      if (value instanceof SVGLength) {
-        return '<SVGLength: ' + value.valueAsString + '>';
-      }
-      if (value instanceof SVGRect) {
-        return (
-          '<SVGRect: ' +
-          [value.x, value.y, value.width, value.height].join(',') +
-          '>'
-        );
-      }
-      if (value instanceof SVGPreserveAspectRatio) {
-        return (
-          '<SVGPreserveAspectRatio: ' +
-          value.align +
-          '/' +
-          value.meetOrSlice +
-          '>'
-        );
-      }
-      if (value instanceof SVGNumber) {
-        return value.value;
-      }
-      if (value instanceof SVGMatrix) {
-        return (
-          '<SVGMatrix ' +
-          value.a +
-          ' ' +
-          value.b +
-          ' ' +
-          value.c +
-          ' ' +
-          value.d +
-          ' ' +
-          value.e +
-          ' ' +
-          value.f +
-          '>'
-        );
-      }
-      if (value instanceof SVGTransform) {
-        return (
-          getCanonicalizedValue(value.matrix) +
-          '/' +
-          value.type +
-          '/' +
-          value.angle
-        );
-      }
-      if (typeof value.length === 'number') {
-        return (
-          '[' +
-          Array.from(value)
-            .map(v => getCanonicalizedValue(v))
-            .join(', ') +
-          ']'
-        );
-      }
-      let name = (value.constructor && value.constructor.name) || 'object';
-      return '<' + name + '>';
-    case 'function':
-      return '<function>';
-    case 'symbol':
-      return '<symbol>';
-    case 'number':
-      return `<number: ${value}>`;
-    case 'string':
-      if (value === '') {
-        return '<empty string>';
-      }
-      return '"' + value + '"';
-    case 'boolean':
-      return `<boolean: ${value}>`;
-    default:
-      throw new Error('Switch statement should be exhaustive.');
-  }
-}
+const getCanonicalizedValue = getCanonicalizedValue();
 
 let _didWarn = false;
 function warn(str) {
@@ -219,6 +38,7 @@ function warn(str) {
   _didWarn = true;
 }
 const UNKNOWN_HTML_TAGS = new Set(['keygen', 'time', 'command']);
+
 function getRenderedAttributeValue(
   react,
   renderer,
@@ -396,98 +216,8 @@ function getRenderedAttributeValue(
   };
 }
 
-function prepareState(initGlobals) {
-  function getRenderedAttributeValues(attribute, type) {
-    const {
-      ReactStable,
-      ReactDOMStable,
-      ReactDOMServerStable,
-      ReactNext,
-      ReactDOMNext,
-      ReactDOMServerNext,
-    } = initGlobals(attribute, type);
-    const reactStableValue = getRenderedAttributeValue(
-      ReactStable,
-      ReactDOMStable,
-      ReactDOMServerStable,
-      attribute,
-      type
-    );
-    const reactNextValue = getRenderedAttributeValue(
-      ReactNext,
-      ReactDOMNext,
-      ReactDOMServerNext,
-      attribute,
-      type
-    );
-
-    let hasSameBehavior;
-    if (reactStableValue.didError && reactNextValue.didError) {
-      hasSameBehavior = true;
-    } else if (!reactStableValue.didError && !reactNextValue.didError) {
-      hasSameBehavior =
-        reactStableValue.didWarn === reactNextValue.didWarn &&
-        reactStableValue.canonicalResult === reactNextValue.canonicalResult &&
-        reactStableValue.ssrHasSameBehavior ===
-          reactNextValue.ssrHasSameBehavior;
-    } else {
-      hasSameBehavior = false;
-    }
-
-    return {
-      reactStable: reactStableValue,
-      reactNext: reactNextValue,
-      hasSameBehavior,
-    };
-  }
-
-  const table = new Map();
-  const rowPatternHashes = new Map();
-
-  // Disable error overlay while testing each attribute
-  uninjectErrorOverlay();
-  for (let attribute of attributes) {
-    const results = new Map();
-    let hasSameBehaviorForAll = true;
-    let rowPatternHash = '';
-    for (let type of types) {
-      const result = getRenderedAttributeValues(attribute, type);
-      results.set(type.name, result);
-      if (!result.hasSameBehavior) {
-        hasSameBehaviorForAll = false;
-      }
-      rowPatternHash += [result.reactStable, result.reactNext]
-        .map(res =>
-          [
-            res.canonicalResult,
-            res.canonicalDefaultValue,
-            res.didWarn,
-            res.didError,
-          ].join('||')
-        )
-        .join('||');
-    }
-    const row = {
-      results,
-      hasSameBehaviorForAll,
-      rowPatternHash,
-      // "Good enough" id that we can store in localStorage
-      rowIdHash: `${attribute.name} ${attribute.tagName} ${attribute.overrideStringValue}`,
-    };
-    const rowGroup = rowPatternHashes.get(rowPatternHash) || new Set();
-    rowGroup.add(row);
-    rowPatternHashes.set(rowPatternHash, rowGroup);
-    table.set(attribute, row);
-  }
-
-  // Renable error overlay
-  injectErrorOverlay();
-
-  return {
-    table,
-    rowPatternHashes,
-  };
-}
+//
+const prepareState = prepareState();
 
 const successColor = 'white';
 const warnColor = 'yellow';

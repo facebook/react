@@ -8,7 +8,7 @@
 
 const gzip = require('gzip-size');
 
-module.exports = function sizes(options) {
+function sizes(options) {
   return {
     name: 'scripts/rollup/plugins/sizes-plugin',
     generateBundle(outputOptions, bundle, isWrite) {
@@ -22,4 +22,6 @@ module.exports = function sizes(options) {
       });
     },
   };
-};
+}
+
+export default sizes;
