@@ -1300,36 +1300,41 @@ describe('ReactDOMSelect', () => {
       );
     });
 
-    it('should not warn about missing onChange if value is undefined', () => {
-      ReactTestUtils.renderIntoDocument(
-        <select value={undefined}>
-          <option value="monkey">A monkey!</option>
-          <option value="giraffe">A giraffe!</option>
-          <option value="gorilla">A gorilla!</option>
-        </select>,
-      );
+    it('should not throw an error about missing onChange if value is undefined', () => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select value={undefined}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
     });
 
     it('should not warn about missing onChange if onChange is set', () => {
       const change = jest.fn();
-
-      ReactTestUtils.renderIntoDocument(
-        <select value="monkey" onChange={change}>
-          <option value="monkey">A monkey!</option>
-          <option value="giraffe">A giraffe!</option>
-          <option value="gorilla">A gorilla!</option>
-        </select>,
-      );
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select value="monkey" onChange={change}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
     });
 
     it('should not warn about missing onChange if disabled is true', () => {
-      ReactTestUtils.renderIntoDocument(
-        <select value="monkey" disabled={true}>
-          <option value="monkey">A monkey!</option>
-          <option value="giraffe">A giraffe!</option>
-          <option value="gorilla">A gorilla!</option>
-        </select>,
-      );
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select value="monkey" disabled={true}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
     });
 
     it('should warn about missing onChange if value is false', () => {
