@@ -169,7 +169,7 @@ function isUseEffectEventIdentifier$1(node) {
 }
 
 function isUseIdentifier(node) {
-  return node.type === 'Identifier' && node.name === 'use';
+  return isReactFunction(node, 'use');
 }
 
 var RulesOfHooks = {
