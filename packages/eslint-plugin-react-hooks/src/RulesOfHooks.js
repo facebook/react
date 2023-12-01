@@ -108,7 +108,7 @@ function isUseEffectEventIdentifier(node) {
 }
 
 function isUseIdentifier(node) {
-  return node.type === 'Identifier' && node.name === 'use';
+  return isReactFunction(node, 'use');
 }
 
 export default {
