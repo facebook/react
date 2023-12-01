@@ -1291,13 +1291,15 @@ describe('ReactDOMSelect', () => {
     });
 
     it('should not warn about missing onChange if value is not set', () => {
-      ReactTestUtils.renderIntoDocument(
-        <select>
-          <option value="monkey">A monkey!</option>
-          <option value="giraffe">A giraffe!</option>
-          <option value="gorilla">A gorilla!</option>
-        </select>,
-      );
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
     });
 
     it('should not throw an error about missing onChange if value is undefined', () => {
