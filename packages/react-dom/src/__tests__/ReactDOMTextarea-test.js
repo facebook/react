@@ -232,10 +232,12 @@ describe('ReactDOMTextarea', () => {
         // See https://tc39.es/proposal-temporal/docs/plaindate.html#valueOf
         throw new TypeError('prod message');
       }
+
       toString() {
         return '2020-01-01';
       }
     }
+
     const container = document.createElement('div');
     const stub = <textarea value="giraffe" onChange={emptyFunction} />;
     const node = renderTextarea(stub, container);
@@ -590,11 +592,14 @@ describe('ReactDOMTextarea', () => {
     const get = jest.fn(value => {
       return defaultValue;
     });
+
     class App extends React.Component {
       state = {count: 0, text: 'foo'};
+
       componentDidMount() {
         instance = this;
       }
+
       render() {
         return (
           <div>
@@ -609,6 +614,7 @@ describe('ReactDOMTextarea', () => {
         );
       }
     }
+
     ReactDOM.render(<App />, container);
     defaultValue = node.defaultValue;
     Object.defineProperty(node, 'defaultValue', {get, set});
@@ -758,5 +764,76 @@ describe('ReactDOMTextarea', () => {
 
     ReactDOM.render(<textarea defaultValue={null} />, container);
     expect(node.defaultValue).toBe('');
+  });
+
+  it('should not warn about missing onChange if value is not set', () => {
+    ReactTestUtils.renderIntoDocument(<textarea />);
+  });
+
+  it('should not warn about missing onChange if value is undefined', () => {
+    ReactTestUtils.renderIntoDocument(<textarea value={undefined} />);
+  });
+
+  it('should not warn about missing onChange if onChange is set', () => {
+    const change = jest.fn();
+    ReactTestUtils.renderIntoDocument(
+      <textarea value="something" onChange={change} />,
+    );
+  });
+
+  it('should not warn about missing onChange if disabled is true', () => {
+    ReactTestUtils.renderIntoDocument(
+      <textarea value="something" disabled={true} />,
+    );
+  });
+
+  it('should not warn about missing onChange if readOnly is true', () => {
+    ReactTestUtils.renderIntoDocument(
+      <textarea value="something" readOnly={true} />,
+    );
+  });
+
+  it('should warn about missing onChange if value is false', () => {
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<textarea value={false} />),
+    ).toErrorDev(
+      'Warning: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
+
+  it('should warn about missing onChange if value is 0', () => {
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<textarea value={0} />),
+    ).toErrorDev(
+      'Warning: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
+
+  it('should warn about missing onChange if value is "0"', () => {
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<textarea value="0" />),
+    ).toErrorDev(
+      'Warning: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
+
+  it('should warn about missing onChange if value is ""', () => {
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<textarea value="" />),
+    ).toErrorDev(
+      'Warning: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
   });
 });
