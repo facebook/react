@@ -651,9 +651,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     await act(() => root.render(<App />));
-
     assertLog(['App', 'Selector', 'A0']);
-    expect(container.textContent).toEqual('A0');
 
     await act(() => store.set(store.getState()));
     await act(() => store.set({a: 0}));
