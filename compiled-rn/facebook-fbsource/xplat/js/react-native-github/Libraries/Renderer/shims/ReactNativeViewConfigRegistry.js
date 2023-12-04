@@ -7,7 +7,7 @@
  * @noformat
  * @flow strict-local
  * @nolint
- * @generated SignedSource<<3cf9b746913da1666cb5bce0ae12d978>>
+ * @generated SignedSource<<73af5b3fe29d226634ed64bc861634df>>
  */
 
 'use strict';
@@ -24,13 +24,11 @@ export const customBubblingEventTypes: {
       skipBubbling?: ?boolean,
     }>,
   }>,
-  ...
 } = {};
 export const customDirectEventTypes: {
   [eventName: string]: $ReadOnly<{
     registrationName: string,
   }>,
-  ...
 } = {};
 
 const viewConfigCallbacks = new Map<string, ?() => ViewConfig>();
