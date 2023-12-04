@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,14 +10,13 @@
 'use strict';
 
 // Polyfills for test environment
-global.ReadableStream = require('web-streams-polyfill/ponyfill/es6').ReadableStream;
+global.ReadableStream =
+  require('web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
 global.TextDecoder = require('util').TextDecoder;
 global.Headers = require('node-fetch').Headers;
 global.Request = require('node-fetch').Request;
 global.Response = require('node-fetch').Response;
-// Patch for Browser environments to be able to polyfill AsyncLocalStorage
-global.AsyncLocalStorage = require('async_hooks').AsyncLocalStorage;
 
 let fetchCount = 0;
 async function fetchMock(resource, options) {
@@ -33,6 +32,7 @@ async function fetchMock(resource, options) {
 }
 
 let React;
+let ReactServer;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let use;
@@ -44,15 +44,21 @@ describe('ReactFetch', () => {
     fetchCount = 0;
     global.fetch = fetchMock;
 
-    if (gate(flags => !flags.www)) {
-      jest.mock('react', () => require('react/react.shared-subset'));
-    }
+    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react-server-dom-webpack/server', () =>
+      require('react-server-dom-webpack/server.browser'),
+    );
+    require('react-server-dom-webpack/src/__tests__/utils/WebpackMock');
+    ReactServerDOMServer = require('react-server-dom-webpack/server');
+    ReactServer = require('react');
 
-    React = require('react');
-    ReactServerDOMServer = require('react-server-dom-webpack/server.browser');
+    jest.resetModules();
+    __unmockReact();
+    jest.unmock('react-server-dom-webpack/server');
     ReactServerDOMClient = require('react-server-dom-webpack/client');
-    use = React.use;
-    cache = React.cache;
+    React = require('react');
+    use = ReactServer.use;
+    cache = ReactServer.cache;
   });
 
   async function render(Component) {
@@ -136,7 +142,22 @@ describe('ReactFetch', () => {
     expect(fetchCount).toBe(1);
   });
 
-  // @gate enableUseHook
+  // @gate enableFetchInstrumentation && enableCache
+  it('can dedupe fetches using URL and not', async () => {
+    const url = 'http://example.com/';
+    function Component() {
+      const response = use(fetch(url));
+      const text = use(response.text());
+      const response2 = use(fetch(new URL(url)));
+      const text2 = use(response2.text());
+      return text + ' ' + text2;
+    }
+    expect(await render(Component)).toMatchInlineSnapshot(
+      `"GET ${url} [] GET ${url} []"`,
+    );
+    expect(fetchCount).toBe(1);
+  });
+
   it('can opt-out of deduping fetches inside of render with custom signal', async () => {
     const controller = new AbortController();
     function useCustomHook() {
@@ -155,7 +176,6 @@ describe('ReactFetch', () => {
     expect(fetchCount).not.toBe(1);
   });
 
-  // @gate enableUseHook
   it('opts out of deduping for POST requests', async () => {
     function useCustomHook() {
       return use(
@@ -184,7 +204,7 @@ describe('ReactFetch', () => {
       return text + ' ' + text2;
     }
     expect(await render(Component)).toMatchInlineSnapshot(
-      `"GET world [[\\"a\\",\\"A\\"]] GET world [[\\"b\\",\\"B\\"]]"`,
+      `"GET world [["a","A"]] GET world [["b","B"]]"`,
     );
     expect(fetchCount).toBe(2);
   });

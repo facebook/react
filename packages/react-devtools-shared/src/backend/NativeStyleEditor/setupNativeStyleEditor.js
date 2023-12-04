@@ -16,6 +16,7 @@ import type {RendererID} from '../types';
 import type {StyleAndLayout} from './types';
 
 export type ResolveNativeStyle = (stylesheetID: any) => ?Object;
+export type SetupNativeStyleEditor = typeof setupNativeStyleEditor;
 
 export default function setupNativeStyleEditor(
   bridge: BackendBridge,
@@ -170,7 +171,7 @@ function measureStyle(
 }
 
 function shallowClone(object: Object): Object {
-  const cloned = {};
+  const cloned: {[string]: $FlowFixMe} = {};
   for (const n in object) {
     cloned[n] = object[n];
   }

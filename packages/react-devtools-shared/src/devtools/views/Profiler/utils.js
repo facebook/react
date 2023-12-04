@@ -8,7 +8,7 @@
  */
 
 import {PROFILER_EXPORT_VERSION} from 'react-devtools-shared/src/constants';
-import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
+import {backendToFrontendSerializedElementMapper} from 'react-devtools-shared/src/utils';
 
 import type {ProfilingDataBackend} from 'react-devtools-shared/src/backend/types';
 import type {
@@ -106,20 +106,9 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
             timestamp: commitDataBackend.timestamp,
             updaters:
               commitDataBackend.updaters !== null
-                ? commitDataBackend.updaters.map(serializedElement => {
-                    const [
-                      serializedElementDisplayName,
-                      serializedElementHocDisplayNames,
-                    ] = separateDisplayNameAndHOCs(
-                      serializedElement.displayName,
-                      serializedElement.type,
-                    );
-                    return {
-                      ...serializedElement,
-                      displayName: serializedElementDisplayName,
-                      hocDisplayNames: serializedElementHocDisplayNames,
-                    };
-                  })
+                ? commitDataBackend.updaters.map(
+                    backendToFrontendSerializedElementMapper,
+                  )
                 : null,
           }),
         );
@@ -250,53 +239,54 @@ export function prepareProfilingDataFrontendFromExport(
 export function prepareProfilingDataExport(
   profilingDataFrontend: ProfilingDataFrontend,
 ): ProfilingDataExport {
-  const timelineData: Array<TimelineDataExport> = profilingDataFrontend.timelineData.map(
-    ({
-      batchUIDToMeasuresMap,
-      componentMeasures,
-      duration,
-      flamechart,
-      internalModuleSourceToRanges,
-      laneToLabelMap,
-      laneToReactMeasureMap,
-      nativeEvents,
-      networkMeasures,
-      otherUserTimingMarks,
-      reactVersion,
-      schedulingEvents,
-      snapshots,
-      snapshotHeight,
-      startTime,
-      suspenseEvents,
-      thrownErrors,
-    }) => ({
-      // Most of the data is safe to serialize as-is,
-      // but we need to convert the Maps to nested Arrays.
-      batchUIDToMeasuresKeyValueArray: Array.from(
-        batchUIDToMeasuresMap.entries(),
-      ),
-      componentMeasures: componentMeasures,
-      duration,
-      flamechart,
-      internalModuleSourceToRanges: Array.from(
-        internalModuleSourceToRanges.entries(),
-      ),
-      laneToLabelKeyValueArray: Array.from(laneToLabelMap.entries()),
-      laneToReactMeasureKeyValueArray: Array.from(
-        laneToReactMeasureMap.entries(),
-      ),
-      nativeEvents,
-      networkMeasures,
-      otherUserTimingMarks,
-      reactVersion,
-      schedulingEvents,
-      snapshots,
-      snapshotHeight,
-      startTime,
-      suspenseEvents,
-      thrownErrors,
-    }),
-  );
+  const timelineData: Array<TimelineDataExport> =
+    profilingDataFrontend.timelineData.map(
+      ({
+        batchUIDToMeasuresMap,
+        componentMeasures,
+        duration,
+        flamechart,
+        internalModuleSourceToRanges,
+        laneToLabelMap,
+        laneToReactMeasureMap,
+        nativeEvents,
+        networkMeasures,
+        otherUserTimingMarks,
+        reactVersion,
+        schedulingEvents,
+        snapshots,
+        snapshotHeight,
+        startTime,
+        suspenseEvents,
+        thrownErrors,
+      }) => ({
+        // Most of the data is safe to serialize as-is,
+        // but we need to convert the Maps to nested Arrays.
+        batchUIDToMeasuresKeyValueArray: Array.from(
+          batchUIDToMeasuresMap.entries(),
+        ),
+        componentMeasures: componentMeasures,
+        duration,
+        flamechart,
+        internalModuleSourceToRanges: Array.from(
+          internalModuleSourceToRanges.entries(),
+        ),
+        laneToLabelKeyValueArray: Array.from(laneToLabelMap.entries()),
+        laneToReactMeasureKeyValueArray: Array.from(
+          laneToReactMeasureMap.entries(),
+        ),
+        nativeEvents,
+        networkMeasures,
+        otherUserTimingMarks,
+        reactVersion,
+        schedulingEvents,
+        snapshots,
+        snapshotHeight,
+        startTime,
+        suspenseEvents,
+        thrownErrors,
+      }),
+    );
 
   const dataForRoots: Array<ProfilingDataForRootExport> = [];
   profilingDataFrontend.dataForRoots.forEach(
@@ -373,15 +363,14 @@ export const formatPercentage = (percentage: number): number =>
 export const formatTime = (timestamp: number): number =>
   Math.round(Math.round(timestamp) / 100) / 10;
 
-export const scale = (
-  minValue: number,
-  maxValue: number,
-  minRange: number,
-  maxRange: number,
-): ((value: number, fallbackValue: number) => number) => (
-  value: number,
-  fallbackValue: number,
-) =>
-  maxValue - minValue === 0
-    ? fallbackValue
-    : ((value - minValue) / (maxValue - minValue)) * (maxRange - minRange);
+export const scale =
+  (
+    minValue: number,
+    maxValue: number,
+    minRange: number,
+    maxRange: number,
+  ): ((value: number, fallbackValue: number) => number) =>
+  (value: number, fallbackValue: number) =>
+    maxValue - minValue === 0
+      ? fallbackValue
+      : ((value - minValue) / (maxValue - minValue)) * (maxRange - minRange);

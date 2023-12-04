@@ -32,7 +32,7 @@ const parserOptions = {
 const warnings = new Set();
 
 function transform(file, enc, cb) {
-  fs.readFile(file.path, 'utf8', function(err, source) {
+  fs.readFile(file.path, 'utf8', function (err, source) {
     if (err) {
       cb(err);
       return;
@@ -48,7 +48,7 @@ function transform(file, enc, cb) {
 
     traverse(ast, {
       CallExpression: {
-        exit: function(astPath) {
+        exit: function (astPath) {
           const callee = astPath.get('callee');
           if (
             callee.matchesPattern('console.warn') ||
@@ -89,13 +89,14 @@ gs([
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',
   '!**/node_modules/**/*.js',
+  // TODO: The newer Flow type syntax in this file breaks the parser and I can't
+  // figure out how to get Babel to parse it. I wasted too much time on
+  // something so unimportant so I'm skipping this for now. There's no actual
+  // code or warnings in this file anyway.
+  '!packages/shared/ReactTypes.js',
 ]).pipe(
   through.obj(transform, cb => {
-    process.stdout.write(
-      Array.from(warnings)
-        .sort()
-        .join('\n') + '\n'
-    );
+    process.stdout.write(Array.from(warnings).sort().join('\n') + '\n');
     cb();
   })
 );

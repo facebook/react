@@ -14,10 +14,10 @@ describe('ReactDOMEventListener', () => {
   let container;
 
   beforeEach(() => {
-    window.TextEvent = function() {};
+    window.TextEvent = function () {};
     jest.resetModules();
-    React = require('react');
     jest.isolateModules(() => {
+      React = require('react');
       OuterReactDOM = require('react-dom');
     });
     jest.isolateModules(() => {
@@ -1249,6 +1249,22 @@ describe('ReactDOMEventListener', () => {
         nativeEvent: 'scroll',
         dispatch(node) {
           const e = new Event('scroll', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onScrollEnd', () => {
+      testNonBubblingEvent({
+        type: 'div',
+        reactEvent: 'onScrollEnd',
+        reactEventType: 'scrollend',
+        nativeEvent: 'scrollend',
+        dispatch(node) {
+          const e = new Event('scrollend', {
             bubbles: false,
             cancelable: true,
           });

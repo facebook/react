@@ -9,13 +9,20 @@
 
 'use strict';
 
+// Fix JSDOM. setAttribute is supposed to throw on things that can't be implicitly toStringed.
+const setAttribute = Element.prototype.setAttribute;
+Element.prototype.setAttribute = function (name, value) {
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  return setAttribute.call(this, name, '' + value);
+};
+
 describe('ReactDOMSelect', () => {
   let React;
   let ReactDOM;
   let ReactDOMServer;
   let ReactTestUtils;
 
-  const noop = function() {};
+  const noop = function () {};
 
   beforeEach(() => {
     jest.resetModules();
@@ -269,7 +276,7 @@ describe('ReactDOMSelect', () => {
   it('should allow setting `value` with `objectToString`', () => {
     const objectToString = {
       animal: 'giraffe',
-      toString: function() {
+      toString: function () {
         return this.animal;
       },
     };
@@ -849,7 +856,7 @@ describe('ReactDOMSelect', () => {
   });
 
   describe('When given a Symbol value', () => {
-    it('treats initial Symbol value as an empty string', () => {
+    it('treats initial Symbol value as missing', () => {
       let node;
 
       expect(() => {
@@ -862,10 +869,10 @@ describe('ReactDOMSelect', () => {
         );
       }).toErrorDev('Invalid value for prop `value`');
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A Symbol!');
     });
 
-    it('treats updated Symbol value as an empty string', () => {
+    it('treats updated Symbol value as missing', () => {
       let node;
 
       expect(() => {
@@ -888,7 +895,7 @@ describe('ReactDOMSelect', () => {
         </select>,
       );
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A Symbol!');
     });
 
     it('treats initial Symbol defaultValue as an empty string', () => {
@@ -904,7 +911,7 @@ describe('ReactDOMSelect', () => {
         );
       }).toErrorDev('Invalid value for prop `value`');
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A Symbol!');
     });
 
     it('treats updated Symbol defaultValue as an empty string', () => {
@@ -930,12 +937,12 @@ describe('ReactDOMSelect', () => {
         </select>,
       );
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A Symbol!');
     });
   });
 
   describe('When given a function value', () => {
-    it('treats initial function value as an empty string', () => {
+    it('treats initial function value as missing', () => {
       let node;
 
       expect(() => {
@@ -948,7 +955,7 @@ describe('ReactDOMSelect', () => {
         );
       }).toErrorDev('Invalid value for prop `value`');
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A function!');
     });
 
     it('treats initial function defaultValue as an empty string', () => {
@@ -964,7 +971,7 @@ describe('ReactDOMSelect', () => {
         );
       }).toErrorDev('Invalid value for prop `value`');
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A function!');
     });
 
     it('treats updated function value as an empty string', () => {
@@ -990,7 +997,7 @@ describe('ReactDOMSelect', () => {
         </select>,
       );
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A function!');
     });
 
     it('treats updated function defaultValue as an empty string', () => {
@@ -1016,7 +1023,7 @@ describe('ReactDOMSelect', () => {
         </select>,
       );
 
-      expect(node.value).toBe('');
+      expect(node.value).toBe('A function!');
     });
   });
 
@@ -1047,7 +1054,7 @@ describe('ReactDOMSelect', () => {
       ).toErrorDev(
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before before using it here.',
+          'This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1067,7 +1074,7 @@ describe('ReactDOMSelect', () => {
         expect(test).toThrowError(new TypeError('prod message')),
       ).toErrorDev(
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1087,7 +1094,7 @@ describe('ReactDOMSelect', () => {
         expect(test).toThrowError(new TypeError('prod message')),
       ).toErrorDev(
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1113,7 +1120,7 @@ describe('ReactDOMSelect', () => {
       ).toErrorDev(
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before before using it here.',
+          'This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1140,7 +1147,7 @@ describe('ReactDOMSelect', () => {
         expect(test).toThrowError(new TypeError('prod message')),
       ).toErrorDev(
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1167,7 +1174,7 @@ describe('ReactDOMSelect', () => {
         expect(test).toThrowError(new TypeError('prod message')),
       ).toErrorDev(
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1186,7 +1193,7 @@ describe('ReactDOMSelect', () => {
       ).toErrorDev(
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before before using it here.',
+          'This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1206,7 +1213,7 @@ describe('ReactDOMSelect', () => {
         expect(test).toThrowError(new TypeError('prod message')),
       ).toErrorDev(
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1226,7 +1233,7 @@ describe('ReactDOMSelect', () => {
         expect(test).toThrowError(new TypeError('prod message')),
       ).toErrorDev(
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1252,7 +1259,7 @@ describe('ReactDOMSelect', () => {
       ).toErrorDev(
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not TemporalLike. ' +
-          'This value must be coerced to a string before before using it here.',
+          'This value must be coerced to a string before using it here.',
       );
     });
 
@@ -1279,7 +1286,124 @@ describe('ReactDOMSelect', () => {
         expect(test).toThrowError(new TypeError('prod message')),
       ).toErrorDev(
         'The provided `value` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
+      );
+    });
+
+    it('should not warn about missing onChange if value is not set', () => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
+    });
+
+    it('should not throw an error about missing onChange if value is undefined', () => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select value={undefined}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
+    });
+
+    it('should not warn about missing onChange if onChange is set', () => {
+      const change = jest.fn();
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select value="monkey" onChange={change}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
+    });
+
+    it('should not warn about missing onChange if disabled is true', () => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select value="monkey" disabled={true}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
+    });
+
+    it('should warn about missing onChange if value is false', () => {
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(
+          <select value={false}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        ),
+      ).toErrorDev(
+        'Warning: You provided a `value` prop to a form ' +
+          'field without an `onChange` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set `onChange`.',
+      );
+    });
+
+    it('should warn about missing onChange if value is 0', () => {
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(
+          <select value={0}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        ),
+      ).toErrorDev(
+        'Warning: You provided a `value` prop to a form ' +
+          'field without an `onChange` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set `onChange`.',
+      );
+    });
+
+    it('should warn about missing onChange if value is "0"', () => {
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(
+          <select value="0">
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        ),
+      ).toErrorDev(
+        'Warning: You provided a `value` prop to a form ' +
+          'field without an `onChange` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set `onChange`.',
+      );
+    });
+
+    it('should warn about missing onChange if value is ""', () => {
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(
+          <select value="">
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        ),
+      ).toErrorDev(
+        'Warning: You provided a `value` prop to a form ' +
+          'field without an `onChange` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set `onChange`.',
       );
     });
   });

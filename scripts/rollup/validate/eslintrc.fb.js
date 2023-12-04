@@ -7,15 +7,33 @@ module.exports = {
   },
   globals: {
     // ES6
+    BigInt: 'readonly',
     Map: 'readonly',
     Set: 'readonly',
     Symbol: 'readonly',
     Proxy: 'readonly',
     WeakMap: 'readonly',
     WeakSet: 'readonly',
+
+    Int8Array: 'readonly',
+    Uint8Array: 'readonly',
+    Uint8ClampedArray: 'readonly',
+    Int16Array: 'readonly',
     Uint16Array: 'readonly',
+    Int32Array: 'readonly',
+    Uint32Array: 'readonly',
+    Float32Array: 'readonly',
+    Float64Array: 'readonly',
+    BigInt64Array: 'readonly',
+    BigUint64Array: 'readonly',
+    DataView: 'readonly',
+    ArrayBuffer: 'readonly',
+
     Reflect: 'readonly',
     globalThis: 'readonly',
+
+    FinalizationRegistry: 'readonly',
+
     // Vendor specific
     MSApp: 'readonly',
     __REACT_DEVTOOLS_GLOBAL_HOOK__: 'readonly',
@@ -28,14 +46,11 @@ module.exports = {
     trustedTypes: 'readonly',
 
     // Scheduler profiling
-    Int32Array: 'readonly',
-    ArrayBuffer: 'readonly',
-
     TaskController: 'readonly',
     reportError: 'readonly',
+    AggregateError: 'readonly',
 
     // Flight
-    Uint8Array: 'readonly',
     Promise: 'readonly',
 
     // Temp
@@ -59,5 +74,5 @@ module.exports = {
   // These plugins aren't used, but eslint complains if an eslint-ignore comment
   // references unused plugins. An alternate approach could be to strip
   // eslint-ignore comments as part of the build.
-  plugins: ['jest', 'no-for-of-loops', 'react', 'react-internal'],
+  plugins: ['ft-flow', 'jest', 'no-for-of-loops', 'react', 'react-internal'],
 };

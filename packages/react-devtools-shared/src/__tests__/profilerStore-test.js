@@ -73,7 +73,7 @@ describe('ProfilerStore', () => {
     const fauxProfilingData = {
       dataForRoots: new Map(),
     };
-    spyOn(console, 'warn');
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
     store.profilerStore.profilingData = fauxProfilingData;
     expect(store.profilerStore.profilingData).not.toBe(fauxProfilingData);
     expect(console.warn).toHaveBeenCalledTimes(1);
@@ -187,7 +187,7 @@ describe('ProfilerStore', () => {
       utils.act(() => {
         const {
           ElementTypeHostComponent,
-        } = require('react-devtools-shared/src/types');
+        } = require('react-devtools-shared/src/frontend/types');
         store.componentFilters = [
           utils.createElementTypeFilter(ElementTypeHostComponent),
         ];

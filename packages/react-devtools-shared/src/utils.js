@@ -41,21 +41,29 @@ import {
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
   LOCAL_STORAGE_HIDE_CONSOLE_LOGS_IN_STRICT_MODE,
 } from './constants';
-import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
+import {
+  ComponentFilterElementType,
+  ElementTypeHostComponent,
+} from './frontend/types';
 import {
   ElementTypeRoot,
   ElementTypeClass,
   ElementTypeForwardRef,
   ElementTypeFunction,
   ElementTypeMemo,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
 import isArray from './isArray';
 
-import type {ComponentFilter, ElementType} from './types';
-import type {LRUCache} from 'react-devtools-shared/src/types';
-import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
+import type {
+  ComponentFilter,
+  ElementType,
+  BrowserTheme,
+  SerializedElement as SerializedElementFrontend,
+  LRUCache,
+} from 'react-devtools-shared/src/frontend/types';
+import type {SerializedElement as SerializedElementBackend} from 'react-devtools-shared/src/backend/types';
 
 // $FlowFixMe[method-unbinding]
 const hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -84,7 +92,7 @@ export function alphaSortKeys(
 export function getAllEnumerableKeys(
   obj: Object,
 ): Set<string | number | symbol> {
-  const keys = new Set();
+  const keys = new Set<string | number | symbol>();
   let current = obj;
   while (current != null) {
     const currentKeys = [
@@ -93,7 +101,7 @@ export function getAllEnumerableKeys(
     ];
     const descriptors = Object.getOwnPropertyDescriptors(current);
     currentKeys.forEach(key => {
-      // $FlowFixMe: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
+      // $FlowFixMe[incompatible-type]: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
       if (descriptors[key].enumerable) {
         keys.add(key);
       }
@@ -110,7 +118,7 @@ export function getWrappedDisplayName(
   wrapperName: string,
   fallbackName?: string,
 ): string {
-  const displayName = (outerType: any).displayName;
+  const displayName = (outerType: any)?.displayName;
   return (
     displayName || `${wrapperName}(${getDisplayName(innerType, fallbackName)})`
   );
@@ -146,15 +154,14 @@ export function getUID(): number {
   return ++uidCounter;
 }
 
-export function utfDecodeString(array: Array<number>): string {
-  // Avoid spreading the array (e.g. String.fromCodePoint(...array))
-  // Functions arguments are first placed on the stack before the function is called
-  // which throws a RangeError for large arrays.
-  // See github.com/facebook/react/issues/22293
+export function utfDecodeStringWithRanges(
+  array: Array<number>,
+  left: number,
+  right: number,
+): string {
   let string = '';
-  for (let i = 0; i < array.length; i++) {
-    const char = array[i];
-    string += String.fromCodePoint(char);
+  for (let i = left; i <= right; i++) {
+    string += String.fromCodePoint(array[i]);
   }
   return string;
 }
@@ -203,15 +210,17 @@ export function printOperationsArray(operations: Array<number>) {
   let i = 2;
 
   // Reassemble the string table.
-  const stringTable = [
+  const stringTable: Array<null | string> = [
     null, // ID = 0 corresponds to the null string.
   ];
   const stringTableSize = operations[i++];
   const stringTableEnd = i + stringTableSize;
   while (i < stringTableEnd) {
     const nextLength = operations[i++];
-    const nextString = utfDecodeString(
-      (operations.slice(i, i + nextLength): any),
+    const nextString = utfDecodeStringWithRanges(
+      operations,
+      i,
+      i + nextLength - 1,
     );
     stringTable.push(nextString);
     i += nextLength;
@@ -408,16 +417,35 @@ export function getOpenInEditorURL(): string {
   return getDefaultOpenInEditorURL();
 }
 
-export function separateDisplayNameAndHOCs(
+type ParseElementDisplayNameFromBackendReturn = {
+  formattedDisplayName: string | null,
+  hocDisplayNames: Array<string> | null,
+  compiledWithForget: boolean,
+};
+export function parseElementDisplayNameFromBackend(
   displayName: string | null,
   type: ElementType,
-): [string | null, Array<string> | null] {
+): ParseElementDisplayNameFromBackendReturn {
   if (displayName === null) {
-    return [null, null];
+    return {
+      formattedDisplayName: null,
+      hocDisplayNames: null,
+      compiledWithForget: false,
+    };
+  }
+
+  if (displayName.startsWith('Forget(')) {
+    const displayNameWithoutForgetWrapper = displayName.slice(
+      7,
+      displayName.length - 1,
+    );
+
+    const {formattedDisplayName, hocDisplayNames} =
+      parseElementDisplayNameFromBackend(displayNameWithoutForgetWrapper, type);
+    return {formattedDisplayName, hocDisplayNames, compiledWithForget: true};
   }
 
   let hocDisplayNames = null;
-
   switch (type) {
     case ElementTypeClass:
     case ElementTypeForwardRef:
@@ -435,7 +463,11 @@ export function separateDisplayNameAndHOCs(
       break;
   }
 
-  return [displayName, hocDisplayNames];
+  return {
+    formattedDisplayName: displayName,
+    hocDisplayNames,
+    compiledWithForget: false,
+  };
 }
 
 // Pulled from react-compat
@@ -534,6 +566,7 @@ export type DataType =
   | 'array_buffer'
   | 'bigint'
   | 'boolean'
+  | 'class_instance'
   | 'data_view'
   | 'date'
   | 'function'
@@ -620,6 +653,11 @@ export function getDataType(data: Object): DataType {
           return 'html_all_collection';
         }
       }
+
+      if (!isPlainObject(data)) {
+        return 'class_instance';
+      }
+
       return 'object';
     case 'string':
       return 'string';
@@ -688,7 +726,7 @@ function truncateForDisplay(
   length: number = MAX_PREVIEW_STRING_LENGTH,
 ) {
   if (string.length > length) {
-    return string.substr(0, length) + '…';
+    return string.slice(0, length) + '…';
   } else {
     return string;
   }
@@ -835,6 +873,8 @@ export function formatDataForPreview(
     }
     case 'date':
       return data.toString();
+    case 'class_instance':
+      return data.constructor.name;
     case 'object':
       if (showFormattedValue) {
         const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
@@ -872,4 +912,27 @@ export function formatDataForPreview(
         return 'unserializable';
       }
   }
+}
+
+// Basically checking that the object only has Object in its prototype chain
+export const isPlainObject = (object: Object): boolean => {
+  const objectPrototype = Object.getPrototypeOf(object);
+  if (!objectPrototype) return true;
+
+  const objectParentPrototype = Object.getPrototypeOf(objectPrototype);
+  return !objectParentPrototype;
+};
+
+export function backendToFrontendSerializedElementMapper(
+  element: SerializedElementBackend,
+): SerializedElementFrontend {
+  const {formattedDisplayName, hocDisplayNames, compiledWithForget} =
+    parseElementDisplayNameFromBackend(element.displayName, element.type);
+
+  return {
+    ...element,
+    displayName: formattedDisplayName,
+    hocDisplayNames,
+    compiledWithForget,
+  };
 }

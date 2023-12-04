@@ -17,7 +17,7 @@
  * of the `value` object).
  */
 
-// $FlowFixMe only called in DEV, so void return is not possible.
+// $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
 function typeName(value: mixed): string {
   if (__DEV__) {
     // toStringTag is needed for namespaced types like Temporal.Instant
@@ -26,12 +26,12 @@ function typeName(value: mixed): string {
       (hasToStringTag && (value: any)[Symbol.toStringTag]) ||
       (value: any).constructor.name ||
       'Object';
-    // $FlowFixMe
+    // $FlowFixMe[incompatible-return]
     return type;
   }
 }
 
-// $FlowFixMe only called in DEV, so void return is not possible.
+// $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
 function willCoercionThrow(value: mixed): boolean {
   if (__DEV__) {
     try {
@@ -78,7 +78,7 @@ export function checkAttributeStringCoercion(
     if (willCoercionThrow(value)) {
       console.error(
         'The provided `%s` attribute is an unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         attributeName,
         typeName(value),
       );
@@ -92,7 +92,7 @@ export function checkKeyStringCoercion(value: mixed): void | string {
     if (willCoercionThrow(value)) {
       console.error(
         'The provided key is an unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         typeName(value),
       );
       return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
@@ -108,7 +108,24 @@ export function checkPropStringCoercion(
     if (willCoercionThrow(value)) {
       console.error(
         'The provided `%s` prop is an unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
+        propName,
+        typeName(value),
+      );
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+
+export function checkOptionStringCoercion(
+  value: mixed,
+  propName: string,
+): void | string {
+  if (__DEV__) {
+    if (willCoercionThrow(value)) {
+      console.error(
+        'The provided `%s` option is an unsupported type %s.' +
+          ' This value must be coerced to a string before using it here.',
         propName,
         typeName(value),
       );
@@ -125,7 +142,7 @@ export function checkCSSPropertyStringCoercion(
     if (willCoercionThrow(value)) {
       console.error(
         'The provided `%s` CSS property is an unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         propName,
         typeName(value),
       );
@@ -139,7 +156,7 @@ export function checkHtmlStringCoercion(value: mixed): void | string {
     if (willCoercionThrow(value)) {
       console.error(
         'The provided HTML markup uses a value of unsupported type %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         typeName(value),
       );
       return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
@@ -153,7 +170,7 @@ export function checkFormFieldValueStringCoercion(value: mixed): void | string {
       console.error(
         'Form field values (value, checked, defaultValue, or defaultChecked props)' +
           ' must be strings, not %s.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
         typeName(value),
       );
       return testStringCoercion(value); // throw (to help callers find troubleshooting comments)

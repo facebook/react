@@ -17,7 +17,7 @@ const errorMap = invertObject(
 
 const SEEN_SYMBOL = Symbol('transform-error-messages.seen');
 
-module.exports = function(babel) {
+module.exports = function (babel) {
   const t = babel.types;
 
   function ErrorCallExpression(path, file) {

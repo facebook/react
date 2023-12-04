@@ -75,10 +75,6 @@ function getTestFlags() {
   // doesn't exist.
   return new Proxy(
     {
-      // Feature flag aliases
-      old: featureFlags.enableNewReconciler === false,
-      new: featureFlags.enableNewReconciler === true,
-
       channel: releaseChannel,
       modern: releaseChannel === 'modern',
       classic: releaseChannel === 'classic',
@@ -86,9 +82,9 @@ function getTestFlags() {
       www,
 
       // This isn't a flag, just a useful alias for tests.
+      enableActivity: releaseChannel === 'experimental' || www,
       enableUseSyncExternalStoreShim: !__VARIANT__,
       enableSuspenseList: releaseChannel === 'experimental' || www,
-      enableOffscreen: releaseChannel === 'experimental' || www,
       enableLegacyHidden: www,
 
       // If there's a naming conflict between scheduler and React feature flags, the

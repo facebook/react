@@ -28,8 +28,8 @@ import isArray from 'react-devtools-shared/src/isArray';
 import {InspectedElementContext} from './InspectedElementContext';
 import {PROTOCOLS_SUPPORTED_AS_LINKS_IN_KEY_VALUE} from './constants';
 
-import type {InspectedElement} from './types';
-import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 import type {Element as ReactElement} from 'react';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
@@ -138,7 +138,7 @@ export default function KeyValue({
     paddingLeft: `${(depth - 1) * 0.75}rem`,
   };
 
-  const overrideValue = (newPath, newValue) => {
+  const overrideValue = (newPath: Array<string | number>, newValue: any) => {
     if (hookID != null) {
       newPath = parseHookPathForEdit(newPath);
     }
@@ -156,7 +156,7 @@ export default function KeyValue({
     }
   };
 
-  const deletePath = pathToDelete => {
+  const deletePath = (pathToDelete: Array<string | number>) => {
     if (hookID != null) {
       pathToDelete = parseHookPathForEdit(pathToDelete);
     }
@@ -173,7 +173,10 @@ export default function KeyValue({
     }
   };
 
-  const renamePath = (oldPath, newPath) => {
+  const renamePath = (
+    oldPath: Array<string | number>,
+    newPath: Array<string | number>,
+  ) => {
     if (newPath[newPath.length - 1] === '') {
       // Deleting the key suggests an intent to delete the whole path.
       if (canDeletePaths) {
@@ -252,6 +255,8 @@ export default function KeyValue({
       displayValue = 'null';
     } else if (value === undefined) {
       displayValue = 'undefined';
+    } else if (isNaN(value)) {
+      displayValue = 'NaN';
     }
 
     let shouldDisplayValueAsLink = false;
@@ -477,7 +482,9 @@ export default function KeyValue({
   return children;
 }
 
+// $FlowFixMe[missing-local-annot]
 function DeleteToggle({deletePath, name, path}) {
+  // $FlowFixMe[missing-local-annot]
   const handleClick = event => {
     event.stopPropagation();
     deletePath(path);

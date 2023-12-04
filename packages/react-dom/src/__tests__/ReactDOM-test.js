@@ -23,7 +23,7 @@ describe('ReactDOM', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
-  it('should bubble onSubmit', function() {
+  it('should bubble onSubmit', function () {
     const container = document.createElement('div');
 
     let count = 0;
@@ -266,7 +266,7 @@ describe('ReactDOM', () => {
       const div = container.firstChild;
       ['appendChild', 'insertBefore'].forEach(name => {
         const mutator = div[name];
-        div[name] = function() {
+        div[name] = function () {
           if (input) {
             input.blur();
             expect(document.activeElement.tagName).toBe('BODY');
@@ -298,7 +298,7 @@ describe('ReactDOM', () => {
       // This test needs to determine that focus is called after mount.
       // Can't check document.activeElement because PhantomJS is too permissive;
       // It doesn't require element to be in the DOM to be focused.
-      HTMLElement.prototype.focus = function() {
+      HTMLElement.prototype.focus = function () {
         focusedElement = this;
         inputFocusedAfterMount = !!this.parentNode;
       };
@@ -369,9 +369,9 @@ describe('ReactDOM', () => {
   it('should not crash with devtools installed', () => {
     try {
       global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-        inject: function() {},
-        onCommitFiberRoot: function() {},
-        onCommitFiberUnmount: function() {},
+        inject: function () {},
+        onCommitFiberRoot: function () {},
+        onCommitFiberUnmount: function () {},
         supportsFiber: true,
       };
       jest.resetModules();

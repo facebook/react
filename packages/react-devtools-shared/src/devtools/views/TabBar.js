@@ -46,11 +46,11 @@ export default function TabBar({
   }
 
   const onChange = useCallback(
-    ({currentTarget}) => selectTab(currentTarget.value),
+    ({currentTarget}: $FlowFixMe) => selectTab(currentTarget.value),
     [selectTab],
   );
 
-  const handleKeyDown = useCallback(event => {
+  const handleKeyDown = useCallback((event: $FlowFixMe) => {
     switch (event.key) {
       case 'ArrowDown':
       case 'ArrowLeft':

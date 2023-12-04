@@ -7,6 +7,7 @@
  * @flow
  */
 
+import {copy} from 'clipboard-js';
 import EventEmitter from '../events';
 import {inspect} from 'util';
 import {
@@ -20,13 +21,13 @@ import {
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
-import {ElementTypeRoot} from '../types';
+import {ElementTypeRoot} from '../frontend/types';
 import {
   getSavedComponentFilters,
   setSavedComponentFilters,
-  separateDisplayNameAndHOCs,
   shallowDiffers,
-  utfDecodeString,
+  utfDecodeStringWithRanges,
+  parseElementDisplayNameFromBackend,
 } from '../utils';
 import {localStorageGetItem, localStorageSetItem} from '../storage';
 import {__DEBUG__} from '../constants';
@@ -36,17 +37,20 @@ import {
   BRIDGE_PROTOCOL,
   currentBridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
-import {StrictMode} from 'react-devtools-shared/src/types';
+import {StrictMode} from 'react-devtools-shared/src/frontend/types';
 
-import type {Element} from './views/Components/types';
-import type {ComponentFilter, ElementType} from '../types';
+import type {
+  Element,
+  ComponentFilter,
+  ElementType,
+} from 'react-devtools-shared/src/frontend/types';
 import type {
   FrontendBridge,
   BridgeProtocol,
 } from 'react-devtools-shared/src/bridge';
 import UnsupportedBridgeOperationError from 'react-devtools-shared/src/UnsupportedBridgeOperationError';
 
-const debug = (methodName, ...args) => {
+const debug = (methodName: string, ...args: Array<string>) => {
   if (__DEBUG__) {
     console.log(
       `%cStore %c${methodName}`,
@@ -117,10 +121,8 @@ export default class Store extends EventEmitter<{
   _componentFilters: Array<ComponentFilter>;
 
   // Map of ID to number of recorded error and warning message IDs.
-  _errorsAndWarnings: Map<
-    number,
-    {errorCount: number, warningCount: number},
-  > = new Map();
+  _errorsAndWarnings: Map<number, {errorCount: number, warningCount: number}> =
+    new Map();
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -170,7 +172,7 @@ export default class Store extends EventEmitter<{
   // Renderer ID is needed to support inspection fiber props, state, and hooks.
   _rootIDToRendererID: Map<number, number> = new Map();
 
-  // These options may be initially set by a confiugraiton option when constructing the Store.
+  // These options may be initially set by a configuration option when constructing the Store.
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
@@ -274,6 +276,8 @@ export default class Store extends EventEmitter<{
 
     bridge.addListener('backendVersion', this.onBridgeBackendVersion);
     bridge.send('getBackendVersion');
+
+    bridge.addListener('saveToClipboard', this.onSaveToClipboard);
   }
 
   // This is only used in tests to avoid memory leaks.
@@ -446,7 +450,7 @@ export default class Store extends EventEmitter<{
   }
 
   // This build of DevTools supports the legacy profiler.
-  // This is a static flag, controled by the Store config.
+  // This is a static flag, controlled by the Store config.
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
@@ -463,7 +467,7 @@ export default class Store extends EventEmitter<{
   }
 
   // This build of DevTools supports the Timeline profiler.
-  // This is a static flag, controled by the Store config.
+  // This is a static flag, controlled by the Store config.
   get supportsTimeline(): boolean {
     return this._supportsTimeline;
   }
@@ -485,7 +489,7 @@ export default class Store extends EventEmitter<{
   }
 
   containsElement(id: number): boolean {
-    return this._idToElement.get(id) != null;
+    return this._idToElement.has(id);
   }
 
   getElementAtIndex(index: number): Element | null {
@@ -498,30 +502,58 @@ export default class Store extends EventEmitter<{
     }
 
     // Find which root this element is in...
-    let rootID;
     let root;
     let rootWeight = 0;
     for (let i = 0; i < this._roots.length; i++) {
-      rootID = this._roots[i];
-      root = ((this._idToElement.get(rootID): any): Element);
+      const rootID = this._roots[i];
+      root = this._idToElement.get(rootID);
+
+      if (root === undefined) {
+        this._throwAndEmitError(
+          Error(
+            `Couldn't find root with id "${rootID}": no matching node was found in the Store.`,
+          ),
+        );
+
+        return null;
+      }
+
       if (root.children.length === 0) {
         continue;
-      } else if (rootWeight + root.weight > index) {
+      }
+
+      if (rootWeight + root.weight > index) {
         break;
       } else {
         rootWeight += root.weight;
       }
     }
 
+    if (root === undefined) {
+      return null;
+    }
+
     // Find the element in the tree using the weight of each node...
     // Skip over the root itself, because roots aren't visible in the Elements tree.
-    let currentElement = ((root: any): Element);
+    let currentElement: Element = root;
     let currentWeight = rootWeight - 1;
+
     while (index !== currentWeight) {
       const numChildren = currentElement.children.length;
       for (let i = 0; i < numChildren; i++) {
         const childID = currentElement.children[i];
-        const child = ((this._idToElement.get(childID): any): Element);
+        const child = this._idToElement.get(childID);
+
+        if (child === undefined) {
+          this._throwAndEmitError(
+            Error(
+              `Couldn't child element with id "${childID}": no matching node was found in the Store.`,
+            ),
+          );
+
+          return null;
+        }
+
         const childWeight = child.isCollapsed ? 1 : child.weight;
 
         if (index <= currentWeight + childWeight) {
@@ -534,17 +566,17 @@ export default class Store extends EventEmitter<{
       }
     }
 
-    return ((currentElement: any): Element) || null;
+    return currentElement || null;
   }
 
   getElementIDAtIndex(index: number): number | null {
-    const element: Element | null = this.getElementAtIndex(index);
+    const element = this.getElementAtIndex(index);
     return element === null ? null : element.id;
   }
 
   getElementByID(id: number): Element | null {
     const element = this._idToElement.get(id);
-    if (element == null) {
+    if (element === undefined) {
       console.warn(`No element found with id "${id}"`);
       return null;
     }
@@ -556,37 +588,37 @@ export default class Store extends EventEmitter<{
   getElementsWithErrorsAndWarnings(): Array<{id: number, index: number}> {
     if (this._cachedErrorAndWarningTuples !== null) {
       return this._cachedErrorAndWarningTuples;
-    } else {
-      const errorAndWarningTuples: ErrorAndWarningTuples = [];
-
-      this._errorsAndWarnings.forEach((_, id) => {
-        const index = this.getIndexOfElementID(id);
-        if (index !== null) {
-          let low = 0;
-          let high = errorAndWarningTuples.length;
-          while (low < high) {
-            const mid = (low + high) >> 1;
-            if (errorAndWarningTuples[mid].index > index) {
-              high = mid;
-            } else {
-              low = mid + 1;
-            }
-          }
-
-          errorAndWarningTuples.splice(low, 0, {id, index});
-        }
-      });
-
-      // Cache for later (at least until the tree changes again).
-      this._cachedErrorAndWarningTuples = errorAndWarningTuples;
-
-      return errorAndWarningTuples;
     }
+
+    const errorAndWarningTuples: ErrorAndWarningTuples = [];
+
+    this._errorsAndWarnings.forEach((_, id) => {
+      const index = this.getIndexOfElementID(id);
+      if (index !== null) {
+        let low = 0;
+        let high = errorAndWarningTuples.length;
+        while (low < high) {
+          const mid = (low + high) >> 1;
+          if (errorAndWarningTuples[mid].index > index) {
+            high = mid;
+          } else {
+            low = mid + 1;
+          }
+        }
+
+        errorAndWarningTuples.splice(low, 0, {id, index});
+      }
+    });
+
+    // Cache for later (at least until the tree changes again).
+    this._cachedErrorAndWarningTuples = errorAndWarningTuples;
+    return errorAndWarningTuples;
   }
 
-  getErrorAndWarningCountForElementID(
-    id: number,
-  ): {errorCount: number, warningCount: number} {
+  getErrorAndWarningCountForElementID(id: number): {
+    errorCount: number,
+    warningCount: number,
+  } {
     return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
@@ -605,7 +637,10 @@ export default class Store extends EventEmitter<{
     let currentID = element.parentID;
     let index = 0;
     while (true) {
-      const current = ((this._idToElement.get(currentID): any): Element);
+      const current = this._idToElement.get(currentID);
+      if (current === undefined) {
+        return null;
+      }
 
       const {children} = current;
       for (let i = 0; i < children.length; i++) {
@@ -613,7 +648,12 @@ export default class Store extends EventEmitter<{
         if (childID === previousID) {
           break;
         }
-        const child = ((this._idToElement.get(childID): any): Element);
+
+        const child = this._idToElement.get(childID);
+        if (child === undefined) {
+          return null;
+        }
+
         index += child.isCollapsed ? 1 : child.weight;
       }
 
@@ -635,7 +675,12 @@ export default class Store extends EventEmitter<{
       if (rootID === currentID) {
         break;
       }
-      const root = ((this._idToElement.get(rootID): any): Element);
+
+      const root = this._idToElement.get(rootID);
+      if (root === undefined) {
+        return null;
+      }
+
       index += root.weight;
     }
 
@@ -643,9 +688,9 @@ export default class Store extends EventEmitter<{
   }
 
   getOwnersListForElement(ownerID: number): Array<Element> {
-    const list = [];
+    const list: Array<Element> = [];
     const element = this._idToElement.get(ownerID);
-    if (element != null) {
+    if (element !== undefined) {
       list.push({
         ...element,
         depth: 0,
@@ -663,8 +708,8 @@ export default class Store extends EventEmitter<{
         // Seems better to defer the cost, since the set of ids is probably pretty small.
         const sortedIDs = Array.from(unsortedIDs).sort(
           (idA, idB) =>
-            ((this.getIndexOfElementID(idA): any): number) -
-            ((this.getIndexOfElementID(idB): any): number),
+            (this.getIndexOfElementID(idA) || 0) -
+            (this.getIndexOfElementID(idB) || 0),
         );
 
         // Next we need to determine the appropriate depth for each element in the list.
@@ -675,7 +720,7 @@ export default class Store extends EventEmitter<{
         // at which point, our depth is just the depth of that node plus one.
         sortedIDs.forEach(id => {
           const innerElement = this._idToElement.get(id);
-          if (innerElement != null) {
+          if (innerElement !== undefined) {
             let parentID = innerElement.parentID;
 
             let depth = 0;
@@ -687,7 +732,7 @@ export default class Store extends EventEmitter<{
                 break;
               }
               const parent = this._idToElement.get(parentID);
-              if (parent == null) {
+              if (parent === undefined) {
                 break;
               }
               parentID = parent.parentID;
@@ -708,7 +753,7 @@ export default class Store extends EventEmitter<{
 
   getRendererIDForElement(id: number): number | null {
     let current = this._idToElement.get(id);
-    while (current != null) {
+    while (current !== undefined) {
       if (current.parentID === 0) {
         const rendererID = this._rootIDToRendererID.get(current.id);
         return rendererID == null ? null : rendererID;
@@ -721,7 +766,7 @@ export default class Store extends EventEmitter<{
 
   getRootIDForElement(id: number): number | null {
     let current = this._idToElement.get(id);
-    while (current != null) {
+    while (current !== undefined) {
       if (current.parentID === 0) {
         return current.id;
       } else {
@@ -763,10 +808,8 @@ export default class Store extends EventEmitter<{
 
           const weightDelta = 1 - element.weight;
 
-          let parentElement: void | Element = ((this._idToElement.get(
-            element.parentID,
-          ): any): Element);
-          while (parentElement != null) {
+          let parentElement = this._idToElement.get(element.parentID);
+          while (parentElement !== undefined) {
             // We don't need to break on a collapsed parent in the same way as the expand case below.
             // That's because collapsing a node doesn't "bubble" and affect its parents.
             parentElement.weight += weightDelta;
@@ -774,7 +817,7 @@ export default class Store extends EventEmitter<{
           }
         }
       } else {
-        let currentElement = element;
+        let currentElement: ?Element = element;
         while (currentElement != null) {
           const oldWeight = currentElement.isCollapsed
             ? 1
@@ -789,10 +832,8 @@ export default class Store extends EventEmitter<{
               : currentElement.weight;
             const weightDelta = newWeight - oldWeight;
 
-            let parentElement: void | Element = ((this._idToElement.get(
-              currentElement.parentID,
-            ): any): Element);
-            while (parentElement != null) {
+            let parentElement = this._idToElement.get(currentElement.parentID);
+            while (parentElement !== undefined) {
               parentElement.weight += weightDelta;
               if (parentElement.isCollapsed) {
                 // It's important to break on a collapsed parent when expanding nodes.
@@ -806,10 +847,8 @@ export default class Store extends EventEmitter<{
 
           currentElement =
             currentElement.parentID !== 0
-              ? // $FlowFixMe[incompatible-type] found when upgrading Flow
-                this.getElementByID(currentElement.parentID)
-              : // $FlowFixMe[incompatible-type] found when upgrading Flow
-                null;
+              ? this.getElementByID(currentElement.parentID)
+              : null;
         }
       }
 
@@ -831,7 +870,7 @@ export default class Store extends EventEmitter<{
   }
 
   _adjustParentTreeWeight: (
-    parentElement: Element | null,
+    parentElement: ?Element,
     weightDelta: number,
   ) => void = (parentElement, weightDelta) => {
     let isInsideCollapsedSubTree = false;
@@ -846,9 +885,7 @@ export default class Store extends EventEmitter<{
         break;
       }
 
-      parentElement = ((this._idToElement.get(
-        parentElement.parentID,
-      ): any): Element);
+      parentElement = this._idToElement.get(parentElement.parentID);
     }
 
     // Additions and deletions within a collapsed subtree should not affect the overall number of elements.
@@ -901,15 +938,22 @@ export default class Store extends EventEmitter<{
     let i = 2;
 
     // Reassemble the string table.
-    const stringTable = [
+    const stringTable: Array<string | null> = [
       null, // ID = 0 corresponds to the null string.
     ];
-    const stringTableSize = operations[i++];
+    const stringTableSize = operations[i];
+    i++;
+
     const stringTableEnd = i + stringTableSize;
+
     while (i < stringTableEnd) {
-      const nextLength = operations[i++];
-      const nextString = utfDecodeString(
-        (operations.slice(i, i + nextLength): any),
+      const nextLength = operations[i];
+      i++;
+
+      const nextString = utfDecodeStringWithRanges(
+        operations,
+        i,
+        i + nextLength - 1,
       );
       stringTable.push(nextString);
       i += nextLength;
@@ -919,7 +963,7 @@ export default class Store extends EventEmitter<{
       const operation = operations[i];
       switch (operation) {
         case TREE_OPERATION_ADD: {
-          const id = ((operations[i + 1]: any): number);
+          const id = operations[i + 1];
           const type = ((operations[i + 2]: any): ElementType);
 
           i += 3;
@@ -932,8 +976,6 @@ export default class Store extends EventEmitter<{
             );
           }
 
-          let ownerID: number = 0;
-          let parentID: number = ((null: any): number);
           if (type === ElementTypeRoot) {
             if (__DEBUG__) {
               debug('Add', `new root node ${id}`);
@@ -991,14 +1033,15 @@ export default class Store extends EventEmitter<{
               parentID: 0,
               type,
               weight: 0,
+              compiledWithForget: false,
             });
 
             haveRootsChanged = true;
           } else {
-            parentID = ((operations[i]: any): number);
+            const parentID = operations[i];
             i++;
 
-            ownerID = ((operations[i]: any): number);
+            const ownerID = operations[i];
             i++;
 
             const displayNameStringID = operations[i];
@@ -1016,23 +1059,24 @@ export default class Store extends EventEmitter<{
               );
             }
 
-            if (!this._idToElement.has(parentID)) {
+            const parentElement = this._idToElement.get(parentID);
+            if (parentElement === undefined) {
               this._throwAndEmitError(
                 Error(
                   `Cannot add child "${id}" to parent "${parentID}" because parent node was not found in the Store.`,
                 ),
               );
+
+              break;
             }
 
-            const parentElement = ((this._idToElement.get(
-              parentID,
-            ): any): Element);
             parentElement.children.push(id);
 
-            const [
-              displayNameWithoutHOCs,
+            const {
+              formattedDisplayName: displayNameWithoutHOCs,
               hocDisplayNames,
-            ] = separateDisplayNameAndHOCs(displayName, type);
+              compiledWithForget,
+            } = parseElementDisplayNameFromBackend(displayName, type);
 
             const element: Element = {
               children: [],
@@ -1047,6 +1091,7 @@ export default class Store extends EventEmitter<{
               parentID,
               type,
               weight: 1,
+              compiledWithForget,
             };
 
             this._idToElement.set(id, element);
@@ -1065,23 +1110,25 @@ export default class Store extends EventEmitter<{
           break;
         }
         case TREE_OPERATION_REMOVE: {
-          const removeLength = ((operations[i + 1]: any): number);
+          const removeLength = operations[i + 1];
           i += 2;
 
           for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
-            const id = ((operations[i]: any): number);
+            const id = operations[i];
+            const element = this._idToElement.get(id);
 
-            if (!this._idToElement.has(id)) {
+            if (element === undefined) {
               this._throwAndEmitError(
                 Error(
                   `Cannot remove node "${id}" because no matching node was found in the Store.`,
                 ),
               );
+
+              break;
             }
 
             i += 1;
 
-            const element = ((this._idToElement.get(id): any): Element);
             const {children, ownerID, parentID, weight} = element;
             if (children.length > 0) {
               this._throwAndEmitError(
@@ -1091,7 +1138,7 @@ export default class Store extends EventEmitter<{
 
             this._idToElement.delete(id);
 
-            let parentElement = null;
+            let parentElement: ?Element = null;
             if (parentID === 0) {
               if (__DEBUG__) {
                 debug('Remove', `node ${id} root`);
@@ -1106,14 +1153,18 @@ export default class Store extends EventEmitter<{
               if (__DEBUG__) {
                 debug('Remove', `node ${id} from parent ${parentID}`);
               }
-              parentElement = ((this._idToElement.get(parentID): any): Element);
+
+              parentElement = this._idToElement.get(parentID);
               if (parentElement === undefined) {
                 this._throwAndEmitError(
                   Error(
                     `Cannot remove node "${id}" from parent "${parentID}" because no matching node was found in the Store.`,
                   ),
                 );
+
+                break;
               }
+
               const index = parentElement.children.indexOf(id);
               parentElement.children.splice(index, 1);
             }
@@ -1146,7 +1197,7 @@ export default class Store extends EventEmitter<{
             debug(`Remove root ${id}`);
           }
 
-          const recursivelyDeleteElements = elementID => {
+          const recursivelyDeleteElements = (elementID: number) => {
             const element = this._idToElement.get(elementID);
             this._idToElement.delete(elementID);
             if (element) {
@@ -1157,7 +1208,17 @@ export default class Store extends EventEmitter<{
             }
           };
 
-          const root = ((this._idToElement.get(id): any): Element);
+          const root = this._idToElement.get(id);
+          if (root === undefined) {
+            this._throwAndEmitError(
+              Error(
+                `Cannot remove root "${id}": no matching node was found in the Store.`,
+              ),
+            );
+
+            break;
+          }
+
           recursivelyDeleteElements(id);
 
           this._rootIDToCapabilities.delete(id);
@@ -1167,19 +1228,21 @@ export default class Store extends EventEmitter<{
           break;
         }
         case TREE_OPERATION_REORDER_CHILDREN: {
-          const id = ((operations[i + 1]: any): number);
-          const numChildren = ((operations[i + 2]: any): number);
+          const id = operations[i + 1];
+          const numChildren = operations[i + 2];
           i += 3;
 
-          if (!this._idToElement.has(id)) {
+          const element = this._idToElement.get(id);
+          if (element === undefined) {
             this._throwAndEmitError(
               Error(
                 `Cannot reorder children for node "${id}" because no matching node was found in the Store.`,
               ),
             );
+
+            break;
           }
 
-          const element = ((this._idToElement.get(id): any): Element);
           const children = element.children;
           if (children.length !== numChildren) {
             this._throwAndEmitError(
@@ -1262,7 +1325,7 @@ export default class Store extends EventEmitter<{
 
     this._revision++;
 
-    // Any time the tree changes (e.g. elements added, removed, or reordered) cached inidices may be invalid.
+    // Any time the tree changes (e.g. elements added, removed, or reordered) cached indices may be invalid.
     this._cachedErrorAndWarningTuples = null;
 
     if (haveErrorsOrWarningsChanged) {
@@ -1280,8 +1343,8 @@ export default class Store extends EventEmitter<{
 
     if (haveRootsChanged) {
       const prevRootSupportsProfiling = this._rootSupportsBasicProfiling;
-      const prevRootSupportsTimelineProfiling = this
-        ._rootSupportsTimelineProfiling;
+      const prevRootSupportsTimelineProfiling =
+        this._rootSupportsTimelineProfiling;
 
       this._hasOwnerMetadata = false;
       this._rootSupportsBasicProfiling = false;
@@ -1365,6 +1428,7 @@ export default class Store extends EventEmitter<{
     );
     bridge.removeListener('backendVersion', this.onBridgeBackendVersion);
     bridge.removeListener('bridgeProtocol', this.onBridgeProtocol);
+    bridge.removeListener('saveToClipboard', this.onSaveToClipboard);
 
     if (this._onBridgeProtocolTimeoutID !== null) {
       clearTimeout(this._onBridgeProtocolTimeoutID);
@@ -1399,22 +1463,21 @@ export default class Store extends EventEmitter<{
     this.emit('backendVersion');
   };
 
-  onBridgeProtocol: (
-    bridgeProtocol: BridgeProtocol,
-  ) => void = bridgeProtocol => {
-    if (this._onBridgeProtocolTimeoutID !== null) {
-      clearTimeout(this._onBridgeProtocolTimeoutID);
-      this._onBridgeProtocolTimeoutID = null;
-    }
+  onBridgeProtocol: (bridgeProtocol: BridgeProtocol) => void =
+    bridgeProtocol => {
+      if (this._onBridgeProtocolTimeoutID !== null) {
+        clearTimeout(this._onBridgeProtocolTimeoutID);
+        this._onBridgeProtocolTimeoutID = null;
+      }
 
-    this._bridgeProtocol = bridgeProtocol;
+      this._bridgeProtocol = bridgeProtocol;
 
-    if (bridgeProtocol.version !== currentBridgeProtocol.version) {
-      // Technically newer versions of the frontend can, at least for now,
-      // gracefully handle older versions of the backend protocol.
-      // So for now we don't need to display the unsupported dialog.
-    }
-  };
+      if (bridgeProtocol.version !== currentBridgeProtocol.version) {
+        // Technically newer versions of the frontend can, at least for now,
+        // gracefully handle older versions of the backend protocol.
+        // So for now we don't need to display the unsupported dialog.
+      }
+    };
 
   onBridgeProtocolTimeout: () => void = () => {
     this._onBridgeProtocolTimeoutID = null;
@@ -1426,12 +1489,16 @@ export default class Store extends EventEmitter<{
     this.emit('unsupportedBridgeProtocolDetected');
   };
 
+  onSaveToClipboard: (text: string) => void = text => {
+    copy(text);
+  };
+
   // The Store should never throw an Error without also emitting an event.
   // Otherwise Store errors will be invisible to users,
   // but the downstream errors they cause will be reported as bugs.
   // For example, https://github.com/facebook/react/issues/21402
   // Emitting an error event allows the ErrorBoundary to show the original error.
-  _throwAndEmitError(error: Error) {
+  _throwAndEmitError(error: Error): empty {
     this.emit('error', error);
 
     // Throwing is still valuable for local development

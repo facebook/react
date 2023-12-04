@@ -10,10 +10,11 @@
 import type {
   Container,
   PublicInstance,
-} from 'react-dom-bindings/src/client/ReactDOMHostConfig';
+} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import {clearContainer} from 'react-dom-bindings/src/client/ReactFiberConfigDOM';
 import {
   getInstanceFromNode,
   isContainerMarkedAsRoot,
@@ -26,7 +27,7 @@ import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
   COMMENT_NODE,
-} from 'react-dom-bindings/src/shared/HTMLNodeType';
+} from 'react-dom-bindings/src/client/HTMLNodeType';
 
 import {
   createContainer,
@@ -77,20 +78,6 @@ if (__DEV__) {
           'and render the new components instead of calling ReactDOM.render.',
       );
     }
-
-    if (
-      container.nodeType === ELEMENT_NODE &&
-      ((container: any): Element).tagName &&
-      ((container: any): Element).tagName.toUpperCase() === 'BODY'
-    ) {
-      console.error(
-        'render(): Rendering components directly into document.body is ' +
-          'discouraged, since its children are often manipulated by third-party ' +
-          'scripts and browser extensions. This may lead to subtle ' +
-          'reconciliation issues. Try rendering into a container element created ' +
-          'for your app.',
-      );
-    }
   };
 }
 
@@ -121,13 +108,13 @@ function legacyCreateRootFromDOMContainer(
   if (isHydrationContainer) {
     if (typeof callback === 'function') {
       const originalCallback = callback;
-      callback = function() {
+      callback = function () {
         const instance = getPublicRootInstance(root);
         originalCallback.call(instance);
       };
     }
 
-    const root = createHydrationContainer(
+    const root: FiberRoot = createHydrationContainer(
       initialChildren,
       callback,
       container,
@@ -138,6 +125,7 @@ function legacyCreateRootFromDOMContainer(
       '', // identifierPrefix
       noopOnRecoverableError,
       // TODO(luna) Support hydration later
+      null,
       null,
     );
     container._reactRootContainer = root;
@@ -152,14 +140,11 @@ function legacyCreateRootFromDOMContainer(
     return root;
   } else {
     // First clear any existing content.
-    let rootSibling;
-    while ((rootSibling = container.lastChild)) {
-      container.removeChild(rootSibling);
-    }
+    clearContainer(container);
 
     if (typeof callback === 'function') {
       const originalCallback = callback;
-      callback = function() {
+      callback = function () {
         const instance = getPublicRootInstance(root);
         originalCallback.call(instance);
       };
@@ -232,7 +217,7 @@ function legacyRenderSubtreeIntoContainer(
     root = maybeRoot;
     if (typeof callback === 'function') {
       const originalCallback = callback;
-      callback = function() {
+      callback = function () {
         const instance = getPublicRootInstance(root);
         originalCallback.call(instance);
       };
@@ -420,7 +405,7 @@ export function unmountComponentAtNode(container: Container): boolean {
     // Unmount should not be batched.
     flushSync(() => {
       legacyRenderSubtreeIntoContainer(null, null, container, false, () => {
-        // $FlowFixMe This should probably use `delete container._reactRootContainer`
+        // $FlowFixMe[incompatible-type] This should probably use `delete container._reactRootContainer`
         container._reactRootContainer = null;
         unmarkContainerAsRoot(container);
       });

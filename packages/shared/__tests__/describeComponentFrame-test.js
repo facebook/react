@@ -97,12 +97,14 @@ describe('Component stack trace displaying', () => {
     });
     if (__DEV__) {
       let i = 0;
-      expect(console.error.calls.count()).toBe(Object.keys(fileNames).length);
+      expect(console.error).toHaveBeenCalledTimes(
+        Object.keys(fileNames).length,
+      );
       for (const fileName in fileNames) {
         if (!fileNames.hasOwnProperty(fileName)) {
           continue;
         }
-        const args = console.error.calls.argsFor(i);
+        const args = console.error.mock.calls[i];
         const stack = args[args.length - 1];
         const expected = fileNames[fileName];
         expect(stack).toContain(`at ${expected}:`);

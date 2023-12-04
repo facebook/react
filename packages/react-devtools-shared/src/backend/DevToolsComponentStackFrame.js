@@ -54,7 +54,7 @@ let reentry = false;
 let componentFrameCache;
 if (__DEV__) {
   const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
-  componentFrameCache = new PossiblyWeakMap();
+  componentFrameCache = new PossiblyWeakMap<$FlowFixMe, string>();
 }
 
 export function describeNativeComponentFrame(
@@ -77,7 +77,7 @@ export function describeNativeComponentFrame(
   let control;
 
   const previousPrepareStackTrace = Error.prepareStackTrace;
-  // $FlowFixMe It does accept undefined.
+  // $FlowFixMe[incompatible-type] It does accept undefined.
   Error.prepareStackTrace = undefined;
 
   reentry = true;
@@ -95,12 +95,12 @@ export function describeNativeComponentFrame(
     // This should throw.
     if (construct) {
       // Something should be setting the props in the constructor.
-      const Fake = function() {
+      const Fake = function () {
         throw Error();
       };
-      // $FlowFixMe
+      // $FlowFixMe[prop-missing]
       Object.defineProperty(Fake.prototype, 'props', {
-        set: function() {
+        set: function () {
           // We use a throwing setter instead of frozen or non-writable props
           // because that won't throw in a non-strict mode function.
           throw Error();

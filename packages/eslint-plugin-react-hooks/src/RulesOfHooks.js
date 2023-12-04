@@ -16,10 +16,7 @@
  */
 
 function isHookName(s) {
-  if (__EXPERIMENTAL__) {
-    return s === 'use' || /^use[A-Z0-9]/.test(s);
-  }
-  return /^use[A-Z0-9]/.test(s);
+  return s === 'use' || /^use[A-Z0-9]/.test(s);
 }
 
 /**
@@ -103,18 +100,15 @@ function isInsideComponentOrHook(node) {
   return false;
 }
 
-function isUseEventIdentifier(node) {
+function isUseEffectEventIdentifier(node) {
   if (__EXPERIMENTAL__) {
-    return node.type === 'Identifier' && node.name === 'useEvent';
+    return node.type === 'Identifier' && node.name === 'useEffectEvent';
   }
   return false;
 }
 
 function isUseIdentifier(node) {
-  if (__EXPERIMENTAL__) {
-    return node.type === 'Identifier' && node.name === 'use';
-  }
-  return false;
+  return isReactFunction(node, 'use');
 }
 
 export default {
@@ -130,12 +124,12 @@ export default {
     let lastEffect = null;
     const codePathReactHooksMapStack = [];
     const codePathSegmentStack = [];
-    const useEventFunctions = new WeakSet();
+    const useEffectEventFunctions = new WeakSet();
 
-    // For a given scope, iterate through the references and add all useEvent definitions. We can
-    // do this in non-Program nodes because we can rely on the assumption that useEvent functions
+    // For a given scope, iterate through the references and add all useEffectEvent definitions. We can
+    // do this in non-Program nodes because we can rely on the assumption that useEffectEvent functions
     // can only be declared within a component or hook at its top level.
-    function recordAllUseEventFunctions(scope) {
+    function recordAllUseEffectEventFunctions(scope) {
       for (const reference of scope.references) {
         const parent = reference.identifier.parent;
         if (
@@ -143,11 +137,11 @@ export default {
           parent.init &&
           parent.init.type === 'CallExpression' &&
           parent.init.callee &&
-          isUseEventIdentifier(parent.init.callee)
+          isUseEffectEventIdentifier(parent.init.callee)
         ) {
           for (const ref of reference.resolved.references) {
             if (ref !== reference) {
-              useEventFunctions.add(ref.identifier);
+              useEffectEventFunctions.add(ref.identifier);
             }
           }
         }
@@ -383,9 +377,8 @@ export default {
 
         // This is a valid code path for React hooks if we are directly in a React
         // function component or we are in a hook function.
-        const isSomewhereInsideComponentOrHook = isInsideComponentOrHook(
-          codePathNode,
-        );
+        const isSomewhereInsideComponentOrHook =
+          isInsideComponentOrHook(codePathNode);
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
             isHook(codePathFunctionName)
@@ -486,6 +479,17 @@ export default {
             // Pick a special message depending on the scope this hook was
             // called in.
             if (isDirectlyInsideComponentOrHook) {
+              // Report an error if the hook is called inside an async function.
+              const isAsyncFunction = codePathNode.async;
+              if (isAsyncFunction) {
+                context.report({
+                  node: hook,
+                  message:
+                    `React Hook "${context.getSource(hook)}" cannot be ` +
+                    'called in an async function.',
+                });
+              }
+
               // Report an error if a hook does not reach all finalizing code
               // path segments.
               //
@@ -571,12 +575,12 @@ export default {
           reactHooks.push(node.callee);
         }
 
-        // useEvent: useEvent functions can be passed by reference within useEffect as well as in
-        // another useEvent
+        // useEffectEvent: useEffectEvent functions can be passed by reference within useEffect as well as in
+        // another useEffectEvent
         if (
           node.callee.type === 'Identifier' &&
           (node.callee.name === 'useEffect' ||
-            isUseEventIdentifier(node.callee)) &&
+            isUseEffectEventIdentifier(node.callee)) &&
           node.arguments.length > 0
         ) {
           // Denote that we have traversed into a useEffect call, and stash the CallExpr for
@@ -586,11 +590,11 @@ export default {
       },
 
       Identifier(node) {
-        // This identifier resolves to a useEvent function, but isn't being referenced in an
+        // This identifier resolves to a useEffectEvent function, but isn't being referenced in an
         // effect or another event function. It isn't being called either.
         if (
           lastEffect == null &&
-          useEventFunctions.has(node) &&
+          useEffectEventFunctions.has(node) &&
           node.parent.type !== 'CallExpression'
         ) {
           context.report({
@@ -598,7 +602,7 @@ export default {
             message:
               `\`${context.getSource(
                 node,
-              )}\` is a function created with React Hook "useEvent", and can only be called from ` +
+              )}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
               'the same component. They cannot be assigned to variables or passed down.',
           });
         }
@@ -611,16 +615,16 @@ export default {
       },
 
       FunctionDeclaration(node) {
-        // function MyComponent() { const onClick = useEvent(...) }
+        // function MyComponent() { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(context.getScope());
         }
       },
 
       ArrowFunctionExpression(node) {
-        // const MyComponent = () => { const onClick = useEvent(...) }
+        // const MyComponent = () => { const onClick = useEffectEvent(...) }
         if (isInsideComponentOrHook(node)) {
-          recordAllUseEventFunctions(context.getScope());
+          recordAllUseEffectEventFunctions(context.getScope());
         }
       },
     };

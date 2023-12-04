@@ -33,24 +33,35 @@ describe('react-dom-server-rendering-stub', () => {
     expect(ReactDOM.hydrate).toBe(undefined);
     expect(ReactDOM.render).toBe(undefined);
     expect(ReactDOM.unmountComponentAtNode).toBe(undefined);
-    expect(ReactDOM.unstable_batchedUpdates).toBe(undefined);
     expect(ReactDOM.unstable_createEventHandle).toBe(undefined);
-    expect(ReactDOM.unstable_flushControlled).toBe(undefined);
-    expect(ReactDOM.unstable_isNewReconciler).toBe(undefined);
     expect(ReactDOM.unstable_renderSubtreeIntoContainer).toBe(undefined);
     expect(ReactDOM.unstable_runWithPriority).toBe(undefined);
   });
 
   // @gate enableFloat
-  it('provides preload and preinit exports', async () => {
+  it('provides preload, preloadModule, preinit, and preinitModule exports', async () => {
     function App() {
       ReactDOM.preload('foo', {as: 'style'});
+      ReactDOM.preloadModule('foomodule');
       ReactDOM.preinit('bar', {as: 'style'});
+      ReactDOM.preinitModule('barmodule');
       return <div>foo</div>;
     }
     const html = ReactDOMFizzServer.renderToString(<App />);
     expect(html).toEqual(
-      '<link rel="stylesheet" href="bar" data-precedence="default"/><link href="foo" rel="preload" as="style"/><div>foo</div>',
+      '<link rel="stylesheet" href="bar" data-precedence="default"/><script src="barmodule" type="module" async=""></script><link rel="preload" href="foo" as="style"/><link rel="modulepreload" href="foomodule"/><div>foo</div>',
+    );
+  });
+
+  it('provides preconnect and prefetchDNS exports', async () => {
+    function App() {
+      ReactDOM.preconnect('foo', {crossOrigin: 'use-credentials'});
+      ReactDOM.prefetchDNS('bar');
+      return <div>foo</div>;
+    }
+    const html = ReactDOMFizzServer.renderToString(<App />);
+    expect(html).toEqual(
+      '<link rel="preconnect" href="foo" crossorigin="use-credentials"/><link href="bar" rel="dns-prefetch"/><div>foo</div>',
     );
   });
 
@@ -70,5 +81,17 @@ describe('react-dom-server-rendering-stub', () => {
       'flushSync was called on the server. This is likely caused by a function being called during render or in module scope that was intended to be called from an effect or event handler. Update your to not call flushSync no the server.',
     );
     expect(x).toBe(false);
+  });
+
+  // @gate enableFormActions
+  // @gate enableAsyncActions
+  it('exports useFormStatus', async () => {
+    function App() {
+      const {pending} = ReactDOM.useFormStatus();
+      return 'Pending: ' + pending;
+    }
+
+    const result = await ReactDOMFizzServer.renderToStaticMarkup(<App />);
+    expect(result).toEqual('Pending: false');
   });
 });

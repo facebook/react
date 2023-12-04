@@ -62,7 +62,7 @@ function removeChild(parent, child) {
 }
 
 const RCTUIManager = {
-  __dumpHierarchyForJestTestsOnly: function() {
+  __dumpHierarchyForJestTestsOnly: function () {
     function dumpSubtree(tag, indent) {
       const info = views.get(tag);
       let out = '';
@@ -155,7 +155,7 @@ const RCTUIManager = {
     }
   }),
   updateView: jest.fn(),
-  removeSubviewsFromContainerWithID: jest.fn(function(parentTag) {
+  removeSubviewsFromContainerWithID: jest.fn(function (parentTag) {
     views.get(parentTag).children.forEach(tag => removeChild(parentTag, tag));
   }),
   replaceExistingNonRootView: jest.fn(),
@@ -173,24 +173,21 @@ const RCTUIManager = {
 
     callback(10, 10, 100, 100);
   }),
-  measureLayout: jest.fn(function measureLayout(
-    tag,
-    relativeTag,
-    fail,
-    success,
-  ) {
-    if (typeof tag !== 'number') {
-      throw new Error(`Expected tag to be a number, was passed ${tag}`);
-    }
+  measureLayout: jest.fn(
+    function measureLayout(tag, relativeTag, fail, success) {
+      if (typeof tag !== 'number') {
+        throw new Error(`Expected tag to be a number, was passed ${tag}`);
+      }
 
-    if (typeof relativeTag !== 'number') {
-      throw new Error(
-        `Expected relativeTag to be a number, was passed ${relativeTag}`,
-      );
-    }
+      if (typeof relativeTag !== 'number') {
+        throw new Error(
+          `Expected relativeTag to be a number, was passed ${relativeTag}`,
+        );
+      }
 
-    success(1, 1, 100, 100);
-  }),
+      success(1, 1, 100, 100);
+    },
+  ),
   __takeSnapshot: jest.fn(),
 };
 

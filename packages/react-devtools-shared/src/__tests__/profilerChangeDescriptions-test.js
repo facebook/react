@@ -10,7 +10,7 @@
 describe('Profiler change descriptions', () => {
   let React;
   let legacyRender;
-  let store: Store;
+  let store;
   let utils;
 
   beforeEach(() => {
@@ -40,12 +40,11 @@ describe('Profiler change descriptions', () => {
     }
 
     const MemoizedChild = React.memo(Child, areEqual);
-    const ForwardRefChild = React.forwardRef(function RefForwardingComponent(
-      props,
-      ref,
-    ) {
-      return <Child />;
-    });
+    const ForwardRefChild = React.forwardRef(
+      function RefForwardingComponent(props, ref) {
+        return <Child />;
+      },
+    );
 
     let forceUpdate = null;
 
@@ -89,12 +88,12 @@ describe('Profiler change descriptions', () => {
     expect(element.hocDisplayNames).toBeNull();
     expect(commitData.changeDescriptions.get(element.id))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "context": true,
         "didHooksChange": false,
         "hooks": null,
         "isFirstMount": false,
-        "props": Array [],
+        "props": [],
         "state": null,
       }
     `);
@@ -109,12 +108,12 @@ describe('Profiler change descriptions', () => {
     expect(element.hocDisplayNames).toBeNull();
     expect(commitData.changeDescriptions.get(element.id))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "context": true,
         "didHooksChange": false,
         "hooks": null,
         "isFirstMount": false,
-        "props": Array [],
+        "props": [],
         "state": null,
       }
     `);
@@ -124,12 +123,12 @@ describe('Profiler change descriptions', () => {
     expect(element.hocDisplayNames).toEqual(['ForwardRef']);
     expect(commitData.changeDescriptions.get(element.id))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "context": null,
         "didHooksChange": false,
         "hooks": null,
         "isFirstMount": false,
-        "props": Array [],
+        "props": [],
         "state": null,
       }
     `);
@@ -139,12 +138,12 @@ describe('Profiler change descriptions', () => {
     expect(element.hocDisplayNames).toBeNull();
     expect(commitData.changeDescriptions.get(element.id))
       .toMatchInlineSnapshot(`
-      Object {
+      {
         "context": true,
         "didHooksChange": false,
         "hooks": null,
         "isFirstMount": false,
-        "props": Array [],
+        "props": [],
         "state": null,
       }
     `);

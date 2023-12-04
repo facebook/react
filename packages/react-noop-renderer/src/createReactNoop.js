@@ -18,7 +18,7 @@ import type {
   Fiber,
   TransitionTracingCallbacks,
 } from 'react-reconciler/src/ReactInternalTypes';
-import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue.new';
+import type {UpdateQueue} from 'react-reconciler/src/ReactFiberClassUpdateQueue';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
@@ -47,6 +47,7 @@ type Props = {
   left?: null | number,
   right?: null | number,
   top?: null | number,
+  src?: string,
   ...
 };
 type Instance = {
@@ -72,17 +73,21 @@ type CreateRootOptions = {
   ...
 };
 
+type SuspenseyCommitSubscription = {
+  pendingCount: number,
+  commit: null | (() => void),
+};
+
+export type TransitionStatus = mixed;
+
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
   let instanceCounter = 0;
-  let hostDiffCounter = 0;
   let hostUpdateCounter = 0;
   let hostCloneCounter = 0;
 
@@ -215,13 +220,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function cloneInstance(
     instance: Instance,
-    updatePayload: null | Object,
     type: string,
     oldProps: Props,
     newProps: Props,
-    internalInstanceHandle: Object,
     keepChildren: boolean,
-    recyclableInstance: null | Instance,
+    children: ?$ReadOnlyArray<Instance>,
   ): Instance {
     if (__DEV__) {
       checkPropStringCoercion(newProps.children, 'children');
@@ -230,7 +233,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       id: instance.id,
       type: type,
       parent: instance.parent,
-      children: keepChildren ? instance.children : [],
+      children: keepChildren ? instance.children : children ?? [],
       text: shouldSetTextContent(type, newProps)
         ? computeText((newProps.children: any) + '', instance.context)
         : null,
@@ -238,6 +241,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       hidden: !!newProps.hidden,
       context: instance.context,
     };
+
+    if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+      clone.src = newProps.src;
+    }
+
     Object.defineProperty(clone, 'id', {
       value: clone.id,
       enumerable: false,
@@ -269,6 +277,79 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function computeText(rawText, hostContext) {
     return hostContext === UPPERCASE_CONTEXT ? rawText.toUpperCase() : rawText;
+  }
+
+  type SuspenseyThingRecord = {
+    status: 'pending' | 'fulfilled',
+    subscriptions: Array<SuspenseyCommitSubscription> | null,
+  };
+
+  let suspenseyThingCache: Map<
+    SuspenseyThingRecord,
+    'pending' | 'fulfilled',
+  > | null = null;
+
+  // Represents a subscription for all the suspensey things that block a
+  // particular commit. Once they've all loaded, the commit phase can proceed.
+  let suspenseyCommitSubscription: SuspenseyCommitSubscription | null = null;
+
+  function startSuspendingCommit(): void {
+    // This is where we might suspend on things that aren't associated with a
+    // particular node, like document.fonts.ready.
+    suspenseyCommitSubscription = null;
+  }
+
+  function suspendInstance(type: string, props: Props): void {
+    const src = props.src;
+    if (type === 'suspensey-thing' && typeof src === 'string') {
+      // Attach a listener to the suspensey thing and create a subscription
+      // object that uses reference counting to track when all the suspensey
+      // things have loaded.
+      const record = suspenseyThingCache.get(src);
+      if (record === undefined) {
+        throw new Error('Could not find record for key.');
+      }
+      if (record.status === 'fulfilled') {
+        // Already loaded.
+      } else if (record.status === 'pending') {
+        if (suspenseyCommitSubscription === null) {
+          suspenseyCommitSubscription = {
+            pendingCount: 1,
+            commit: null,
+          };
+        } else {
+          suspenseyCommitSubscription.pendingCount++;
+        }
+        // Stash the subscription on the record. In `resolveSuspenseyThing`,
+        // we'll use this fire the commit once all the things have loaded.
+        if (record.subscriptions === null) {
+          record.subscriptions = [];
+        }
+        record.subscriptions.push(suspenseyCommitSubscription);
+      }
+    } else {
+      throw new Error(
+        'Did not expect this host component to be visited when suspending ' +
+          'the commit. Did you check the SuspendCommit flag?',
+      );
+    }
+  }
+
+  function waitForCommitToBeReady():
+    | ((commit: () => mixed) => () => void)
+    | null {
+    const subscription = suspenseyCommitSubscription;
+    if (subscription !== null) {
+      suspenseyCommitSubscription = null;
+      return (commit: () => void) => {
+        subscription.commit = commit;
+        const cancelCommit = () => {
+          subscription.commit = null;
+        };
+        return cancelCommit;
+      };
+    }
+    return null;
   }
 
   const sharedHostConfig = {
@@ -322,6 +403,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         hidden: !!props.hidden,
         context: hostContext,
       };
+
+      if (type === 'suspensey-thing' && typeof props.src === 'string') {
+        inst.src = props.src;
+      }
+
       // Hide from unit tests
       Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
       Object.defineProperty(inst, 'parent', {
@@ -361,25 +447,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       props: Props,
     ): boolean {
       return false;
-    },
-
-    prepareUpdate(
-      instance: Instance,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-    ): null | {...} {
-      if (type === 'errorInCompletePhase') {
-        throw new Error('Error in host config.');
-      }
-      if (oldProps === null) {
-        throw new Error('Should have old props');
-      }
-      if (newProps === null) {
-        throw new Error('Should have new props');
-      }
-      hostDiffCounter++;
-      return UPDATE_SIGNAL;
     },
 
     shouldSetTextContent,
@@ -442,6 +509,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return currentEventPriority;
     },
 
+    shouldAttemptEagerTransition(): boolean {
+      return false;
+    },
+
     now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,
@@ -480,8 +551,69 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const endTime = Scheduler.unstable_now();
       callback(endTime);
     },
-    prepareRendererToRender() {},
-    resetRendererAfterRender() {},
+
+    maySuspendCommit(type: string, props: Props): boolean {
+      // Asks whether it's possible for this combination of type and props
+      // to ever need to suspend. This is different from asking whether it's
+      // currently ready because even if it's ready now, it might get purged
+      // from the cache later.
+      return type === 'suspensey-thing' && typeof props.src === 'string';
+    },
+
+    mayResourceSuspendCommit(resource: mixed): boolean {
+      throw new Error(
+        'Resources are not implemented for React Noop yet. This method should not be called',
+      );
+    },
+
+    preloadInstance(type: string, props: Props): boolean {
+      if (type !== 'suspensey-thing' || typeof props.src !== 'string') {
+        throw new Error('Attempted to preload unexpected instance: ' + type);
+      }
+
+      // In addition to preloading an instance, this method asks whether the
+      // instance is ready to be committed. If it's not, React may yield to the
+      // main thread and ask again. It's possible a load event will fire in
+      // between, in which case we can avoid showing a fallback.
+      if (suspenseyThingCache === null) {
+        suspenseyThingCache = new Map();
+      }
+      const record = suspenseyThingCache.get(props.src);
+      if (record === undefined) {
+        const newRecord: SuspenseyThingRecord = {
+          status: 'pending',
+          subscriptions: null,
+        };
+        suspenseyThingCache.set(props.src, newRecord);
+        const onLoadStart = props.onLoadStart;
+        if (typeof onLoadStart === 'function') {
+          onLoadStart();
+        }
+        return false;
+      } else {
+        // If this is false, React will trigger a fallback, if needed.
+        return record.status === 'fulfilled';
+      }
+    },
+
+    preloadResource(resource: mixed): boolean {
+      throw new Error(
+        'Resources are not implemented for React Noop yet. This method should not be called',
+      );
+    },
+
+    startSuspendingCommit,
+    suspendInstance,
+
+    suspendResource(resource: mixed): void {
+      throw new Error(
+        'Resources are not implemented for React Noop yet. This method should not be called',
+      );
+    },
+
+    waitForCommitToBeReady,
+
+    NotPendingTransition: (null: TransitionStatus),
   };
 
   const hostConfig = useMutation
@@ -508,6 +640,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           hostUpdateCounter++;
           instance.prop = newProps.prop;
           instance.hidden = !!newProps.hidden;
+
+          if (type === 'suspensey-thing' && typeof newProps.src === 'string') {
+            instance.src = newProps.src;
+          }
+
           if (shouldSetTextContent(type, newProps)) {
             if (__DEV__) {
               checkPropStringCoercion(newProps.children, 'children');
@@ -566,9 +703,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         cloneInstance,
         clearContainer,
 
-        createContainerChildSet(
-          container: Container,
-        ): Array<Instance | TextInstance> {
+        createContainerChildSet(): Array<Instance | TextInstance> {
           return [];
         },
 
@@ -604,18 +739,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           instance: Instance,
           type: string,
           props: Props,
-          internalInstanceHandle: Object,
         ): Instance {
-          const clone = cloneInstance(
-            instance,
-            null,
-            type,
-            props,
-            props,
-            internalInstanceHandle,
-            true,
-            null,
-          );
+          const clone = cloneInstance(instance, type, props, props, true, null);
           clone.hidden = true;
           return clone;
         },
@@ -623,7 +748,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         cloneHiddenTextInstance(
           instance: TextInstance,
           text: string,
-          internalInstanceHandle: Object,
         ): TextInstance {
           const clone = {
             text: instance.text,
@@ -674,7 +798,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (child.length === 1) {
         return childToJSX(child[0], null);
       }
-      // $FlowFixMe
       const children = child.map(c => childToJSX(c, null));
       if (children.every(c => typeof c === 'string' || typeof c === 'number')) {
         return children.join('');
@@ -688,6 +811,9 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const props = ({prop: instance.prop}: any);
       if (instance.hidden) {
         props.hidden = true;
+      }
+      if (instance.src) {
+        props.src = instance.src;
       }
       if (children !== null) {
         props.children = children;
@@ -789,11 +915,35 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     _Scheduler: Scheduler,
 
     getChildren(rootID: string = DEFAULT_ROOT_ID) {
+      throw new Error(
+        'No longer supported due to bad performance when used with `expect()`. ' +
+          'Use `ReactNoop.getChildrenAsJSX()` instead or, if you really need to, `dangerouslyGetChildren` after you carefully considered the warning in its JSDOC.',
+      );
+    },
+
+    getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
+      throw new Error(
+        'No longer supported due to bad performance when used with `expect()`. ' +
+          'Use `ReactNoop.getPendingChildrenAsJSX()` instead or, if you really need to, `dangerouslyGetPendingChildren` after you carefully considered the warning in its JSDOC.',
+      );
+    },
+
+    /**
+     * Prefer using `getChildrenAsJSX`.
+     * Using the returned children in `.toEqual` has very poor performance on mismatch due to deep equality checking of fiber structures.
+     * Make sure you deeply remove enumerable properties before passing it to `.toEqual`, or, better, use `getChildrenAsJSX` or `toMatchRenderedOutput`.
+     */
+    dangerouslyGetChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getChildren(container);
     },
 
-    getPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
+    /**
+     * Prefer using `getPendingChildrenAsJSX`.
+     * Using the returned children in `.toEqual` has very poor performance on mismatch due to deep equality checking of fiber structures.
+     * Make sure you deeply remove enumerable properties before passing it to `.toEqual`, or, better, use `getChildrenAsJSX` or `toMatchRenderedOutput`.
+     */
+    dangerouslyGetPendingChildren(rootID: string = DEFAULT_ROOT_ID) {
       const container = rootContainers.get(rootID);
       return getPendingChildren(container);
     },
@@ -891,6 +1041,50 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return getPendingChildrenAsJSX(container);
     },
 
+    getSuspenseyThingStatus(src): string | null {
+      if (suspenseyThingCache === null) {
+        return null;
+      } else {
+        const record = suspenseyThingCache.get(src);
+        return record === undefined ? null : record.status;
+      }
+    },
+
+    resolveSuspenseyThing(key: string): void {
+      if (suspenseyThingCache === null) {
+        suspenseyThingCache = new Map();
+      }
+      const record = suspenseyThingCache.get(key);
+      if (record === undefined) {
+        const newRecord: SuspenseyThingRecord = {
+          status: 'fulfilled',
+          subscriptions: null,
+        };
+        suspenseyThingCache.set(key, newRecord);
+      } else {
+        if (record.status === 'pending') {
+          record.status = 'fulfilled';
+          const subscriptions = record.subscriptions;
+          if (subscriptions !== null) {
+            record.subscriptions = null;
+            for (let i = 0; i < subscriptions.length; i++) {
+              const subscription = subscriptions[i];
+              subscription.pendingCount--;
+              if (subscription.pendingCount === 0) {
+                const commit = subscription.commit;
+                subscription.commit = null;
+                commit();
+              }
+            }
+          }
+        }
+      }
+    },
+
+    resetSuspenseyThingCache() {
+      suspenseyThingCache = null;
+    },
+
     createPortal(
       children: ReactNodeList,
       container: Container,
@@ -956,39 +1150,32 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     flushNextYield(): Array<mixed> {
       Scheduler.unstable_flushNumberOfYields(1);
-      return Scheduler.unstable_clearYields();
+      return Scheduler.unstable_clearLog();
     },
 
-    flushWithHostCounters(
-      fn: () => void,
-    ):
+    startTrackingHostCounters(): void {
+      hostUpdateCounter = 0;
+      hostCloneCounter = 0;
+    },
+
+    stopTrackingHostCounters():
       | {
-          hostDiffCounter: number,
           hostUpdateCounter: number,
         }
       | {
-          hostDiffCounter: number,
           hostCloneCounter: number,
         } {
-      hostDiffCounter = 0;
+      const result = useMutation
+        ? {
+            hostUpdateCounter,
+          }
+        : {
+            hostCloneCounter,
+          };
       hostUpdateCounter = 0;
       hostCloneCounter = 0;
-      try {
-        Scheduler.unstable_flushAll();
-        return useMutation
-          ? {
-              hostDiffCounter,
-              hostUpdateCounter,
-            }
-          : {
-              hostDiffCounter,
-              hostCloneCounter,
-            };
-      } finally {
-        hostDiffCounter = 0;
-        hostUpdateCounter = 0;
-        hostCloneCounter = 0;
-      }
+
+      return result;
     },
 
     expire: Scheduler.unstable_advanceTime,
@@ -1043,9 +1230,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           if (typeof child.text === 'string') {
             log(indent + '- ' + child.text);
           } else {
-            // $FlowFixMe - The child should've been refined now.
             log(indent + '- ' + child.type + '#' + child.id);
-            // $FlowFixMe - The child should've been refined now.
             logHostInstances(child.children, depth + 1);
           }
         }

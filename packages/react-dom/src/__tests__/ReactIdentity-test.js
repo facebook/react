@@ -141,7 +141,7 @@ describe('ReactIdentity', () => {
       }
     }
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(<TestContainer />);
     }).not.toThrow();
   });
@@ -176,7 +176,7 @@ describe('ReactIdentity', () => {
       }
     }
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(<TestContainer />);
     }).not.toThrow();
   });
@@ -204,7 +204,7 @@ describe('ReactIdentity', () => {
       }
     }
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(<TestContainer />);
     }).not.toThrow();
   });
@@ -259,7 +259,7 @@ describe('ReactIdentity', () => {
       </div>
     );
 
-    expect(function() {
+    expect(function () {
       ReactTestUtils.renderIntoDocument(component);
     }).not.toThrow();
   });
@@ -288,7 +288,7 @@ describe('ReactIdentity', () => {
       expect(test).toThrowError(new TypeError('prod message')),
     ).toErrorDev(
       'The provided key is an unsupported type TemporalLike.' +
-        ' This value must be coerced to a string before before using it here.',
+        ' This value must be coerced to a string before using it here.',
       {withoutStack: true},
     );
   });

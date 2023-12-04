@@ -9,15 +9,15 @@
 
 import EventEmitter from './events';
 
-import type {ComponentFilter, Wall} from './types';
+import type {ComponentFilter, Wall} from './frontend/types';
 import type {
   InspectedElementPayload,
   OwnersList,
   ProfilingDataBackend,
   RendererID,
+  ConsolePatchSettings,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
-import type {ConsolePatchSettings} from 'react-devtools-shared/src/backend/console';
 
 const BATCH_DURATION = 100;
 
@@ -194,6 +194,7 @@ export type BackendEvents = {
   profilingData: [ProfilingDataBackend],
   profilingStatus: [boolean],
   reloadAppForProfiling: [],
+  saveToClipboard: [string],
   selectFiber: [number],
   shutdown: [],
   stopInspectingNative: [boolean],
@@ -262,6 +263,9 @@ type FrontendEvents = {
   overrideHookState: [OverrideHookState],
   overrideProps: [OverrideValue],
   overrideState: [OverrideValue],
+
+  resumeElementPolling: [],
+  pauseElementPolling: [],
 };
 
 class Bridge<
@@ -333,16 +337,17 @@ class Bridge<
     }
 
     // Queue the shutdown outgoing message for subscribers.
+    this.emit('shutdown');
     this.send('shutdown');
 
     // Mark this bridge as destroyed, i.e. disable its public API.
     this._isShutdown = true;
 
     // Disable the API inherited from EventEmitter that can add more listeners and send more messages.
-    // $FlowFixMe This property is not writable.
-    this.addListener = function() {};
-    // $FlowFixMe This property is not writable.
-    this.emit = function() {};
+    // $FlowFixMe[cannot-write] This property is not writable.
+    this.addListener = function () {};
+    // $FlowFixMe[cannot-write] This property is not writable.
+    this.emit = function () {};
     // NOTE: There's also EventEmitter API like `on` and `prependListener` that we didn't add to our Flow type of EventEmitter.
 
     // Unsubscribe this bridge incoming message listeners to be sure, and so they don't have to do that.

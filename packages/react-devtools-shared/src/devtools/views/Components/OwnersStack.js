@@ -19,7 +19,7 @@ import {
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Toggle from '../Toggle';
-import Badge from './Badge';
+import ElementBadges from './ElementBadges';
 import {OwnersListContext} from './OwnersListContext';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {useIsOverflowing} from '../hooks';
@@ -32,7 +32,7 @@ import {
   MenuItem,
 } from '../Components/reach-ui/menu-button';
 
-import type {SerializedElement} from './types';
+import type {SerializedElement} from 'react-devtools-shared/src/frontend/types';
 
 import styles from './OwnersStack.css';
 
@@ -56,7 +56,7 @@ type State = {
   selectedIndex: number,
 };
 
-function dialogReducer(state, action) {
+function dialogReducer(state: State, action: Action) {
   switch (action.type) {
     case 'UPDATE_OWNER_ID':
       const selectedIndex = action.owners.findIndex(
@@ -191,10 +191,7 @@ export default function OwnerStack(): React.Node {
           ))}
       </div>
       <div className={styles.VRule} />
-      <Button
-        className={styles.IconButton}
-        onClick={() => selectOwner(null)}
-        title="Back to tree view">
+      <Button onClick={() => selectOwner(null)} title="Back to tree view">
         <ButtonIcon type="close" />
       </Button>
     </div>
@@ -207,11 +204,7 @@ type ElementsDropdownProps = {
   selectOwner: SelectOwner,
   ...
 };
-function ElementsDropdown({
-  owners,
-  selectedIndex,
-  selectOwner,
-}: ElementsDropdownProps) {
+function ElementsDropdown({owners, selectOwner}: ElementsDropdownProps) {
   const store = useContext(StoreContext);
 
   const menuItems = [];
@@ -225,10 +218,10 @@ function ElementsDropdown({
         onSelect={() => (isInStore ? selectOwner(owner) : null)}>
         {owner.displayName}
 
-        <Badge
-          className={styles.Badge}
+        <ElementBadges
           hocDisplayNames={owner.hocDisplayNames}
-          type={owner.type}
+          compiledWithForget={owner.compiledWithForget}
+          className={styles.BadgesBlock}
         />
       </MenuItem>,
     );
@@ -257,7 +250,7 @@ type ElementViewProps = {
 function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
   const store = useContext(StoreContext);
 
-  const {displayName, hocDisplayNames, type} = owner;
+  const {displayName, hocDisplayNames, compiledWithForget} = owner;
   const isInStore = store.containsElement(owner.id);
 
   const handleChange = useCallback(() => {
@@ -273,10 +266,10 @@ function ElementView({isSelected, owner, selectOwner}: ElementViewProps) {
       onChange={handleChange}>
       {displayName}
 
-      <Badge
-        className={styles.Badge}
+      <ElementBadges
         hocDisplayNames={hocDisplayNames}
-        type={type}
+        compiledWithForget={compiledWithForget}
+        className={styles.BadgesBlock}
       />
     </Toggle>
   );

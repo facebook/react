@@ -4,6 +4,197 @@
 
 ---
 
+### 5.0.0
+November 29, 2023
+
+### Breaking
+* refactor[devtools]: highlight an array of elements for native ([hoxyq](https://github.com/hoxyq) in [#27734](https://github.com/facebook/react/pull/27734))
+
+### Features
+* feat[devtools]: display Forget badge for the relevant components ([hoxyq](https://github.com/hoxyq) in [#27709](https://github.com/facebook/react/pull/27709))
+
+### Other
+* Added windows powershell syntax to build scripts ([PrathamLalwani](https://github.com/PrathamLalwani) in [#27692](https://github.com/facebook/react/pull/27692))
+* refactor[react-devtools-shared]: minor parsing improvements and modifications ([hoxyq](https://github.com/hoxyq) in [#27661](https://github.com/facebook/react/pull/27661))
+
+---
+
+### 4.28.5
+October 18, 2023
+
+#### Bugfixes
+* fix[devtools/useMemoCache]: add stub for useMemoCache in ReactDebugHook ([hoxyq](https://github.com/hoxyq) in [#27472](https://github.com/facebook/react/pull/27472))
+* refactor[react-devtools-extensions]: use globals to eliminate dead code ([hoxyq](https://github.com/hoxyq) in [#27516](https://github.com/facebook/react/pull/27516))
+* fix[devtools/inspectElement]: dont pause initial inspectElement call when user switches tabs ([hoxyq](https://github.com/hoxyq) in [#27488](https://github.com/facebook/react/pull/27488))
+
+---
+
+### 4.28.4
+September 25, 2023
+
+#### Features
+* feat:-Added a delete all filters action and added title to the add filter a… ([Biki-das](https://github.com/Biki-das) in [#27332](https://github.com/facebook/react/pull/27332))
+* feat[devtools/extension]: add dark theme for popup ([rakleed](https://github.com/rakleed) in [#27330](https://github.com/facebook/react/pull/27330))
+
+#### Bugfixes
+* refactor[devtools/extension]: refactored messaging logic across different parts of the extension ([hoxyq](https://github.com/hoxyq) in [#27417](https://github.com/facebook/react/pull/27417))
+* fix[devtools/extension]: added a workaround for proxy content script injection in firefox ([hoxyq](https://github.com/hoxyq) in [#27375](https://github.com/facebook/react/pull/27375))
+* fix[devtools/useTransition]: don't check for dispatch property when determining if hook is stateful ([hoxyq](https://github.com/hoxyq) in [#27365](https://github.com/facebook/react/pull/27365))
+* feat[devtools/extension]: show disclaimer when page doesnt run react and refactor react polling logic ([hoxyq](https://github.com/hoxyq) in [#27373](https://github.com/facebook/react/pull/27373))
+* fix[devtools/extension]: unregister dynamically injected content scripts instead of filtering ([hoxyq](https://github.com/hoxyq) in [#27369](https://github.com/facebook/react/pull/27369))
+* refactor[devtools/extension]: more stable element updates polling to avoid timed out errors ([hoxyq](https://github.com/hoxyq) in [#27357](https://github.com/facebook/react/pull/27357))
+
+---
+
+### 4.28.3
+September 5, 2023
+
+* refactor[devtools/extension]: handle ports disconnection, instead of frequent reconnection ([hoxyq](https://github.com/hoxyq) in [#27336](https://github.com/facebook/react/pull/27336))
+* refactor[devtools/extension]: migrate from using setInterval for polling if react is loaded ([hoxyq](https://github.com/hoxyq) in [#27323](https://github.com/facebook/react/pull/27323))
+* fix[devtools/extension]: fixed duplicating panels in firefox ([hoxyq](https://github.com/hoxyq) in [#27320](https://github.com/facebook/react/pull/27320))
+
+---
+
+### 4.28.2
+August 30, 2023
+
+#### Bugfixes
+* fix[devtools/extension]: handle tab navigation events before react is loaded ([hoxyq](https://github.com/hoxyq) in [#27316](https://github.com/facebook/react/pull/27316))
+
+---
+
+### 4.28.1
+August 29, 2023
+
+#### Features
+* feat: added open in editor to appear by default ([Biki-das](https://github.com/Biki-das) in [#26949](https://github.com/facebook/react/pull/26949))
+
+#### Bugfixes
+* refactor: refactored devtools browser extension scripts to improve port management and service worker lifetime ([hoxyq](https://github.com/hoxyq) in [#27215](https://github.com/facebook/react/pull/27215))
+* fix[devtools]: allow element updates polling only if bridge is alive ([hoxyq](https://github.com/hoxyq) in [#27067](https://github.com/facebook/react/pull/27067))
+* refactor: resolve browser via env variables based on build rather than user agent ([hoxyq](https://github.com/hoxyq) in [#27179](https://github.com/facebook/react/pull/27179))
+* fix[devtools/updateFiberRecursively]: mount suspense fallback set in timed out case ([hoxyq](https://github.com/hoxyq) in [#27147](https://github.com/facebook/react/pull/27147))
+* fix[devtools/inspect]: null check memoized props before trying to call hasOwnProperty ([hoxyq](https://github.com/hoxyq) in [#27057](https://github.com/facebook/react/pull/27057))
+
+#### Other
+* refactor[devtools/extension]: minify production builds to strip comments ([hoxyq](https://github.com/hoxyq) in [#27304](https://github.com/facebook/react/pull/27304))
+
+---
+
+### 4.28.0
+July 4, 2023
+
+#### Features
+* feat[devtools]: support x_google_ignoreList source maps extension ([hoxyq](https://github.com/hoxyq) in [#26951](https://github.com/facebook/react/pull/26951))
+
+#### Bugfixes
+* fix: check if fiber is unmounted before trying to highlight ([hoxyq](https://github.com/hoxyq) in [#26983](https://github.com/facebook/react/pull/26983))
+* fix: display NaN as string in values ([hoxyq](https://github.com/hoxyq) in [#26947](https://github.com/facebook/react/pull/26947))
+* fix: devtools cannot be closed correctly ([Jack-Works](https://github.com/Jack-Works) in [#25510](https://github.com/facebook/react/pull/25510))
+* fix: supported inspect mode on Shadow dom ([Biki-das](https://github.com/Biki-das) in [#26888](https://github.com/facebook/react/pull/26888))
+* fix: updated strict mode badge URL ([ibrahemid](https://github.com/ibrahemid) in [#26825](https://github.com/facebook/react/pull/26825))
+
+#### Other
+* chore: upgrade to webpack v5 ([hoxyq](https://github.com/hoxyq) in [#26887](https://github.com/facebook/react/pull/26887))
+* chore: removed unused CSS ([Biki-das](https://github.com/Biki-das) in [#27032](https://github.com/facebook/react/pull/27032))
+
+---
+
+### 4.27.8
+May 17, 2023
+
+#### Bugfixes
+* Fixed duplicated backend activation with multiple renderers ([hoxyq](https://github.com/hoxyq) in [#26807](https://github.com/facebook/react/pull/26807))
+
+---
+
+### 4.27.7
+May 4, 2023
+
+#### Bugfixes
+* Fixed to work when browser devtools panel is reopened ([hoxyq](https://github.com/hoxyq) in [#26779](https://github.com/facebook/react/pull/26779))
+* Fixed to work in Chrome incognito mode ([hoxyq](https://github.com/hoxyq) in [#26765](https://github.com/facebook/react/pull/26765))
+
+---
+
+### 4.27.6
+April 20, 2023
+
+#### Bugfixes
+* Fixed backend injection logic for undocked devtools window ([mondaychen](https://github.com/mondaychen) in [#26665](https://github.com/facebook/react/pull/26665))
+
+#### Other
+* Use backend manager to support multiple backends in extension ([mondaychen](https://github.com/mondaychen) in [#26615](https://github.com/facebook/react/pull/26615))
+
+---
+
+### 4.27.5
+April 17, 2023
+
+#### Bugfixes
+* Fixed copying to clipboard from context menu on Chrome ([hoxyq](https://github.com/hoxyq) in [#26604](https://github.com/facebook/react/pull/26604))
+* Fixed external link behavior in the standalone app ([Willie-Boy](https://github.com/Willie-Boy) in [#26559](https://github.com/facebook/react/pull/26559))
+
+#### Other
+* Provide icon to edge devtools. ([harrygz889](https://github.com/harrygz889) in [#26543](https://github.com/facebook/react/pull/26543))
+* Forbid editing class instances in props ([hoxyq](https://github.com/hoxyq) in [#26522](https://github.com/facebook/react/pull/26522))
+* Improved script injection logic in browser extension ([mondaychen](https://github.com/mondaychen) in [#26492](https://github.com/facebook/react/pull/26492))
+---
+
+### 4.27.4
+March 24, 2023
+
+#### Bugfixes
+* missing file name in react-devtools package.json for electron ([mondaychen](https://github.com/mondaychen) in [#26469](https://github.com/facebook/react/pull/26469))
+
+---
+
+### 4.27.3
+March 22, 2023
+
+#### Bugfixes
+* prevent StyleX plugin from throwing when inspecting CSS ([mondaychen](https://github.com/mondaychen) in [#26364](https://github.com/facebook/react/pull/26364))
+* remove script tag immediately ([mondaychen](https://github.com/mondaychen) in [#26233](https://github.com/facebook/react/pull/26233))
+
+#### Others
+* upgrade electron to latest version & security improvements ([mondaychen](https://github.com/mondaychen) in [#26337](https://github.com/facebook/react/pull/26337))
+* improve troubleshooting in README ([mondaychen](https://github.com/mondaychen) in [#26235](https://github.com/facebook/react/pull/26235))
+* Remove renderer.js from extension build ([mondaychen](https://github.com/mondaychen) in [#26234](https://github.com/facebook/react/pull/26234))
+* permanently polyfill for rAF in devtools_page ([mondaychen](https://github.com/mondaychen) in [#26193](https://github.com/facebook/react/pull/26193))
+
+---
+
+### 4.27.2
+February 16, 2023
+
+* Replace DevTools `semver` usages with `compare-versions` for smaller bundle size ([markerikson](https://github.com/markerikson) in [#26122](https://github.com/facebook/react/pull/26122))
+* Support highlights for React Native apps in dev tools ([ryancat](https://github.com/ryancat) in [#26060](https://github.com/facebook/react/pull/26060))
+* improve error handling in extension ([mondaychen](https://github.com/mondaychen) in [#26068](https://github.com/facebook/react/pull/26068))
+
+---
+
+### 4.27.1
+December 6, 2022
+
+* [bug fix] revert values in ReactFiberFlags to keep consistency for devtools ([mondaychen](https://github.com/mondaychen) in [#25832](https://github.com/facebook/react/pull/25832))
+
+---
+
+### 4.27.0
+November 28, 2022
+
+#### Features
+* add support for new host type fibers for server components use cases ([mondaychen](https://github.com/mondaychen) in [#25616](https://github.com/facebook/react/pull/25616))
+* [react devtools] Device storage support ([rbalicki2](https://github.com/rbalicki2) in [#25452](https://github.com/facebook/react/pull/25452))
+* upgrade to Manifest V3 ([mondaychen](https://github.com/mondaychen) in [#25145](https://github.com/facebook/react/pull/25145))
+
+#### Bugfixes
+* bug fix for Hydrating fibers ([mondaychen](https://github.com/mondaychen) in [#25663](https://github.com/facebook/react/pull/25663))
+
+
+
+---
+
 ### 4.26.1
 October 13, 2022
 

@@ -40,10 +40,8 @@ type ModuleLoaderFunction = () => Thenable<Module>;
 // This is intentionally a module-level Map, rather than a React-managed one.
 // Otherwise, refreshing the inspected element cache would also clear this cache.
 // Modules are static anyway.
-const moduleLoaderFunctionToModuleMap: Map<
-  ModuleLoaderFunction,
-  Module,
-> = new Map();
+const moduleLoaderFunctionToModuleMap: Map<ModuleLoaderFunction, Module> =
+  new Map();
 
 function readRecord<T>(record: Record<T>): ResolvedRecord<T> | RejectedRecord {
   if (record.status === Resolved) {
@@ -68,9 +66,9 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
   }
 
   if (!record) {
-    const callbacks = new Set();
+    const callbacks = new Set<() => mixed>();
     const wakeable: Wakeable = {
-      then(callback) {
+      then(callback: () => mixed) {
         callbacks.add(callback);
       },
 
@@ -157,6 +155,7 @@ export function loadModule(moduleLoaderFunction: ModuleLoaderFunction): Module {
     moduleLoaderFunctionToModuleMap.set(moduleLoaderFunction, record);
   }
 
+  // $FlowFixMe[underconstrained-implicit-instantiation]
   const response = readRecord(record).value;
   return response;
 }

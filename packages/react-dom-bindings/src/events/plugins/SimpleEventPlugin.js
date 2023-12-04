@@ -72,6 +72,8 @@ function extractEvents(
       // Firefox creates a keypress event for function keys too. This removes
       // the unwanted keypress events. Enter is however both printable and
       // non-printable. One would expect Tab to be as well (but it isn't).
+      // TODO: Fixed in https://bugzilla.mozilla.org/show_bug.cgi?id=968056. Can
+      // probably remove.
       if (getEventCharCode(((nativeEvent: any): KeyboardEvent)) === 0) {
         return;
       }
@@ -95,6 +97,8 @@ function extractEvents(
     case 'click':
       // Firefox creates a click event on right mouse clicks. This removes the
       // unwanted click events.
+      // TODO: Fixed in https://phabricator.services.mozilla.com/D26793. Can
+      // probably remove.
       if (nativeEvent.button === 2) {
         return;
       }
@@ -136,6 +140,7 @@ function extractEvents(
       SyntheticEventCtor = SyntheticTransitionEvent;
       break;
     case 'scroll':
+    case 'scrollend':
       SyntheticEventCtor = SyntheticUIEvent;
       break;
     case 'wheel':
@@ -195,7 +200,7 @@ function extractEvents(
       // nonDelegatedEvents list in DOMPluginEventSystem.
       // Then we can remove this special list.
       // This is a breaking change that can wait until React 18.
-      domEventName === 'scroll';
+      (domEventName === 'scroll' || domEventName === 'scrollend');
 
     const listeners = accumulateSinglePhaseListeners(
       targetInst,

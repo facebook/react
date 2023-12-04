@@ -14,9 +14,12 @@ import {
   getInObject,
   formatDataForPreview,
   setInObject,
-} from './utils';
+} from 'react-devtools-shared/src/utils';
 
-import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {
+  DehydratedData,
+  InspectedElementPath,
+} from 'react-devtools-shared/src/frontend/types';
 
 export const meta = {
   inspectable: (Symbol('inspectable'): symbol),
@@ -52,7 +55,7 @@ export type Unserializable = {
   size?: number,
   type: string,
   unserializable: boolean,
-  ...
+  [string | number]: any,
 };
 
 // This threshold determines the depth at which the bridge "dehydrates" nested data.
@@ -123,14 +126,8 @@ export function dehydrate(
   unserializable: Array<Array<string | number>>,
   path: Array<string | number>,
   isPathAllowed: (path: Array<string | number>) => boolean,
-  level?: number = 0,
-):
-  | string
-  | Dehydrated
-  | Unserializable
-  | Array<Dehydrated>
-  | Array<Unserializable>
-  | {[key: string]: string | Dehydrated | Unserializable, ...} {
+  level: number = 0,
+): $PropertyType<DehydratedData, 'data'> {
   const type = getDataType(data);
 
   let isPathAllowedCheck;
@@ -301,10 +298,13 @@ export function dehydrate(
 
     case 'object':
       isPathAllowedCheck = isPathAllowed(path);
+
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
         return createDehydrated(type, true, data, cleaned, path);
       } else {
-        const object = {};
+        const object: {
+          [string]: $PropertyType<DehydratedData, 'data'>,
+        } = {};
         getAllEnumerableKeys(data).forEach(key => {
           const name = key.toString();
           object[name] = dehydrate(
@@ -319,15 +319,46 @@ export function dehydrate(
         return object;
       }
 
+    case 'class_instance':
+      isPathAllowedCheck = isPathAllowed(path);
+
+      if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
+        return createDehydrated(type, true, data, cleaned, path);
+      }
+
+      const value: Unserializable = {
+        unserializable: true,
+        type,
+        readonly: true,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data.constructor.name,
+      };
+
+      getAllEnumerableKeys(data).forEach(key => {
+        const keyAsString = key.toString();
+
+        value[keyAsString] = dehydrate(
+          data[key],
+          cleaned,
+          unserializable,
+          path.concat([keyAsString]),
+          isPathAllowed,
+          isPathAllowedCheck ? 1 : level + 1,
+        );
+      });
+
+      unserializable.push(path);
+
+      return value;
+
     case 'infinity':
     case 'nan':
     case 'undefined':
       // Some values are lossy when sent through a WebSocket.
       // We dehydrate+rehydrate them to preserve their type.
       cleaned.push(path);
-      return {
-        type,
-      };
+      return {type};
 
     default:
       return data;
@@ -337,7 +368,7 @@ export function dehydrate(
 export function fillInPath(
   object: Object,
   data: DehydratedData,
-  path: Array<string | number>,
+  path: InspectedElementPath,
   value: any,
 ) {
   const target = getInObject(object, path);
@@ -432,41 +463,49 @@ export function hydrate(
 
 function upgradeUnserializable(destination: Object, source: Object) {
   Object.defineProperties(destination, {
+    // $FlowFixMe[invalid-computed-prop]
     [meta.inspected]: {
       configurable: true,
       enumerable: false,
       value: !!source.inspected,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.name]: {
       configurable: true,
       enumerable: false,
       value: source.name,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.preview_long]: {
       configurable: true,
       enumerable: false,
       value: source.preview_long,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.preview_short]: {
       configurable: true,
       enumerable: false,
       value: source.preview_short,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.size]: {
       configurable: true,
       enumerable: false,
       value: source.size,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.readonly]: {
       configurable: true,
       enumerable: false,
       value: !!source.readonly,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.type]: {
       configurable: true,
       enumerable: false,
       value: source.type,
     },
+    // $FlowFixMe[invalid-computed-prop]
     [meta.unserializable]: {
       configurable: true,
       enumerable: false,

@@ -12,7 +12,7 @@ import typeof ReactTestRenderer from 'react-test-renderer';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/frontend/types';
 
 export function act(
   callback: Function,
@@ -46,7 +46,6 @@ export async function actAsync(
   const {act: actTestRenderer} = require('react-test-renderer');
   const {act: actDOM} = require('react-dom/test-utils');
 
-  // $FlowFixMe Flow doesn't know about "await act()" yet
   await actDOM(async () => {
     await actTestRenderer(async () => {
       await cb();
@@ -55,7 +54,6 @@ export async function actAsync(
 
   if (recursivelyFlush) {
     while (jest.getTimerCount() > 0) {
-      // $FlowFixMe Flow doesn't know about "await act()" yet
       await actDOM(async () => {
         await actTestRenderer(async () => {
           jest.runAllTimers();
@@ -63,7 +61,6 @@ export async function actAsync(
       });
     }
   } else {
-    // $FlowFixMe Flow doesn't know about "await act()" yet
     await actDOM(async () => {
       await actTestRenderer(async () => {
         jest.runOnlyPendingTimers();
@@ -89,7 +86,7 @@ export function createDisplayNameFilter(
   source: string,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   let isValid = true;
   try {
     new RegExp(source); // eslint-disable-line no-new
@@ -105,7 +102,7 @@ export function createDisplayNameFilter(
 }
 
 export function createHOCFilter(isEnabled: boolean = true) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   return {
     type: Types.ComponentFilterHOC,
     isEnabled,
@@ -117,7 +114,7 @@ export function createElementTypeFilter(
   elementType: ElementType,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   return {
     type: Types.ComponentFilterElementType,
     isEnabled,
@@ -129,7 +126,7 @@ export function createLocationFilter(
   source: string,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   let isValid = true;
   try {
     new RegExp(source); // eslint-disable-line no-new
@@ -155,7 +152,7 @@ export function getRendererID(): number {
     return rendererInterface.renderer.rendererPackageName === 'react-dom';
   });
 
-  if (ids == null) {
+  if (id == null) {
     throw Error('Could not find renderer.');
   }
 
@@ -203,7 +200,8 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
 
   expect(profilerStore.profilingData).not.toBeNull();
 
-  const profilingDataFrontendInitial = ((profilerStore.profilingData: any): ProfilingDataFrontend);
+  const profilingDataFrontendInitial =
+    ((profilerStore.profilingData: any): ProfilingDataFrontend);
   expect(profilingDataFrontendInitial.imported).toBe(false);
 
   const profilingDataExport = prepareProfilingDataExport(
@@ -301,7 +299,7 @@ export function normalizeCodeLocInfo(str) {
   //  at Component (/path/filename.js:123:45)
   // React format:
   //    in Component (at filename.js:123)
-  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
     return '\n    in ' + name + ' (at **)';
   });
 }

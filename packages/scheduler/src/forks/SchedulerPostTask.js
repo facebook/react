@@ -10,7 +10,7 @@
 import type {PriorityLevel} from '../SchedulerPriorities';
 
 declare class TaskController {
-  constructor(priority?: string): TaskController;
+  constructor(options?: {priority?: string}): TaskController;
   signal: mixed;
   abort(): void;
 }
@@ -67,9 +67,7 @@ export function unstable_requestPaint() {
   // Since we yield every frame regardless, `requestPaint` has no effect.
 }
 
-type SchedulerCallback<T> = (
-  didTimeout_DEPRECATED: boolean,
-) =>
+type SchedulerCallback<T> = (didTimeout_DEPRECATED: boolean) =>
   | T
   // May return a continuation
   | SchedulerCallback<T>;
@@ -97,9 +95,8 @@ export function unstable_scheduleCallback<T>(
       break;
   }
 
-  const controller = new TaskController();
+  const controller = new TaskController({priority: postTaskPriority});
   const postTaskOptions = {
-    priority: postTaskPriority,
     delay: typeof options === 'object' && options !== null ? options.delay : 0,
     signal: controller.signal,
   };
@@ -132,26 +129,28 @@ function runTask<T>(
     if (typeof result === 'function') {
       // Assume this is a continuation
       const continuation: SchedulerCallback<T> = (result: any);
-      const continuationController = new TaskController();
       const continuationOptions = {
-        priority: postTaskPriority,
-        signal: continuationController.signal,
+        signal: node._controller.signal,
       };
-      // Update the original callback node's controller, since even though we're
-      // posting a new task, conceptually it's the same one.
-      node._controller = continuationController;
-      scheduler
-        .postTask(
-          runTask.bind(
-            null,
-            priorityLevel,
-            postTaskPriority,
-            node,
-            continuation,
-          ),
-          continuationOptions,
-        )
-        .catch(handleAbortError);
+
+      const nextTask = runTask.bind(
+        null,
+        priorityLevel,
+        postTaskPriority,
+        node,
+        continuation,
+      );
+
+      if (scheduler.yield !== undefined) {
+        scheduler
+          .yield(continuationOptions)
+          .then(nextTask)
+          .catch(handleAbortError);
+      } else {
+        scheduler
+          .postTask(nextTask, continuationOptions)
+          .catch(handleAbortError);
+      }
     }
   } catch (error) {
     // We're inside a `postTask` promise. If we don't handle this error, then it
@@ -168,7 +167,7 @@ function runTask<T>(
   }
 }
 
-function handleAbortError(error) {
+function handleAbortError(error: any) {
   // Abort errors are an implementation detail. We don't expose the
   // TaskController to the user, nor do we expose the promise that is returned
   // from `postTask`. So we should suppress them, since there's no way for the

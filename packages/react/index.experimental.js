@@ -17,7 +17,6 @@ export {
   PureComponent,
   StrictMode,
   Suspense,
-  SuspenseList,
   cloneElement,
   createContext,
   createElement,
@@ -33,9 +32,11 @@ export {
   startTransition,
   unstable_Cache,
   unstable_DebugTracingMode,
-  unstable_Offscreen,
+  unstable_Activity,
+  unstable_postpone,
   unstable_getCacheSignal,
   unstable_getCacheForType,
+  unstable_SuspenseList,
   unstable_useCacheRefresh,
   unstable_useMemoCache,
   useId,
@@ -44,11 +45,12 @@ export {
   useDebugValue,
   useDeferredValue,
   useEffect,
-  experimental_useEvent,
+  experimental_useEffectEvent,
   useImperativeHandle,
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
+  useOptimistic,
   useReducer,
   useRef,
   useState,
@@ -56,3 +58,18 @@ export {
   useTransition,
   version,
 } from './src/React';
+
+import {useOptimistic} from './src/React';
+
+export function experimental_useOptimistic<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  if (__DEV__) {
+    console.error(
+      'useOptimistic is now in canary. Remove the experimental_ prefix. ' +
+        'The prefixed alias will be removed in an upcoming release.',
+    );
+  }
+  return useOptimistic(passthrough, reducer);
+}

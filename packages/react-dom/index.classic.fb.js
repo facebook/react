@@ -29,12 +29,16 @@ export {
   unmountComponentAtNode,
   unstable_batchedUpdates,
   unstable_createEventHandle,
-  unstable_flushControlled,
-  unstable_isNewReconciler,
   unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
-  preinit,
+  useFormStatus,
+  useFormState,
+  prefetchDNS,
+  preconnect,
   preload,
+  preloadModule,
+  preinit,
+  preinitModule,
   version,
 } from './src/client/ReactDOM';
 

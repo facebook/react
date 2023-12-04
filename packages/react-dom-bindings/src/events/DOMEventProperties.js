@@ -19,10 +19,8 @@ import {
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
-export const topLevelEventsToReactNames: Map<
-  DOMEventName,
-  string | null,
-> = new Map();
+export const topLevelEventsToReactNames: Map<DOMEventName, string | null> =
+  new Map();
 
 // NOTE: Capitalization is important in this list!
 //
@@ -98,6 +96,7 @@ const simpleEventPluginEvents = [
   'touchStart',
   'volumeChange',
   'scroll',
+  'scrollEnd',
   'toggle',
   'touchMove',
   'waiting',
@@ -111,7 +110,7 @@ if (enableCreateEventHandleAPI) {
   topLevelEventsToReactNames.set('afterblur', null);
 }
 
-function registerSimpleEvent(domEventName, reactName) {
+function registerSimpleEvent(domEventName: DOMEventName, reactName: string) {
   topLevelEventsToReactNames.set(domEventName, reactName);
   registerTwoPhaseEvent(reactName, [domEventName]);
 }

@@ -46,7 +46,7 @@ import {
 
 export type Callback = boolean => ?Callback;
 
-type Task = {
+export opaque type Task = {
   id: number,
   callback: Callback | null,
   priorityLevel: PriorityLevel,
@@ -152,7 +152,7 @@ function handleTimeout(currentTime: number) {
   if (!isHostCallbackScheduled) {
     if (peek(taskQueue) !== null) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork);
+      requestHostCallback();
     } else {
       const firstTimer = peek(timerQueue);
       if (firstTimer !== null) {
@@ -162,7 +162,7 @@ function handleTimeout(currentTime: number) {
   }
 }
 
-function flushWork(hasTimeRemaining: boolean, initialTime: number) {
+function flushWork(initialTime: number) {
   if (enableProfiling) {
     markSchedulerUnsuspended(initialTime);
   }
@@ -180,7 +180,7 @@ function flushWork(hasTimeRemaining: boolean, initialTime: number) {
   try {
     if (enableProfiling) {
       try {
-        return workLoop(hasTimeRemaining, initialTime);
+        return workLoop(initialTime);
       } catch (error) {
         if (currentTask !== null) {
           const currentTime = getCurrentTime();
@@ -193,7 +193,7 @@ function flushWork(hasTimeRemaining: boolean, initialTime: number) {
       }
     } else {
       // No catch in prod code path.
-      return workLoop(hasTimeRemaining, initialTime);
+      return workLoop(initialTime);
     }
   } finally {
     currentTask = null;
@@ -206,7 +206,7 @@ function flushWork(hasTimeRemaining: boolean, initialTime: number) {
   }
 }
 
-function workLoop(hasTimeRemaining: boolean, initialTime: number) {
+function workLoop(initialTime: number) {
   let currentTime = initialTime;
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
@@ -214,10 +214,7 @@ function workLoop(hasTimeRemaining: boolean, initialTime: number) {
     currentTask !== null &&
     !(enableSchedulerDebugging && isSchedulerPaused)
   ) {
-    if (
-      currentTask.expirationTime > currentTime &&
-      (!hasTimeRemaining || shouldYieldToHost())
-    ) {
+    if (currentTask.expirationTime > currentTime && shouldYieldToHost()) {
       // This currentTask hasn't expired, and we've reached the deadline.
       break;
     }
@@ -329,7 +326,8 @@ function unstable_next<T>(eventHandler: () => T): T {
 function unstable_wrapCallback<T: (...Array<mixed>) => mixed>(callback: T): T {
   var parentPriorityLevel = currentPriorityLevel;
   // $FlowFixMe[incompatible-return]
-  return function() {
+  // $FlowFixMe[missing-this-annot]
+  return function () {
     // This is a fork of runWithPriority, inlined for performance.
     var previousPriorityLevel = currentPriorityLevel;
     currentPriorityLevel = parentPriorityLevel;
@@ -421,7 +419,7 @@ function unstable_scheduleCallback(
     // wait until the next time we yield.
     if (!isHostCallbackScheduled && !isPerformingWork) {
       isHostCallbackScheduled = true;
-      requestHostCallback(flushWork);
+      requestHostCallback();
     }
   }
 
@@ -436,7 +434,7 @@ function unstable_continueExecution() {
   isSchedulerPaused = false;
   if (!isHostCallbackScheduled && !isPerformingWork) {
     isHostCallbackScheduled = true;
-    requestHostCallback(flushWork);
+    requestHostCallback();
   }
 }
 
@@ -464,12 +462,6 @@ function unstable_getCurrentPriorityLevel(): PriorityLevel {
 }
 
 let isMessageLoopRunning = false;
-let scheduledHostCallback:
-  | null
-  | ((
-      hasTimeRemaining: boolean,
-      initialTime: DOMHighResTimeStamp | number,
-    ) => boolean) = null;
 let taskTimeoutID: TimeoutID = (-1: any);
 
 // Scheduler periodically yields in case there is other work on the main
@@ -561,23 +553,21 @@ function forceFrameRate(fps: number) {
 }
 
 const performWorkUntilDeadline = () => {
-  if (scheduledHostCallback !== null) {
+  if (isMessageLoopRunning) {
     const currentTime = getCurrentTime();
     // Keep track of the start time so we can measure how long the main thread
     // has been blocked.
     startTime = currentTime;
-    const hasTimeRemaining = true;
 
     // If a scheduler task throws, exit the current browser task so the
     // error can be observed.
     //
     // Intentionally not using a try-catch, since that makes some debugging
-    // techniques harder. Instead, if `scheduledHostCallback` errors, then
-    // `hasMoreWork` will remain true, and we'll continue the work loop.
+    // techniques harder. Instead, if `flushWork` errors, then `hasMoreWork` will
+    // remain true, and we'll continue the work loop.
     let hasMoreWork = true;
     try {
-      // $FlowFixMe[not-a-function] found when upgrading Flow
-      hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
+      hasMoreWork = flushWork(currentTime);
     } finally {
       if (hasMoreWork) {
         // If there's more work, schedule the next message event at the end
@@ -585,11 +575,8 @@ const performWorkUntilDeadline = () => {
         schedulePerformWorkUntilDeadline();
       } else {
         isMessageLoopRunning = false;
-        scheduledHostCallback = null;
       }
     }
-  } else {
-    isMessageLoopRunning = false;
   }
   // Yielding to the browser will give it a chance to paint, so we can
   // reset this.
@@ -629,15 +616,17 @@ if (typeof localSetImmediate === 'function') {
   };
 }
 
-function requestHostCallback(callback) {
-  scheduledHostCallback = callback;
+function requestHostCallback() {
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
     schedulePerformWorkUntilDeadline();
   }
 }
 
-function requestHostTimeout(callback, ms: number) {
+function requestHostTimeout(
+  callback: (currentTime: number) => void,
+  ms: number,
+) {
   // $FlowFixMe[not-a-function] nullable value
   taskTimeoutID = localSetTimeout(() => {
     callback(getCurrentTime());

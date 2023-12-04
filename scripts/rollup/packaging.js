@@ -7,6 +7,7 @@ const {
   readFileSync,
   writeFileSync,
 } = require('fs');
+const path = require('path');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -14,10 +15,12 @@ const {
   asyncExtractTar,
   asyncRimRaf,
 } = require('./utils');
+const {getSigningToken, signFile} = require('signedsource');
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -49,7 +52,8 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
   switch (bundleType) {
     case NODE_ES2015:
       return `build/node_modules/${packageName}/cjs/${filename}`;
-    case NODE_ESM:
+    case ESM_DEV:
+    case ESM_PROD:
       return `build/node_modules/${packageName}/esm/${filename}`;
     case BUN_DEV:
     case BUN_PROD:
@@ -89,8 +93,6 @@ function getBundleOutputPath(bundle, bundleType, filename, packageName) {
             /\.js$/,
             '.fb.js'
           )}`;
-        case 'react-server-native-relay':
-          return `build/facebook-relay/flight/${filename}`;
         default:
           throw new Error('Unknown RN package.');
       }
@@ -132,6 +134,24 @@ async function copyRNShims() {
     require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
     'build/react-native/shims/ReactNativeTypes.js'
   );
+  processGenerated('build/react-native/shims');
+}
+
+function processGenerated(directory) {
+  const files = readdirSync(directory)
+    .filter(dir => dir.endsWith('.js'))
+    .map(file => path.join(directory, file));
+
+  files.forEach(file => {
+    const originalContents = readFileSync(file, 'utf8');
+    const contents = originalContents
+      // Replace {@}format with {@}noformat
+      .replace(/(\r?\n\s*\*\s*)@format\b.*(\n)/, '$1@noformat$2')
+      // Add {@}nolint and {@}generated
+      .replace(/(\r?\n\s*\*)\//, `$1 @nolint$1 ${getSigningToken()}$1/`);
+    const signedContents = signFile(contents);
+    writeFileSync(file, signedContents, 'utf8');
+  });
 }
 
 async function copyAllShims() {
@@ -150,7 +170,7 @@ function getTarOptions(tgzName, packageName) {
       entries: [CONTENTS_FOLDER],
       map(header) {
         if (header.name.indexOf(CONTENTS_FOLDER + '/') === 0) {
-          header.name = header.name.substring(CONTENTS_FOLDER.length + 1);
+          header.name = header.name.slice(CONTENTS_FOLDER.length + 1);
         }
       },
     },

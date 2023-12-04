@@ -5,10 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
-
-// TODO: This should actually run in `@jest-environment node` but we currently
-// run an old jest that doesn't support AbortController so we use DOM for now.
 
 'use strict';
 
@@ -49,8 +47,8 @@ describe('ReactDOMFizzStaticNode', () => {
   }
 
   // @gate experimental
-  it('should call prerenderToNodeStreams', async () => {
-    const result = await ReactDOMFizzStatic.prerenderToNodeStreams(
+  it('should call prerenderToNodeStream', async () => {
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>hello world</div>,
     );
     const prelude = await readContent(result.prelude);
@@ -59,20 +57,26 @@ describe('ReactDOMFizzStaticNode', () => {
 
   // @gate experimental
   it('should emit DOCTYPE at the root of the document', async () => {
-    const result = await ReactDOMFizzStatic.prerenderToNodeStreams(
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <html>
         <body>hello world</body>
       </html>,
     );
     const prelude = await readContent(result.prelude);
-    expect(prelude).toMatchInlineSnapshot(
-      `"<!DOCTYPE html><html><body>hello world</body></html>"`,
-    );
+    if (gate(flags => flags.enableFloat)) {
+      expect(prelude).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><head></head><body>hello world</body></html>"`,
+      );
+    } else {
+      expect(prelude).toMatchInlineSnapshot(
+        `"<!DOCTYPE html><html><body>hello world</body></html>"`,
+      );
+    }
   });
 
   // @gate experimental
   it('should emit bootstrap script src at the end', async () => {
-    const result = await ReactDOMFizzStatic.prerenderToNodeStreams(
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>hello world</div>,
       {
         bootstrapScriptContent: 'INIT();',
@@ -82,7 +86,7 @@ describe('ReactDOMFizzStaticNode', () => {
     );
     const prelude = await readContent(result.prelude);
     expect(prelude).toMatchInlineSnapshot(
-      `"<div>hello world</div><script>INIT();</script><script src=\\"init.js\\" async=\\"\\"></script><script type=\\"module\\" src=\\"init.mjs\\" async=\\"\\"></script>"`,
+      `"<link rel="preload" as="script" fetchPriority="low" href="init.js"/><link rel="modulepreload" fetchPriority="low" href="init.mjs"/><div>hello world</div><script>INIT();</script><script src="init.js" async=""></script><script type="module" src="init.mjs" async=""></script>"`,
     );
   });
 
@@ -97,7 +101,7 @@ describe('ReactDOMFizzStaticNode', () => {
       }
       return 'Done';
     }
-    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <Suspense fallback="Loading">
           <Wait />
@@ -123,7 +127,7 @@ describe('ReactDOMFizzStaticNode', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzStatic.prerenderToNodeStreams(
+      await ReactDOMFizzStatic.prerenderToNodeStream(
         <div>
           <Throw />
         </div>,
@@ -145,7 +149,7 @@ describe('ReactDOMFizzStaticNode', () => {
     const reportedErrors = [];
     let caughtError = null;
     try {
-      await ReactDOMFizzStatic.prerenderToNodeStreams(
+      await ReactDOMFizzStatic.prerenderToNodeStream(
         <div>
           <Suspense fallback={<Throw />}>
             <InfiniteSuspend />
@@ -167,7 +171,7 @@ describe('ReactDOMFizzStaticNode', () => {
   // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
     const reportedErrors = [];
-    const result = await ReactDOMFizzStatic.prerenderToNodeStreams(
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Throw />
@@ -189,7 +193,7 @@ describe('ReactDOMFizzStaticNode', () => {
   it('should be able to complete by aborting even if the promise never resolves', async () => {
     const errors = [];
     const controller = new AbortController();
-    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
@@ -212,16 +216,14 @@ describe('ReactDOMFizzStaticNode', () => {
     const prelude = await readContent(result.prelude);
     expect(prelude).toContain('Loading');
 
-    expect(errors).toEqual([
-      'The render was aborted by the server without a reason.',
-    ]);
+    expect(errors).toEqual(['This operation was aborted']);
   });
 
   // @gate experimental
   it('should reject if aborting before the shell is complete', async () => {
     const errors = [];
     const controller = new AbortController();
-    const promise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const promise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <InfiniteSuspend />
       </div>,
@@ -236,10 +238,6 @@ describe('ReactDOMFizzStaticNode', () => {
     await jest.runAllTimers();
 
     const theReason = new Error('aborted for reasons');
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = theReason;
     controller.abort(theReason);
 
     let caughtError = null;
@@ -264,7 +262,7 @@ describe('ReactDOMFizzStaticNode', () => {
         </Suspense>
       );
     }
-    const streamPromise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const streamPromise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <App />
       </div>,
@@ -282,12 +280,8 @@ describe('ReactDOMFizzStaticNode', () => {
     } catch (error) {
       caughtError = error;
     }
-    expect(caughtError.message).toBe(
-      'The render was aborted by the server without a reason.',
-    );
-    expect(errors).toEqual([
-      'The render was aborted by the server without a reason.',
-    ]);
+    expect(caughtError.message).toBe('This operation was aborted');
+    expect(errors).toEqual(['This operation was aborted']);
   });
 
   // @gate experimental
@@ -295,13 +289,9 @@ describe('ReactDOMFizzStaticNode', () => {
     const errors = [];
     const controller = new AbortController();
     const theReason = new Error('aborted for reasons');
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = theReason;
     controller.abort(theReason);
 
-    const promise = ReactDOMFizzStatic.prerenderToNodeStreams(
+    const promise = ReactDOMFizzStatic.prerenderToNodeStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
@@ -352,7 +342,7 @@ describe('ReactDOMFizzStaticNode', () => {
 
     const errors = [];
     const controller = new AbortController();
-    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStreams(<App />, {
+    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
       signal: controller.signal,
       onError(x) {
         errors.push(x);
@@ -362,10 +352,6 @@ describe('ReactDOMFizzStaticNode', () => {
 
     await jest.runAllTimers();
 
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = 'foobar';
     controller.abort('foobar');
 
     await resultPromise;
@@ -398,7 +384,7 @@ describe('ReactDOMFizzStaticNode', () => {
 
     const errors = [];
     const controller = new AbortController();
-    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStreams(<App />, {
+    const resultPromise = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
       signal: controller.signal,
       onError(x) {
         errors.push(x.message);
@@ -408,10 +394,6 @@ describe('ReactDOMFizzStaticNode', () => {
 
     await jest.runAllTimers();
 
-    // @TODO this is a hack to work around lack of support for abortSignal.reason in node
-    // The abort call itself should set this property but since we are testing in node we
-    // set it here manually
-    controller.signal.reason = new Error('uh oh');
     controller.abort(new Error('uh oh'));
 
     await resultPromise;

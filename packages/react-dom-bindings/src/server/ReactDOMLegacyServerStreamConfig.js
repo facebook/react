@@ -14,6 +14,7 @@ export interface Destination {
 
 export opaque type PrecomputedChunk = string;
 export opaque type Chunk = string;
+export opaque type BinaryChunk = string;
 
 export function scheduleWork(callback: () => void) {
   callback();
@@ -21,21 +22,18 @@ export function scheduleWork(callback: () => void) {
 
 export function flushBuffered(destination: Destination) {}
 
-export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<any> = (null: any);
-
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(
   destination: Destination,
-  chunk: Chunk | PrecomputedChunk,
+  chunk: Chunk | PrecomputedChunk | BinaryChunk,
 ): void {
   writeChunkAndReturn(destination, chunk);
 }
 
 export function writeChunkAndReturn(
   destination: Destination,
-  chunk: Chunk | PrecomputedChunk,
+  chunk: Chunk | PrecomputedChunk | BinaryChunk,
 ): boolean {
   return destination.push(chunk);
 }
@@ -54,13 +52,29 @@ export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   return content;
 }
 
+export function typedArrayToBinaryChunk(
+  content: $ArrayBufferView,
+): BinaryChunk {
+  throw new Error('Not implemented.');
+}
+
 export function clonePrecomputedChunk(
   chunk: PrecomputedChunk,
 ): PrecomputedChunk {
   return chunk;
 }
 
+export function byteLengthOfChunk(chunk: Chunk | PrecomputedChunk): number {
+  throw new Error('Not implemented.');
+}
+
+export function byteLengthOfBinaryChunk(chunk: BinaryChunk): number {
+  throw new Error('Not implemented.');
+}
+
 export function closeWithError(destination: Destination, error: mixed): void {
-  // $FlowFixMe: This is an Error object or the destination accepts other types.
+  // $FlowFixMe[incompatible-call]: This is an Error object or the destination accepts other types.
   destination.destroy(error);
 }
+
+export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';
