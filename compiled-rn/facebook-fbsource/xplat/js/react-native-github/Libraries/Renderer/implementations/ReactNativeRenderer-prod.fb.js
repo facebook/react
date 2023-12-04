@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7fdeaf4f918aca9cf091153ffddbae9a>>
+ * @generated SignedSource<<863e55acd5e0f90afebe249734c95bac>>
  */
 
 "use strict";
@@ -9766,7 +9766,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1111 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-5ba98bbb",
+    version: "18.3.0-canary-b9d34249",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9809,7 +9809,7 @@ var internals$jscomp$inline_1367 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-5ba98bbb"
+  reconcilerVersion: "18.3.0-canary-b9d34249"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1368 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9865,6 +9865,9 @@ exports.findHostInstance_DEPRECATED = function (componentOrHandle) {
 };
 exports.findNodeHandle = findNodeHandle;
 exports.getInspectorDataForInstance = getInspectorDataForInstance;
+exports.isChildPublicInstance = function () {
+  throw Error("isChildPublicInstance() is not available in production.");
+};
 exports.render = function (element, containerTag, callback) {
   var root = roots.get(containerTag);
   if (!root) {

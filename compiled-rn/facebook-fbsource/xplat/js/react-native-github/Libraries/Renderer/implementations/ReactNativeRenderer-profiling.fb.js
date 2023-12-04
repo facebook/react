@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c0c76c904ba8465467031fe724931223>>
+ * @generated SignedSource<<36792d6bd27d5d504c52b9ade8416d95>>
  */
 
 "use strict";
@@ -10468,7 +10468,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1189 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-0d007843",
+    version: "18.3.0-canary-fea3cad9",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10524,7 +10524,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-0d007843"
+  reconcilerVersion: "18.3.0-canary-fea3cad9"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
@@ -10567,6 +10567,9 @@ exports.findHostInstance_DEPRECATED = function (componentOrHandle) {
 };
 exports.findNodeHandle = findNodeHandle;
 exports.getInspectorDataForInstance = getInspectorDataForInstance;
+exports.isChildPublicInstance = function () {
+  throw Error("isChildPublicInstance() is not available in production.");
+};
 exports.render = function (element, containerTag, callback) {
   var root = roots.get(containerTag);
   if (!root) {

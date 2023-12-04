@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ce5fd2521d2e9fc4c77333a98ac6ecb4>>
+ * @generated SignedSource<<d24e5265ff25936497dfc29885a7ed06>>
  */
 
 "use strict";
@@ -3603,6 +3603,20 @@ to return true:wantsResponderID|                            |
       }
 
       return null;
+    }
+    function doesFiberContain(parentFiber, childFiber) {
+      var node = childFiber;
+      var parentFiberAlternate = parentFiber.alternate;
+
+      while (node !== null) {
+        if (node === parentFiber || node === parentFiberAlternate) {
+          return true;
+        }
+
+        node = node.return;
+      }
+
+      return false;
     }
 
     // Modules provided by RN:
@@ -28256,7 +28270,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-285f1cc2";
+    var ReactVersion = "18.3.0-canary-6d7633fe";
 
     function createPortal$1(
       children,
@@ -28980,6 +28994,49 @@ to return true:wantsResponderID|                            |
         internalInstanceHandle.stateNode && // $FlowExpectedError[incompatible-use]
         internalInstanceHandle.stateNode.node
       );
+    } // Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
+
+    function isChildPublicInstance(parentInstance, childInstance) {
+      {
+        // Paper
+        if (
+          parentInstance instanceof ReactNativeFiberHostComponent ||
+          childInstance instanceof ReactNativeFiberHostComponent
+        ) {
+          if (
+            parentInstance instanceof ReactNativeFiberHostComponent &&
+            childInstance instanceof ReactNativeFiberHostComponent
+          ) {
+            return doesFiberContain(
+              parentInstance._internalFiberInstanceHandleDEV,
+              childInstance._internalFiberInstanceHandleDEV
+            );
+          } // Means that one instance is from Fabric and other is from Paper.
+
+          return false;
+        }
+
+        var parentInternalInstanceHandle =
+          ReactNativePrivateInterface.getInternalInstanceHandleFromPublicInstance(
+            parentInstance
+          );
+        var childInternalInstanceHandle =
+          ReactNativePrivateInterface.getInternalInstanceHandleFromPublicInstance(
+            childInstance
+          ); // Fabric
+
+        if (
+          parentInternalInstanceHandle != null &&
+          childInternalInstanceHandle != null
+        ) {
+          return doesFiberContain(
+            parentInternalInstanceHandle,
+            childInternalInstanceHandle
+          );
+        }
+
+        return false;
+      }
     }
 
     var emptyObject = {};
@@ -29307,6 +29364,7 @@ to return true:wantsResponderID|                            |
     exports.findHostInstance_DEPRECATED = findHostInstance_DEPRECATED;
     exports.findNodeHandle = findNodeHandle;
     exports.getInspectorDataForInstance = getInspectorDataForInstance;
+    exports.isChildPublicInstance = isChildPublicInstance;
     exports.render = render;
     exports.sendAccessibilityEvent = sendAccessibilityEvent;
     exports.unmountComponentAtNode = unmountComponentAtNode;

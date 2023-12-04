@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<aeb13744feb3c4d52877eeb7f7905a51>>
+ * @generated SignedSource<<685bf7c576463dfbb4cf704d94b8c71b>>
  */
 
 "use strict";
@@ -5861,6 +5861,20 @@ to return true:wantsResponderID|                            |
       }
 
       return null;
+    }
+    function doesFiberContain(parentFiber, childFiber) {
+      var node = childFiber;
+      var parentFiberAlternate = parentFiber.alternate;
+
+      while (node !== null) {
+        if (node === parentFiber || node === parentFiberAlternate) {
+          return true;
+        }
+
+        node = node.return;
+      }
+
+      return false;
     }
 
     function describeBuiltInComponentFrame(name, source, ownerFn) {
@@ -27815,7 +27829,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-c34d6f72";
+    var ReactVersion = "18.3.0-canary-ad95fe0f";
 
     function createPortal$1(
       children,
@@ -28357,6 +28371,158 @@ to return true:wantsResponderID|                            |
       return instanceCache.get(tag) || null;
     }
 
+    /**
+     * In the future, we should cleanup callbacks by cancelling them instead of
+     * using this.
+     */
+    function mountSafeCallback_NOT_REALLY_SAFE(context, callback) {
+      return function () {
+        if (!callback) {
+          return undefined;
+        } // This protects against createClass() components.
+        // We don't know if there is code depending on it.
+        // We intentionally don't use isMounted() because even accessing
+        // isMounted property on a React ES6 class will trigger a warning.
+
+        if (typeof context.__isMounted === "boolean") {
+          if (!context.__isMounted) {
+            return undefined;
+          }
+        } // FIXME: there used to be other branches that protected
+        // against unmounted host components. But RN host components don't
+        // define isMounted() anymore, so those checks didn't do anything.
+        // They caused false positive warning noise so we removed them:
+        // https://github.com/facebook/react-native/issues/18868#issuecomment-413579095
+        // However, this means that the callback is NOT guaranteed to be safe
+        // for host components. The solution we should implement is to make
+        // UIManager.measure() and similar calls truly cancelable. Then we
+        // can change our own code calling them to cancel when something unmounts.
+
+        return callback.apply(context, arguments);
+      };
+    }
+    function warnForStyleProps(props, validAttributes) {
+      {
+        for (var key in validAttributes.style) {
+          if (!(validAttributes[key] || props[key] === undefined)) {
+            error(
+              "You are setting the style `{ %s" +
+                ": ... }` as a prop. You " +
+                "should nest it in a style object. " +
+                "E.g. `{ style: { %s" +
+                ": ... } }`",
+              key,
+              key
+            );
+          }
+        }
+      }
+    }
+
+    var ReactNativeFiberHostComponent = /*#__PURE__*/ (function () {
+      function ReactNativeFiberHostComponent(
+        tag,
+        viewConfig,
+        internalInstanceHandleDEV
+      ) {
+        this._children = void 0;
+        this._nativeTag = void 0;
+        this._internalFiberInstanceHandleDEV = void 0;
+        this.viewConfig = void 0;
+        this._nativeTag = tag;
+        this._children = [];
+        this.viewConfig = viewConfig;
+
+        {
+          this._internalFiberInstanceHandleDEV = internalInstanceHandleDEV;
+        }
+      }
+
+      var _proto = ReactNativeFiberHostComponent.prototype;
+
+      _proto.blur = function blur() {
+        ReactNativePrivateInterface.TextInputState.blurTextInput(this);
+      };
+
+      _proto.focus = function focus() {
+        ReactNativePrivateInterface.TextInputState.focusTextInput(this);
+      };
+
+      _proto.measure = function measure(callback) {
+        ReactNativePrivateInterface.UIManager.measure(
+          this._nativeTag,
+          mountSafeCallback_NOT_REALLY_SAFE(this, callback)
+        );
+      };
+
+      _proto.measureInWindow = function measureInWindow(callback) {
+        ReactNativePrivateInterface.UIManager.measureInWindow(
+          this._nativeTag,
+          mountSafeCallback_NOT_REALLY_SAFE(this, callback)
+        );
+      };
+
+      _proto.measureLayout = function measureLayout(
+        relativeToNativeNode,
+        onSuccess,
+        onFail
+        /* currently unused */
+      ) {
+        var relativeNode;
+
+        if (typeof relativeToNativeNode === "number") {
+          // Already a node handle
+          relativeNode = relativeToNativeNode;
+        } else {
+          var nativeNode = relativeToNativeNode;
+
+          if (nativeNode._nativeTag) {
+            relativeNode = nativeNode._nativeTag;
+          }
+        }
+
+        if (relativeNode == null) {
+          {
+            error(
+              "Warning: ref.measureLayout must be called with a node handle or a ref to a native component."
+            );
+          }
+
+          return;
+        }
+
+        ReactNativePrivateInterface.UIManager.measureLayout(
+          this._nativeTag,
+          relativeNode,
+          mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
+          mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess)
+        );
+      };
+
+      _proto.setNativeProps = function setNativeProps(nativeProps) {
+        {
+          warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
+        }
+
+        var updatePayload = create(
+          nativeProps,
+          this.viewConfig.validAttributes
+        ); // Avoid the overhead of bridge calls if there's no update.
+        // This is an expensive no-op for Android, and causes an unnecessary
+        // view invalidation for certain components (eg RCTTextInput) on iOS.
+
+        if (updatePayload != null) {
+          ReactNativePrivateInterface.UIManager.updateView(
+            this._nativeTag,
+            this.viewConfig.uiViewClassName,
+            updatePayload
+          );
+        }
+      };
+
+      return ReactNativeFiberHostComponent;
+    })();
+
     var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
     function findHostInstance_DEPRECATED(componentOrHandle) {
       {
@@ -28545,6 +28711,49 @@ to return true:wantsResponderID|                            |
         internalInstanceHandle.stateNode && // $FlowExpectedError[incompatible-use]
         internalInstanceHandle.stateNode.node
       );
+    } // Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
+
+    function isChildPublicInstance(parentInstance, childInstance) {
+      {
+        // Paper
+        if (
+          parentInstance instanceof ReactNativeFiberHostComponent ||
+          childInstance instanceof ReactNativeFiberHostComponent
+        ) {
+          if (
+            parentInstance instanceof ReactNativeFiberHostComponent &&
+            childInstance instanceof ReactNativeFiberHostComponent
+          ) {
+            return doesFiberContain(
+              parentInstance._internalFiberInstanceHandleDEV,
+              childInstance._internalFiberInstanceHandleDEV
+            );
+          } // Means that one instance is from Fabric and other is from Paper.
+
+          return false;
+        }
+
+        var parentInternalInstanceHandle =
+          ReactNativePrivateInterface.getInternalInstanceHandleFromPublicInstance(
+            parentInstance
+          );
+        var childInternalInstanceHandle =
+          ReactNativePrivateInterface.getInternalInstanceHandleFromPublicInstance(
+            childInstance
+          ); // Fabric
+
+        if (
+          parentInternalInstanceHandle != null &&
+          childInternalInstanceHandle != null
+        ) {
+          return doesFiberContain(
+            parentInternalInstanceHandle,
+            childInternalInstanceHandle
+          );
+        }
+
+        return false;
+      }
     }
 
     var emptyObject = {};
@@ -28859,6 +29068,7 @@ to return true:wantsResponderID|                            |
       getNodeFromInternalInstanceHandle;
     exports.getPublicInstanceFromInternalInstanceHandle =
       getPublicInstanceFromInternalInstanceHandle;
+    exports.isChildPublicInstance = isChildPublicInstance;
     exports.render = render;
     exports.sendAccessibilityEvent = sendAccessibilityEvent;
     exports.stopSurface = stopSurface;
