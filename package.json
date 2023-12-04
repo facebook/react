@@ -4,7 +4,6 @@
     "packages/*"
   ],
   "devDependencies": {
-    "@actuallyworks/node-fetch": "^2.6.0",
     "@babel/cli": "^7.10.5",
     "@babel/code-frame": "^7.10.4",
     "@babel/core": "^7.11.1",
@@ -47,7 +46,6 @@
     "coffee-script": "^1.12.7",
     "confusing-browser-globals": "^1.0.9",
     "core-js": "^3.6.4",
-    "coveralls": "^3.0.9",
     "create-react-class": "^15.6.3",
     "danger": "^11.2.3",
     "error-stack-parser": "^2.0.6",
