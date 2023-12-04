@@ -62,7 +62,7 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   compilationMode: "infer",
   panicThreshold: "CRITICAL_ERRORS",
   environment: {
-    validateHooksUsage: false,
+    validateHooksUsage: true,
     validateNoSetStateInRender: true,
   },
 };
