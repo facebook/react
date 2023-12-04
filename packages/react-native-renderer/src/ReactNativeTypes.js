@@ -191,6 +191,10 @@ export type ReactNativeType = {
   findNodeHandle<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
   ): ?number,
+  isChildPublicInstance(
+    parent: PublicInstance | HostComponent<mixed>,
+    child: PublicInstance | HostComponent<mixed>,
+  ): boolean,
   dispatchCommand(
     handle: ElementRef<HostComponent<mixed>>,
     command: string,
@@ -229,6 +233,7 @@ export type ReactFabricType = {
     command: string,
     args: Array<mixed>,
   ): void,
+  isChildPublicInstance(parent: PublicInstance, child: PublicInstance): boolean,
   sendAccessibilityEvent(
     handle: ElementRef<HostComponent<mixed>>,
     eventType: string,

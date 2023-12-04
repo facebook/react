@@ -8,8 +8,6 @@
  */
 
 import type {Node, HostComponent} from './ReactNativeTypes';
-import type {PublicInstance as FabricPublicInstance} from './ReactFiberConfigFabric';
-import type {PublicInstance as PaperPublicInstance} from './ReactFiberConfigNative';
 import type {ElementRef, ElementType} from 'react';
 
 // Modules provided by RN:
@@ -225,6 +223,11 @@ export function getNodeFromInternalInstanceHandle(
   );
 }
 
+// Should have been PublicInstance from ReactFiberConfigFabric
+type FabricPublicInstance = mixed;
+// Should have been PublicInstance from ReactFiberConfigNative
+type PaperPublicInstance = HostComponent<mixed>;
+
 // Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
 export function isChildPublicInstance(
   parentInstance: FabricPublicInstance | PaperPublicInstance,
@@ -251,8 +254,10 @@ export function isChildPublicInstance(
     }
 
     const parentInternalInstanceHandle =
+      // $FlowExpectedError[incompatible-call] Type for parentInstance should have been PublicInstance from ReactFiberConfigFabric.
       getInternalInstanceHandleFromPublicInstance(parentInstance);
     const childInternalInstanceHandle =
+      // $FlowExpectedError[incompatible-call] Type for childInstance should have been PublicInstance from ReactFiberConfigFabric.
       getInternalInstanceHandleFromPublicInstance(childInstance);
 
     // Fabric
