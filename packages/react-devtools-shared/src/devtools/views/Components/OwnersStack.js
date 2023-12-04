@@ -202,7 +202,6 @@ type ElementsDropdownProps = {
   owners: Array<SerializedElement>,
   selectedIndex: number,
   selectOwner: SelectOwner,
-  ...
 };
 function ElementsDropdown({owners, selectOwner}: ElementsDropdownProps) {
   const store = useContext(StoreContext);
