@@ -467,7 +467,7 @@ export class Environment {
 }
 
 // From https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#LL18C1-L23C2
-function isHookName(name: string): boolean {
+export function isHookName(name: string): boolean {
   /*
    * if (__EXPERIMENTAL__) {
    *   return name === 'use' || /^use[A-Z0-9]/.test(name);

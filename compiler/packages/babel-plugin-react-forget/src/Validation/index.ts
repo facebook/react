@@ -10,5 +10,4 @@ export { validateHooksUsage } from "./ValidateHooksUsage";
 export { validateMemoizedEffectDependencies } from "./ValidateMemoizedEffectDependencies";
 export { validateNoRefAccessInRender } from "./ValidateNoRefAccesInRender";
 export { validateNoSetStateInRender } from "./ValidateNoSetStateInRender";
-export { validateUnconditionalHooks } from "./ValidateUnconditionalHooks";
 export { validateUseMemo } from "./ValidateUseMemo";

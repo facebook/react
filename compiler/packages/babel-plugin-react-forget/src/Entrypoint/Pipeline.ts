@@ -74,7 +74,6 @@ import {
   validateMemoizedEffectDependencies,
   validateNoRefAccessInRender,
   validateNoSetStateInRender,
-  validateUnconditionalHooks,
   validateUseMemo,
 } from "../Validation";
 
@@ -151,12 +150,6 @@ function* runWithEnvironment(
 
   if (env.config.validateHooksUsage) {
     validateHooksUsage(hir);
-    const conditionalHooksResult = validateUnconditionalHooks(hir).unwrap();
-    yield log({
-      kind: "debug",
-      name: "ValidateUnconditionalHooks",
-      value: conditionalHooksResult.debug(),
-    });
   }
 
   analyseFunctions(hir);
