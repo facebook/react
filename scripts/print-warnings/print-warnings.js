@@ -75,11 +75,19 @@ gs([
   '!**/node_modules/**/*.js',
 ]).pipe(
   through.obj(transform, cb => {
-    process.stdout.write(
-      Array.from(warnings, warning => JSON.stringify(warning))
-        .sort()
-        .join('\n') + '\n'
-    );
+    if (process.argv[2] === '--js') {
+      const warningsArray = Array.from(warnings);
+      warningsArray.sort();
+      process.stdout.write(
+        `export default ${JSON.stringify(warningsArray, null, 2)};\n`
+      );
+    } else {
+      process.stdout.write(
+        Array.from(warnings, warning => JSON.stringify(warning))
+          .sort()
+          .join('\n') + '\n'
+      );
+    }
     cb();
   })
 );
