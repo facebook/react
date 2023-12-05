@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import invariant from "invariant";
 import * as React from "react";
 
 const {
@@ -41,7 +42,7 @@ export function $read(memoCache: MemoCache, index: number) {
   return value;
 }
 
-const LazyGuardDispatcher: { [key: string]: () => never } = {};
+const LazyGuardDispatcher: { [key: string]: (...args: Array<any>) => any } = {};
 [
   "readContext",
   "useCallback",
@@ -66,26 +67,121 @@ const LazyGuardDispatcher: { [key: string]: () => never } = {};
   "useCacheRefresh",
 ].forEach((name) => {
   LazyGuardDispatcher[name] = () => {
-    throw new Error(`Cannot call ${name} within ReactForget lazy block.`);
+    throw new Error(
+      `[React] Unexpected React hook call (${name}) from a React Forget compiled function. ` +
+        "Check that all hooks are called directly and named according to convention ('use[A-Z]') "
+    );
   };
 });
 
 let originalDispatcher: unknown = null;
 
-export function $startLazy() {
-  if (originalDispatcher !== null) {
-    throw new Error("unexpected startLazy with dispatcher set");
+// Allow guards are not emitted for useMemoCache
+LazyGuardDispatcher["useMemoCache"] = (count: number) => {
+  if (originalDispatcher == null) {
+    throw new Error(
+      "React Forget internal invariant violation: unexpected null dispatcher"
+    );
+  } else {
+    return (originalDispatcher as any).useMemoCache(count);
   }
-  originalDispatcher = ReactCurrentDispatcher.current;
-  ReactCurrentDispatcher.current = LazyGuardDispatcher;
+};
+
+enum GuardKind {
+  PushGuardContext = 0,
+  PopGuardContext = 1,
+  PushExpectHook = 2,
+  PopExpectHook = 3,
 }
 
-export function $endLazy() {
-  if (originalDispatcher === null) {
-    throw new Error("unexpected endLazy with dispatcher not set");
+function setCurrent(newDispatcher: any) {
+  ReactCurrentDispatcher.current = newDispatcher;
+  return ReactCurrentDispatcher.current;
+}
+
+const guardFrames: Array<unknown> = [];
+
+/**
+ * When `enableEmitHookGuards` is set, this does runtime validation
+ * of the no-conditional-hook-calls rule.
+ * As Forget needs to statically understand which calls to move out of
+ * conditional branches (i.e. Forget cannot memoize the results of hook
+ * calls), its understanding of "the rules of React" are more restrictive.
+ * This validation throws on unsound inputs at runtime.
+ *
+ * Components should only be invoked through React as Forget could memoize
+ * the call to AnotherComponent, introducing conditional hook calls in its
+ * compiled output.
+ * ```js
+ * function Invalid(props) {
+ *  const myJsx = AnotherComponent(props);
+ *  return <div> { myJsx } </div>;
+ * }
+ *
+ * Hooks must be named as hooks.
+ * ```js
+ * const renamedHook = useState;
+ * function Invalid() {
+ *   const [state, setState] = renamedHook(0);
+ * }
+ * ```
+ *
+ * Hooks must be directly called.
+ * ```
+ * function call(fn) {
+ *  return fn();
+ * }
+ * function Invalid() {
+ *   const result = call(useMyHook);
+ * }
+ * ```
+ */
+export function $dispatcherGuard(kind: GuardKind) {
+  const curr = ReactCurrentDispatcher.current;
+  if (kind === GuardKind.PushGuardContext) {
+    // Push before checking invariant or errors
+    guardFrames.push(curr);
+
+    if (guardFrames.length === 1) {
+      // save if we're the first guard on the stack
+      originalDispatcher = curr;
+    }
+
+    if (curr === LazyGuardDispatcher) {
+      throw new Error(
+        `[React] Unexpected call to custom hook or component from a React Forget compiled function. ` +
+          "Check that (1) all hooks are called directly and named according to convention ('use[A-Z]') " +
+          "and (2) components are returned as JSX instead of being directly invoked."
+      );
+    }
+    setCurrent(LazyGuardDispatcher);
+  } else if (kind === GuardKind.PopGuardContext) {
+    // Pop before checking invariant or errors
+    const lastFrame = guardFrames.pop();
+
+    invariant(
+      lastFrame != null,
+      "React Forget internal error: unexpected null in guard stack"
+    );
+    if (guardFrames.length === 0) {
+      originalDispatcher = null;
+    }
+    setCurrent(lastFrame);
+  } else if (kind === GuardKind.PushExpectHook) {
+    // ExpectHooks could be nested, so we save the current dispatcher
+    // for the matching PopExpectHook to restore.
+    guardFrames.push(curr);
+    setCurrent(originalDispatcher);
+  } else if (kind === GuardKind.PopExpectHook) {
+    const lastFrame = guardFrames.pop();
+    invariant(
+      lastFrame != null,
+      "React Forget internal error: unexpected null in guard stack"
+    );
+    setCurrent(lastFrame);
+  } else {
+    invariant(false, "Forget internal error: unreachable block" + kind);
   }
-  ReactCurrentDispatcher.current = originalDispatcher;
-  originalDispatcher = null;
 }
 
 export function $reset($: MemoCache) {

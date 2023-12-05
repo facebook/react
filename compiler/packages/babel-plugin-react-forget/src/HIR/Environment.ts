@@ -191,6 +191,8 @@ const EnvironmentConfigSchema = z.object({
    */
   enableEmitFreeze: ExternalFunctionSchema.nullish(),
 
+  enableEmitHookGuards: ExternalFunctionSchema.nullish(),
+
   /*
    * Enables instrumentation codegen. This emits a dev-mode only call to an
    * instrumentation function, for components and hooks that Forget compiles.

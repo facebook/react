@@ -312,6 +312,13 @@ export function compileProgram(
       );
       externalFunctions.push(enableEmitFreeze);
     }
+
+    if (options.environment?.enableEmitHookGuards != null) {
+      const enableEmitHookGuards = tryParseExternalFunction(
+        options.environment.enableEmitHookGuards
+      );
+      externalFunctions.push(enableEmitHookGuards);
+    }
   } catch (err) {
     handleError(err, pass, null);
     return;

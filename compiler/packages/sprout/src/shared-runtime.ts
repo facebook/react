@@ -229,4 +229,7 @@ export const ObjectWithHooks = {
   useMakeArray(): Array<number> {
     return [1, 2, 3];
   },
+  useIdentity<T>(arg: T): T {
+    return arg;
+  }
 };

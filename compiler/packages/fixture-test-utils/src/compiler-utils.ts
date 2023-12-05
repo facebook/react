@@ -33,6 +33,7 @@ export function transformFixtureInput(
   let gating = null;
   let enableEmitInstrumentForget = null;
   let enableEmitFreeze = null;
+  let enableEmitHookGuards = null;
   let compilationMode: CompilationMode = "all";
   let enableUseMemoCachePolyfill = false;
   let panicThreshold: PanicThresholdOptions = "ALL_ERRORS";
@@ -68,6 +69,12 @@ export function transformFixtureInput(
     enableEmitFreeze = {
       source: "react-forget-runtime",
       importSpecifierName: "makeReadOnly",
+    };
+  }
+  if (firstLine.includes("@enableEmitHookGuards")) {
+    enableEmitHookGuards = {
+      source: "react-forget-runtime",
+      importSpecifierName: "$dispatcherGuard",
     };
   }
   if (firstLine.includes("@enableUseMemoCachePolyfill")) {
@@ -116,6 +123,7 @@ export function transformFixtureInput(
         ]),
         enableEmitFreeze,
         enableEmitInstrumentForget,
+        enableEmitHookGuards,
         assertValidMutableRanges: true,
       },
       compilationMode,

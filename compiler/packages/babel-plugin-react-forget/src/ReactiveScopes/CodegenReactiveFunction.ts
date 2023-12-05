@@ -8,7 +8,7 @@
 import * as t from "@babel/types";
 import { pruneUnusedLValues, pruneUnusedLabels, renameVariables } from ".";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
-import { Environment } from "../HIR";
+import { Environment, EnvironmentConfig, ExternalFunction } from "../HIR";
 import {
   BlockId,
   GeneratedSource,
@@ -30,10 +30,12 @@ import {
   ReactiveValue,
   SourceLocation,
   SpreadPattern,
+  getHookKind,
 } from "../HIR/HIR";
 import { printPlace } from "../HIR/PrintHIR";
 import { eachPatternOperand } from "../HIR/visitors";
 import { Err, Ok, Result } from "../Utils/Result";
+import { GuardKind } from "../Utils/RuntimeDiagnosticConstants";
 import { assertExhaustive } from "../Utils/utils";
 import { buildReactiveFunction } from "./BuildReactiveFunction";
 import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtOperandsInSameScope";
@@ -85,6 +87,18 @@ export function codegenFunction(
       )
     );
     compiled.body.body.unshift(test);
+  }
+
+  const hookGuard = fn.env.config.enableEmitHookGuards;
+  if (hookGuard != null) {
+    compiled.body = t.blockStatement([
+      createHookGuard(
+        hookGuard,
+        compiled.body.body,
+        GuardKind.PushHookGuard,
+        GuardKind.PopHookGuard
+      ),
+    ]);
   }
   return compileResult;
 }
@@ -970,7 +984,6 @@ function withLoc<T extends (...args: any[]) => t.Node>(
 }
 
 const createBinaryExpression = withLoc(t.binaryExpression);
-const createCallExpression = withLoc(t.callExpression);
 const createExpressionStatement = withLoc(t.expressionStatement);
 const _createLabelledStatement = withLoc(t.labeledStatement);
 const createVariableDeclaration = withLoc(t.variableDeclaration);
@@ -988,6 +1001,77 @@ const createJsxExpressionContainer = withLoc(t.jsxExpressionContainer);
 const createJsxText = withLoc(t.jsxText);
 const createJsxClosingElement = withLoc(t.jsxClosingElement);
 const createStringLiteral = withLoc(t.stringLiteral);
+
+function createHookGuard(
+  guard: ExternalFunction,
+  stmts: t.Statement[],
+  before: GuardKind,
+  after: GuardKind
+): t.TryStatement {
+  function createHookGuardImpl(kind: number): t.ExpressionStatement {
+    return t.expressionStatement(
+      t.callExpression(t.identifier(guard.importSpecifierName), [
+        t.numericLiteral(kind),
+      ])
+    );
+  }
+
+  return t.tryStatement(
+    t.blockStatement([createHookGuardImpl(before), ...stmts]),
+    null,
+    t.blockStatement([createHookGuardImpl(after)])
+  );
+}
+
+/**
+ * Create a call expression.
+ * If enableEmitHookGuards is set and the callExpression is a hook call,
+ * the following transform will be made.
+ * ```js
+ * // source
+ * useHook(arg1, arg2)
+ *
+ * // codegen
+ * (() => {
+ *   try {
+ *     $dispatcherGuard(PUSH_EXPECT_HOOK);
+ *     return useHook(arg1, arg2);
+ *   } finally {
+ *     $dispatcherGuard(POP_EXPECT_HOOK);
+ *   }
+ * })()
+ * ```
+ */
+function createCallExpression(
+  config: EnvironmentConfig,
+  callee: t.Expression,
+  args: Array<t.Expression | t.SpreadElement>,
+  loc: SourceLocation | null,
+  isHook: boolean
+): t.CallExpression {
+  const callExpr = t.callExpression(callee, args);
+  if (loc != null && loc != GeneratedSource) {
+    callExpr.loc = loc;
+  }
+
+  const hookGuard = config.enableEmitHookGuards;
+  if (hookGuard != null && isHook) {
+    const iife = t.arrowFunctionExpression(
+      [],
+      t.blockStatement([
+        createHookGuard(
+          hookGuard,
+          [t.returnStatement(callExpr)],
+          GuardKind.AllowHook,
+          GuardKind.DisallowHook
+        ),
+      ])
+    );
+    return t.callExpression(iife, []);
+  } else {
+    return callExpr;
+  }
+}
 
 type Temporaries = Map<IdentifierId, t.Expression | t.JSXText | null>;
 
@@ -1091,9 +1175,16 @@ function codegenInstructionValue(
       break;
     }
     case "CallExpression": {
+      const isHook = getHookKind(cx.env, instrValue.callee.identifier) != null;
       const callee = codegenPlaceToExpression(cx, instrValue.callee);
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
-      value = createCallExpression(instrValue.loc, callee, args);
+      value = createCallExpression(
+        cx.env.config,
+        callee,
+        args,
+        instrValue.loc,
+        isHook
+      );
       break;
     }
     case "OptionalExpression": {
@@ -1147,6 +1238,8 @@ function codegenInstructionValue(
       break;
     }
     case "MethodCall": {
+      const isHook =
+        getHookKind(cx.env, instrValue.property.identifier) != null;
       const memberExpr = codegenPlaceToExpression(cx, instrValue.property);
       CompilerError.invariant(
         t.isMemberExpression(memberExpr) ||
@@ -1175,7 +1268,13 @@ function codegenInstructionValue(
         }
       );
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
-      value = createCallExpression(instrValue.loc, memberExpr, args);
+      value = createCallExpression(
+        cx.env.config,
+        memberExpr,
+        args,
+        instrValue.loc,
+        isHook
+      );
       break;
     }
     case "NewExpression": {
