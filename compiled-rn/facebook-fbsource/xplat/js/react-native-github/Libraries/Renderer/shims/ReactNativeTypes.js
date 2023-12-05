@@ -7,7 +7,7 @@
  * @noformat
  * @flow strict
  * @nolint
- * @generated SignedSource<<1836a1b6639552dce12199ef2c85f63d>>
+ * @generated SignedSource<<30640e7dd83e22e14db1648ca63f4316>>
  */
 
 import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';
@@ -193,6 +193,10 @@ export type ReactNativeType = {
   findNodeHandle<TElementType: ElementType>(
     componentOrHandle: ?(ElementRef<TElementType> | number),
   ): ?number,
+  isChildPublicInstance(
+    parent: PublicInstance | HostComponent<mixed>,
+    child: PublicInstance | HostComponent<mixed>,
+  ): boolean,
   dispatchCommand(
     handle: ElementRef<HostComponent<mixed>>,
     command: string,
@@ -231,6 +235,7 @@ export type ReactFabricType = {
     command: string,
     args: Array<mixed>,
   ): void,
+  isChildPublicInstance(parent: PublicInstance, child: PublicInstance): boolean,
   sendAccessibilityEvent(
     handle: ElementRef<HostComponent<mixed>>,
     eventType: string,

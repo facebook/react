@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<685bf7c576463dfbb4cf704d94b8c71b>>
+ * @generated SignedSource<<86b0cafe89bf505872d503a476664cf5>>
  */
 
 "use strict";
@@ -27829,7 +27829,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-ad95fe0f";
+    var ReactVersion = "18.3.0-canary-e53565aa";
 
     function createPortal$1(
       children,
@@ -28711,7 +28711,9 @@ to return true:wantsResponderID|                            |
         internalInstanceHandle.stateNode && // $FlowExpectedError[incompatible-use]
         internalInstanceHandle.stateNode.node
       );
-    } // Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
+    } // Should have been PublicInstance from ReactFiberConfigFabric
+    // Should have been PublicInstance from ReactFiberConfigNative
+    // Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
 
     function isChildPublicInstance(parentInstance, childInstance) {
       {
@@ -28733,11 +28735,11 @@ to return true:wantsResponderID|                            |
           return false;
         }
 
-        var parentInternalInstanceHandle =
+        var parentInternalInstanceHandle = // $FlowExpectedError[incompatible-call] Type for parentInstance should have been PublicInstance from ReactFiberConfigFabric.
           ReactNativePrivateInterface.getInternalInstanceHandleFromPublicInstance(
             parentInstance
           );
-        var childInternalInstanceHandle =
+        var childInternalInstanceHandle = // $FlowExpectedError[incompatible-call] Type for childInstance should have been PublicInstance from ReactFiberConfigFabric.
           ReactNativePrivateInterface.getInternalInstanceHandleFromPublicInstance(
             childInstance
           ); // Fabric
