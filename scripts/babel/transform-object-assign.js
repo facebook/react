@@ -10,45 +10,56 @@
 const helperModuleImports = require('@babel/helper-module-imports');
 
 module.exports = function autoImporter(babel) {
-  function getAssignIdent(path, file, state) {
-    if (state.id) {
-      return state.id;
+  function getAssignIdentifier(path, file, state) {
+    // If identifier already generated, return it
+    if (state.identifier) {
+      return state.identifier;
     }
-    state.id = helperModuleImports.addDefault(path, 'shared/assign', {
+
+    // Otherwise, generate a new identifier using helper-module-imports
+    state.identifier = helperModuleImports.addDefault(path, 'shared/assign', {
       nameHint: 'assign',
     });
-    return state.id;
+
+    return state.identifier;
   }
 
   return {
-    pre: function () {
-      // map from module to generated identifier
-      this.id = null;
+    pre() {
+      // Initialize identifier to null
+      this.identifier = null;
     },
 
     visitor: {
-      CallExpression: function (path, file) {
+      CallExpression(path, file) {
+        // Ignore if transforming shared/assign
         if (/shared(\/|\\)assign/.test(file.filename)) {
-          // Don't replace Object.assign if we're transforming shared/assign
           return;
         }
+
+        // Replace Object.assign with the generated identifier
         if (path.get('callee').matchesPattern('Object.assign')) {
-          // generate identifier and require if it hasn't been already
-          const id = getAssignIdent(path, file, this);
-          path.node.callee = id;
+          const identifier = getAssignIdentifier(path, file, this);
+          path.node.callee = identifier;
         }
       },
 
-      MemberExpression: function (path, file) {
+      MemberExpression(path, file) {
+        // Ignore if transforming shared/assign
         if (/shared(\/|\\)assign/.test(file.filename)) {
-          // Don't replace Object.assign if we're transforming shared/assign
           return;
         }
+
+        // Replace Object.assign with the generated identifier
         if (path.matchesPattern('Object.assign')) {
-          const id = getAssignIdent(path, file, this);
-          path.replaceWith(id);
+          const identifier = getAssignIdentifier(path, file, this);
+          path.replaceWith(identifier);
         }
       },
+    },
+  };
+};
+
     },
   };
 };
