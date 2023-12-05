@@ -1,7 +1,7 @@
 'use strict';
 
-const {readdirSync, statSync} = require('fs');
-const {join} = require('path');
+const { readdirSync, statSync } = require('fs');
+const { join } = require('path');
 const runBenchmark = require('./benchmark');
 const {
   buildReactBundles,
@@ -14,23 +14,28 @@ const chalk = require('chalk');
 const printResults = require('./stats');
 const serveBenchmark = require('./server');
 
+// Function to get the names of available benchmarks
 function getBenchmarkNames() {
   return readdirSync(join(__dirname, 'benchmarks')).filter(file =>
     statSync(join(__dirname, 'benchmarks', file)).isDirectory()
   );
 }
 
+// Utility function to wait for a given time
 function wait(val) {
   return new Promise(resolve => setTimeout(resolve, val));
 }
 
-const runRemote = argv.remote;
-const runLocal = argv.local;
-const benchmarkFilter = argv.benchmark;
-const headless = argv.headless;
-const skipBuild = argv['skip-build'];
+// Function to build and run a specific benchmark
+async function buildAndRunBenchmark(reactPath, benchmarkName) {
+  console.log(chalk.gray(`- Building benchmark "${chalk.white(benchmarkName)}"...`));
+  await buildBenchmark(reactPath, benchmarkName);
+  console.log(chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"...`));
+  return runBenchmark(benchmarkName, argv.headless);
+}
 
-async function runBenchmarks(reactPath) {
+// Function to run benchmarks with optional filtering
+async function runBenchmarks(reactPath, benchmarkFilter) {
   const benchmarkNames = getBenchmarkNames();
   const results = {};
   const server = serveBenchmark();
@@ -39,60 +44,41 @@ async function runBenchmarks(reactPath) {
   for (let i = 0; i < benchmarkNames.length; i++) {
     const benchmarkName = benchmarkNames[i];
 
-    if (
-      !benchmarkFilter ||
-      (benchmarkFilter && benchmarkName.indexOf(benchmarkFilter) !== -1)
-    ) {
-      console.log(
-        chalk.gray(`- Building benchmark "${chalk.white(benchmarkName)}"...`)
-      );
-      await buildBenchmark(reactPath, benchmarkName);
-      console.log(
-        chalk.gray(`- Running benchmark "${chalk.white(benchmarkName)}"...`)
-      );
-      results[benchmarkName] = await runBenchmark(benchmarkName, headless);
+    // Check if the benchmark should be included based on the filter
+    if (!benchmarkFilter || (benchmarkFilter && benchmarkName.includes(benchmarkFilter))) {
+      results[benchmarkName] = await buildAndRunBenchmark(reactPath, benchmarkName);
     }
   }
 
   server.close();
-  // http-server.close() is async but they don't provide a callback..
   await wait(500);
   return results;
 }
 
-// get the performance benchmark results
-// from remote main (default React repo)
+// Function to perform benchmarks for the remote (default React repo)
 async function benchmarkRemoteMaster() {
-  console.log(chalk.gray(`- Building React bundles...`));
-  let commit = argv.remote;
+  console.log(chalk.gray(`- Building React bundles for remote...`));
+  const commit = argv.remote || (await getMergeBaseFromLocalGitRepo(join(__dirname, '..', '..')));
+  console.log(chalk.gray(`- Merge base commit ${chalk.white(commit.tostrS())}`));
 
-  if (!commit || typeof commit !== 'string') {
-    commit = await getMergeBaseFromLocalGitRepo(join(__dirname, '..', '..'));
-    console.log(
-      chalk.gray(`- Merge base commit ${chalk.white(commit.tostrS())}`)
-    );
-  }
-  await buildBenchmarkBundlesFromGitRepo(commit, skipBuild);
+  await buildBenchmarkBundlesFromGitRepo(commit, argv['skip-build']);
   return {
-    benchmarks: await runBenchmarks(),
+    benchmarks: await runBenchmarks(null, argv.benchmark),
   };
 }
 
-// get the performance benchmark results
-// of the local react repo
+// Function to perform benchmarks for the local react repo
 async function benchmarkLocal(reactPath) {
-  console.log(chalk.gray(`- Building React bundles...`));
-  await buildReactBundles(reactPath, skipBuild);
+  console.log(chalk.gray(`- Building React bundles for local...`));
+  await buildReactBundles(reactPath, argv['skip-build']);
   return {
-    benchmarks: await runBenchmarks(reactPath),
+    benchmarks: await runBenchmarks(reactPath, argv.benchmark),
   };
 }
 
+// Function to run and display local benchmarks
 async function runLocalBenchmarks(showResults) {
-  console.log(
-    chalk.white.bold('Running benchmarks for ') +
-      chalk.green.bold('Local (Current Branch)')
-  );
+  console.log(chalk.white.bold('Running benchmarks for ') + chalk.green.bold('Local (Current Branch)'));
   const localResults = await benchmarkLocal(join(__dirname, '..', '..'));
 
   if (showResults) {
@@ -101,11 +87,9 @@ async function runLocalBenchmarks(showResults) {
   return localResults;
 }
 
+// Function to run and display remote benchmarks
 async function runRemoteBenchmarks(showResults) {
-  console.log(
-    chalk.white.bold('Running benchmarks for ') +
-      chalk.yellow.bold('Remote (Merge Base)')
-  );
+  console.log(chalk.white.bold('Running benchmarks for ') + chalk.yellow.bold('Remote (Merge Base)'));
   const remoteMasterResults = await benchmarkRemoteMaster();
 
   if (showResults) {
@@ -114,22 +98,25 @@ async function runRemoteBenchmarks(showResults) {
   return remoteMasterResults;
 }
 
+// Function to compare local and remote benchmarks
 async function compareLocalToMaster() {
   console.log(
     chalk.white.bold('Comparing ') +
-      chalk.green.bold('Local (Current Branch)') +
-      chalk.white.bold(' to ') +
-      chalk.yellow.bold('Remote (Merge Base)')
+    chalk.green.bold('Local (Current Branch)') +
+    chalk.white.bold(' to ') +
+    chalk.yellow.bold('Remote (Merge Base)')
   );
   const localResults = await runLocalBenchmarks(false);
   const remoteMasterResults = await runRemoteBenchmarks(false);
   printResults(localResults, remoteMasterResults);
 }
 
-if ((runLocal && runRemote) || (!runLocal && !runRemote)) {
+// Main logic to decide which benchmarks to run
+if ((argv.local && argv.remote) || (!argv.local && !argv.remote)) {
   compareLocalToMaster().then(() => process.exit(0));
-} else if (runLocal) {
+} else if (argv.local) {
   runLocalBenchmarks(true).then(() => process.exit(0));
-} else if (runRemote) {
+} else if (argv.remote) {
   runRemoteBenchmarks(true).then(() => process.exit(0));
 }
+
