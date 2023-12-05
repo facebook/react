@@ -117,4 +117,3 @@ if ((argv.local && argv.remote) || (!argv.local && !argv.remote)) {
 } else if (argv.remote) {
   runRemoteBenchmarks(true).then(() => process.exit(0));
 }
-
