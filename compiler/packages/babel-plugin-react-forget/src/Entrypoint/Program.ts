@@ -27,7 +27,6 @@ import {
 } from "./EslintSuppression";
 import { insertGatedFunctionDeclaration } from "./Gating";
 import { addImportsToProgram, updateUseMemoCacheImport } from "./Imports";
-import { addInstrumentForget } from "./Instrumentation";
 import { PluginOptions, parsePluginOptions } from "./Options";
 import { compileFn } from "./Pipeline";
 
@@ -300,8 +299,10 @@ export function compileProgram(
       externalFunctions.push(gating);
     }
 
-    if (options.instrumentForget != null) {
-      instrumentForget = tryParseExternalFunction(options.instrumentForget);
+    if (options.environment?.enableEmitInstrumentForget != null) {
+      instrumentForget = tryParseExternalFunction(
+        options.environment.enableEmitInstrumentForget
+      );
       externalFunctions.push(instrumentForget);
     }
 
@@ -322,16 +323,8 @@ export function compileProgram(
    */
   for (const { originalFn, compiledFn } of compiledFns) {
     const transformedFn = createNewFunctionNode(originalFn, compiledFn);
-    if (instrumentForget != null) {
-      const instrumentFnName = instrumentForget.importSpecifierName;
-      addInstrumentForget(transformedFn, instrumentFnName);
-    }
 
     if (gating != null) {
-      if (instrumentForget != null) {
-        const instrumentFnName = instrumentForget.importSpecifierName;
-        addInstrumentForget(originalFn.node, instrumentFnName);
-      }
       insertGatedFunctionDeclaration(originalFn, transformedFn, gating);
     } else {
       originalFn.replaceWith(transformedFn);

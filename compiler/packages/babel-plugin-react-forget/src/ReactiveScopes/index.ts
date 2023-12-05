@@ -10,7 +10,7 @@ export { assertScopeInstructionsWithinScopes } from "./AssertScopeInstructionsWi
 export { buildReactiveBlocks } from "./BuildReactiveBlocks";
 export { buildReactiveFunction } from "./BuildReactiveFunction";
 export {
-  codegenReactiveFunction,
+  codegenFunction,
   type CodegenFunction,
 } from "./CodegenReactiveFunction";
 export { extractScopeDeclarationsFromDestructuring } from "./ExtractScopeDeclarationsFromDestructuring";

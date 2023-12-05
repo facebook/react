@@ -56,27 +56,6 @@ export type PluginOptions = {
    *   var Foo = isForgetEnabled_Pokes() ? Foo_forget : Foo_uncompiled;
    */
   gating: ExternalFunction | null;
-  /*
-   * Enables instrumentation codegen. This emits a dev-mode only call to an
-   * instrumentation function, for components and hooks that Forget compiles.
-   * For example:
-   *   instrumentForget: {
-   *     source: 'react-forget-runtime',
-   *     importSpecifierName: 'useRenderCounter',
-   *   }
-   *
-   * produces:
-   *   import {useRenderCounter} from 'react-forget-runtime-pokes';
-   *
-   *   function Component(props) {
-   *     if (__DEV__) {
-   *        useRenderCounter();
-   *     }
-   *     // ...
-   *   }
-   *
-   */
-  instrumentForget: ExternalFunction | null;
 
   panicThreshold: PanicThresholdOptions;
 
@@ -176,7 +155,6 @@ export const defaultOptions: PluginOptions = {
   environment: {},
   logger: null,
   gating: null,
-  instrumentForget: null,
   noEmit: false,
   enableUseMemoCachePolyfill: false,
 } as const;

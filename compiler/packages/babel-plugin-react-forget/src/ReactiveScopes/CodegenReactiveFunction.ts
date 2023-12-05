@@ -60,7 +60,36 @@ export type CodegenFunction = {
   memoBlocks: number;
 };
 
-export function codegenReactiveFunction(
+export function codegenFunction(
+  fn: ReactiveFunction
+): Result<CodegenFunction, CompilerError> {
+  const compileResult = codegenReactiveFunction(fn);
+  if (compileResult.isErr()) {
+    return compileResult;
+  }
+  const compiled = compileResult.unwrap();
+
+  const emitInstrumentForget = fn.env.config.enableEmitInstrumentForget;
+  if (emitInstrumentForget != null && fn.id != null) {
+    /*
+     * Technically, this is a conditional hook call. However, we expect
+     * __DEV__ and gatingIdentifier to be runtime constants
+     */
+    const test: t.IfStatement = t.ifStatement(
+      t.identifier("__DEV__"),
+      t.expressionStatement(
+        t.callExpression(
+          t.identifier(emitInstrumentForget.importSpecifierName),
+          [t.stringLiteral(fn.id)]
+        )
+      )
+    );
+    compiled.body.body.unshift(test);
+  }
+  return compileResult;
+}
+
+function codegenReactiveFunction(
   fn: ReactiveFunction
 ): Result<CodegenFunction, CompilerError> {
   const cx = new Context(fn.env, fn.id ?? "[[ anonymous ]]");

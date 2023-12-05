@@ -31,7 +31,7 @@ export function transformFixtureInput(
 
   let language = parseLanguage(firstLine);
   let gating = null;
-  let instrumentForget = null;
+  let enableEmitInstrumentForget = null;
   let enableEmitFreeze = null;
   let compilationMode: CompilationMode = "all";
   let enableUseMemoCachePolyfill = false;
@@ -59,7 +59,7 @@ export function transformFixtureInput(
     };
   }
   if (firstLine.includes("@instrumentForget")) {
-    instrumentForget = {
+    enableEmitInstrumentForget = {
       source: "react-forget-runtime",
       importSpecifierName: "useRenderCounter",
     };
@@ -115,12 +115,12 @@ export function transformFixtureInput(
           ],
         ]),
         enableEmitFreeze,
+        enableEmitInstrumentForget,
         assertValidMutableRanges: true,
       },
       compilationMode,
       logger: null,
       gating,
-      instrumentForget,
       panicThreshold,
       noEmit: false,
       enableUseMemoCachePolyfill,

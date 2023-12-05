@@ -42,7 +42,6 @@ const Bar = isForgetEnabled_Fixtures()
     }
   : function Bar(props) {
       "use forget";
-      if (__DEV__) useRenderCounter("Bar");
       return <div>{props.bar}</div>;
     };
 
@@ -65,7 +64,6 @@ const Foo = isForgetEnabled_Fixtures()
     }
   : function Foo(props) {
       "use forget";
-      if (__DEV__) useRenderCounter("Foo");
       return <Foo>{props.bar}</Foo>;
     };
 

@@ -39,7 +39,7 @@ import {
   assertScopeInstructionsWithinScopes,
   buildReactiveBlocks,
   buildReactiveFunction,
-  codegenReactiveFunction,
+  codegenFunction,
   extractScopeDeclarationsFromDestructuring,
   flattenReactiveLoops,
   flattenScopesWithHooks,
@@ -356,7 +356,7 @@ function* runWithEnvironment(
     validateMemoizedEffectDependencies(reactiveFunction);
   }
 
-  const ast = codegenReactiveFunction(reactiveFunction).unwrap();
+  const ast = codegenFunction(reactiveFunction).unwrap();
   yield log({ kind: "ast", name: "Codegen", value: ast });
 
   /**

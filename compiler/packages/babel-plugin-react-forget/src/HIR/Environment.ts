@@ -192,6 +192,28 @@ const EnvironmentConfigSchema = z.object({
   enableEmitFreeze: ExternalFunctionSchema.nullish(),
 
   /*
+   * Enables instrumentation codegen. This emits a dev-mode only call to an
+   * instrumentation function, for components and hooks that Forget compiles.
+   * For example:
+   *   instrumentForget: {
+   *     source: 'react-forget-runtime',
+   *     importSpecifierName: 'useRenderCounter',
+   *   }
+   *
+   * produces:
+   *   import {useRenderCounter} from 'react-forget-runtime-pokes';
+   *
+   *   function Component(props) {
+   *     if (__DEV__) {
+   *        useRenderCounter();
+   *     }
+   *     // ...
+   *   }
+   *
+   */
+  enableEmitInstrumentForget: ExternalFunctionSchema.nullish(),
+
+  /*
    * Forget infers certain operations as "freezing" a value, such that those
    * values should not be subsequently mutated. By default this freeze operation
    * applies to the value itself and its direct aliases, but not values captured
