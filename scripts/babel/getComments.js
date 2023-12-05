@@ -9,22 +9,29 @@
 
 function getComments(path) {
   const allComments = path.hub.file.ast.comments;
+
+  // Check if Babel AST includes comments.
   if (path.node.leadingComments) {
-    // Babel AST includes comments.
     return path.node.leadingComments;
   }
-  // In Hermes AST we need to find the comments by range.
+
+  // In Hermes AST, find comments by range.
   const comments = [];
-  let line = path.node.loc.start.line;
+  const startLine = path.node.loc.start.line;
+
+  // Find comments that end before or on the same line as the node.
   let i = allComments.length - 1;
-  while (i >= 0 && allComments[i].loc.end.line >= line) {
+  while (i >= 0 && allComments[i].loc.end.line >= startLine) {
     i--;
   }
-  while (i >= 0 && allComments[i].loc.end.line === line - 1) {
-    line = allComments[i].loc.start.line;
+
+  // Collect comments that end on the line before the node.
+  while (i >= 0 && allComments[i].loc.end.line === startLine - 1) {
+    startLine = allComments[i].loc.start.line;
     comments.unshift(allComments[i]);
     i--;
   }
+
   return comments;
 }
 
