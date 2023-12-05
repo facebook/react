@@ -8,6 +8,8 @@
  */
 
 import type {Node, HostComponent} from './ReactNativeTypes';
+import type {PublicInstance as FabricPublicInstance} from './ReactFiberConfigFabric';
+import type {PublicInstance as PaperPublicInstance} from './ReactFiberConfigNative';
 import type {ElementRef, ElementType} from 'react';
 
 // Modules provided by RN:
@@ -16,14 +18,18 @@ import {
   legacySendAccessibilityEvent,
   getNodeFromPublicInstance,
   getNativeTagFromPublicInstance,
+  getInternalInstanceHandleFromPublicInstance,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {
   findHostInstance,
   findHostInstanceWithWarning,
 } from 'react-reconciler/src/ReactFiberReconciler';
+import {doesFiberContain} from 'react-reconciler/src/ReactFiberTreeReflection';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
+
+import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -217,4 +223,51 @@ export function getNodeFromInternalInstanceHandle(
     // $FlowExpectedError[incompatible-use]
     internalInstanceHandle.stateNode.node
   );
+}
+
+// Remove this once Paper is no longer supported and DOM Node API are enabled by default in RN.
+export function isChildPublicInstance(
+  parentInstance: FabricPublicInstance | PaperPublicInstance,
+  childInstance: FabricPublicInstance | PaperPublicInstance,
+): boolean {
+  if (__DEV__) {
+    // Paper
+    if (
+      parentInstance instanceof ReactNativeFiberHostComponent ||
+      childInstance instanceof ReactNativeFiberHostComponent
+    ) {
+      if (
+        parentInstance instanceof ReactNativeFiberHostComponent &&
+        childInstance instanceof ReactNativeFiberHostComponent
+      ) {
+        return doesFiberContain(
+          parentInstance._internalFiberInstanceHandleDEV,
+          childInstance._internalFiberInstanceHandleDEV,
+        );
+      }
+
+      // Means that one instance is from Fabric and other is from Paper.
+      return false;
+    }
+
+    const parentInternalInstanceHandle =
+      getInternalInstanceHandleFromPublicInstance(parentInstance);
+    const childInternalInstanceHandle =
+      getInternalInstanceHandleFromPublicInstance(childInstance);
+
+    // Fabric
+    if (
+      parentInternalInstanceHandle != null &&
+      childInternalInstanceHandle != null
+    ) {
+      return doesFiberContain(
+        parentInternalInstanceHandle,
+        childInternalInstanceHandle,
+      );
+    }
+
+    return false;
+  } else {
+    throw new Error('isChildPublicInstance() is not available in production.');
+  }
 }

@@ -35,15 +35,14 @@ export type RootType = {
   render(children: ReactNodeList): void,
   unmount(): void,
   _internalRoot: FiberRoot | null,
-  ...
 };
+
 export type CreateRootOptions = {
   unstable_strictMode?: boolean,
   unstable_concurrentUpdatesByDefault?: boolean,
   unstable_transitionCallbacks?: TransitionTracingCallbacks,
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
-  ...
 };
 
 export type HydrateRootOptions = {
@@ -57,7 +56,6 @@ export type HydrateRootOptions = {
   identifierPrefix?: string,
   onRecoverableError?: (error: mixed) => void,
   formState?: ReactFormState<any, any> | null,
-  ...
 };
 
 import {

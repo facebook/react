@@ -36,7 +36,6 @@ type HookLogEntry = {
   primitive: string,
   stackError: Error,
   value: mixed,
-  ...
 };
 
 let hookLog: Array<HookLogEntry> = [];
@@ -408,7 +407,6 @@ export type HooksNode = {
   value: mixed,
   subHooks: Array<HooksNode>,
   hookSource?: HookSource,
-  ...
 };
 export type HooksTree = Array<HooksNode>;
 

@@ -5,7 +5,7 @@ const {esNextPaths} = require('./scripts/shared/pathsByLanguageVersion');
 module.exports = {
   bracketSpacing: false,
   singleQuote: true,
-  jsxBracketSameLine: true,
+  bracketSameLine: true,
   trailingComma: 'es5',
   printWidth: 80,
   parser: 'flow',

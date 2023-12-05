@@ -31,15 +31,12 @@ export type ReactProvider<T> = {
   props: {
     value: T,
     children?: ReactNodeList,
-    ...
   },
-  ...
 };
 
 export type ReactProviderType<T> = {
   $$typeof: symbol | number,
   _context: ReactContext<T>,
-  ...
 };
 
 export type ReactConsumer<T> = {
@@ -49,9 +46,7 @@ export type ReactConsumer<T> = {
   ref: null,
   props: {
     children: (value: T) => ReactNodeList,
-    ...
   },
-  ...
 };
 
 export type ReactContext<T> = {
@@ -71,7 +66,6 @@ export type ReactContext<T> = {
   // only used by ServerContext
   _defaultValue: T,
   _globalName: string,
-  ...
 };
 
 export type ServerContextJSONValue =
@@ -91,7 +85,6 @@ export type ReactPortal = {
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
-  ...
 };
 
 export type RefObject = {
@@ -104,7 +97,7 @@ export type ReactScope = {
 
 export type ReactScopeQuery = (
   type: string,
-  props: {[string]: mixed, ...},
+  props: {[string]: mixed},
   instance: mixed,
 ) => boolean;
 
