@@ -1,7 +1,6 @@
 {
   "extends": "@tsconfig/node18-strictest/tsconfig.json",
   "compilerOptions": {
-    "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "declaration": true,
     "declarationDir": "./dist",
