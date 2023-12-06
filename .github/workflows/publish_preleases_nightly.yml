@@ -1,0 +1,67 @@
+name: facebook/react/publish_preleases_nightly
+on:
+  schedule:
+  - cron: 10 16 * * 1,2,3,4,5
+#   # 'filters' was not transformed because there is no suitable equivalent in GitHub Actions
+  workflow_dispatch:
+    inputs:
+      prerelease_commit_sha:
+        required: true
+env:
+  CIRCLE_CI_API_TOKEN: xxxx6989
+  NPM_TOKEN: xxxxJBvP
+jobs:
+  publish_to_canary_channel:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+      commit_sha: "${{ github.sha }}"
+      release_channel: stable
+      dist_tag: canary,next
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Run publish script
+      run: |-
+        git fetch origin main
+        cd ./scripts/release && yarn && cd ../../
+        scripts/release/prepare-release-from-ci.js --skipTests -r ${{ env.release_channel }} --commit=${{ env.commit_sha }}
+        cp ./scripts/release/ci-npmrc ~/.npmrc
+        scripts/release/publish.js --ci --tags ${{ env.dist_tag }}
+  publish_to_experimental_channel:
+    if: inputs.prerelease_commit_sha == ''
+    runs-on: ubuntu-latest
+    needs:
+    - publish_to_canary_channel
+    env:
+      TZ: "/usr/share/zoneinfo/America/Los_Angeles"
+      commit_sha: "${{ github.sha }}"
+      release_channel: experimental
+      dist_tag: experimental
+    steps:
+    - uses: actions/checkout@v4.1.0
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: '.nvmrc'
+        cache: 'yarn'
+    - name: Install dependencies
+      run: yarn install --frozen-lockfile
+      env:
+        ELECTRON_SKIP_BINARY_DOWNLOAD: "1"
+      shell: bash
+    - name: Run publish script
+      run: |-
+        git fetch origin main
+        cd ./scripts/release && yarn && cd ../../
+        scripts/release/prepare-release-from-ci.js --skipTests -r ${{ env.release_channel }} --commit=${{ env.commit_sha }}
+        cp ./scripts/release/ci-npmrc ~/.npmrc
+        scripts/release/publish.js --ci --tags ${{ env.dist_tag }}
