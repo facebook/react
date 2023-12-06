@@ -10,6 +10,7 @@ import { pruneUnusedLValues, pruneUnusedLabels, renameVariables } from ".";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Environment, EnvironmentConfig, ExternalFunction } from "../HIR";
 import {
+  ArrayPattern,
   BlockId,
   GeneratedSource,
   Identifier,
@@ -1827,20 +1828,51 @@ function codegenObjectPropertyKey(
   }
 }
 
+function codegenArrayPattern(
+  cx: Context,
+  pattern: ArrayPattern
+): t.ArrayPattern {
+  const hasHoles = !pattern.items.every((e) => e.kind !== "Hole");
+  if (hasHoles) {
+    const result = t.arrayPattern([]);
+    /*
+     * Older versions of babel have a validation bug fixed by
+     * https://github.com/babel/babel/pull/10917
+     * https://github.com/babel/babel/commit/e7b80a2cb93cf28010207fc3cdd19b4568ca35b9#diff-19b555d2f3904c206af406540d9df200b1e16befedb83ff39ebfcbd876f7fa8aL52
+     *
+     * Link to buggy older version (observe that elements must be PatternLikes here)
+     * https://github.com/babel/babel/blob/v7.7.4/packages/babel-types/src/definitions/es2015.js#L50-L53
+     *
+     * Link to newer versions with correct validation (observe elements can be PatternLike | null)
+     * https://github.com/babel/babel/blob/v7.23.0/packages/babel-types/src/definitions/core.ts#L1306-L1311
+     */
+    for (const item of pattern.items) {
+      if (item.kind === "Hole") {
+        result.elements.push(null);
+      } else {
+        result.elements.push(codegenLValue(cx, item));
+      }
+    }
+    return result;
+  } else {
+    return t.arrayPattern(
+      pattern.items.map((item) => {
+        if (item.kind === "Hole") {
+          return null;
+        }
+        return codegenLValue(cx, item);
+      })
+    );
+  }
+}
+
 function codegenLValue(
   cx: Context,
   pattern: Pattern | Place | SpreadPattern
 ): t.ArrayPattern | t.ObjectPattern | t.RestElement | t.Identifier {
   switch (pattern.kind) {
     case "ArrayPattern": {
-      return t.arrayPattern(
-        pattern.items.map((item) => {
-          if (item.kind === "Hole") {
-            return null;
-          }
-          return codegenLValue(cx, item);
-        })
-      );
+      return codegenArrayPattern(cx, pattern);
     }
     case "ObjectPattern": {
       return t.objectPattern(

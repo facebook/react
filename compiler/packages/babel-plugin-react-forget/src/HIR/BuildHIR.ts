@@ -1456,14 +1456,6 @@ function lowerExpression(
           elements.push({
             kind: "Hole",
           });
-          if (builder.environment.config.bailoutOnHoleyArrays) {
-            builder.errors.push({
-              reason: `(BuildHIR::lower) Fix babel holey array backward compatibility.`,
-              severity: ErrorSeverity.Todo,
-              loc: expr.node.loc ?? null,
-              suggestions: null,
-            });
-          }
           continue;
         } else if (element.isExpression()) {
           elements.push(lowerExpressionToTemporary(builder, element));
@@ -3289,15 +3281,6 @@ function lowerAssignment(
           items.push({
             kind: "Hole",
           });
-
-          if (builder.environment.config.bailoutOnHoleyArrays) {
-            builder.errors.push({
-              reason: `(BuildHIR::lower) Fix babel holey array backward compatibility.`,
-              severity: ErrorSeverity.Todo,
-              loc: lvalue.node.loc ?? null,
-              suggestions: null,
-            });
-          }
           continue;
         }
         if (element.isRestElement()) {
