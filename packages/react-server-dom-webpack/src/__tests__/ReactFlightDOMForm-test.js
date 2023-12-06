@@ -54,7 +54,7 @@ describe('ReactFlightDOMForm', () => {
     ReactServerDOMClient = require('react-server-dom-webpack/client.edge');
     ReactDOMServer = require('react-dom/server.edge');
     ReactDOMClient = require('react-dom/client');
-    act = require('react-dom/test-utils').act;
+    act = React.unstable_act;
     useFormState = require('react-dom').useFormState;
     container = document.createElement('div');
     document.body.appendChild(container);

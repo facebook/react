@@ -19,7 +19,7 @@ export function act(
   recursivelyFlush: boolean = true,
 ): void {
   const {act: actTestRenderer} = require('react-test-renderer');
-  const {act: actDOM} = require('react-dom/test-utils');
+  const actDOM = require('react').unstable_act;
 
   actDOM(() => {
     actTestRenderer(() => {
@@ -44,7 +44,7 @@ export async function actAsync(
   recursivelyFlush: boolean = true,
 ): Promise<void> {
   const {act: actTestRenderer} = require('react-test-renderer');
-  const {act: actDOM} = require('react-dom/test-utils');
+  const actDOM = require('react').unstable_act;
 
   await actDOM(async () => {
     await actTestRenderer(async () => {
