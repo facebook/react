@@ -19,7 +19,6 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
-  disableModulePatternComponents,
   enableDeferRootSchedulingToMicrotask,
   enableUnifiedSyncLane,
   enableUseRefAccessWarning,
@@ -28,6 +27,7 @@ export const {
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
+export const disableModulePatternComponents = true;
 export const enableDebugTracing = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;

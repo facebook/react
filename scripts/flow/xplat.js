@@ -9,7 +9,6 @@
 
 declare module 'ReactNativeInternalFeatureFlags' {
   declare export var alwaysThrottleRetries: boolean;
-  declare export var disableModulePatternComponents: boolean;
   declare export var enableDeferRootSchedulingToMicrotask: boolean;
   declare export var enableUnifiedSyncLane: boolean;
   declare export var enableUseRefAccessWarning: boolean;
