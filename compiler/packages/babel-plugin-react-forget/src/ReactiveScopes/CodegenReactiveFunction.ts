@@ -1318,17 +1318,20 @@ function codegenInstructionValue(
               renameVariables(reactiveFunction);
               const fn = codegenReactiveFunction(reactiveFunction).unwrap();
 
-              properties.push(
-                t.objectMethod(
-                  "method",
-                  key,
-                  fn.params,
-                  fn.body,
-                  false,
-                  fn.generator,
-                  fn.async
-                )
+              /*
+               * ObjectMethod builder must be backwards compatible with older versions of babel.
+               * https://github.com/babel/babel/blob/v7.7.4/packages/babel-types/src/definitions/core.js#L599-L603
+               */
+              const babelNode = t.objectMethod(
+                "method",
+                key,
+                fn.params,
+                fn.body,
+                false
               );
+              babelNode.async = fn.async;
+              babelNode.generator = fn.generator;
+              properties.push(babelNode);
               break;
             }
             default:
