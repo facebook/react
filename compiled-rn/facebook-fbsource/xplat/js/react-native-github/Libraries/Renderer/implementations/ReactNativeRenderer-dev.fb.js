@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d78568faa845f2ded9fe23a625f144a4>>
+ * @generated SignedSource<<dfd02eaf29e944e9f458476582b7ac96>>
  */
 
 "use strict";
@@ -2944,8 +2944,6 @@ to return true:wantsResponderID|                            |
     // the exports object every time a flag is read.
 
     var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
-      disableModulePatternComponents =
-        dynamicFlags.disableModulePatternComponents,
       enableDeferRootSchedulingToMicrotask =
         dynamicFlags.enableDeferRootSchedulingToMicrotask,
       enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
@@ -17080,67 +17078,7 @@ to return true:wantsResponderID|                            |
         }
       }
 
-      if (
-        // Run these checks in production only if the flag is off.
-        // Eventually we'll delete this branch altogether.
-        !disableModulePatternComponents &&
-        typeof value === "object" &&
-        value !== null &&
-        typeof value.render === "function" &&
-        value.$$typeof === undefined
-      ) {
-        {
-          var _componentName2 =
-            getComponentNameFromType(Component) || "Unknown";
-
-          if (!didWarnAboutModulePatternComponent[_componentName2]) {
-            error(
-              "The <%s /> component appears to be a function component that returns a class instance. " +
-                "Change %s to a class that extends React.Component instead. " +
-                "If you can't use a class try assigning the prototype on the function as a workaround. " +
-                "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
-                "cannot be called with `new` by React.",
-              _componentName2,
-              _componentName2,
-              _componentName2
-            );
-
-            didWarnAboutModulePatternComponent[_componentName2] = true;
-          }
-        } // Proceed under the assumption that this is a class instance
-
-        workInProgress.tag = ClassComponent; // Throw out any hooks that were used.
-
-        workInProgress.memoizedState = null;
-        workInProgress.updateQueue = null; // Push context providers early to prevent context stack mismatches.
-        // During mounting we don't know the child context yet as the instance doesn't exist.
-        // We will invalidate the child context in finishClassComponent() right after rendering.
-
-        var hasContext = false;
-
-        if (isContextProvider(Component)) {
-          hasContext = true;
-          pushContextProvider(workInProgress);
-        } else {
-          hasContext = false;
-        }
-
-        workInProgress.memoizedState =
-          value.state !== null && value.state !== undefined
-            ? value.state
-            : null;
-        initializeUpdateQueue(workInProgress);
-        adoptClassInstance(workInProgress, value);
-        mountClassInstance(workInProgress, Component, props, renderLanes);
-        return finishClassComponent(
-          null,
-          workInProgress,
-          Component,
-          true,
-          hasContext,
-          renderLanes
-        );
-      } else {
+      {
         // Proceed under the assumption that this is a function component
         workInProgress.tag = FunctionComponent;
 
@@ -28270,7 +28208,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-07e71c82";
+    var ReactVersion = "18.3.0-canary-0ae2c000";
 
     function createPortal$1(
       children,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<863e55acd5e0f90afebe249734c95bac>>
+ * @generated SignedSource<<8436aa04dfdc2e6334e692f9128f8baf>>
  */
 
 "use strict";
@@ -1160,7 +1160,6 @@ ResponderEventPlugin.injection.injectGlobalResponderHandler({
 var ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
-  disableModulePatternComponents = dynamicFlags.disableModulePatternComponents,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
@@ -8834,7 +8833,7 @@ beginWork = function (current, workInProgress, renderLanes) {
         contextStackCursor$1.current
       );
       prepareToReadContext(workInProgress, renderLanes);
-      context = renderWithHooks(
+      current = renderWithHooks(
         null,
         workInProgress,
         Component,
@@ -8843,42 +8842,9 @@ beginWork = function (current, workInProgress, renderLanes) {
         renderLanes
       );
       workInProgress.flags |= 1;
-      if (
-        disableModulePatternComponents ||
-        "object" !== typeof context ||
-        null === context ||
-        "function" !== typeof context.render ||
-        void 0 !== context.$$typeof
-      )
-        (workInProgress.tag = 0),
-          reconcileChildren(null, workInProgress, context, renderLanes),
-          (workInProgress = workInProgress.child);
-      else {
-        workInProgress.tag = 1;
-        workInProgress.memoizedState = null;
-        workInProgress.updateQueue = null;
-        if (isContextProvider(Component)) {
-          var hasContext = !0;
-          pushContextProvider(workInProgress);
-        } else hasContext = !1;
-        workInProgress.memoizedState =
-          null !== context.state && void 0 !== context.state
-            ? context.state
-            : null;
-        initializeUpdateQueue(workInProgress);
-        context.updater = classComponentUpdater;
-        workInProgress.stateNode = context;
-        context._reactInternals = workInProgress;
-        mountClassInstance(workInProgress, Component, current, renderLanes);
-        workInProgress = finishClassComponent(
-          null,
-          workInProgress,
-          Component,
-          !0,
-          hasContext,
-          renderLanes
-        );
-      }
+      workInProgress.tag = 0;
+      reconcileChildren(null, workInProgress, current, renderLanes);
+      workInProgress = workInProgress.child;
       return workInProgress;
     case 16:
       Component = workInProgress.elementType;
@@ -9066,14 +9032,14 @@ beginWork = function (current, workInProgress, renderLanes) {
       a: {
         Component = workInProgress.type._context;
         context = workInProgress.pendingProps;
-        hasContext = workInProgress.memoizedProps;
-        var newValue = context.value;
+        var oldProps = workInProgress.memoizedProps,
+          newValue = context.value;
         push(valueCursor, Component._currentValue);
         Component._currentValue = newValue;
-        if (null !== hasContext)
-          if (objectIs(hasContext.value, newValue)) {
+        if (null !== oldProps)
+          if (objectIs(oldProps.value, newValue)) {
             if (
-              hasContext.children === context.children &&
+              oldProps.children === context.children &&
               !didPerformWorkStackCursor.current
             ) {
               workInProgress = bailoutOnAlreadyFinishedWork(
@@ -9085,24 +9051,24 @@ beginWork = function (current, workInProgress, renderLanes) {
             }
           } else
             for (
-              hasContext = workInProgress.child,
-                null !== hasContext && (hasContext.return = workInProgress);
-              null !== hasContext;
+              oldProps = workInProgress.child,
+                null !== oldProps && (oldProps.return = workInProgress);
+              null !== oldProps;
 
             ) {
-              var list = hasContext.dependencies;
+              var list = oldProps.dependencies;
               if (null !== list) {
-                newValue = hasContext.child;
+                newValue = oldProps.child;
                 for (
                   var dependency = list.firstContext;
                   null !== dependency;
 
                 ) {
                   if (dependency.context === Component) {
-                    if (1 === hasContext.tag) {
+                    if (1 === oldProps.tag) {
                       dependency = createUpdate(renderLanes & -renderLanes);
                       dependency.tag = 2;
-                      var updateQueue = hasContext.updateQueue;
+                      var updateQueue = oldProps.updateQueue;
                       if (null !== updateQueue) {
                         updateQueue = updateQueue.shared;
                         var pending = updateQueue.pending;
@@ -9113,11 +9079,11 @@ beginWork = function (current, workInProgress, renderLanes) {
                         updateQueue.pending = dependency;
                       }
                     }
-                    hasContext.lanes |= renderLanes;
-                    dependency = hasContext.alternate;
+                    oldProps.lanes |= renderLanes;
+                    dependency = oldProps.alternate;
                     null !== dependency && (dependency.lanes |= renderLanes);
                     scheduleContextWorkOnParentPath(
-                      hasContext.return,
+                      oldProps.return,
                       renderLanes,
                       workInProgress
                     );
@@ -9126,13 +9092,11 @@ beginWork = function (current, workInProgress, renderLanes) {
                   }
                   dependency = dependency.next;
                 }
-              } else if (10 === hasContext.tag)
+              } else if (10 === oldProps.tag)
                 newValue =
-                  hasContext.type === workInProgress.type
-                    ? null
-                    : hasContext.child;
-              else if (18 === hasContext.tag) {
-                newValue = hasContext.return;
+                  oldProps.type === workInProgress.type ? null : oldProps.child;
+              else if (18 === oldProps.tag) {
+                newValue = oldProps.return;
                 if (null === newValue)
                   throw Error(
                     "We just came from a parent so we must have had a parent. This is a bug in React."
@@ -9145,24 +9109,24 @@ beginWork = function (current, workInProgress, renderLanes) {
                   renderLanes,
                   workInProgress
                 );
-                newValue = hasContext.sibling;
-              } else newValue = hasContext.child;
-              if (null !== newValue) newValue.return = hasContext;
+                newValue = oldProps.sibling;
+              } else newValue = oldProps.child;
+              if (null !== newValue) newValue.return = oldProps;
               else
-                for (newValue = hasContext; null !== newValue; ) {
+                for (newValue = oldProps; null !== newValue; ) {
                   if (newValue === workInProgress) {
                     newValue = null;
                     break;
                   }
-                  hasContext = newValue.sibling;
-                  if (null !== hasContext) {
-                    hasContext.return = newValue.return;
-                    newValue = hasContext;
+                  oldProps = newValue.sibling;
+                  if (null !== oldProps) {
+                    oldProps.return = newValue.return;
+                    newValue = oldProps;
                     break;
                   }
                   newValue = newValue.return;
                 }
-              hasContext = newValue;
+              oldProps = newValue;
             }
         reconcileChildren(
           current,
@@ -9763,10 +9727,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1111 = {
+  devToolsConfig$jscomp$inline_1113 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-b9d34249",
+    version: "18.3.0-canary-b9b5fd7b",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9782,11 +9746,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1367 = {
-  bundleType: devToolsConfig$jscomp$inline_1111.bundleType,
-  version: devToolsConfig$jscomp$inline_1111.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1111.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1111.rendererConfig,
+var internals$jscomp$inline_1366 = {
+  bundleType: devToolsConfig$jscomp$inline_1113.bundleType,
+  version: devToolsConfig$jscomp$inline_1113.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1113.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1113.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9802,26 +9766,26 @@ var internals$jscomp$inline_1367 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1111.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1113.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-b9d34249"
+  reconcilerVersion: "18.3.0-canary-b9b5fd7b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1368 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1367 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1368.isDisabled &&
-    hook$jscomp$inline_1368.supportsFiber
+    !hook$jscomp$inline_1367.isDisabled &&
+    hook$jscomp$inline_1367.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1368.inject(
-        internals$jscomp$inline_1367
+      (rendererID = hook$jscomp$inline_1367.inject(
+        internals$jscomp$inline_1366
       )),
-        (injectedHook = hook$jscomp$inline_1368);
+        (injectedHook = hook$jscomp$inline_1367);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

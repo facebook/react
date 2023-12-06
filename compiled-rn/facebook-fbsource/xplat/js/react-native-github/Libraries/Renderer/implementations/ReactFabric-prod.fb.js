@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5f82e29b047fb91d2b0612c4bb92f552>>
+ * @generated SignedSource<<c8faa86d63432a16dcd4dd35437cd2d9>>
  */
 
 "use strict";
@@ -1315,7 +1315,6 @@ function dispatchEvent(target, topLevelType, nativeEvent) {
   });
 }
 var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
-  disableModulePatternComponents = dynamicFlags.disableModulePatternComponents,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
@@ -8619,7 +8618,7 @@ beginWork = function (current, workInProgress, renderLanes) {
         contextStackCursor$1.current
       );
       prepareToReadContext(workInProgress, renderLanes);
-      context = renderWithHooks(
+      current = renderWithHooks(
         null,
         workInProgress,
         Component,
@@ -8628,42 +8627,9 @@ beginWork = function (current, workInProgress, renderLanes) {
         renderLanes
       );
       workInProgress.flags |= 1;
-      if (
-        disableModulePatternComponents ||
-        "object" !== typeof context ||
-        null === context ||
-        "function" !== typeof context.render ||
-        void 0 !== context.$$typeof
-      )
-        (workInProgress.tag = 0),
-          reconcileChildren(null, workInProgress, context, renderLanes),
-          (workInProgress = workInProgress.child);
-      else {
-        workInProgress.tag = 1;
-        workInProgress.memoizedState = null;
-        workInProgress.updateQueue = null;
-        if (isContextProvider(Component)) {
-          var hasContext = !0;
-          pushContextProvider(workInProgress);
-        } else hasContext = !1;
-        workInProgress.memoizedState =
-          null !== context.state && void 0 !== context.state
-            ? context.state
-            : null;
-        initializeUpdateQueue(workInProgress);
-        context.updater = classComponentUpdater;
-        workInProgress.stateNode = context;
-        context._reactInternals = workInProgress;
-        mountClassInstance(workInProgress, Component, current, renderLanes);
-        workInProgress = finishClassComponent(
-          null,
-          workInProgress,
-          Component,
-          !0,
-          hasContext,
-          renderLanes
-        );
-      }
+      workInProgress.tag = 0;
+      reconcileChildren(null, workInProgress, current, renderLanes);
+      workInProgress = workInProgress.child;
       return workInProgress;
     case 16:
       Component = workInProgress.elementType;
@@ -8851,14 +8817,14 @@ beginWork = function (current, workInProgress, renderLanes) {
       a: {
         Component = workInProgress.type._context;
         context = workInProgress.pendingProps;
-        hasContext = workInProgress.memoizedProps;
-        var newValue = context.value;
+        var oldProps = workInProgress.memoizedProps,
+          newValue = context.value;
         push(valueCursor, Component._currentValue2);
         Component._currentValue2 = newValue;
-        if (null !== hasContext)
-          if (objectIs(hasContext.value, newValue)) {
+        if (null !== oldProps)
+          if (objectIs(oldProps.value, newValue)) {
             if (
-              hasContext.children === context.children &&
+              oldProps.children === context.children &&
               !didPerformWorkStackCursor.current
             ) {
               workInProgress = bailoutOnAlreadyFinishedWork(
@@ -8870,24 +8836,24 @@ beginWork = function (current, workInProgress, renderLanes) {
             }
           } else
             for (
-              hasContext = workInProgress.child,
-                null !== hasContext && (hasContext.return = workInProgress);
-              null !== hasContext;
+              oldProps = workInProgress.child,
+                null !== oldProps && (oldProps.return = workInProgress);
+              null !== oldProps;
 
             ) {
-              var list = hasContext.dependencies;
+              var list = oldProps.dependencies;
               if (null !== list) {
-                newValue = hasContext.child;
+                newValue = oldProps.child;
                 for (
                   var dependency = list.firstContext;
                   null !== dependency;
 
                 ) {
                   if (dependency.context === Component) {
-                    if (1 === hasContext.tag) {
+                    if (1 === oldProps.tag) {
                       dependency = createUpdate(renderLanes & -renderLanes);
                       dependency.tag = 2;
-                      var updateQueue = hasContext.updateQueue;
+                      var updateQueue = oldProps.updateQueue;
                       if (null !== updateQueue) {
                         updateQueue = updateQueue.shared;
                         var pending = updateQueue.pending;
@@ -8898,11 +8864,11 @@ beginWork = function (current, workInProgress, renderLanes) {
                         updateQueue.pending = dependency;
                       }
                     }
-                    hasContext.lanes |= renderLanes;
-                    dependency = hasContext.alternate;
+                    oldProps.lanes |= renderLanes;
+                    dependency = oldProps.alternate;
                     null !== dependency && (dependency.lanes |= renderLanes);
                     scheduleContextWorkOnParentPath(
-                      hasContext.return,
+                      oldProps.return,
                       renderLanes,
                       workInProgress
                     );
@@ -8911,13 +8877,11 @@ beginWork = function (current, workInProgress, renderLanes) {
                   }
                   dependency = dependency.next;
                 }
-              } else if (10 === hasContext.tag)
+              } else if (10 === oldProps.tag)
                 newValue =
-                  hasContext.type === workInProgress.type
-                    ? null
-                    : hasContext.child;
-              else if (18 === hasContext.tag) {
-                newValue = hasContext.return;
+                  oldProps.type === workInProgress.type ? null : oldProps.child;
+              else if (18 === oldProps.tag) {
+                newValue = oldProps.return;
                 if (null === newValue)
                   throw Error(
                     "We just came from a parent so we must have had a parent. This is a bug in React."
@@ -8930,24 +8894,24 @@ beginWork = function (current, workInProgress, renderLanes) {
                   renderLanes,
                   workInProgress
                 );
-                newValue = hasContext.sibling;
-              } else newValue = hasContext.child;
-              if (null !== newValue) newValue.return = hasContext;
+                newValue = oldProps.sibling;
+              } else newValue = oldProps.child;
+              if (null !== newValue) newValue.return = oldProps;
               else
-                for (newValue = hasContext; null !== newValue; ) {
+                for (newValue = oldProps; null !== newValue; ) {
                   if (newValue === workInProgress) {
                     newValue = null;
                     break;
                   }
-                  hasContext = newValue.sibling;
-                  if (null !== hasContext) {
-                    hasContext.return = newValue.return;
-                    newValue = hasContext;
+                  oldProps = newValue.sibling;
+                  if (null !== oldProps) {
+                    oldProps.return = newValue.return;
+                    newValue = oldProps;
                     break;
                   }
                   newValue = newValue.return;
                 }
-              hasContext = newValue;
+              oldProps = newValue;
             }
         reconcileChildren(
           current,
@@ -9541,10 +9505,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1048 = {
+  devToolsConfig$jscomp$inline_1050 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-c1e14826",
+    version: "18.3.0-canary-7c1beba4",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9560,11 +9524,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1290 = {
-  bundleType: devToolsConfig$jscomp$inline_1048.bundleType,
-  version: devToolsConfig$jscomp$inline_1048.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1048.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1048.rendererConfig,
+var internals$jscomp$inline_1289 = {
+  bundleType: devToolsConfig$jscomp$inline_1050.bundleType,
+  version: devToolsConfig$jscomp$inline_1050.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1050.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1050.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9580,26 +9544,26 @@ var internals$jscomp$inline_1290 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1048.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1050.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-c1e14826"
+  reconcilerVersion: "18.3.0-canary-7c1beba4"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1291 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1290 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1291.isDisabled &&
-    hook$jscomp$inline_1291.supportsFiber
+    !hook$jscomp$inline_1290.isDisabled &&
+    hook$jscomp$inline_1290.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1291.inject(
-        internals$jscomp$inline_1290
+      (rendererID = hook$jscomp$inline_1290.inject(
+        internals$jscomp$inline_1289
       )),
-        (injectedHook = hook$jscomp$inline_1291);
+        (injectedHook = hook$jscomp$inline_1290);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
