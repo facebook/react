@@ -33,7 +33,7 @@ function Foo() {
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     const x = {
       foo() {
-        return identity(CONSTANT);
+        return identity(1);
       },
     };
 
@@ -52,3 +52,5 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) 1

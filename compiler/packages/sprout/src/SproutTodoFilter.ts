@@ -515,7 +515,6 @@ const skipFilter = new Set([
   "bug-jsx-memberexpr-tag-in-lambda",
   "bug-invalid-code-when-bailout",
   "component-syntax-ref-gating.flow",
-  "bug-context-vars-in-object-method",
   
   // 'react-forget-runtime' not yet supported
   "flag-enable-emit-hook-guards",
