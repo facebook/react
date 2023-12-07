@@ -423,7 +423,9 @@ export function markStarvedLanesAsExpired(
   // We exclude retry lanes because those must always be time sliced, in order
   // to unwrap uncached promises.
   // TODO: Write a test for this
-  let lanes = pendingLanes & ~RetryLanes;
+  let lanes = enableRetryLaneExpiration
+    ? pendingLanes
+    : pendingLanes & ~RetryLanes;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;

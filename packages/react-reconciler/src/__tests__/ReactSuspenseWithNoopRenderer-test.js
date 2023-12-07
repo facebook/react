@@ -5,6 +5,7 @@ let Scheduler;
 let act;
 let waitFor;
 let waitForAll;
+let unstable_waitForExpired;
 let assertLog;
 let waitForPaint;
 let Suspense;
@@ -29,6 +30,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     waitFor = InternalTestUtils.waitFor;
     waitForAll = InternalTestUtils.waitForAll;
     waitForPaint = InternalTestUtils.waitForPaint;
+    unstable_waitForExpired = InternalTestUtils.unstable_waitForExpired;
     assertLog = InternalTestUtils.assertLog;
 
     getCacheForType = React.unstable_getCacheForType;
@@ -4010,6 +4012,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   );
 
   // @gate enableLegacyCache
+  // @gate enableRetryLaneExpiration
   it('recurring updates in siblings should not block expensive content in suspense boundary from committing', async () => {
     const {useState} = React;
 
@@ -4064,19 +4067,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     setText('2');
     await waitForPaint(['2']);
 
-    await waitFor(['Async', 'A', 'B']);
     ReactNoop.expire(10000000);
     await advanceTimers(10000000);
-    setText('3');
-
-    // TODO: At this point we want "C" to commit
-    await waitForPaint(['3']);
-    await waitFor(['Async', 'A', 'B']);
+    await unstable_waitForExpired(['Async', 'A', 'B', 'C']);
 
     expect(root).toMatchRenderedOutput(
       <>
-        <span prop="3" />
-        <span prop="Loading..." />
+        <span prop="2" />
+        <span prop="Async" />
+        <span prop="A" />
+        <span prop="B" />
+        <span prop="C" />
       </>,
     );
   });
