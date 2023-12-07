@@ -1,10 +1,11 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment ./scripts/jest/ReactDOMServerIntegrationEnvironment
  */
 
 'use strict';
@@ -19,7 +20,7 @@ let ReactDOMServer;
 let ReactTestUtils;
 
 function initModules() {
-  jest.resetModuleRegistry();
+  jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
@@ -48,7 +49,7 @@ describe('ReactDOMServerIntegration', () => {
     resetModules();
   });
 
-  describe('elements and children', function() {
+  describe('elements and children', function () {
     function expectNode(node, type, value) {
       expect(node).not.toBe(null);
       expect(node.nodeType).toBe(type);
@@ -59,7 +60,7 @@ describe('ReactDOMServerIntegration', () => {
       expectNode(node, TEXT_NODE_TYPE, text);
     }
 
-    describe('text children', function() {
+    describe('text children', function () {
       itRenders('a div with text', async render => {
         const e = await render(<div>Text</div>);
         expect(e.tagName).toBe('DIV');
@@ -101,7 +102,7 @@ describe('ReactDOMServerIntegration', () => {
         ) {
           // For plain server markup result we have comments between.
           // If we're able to hydrate, they remain.
-          expect(e.childNodes.length).toBe(render === streamRender ? 6 : 5);
+          expect(e.childNodes.length).toBe(5);
           expectTextNode(e.childNodes[0], ' ');
           expectTextNode(e.childNodes[2], ' ');
           expectTextNode(e.childNodes[4], ' ');
@@ -119,8 +120,8 @@ describe('ReactDOMServerIntegration', () => {
             Text<span>More Text</span>
           </div>,
         );
-        expect(e.childNodes.length).toBe(render === streamRender ? 3 : 2);
-        const spanNode = e.childNodes[render === streamRender ? 2 : 1];
+        expect(e.childNodes.length).toBe(2);
+        const spanNode = e.childNodes[1];
         expectTextNode(e.childNodes[0], 'Text');
         expect(spanNode.tagName).toBe('SPAN');
         expect(spanNode.childNodes.length).toBe(1);
@@ -147,19 +148,19 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('a custom element with text', async render => {
         const e = await render(<custom-element>Text</custom-element>);
         expect(e.tagName).toBe('CUSTOM-ELEMENT');
-        expect(e.childNodes.length).toBe(render === streamRender ? 2 : 1);
+        expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'Text');
       });
 
       itRenders('a leading blank child with a text sibling', async render => {
         const e = await render(<div>{''}foo</div>);
-        expect(e.childNodes.length).toBe(render === streamRender ? 2 : 1);
+        expect(e.childNodes.length).toBe(1);
         expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('a trailing blank child with a text sibling', async render => {
         const e = await render(<div>foo{''}</div>);
-        expect(e.childNodes.length).toBe(render === streamRender ? 2 : 1);
+        expect(e.childNodes.length).toBe(1);
         expectTextNode(e.childNodes[0], 'foo');
       });
 
@@ -176,7 +177,7 @@ describe('ReactDOMServerIntegration', () => {
           render === streamRender
         ) {
           // In the server render output there's a comment between them.
-          expect(e.childNodes.length).toBe(render === streamRender ? 4 : 3);
+          expect(e.childNodes.length).toBe(3);
           expectTextNode(e.childNodes[0], 'foo');
           expectTextNode(e.childNodes[2], 'bar');
         } else {
@@ -203,7 +204,7 @@ describe('ReactDOMServerIntegration', () => {
             render === streamRender
           ) {
             // In the server render output there's a comment between them.
-            expect(e.childNodes.length).toBe(render === streamRender ? 6 : 5);
+            expect(e.childNodes.length).toBe(5);
             expectTextNode(e.childNodes[0], 'a');
             expectTextNode(e.childNodes[2], 'b');
             expectTextNode(e.childNodes[4], 'c');
@@ -240,7 +241,11 @@ describe('ReactDOMServerIntegration', () => {
             e
           </div>,
         );
-        if (render === serverRender || render === clientRenderOnServerString) {
+        if (
+          render === serverRender ||
+          render === streamRender ||
+          render === clientRenderOnServerString
+        ) {
           // In the server render output there's comments between text nodes.
           expect(e.childNodes.length).toBe(5);
           expectTextNode(e.childNodes[0], 'a');
@@ -249,15 +254,6 @@ describe('ReactDOMServerIntegration', () => {
           expectTextNode(e.childNodes[3].childNodes[0], 'c');
           expectTextNode(e.childNodes[3].childNodes[2], 'd');
           expectTextNode(e.childNodes[4], 'e');
-        } else if (render === streamRender) {
-          // In the server render output there's comments after each text node.
-          expect(e.childNodes.length).toBe(7);
-          expectTextNode(e.childNodes[0], 'a');
-          expectTextNode(e.childNodes[2], 'b');
-          expect(e.childNodes[4].childNodes.length).toBe(4);
-          expectTextNode(e.childNodes[4].childNodes[0], 'c');
-          expectTextNode(e.childNodes[4].childNodes[2], 'd');
-          expectTextNode(e.childNodes[5], 'e');
         } else {
           expect(e.childNodes.length).toBe(4);
           expectTextNode(e.childNodes[0], 'a');
@@ -270,7 +266,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('number children', function() {
+    describe('number children', function () {
       itRenders('a number as single child', async render => {
         const e = await render(<div>{3}</div>);
         expect(e.textContent).toBe('3');
@@ -296,7 +292,7 @@ describe('ReactDOMServerIntegration', () => {
           render === streamRender
         ) {
           // In the server markup there's a comment between.
-          expect(e.childNodes.length).toBe(render === streamRender ? 4 : 3);
+          expect(e.childNodes.length).toBe(3);
           expectTextNode(e.childNodes[0], 'foo');
           expectTextNode(e.childNodes[2], '40');
         } else {
@@ -307,7 +303,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('null, false, and undefined children', function() {
+    describe('null, false, and undefined children', function () {
       itRenders('null single child as blank', async render => {
         const e = await render(<div>{null}</div>);
         expect(e.childNodes.length).toBe(0);
@@ -335,13 +331,13 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('null children as blank', async render => {
         const e = await render(<div>{null}foo</div>);
-        expect(e.childNodes.length).toBe(render === streamRender ? 2 : 1);
+        expect(e.childNodes.length).toBe(1);
         expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('false children as blank', async render => {
         const e = await render(<div>{false}foo</div>);
-        expect(e.childNodes.length).toBe(render === streamRender ? 2 : 1);
+        expect(e.childNodes.length).toBe(1);
         expectTextNode(e.childNodes[0], 'foo');
       });
 
@@ -353,7 +349,7 @@ describe('ReactDOMServerIntegration', () => {
             {false}
           </div>,
         );
-        expect(e.childNodes.length).toBe(render === streamRender ? 2 : 1);
+        expect(e.childNodes.length).toBe(1);
         expectTextNode(e.childNodes[0], 'foo');
       });
 
@@ -370,7 +366,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('elements with implicit namespaces', function() {
+    describe('elements with implicit namespaces', function () {
       itRenders('an svg element', async render => {
         const e = await render(<svg />);
         expect(e.childNodes.length).toBe(0);
@@ -585,7 +581,7 @@ describe('ReactDOMServerIntegration', () => {
       }
     });
 
-    describe('newline-eating elements', function() {
+    describe('newline-eating elements', function () {
       itRenders(
         'a newline-eating tag with content not starting with \\n',
         async render => {
@@ -606,7 +602,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('different component implementations', function() {
+    describe('different component implementations', function () {
       function checkFooDiv(e) {
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
@@ -632,7 +628,7 @@ describe('ReactDOMServerIntegration', () => {
           async render => {
             const FactoryComponent = () => {
               return {
-                render: function() {
+                render: function () {
                   return <div>foo</div>;
                 },
               };
@@ -645,7 +641,7 @@ describe('ReactDOMServerIntegration', () => {
         itRenders('factory components', async render => {
           const FactoryComponent = () => {
             return {
-              render: function() {
+              render: function () {
                 return <div>foo</div>;
               },
             };
@@ -655,7 +651,7 @@ describe('ReactDOMServerIntegration', () => {
       }
     });
 
-    describe('component hierarchies', function() {
+    describe('component hierarchies', function () {
       itRenders('single child hierarchies of components', async render => {
         const Component = props => <div>{props.children}</div>;
         let e = await render(
@@ -740,10 +736,10 @@ describe('ReactDOMServerIntegration', () => {
             </div>,
           );
           expect(e.id).toBe('parent');
-          expect(e.childNodes.length).toBe(render === streamRender ? 4 : 3);
+          expect(e.childNodes.length).toBe(3);
           const child1 = e.childNodes[0];
           const textNode = e.childNodes[1];
-          const child2 = e.childNodes[render === streamRender ? 3 : 2];
+          const child2 = e.childNodes[2];
           expect(child1.id).toBe('child1');
           expect(child1.childNodes.length).toBe(0);
           expectTextNode(textNode, ' ');
@@ -757,10 +753,10 @@ describe('ReactDOMServerIntegration', () => {
         async render => {
           // prettier-ignore
           const e = await render(<div id="parent">  <div id="child" />   </div>); // eslint-disable-line no-multi-spaces
-          expect(e.childNodes.length).toBe(render === streamRender ? 5 : 3);
+          expect(e.childNodes.length).toBe(3);
           const textNode1 = e.childNodes[0];
-          const child = e.childNodes[render === streamRender ? 2 : 1];
-          const textNode2 = e.childNodes[render === streamRender ? 3 : 2];
+          const child = e.childNodes[1];
+          const textNode2 = e.childNodes[2];
           expect(e.id).toBe('parent');
           expectTextNode(textNode1, '  ');
           expect(child.id).toBe('child');
@@ -783,9 +779,7 @@ describe('ReactDOMServerIntegration', () => {
         ) {
           // For plain server markup result we have comments between.
           // If we're able to hydrate, they remain.
-          expect(parent.childNodes.length).toBe(
-            render === streamRender ? 6 : 5,
-          );
+          expect(parent.childNodes.length).toBe(5);
           expectTextNode(parent.childNodes[0], 'a');
           expectTextNode(parent.childNodes[2], 'b');
           expectTextNode(parent.childNodes[4], 'c');
@@ -798,7 +792,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('escaping >, <, and &', function() {
+    describe('escaping >, <, and &', function () {
       itRenders('>,<, and & as single child', async render => {
         const e = await render(<div>{'<span>Text&quot;</span>'}</div>);
         expect(e.childNodes.length).toBe(1);
@@ -817,7 +811,7 @@ describe('ReactDOMServerIntegration', () => {
           render === clientRenderOnServerString ||
           render === streamRender
         ) {
-          expect(e.childNodes.length).toBe(render === streamRender ? 4 : 3);
+          expect(e.childNodes.length).toBe(3);
           expectTextNode(e.childNodes[0], '<span>Text1&quot;</span>');
           expectTextNode(e.childNodes[2], '<span>Text2&quot;</span>');
         } else {
@@ -868,7 +862,7 @@ describe('ReactDOMServerIntegration', () => {
           );
           if (render === serverRender || render === streamRender) {
             // We have three nodes because there is a comment between them.
-            expect(e.childNodes.length).toBe(render === streamRender ? 4 : 3);
+            expect(e.childNodes.length).toBe(3);
             // Everything becomes LF when parsed from server HTML.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
@@ -909,7 +903,7 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('components that render nullish', function() {
+    describe('components that render nullish', function () {
       itRenders('a function returning null', async render => {
         const NullComponent = () => null;
         await render(<NullComponent />);
@@ -939,7 +933,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('components that throw errors', function() {
+    describe('components that throw errors', function () {
       itThrowsWhenRendering(
         'a function returning an object',
         async render => {
@@ -983,7 +977,7 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('badly-typed elements', function() {
+    describe('badly-typed elements', function () {
       itThrowsWhenRendering(
         'object',
         async render => {

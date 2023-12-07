@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,9 +13,9 @@ import {StoreContext} from '../context';
 import {
   ComponentFilterElementType,
   ElementTypeSuspense,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 
-export default function CannotSuspendWarningMessage() {
+export default function CannotSuspendWarningMessage(): React.Node {
   const store = useContext(StoreContext);
   const areSuspenseElementsHidden = !!store.componentFilters.find(
     filter =>

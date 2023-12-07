@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,23 +7,40 @@
  * @flow strict-local
  */
 
-import type {LogEvent} from 'react-devtools-shared/src/Logger';
+import type {LoggerEvent} from 'react-devtools-shared/src/Logger';
 
 import {registerEventLogger} from 'react-devtools-shared/src/Logger';
 import {enableLogger} from 'react-devtools-feature-flags';
 
-let loggingIFrame = null;
-let missedEvents = [];
+let currentLoggingIFrame = null;
+let currentSessionId = null;
+let missedEvents: Array<LoggerEvent> = [];
 
-export function registerDevToolsEventLogger(surface: string) {
-  function logEvent(event: LogEvent) {
+type LoggerContext = {
+  page_url: ?string,
+};
+
+export function registerDevToolsEventLogger(
+  surface: string,
+  fetchAdditionalContext?:
+    | (() => LoggerContext)
+    | (() => Promise<LoggerContext>),
+): void {
+  async function logEvent(event: LoggerEvent) {
     if (enableLogger) {
-      if (loggingIFrame != null) {
-        loggingIFrame.contentWindow.postMessage(
+      if (currentLoggingIFrame != null && currentSessionId != null) {
+        const {metadata, ...eventWithoutMetadata} = event;
+        const additionalContext: LoggerContext | {} =
+          fetchAdditionalContext != null ? await fetchAdditionalContext() : {};
+
+        currentLoggingIFrame?.contentWindow?.postMessage(
           {
             source: 'react-devtools-logging',
-            event: event,
+            event: eventWithoutMetadata,
             context: {
+              ...additionalContext,
+              metadata: metadata != null ? JSON.stringify(metadata) : '',
+              session_id: currentSessionId,
               surface,
               version: process.env.DEVTOOLS_VERSION,
             },
@@ -36,14 +53,11 @@ export function registerDevToolsEventLogger(surface: string) {
     }
   }
 
-  function handleLoggingIFrameLoaded(iframe) {
-    if (loggingIFrame != null) {
-      return;
-    }
+  function handleLoggingIFrameLoaded(iframe: HTMLIFrameElement) {
+    currentLoggingIFrame = iframe;
 
-    loggingIFrame = iframe;
     if (missedEvents.length > 0) {
-      missedEvents.forEach(logEvent);
+      missedEvents.forEach(event => logEvent(event));
       missedEvents = [];
     }
   }
@@ -53,18 +67,21 @@ export function registerDevToolsEventLogger(surface: string) {
   if (enableLogger) {
     const loggingUrl = process.env.LOGGING_URL;
     const body = document.body;
+
     if (
       typeof loggingUrl === 'string' &&
       loggingUrl.length > 0 &&
-      body != null
+      body != null &&
+      currentLoggingIFrame == null
     ) {
       registerEventLogger(logEvent);
+      currentSessionId = window.crypto.randomUUID();
 
       const iframe = document.createElement('iframe');
+
+      iframe.onload = () => handleLoggingIFrameLoaded(iframe);
       iframe.src = loggingUrl;
-      iframe.onload = function(...args) {
-        handleLoggingIFrameLoaded(iframe);
-      };
+
       body.appendChild(iframe);
     }
   }

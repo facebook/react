@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,16 +10,17 @@
 import * as React from 'react';
 import {Fragment, useContext, useMemo, useState} from 'react';
 import Store from 'react-devtools-shared/src/devtools/store';
-import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
-import {createRegExp} from '../utils';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 import {StoreContext} from '../context';
 import {useSubscription} from '../hooks';
+import {logEvent} from 'react-devtools-shared/src/Logger';
+import IndexableElementBadges from './IndexableElementBadges';
+import IndexableDisplayName from './IndexableDisplayName';
 
 import type {ItemData} from './Tree';
-import type {Element as ElementType} from './types';
+import type {Element as ElementType} from 'react-devtools-shared/src/frontend/types';
 
 import styles from './Element.css';
 import Icon from '../Icon';
@@ -31,11 +32,10 @@ type Props = {
   ...
 };
 
-export default function Element({data, index, style}: Props) {
+export default function Element({data, index, style}: Props): React.Node {
   const store = useContext(StoreContext);
-  const {ownerFlatTree, ownerID, selectedElementID} = useContext(
-    TreeStateContext,
-  );
+  const {ownerFlatTree, ownerID, selectedElementID} =
+    useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
   const {showInlineWarningsAndErrors} = React.useContext(SettingsContext);
 
@@ -63,10 +63,10 @@ export default function Element({data, index, style}: Props) {
     }),
     [store, element],
   );
-  const {errorCount, warningCount} = useSubscription<{|
+  const {errorCount, warningCount} = useSubscription<{
     errorCount: number,
     warningCount: number,
-  |}>(errorsAndWarningsSubscription);
+  }>(errorsAndWarningsSubscription);
 
   const handleDoubleClick = () => {
     if (id !== null) {
@@ -74,8 +74,13 @@ export default function Element({data, index, style}: Props) {
     }
   };
 
+  // $FlowFixMe[missing-local-annot]
   const handleClick = ({metaKey}) => {
     if (id !== null) {
+      logEvent({
+        event_name: 'select-element',
+        metadata: {source: 'click-element'},
+      });
       dispatch({
         type: 'SELECT_ELEMENT_BY_ID',
         payload: metaKey ? null : id,
@@ -94,6 +99,7 @@ export default function Element({data, index, style}: Props) {
     setIsHovered(false);
   };
 
+  // $FlowFixMe[missing-local-annot]
   const handleKeyDoubleClick = event => {
     // Double clicks on key value are used for text selection (if the text has been truncated).
     // They should not enter the owners tree view.
@@ -115,8 +121,8 @@ export default function Element({data, index, style}: Props) {
     hocDisplayNames,
     isStrictModeNonCompliant,
     key,
-    type,
-  } = ((element: any): ElementType);
+    compiledWithForget,
+  } = element;
 
   // Only show strict mode non-compliance badges for top level elements.
   // Showing an inline badge for every element in the tree would be noisy.
@@ -149,11 +155,11 @@ export default function Element({data, index, style}: Props) {
           // We must use padding rather than margin/left because of the selected background color.
           transform: `translateX(calc(${depth} * var(--indentation-size)))`,
         }}>
-        {ownerID === null ? (
+        {ownerID === null && (
           <ExpandCollapseToggle element={element} store={store} />
-        ) : null}
+        )}
 
-        <DisplayName displayName={displayName} id={((id: any): number)} />
+        <IndexableDisplayName displayName={displayName} id={id} />
 
         {key && (
           <Fragment>
@@ -167,17 +173,14 @@ export default function Element({data, index, style}: Props) {
             "
           </Fragment>
         )}
-        {hocDisplayNames !== null && hocDisplayNames.length > 0 ? (
-          <Badge
-            className={styles.Badge}
-            hocDisplayNames={hocDisplayNames}
-            type={type}>
-            <DisplayName
-              displayName={hocDisplayNames[0]}
-              id={((id: any): number)}
-            />
-          </Badge>
-        ) : null}
+
+        <IndexableElementBadges
+          hocDisplayNames={hocDisplayNames}
+          compiledWithForget={compiledWithForget}
+          elementID={id}
+          className={styles.BadgesBlock}
+        />
+
         {showInlineWarningsAndErrors && errorCount > 0 && (
           <Icon
             type="error"
@@ -215,19 +218,21 @@ export default function Element({data, index, style}: Props) {
 }
 
 // Prevent double clicks on toggle from drilling into the owner list.
+// $FlowFixMe[missing-local-annot]
 const swallowDoubleClick = event => {
   event.preventDefault();
   event.stopPropagation();
 };
 
-type ExpandCollapseToggleProps = {|
+type ExpandCollapseToggleProps = {
   element: ElementType,
   store: Store,
-|};
+};
 
 function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
   const {children, id, isCollapsed} = element;
 
+  // $FlowFixMe[missing-local-annot]
   const toggleCollapsed = event => {
     event.preventDefault();
     event.stopPropagation();
@@ -235,6 +240,7 @@ function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
     store.toggleIsCollapsed(id, !isCollapsed);
   };
 
+  // $FlowFixMe[missing-local-annot]
   const stopPropagation = event => {
     // Prevent the row from selecting
     event.stopPropagation();
@@ -253,48 +259,4 @@ function ExpandCollapseToggle({element, store}: ExpandCollapseToggleProps) {
       <ButtonIcon type={isCollapsed ? 'collapsed' : 'expanded'} />
     </div>
   );
-}
-
-type DisplayNameProps = {|
-  displayName: string | null,
-  id: number,
-|};
-
-function DisplayName({displayName, id}: DisplayNameProps) {
-  const {searchIndex, searchResults, searchText} = useContext(TreeStateContext);
-  const isSearchResult = useMemo(() => {
-    return searchResults.includes(id);
-  }, [id, searchResults]);
-  const isCurrentResult =
-    searchIndex !== null && id === searchResults[searchIndex];
-
-  if (!isSearchResult || displayName === null) {
-    return displayName;
-  }
-
-  const match = createRegExp(searchText).exec(displayName);
-
-  if (match === null) {
-    return displayName;
-  }
-
-  const startIndex = match.index;
-  const stopIndex = startIndex + match[0].length;
-
-  const children = [];
-  if (startIndex > 0) {
-    children.push(<span key="begin">{displayName.slice(0, startIndex)}</span>);
-  }
-  children.push(
-    <mark
-      key="middle"
-      className={isCurrentResult ? styles.CurrentHighlight : styles.Highlight}>
-      {displayName.slice(startIndex, stopIndex)}
-    </mark>,
-  );
-  if (stopIndex < displayName.length) {
-    children.push(<span key="end">{displayName.slice(stopIndex)}</span>);
-  }
-
-  return children;
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,28 +30,28 @@ const app = express();
 app.use(compress());
 app.get(
   '/',
-  handleErrors(async function(req, res) {
+  handleErrors(async function (req, res) {
     await waitForWebpack();
     renderToStream(req.url, res);
   })
 );
 app.get(
   '/string',
-  handleErrors(async function(req, res) {
+  handleErrors(async function (req, res) {
     await waitForWebpack();
     renderToString(req.url, res);
   })
 );
 app.get(
   '/stream',
-  handleErrors(async function(req, res) {
+  handleErrors(async function (req, res) {
     await waitForWebpack();
     renderToStream(req.url, res);
   })
 );
 app.get(
   '/buffer',
-  handleErrors(async function(req, res) {
+  handleErrors(async function (req, res) {
     await waitForWebpack();
     renderToBuffer(req.url, res);
   })
@@ -63,7 +63,7 @@ app
   .listen(PORT, () => {
     console.log(`Listening at ${PORT}...`);
   })
-  .on('error', function(error) {
+  .on('error', function (error) {
     if (error.syscall !== 'listen') {
       throw error;
     }
@@ -84,7 +84,7 @@ app
   });
 
 function handleErrors(fn) {
-  return async function(req, res, next) {
+  return async function (req, res, next) {
     try {
       return await fn(req, res);
     } catch (x) {

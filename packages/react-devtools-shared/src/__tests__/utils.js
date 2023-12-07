@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,14 +12,14 @@ import typeof ReactTestRenderer from 'react-test-renderer';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/frontend/types';
 
 export function act(
   callback: Function,
   recursivelyFlush: boolean = true,
 ): void {
   const {act: actTestRenderer} = require('react-test-renderer');
-  const {act: actDOM} = require('react-dom/test-utils');
+  const actDOM = require('react').unstable_act;
 
   actDOM(() => {
     actTestRenderer(() => {
@@ -44,9 +44,8 @@ export async function actAsync(
   recursivelyFlush: boolean = true,
 ): Promise<void> {
   const {act: actTestRenderer} = require('react-test-renderer');
-  const {act: actDOM} = require('react-dom/test-utils');
+  const actDOM = require('react').unstable_act;
 
-  // $FlowFixMe Flow doesn't know about "await act()" yet
   await actDOM(async () => {
     await actTestRenderer(async () => {
       await cb();
@@ -55,7 +54,6 @@ export async function actAsync(
 
   if (recursivelyFlush) {
     while (jest.getTimerCount() > 0) {
-      // $FlowFixMe Flow doesn't know about "await act()" yet
       await actDOM(async () => {
         await actTestRenderer(async () => {
           jest.runAllTimers();
@@ -63,7 +61,6 @@ export async function actAsync(
       });
     }
   } else {
-    // $FlowFixMe Flow doesn't know about "await act()" yet
     await actDOM(async () => {
       await actTestRenderer(async () => {
         jest.runOnlyPendingTimers();
@@ -89,7 +86,7 @@ export function createDisplayNameFilter(
   source: string,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   let isValid = true;
   try {
     new RegExp(source); // eslint-disable-line no-new
@@ -105,7 +102,7 @@ export function createDisplayNameFilter(
 }
 
 export function createHOCFilter(isEnabled: boolean = true) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   return {
     type: Types.ComponentFilterHOC,
     isEnabled,
@@ -117,7 +114,7 @@ export function createElementTypeFilter(
   elementType: ElementType,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   return {
     type: Types.ComponentFilterElementType,
     isEnabled,
@@ -129,7 +126,7 @@ export function createLocationFilter(
   source: string,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   let isValid = true;
   try {
     new RegExp(source); // eslint-disable-line no-new
@@ -155,7 +152,7 @@ export function getRendererID(): number {
     return rendererInterface.renderer.rendererPackageName === 'react-dom';
   });
 
-  if (ids == null) {
+  if (id == null) {
     throw Error('Could not find renderer.');
   }
 
@@ -203,7 +200,8 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
 
   expect(profilerStore.profilingData).not.toBeNull();
 
-  const profilingDataFrontendInitial = ((profilerStore.profilingData: any): ProfilingDataFrontend);
+  const profilingDataFrontendInitial =
+    ((profilerStore.profilingData: any): ProfilingDataFrontend);
   expect(profilingDataFrontendInitial.imported).toBe(false);
 
   const profilingDataExport = prepareProfilingDataExport(
@@ -287,5 +285,21 @@ export function overrideFeatureFlags(overrideFlags) {
       ...actualFlags,
       ...overrideFlags,
     };
+  });
+}
+
+export function normalizeCodeLocInfo(str) {
+  if (typeof str !== 'string') {
+    return str;
+  }
+  // This special case exists only for the special source location in
+  // ReactElementValidator. That will go away if we remove source locations.
+  str = str.replace(/Check your code at .+?:\d+/g, 'Check your code at **');
+  // V8 format:
+  //  at Component (/path/filename.js:123:45)
+  // React format:
+  //    in Component (at filename.js:123)
+  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function (m, name) {
+    return '\n    in ' + name + ' (at **)';
   });
 }

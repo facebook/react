@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -106,7 +106,7 @@ describe('ReactDOM unknown attribute', () => {
         expect(test).toThrowError(new TypeError('prod message')),
       ).toErrorDev(
         'Warning: The provided `unknown` attribute is an unsupported type TemporalLike.' +
-          ' This value must be coerced to a string before before using it here.',
+          ' This value must be coerced to a string before using it here.',
       );
     });
 

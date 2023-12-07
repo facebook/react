@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,6 +19,16 @@ ESLintTester.setDefaultConfig({
   },
 });
 
+/**
+ * A string template tag that removes padding from the left side of multi-line strings
+ * @param {Array} strings array of code strings (only one expected)
+ */
+function normalizeIndent(strings) {
+  const codeLines = strings[0].split('\n');
+  const leftPadding = codeLines[1].match(/\s+/)[0];
+  return codeLines.map(line => line.slice(leftPadding.length)).join('\n');
+}
+
 // ***************************************************
 // For easier local testing, you can add to any case:
 // {
@@ -31,385 +41,490 @@ ESLintTester.setDefaultConfig({
 
 const tests = {
   valid: [
-    `
-      // Valid because components can use hooks.
-      function ComponentWithHook() {
-        useHook();
-      }
-    `,
-    `
-      // Valid because components can use hooks.
-      function createComponentWithHook() {
-        return function ComponentWithHook() {
-          useHook();
-        };
-      }
-    `,
-    `
-      // Valid because hooks can use hooks.
-      function useHookWithHook() {
-        useHook();
-      }
-    `,
-    `
-      // Valid because hooks can use hooks.
-      function createHook() {
-        return function useHookWithHook() {
+    {
+      code: normalizeIndent`
+        // Valid because components can use hooks.
+        function ComponentWithHook() {
           useHook();
         }
-      }
-    `,
-    `
-      // Valid because components can call functions.
-      function ComponentWithNormalFunction() {
-        doSomething();
-      }
-    `,
-    `
-      // Valid because functions can call functions.
-      function normalFunctionWithNormalFunction() {
-        doSomething();
-      }
-    `,
-    `
-      // Valid because functions can call functions.
-      function normalFunctionWithConditionalFunction() {
-        if (cond) {
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because components can use hooks.
+        function createComponentWithHook() {
+          return function ComponentWithHook() {
+            useHook();
+          };
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can use hooks.
+        function useHookWithHook() {
+          useHook();
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can use hooks.
+        function createHook() {
+          return function useHookWithHook() {
+            useHook();
+          }
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because components can call functions.
+        function ComponentWithNormalFunction() {
           doSomething();
         }
-      }
-    `,
-    `
-      // Valid because functions can call functions.
-      function functionThatStartsWithUseButIsntAHook() {
-        if (cond) {
-          userFetch();
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions can call functions.
+        function normalFunctionWithNormalFunction() {
+          doSomething();
         }
-      }
-    `,
-    `
-      // Valid although unconditional return doesn't make sense and would fail other rules.
-      // We could make it invalid but it doesn't matter.
-      function useUnreachable() {
-        return;
-        useHook();
-      }
-    `,
-    `
-      // Valid because hooks can call hooks.
-      function useHook() { useState(); }
-      const whatever = function useHook() { useState(); };
-      const useHook1 = () => { useState(); };
-      let useHook2 = () => useState();
-      useHook2 = () => { useState(); };
-      ({useHook: () => { useState(); }});
-      ({useHook() { useState(); }});
-      const {useHook3 = () => { useState(); }} = {};
-      ({useHook = () => { useState(); }} = {});
-      Namespace.useHook = () => { useState(); };
-    `,
-    `
-      // Valid because hooks can call hooks.
-      function useHook() {
-        useHook1();
-        useHook2();
-      }
-    `,
-    `
-      // Valid because hooks can call hooks.
-      function createHook() {
-        return function useHook() {
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions can call functions.
+        function normalFunctionWithConditionalFunction() {
+          if (cond) {
+            doSomething();
+          }
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions can call functions.
+        function functionThatStartsWithUseButIsntAHook() {
+          if (cond) {
+            userFetch();
+          }
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid although unconditional return doesn't make sense and would fail other rules.
+        // We could make it invalid but it doesn't matter.
+        function useUnreachable() {
+          return;
+          useHook();
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can call hooks.
+        function useHook() { useState(); }
+        const whatever = function useHook() { useState(); };
+        const useHook1 = () => { useState(); };
+        let useHook2 = () => useState();
+        useHook2 = () => { useState(); };
+        ({useHook: () => { useState(); }});
+        ({useHook() { useState(); }});
+        const {useHook3 = () => { useState(); }} = {};
+        ({useHook = () => { useState(); }} = {});
+        Namespace.useHook = () => { useState(); };
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can call hooks.
+        function useHook() {
           useHook1();
           useHook2();
-        };
-      }
-    `,
-    `
-      // Valid because hooks can call hooks.
-      function useHook() {
-        useState() && a;
-      }
-    `,
-    `
-      // Valid because hooks can call hooks.
-      function useHook() {
-        return useHook1() + useHook2();
-      }
-    `,
-    `
-      // Valid because hooks can call hooks.
-      function useHook() {
-        return useHook1(useHook2());
-      }
-    `,
-    `
-      // Valid because hooks can be used in anonymous arrow-function arguments
-      // to forwardRef.
-      const FancyButton = React.forwardRef((props, ref) => {
-        useHook();
-        return <button {...props} ref={ref} />
-      });
-    `,
-    `
-      // Valid because hooks can be used in anonymous function arguments to
-      // forwardRef.
-      const FancyButton = React.forwardRef(function (props, ref) {
-        useHook();
-        return <button {...props} ref={ref} />
-      });
-    `,
-    `
-      // Valid because hooks can be used in anonymous function arguments to
-      // forwardRef.
-      const FancyButton = forwardRef(function (props, ref) {
-        useHook();
-        return <button {...props} ref={ref} />
-      });
-    `,
-    `
-      // Valid because hooks can be used in anonymous function arguments to
-      // React.memo.
-      const MemoizedFunction = React.memo(props => {
-        useHook();
-        return <button {...props} />
-      });
-    `,
-    `
-      // Valid because hooks can be used in anonymous function arguments to
-      // memo.
-      const MemoizedFunction = memo(function (props) {
-        useHook();
-        return <button {...props} />
-      });
-    `,
-    `
-      // Valid because classes can call functions.
-      // We don't consider these to be hooks.
-      class C {
-        m() {
-          this.useHook();
-          super.useHook();
         }
-      }
-    `,
-    `
-      // Valid -- this is a regression test.
-      jest.useFakeTimers();
-      beforeEach(() => {
-        jest.useRealTimers();
-      })
-    `,
-    `
-      // Valid because they're not matching use[A-Z].
-      fooState();
-      use();
-      _use();
-      _useState();
-      use_hook();
-      // also valid because it's not matching the PascalCase namespace
-      jest.useFakeTimer()
-    `,
-    `
-      // Regression test for some internal code.
-      // This shows how the "callback rule" is more relaxed,
-      // and doesn't kick in unless we're confident we're in
-      // a component or a hook.
-      function makeListener(instance) {
-        each(pixelsWithInferredEvents, pixel => {
-          if (useExtendedSelector(pixel.id) && extendedButton) {
-            foo();
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can call hooks.
+        function createHook() {
+          return function useHook() {
+            useHook1();
+            useHook2();
+          };
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can call hooks.
+        function useHook() {
+          useState() && a;
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can call hooks.
+        function useHook() {
+          return useHook1() + useHook2();
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can call hooks.
+        function useHook() {
+          return useHook1(useHook2());
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can be used in anonymous arrow-function arguments
+        // to forwardRef.
+        const FancyButton = React.forwardRef((props, ref) => {
+          useHook();
+          return <button {...props} ref={ref} />
+        });
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can be used in anonymous function arguments to
+        // forwardRef.
+        const FancyButton = React.forwardRef(function (props, ref) {
+          useHook();
+          return <button {...props} ref={ref} />
+        });
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can be used in anonymous function arguments to
+        // forwardRef.
+        const FancyButton = forwardRef(function (props, ref) {
+          useHook();
+          return <button {...props} ref={ref} />
+        });
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can be used in anonymous function arguments to
+        // React.memo.
+        const MemoizedFunction = React.memo(props => {
+          useHook();
+          return <button {...props} />
+        });
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because hooks can be used in anonymous function arguments to
+        // memo.
+        const MemoizedFunction = memo(function (props) {
+          useHook();
+          return <button {...props} />
+        });
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because classes can call functions.
+        // We don't consider these to be hooks.
+        class C {
+          m() {
+            this.useHook();
+            super.useHook();
+          }
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid -- this is a regression test.
+        jest.useFakeTimers();
+        beforeEach(() => {
+          jest.useRealTimers();
+        })
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because they're not matching use[A-Z].
+        fooState();
+        _use();
+        _useState();
+        use_hook();
+        // also valid because it's not matching the PascalCase namespace
+        jest.useFakeTimer()
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Regression test for some internal code.
+        // This shows how the "callback rule" is more relaxed,
+        // and doesn't kick in unless we're confident we're in
+        // a component or a hook.
+        function makeListener(instance) {
+          each(pixelsWithInferredEvents, pixel => {
+            if (useExtendedSelector(pixel.id) && extendedButton) {
+              foo();
+            }
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // This is valid because "use"-prefixed functions called in
+        // unnamed function arguments are not assumed to be hooks.
+        React.unknownFunction((foo, bar) => {
+          if (foo) {
+            useNotAHook(bar)
           }
         });
-      }
-    `,
-    `
-      // This is valid because "use"-prefixed functions called in
-      // unnamed function arguments are not assumed to be hooks.
-      React.unknownFunction((foo, bar) => {
-        if (foo) {
-          useNotAHook(bar)
-        }
-      });
-    `,
-    `
-      // This is valid because "use"-prefixed functions called in
-      // unnamed function arguments are not assumed to be hooks.
-      unknownFunction(function(foo, bar) {
-        if (foo) {
-          useNotAHook(bar)
-        }
-      });
-    `,
-    `
-      // Regression test for incorrectly flagged valid code.
-      function RegressionTest() {
-        const foo = cond ? a : b;
-        useState();
-      }
-    `,
-    `
-      // Valid because exceptions abort rendering
-      function RegressionTest() {
-        if (page == null) {
-          throw new Error('oh no!');
-        }
-        useState();
-      }
-    `,
-    `
-      // Valid because the loop doesn't change the order of hooks calls.
-      function RegressionTest() {
-        const res = [];
-        const additionalCond = true;
-        for (let i = 0; i !== 10 && additionalCond; ++i ) {
-          res.push(i);
-        }
-        React.useLayoutEffect(() => {});
-      }
-    `,
-    `
-      // Is valid but hard to compute by brute-forcing
-      function MyComponent() {
-        // 40 conditions
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-        if (c) {} else {}
-
-        // 10 hooks
-        useHook();
-        useHook();
-        useHook();
-        useHook();
-        useHook();
-        useHook();
-        useHook();
-        useHook();
-        useHook();
-        useHook();
-      }
-    `,
-    `
-      // Valid because the neither the conditions before or after the hook affect the hook call
-      // Failed prior to implementing BigInt because pathsFromStartToEnd and allPathsFromStartToEnd were too big and had rounding errors
-      const useSomeHook = () => {};
-
-      const SomeName = () => {
-        const filler = FILLER ?? FILLER ?? FILLER;
-        const filler2 = FILLER ?? FILLER ?? FILLER;
-        const filler3 = FILLER ?? FILLER ?? FILLER;
-        const filler4 = FILLER ?? FILLER ?? FILLER;
-        const filler5 = FILLER ?? FILLER ?? FILLER;
-        const filler6 = FILLER ?? FILLER ?? FILLER;
-        const filler7 = FILLER ?? FILLER ?? FILLER;
-        const filler8 = FILLER ?? FILLER ?? FILLER;
-
-        useSomeHook();
-
-        if (anyConditionCanEvenBeFalse) {
-          return null;
-        }
-
-        return (
-          <React.Fragment>
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-            {FILLER ? FILLER : FILLER}
-          </React.Fragment>
-        );
-      };
-    `,
-    `
-      // Valid because the neither the condition nor the loop affect the hook call.
-      function App(props) {
-        const someObject = {propA: true};
-        for (const propName in someObject) {
-          if (propName === true) {
-          } else {
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // This is valid because "use"-prefixed functions called in
+        // unnamed function arguments are not assumed to be hooks.
+        unknownFunction(function(foo, bar) {
+          if (foo) {
+            useNotAHook(bar)
           }
+        });
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Regression test for incorrectly flagged valid code.
+        function RegressionTest() {
+          const foo = cond ? a : b;
+          useState();
         }
-        const [myState, setMyState] = useState(null);
-      }
-    `,
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because exceptions abort rendering
+        function RegressionTest() {
+          if (page == null) {
+            throw new Error('oh no!');
+          }
+          useState();
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because the loop doesn't change the order of hooks calls.
+        function RegressionTest() {
+          const res = [];
+          const additionalCond = true;
+          for (let i = 0; i !== 10 && additionalCond; ++i ) {
+            res.push(i);
+          }
+          React.useLayoutEffect(() => {});
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Is valid but hard to compute by brute-forcing
+        function MyComponent() {
+          // 40 conditions
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+          if (c) {} else {}
+
+          // 10 hooks
+          useHook();
+          useHook();
+          useHook();
+          useHook();
+          useHook();
+          useHook();
+          useHook();
+          useHook();
+          useHook();
+          useHook();
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because the neither the conditions before or after the hook affect the hook call
+        // Failed prior to implementing BigInt because pathsFromStartToEnd and allPathsFromStartToEnd were too big and had rounding errors
+        const useSomeHook = () => {};
+
+        const SomeName = () => {
+          const filler = FILLER ?? FILLER ?? FILLER;
+          const filler2 = FILLER ?? FILLER ?? FILLER;
+          const filler3 = FILLER ?? FILLER ?? FILLER;
+          const filler4 = FILLER ?? FILLER ?? FILLER;
+          const filler5 = FILLER ?? FILLER ?? FILLER;
+          const filler6 = FILLER ?? FILLER ?? FILLER;
+          const filler7 = FILLER ?? FILLER ?? FILLER;
+          const filler8 = FILLER ?? FILLER ?? FILLER;
+
+          useSomeHook();
+
+          if (anyConditionCanEvenBeFalse) {
+            return null;
+          }
+
+          return (
+            <React.Fragment>
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+              {FILLER ? FILLER : FILLER}
+            </React.Fragment>
+          );
+        };
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because the neither the condition nor the loop affect the hook call.
+        function App(props) {
+          const someObject = {propA: true};
+          for (const propName in someObject) {
+            if (propName === true) {
+            } else {
+            }
+          }
+          const [myState, setMyState] = useState(null);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          const text = use(Promise.resolve('A'));
+          return <Text text={text} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        import * as React from 'react';
+        function App() {
+          if (shouldShowText) {
+            const text = use(query);
+            const data = React.use(thing);
+            const data2 = react.use(thing2);
+            return <Text text={text} />
+          }
+          return <Text text={shouldFetchBackupText ? use(backupQuery) : "Nothing to see here"} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          let data = [];
+          for (const query of queries) {
+            const text = use(item);
+            data.push(text);
+          }
+          return <Child data={data} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          const data = someCallback((x) => use(x));
+          return <Child data={data} />
+        }
+      `,
+    },
   ],
   invalid: [
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function ComponentWithConditionalHook() {
@@ -421,9 +536,7 @@ const tests = {
       errors: [conditionalError('useConditionalHook')],
     },
     {
-      code: `
-        Hook.use();
-        Hook._use();
+      code: normalizeIndent`
         Hook.useState();
         Hook._useState();
         Hook.use42();
@@ -437,7 +550,7 @@ const tests = {
       ],
     },
     {
-      code: `
+      code: normalizeIndent`
         class C {
           m() {
             This.useHook();
@@ -448,8 +561,8 @@ const tests = {
       errors: [classError('This.useHook'), classError('Super.useHook')],
     },
     {
-      code: `
-        // This is a false positive (it's valid) that unfortunately 
+      code: normalizeIndent`
+        // This is a false positive (it's valid) that unfortunately
         // we cannot avoid. Prefer to rename it to not start with "use"
         class Foo extends Component {
           render() {
@@ -462,7 +575,7 @@ const tests = {
       errors: [classError('FooStore.useFeatureFlag')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function ComponentWithConditionalHook() {
@@ -474,7 +587,7 @@ const tests = {
       errors: [conditionalError('Namespace.useConditionalHook')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function createComponent() {
@@ -488,7 +601,7 @@ const tests = {
       errors: [conditionalError('useConditionalHook')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useHookWithConditionalHook() {
@@ -500,7 +613,7 @@ const tests = {
       errors: [conditionalError('useConditionalHook')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function createHook() {
@@ -514,7 +627,7 @@ const tests = {
       errors: [conditionalError('useConditionalHook')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function ComponentWithTernaryHook() {
@@ -524,7 +637,7 @@ const tests = {
       errors: [conditionalError('useTernaryHook')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's a common misunderstanding.
         // We *could* make it valid but the runtime error could be confusing.
         function ComponentWithHookInsideCallback() {
@@ -536,7 +649,7 @@ const tests = {
       errors: [genericError('useHookInsideCallback')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's a common misunderstanding.
         // We *could* make it valid but the runtime error could be confusing.
         function createComponent() {
@@ -550,7 +663,7 @@ const tests = {
       errors: [genericError('useHookInsideCallback')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's a common misunderstanding.
         // We *could* make it valid but the runtime error could be confusing.
         const ComponentWithHookInsideCallback = React.forwardRef((props, ref) => {
@@ -563,7 +676,7 @@ const tests = {
       errors: [genericError('useHookInsideCallback')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's a common misunderstanding.
         // We *could* make it valid but the runtime error could be confusing.
         const ComponentWithHookInsideCallback = React.memo(props => {
@@ -576,7 +689,7 @@ const tests = {
       errors: [genericError('useHookInsideCallback')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's a common misunderstanding.
         // We *could* make it valid but the runtime error could be confusing.
         function ComponentWithHookInsideCallback() {
@@ -588,7 +701,7 @@ const tests = {
       errors: [functionError('useState', 'handleClick')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's a common misunderstanding.
         // We *could* make it valid but the runtime error could be confusing.
         function createComponent() {
@@ -602,7 +715,7 @@ const tests = {
       errors: [functionError('useState', 'handleClick')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function ComponentWithHookInsideLoop() {
@@ -614,7 +727,7 @@ const tests = {
       errors: [loopError('useHookInsideLoop')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function renderItem() {
@@ -628,7 +741,7 @@ const tests = {
       errors: [functionError('useState', 'renderItem')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Currently invalid because it violates the convention and removes the "taint"
         // from a hook. We *could* make it valid to avoid some false positives but let's
         // ensure that we don't break the "renderItem" and "normalFunctionWithConditionalHook"
@@ -642,7 +755,22 @@ const tests = {
       ],
     },
     {
-      code: `
+      code: normalizeIndent`
+        // These are neither functions nor hooks.
+        function _normalFunctionWithHook() {
+          useHookInsideNormalFunction();
+        }
+        function _useNotAHook() {
+          useHookInsideNormalFunction();
+        }
+      `,
+      errors: [
+        functionError('useHookInsideNormalFunction', '_normalFunctionWithHook'),
+        functionError('useHookInsideNormalFunction', '_useNotAHook'),
+      ],
+    },
+    {
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function normalFunctionWithConditionalHook() {
@@ -659,7 +787,7 @@ const tests = {
       ],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useHookInLoops() {
@@ -683,7 +811,7 @@ const tests = {
       ],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useHookInLoops() {
@@ -697,7 +825,7 @@ const tests = {
       errors: [loopError('useHook1'), loopError('useHook2', true)],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useLabeledBlock() {
@@ -710,7 +838,7 @@ const tests = {
       errors: [conditionalError('useHook')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Currently invalid.
         // These are variations capturing the current heuristic--
         // we only allow hooks in PascalCase or useFoo functions.
@@ -739,7 +867,7 @@ const tests = {
       ],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useHook() {
@@ -750,7 +878,7 @@ const tests = {
       errors: [conditionalError('useState', true)],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useHook() {
@@ -766,7 +894,7 @@ const tests = {
       errors: [conditionalError('useState', true)],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useHook() {
@@ -782,7 +910,7 @@ const tests = {
       errors: [conditionalError('useState', true)],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useHook() {
@@ -793,7 +921,7 @@ const tests = {
       errors: [conditionalError('useHook1'), conditionalError('useHook2')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useHook() {
@@ -809,7 +937,7 @@ const tests = {
       ],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         function useHook({ bar }) {
@@ -825,7 +953,7 @@ const tests = {
       ],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         const FancyButton = React.forwardRef((props, ref) => {
@@ -838,7 +966,7 @@ const tests = {
       errors: [conditionalError('useCustomHook')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         const FancyButton = forwardRef(function(props, ref) {
@@ -851,7 +979,7 @@ const tests = {
       errors: [conditionalError('useCustomHook')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous and might not warn otherwise.
         // This *must* be invalid.
         const MemoizedButton = memo(function(props) {
@@ -864,7 +992,7 @@ const tests = {
       errors: [conditionalError('useCustomHook')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // This is invalid because "use"-prefixed functions used in named
         // functions are assumed to be hooks.
         React.unknownFunction(function notAComponent(foo, bar) {
@@ -874,7 +1002,7 @@ const tests = {
       errors: [functionError('useProbablyAHook', 'notAComponent')],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Invalid because it's dangerous.
         // Normally, this would crash, but not if you use inline requires.
         // This *must* be invalid.
@@ -894,7 +1022,7 @@ const tests = {
       ],
     },
     {
-      code: `
+      code: normalizeIndent`
         // Technically this is a false positive.
         // We *could* make it valid (and it used to be).
         //
@@ -911,7 +1039,7 @@ const tests = {
       errors: [topLevelError('useBasename')],
     },
     {
-      code: `
+      code: normalizeIndent`
         class ClassComponentWithFeatureFlag extends React.Component {
           render() {
             if (foo) {
@@ -923,7 +1051,7 @@ const tests = {
       errors: [classError('useFeatureFlag')],
     },
     {
-      code: `
+      code: normalizeIndent`
         class ClassComponentWithHook extends React.Component {
           render() {
             React.useState();
@@ -933,31 +1061,274 @@ const tests = {
       errors: [classError('React.useState')],
     },
     {
-      code: `
+      code: normalizeIndent`
         (class {useHook = () => { useState(); }});
       `,
       errors: [classError('useState')],
     },
     {
-      code: `
+      code: normalizeIndent`
         (class {useHook() { useState(); }});
       `,
       errors: [classError('useState')],
     },
     {
-      code: `
+      code: normalizeIndent`
         (class {h = () => { useState(); }});
       `,
       errors: [classError('useState')],
     },
     {
-      code: `
+      code: normalizeIndent`
         (class {i() { useState(); }});
       `,
       errors: [classError('useState')],
     },
+    {
+      code: normalizeIndent`
+        async function AsyncComponent() {
+          useState();
+        }
+      `,
+      errors: [asyncComponentHookError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        async function useAsyncHook() {
+          useState();
+        }
+      `,
+      errors: [asyncComponentHookError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        Hook.use();
+        Hook._use();
+        Hook.useState();
+        Hook._useState();
+        Hook.use42();
+        Hook.useHook();
+        Hook.use_hook();
+      `,
+      errors: [
+        topLevelError('Hook.use'),
+        topLevelError('Hook.useState'),
+        topLevelError('Hook.use42'),
+        topLevelError('Hook.useHook'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function notAComponent() {
+          use(promise);
+        }
+      `,
+      errors: [functionError('use', 'notAComponent')],
+    },
+    {
+      code: normalizeIndent`
+        const text = use(promise);
+        function App() {
+          return <Text text={text} />
+        }
+      `,
+      errors: [topLevelError('use')],
+    },
+    {
+      code: normalizeIndent`
+        class C {
+          m() {
+            use(promise);
+          }
+        }
+      `,
+      errors: [classError('use')],
+    },
+    {
+      code: normalizeIndent`
+        async function AsyncComponent() {
+          use();
+        }
+      `,
+      errors: [asyncComponentHookError('use')],
+    },
   ],
 };
+
+if (__EXPERIMENTAL__) {
+  tests.valid = [
+    ...tests.valid,
+    {
+      code: normalizeIndent`
+        // Valid because functions created with useEffectEvent can be called in a useEffect.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          useEffect(() => {
+            onClick();
+          });
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions created with useEffectEvent can be called in closures.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          return <Child onClick={() => onClick()}></Child>;
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions created with useEffectEvent can be called in closures.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          const onClick2 = () => { onClick() };
+          const onClick3 = useCallback(() => onClick(), []);
+          return <>
+            <Child onClick={onClick2}></Child>
+            <Child onClick={onClick3}></Child>
+          </>;
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid because functions created with useEffectEvent can be passed by reference in useEffect
+        // and useEffectEvent.
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          const onClick2 = useEffectEvent(() => {
+            debounce(onClick);
+          });
+          useEffect(() => {
+            let id = setInterval(onClick, 100);
+            return () => clearInterval(onClick);
+          }, []);
+          return <Child onClick={() => onClick2()} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        const MyComponent = ({theme}) => {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          return <Child onClick={() => onClick()}></Child>;
+        };
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const notificationService = useNotifications();
+          const showNotification = useEffectEvent((text) => {
+            notificationService.notify(theme, text);
+          });
+          const onClick = useEffectEvent((text) => {
+            showNotification(text);
+          });
+          return <Child onClick={(text) => onClick(text)} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          useEffect(() => {
+            onClick();
+          });
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+        }
+      `,
+    },
+  ];
+  tests.invalid = [
+    ...tests.invalid,
+    {
+      code: normalizeIndent`
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          return <Child onClick={onClick}></Child>;
+        }
+      `,
+      errors: [useEffectEventError('onClick')],
+    },
+    {
+      code: normalizeIndent`
+        // This should error even though it shares an identifier name with the below
+        function MyComponent({theme}) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme)
+          });
+          return <Child onClick={onClick} />
+        }
+
+        // The useEffectEvent function shares an identifier name with the above
+        function MyOtherComponent({theme}) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme)
+          });
+          return <Child onClick={() => onClick()} />
+        }
+      `,
+      errors: [{...useEffectEventError('onClick'), line: 7}],
+    },
+    {
+      code: normalizeIndent`
+        const MyComponent = ({ theme }) => {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          return <Child onClick={onClick}></Child>;
+        }
+      `,
+      errors: [useEffectEventError('onClick')],
+    },
+    {
+      code: normalizeIndent`
+        // Invalid because onClick is being aliased to foo but not invoked
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(theme);
+          });
+          let foo = onClick;
+          return <Bar onClick={foo} />
+        }
+      `,
+      errors: [{...useEffectEventError('onClick'), line: 7}],
+    },
+    {
+      code: normalizeIndent`
+        // Should error because it's being passed down to JSX, although it's been referenced once
+        // in an effect
+        function MyComponent({ theme }) {
+          const onClick = useEffectEvent(() => {
+            showNotification(them);
+          });
+          useEffect(() => {
+            setTimeout(onClick, 100);
+          });
+          return <Child onClick={onClick} />
+        }
+      `,
+      errors: [useEffectEventError('onClick')],
+    },
+  ];
+}
 
 function conditionalError(hook, hasPreviousFinalizer = false) {
   return {
@@ -1013,6 +1384,20 @@ function classError(hook) {
       `React Hook "${hook}" cannot be called in a class component. React Hooks ` +
       'must be called in a React function component or a custom React ' +
       'Hook function.',
+  };
+}
+
+function useEffectEventError(fn) {
+  return {
+    message:
+      `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
+      'the same component. They cannot be assigned to variables or passed down.',
+  };
+}
+
+function asyncComponentHookError(fn) {
+  return {
+    message: `React Hook "${fn}" cannot be called in an async function.`,
   };
 }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -26,16 +26,11 @@ describe('InspectedElementContext', () => {
 
   async function read(
     id: number,
-    path?: Array<string | number> = null,
+    path: Array<string | number> = null,
   ): Promise<Object> {
     const rendererID = ((store.getRendererIDForElement(id): any): number);
     const promise = backendAPI
-      .inspectElement({
-        bridge,
-        id,
-        path,
-        rendererID,
-      })
+      .inspectElement(bridge, false, id, path, rendererID)
       .then(data =>
         backendAPI.convertInspectedElementBackendToFrontend(data.value),
       );
@@ -62,6 +57,7 @@ describe('InspectedElementContext', () => {
     ReactDOM = require('react-dom');
   });
 
+  // @reactVersion >= 16.0
   it('should inspect the currently selected element', async () => {
     const Example = () => null;
 
@@ -73,13 +69,13 @@ describe('InspectedElementContext', () => {
     const inspectedElement = await read(id);
 
     expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
-        "context": Object {},
+      {
+        "context": {},
         "events": undefined,
         "hooks": null,
         "id": 2,
         "owners": null,
-        "props": Object {
+        "props": {
           "a": 1,
           "b": "abc",
         },
@@ -89,6 +85,7 @@ describe('InspectedElementContext', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should support simple data types', async () => {
     const Example = () => null;
 
@@ -115,13 +112,13 @@ describe('InspectedElementContext', () => {
     const inspectedElement = await read(id);
 
     expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
-        "context": Object {},
+      {
+        "context": {},
         "events": undefined,
         "hooks": null,
         "id": 2,
         "owners": null,
-        "props": Object {
+        "props": {
           "boolean_false": false,
           "boolean_true": true,
           "float": 1.23,
@@ -140,6 +137,7 @@ describe('InspectedElementContext', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should support complex data types', async () => {
     const Immutable = require('immutable');
 
@@ -210,7 +208,7 @@ describe('InspectedElementContext', () => {
     const inspectedElement = await read(id);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
+      {
         "anonymous_fn": Dehydrated {
           "preview_short": ƒ () {},
           "preview_long": ƒ () {},
@@ -219,7 +217,7 @@ describe('InspectedElementContext', () => {
           "preview_short": ArrayBuffer(3),
           "preview_long": ArrayBuffer(3),
         },
-        "array_of_arrays": Array [
+        "array_of_arrays": [
           Dehydrated {
             "preview_short": Array(2),
             "preview_long": [Array(3), Array(0)],
@@ -249,7 +247,7 @@ describe('InspectedElementContext', () => {
           "preview_short": <div />,
           "preview_long": <div />,
         },
-        "immutable": Object {
+        "immutable": {
           "0": Dehydrated {
             "preview_short": Array(2),
             "preview_long": ["a", List(3)],
@@ -263,7 +261,7 @@ describe('InspectedElementContext', () => {
             "preview_long": ["c", Map(2)],
           },
         },
-        "map": Object {
+        "map": {
           "0": Dehydrated {
             "preview_short": Array(2),
             "preview_long": ["name", "Brian"],
@@ -273,7 +271,7 @@ describe('InspectedElementContext', () => {
             "preview_long": ["food", "sushi"],
           },
         },
-        "map_of_maps": Object {
+        "map_of_maps": {
           "0": Dehydrated {
             "preview_short": Array(2),
             "preview_long": ["first", Map(2)],
@@ -283,7 +281,7 @@ describe('InspectedElementContext', () => {
             "preview_long": ["second", Map(2)],
           },
         },
-        "object_of_objects": Object {
+        "object_of_objects": {
           "inner": Dehydrated {
             "preview_short": {…},
             "preview_long": {boolean: true, number: 123, string: "abc"},
@@ -297,11 +295,11 @@ describe('InspectedElementContext', () => {
           "preview_short": /abc/giu,
           "preview_long": /abc/giu,
         },
-        "set": Object {
+        "set": {
           "0": "abc",
           "1": 123,
         },
-        "set_of_sets": Object {
+        "set_of_sets": {
           "0": Dehydrated {
             "preview_short": Set(3),
             "preview_long": Set(3) {"a", "b", "c"},
@@ -315,7 +313,7 @@ describe('InspectedElementContext', () => {
           "preview_short": Symbol(symbol),
           "preview_long": Symbol(symbol),
         },
-        "typed_array": Object {
+        "typed_array": {
           "0": 100,
           "1": -100,
           "2": 0,
@@ -324,6 +322,7 @@ describe('InspectedElementContext', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should support objects with no prototype', async () => {
     const Example = () => null;
 
@@ -343,8 +342,8 @@ describe('InspectedElementContext', () => {
     const inspectedElement = await read(id);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "object": Object {
+      {
+        "object": {
           "boolean": true,
           "number": 123,
           "string": "abc",
@@ -353,6 +352,7 @@ describe('InspectedElementContext', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should support objects with overridden hasOwnProperty', async () => {
     const Example = () => null;
 
@@ -377,6 +377,7 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement.props.object.hasOwnProperty).toBe(true);
   });
 
+  // @reactVersion >= 16.0
   it('should not consume iterables while inspecting', async () => {
     const Example = () => null;
 
@@ -398,13 +399,13 @@ describe('InspectedElementContext', () => {
     const inspectedElement = await read(id);
 
     expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
-        "context": Object {},
+      {
+        "context": {},
         "events": undefined,
         "hooks": null,
         "id": 2,
         "owners": null,
-        "props": Object {
+        "props": {
           "iteratable": Dehydrated {
             "preview_short": Generator,
             "preview_long": Generator,
@@ -421,6 +422,7 @@ describe('InspectedElementContext', () => {
     expect(iteratable.next().value).toBeUndefined();
   });
 
+  // @reactVersion >= 16.0
   it('should support custom objects with enumerable properties and getters', async () => {
     class CustomData {
       _number = 42;
@@ -452,14 +454,14 @@ describe('InspectedElementContext', () => {
     const inspectedElement = await read(id);
 
     expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
-        "context": Object {},
+      {
+        "context": {},
         "events": undefined,
         "hooks": null,
         "id": 2,
         "owners": null,
-        "props": Object {
-          "data": Object {
+        "props": {
+          "data": {
             "_number": 42,
             "number": 42,
           },
@@ -470,7 +472,8 @@ describe('InspectedElementContext', () => {
     `);
   });
 
-  it('should support objects with with inherited keys', async () => {
+  // @reactVersion >= 16.0
+  it('should support objects with inherited keys', async () => {
     const Example = () => null;
 
     const base = Object.create(Object.prototype, {
@@ -541,14 +544,14 @@ describe('InspectedElementContext', () => {
     const inspectedElement = await read(id);
 
     expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
-        "context": Object {},
+      {
+        "context": {},
         "events": undefined,
         "hooks": null,
         "id": 2,
         "owners": null,
-        "props": Object {
-          "data": Object {
+        "props": {
+          "data": {
             "123": 3,
             "Symbol(enumerableSymbol)": 3,
             "Symbol(enumerableSymbolBase)": 1,
@@ -562,6 +565,7 @@ describe('InspectedElementContext', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should allow component prop value and value`s prototype has same name params.', async () => {
     const testData = Object.create(
       {
@@ -610,8 +614,8 @@ describe('InspectedElementContext', () => {
     const inspectedElement = await read(id);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "data": Object {
+      {
+        "data": {
           "a": undefined,
           "b": Infinity,
           "c": NaN,
@@ -621,6 +625,7 @@ describe('InspectedElementContext', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should not dehydrate nested values until explicitly requested', async () => {
     const Example = () => null;
 
@@ -649,8 +654,8 @@ describe('InspectedElementContext', () => {
 
     let inspectedElement = await read(id);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
+      {
+        "nestedObject": {
           "a": Dehydrated {
             "preview_short": {…},
             "preview_long": {b: {…}},
@@ -661,10 +666,10 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = await read(id, ['props', 'nestedObject', 'a']);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
               "c": Dehydrated {
                 "preview_short": Array(1),
                 "preview_long": [{…}],
@@ -677,12 +682,12 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = await read(id, ['props', 'nestedObject', 'a', 'b', 'c']);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
-              "c": Array [
-                Object {
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
+              "c": [
+                {
                   "d": Dehydrated {
                     "preview_short": {…},
                     "preview_long": {e: {…}},
@@ -705,14 +710,14 @@ describe('InspectedElementContext', () => {
       'd',
     ]);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
-      Object {
-        "nestedObject": Object {
-          "a": Object {
-            "b": Object {
-              "c": Array [
-                Object {
-                  "d": Object {
-                    "e": Object {},
+      {
+        "nestedObject": {
+          "a": {
+            "b": {
+              "c": [
+                {
+                  "d": {
+                    "e": {},
                   },
                 },
               ],
@@ -723,6 +728,7 @@ describe('InspectedElementContext', () => {
     `);
   });
 
+  // @reactVersion >= 16.0
   it('should enable inspected values to be stored as global variables', () => {
     const Example = () => null;
 
@@ -749,7 +755,7 @@ describe('InspectedElementContext', () => {
     const rendererID = ((store.getRendererIDForElement(id): any): number);
 
     const logSpy = jest.fn();
-    spyOn(console, 'log').and.callFake(logSpy);
+    jest.spyOn(console, 'log').mockImplementation(logSpy);
 
     // Should store the whole value (not just the hydrated parts)
     backendAPI.storeAsGlobal({
@@ -778,6 +784,7 @@ describe('InspectedElementContext', () => {
     expect(global.$reactTemp1).toBe(nestedObject.a.b);
   });
 
+  // @reactVersion >= 16.0
   it('should enable inspected values to be copied to the clipboard', () => {
     const Example = () => null;
 
@@ -814,7 +821,7 @@ describe('InspectedElementContext', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify(nestedObject),
+      JSON.stringify(nestedObject, undefined, 2),
     );
 
     global.mockClipboardCopy.mockReset();
@@ -830,10 +837,11 @@ describe('InspectedElementContext', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify(nestedObject.a.b),
+      JSON.stringify(nestedObject.a.b, undefined, 2),
     );
   });
 
+  // @reactVersion >= 16.0
   it('should enable complex values to be copied to the clipboard', () => {
     const Immutable = require('immutable');
 
@@ -860,7 +868,6 @@ describe('InspectedElementContext', () => {
         xyz: 1,
       },
     });
-    // $FlowFixMe
     const bigInt = BigInt(123); // eslint-disable-line no-undef
 
     act(() =>
@@ -920,7 +927,7 @@ describe('InspectedElementContext', () => {
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
-      JSON.stringify({0: 100, 1: -100, 2: 0}),
+      JSON.stringify({0: 100, 1: -100, 2: 0}, undefined, 2),
     );
   });
 });

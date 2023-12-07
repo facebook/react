@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,25 +17,25 @@ import NewKeyValue from './NewKeyValue';
 import {alphaSortEntries, serializeDataForCopy} from '../utils';
 import Store from '../../store';
 import styles from './InspectedElementSharedStyles.css';
-import {ElementTypeClass} from 'react-devtools-shared/src/types';
+import {ElementTypeClass} from 'react-devtools-shared/src/frontend/types';
 
-import type {InspectedElement} from './types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {Element} from 'react-devtools-shared/src/frontend/types';
 
-type Props = {|
+type Props = {
   bridge: FrontendBridge,
   element: Element,
   inspectedElement: InspectedElement,
   store: Store,
-|};
+};
 
 export default function InspectedElementPropsTree({
   bridge,
   element,
   inspectedElement,
   store,
-}: Props) {
+}: Props): React.Node {
   const {readOnly} = React.useContext(OptionsContext);
 
   const {

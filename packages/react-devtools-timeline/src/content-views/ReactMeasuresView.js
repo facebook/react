@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -71,7 +71,7 @@ export class ReactMeasuresView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): IntrinsicSize {
     return this._intrinsicSize;
   }
 
@@ -95,7 +95,7 @@ export class ReactMeasuresView extends View {
     scaleFactor: number,
     showGroupHighlight: boolean,
     showHoverHighlight: boolean,
-  ) {
+  ): void {
     const {frame, visibleArea} = this;
     const {timestamp, type, duration} = measure;
 
@@ -202,14 +202,9 @@ export class ReactMeasuresView extends View {
     }
   }
 
-  draw(context: CanvasRenderingContext2D) {
-    const {
-      frame,
-      _hoveredMeasure,
-      _lanesToRender,
-      _profilerData,
-      visibleArea,
-    } = this;
+  draw(context: CanvasRenderingContext2D): void {
+    const {frame, _hoveredMeasure, _lanesToRender, _profilerData, visibleArea} =
+      this;
 
     context.fillStyle = COLORS.PRIORITY_BACKGROUND;
     context.fillRect(

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,34 +17,40 @@ export {
   PureComponent,
   StrictMode,
   Suspense,
-  SuspenseList,
   cloneElement,
   createContext,
   createElement,
   createFactory,
   createRef,
   createServerContext,
+  use,
   forwardRef,
   isValidElement,
   lazy,
   memo,
+  cache,
   startTransition,
   unstable_Cache,
   unstable_DebugTracingMode,
-  unstable_Offscreen,
+  unstable_Activity,
+  unstable_postpone,
   unstable_getCacheSignal,
   unstable_getCacheForType,
+  unstable_SuspenseList,
   unstable_useCacheRefresh,
+  unstable_useMemoCache,
   useId,
   useCallback,
   useContext,
   useDebugValue,
   useDeferredValue,
   useEffect,
+  experimental_useEffectEvent,
   useImperativeHandle,
   useInsertionEffect,
   useLayoutEffect,
   useMemo,
+  useOptimistic,
   useReducer,
   useRef,
   useState,
@@ -52,3 +58,18 @@ export {
   useTransition,
   version,
 } from './src/React';
+
+import {useOptimistic} from './src/React';
+
+export function experimental_useOptimistic<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  if (__DEV__) {
+    console.error(
+      'useOptimistic is now in canary. Remove the experimental_ prefix. ' +
+        'The prefixed alias will be removed in an upcoming release.',
+    );
+  }
+  return useOptimistic(passthrough, reducer);
+}

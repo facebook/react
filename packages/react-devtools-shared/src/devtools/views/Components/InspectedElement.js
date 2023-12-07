@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,7 +17,7 @@ import Icon from '../Icon';
 import {ModalDialogContext} from '../ModalDialog';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Toggle from '../Toggle';
-import {ElementTypeSuspense} from 'react-devtools-shared/src/types';
+import {ElementTypeSuspense} from 'react-devtools-shared/src/frontend/types';
 import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
 import {InspectedElementContext} from './InspectedElementContext';
@@ -26,13 +26,13 @@ import {LOCAL_STORAGE_OPEN_IN_EDITOR_URL} from '../../../constants';
 
 import styles from './InspectedElement.css';
 
-import type {InspectedElement} from './types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 
-export type Props = {||};
+export type Props = {};
 
 // TODO Make edits and deletes also use transition API!
 
-export default function InspectedElementWrapper(_: Props) {
+export default function InspectedElementWrapper(_: Props): React.Node {
   const {inspectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);
   const {canViewElementSourceFunction, viewElementSourceFunction} = useContext(
@@ -48,12 +48,8 @@ export default function InspectedElementWrapper(_: Props) {
   } = useContext(OptionsContext);
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
-  const {
-    hookNames,
-    inspectedElement,
-    parseHookNames,
-    toggleParseHookNames,
-  } = useContext(InspectedElementContext);
+  const {hookNames, inspectedElement, parseHookNames, toggleParseHookNames} =
+    useContext(InspectedElementContext);
 
   const element =
     inspectedElementID !== null
@@ -223,8 +219,11 @@ export default function InspectedElementWrapper(_: Props) {
     }
 
     const url = new URL(editorURL);
-    url.href = url.href.replace('{path}', source.fileName);
-    url.href = url.href.replace('{line}', String(source.lineNumber));
+    url.href = url.href
+      .replace('{path}', source.fileName)
+      .replace('{line}', String(source.lineNumber))
+      .replace('%7Bpath%7D', source.fileName)
+      .replace('%7Bline%7D', String(source.lineNumber));
     window.open(url);
   }, [inspectedElement, editorURL]);
 
@@ -241,7 +240,7 @@ export default function InspectedElementWrapper(_: Props) {
     strictModeBadge = (
       <a
         className={styles.StrictModeNonCompliant}
-        href="https://fb.me/devtools-strict-mode"
+        href="https://react.dev/reference/react/StrictMode"
         rel="noopener noreferrer"
         target="_blank"
         title="This component is not running in StrictMode. Click to learn more.">
@@ -268,7 +267,7 @@ export default function InspectedElementWrapper(_: Props) {
           <div
             className={
               element.isStrictModeNonCompliant
-                ? styles.StrictModeNonCompliantComponent
+                ? styles.StrictModeNonCompliant
                 : styles.Component
             }
             title={element.displayName}>
@@ -276,16 +275,12 @@ export default function InspectedElementWrapper(_: Props) {
           </div>
         </div>
         {canOpenInEditor && (
-          <Button
-            className={styles.IconButton}
-            onClick={onOpenInEditor}
-            title="Open in editor">
+          <Button onClick={onOpenInEditor} title="Open in editor">
             <ButtonIcon type="editor" />
           </Button>
         )}
         {canToggleError && (
           <Toggle
-            className={styles.IconButton}
             isChecked={isErrored}
             onChange={toggleErrored}
             title={
@@ -298,7 +293,6 @@ export default function InspectedElementWrapper(_: Props) {
         )}
         {canToggleSuspense && (
           <Toggle
-            className={styles.IconButton}
             isChecked={isSuspended}
             onChange={toggleSuspended}
             title={
@@ -311,7 +305,6 @@ export default function InspectedElementWrapper(_: Props) {
         )}
         {store.supportsNativeInspection && (
           <Button
-            className={styles.IconButton}
             onClick={highlightElement}
             title="Inspect the matching DOM element">
             <ButtonIcon type="view-dom" />
@@ -319,7 +312,6 @@ export default function InspectedElementWrapper(_: Props) {
         )}
         {!hideLogAction && (
           <Button
-            className={styles.IconButton}
             onClick={logElement}
             title="Log this component data to the console">
             <ButtonIcon type="log-data" />
@@ -327,7 +319,6 @@ export default function InspectedElementWrapper(_: Props) {
         )}
         {!hideViewSourceAction && (
           <Button
-            className={styles.IconButton}
             disabled={!canViewSource}
             onClick={viewSource}
             title="View source for this element">

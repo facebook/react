@@ -356,7 +356,7 @@ const attributes = [
   },
   {name: 'cols', tagName: 'textarea'},
   {name: 'colSpan', containerTagName: 'tr', tagName: 'td'},
-  {name: 'content', tagName: 'meta'},
+  {name: 'content', containerTagName: 'head', tagName: 'meta'},
   {name: 'contentEditable'},
   {
     name: 'contentScriptType',
@@ -572,6 +572,24 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'path',
     read: getSVGAttribute('externalResourcesRequired'),
+  },
+  {
+    name: 'fetchPriority',
+    overrideStringValue: 'high',
+    tagName: 'img',
+    read: getProperty('fetchPriority'),
+  },
+  {
+    name: 'fetchpriority',
+    overrideStringValue: 'high',
+    tagName: 'img',
+    read: getProperty('fetchPriority'),
+  },
+  {
+    name: 'fetchPriority',
+    overrideStringValue: 'high',
+    tagName: 'link',
+    read: getProperty('fetchPriority'),
   },
   {
     name: 'fill',
@@ -916,8 +934,13 @@ const attributes = [
   {name: 'href', tagName: 'a', overrideStringValue: 'https://reactjs.com'},
   {name: 'hrefLang', read: getAttribute('hreflang')},
   {name: 'htmlFor', tagName: 'label'},
-  {name: 'http-equiv', tagName: 'meta', read: getProperty('httpEquiv')},
-  {name: 'httpEquiv', tagName: 'meta'},
+  {
+    name: 'http-equiv',
+    containerTagName: 'head',
+    tagName: 'meta',
+    read: getProperty('httpEquiv'),
+  },
+  {name: 'httpEquiv', containerTagName: 'head', tagName: 'meta'},
   {name: 'icon', tagName: 'command', read: getAttribute('icon')},
   {name: 'id'},
   {name: 'ID', read: getProperty('id')},
@@ -1058,6 +1081,7 @@ const attributes = [
   {name: 'label', tagName: 'track'},
   {name: 'LANG', read: getProperty('lang')},
   {name: 'lang'},
+  {name: 'lang', containerTagName: 'document', tagName: 'html'},
   {name: 'length', read: getAttribute('length')},
   {
     name: 'lengthAdjust',
@@ -1962,6 +1986,16 @@ const attributes = [
     tagName: 'a',
     overrideStringValue:
       'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
+  },
+  {
+    name: 'transform-origin',
+    tagName: 'svg',
+    read: getSVGAttribute('transform-origin'),
+  },
+  {
+    name: 'transformOrigin',
+    tagName: 'svg',
+    read: getSVGAttribute('transform-origin'),
   },
   {name: 'type', tagName: 'button', overrideStringValue: 'reset'},
   {

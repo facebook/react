@@ -1,15 +1,17 @@
 'use strict';
 
 const rollup = require('rollup');
-const babel = require('rollup-plugin-babel');
+const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('rollup-plugin-commonjs');
+const commonjs = require('@rollup/plugin-commonjs');
+const flowRemoveTypes = require('flow-remove-types');
 const prettier = require('rollup-plugin-prettier');
-const replace = require('rollup-plugin-replace');
+const replace = require('@rollup/plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
-const resolve = require('rollup-plugin-node-resolve');
+const resolve = require('@rollup/plugin-node-resolve').nodeResolve;
 const fs = require('fs');
+const path = require('path');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
@@ -17,10 +19,10 @@ const Stats = require('./stats');
 const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
-const stripUnusedImports = require('./plugins/strip-unused-imports');
+const dynamicImports = require('./plugins/dynamic-imports');
 const Packaging = require('./packaging');
 const {asyncRimRaf} = require('./utils');
-const codeFrame = require('babel-code-frame');
+const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
@@ -44,13 +46,16 @@ process.on('unhandledRejection', err => {
 
 const {
   NODE_ES2015,
-  NODE_ESM,
+  ESM_DEV,
+  ESM_PROD,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
   NODE_DEV,
   NODE_PROD,
   NODE_PROFILING,
+  BUN_DEV,
+  BUN_PROD,
   FB_WWW_DEV,
   FB_WWW_PROD,
   FB_WWW_PROFILING,
@@ -60,6 +65,7 @@ const {
   RN_FB_DEV,
   RN_FB_PROD,
   RN_FB_PROFILING,
+  BROWSER_SCRIPT,
 } = Bundles.bundleTypes;
 
 const {getFilename} = Bundles;
@@ -93,23 +99,9 @@ const isWatchMode = argv.watch;
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
 
-const closureOptions = {
-  compilation_level: 'SIMPLE',
-  language_in: 'ECMASCRIPT_2015',
-  language_out: 'ECMASCRIPT5_STRICT',
-  env: 'CUSTOM',
-  warning_level: 'QUIET',
-  apply_input_source_maps: false,
-  use_types_for_optimization: false,
-  process_common_js_modules: false,
-  rewrite_polyfills: false,
-  inject_libraries: false,
-};
-
 // Non-ES2015 stuff applied before closure compiler.
 const babelPlugins = [
   // These plugins filter out non-ES2015.
-  '@babel/plugin-transform-flow-strip-types',
   ['@babel/plugin-proposal-class-properties', {loose: true}],
   'syntax-trailing-function-commas',
   // These use loose mode which avoids embedding a runtime.
@@ -156,6 +148,8 @@ function getBabelConfig(
     configFile: false,
     presets: [],
     plugins: [...babelPlugins],
+    babelHelpers: 'bundled',
+    sourcemap: false,
   };
   if (isDevelopment) {
     options.plugins.push(
@@ -181,6 +175,35 @@ function getBabelConfig(
   return options;
 }
 
+let getRollupInteropValue = id => {
+  // We're setting Rollup to assume that imports are ES modules unless otherwise specified.
+  // However, we also compile ES import syntax to `require()` using Babel.
+  // This causes Rollup to turn uses of `import SomeDefaultImport from 'some-module' into
+  // references to `SomeDefaultImport.default` due to CJS/ESM interop.
+  // Some CJS modules don't have a `.default` export, and the rewritten import is incorrect.
+  // Specifying `interop: 'default'` instead will have Rollup use the imported variable as-is,
+  // without adding a `.default` to the reference.
+  const modulesWithCommonJsExports = [
+    'art/core/transform',
+    'art/modes/current',
+    'art/modes/fast-noSideEffects',
+    'art/modes/svg',
+    'JSResourceReferenceImpl',
+    'error-stack-parser',
+    'neo-async',
+    'webpack/lib/dependencies/ModuleDependency',
+    'webpack/lib/dependencies/NullDependency',
+    'webpack/lib/Template',
+  ];
+
+  if (modulesWithCommonJsExports.includes(id)) {
+    return 'default';
+  }
+
+  // For all other modules, handle imports without any import helper utils
+  return 'esModule';
+};
+
 function getRollupOutputOptions(
   outputPath,
   format,
@@ -195,10 +218,11 @@ function getRollupOutputOptions(
     format,
     globals,
     freeze: !isProduction,
-    interop: false,
+    interop: getRollupInteropValue,
     name: globalName,
     sourcemap: false,
     esModule: false,
+    exports: 'auto',
   };
 }
 
@@ -212,6 +236,8 @@ function getFormat(bundleType) {
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
+    case BUN_DEV:
+    case BUN_PROD:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
@@ -222,23 +248,30 @@ function getFormat(bundleType) {
     case RN_FB_PROD:
     case RN_FB_PROFILING:
       return `cjs`;
-    case NODE_ESM:
+    case ESM_DEV:
+    case ESM_PROD:
       return `es`;
+    case BROWSER_SCRIPT:
+      return `iife`;
   }
 }
 
 function isProductionBundleType(bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
-    case NODE_ESM:
+      return true;
+    case ESM_DEV:
     case UMD_DEV:
     case NODE_DEV:
+    case BUN_DEV:
     case FB_WWW_DEV:
     case RN_OSS_DEV:
     case RN_FB_DEV:
       return false;
+    case ESM_PROD:
     case UMD_PROD:
     case NODE_PROD:
+    case BUN_PROD:
     case UMD_PROFILING:
     case NODE_PROFILING:
     case FB_WWW_PROD:
@@ -247,6 +280,7 @@ function isProductionBundleType(bundleType) {
     case RN_OSS_PROFILING:
     case RN_FB_PROD:
     case RN_FB_PROFILING:
+    case BROWSER_SCRIPT:
       return true;
     default:
       throw new Error(`Unknown type: ${bundleType}`);
@@ -256,17 +290,21 @@ function isProductionBundleType(bundleType) {
 function isProfilingBundleType(bundleType) {
   switch (bundleType) {
     case NODE_ES2015:
-    case NODE_ESM:
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case NODE_DEV:
     case NODE_PROD:
+    case BUN_DEV:
+    case BUN_PROD:
     case RN_FB_DEV:
     case RN_FB_PROD:
     case RN_OSS_DEV:
     case RN_OSS_PROD:
+    case ESM_DEV:
+    case ESM_PROD:
     case UMD_DEV:
     case UMD_PROD:
+    case BROWSER_SCRIPT:
       return false;
     case FB_WWW_PROFILING:
     case NODE_PROFILING:
@@ -277,6 +315,45 @@ function isProfilingBundleType(bundleType) {
     default:
       throw new Error(`Unknown type: ${bundleType}`);
   }
+}
+
+function getBundleTypeFlags(bundleType) {
+  const isUMDBundle =
+    bundleType === UMD_DEV ||
+    bundleType === UMD_PROD ||
+    bundleType === UMD_PROFILING;
+  const isFBWWWBundle =
+    bundleType === FB_WWW_DEV ||
+    bundleType === FB_WWW_PROD ||
+    bundleType === FB_WWW_PROFILING;
+  const isRNBundle =
+    bundleType === RN_OSS_DEV ||
+    bundleType === RN_OSS_PROD ||
+    bundleType === RN_OSS_PROFILING ||
+    bundleType === RN_FB_DEV ||
+    bundleType === RN_FB_PROD ||
+    bundleType === RN_FB_PROFILING;
+
+  const isFBRNBundle =
+    bundleType === RN_FB_DEV ||
+    bundleType === RN_FB_PROD ||
+    bundleType === RN_FB_PROFILING;
+
+  const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
+
+  const shouldBundleDependencies =
+    bundleType === UMD_DEV ||
+    bundleType === UMD_PROD ||
+    bundleType === UMD_PROFILING;
+
+  return {
+    isUMDBundle,
+    isFBWWWBundle,
+    isRNBundle,
+    isFBRNBundle,
+    shouldBundleDependencies,
+    shouldStayReadable,
+  };
 }
 
 function forbidFBJSImports() {
@@ -305,123 +382,274 @@ function getPlugins(
   pureExternalModules,
   bundle
 ) {
-  const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
-  const isProduction = isProductionBundleType(bundleType);
-  const isProfiling = isProfilingBundleType(bundleType);
-  const isUMDBundle =
-    bundleType === UMD_DEV ||
-    bundleType === UMD_PROD ||
-    bundleType === UMD_PROFILING;
-  const isFBWWWBundle =
-    bundleType === FB_WWW_DEV ||
-    bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING;
-  const isRNBundle =
-    bundleType === RN_OSS_DEV ||
-    bundleType === RN_OSS_PROD ||
-    bundleType === RN_OSS_PROFILING ||
-    bundleType === RN_FB_DEV ||
-    bundleType === RN_FB_PROD ||
-    bundleType === RN_FB_PROFILING;
-  const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
-  return [
-    // Shim any modules that need forking in this environment.
-    useForks(forks),
-    // Ensure we don't try to bundle any fbjs modules.
-    forbidFBJSImports(),
-    // Use Node resolution mechanism.
-    resolve({
-      skip: externals,
-    }),
-    // Remove license headers from individual modules
-    stripBanner({
-      exclude: 'node_modules/**/*',
-    }),
-    // Compile to ES2015.
-    babel(
-      getBabelConfig(
-        updateBabelOptions,
-        bundleType,
-        packageName,
-        externals,
-        !isProduction,
-        bundle
-      )
-    ),
-    // Remove 'use strict' from individual source files.
-    {
-      transform(source) {
-        return source.replace(/['"]use strict["']/g, '');
+  try {
+    const forks = Modules.getForks(bundleType, entry, moduleType, bundle);
+    const isProduction = isProductionBundleType(bundleType);
+    const isProfiling = isProfilingBundleType(bundleType);
+
+    const {isUMDBundle, shouldStayReadable} = getBundleTypeFlags(bundleType);
+
+    const needsMinifiedByClosure = isProduction && bundleType !== ESM_PROD;
+
+    // Any other packages that should specifically _not_ have sourcemaps
+    const sourcemapPackageExcludes = [
+      // Having `//#sourceMappingUrl` for the `react-debug-tools` prod bundle breaks
+      // `ReactDevToolsHooksIntegration-test.js`, because it changes Node's generated
+      // stack traces and thus alters the hook name parsing behavior.
+      // Also, this is an internal-only package that doesn't need sourcemaps anyway
+      'react-debug-tools',
+    ];
+
+    // Generate sourcemaps for true "production" build artifacts
+    // that will be used by bundlers, such as `react-dom.production.min.js`.
+    // Also include profiling builds as well.
+    // UMD builds are rarely used and not worth having sourcemaps.
+    const needsSourcemaps =
+      needsMinifiedByClosure &&
+      // This will only exclude `unstable_server-external-runtime.js` artifact
+      // To start generating sourcemaps for it, we should stop manually copying it to `facebook-www`
+      // and force `react-dom` to include .map files in npm-package at the root level
+      bundleType !== BROWSER_SCRIPT &&
+      !isUMDBundle &&
+      !sourcemapPackageExcludes.includes(entry) &&
+      !shouldStayReadable;
+
+    return [
+      // Keep dynamic imports as externals
+      dynamicImports(),
+      {
+        name: 'rollup-plugin-flow-remove-types',
+        transform(code) {
+          const transformed = flowRemoveTypes(code);
+          return {
+            code: transformed.toString(),
+            map: null,
+          };
+        },
       },
-    },
-    // Turn __DEV__ and process.env checks into constants.
-    replace({
-      __DEV__: isProduction ? 'false' : 'true',
-      __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
-      __UMD__: isUMDBundle ? 'true' : 'false',
-      'process.env.NODE_ENV': isProduction ? "'production'" : "'development'",
-      __EXPERIMENTAL__,
-      // Enable forked reconciler.
-      // NOTE: I did not put much thought into how to configure this.
-      __VARIANT__: bundle.enableNewReconciler === true,
-    }),
-    // The CommonJS plugin *only* exists to pull "art" into "react-art".
-    // I'm going to port "art" to ES modules to avoid this problem.
-    // Please don't enable this for anything else!
-    isUMDBundle && entry === 'react-art' && commonjs(),
-    // Apply dead code elimination and/or minification.
-    isProduction &&
-      closure(
-        Object.assign({}, closureOptions, {
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isUMDBundle,
-          renaming: !shouldStayReadable,
-        })
-      ),
-    // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
-    // Note that this plugin must be called after closure applies DCE.
-    isProduction && stripUnusedImports(pureExternalModules),
-    // Add the whitespace back if necessary.
-    shouldStayReadable &&
-      prettier({
-        parser: 'babel',
-        singleQuote: false,
-        trailingComma: 'none',
-        bracketSpacing: true,
+      // Shim any modules that need forking in this environment.
+      useForks(forks),
+      // Ensure we don't try to bundle any fbjs modules.
+      forbidFBJSImports(),
+      // Use Node resolution mechanism.
+      resolve({
+        // skip: externals, // TODO: options.skip was removed in @rollup/plugin-node-resolve 3.0.0
       }),
-    // License and haste headers, top-level `if` blocks.
-    {
-      renderChunk(source) {
-        return Wrappers.wrapBundle(
-          source,
-          bundleType,
-          globalName,
-          filename,
-          moduleType,
-          bundle.wrapWithModuleBoundaries
-        );
-      },
-    },
-    // Record bundle size.
-    sizes({
-      getSize: (size, gzip) => {
-        const currentSizes = Stats.currentBuildResults.bundleSizes;
-        const recordIndex = currentSizes.findIndex(
-          record =>
-            record.filename === filename && record.bundleType === bundleType
-        );
-        const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
-        currentSizes[index] = {
-          filename,
+      // Remove license headers from individual modules
+      stripBanner({
+        exclude: 'node_modules/**/*',
+      }),
+      // Compile to ES2015.
+      babel(
+        getBabelConfig(
+          updateBabelOptions,
           bundleType,
           packageName,
-          size,
-          gzip,
-        };
+          externals,
+          !isProduction,
+          bundle
+        )
+      ),
+      // Remove 'use strict' from individual source files.
+      {
+        name: "remove 'use strict'",
+        transform(source) {
+          return source.replace(/['"]use strict["']/g, '');
+        },
       },
-    }),
-  ].filter(Boolean);
+      // Turn __DEV__ and process.env checks into constants.
+      replace({
+        preventAssignment: true,
+        values: {
+          __DEV__: isProduction ? 'false' : 'true',
+          __PROFILE__: isProfiling || !isProduction ? 'true' : 'false',
+          __UMD__: isUMDBundle ? 'true' : 'false',
+          'process.env.NODE_ENV': isProduction
+            ? "'production'"
+            : "'development'",
+          __EXPERIMENTAL__,
+        },
+      }),
+      // The CommonJS plugin *only* exists to pull "art" into "react-art".
+      // I'm going to port "art" to ES modules to avoid this problem.
+      // Please don't enable this for anything else!
+      isUMDBundle && entry === 'react-art' && commonjs(),
+      {
+        name: 'top-level-definitions',
+        renderChunk(source) {
+          return Wrappers.wrapWithTopLevelDefinitions(
+            source,
+            bundleType,
+            globalName,
+            filename,
+            moduleType,
+            bundle.wrapWithModuleBoundaries
+          );
+        },
+      },
+      // License and haste headers for artifacts with sourcemaps
+      // For artifacts with sourcemaps we apply these headers
+      // before passing sources to the Closure compiler, which will be building sourcemaps
+      needsSourcemaps && {
+        name: 'license-and-signature-header-for-artifacts-with-sourcemaps',
+        renderChunk(source) {
+          return Wrappers.wrapWithLicenseHeader(
+            source,
+            bundleType,
+            globalName,
+            filename,
+            moduleType
+          );
+        },
+      },
+      // Apply dead code elimination and/or minification.
+      // closure doesn't yet support leaving ESM imports intact
+      needsMinifiedByClosure &&
+        closure(
+          {
+            compilation_level: 'SIMPLE',
+            language_in: 'ECMASCRIPT_2020',
+            language_out:
+              bundleType === NODE_ES2015
+                ? 'ECMASCRIPT_2020'
+                : bundleType === BROWSER_SCRIPT
+                ? 'ECMASCRIPT5'
+                : 'ECMASCRIPT5_STRICT',
+            emit_use_strict:
+              bundleType !== BROWSER_SCRIPT &&
+              bundleType !== ESM_PROD &&
+              bundleType !== ESM_DEV,
+            env: 'CUSTOM',
+            warning_level: 'QUIET',
+            source_map_include_content: true,
+            use_types_for_optimization: false,
+            process_common_js_modules: false,
+            rewrite_polyfills: false,
+            inject_libraries: false,
+            allow_dynamic_import: true,
+
+            // Don't let it create global variables in the browser.
+            // https://github.com/facebook/react/issues/10909
+            assume_function_wrapper: !isUMDBundle,
+            renaming: !shouldStayReadable,
+          },
+          {needsSourcemaps}
+        ),
+      // Add the whitespace back if necessary.
+      shouldStayReadable &&
+        prettier({
+          parser: 'flow',
+          singleQuote: false,
+          trailingComma: 'none',
+          bracketSpacing: true,
+        }),
+      needsSourcemaps && {
+        name: 'generate-prod-bundle-sourcemaps',
+        async renderChunk(minifiedCodeWithChangedHeader, chunk, options, meta) {
+          // We want to generate a sourcemap that shows the production bundle source
+          // as it existed before Closure Compiler minified that chunk, rather than
+          // showing the "original" individual source files. This better shows
+          // what is actually running in the app.
+
+          // Use a path like `node_modules/react/cjs/react.production.min.js.map` for the sourcemap file
+          const finalSourcemapPath = options.file.replace('.js', '.js.map');
+          const finalSourcemapFilename = path.basename(finalSourcemapPath);
+          const outputFolder = path.dirname(options.file);
+
+          // Read the sourcemap that Closure wrote to disk
+          const sourcemapAfterClosure = JSON.parse(
+            fs.readFileSync(finalSourcemapPath, 'utf8')
+          );
+
+          // Represent the "original" bundle as a file with no `.min` in the name
+          const filenameWithoutMin = filename.replace('.min', '');
+          // There's _one_ artifact where the incoming filename actually contains
+          // a folder name: "use-sync-external-store-shim/with-selector.production.js".
+          // The output path already has the right structure, but we need to strip this
+          // down to _just_ the JS filename.
+          const preMinifiedFilename = path.basename(filenameWithoutMin);
+
+          // CC generated a file list that only contains the tempfile name.
+          // Replace that with a more meaningful "source" name for this bundle
+          // that represents "the bundled source before minification".
+          sourcemapAfterClosure.sources = [preMinifiedFilename];
+          sourcemapAfterClosure.file = filename;
+
+          // We'll write the pre-minified source to disk as a separate file.
+          // Because it sits on disk, there's no need to have it in the `sourcesContent` array.
+          // That also makes the file easier to read, and available for use by scripts.
+          // This should be the only file in the array.
+          const [preMinifiedBundleSource] =
+            sourcemapAfterClosure.sourcesContent;
+
+          // Remove this entirely - we're going to write the file to disk instead.
+          delete sourcemapAfterClosure.sourcesContent;
+
+          const preMinifiedBundlePath = path.join(
+            outputFolder,
+            preMinifiedFilename
+          );
+
+          // Write the original source to disk as a separate file
+          fs.writeFileSync(preMinifiedBundlePath, preMinifiedBundleSource);
+
+          // Overwrite the Closure-generated file with the final combined sourcemap
+          fs.writeFileSync(
+            finalSourcemapPath,
+            JSON.stringify(sourcemapAfterClosure)
+          );
+
+          // Add the sourcemap URL to the actual bundle, so that tools pick it up
+          const sourceWithMappingUrl =
+            minifiedCodeWithChangedHeader +
+            `\n//# sourceMappingURL=${finalSourcemapFilename}`;
+
+          return {
+            code: sourceWithMappingUrl,
+            map: null,
+          };
+        },
+      },
+      // License and haste headers for artifacts without sourcemaps
+      // Primarily used for FB-artifacts, which should preserve specific format of the header
+      // Which potentially can be changed by Closure minification
+      !needsSourcemaps && {
+        name: 'license-and-signature-header-for-artifacts-without-sourcemaps',
+        renderChunk(source) {
+          return Wrappers.wrapWithLicenseHeader(
+            source,
+            bundleType,
+            globalName,
+            filename,
+            moduleType
+          );
+        },
+      },
+      // Record bundle size.
+      sizes({
+        getSize: (size, gzip) => {
+          const currentSizes = Stats.currentBuildResults.bundleSizes;
+          const recordIndex = currentSizes.findIndex(
+            record =>
+              record.filename === filename && record.bundleType === bundleType
+          );
+          const index = recordIndex !== -1 ? recordIndex : currentSizes.length;
+          currentSizes[index] = {
+            filename,
+            bundleType,
+            packageName,
+            size,
+            gzip,
+          };
+        },
+      }),
+    ].filter(Boolean);
+  } catch (error) {
+    console.error(
+      chalk.red(`There was an error preparing plugins for entry "${entry}"`)
+    );
+    throw error;
+  }
 }
 
 function shouldSkipBundle(bundle, bundleType) {
@@ -496,35 +724,20 @@ function resolveEntryFork(resolvedEntry, isFBBundle) {
 }
 
 async function createBundle(bundle, bundleType) {
-  if (shouldSkipBundle(bundle, bundleType)) {
-    return;
-  }
-
   const filename = getFilename(bundle, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  const isFBWWWBundle =
-    bundleType === FB_WWW_DEV ||
-    bundleType === FB_WWW_PROD ||
-    bundleType === FB_WWW_PROFILING;
-
-  const isFBRNBundle =
-    bundleType === RN_FB_DEV ||
-    bundleType === RN_FB_PROD ||
-    bundleType === RN_FB_PROFILING;
+  const {isFBWWWBundle, isFBRNBundle, shouldBundleDependencies} =
+    getBundleTypeFlags(bundleType);
 
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
     isFBWWWBundle || isFBRNBundle
   );
 
-  const shouldBundleDependencies =
-    bundleType === UMD_DEV ||
-    bundleType === UMD_PROD ||
-    bundleType === UMD_PROFILING;
   const peerGlobals = Modules.getPeerGlobals(bundle.externals, bundleType);
   let externals = Object.keys(peerGlobals);
   if (!shouldBundleDependencies) {
@@ -540,7 +753,9 @@ async function createBundle(bundle, bundleType) {
   const rollupConfig = {
     input: resolvedEntry,
     treeshake: {
-      pureExternalModules,
+      moduleSideEffects: (id, external) =>
+        !(external && pureExternalModules.includes(id)),
+      propertyReadSideEffects: false,
     },
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
@@ -577,15 +792,17 @@ async function createBundle(bundle, bundleType) {
     output: {
       externalLiveBindings: false,
       freeze: false,
-      interop: false,
+      interop: getRollupInteropValue,
       esModule: false,
     },
   };
   const mainOutputPath = Packaging.getBundleOutputPath(
+    bundle,
     bundleType,
     filename,
     packageName
   );
+
   const rollupOutputOptions = getRollupOutputOptions(
     mainOutputPath,
     format,
@@ -628,7 +845,7 @@ async function createBundle(bundle, bundleType) {
 
 function handleRollupWarning(warning) {
   if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
-    const match = warning.message.match(/external module '([^']+)'/);
+    const match = warning.message.match(/external module "([^"]+)"/);
     if (!match || typeof match[1] !== 'string') {
       throw new Error(
         'Could not parse a Rollup warning. ' + 'Fix this method.'
@@ -709,13 +926,16 @@ async function buildEverything() {
   for (const bundle of Bundles.bundles) {
     bundles.push(
       [bundle, NODE_ES2015],
-      [bundle, NODE_ESM],
+      [bundle, ESM_DEV],
+      [bundle, ESM_PROD],
       [bundle, UMD_DEV],
       [bundle, UMD_PROD],
       [bundle, UMD_PROFILING],
       [bundle, NODE_DEV],
       [bundle, NODE_PROD],
       [bundle, NODE_PROFILING],
+      [bundle, BUN_DEV],
+      [bundle, BUN_PROD],
       [bundle, FB_WWW_DEV],
       [bundle, FB_WWW_PROD],
       [bundle, FB_WWW_PROFILING],
@@ -724,9 +944,14 @@ async function buildEverything() {
       [bundle, RN_OSS_PROFILING],
       [bundle, RN_FB_DEV],
       [bundle, RN_FB_PROD],
-      [bundle, RN_FB_PROFILING]
+      [bundle, RN_FB_PROFILING],
+      [bundle, BROWSER_SCRIPT]
     );
   }
+
+  bundles = bundles.filter(([bundle, bundleType]) => {
+    return !shouldSkipBundle(bundle, bundleType);
+  });
 
   if (process.env.CIRCLE_NODE_TOTAL) {
     // In CI, parallelize bundles across multiple tasks.

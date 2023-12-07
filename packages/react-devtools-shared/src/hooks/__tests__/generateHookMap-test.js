@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -70,9 +70,9 @@ export function Component() {
 
     const encodedHookMap = generateEncodedHookMap(parsed);
     expect(encodedHookMap).toMatchInlineSnapshot(`
-    Object {
+    {
       "mappings": "CAAD;KYCA,AgBDA;MREA,AWFA;SnBGA,AaHA,AMIA,AaJA;WpBKA,AiCLA;Y7CMA,AYNA",
-      "names": Array [
+      "names": [
         "<no-hook>",
         "a",
         "b",
@@ -115,9 +115,9 @@ export function Component() {
 
     const encodedHookMap = generateEncodedHookMap(parsed);
     expect(encodedHookMap).toMatchInlineSnapshot(`
-    Object {
+    {
       "mappings": "CAAD;MgBCA,AUDA;OFEA,AUFA",
-      "names": Array [
+      "names": [
         "<no-hook>",
         "theme",
         "val",
@@ -158,9 +158,9 @@ export function Component() {
 
     const encodedHookMap = generateEncodedHookMap(parsed);
     expect(encodedHookMap).toMatchInlineSnapshot(`
-    Object {
+    {
       "mappings": "CAAD;KyBCA;MKCA,AWDA;SrCDA",
-      "names": Array [
+      "names": [
         "<no-hook>",
         "InnerComponent",
         "state",
@@ -200,9 +200,9 @@ export function Component() {
 
     const encodedHookMap = generateEncodedHookMap(parsed);
     expect(encodedHookMap).toMatchInlineSnapshot(`
-    Object {
+    {
       "mappings": "CAAD;MwBCA,AWDA",
-      "names": Array [
+      "names": [
         "<no-hook>",
         "val",
       ],

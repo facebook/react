@@ -22,7 +22,7 @@ global.__EXPERIMENTAL__ =
 global.__VARIANT__ = !!process.env.VARIANT;
 
 if (typeof window !== 'undefined') {
-  global.requestIdleCallback = function(callback) {
+  global.requestIdleCallback = function (callback) {
     return setTimeout(() => {
       callback({
         timeRemaining() {
@@ -32,7 +32,10 @@ if (typeof window !== 'undefined') {
     });
   };
 
-  global.cancelIdleCallback = function(callbackID) {
+  global.cancelIdleCallback = function (callbackID) {
     clearTimeout(callbackID);
   };
+} else {
+  global.AbortController =
+    require('abortcontroller-polyfill/dist/cjs-ponyfill').AbortController;
 }

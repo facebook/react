@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,12 +14,15 @@ describe('Bridge', () => {
     Bridge = require('react-devtools-shared/src/bridge').default;
   });
 
+  // @reactVersion >=16.0
   it('should shutdown properly', () => {
     const wall = {
       listen: jest.fn(() => () => {}),
       send: jest.fn(),
     };
     const bridge = new Bridge(wall);
+    const shutdownCallback = jest.fn();
+    bridge.addListener('shutdown', shutdownCallback);
 
     // Check that we're wired up correctly.
     bridge.send('reloadAppForProfiling');
@@ -35,9 +38,10 @@ describe('Bridge', () => {
     expect(wall.send).toHaveBeenCalledWith('update', '1');
     expect(wall.send).toHaveBeenCalledWith('update', '2');
     expect(wall.send).toHaveBeenCalledWith('shutdown');
+    expect(shutdownCallback).toHaveBeenCalledTimes(1);
 
     // Verify that the Bridge doesn't send messages after shutdown.
-    spyOn(console, 'warn');
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
     wall.send.mockClear();
     bridge.send('should not send');
     jest.runAllTimers();

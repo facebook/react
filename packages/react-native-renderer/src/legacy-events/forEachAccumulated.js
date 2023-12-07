@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -22,6 +22,7 @@ function forEachAccumulated<T>(
   scope: ?any,
 ) {
   if (Array.isArray(arr)) {
+    // $FlowFixMe[incompatible-call] if `T` is an array, `cb` cannot be called
     arr.forEach(cb, scope);
   } else if (arr) {
     cb.call(scope, arr);

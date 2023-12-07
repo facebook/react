@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -45,4 +45,8 @@ function unmemoizedGetBatchRange(
   return [startTime, stopTime];
 }
 
-export const getBatchRange = memoize(unmemoizedGetBatchRange);
+export const getBatchRange: (
+  batchUID: BatchUID,
+  data: TimelineData,
+  minStartTime?: number,
+) => [Milliseconds, Milliseconds] = memoize(unmemoizedGetBatchRange);

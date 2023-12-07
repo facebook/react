@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,18 +15,21 @@ import {
 } from 'react-devtools-shared/src/backendAPI';
 import {fillInPath} from 'react-devtools-shared/src/hydration';
 
-import type {LRUCache} from 'react-devtools-shared/src/types';
+import type {LRUCache} from 'react-devtools-shared/src/frontend/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {
   InspectElementError,
   InspectElementFullData,
   InspectElementHydratedPath,
 } from 'react-devtools-shared/src/backend/types';
+import UserError from 'react-devtools-shared/src/errors/UserError';
+import UnknownHookError from 'react-devtools-shared/src/errors/UnknownHookError';
 import type {
   Element,
   InspectedElement as InspectedElementFrontend,
   InspectedElementResponseType,
-} from 'react-devtools-shared/src/devtools/views/Components/types';
+  InspectedElementPath,
+} from 'react-devtools-shared/src/frontend/types';
 
 // Maps element ID to inspected data.
 // We use an LRU for this rather than a WeakMap because of how the "no-change" optimization works.
@@ -37,31 +40,23 @@ import type {
 // This doens't work properly though when component filters are changed,
 // because this will cause the Store to dump all roots and re-initialize the tree (recreating the Element objects).
 // So instead we key on Element ID (which is stable in this case) and use an LRU for eviction.
-const inspectedElementCache: LRUCache<
-  number,
-  InspectedElementFrontend,
-> = new LRU({
-  max: 25,
-});
-
-type Path = Array<string | number>;
+const inspectedElementCache: LRUCache<number, InspectedElementFrontend> =
+  new LRU({
+    max: 25,
+  });
 
 type InspectElementReturnType = [
   InspectedElementFrontend,
   InspectedElementResponseType,
 ];
 
-export function inspectElement({
-  bridge,
-  element,
-  path,
-  rendererID,
-}: {|
+export function inspectElement(
   bridge: FrontendBridge,
   element: Element,
-  path: Path | null,
+  path: InspectedElementPath | null,
   rendererID: number,
-|}): Promise<InspectElementReturnType> {
+  shouldListenToPauseEvents: boolean = false,
+): Promise<InspectElementReturnType> {
   const {id} = element;
 
   // This could indicate that the DevTools UI has been closed and reopened.
@@ -69,25 +64,36 @@ export function inspectElement({
   // In this case, we need to tell it to resend the full data.
   const forceFullData = !inspectedElementCache.has(id);
 
-  return inspectElementAPI({
+  return inspectElementAPI(
     bridge,
     forceFullData,
     id,
     path,
     rendererID,
-  }).then((data: any) => {
+    shouldListenToPauseEvents,
+  ).then((data: any) => {
     const {type} = data;
 
     let inspectedElement;
     switch (type) {
-      case 'error':
-        const {message, stack} = ((data: any): InspectElementError);
+      case 'error': {
+        const {message, stack, errorType} = ((data: any): InspectElementError);
 
+        // create a different error class for each error type
+        // and keep useful information from backend.
+        let error;
+        if (errorType === 'user') {
+          error = new UserError(message);
+        } else if (errorType === 'unknown-hook') {
+          error = new UnknownHookError(message);
+        } else {
+          error = new Error(message);
+        }
         // The backend's stack (where the error originated) is more meaningful than this stack.
-        const error = new Error(message);
-        error.stack = stack;
+        error.stack = stack || error.stack;
 
         throw error;
+      }
 
       case 'no-change':
         // This is a no-op for the purposes of our cache.
@@ -102,7 +108,7 @@ export function inspectElement({
       case 'not-found':
         // This is effectively a no-op.
         // If the Element is still in the Store, we can eagerly remove it from the Map.
-        inspectedElementCache.remove(id);
+        inspectedElementCache.del(id);
 
         throw Error(`Element "${id}" not found`);
 
@@ -131,12 +137,14 @@ export function inspectElement({
           inspectedElement = {...inspectedElement};
 
           // Merge hydrated data
-          fillInPath(
-            inspectedElement,
-            value,
-            ((path: any): Path),
-            hydrateHelper(value, ((path: any): Path)),
-          );
+          if (path != null) {
+            fillInPath(
+              inspectedElement,
+              value,
+              path,
+              hydrateHelper(value, path),
+            );
+          }
 
           inspectedElementCache.set(id, inspectedElement);
 

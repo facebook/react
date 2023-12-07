@@ -2,11 +2,11 @@
   "manifest_version": 2,
   "name": "React Developer Tools",
   "description": "Adds React debugging tools to the Firefox Developer Tools.",
-  "version": "4.24.4",
+  "version": "5.0.0",
   "applications": {
     "gecko": {
       "id": "@react-devtools",
-      "strict_min_version": "55.0"
+      "strict_min_version": "102.0"
     }
   },
   "icons": {
@@ -30,8 +30,7 @@
   "web_accessible_resources": [
     "main.html",
     "panel.html",
-    "build/react_devtools_backend.js",
-    "build/renderer.js"
+    "build/*.js"
   ],
   "background": {
     "scripts": [
@@ -42,7 +41,9 @@
     "file:///*",
     "http://*/*",
     "https://*/*",
-    "clipboardWrite"
+    "clipboardWrite",
+    "scripting",
+    "devtools"
   ],
   "content_scripts": [
     {
@@ -50,7 +51,7 @@
         "<all_urls>"
       ],
       "js": [
-        "build/injectGlobalHook.js"
+        "build/prepareInjection.js"
       ],
       "run_at": "document_start"
     }

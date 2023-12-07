@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,38 +24,33 @@ export type ReactNodeList = ReactEmpty | React$Node;
 export type ReactText = string | number;
 
 export type ReactProvider<T> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   type: ReactProviderType<T>,
   key: null | string,
   ref: null,
   props: {
     value: T,
     children?: ReactNodeList,
-    ...
   },
-  ...
 };
 
 export type ReactProviderType<T> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   _context: ReactContext<T>,
-  ...
 };
 
 export type ReactConsumer<T> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   type: ReactContext<T>,
   key: null | string,
   ref: null,
   props: {
     children: (value: T) => ReactNodeList,
-    ...
   },
-  ...
 };
 
 export type ReactContext<T> = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   Consumer: ReactContext<T>,
   Provider: ReactProviderType<T>,
   _currentValue: T,
@@ -71,7 +66,6 @@ export type ReactContext<T> = {
   // only used by ServerContext
   _defaultValue: T,
   _globalName: string,
-  ...
 };
 
 export type ServerContextJSONValue =
@@ -85,85 +79,34 @@ export type ServerContextJSONValue =
 export type ReactServerContext<T: any> = ReactContext<T>;
 
 export type ReactPortal = {
-  $$typeof: Symbol | number,
+  $$typeof: symbol | number,
   key: null | string,
   containerInfo: any,
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
-  ...
 };
 
-export type RefObject = {|
+export type RefObject = {
   current: any,
-|};
+};
 
-export type ReactScope = {|
-  $$typeof: Symbol | number,
-|};
+export type ReactScope = {
+  $$typeof: symbol | number,
+};
 
 export type ReactScopeQuery = (
   type: string,
-  props: {[string]: mixed, ...},
+  props: {[string]: mixed},
   instance: mixed,
 ) => boolean;
 
-export type ReactScopeInstance = {|
+export type ReactScopeInstance = {
   DO_NOT_USE_queryAllNodes(ReactScopeQuery): null | Array<Object>,
   DO_NOT_USE_queryFirstNode(ReactScopeQuery): null | Object,
   containsNode(Object): boolean,
   getChildContextValues: <T>(context: ReactContext<T>) => Array<T>,
-|};
-
-// Mutable source version can be anything (e.g. number, string, immutable data structure)
-// so long as it changes every time any part of the source changes.
-export type MutableSourceVersion = $NonMaybeType<mixed>;
-
-export type MutableSourceGetSnapshotFn<
-  Source: $NonMaybeType<mixed>,
-  Snapshot,
-> = (source: Source) => Snapshot;
-
-export type MutableSourceSubscribeFn<Source: $NonMaybeType<mixed>, Snapshot> = (
-  source: Source,
-  callback: (snapshot: Snapshot) => void,
-) => () => void;
-
-export type MutableSourceGetVersionFn = (
-  source: $NonMaybeType<mixed>,
-) => MutableSourceVersion;
-
-export type MutableSource<Source: $NonMaybeType<mixed>> = {|
-  _source: Source,
-
-  _getVersion: MutableSourceGetVersionFn,
-
-  // Tracks the version of this source at the time it was most recently read.
-  // Used to determine if a source is safe to read from before it has been subscribed to.
-  // Version number is only used during mount,
-  // since the mechanism for determining safety after subscription is expiration time.
-  //
-  // As a workaround to support multiple concurrent renderers,
-  // we categorize some renderers as primary and others as secondary.
-  // We only expect there to be two concurrent renderers at most:
-  // React Native (primary) and Fabric (secondary);
-  // React DOM (primary) and React ART (secondary).
-  // Secondary renderers store their context values on separate fields.
-  // We use the same approach for Context.
-  _workInProgressVersionPrimary: null | MutableSourceVersion,
-  _workInProgressVersionSecondary: null | MutableSourceVersion,
-
-  // DEV only
-  // Used to detect multiple renderers using the same mutable source.
-  _currentPrimaryRenderer?: Object | null,
-  _currentSecondaryRenderer?: Object | null,
-
-  // DEV only
-  // Used to detect side effects that update a mutable source during render.
-  // See https://github.com/facebook/react/issues/19948
-  _currentlyRenderingFiber?: Fiber | null,
-  _initialVersionAsOfFirstRender?: MutableSourceVersion | null,
-|};
+};
 
 // The subset of a Thenable required by things thrown by Suspense.
 // This doesn't require a value to be passed to either handler.
@@ -174,18 +117,73 @@ export interface Wakeable {
 // The subset of a Promise that React APIs rely on. This resolves a value.
 // This doesn't require a return value neither from the handler nor the
 // then function.
-export interface Thenable<+R> {
-  then<U>(
-    onFulfill: (value: R) => void | Thenable<U> | U,
-    onReject: (error: mixed) => void | Thenable<U> | U,
-  ): void | Thenable<U>;
+interface ThenableImpl<T> {
+  then(
+    onFulfill: (value: T) => mixed,
+    onReject: (error: mixed) => mixed,
+  ): void | Wakeable;
 }
+interface UntrackedThenable<T> extends ThenableImpl<T> {
+  status?: void;
+}
+
+export interface PendingThenable<T> extends ThenableImpl<T> {
+  status: 'pending';
+}
+
+export interface FulfilledThenable<T> extends ThenableImpl<T> {
+  status: 'fulfilled';
+  value: T;
+}
+
+export interface RejectedThenable<T> extends ThenableImpl<T> {
+  status: 'rejected';
+  reason: mixed;
+}
+
+export type Thenable<T> =
+  | UntrackedThenable<T>
+  | PendingThenable<T>
+  | FulfilledThenable<T>
+  | RejectedThenable<T>;
 
 export type OffscreenMode =
   | 'hidden'
   | 'unstable-defer-without-hiding'
-  | 'visible';
+  | 'visible'
+  | 'manual';
 
 export type StartTransitionOptions = {
   name?: string,
 };
+
+export type Usable<T> = Thenable<T> | ReactContext<T>;
+
+export type ReactCustomFormAction = {
+  name?: string,
+  action?: string,
+  encType?: string,
+  method?: string,
+  target?: string,
+  data?: null | FormData,
+};
+
+// This is an opaque type returned by decodeFormState on the server, but it's
+// defined in this shared file because the same type is used by React on
+// the client.
+export type ReactFormState<S, ReferenceId> = [
+  S /* actual state value */,
+  string /* key path */,
+  ReferenceId /* Server Reference ID */,
+  number /* number of bound arguments */,
+];
+
+export type Awaited<T> = T extends null | void
+  ? T // special case for `null | undefined` when not in `--strictNullChecks` mode
+  : T extends Object // `await` only unwraps object types with a callable then. Non-object types are not unwrapped.
+  ? T extends {then(onfulfilled: infer F): any} // thenable, extracts the first argument to `then()`
+    ? F extends (value: infer V) => any // if the argument to `then` is callable, extracts the argument
+      ? Awaited<V> // recursively unwrap the value
+      : empty // the argument to `then` was not callable.
+    : T // argument was not an object
+  : T; // non-thenable

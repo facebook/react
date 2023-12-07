@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,7 +7,7 @@
 
 'use strict';
 
-export default function(babel, opts = {}) {
+export default function (babel, opts = {}) {
   if (typeof babel.env === 'function') {
     // Only available in Babel 7.
     const env = babel.env();

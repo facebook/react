@@ -1,7 +1,8 @@
 'use strict';
 
 const {resolve} = require('path');
-const {DefinePlugin} = require('webpack');
+const Webpack = require('webpack');
+const TerserPlugin = require('terser-webpack-plugin');
 const {
   DARK_MODE_DIMMED_WARNING_COLOR,
   DARK_MODE_DIMMED_ERROR_COLOR,
@@ -35,6 +36,10 @@ const DEVTOOLS_VERSION = getVersionString(process.env.DEVTOOLS_VERSION);
 const EDITOR_URL = process.env.EDITOR_URL || null;
 const LOGGING_URL = process.env.LOGGING_URL || null;
 
+const IS_CHROME = process.env.IS_CHROME === 'true';
+const IS_FIREFOX = process.env.IS_FIREFOX === 'true';
+const IS_EDGE = process.env.IS_EDGE === 'true';
+
 const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 const babelOptions = {
@@ -48,14 +53,17 @@ const babelOptions = {
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
+  devtool: __DEV__ ? 'cheap-module-source-map' : false,
   entry: {
-    background: './src/background.js',
-    contentScript: './src/contentScript.js',
-    injectGlobalHook: './src/injectGlobalHook.js',
-    main: './src/main.js',
+    background: './src/background/index.js',
+    backendManager: './src/contentScripts/backendManager.js',
+    fileFetcher: './src/contentScripts/fileFetcher.js',
+    main: './src/main/index.js',
     panel: './src/panel.js',
-    renderer: './src/renderer.js',
+    proxy: './src/contentScripts/proxy.js',
+    prepareInjection: './src/contentScripts/prepareInjection.js',
+    renderer: './src/contentScripts/renderer.js',
+    installHook: './src/contentScripts/installHook.js',
   },
   output: {
     path: __dirname + '/build',
@@ -64,12 +72,7 @@ module.exports = {
     chunkFilename: '[name].chunk.js',
   },
   node: {
-    // Don't define a polyfill on window.setImmediate
-    setImmediate: false,
-
-    // source-maps package has a dependency on 'fs'
-    // but this build won't trigger that code path
-    fs: 'empty',
+    global: false,
   },
   resolve: {
     alias: {
@@ -83,15 +86,39 @@ module.exports = {
     },
   },
   optimization: {
-    minimize: false,
+    minimize: !__DEV__,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            unused: true,
+            dead_code: true,
+          },
+          mangle: {
+            keep_fnames: true,
+          },
+          format: {
+            comments: false,
+          },
+        },
+        extractComments: false,
+      }),
+    ],
   },
   plugins: [
-    new DefinePlugin({
+    new Webpack.ProvidePlugin({
+      process: 'process/browser',
+      Buffer: ['buffer', 'Buffer'],
+    }),
+    new Webpack.DefinePlugin({
       __DEV__,
       __EXPERIMENTAL__: true,
       __EXTENSION__: true,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',
+      __IS_CHROME__: IS_CHROME,
+      __IS_FIREFOX__: IS_FIREFOX,
+      __IS_EDGE__: IS_EDGE,
       'process.env.DEVTOOLS_PACKAGE': `"react-devtools-extensions"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.EDITOR_URL': EDITOR_URL != null ? `"${EDITOR_URL}"` : null,

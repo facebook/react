@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -68,7 +68,7 @@ export class NetworkMeasuresView extends View {
       if (!this._depthToNetworkMeasure.has(depth)) {
         this._depthToNetworkMeasure.set(depth, [event]);
       } else {
-        // $FlowFixMe This is unnecessary.
+        // $FlowFixMe[incompatible-use] This is unnecessary.
         this._depthToNetworkMeasure.get(depth).push(event);
       }
     });
@@ -81,7 +81,7 @@ export class NetworkMeasuresView extends View {
     };
   }
 
-  desiredSize() {
+  desiredSize(): IntrinsicSize {
     return this._intrinsicSize;
   }
 

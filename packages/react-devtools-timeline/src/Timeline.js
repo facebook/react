@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Facebook, Inc. and its affiliates.
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -32,14 +32,9 @@ import {TimelineSearchContextController} from './TimelineSearchContext';
 
 import styles from './Timeline.css';
 
-export function Timeline(_: {||}) {
-  const {
-    file,
-    inMemoryTimelineData,
-    isTimelineSupported,
-    setFile,
-    viewState,
-  } = useContext(TimelineContext);
+export function Timeline(_: {}): React.Node {
+  const {file, inMemoryTimelineData, isTimelineSupported, setFile, viewState} =
+    useContext(TimelineContext);
   const {didRecordCommits, isProfiling} = useContext(ProfilerContext);
 
   const ref = useRef(null);
@@ -117,6 +112,7 @@ const ProcessingData = () => (
   </div>
 );
 
+// $FlowFixMe[missing-local-annot]
 const CouldNotLoadProfile = ({error, onFileSelect}) => (
   <div className={styles.EmptyStateContainer}>
     <div className={styles.Header}>Could not load profile</div>
@@ -143,11 +139,11 @@ const FileLoader = ({
   file,
   onFileSelect,
   viewState,
-}: {|
+}: {
   file: File | null,
   onFileSelect: (file: File) => void,
   viewState: ViewState,
-|}) => {
+}) => {
   if (file === null) {
     return null;
   }
