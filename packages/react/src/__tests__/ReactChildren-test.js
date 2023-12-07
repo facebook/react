@@ -1000,4 +1000,20 @@ describe('ReactChildren', () => {
       );
     });
   });
+
+  it('should have the same key pattern for a single child and an array with one item', () => {
+    const singleChild = <div />;
+    const arrayWithOneItem = [<div />];
+
+    const singleChildKey = React.Children.map(
+      singleChild,
+      child => child.key,
+    )[0];
+    const arrayChildKey = React.Children.map(
+      arrayWithOneItem,
+      child => child.key,
+    )[0];
+
+    expect(singleChildKey).toBe(arrayChildKey);
+  });
 });

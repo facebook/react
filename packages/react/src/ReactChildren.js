@@ -41,11 +41,6 @@ function escape(key: string): string {
   return '$' + escapedString;
 }
 
-/**
- * TODO: Test that a single child and an array with one item have the same key
- * pattern.
- */
-
 let didWarnAboutMaps = false;
 
 const userProvidedKeyEscapeRegex = /\/+/g;
