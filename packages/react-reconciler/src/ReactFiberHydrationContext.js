@@ -249,6 +249,7 @@ function warnNonhydratedInstance(
             didNotFindHydratableTextInstanceWithinContainer(
               parentContainer,
               text,
+              mismatchInstance
             );
             break;
           case SuspenseComponent:
@@ -329,6 +330,7 @@ function warnNonhydratedInstance(
               didNotFindHydratableTextInstanceWithinSuspenseInstance(
                 parentInstance,
                 text,
+                mismatchInstance,
               );
               break;
             case SuspenseComponent:

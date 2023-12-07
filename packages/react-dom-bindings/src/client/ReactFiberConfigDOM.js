@@ -1597,9 +1597,14 @@ export function didNotFindHydratableInstanceWithinContainer(
 export function didNotFindHydratableTextInstanceWithinContainer(
   parentContainer: Container,
   text: string,
+  lastHydratedChild,
 ) {
   if (__DEV__) {
-    warnForInsertedHydratedText(parentContainer, text);
+    warnForInsertedHydratedText(
+      parentContainer,
+      text,
+      lastHydratedChild,
+    );
   }
 }
 
@@ -1628,11 +1633,12 @@ export function didNotFindHydratableInstanceWithinSuspenseInstance(
 export function didNotFindHydratableTextInstanceWithinSuspenseInstance(
   parentInstance: SuspenseInstance,
   text: string,
+  lastHydratedChild,
 ) {
   if (__DEV__) {
     // $FlowFixMe[incompatible-type]: Only Element or Document can be parent nodes.
     const parentNode: Element | Document | null = parentInstance.parentNode;
-    if (parentNode !== null) warnForInsertedHydratedText(parentNode, text);
+    if (parentNode !== null) warnForInsertedHydratedText(parentNode, text, lastHydratedChild);
   }
 }
 

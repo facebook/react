@@ -9,7 +9,10 @@
 
 import type {HostContext, HostContextDev} from './ReactFiberConfigDOM';
 
-import {HostContextNamespaceNone} from './ReactFiberConfigDOM';
+import {
+  HostContextNamespaceNone,
+  HydratableInstance
+} from './ReactFiberConfigDOM'
 
 import {
   registrationNameDependencies,
@@ -3028,7 +3031,11 @@ function formatDiffForExtraServerNode(parentNode, child) {
   return formatElement(parentNode, '  ', formattedChildren);
 }
 
-function formatDiffForExtraClientNode(parentNode, text, mismatchNode) {
+function formatDiffForExtraClientNode(
+  parentNode,
+  text,
+  mismatchNode?: HydratableInstance
+) {
   let formattedSibling = null;
   let prevSibling = null;
   if (mismatchNode != null) {
@@ -3104,6 +3111,7 @@ export function warnForInsertedHydratedElement(
   parentNode: Element | Document | DocumentFragment,
   tag: string,
   props: Object,
+  lastHydratedChild: HydratableInstance,
 ) {
   if (__DEV__) {
     if (didWarnInvalidHydration) {
@@ -3114,7 +3122,7 @@ export function warnForInsertedHydratedElement(
       'The content rendered by the server and the client did not match ' +
       'because the server has rendered an extra text node. ' +
       'The mismatch occurred inside of this parent:\n\n%s',
-      formatDiffForExtraClientNode(parentNode, formatTagWithProps(tag, props)),
+      formatDiffForExtraClientNode(parentNode, formatTagWithProps(tag, props), lastHydratedChild),
     );
   }
 }
@@ -3122,7 +3130,7 @@ export function warnForInsertedHydratedElement(
 export function warnForInsertedHydratedText(
   parentNode: Element | Document | DocumentFragment,
   text: string,
-  mismatchInstance,
+  lastHydratedChild: HydratableInstance,
 ) {
   if (__DEV__) {
     if (text === '') {
@@ -3140,7 +3148,7 @@ export function warnForInsertedHydratedText(
       'The content rendered by the server and the client did not match ' +
       'because the client has rendered an extra element. ' +
       'The mismatch occurred inside of this parent:\n\n%s',
-      formatDiffForExtraClientNode(parentNode, text, mismatchInstance),
+      formatDiffForExtraClientNode(parentNode, text, lastHydratedChild),
     );
   }
 }
