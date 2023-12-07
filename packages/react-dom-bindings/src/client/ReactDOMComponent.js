@@ -2892,21 +2892,176 @@ export function diffHydratedText(
   return isDifferent;
 }
 
-function formatDiffForExtraServerNode(
-  parentNode: Element | Document | DocumentFragment,
-  childNode: Node,
-): string {
-  if (__DEV__) {
-    let parentNodeName = 'Unknown';
-    let childNodeName = getNodeName(childNode);
-    if (childNode.nodeType === TEXT_NODE) {
-      parentNodeName = getNodeName(parentNode);
-    } else if (childNode.nodeType === ELEMENT_NODE) {
-      parentNodeName = getNodeName(parentNode);
-      childNodeName = getNodeName(childNode);
+function formatAttributes(element: Element): string {
+  let str = '';
+  const attributes = element.attributes;
+  for (let i = 0; i < attributes.length; i++) {
+    if (i > 30) {
+      str += ' ...';
+      break;
     }
-    return 'Server node: ' + childNodeName + '\n' + parentNodeName;
+    const attributeName = attributes[i].name;
+    const value = attributes[i].value;
+    if (value != null) {
+      let trimmedValue = value;
+      if (value.length > 30) {
+        trimmedValue = value.slice(0, 30) + '...';
+      }
+      const escapedValue = trimmedValue.replace(/"/g, '&quot;');
+      str += ' ' + attributeName + '="' + escapedValue + '"';
+    }
   }
+  return str;
+}
+
+function formatProps(props): string {
+  let str = '';
+  let i = 0;
+  for (const prop in props) {
+    if (!props.hasOwnProperty(prop)) {
+      continue;
+    }
+    if (i > 30) {
+      str += ' ...';
+      break;
+    }
+    const attributeName = prop;
+    const value = props[prop];
+    if (
+      value != null &&
+      typeof value !== 'function' &&
+      typeof value !== 'symbol'
+    ) {
+      let trimmedValue = JSON.stringify(value);
+      if (value.length > 30) {
+        trimmedValue = value.slice(0, 30) + '...';
+      }
+      if (typeof value === 'string') {
+        str += ' ' + attributeName + '=' + trimmedValue + '';
+      } else {
+        str += ' ' + attributeName + '={' + trimmedValue + '}';
+      }
+    }
+    i++;
+  }
+  return str;
+}
+
+function formatElement(element, indentation, formattedChildren) {
+  let str = indentation + '<' + element.nodeName.toLowerCase();
+  str += formatAttributes(element);
+  if (formattedChildren === null) {
+    if (element.innerHTML !== '') {
+      str += '>...';
+      str += '</' + element.nodeName.toLowerCase() + '>';
+    } else {
+      str += ' />';
+    }
+  } else {
+    str += '>\n' + formattedChildren;
+    str += '\n' + indentation;
+    str += '</' + element.nodeName.toLowerCase() + '>';
+  }
+  return str;
+}
+
+function formatNode(node, indentation) {
+  switch (node.nodeType) {
+    // TODO: use constants
+    case Node.ELEMENT_NODE:
+      return formatElement(node, indentation, null);
+    case Node.TEXT_NODE:
+      // TODO: trim
+      return indentation + node.textContent;
+    default:
+      return '';
+  }
+}
+
+function shouldIncludeInDiff(node) {
+  return (
+    // TODO: use constants
+    node.nodeType === Node.ELEMENT_NODE || node.nodeType === Node.TEXT_NODE
+  );
+}
+
+function findPreviousSiblingForDiff(node) {
+  let sibling = node.previousSibling;
+  while (sibling !== null) {
+    if (shouldIncludeInDiff(sibling)) {
+      return sibling;
+    }
+    sibling = sibling.previousSibling;
+  }
+  return null;
+}
+
+function findNextSiblingForDiff(node) {
+  let sibling = node.nextSibling;
+  while (sibling !== null) {
+    if (shouldIncludeInDiff(sibling)) {
+      return sibling;
+    }
+    sibling = sibling.nextSibling;
+  }
+  return null;
+}
+
+function formatDiffForExtraServerNode(parentNode, child) {
+  let formattedSibling = null;
+  const prevSibling = findPreviousSiblingForDiff(child);
+  if (prevSibling !== null) {
+    formattedSibling = formatNode(prevSibling, '    ');
+  }
+  let formattedChildren = '';
+  if (formattedSibling !== null) {
+    if (findPreviousSiblingForDiff(prevSibling) !== null) {
+      formattedChildren += '    ...\n';
+    }
+    formattedChildren += formattedSibling + '\n';
+  }
+  formattedChildren += formatNode(child, '-   ');
+  formattedChildren += ' <-- server';
+  if (findNextSiblingForDiff(child) !== null) {
+    formattedChildren += '\n    ...';
+  }
+  return formatElement(parentNode, '  ', formattedChildren);
+}
+
+function formatDiffForExtraClientNode(parentNode, text, mismatchNode) {
+  let formattedSibling = null;
+  let prevSibling = null;
+  if (mismatchNode != null) {
+    prevSibling = findPreviousSiblingForDiff(mismatchNode);
+  } else if (parentNode.lastChild !== null) {
+    prevSibling = parentNode.lastChild;
+  }
+  let formattedChildren = '';
+  if (prevSibling !== null) {
+    formattedSibling = formatNode(prevSibling, '    ');
+    if (formattedSibling !== null) {
+      if (findPreviousSiblingForDiff(prevSibling) !== null) {
+        formattedChildren += '    ...\n';
+      }
+      formattedChildren += formattedSibling + '\n';
+    }
+  }
+  if (mismatchNode != null) {
+    formattedChildren += formatNode(mismatchNode, '-   ') + ' <-- server\n';
+  }
+  formattedChildren += text + ' <-- client';
+  formattedChildren += ' <-- client\n';
+  if (mismatchNode != null) {
+    formattedChildren += '    ...';
+  }
+  return formatElement(parentNode, '  ', formattedChildren);
+}
+
+function formatTagWithProps(tag, props) {
+  let str = '<' + tag.toLowerCase();
+  str += formatProps(props);
+  str += ' />';
+  return str;
 }
 
 export function warnForDeletedHydratableElement(
@@ -2956,9 +3111,10 @@ export function warnForInsertedHydratedElement(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Expected server HTML to contain a matching <%s> in <%s>.',
-      tag,
-      parentNode.nodeName.toLowerCase(),
+      'The content rendered by the server and the client did not match ' +
+      'because the server has rendered an extra text node. ' +
+      'The mismatch occurred inside of this parent:\n\n%s',
+      formatDiffForExtraClientNode(parentNode, formatTagWithProps(tag, props)),
     );
   }
 }
@@ -2966,6 +3122,7 @@ export function warnForInsertedHydratedElement(
 export function warnForInsertedHydratedText(
   parentNode: Element | Document | DocumentFragment,
   text: string,
+  mismatchInstance,
 ) {
   if (__DEV__) {
     if (text === '') {
@@ -2980,9 +3137,10 @@ export function warnForInsertedHydratedText(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Expected server HTML to contain a matching text node for "%s" in <%s>.',
-      text,
-      parentNode.nodeName.toLowerCase(),
+      'The content rendered by the server and the client did not match ' +
+      'because the client has rendered an extra element. ' +
+      'The mismatch occurred inside of this parent:\n\n%s',
+      formatDiffForExtraClientNode(parentNode, text, mismatchInstance),
     );
   }
 }
