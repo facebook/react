@@ -2892,6 +2892,23 @@ export function diffHydratedText(
   return isDifferent;
 }
 
+function formatDiffForExtraServerNode(
+  parentNode: Element | Document | DocumentFragment,
+  childNode: Node,
+): string {
+  if (__DEV__) {
+    let parentNodeName = 'Unknown';
+    let childNodeName = getNodeName(childNode);
+    if (childNode.nodeType === TEXT_NODE) {
+      parentNodeName = getNodeName(parentNode);
+    } else if (childNode.nodeType === ELEMENT_NODE) {
+      parentNodeName = getNodeName(parentNode);
+      childNodeName = getNodeName(childNode);
+    }
+    return 'Server node: ' + childNodeName + '\n' + parentNodeName;
+  }
+}
+
 export function warnForDeletedHydratableElement(
   parentNode: Element | Document | DocumentFragment,
   child: Element,
@@ -2902,9 +2919,10 @@ export function warnForDeletedHydratableElement(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Did not expect server HTML to contain a <%s> in <%s>.',
-      child.nodeName.toLowerCase(),
-      parentNode.nodeName.toLowerCase(),
+      'The content rendered by the server and the client did not match ' +
+      'because the server has rendered an extra text node. ' +
+      'The mismatch occurred inside of this parent:\n\n%s',
+      formatDiffForExtraServerNode(parentNode, child),
     );
   }
 }
@@ -2919,9 +2937,10 @@ export function warnForDeletedHydratableText(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'Did not expect server HTML to contain the text node "%s" in <%s>.',
-      child.nodeValue,
-      parentNode.nodeName.toLowerCase(),
+      'The content rendered by the server and the client did not match ' +
+      'because the server has rendered an extra text node. ' +
+      'The mismatch occurred inside of this parent:\n\n%s',
+      formatDiffForExtraServerNode(parentNode, child),
     );
   }
 }

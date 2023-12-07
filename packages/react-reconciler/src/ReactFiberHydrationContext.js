@@ -219,7 +219,7 @@ function deleteHydratableInstance(
 function warnNonhydratedInstance(
   returnFiber: Fiber,
   fiber: Fiber,
-  mismatchInstance,
+  mismatchInstance?: HydratableInstance,
 ) {
   if (__DEV__) {
     if (didSuspendOrErrorDEV) {
