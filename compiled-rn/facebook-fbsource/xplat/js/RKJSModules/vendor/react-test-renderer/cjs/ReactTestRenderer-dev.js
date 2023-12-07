@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b7d1bb0f480a798225aca9bde21b4786>>
+ * @generated SignedSource<<ad4f3cc032aebbca30e14b6cadc89a2a>>
  */
 
 "use strict";
@@ -25474,7 +25474,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-be8aa7687-20231206";
+    var ReactVersion = "18.3.0-canary-b36ae8d7a-20231207";
 
     // Might add PROFILE later.
 
@@ -26378,7 +26378,10 @@ if (__DEV__) {
           createNodeMock = options.createNodeMock;
         }
 
-        if (options.unstable_isConcurrent === true) {
+        if (
+          options.unstable_isConcurrent === true ||
+          options.isConcurrent === true
+        ) {
           isConcurrent = true;
         }
 

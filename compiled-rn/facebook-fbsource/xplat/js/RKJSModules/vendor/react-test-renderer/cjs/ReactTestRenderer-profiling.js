@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9c511bbcbb96d7f0fe52befe1fc1cbec>>
+ * @generated SignedSource<<85d704372814074410fc8d3c9e856fbb>>
  */
 
 "use strict";
@@ -9509,7 +9509,7 @@ var devToolsConfig$jscomp$inline_1075 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-be8aa7687-20231206",
+  version: "18.3.0-canary-b36ae8d7a-20231207",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1267 = {
@@ -9540,7 +9540,7 @@ var internals$jscomp$inline_1267 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-be8aa7687-20231206"
+  reconcilerVersion: "18.3.0-canary-b36ae8d7a-20231207"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1268 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -9562,15 +9562,16 @@ exports.create = function (element, options) {
     isConcurrent = !1,
     isStrictMode = !1,
     concurrentUpdatesByDefault = null;
-  "object" === typeof options &&
-    null !== options &&
-    ("function" === typeof options.createNodeMock &&
-      (createNodeMock = options.createNodeMock),
-    !0 === options.unstable_isConcurrent && (isConcurrent = !0),
-    !0 === options.unstable_strictMode && (isStrictMode = !0),
+  if ("object" === typeof options && null !== options) {
+    "function" === typeof options.createNodeMock &&
+      (createNodeMock = options.createNodeMock);
+    if (!0 === options.unstable_isConcurrent || !0 === options.isConcurrent)
+      isConcurrent = !0;
+    !0 === options.unstable_strictMode && (isStrictMode = !0);
     void 0 !== options.unstable_concurrentUpdatesByDefault &&
       (concurrentUpdatesByDefault =
-        options.unstable_concurrentUpdatesByDefault));
+        options.unstable_concurrentUpdatesByDefault);
+  }
   var container = {
       children: [],
       createNodeMock: createNodeMock,
