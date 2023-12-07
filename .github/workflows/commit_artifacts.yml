@@ -120,7 +120,7 @@ jobs:
       - name: Move relevant files for React in www into compiled
         run: |
           mkdir -p ./compiled
-          mkdir -p ./compiled/facebook-www
+          mkdir -p ./compiled/facebook-www/__test_utils__
           mkdir -p ./compiled/babel-plugin-react-refresh
 
           # Copy the facebook-www folder into compiled
@@ -128,6 +128,7 @@ jobs:
 
           # Copy WARNINGS to facebook-www
           mv build/WARNINGS ./compiled/facebook-www/WARNINGS
+          mv build/__test_utils__/ReactAllWarnings.js ./compiled/facebook-www/__test_utils__/ReactAllWarnings.js
 
           # Copy eslint-plugin-react-hooks into facebook-www
           mv build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
