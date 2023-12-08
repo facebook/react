@@ -75,11 +75,10 @@ gs([
   '!**/node_modules/**/*.js',
 ]).pipe(
   through.obj(transform, cb => {
-    if (process.argv[2] === '--js') {
-      const warningsArray = Array.from(warnings);
-      warningsArray.sort();
-      process.stdout.write(
-        `/**
+    const warningsArray = Array.from(warnings);
+    warningsArray.sort();
+    process.stdout.write(
+      `/**
  * Copyright (c) Meta Platforms, Inc. and affiliates.
  *
  * This source code is licensed under the MIT license found in the
@@ -92,14 +91,7 @@ gs([
 
 export default ${JSON.stringify(warningsArray, null, 2)};
 `
-      );
-    } else {
-      process.stdout.write(
-        Array.from(warnings, warning => JSON.stringify(warning))
-          .sort()
-          .join('\n') + '\n'
-      );
-    }
+    );
     cb();
   })
 );

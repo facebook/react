@@ -107,8 +107,7 @@ jobs:
       - run:
           command: |
             mkdir -p ./build/__test_utils__
-            node ./scripts/print-warnings/print-warnings.js > build/WARNINGS
-            node ./scripts/print-warnings/print-warnings.js --js > build/__test_utils__/ReactAllWarnings.js
+            node ./scripts/print-warnings/print-warnings.js > build/__test_utils__/ReactAllWarnings.js
       - persist_to_workspace:
           root: .
           paths:

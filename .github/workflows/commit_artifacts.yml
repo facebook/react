@@ -123,9 +123,8 @@ jobs:
           mkdir ./compiled
           mv build/facebook-www ./compiled
 
-          # Move WARNINGS to facebook-www
+          # Move ReactAllWarnings.js to facebook-www
           mkdir ./compiled/facebook-www/__test_utils__
-          mv build/WARNINGS ./compiled/facebook-www/WARNINGS
           mv build/__test_utils__/ReactAllWarnings.js ./compiled/facebook-www/__test_utils__/ReactAllWarnings.js
 
           # Move eslint-plugin-react-hooks into facebook-www
