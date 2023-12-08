@@ -119,26 +119,25 @@ jobs:
             build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js
       - name: Move relevant files for React in www into compiled
         run: |
-          mkdir -p ./compiled
-          mkdir -p ./compiled/facebook-www/__test_utils__
-          mkdir -p ./compiled/babel-plugin-react-refresh
-
-          # Copy the facebook-www folder into compiled
+          # Move the facebook-www folder into compiled
+          mkdir ./compiled
           mv build/facebook-www ./compiled
 
-          # Copy WARNINGS to facebook-www
+          # Move WARNINGS to facebook-www
+          mkdir ./compiled/facebook-www/__test_utils__
           mv build/WARNINGS ./compiled/facebook-www/WARNINGS
           mv build/__test_utils__/ReactAllWarnings.js ./compiled/facebook-www/__test_utils__/ReactAllWarnings.js
 
-          # Copy eslint-plugin-react-hooks into facebook-www
+          # Move eslint-plugin-react-hooks into facebook-www
           mv build/oss-experimental/eslint-plugin-react-hooks/cjs/eslint-plugin-react-hooks.development.js \
             ./compiled/facebook-www/eslint-plugin-react-hooks.js
 
-          # Copy unstable_server-external-runtime.js into facebook-www
+          # Move unstable_server-external-runtime.js into facebook-www
           mv build/oss-stable/react-dom/unstable_server-external-runtime.js \
             ./compiled/facebook-www/unstable_server-external-runtime.js
 
-          # Copy react-refresh-babel.development.js into babel-plugin-react-refresh
+          # Move react-refresh-babel.development.js into babel-plugin-react-refresh
+          mkdir ./compiled/babel-plugin-react-refresh
           mv build/oss-experimental/react-refresh/cjs/react-refresh-babel.development.js \
             ./compiled/babel-plugin-react-refresh/index.js
 
