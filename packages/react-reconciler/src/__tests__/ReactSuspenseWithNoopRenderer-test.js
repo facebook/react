@@ -5,7 +5,7 @@ let Scheduler;
 let act;
 let waitFor;
 let waitForAll;
-let unstable_waitForExpired;
+let waitForMicrotasks;
 let assertLog;
 let waitForPaint;
 let Suspense;
@@ -30,7 +30,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     waitFor = InternalTestUtils.waitFor;
     waitForAll = InternalTestUtils.waitForAll;
     waitForPaint = InternalTestUtils.waitForPaint;
-    unstable_waitForExpired = InternalTestUtils.unstable_waitForExpired;
+    waitForMicrotasks = InternalTestUtils.waitForMicrotasks;
     assertLog = InternalTestUtils.assertLog;
 
     getCacheForType = React.unstable_getCacheForType;
@@ -4011,8 +4011,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     },
   );
 
-  // @gate enableLegacyCache
-  // @gate enableRetryLaneExpiration
+  // @gate enableLegacyCache && enableRetryLaneExpiration
   it('recurring updates in siblings should not block expensive content in suspense boundary from committing', async () => {
     const {useState} = React;
 
@@ -4062,14 +4061,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
 
     await waitFor(['Async', 'A', 'B']);
-    ReactNoop.expire(10000000);
-    await advanceTimers(10000000);
+    ReactNoop.expire(100000);
+    await advanceTimers(100000);
     setText('2');
     await waitForPaint(['2']);
 
-    ReactNoop.expire(10000000);
-    await advanceTimers(10000000);
-    await unstable_waitForExpired(['Async', 'A', 'B', 'C']);
+    await waitForMicrotasks();
+    Scheduler.unstable_flushNumberOfYields(1);
+    assertLog(['Async', 'A', 'B', 'C']);
 
     expect(root).toMatchRenderedOutput(
       <>
