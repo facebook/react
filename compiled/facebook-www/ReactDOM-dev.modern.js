@@ -1564,7 +1564,9 @@ if (__DEV__) {
       // to unwrap uncached promises.
       // TODO: Write a test for this
 
-      var lanes = pendingLanes & ~RetryLanes;
+      var lanes = enableRetryLaneExpiration
+        ? pendingLanes
+        : pendingLanes & ~RetryLanes;
 
       while (lanes > 0) {
         var index = pickArbitraryLaneIndex(lanes);
@@ -34712,7 +34714,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-152469ca";
+    var ReactVersion = "18.3.0-www-modern-c3c79046";
 
     function createPortal$1(
       children,

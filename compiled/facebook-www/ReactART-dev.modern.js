@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-660048ac";
+    var ReactVersion = "18.3.0-www-modern-10e22a22";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -2037,7 +2037,9 @@ if (__DEV__) {
       // to unwrap uncached promises.
       // TODO: Write a test for this
 
-      var lanes = pendingLanes & ~RetryLanes;
+      var lanes = enableRetryLaneExpiration
+        ? pendingLanes
+        : pendingLanes & ~RetryLanes;
 
       while (lanes > 0) {
         var index = pickArbitraryLaneIndex(lanes);

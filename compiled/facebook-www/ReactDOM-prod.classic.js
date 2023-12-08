@@ -3183,22 +3183,25 @@ function processRootScheduleInMicrotask() {
   flushSyncWorkAcrossRoots_impl(!1);
 }
 function scheduleTaskForRootDuringMicrotask(root, currentTime) {
+  var pendingLanes = root.pendingLanes,
+    suspendedLanes = root.suspendedLanes,
+    pingedLanes = root.pingedLanes,
+    expirationTimes = root.expirationTimes;
   for (
-    var suspendedLanes = root.suspendedLanes,
-      pingedLanes = root.pingedLanes,
-      expirationTimes = root.expirationTimes,
-      lanes = root.pendingLanes & -62914561;
-    0 < lanes;
+    pendingLanes = enableRetryLaneExpiration
+      ? pendingLanes
+      : pendingLanes & -62914561;
+    0 < pendingLanes;
 
   ) {
-    var index$2 = 31 - clz32(lanes),
+    var index$2 = 31 - clz32(pendingLanes),
       lane = 1 << index$2,
       expirationTime = expirationTimes[index$2];
     if (-1 === expirationTime) {
       if (0 === (lane & suspendedLanes) || 0 !== (lane & pingedLanes))
         expirationTimes[index$2] = computeExpirationTime(lane, currentTime);
     } else expirationTime <= currentTime && (root.expiredLanes |= lane);
-    lanes &= ~lane;
+    pendingLanes &= ~lane;
   }
   currentTime = workInProgressRoot;
   suspendedLanes = workInProgressRootRenderLanes;
@@ -16540,7 +16543,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1796 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-55fb1194",
+  version: "18.3.0-www-classic-3868b5c2",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2142 = {
@@ -16570,7 +16573,7 @@ var internals$jscomp$inline_2142 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-55fb1194"
+  reconcilerVersion: "18.3.0-www-classic-3868b5c2"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2143 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16907,4 +16910,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-55fb1194";
+exports.version = "18.3.0-www-classic-3868b5c2";
