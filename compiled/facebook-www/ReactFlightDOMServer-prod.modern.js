@@ -585,9 +585,9 @@ function serializeThenable(request, thenable) {
     },
     function (reason) {
       newTask.status = 4;
-      request.abortableTasks.delete(newTask);
       reason = logRecoverableError(request, reason);
       emitErrorChunk(request, newTask.id, reason);
+      request.abortableTasks.delete(newTask);
       null !== request.destination &&
         flushCompletedChunks(request, request.destination);
     }

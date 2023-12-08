@@ -16449,7 +16449,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1784 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-ade0aaf2",
+  version: "18.3.0-www-modern-faf29095",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2140 = {
@@ -16480,7 +16480,7 @@ var internals$jscomp$inline_2140 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-ade0aaf2"
+  reconcilerVersion: "18.3.0-www-modern-faf29095"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2141 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16896,4 +16896,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-ade0aaf2";
+exports.version = "18.3.0-www-modern-faf29095";
