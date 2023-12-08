@@ -759,4 +759,85 @@ describe('ReactDOMTextarea', () => {
     ReactDOM.render(<textarea defaultValue={null} />, container);
     expect(node.defaultValue).toBe('');
   });
+
+  it('should not warn about missing onChange if value is not set', () => {
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<textarea />);
+    }).not.toThrow();
+  });
+
+  it('should not warn about missing onChange if value is undefined', () => {
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<textarea value={undefined} />);
+    }).not.toThrow();
+  });
+
+  it('should not warn about missing onChange if onChange is set', () => {
+    expect(() => {
+      const change = jest.fn();
+      ReactTestUtils.renderIntoDocument(
+        <textarea value="something" onChange={change} />,
+      );
+    }).not.toThrow();
+  });
+
+  it('should not warn about missing onChange if disabled is true', () => {
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(
+        <textarea value="something" disabled={true} />,
+      );
+    }).not.toThrow();
+  });
+
+  it('should not warn about missing onChange if value is not set', () => {
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(
+        <textarea value="something" readOnly={true} />,
+      );
+    }).not.toThrow();
+  });
+
+  it('should warn about missing onChange if value is false', () => {
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<textarea value={false} />),
+    ).toErrorDev(
+      'Warning: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
+
+  it('should warn about missing onChange if value is 0', () => {
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<textarea value={0} />),
+    ).toErrorDev(
+      'Warning: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
+
+  it('should warn about missing onChange if value is "0"', () => {
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<textarea value="0" />),
+    ).toErrorDev(
+      'Warning: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
+
+  it('should warn about missing onChange if value is ""', () => {
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(<textarea value="" />),
+    ).toErrorDev(
+      'Warning: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.',
+    );
+  });
 });
