@@ -3,7 +3,7 @@
 React is a JavaScript library for building user interfaces.
 
 * **Declarative:** React makes it painless to create interactive UIs. Design simple views for each state in your application, and React will efficiently update and render just the right components when your data changes. Declarative views make your code more predictable, simpler to understand, and easier to debug.
-* **Component-Based:** Build encapsulated components that manage their own state, then compose them to make complex UIs. Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep the state out of the DOM.
+* **Component-Based:** Build encapsulated components that manage their own state, then compose them to create complex UIs. Since component logic is written in JavaScript instead of templates, you can easily pass rich data through your app and keep the state out of the DOM.
 * **Learn Once, Write Anywhere:** We don't make assumptions about the rest of your technology stack, so you can develop new features in React without rewriting existing code. React can also render on the server using Node and power mobile apps using [React Native](https://reactnative.dev/).
 
 [Learn how to use React in your project](https://react.dev/learn).
@@ -30,7 +30,7 @@ The documentation is divided into several sections:
 * [Installation](https://react.dev/learn/installation)
 * [Describing the UI](https://react.dev/learn/describing-the-ui)
 * [Adding Interactivity](https://react.dev/learn/adding-interactivity)
-* [Manging State](https://react.dev/learn/managing-state)
+* [Managing State](https://react.dev/learn/managing-state)
 * [Advanced Guides](https://react.dev/learn/escape-hatches)
 * [API Reference](https://react.dev/reference/react)
 * [Where to Get Support](https://react.dev/community)
@@ -59,7 +59,7 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://react.d
 
 ## Contributing
 
-The main purpose of this repository is to continue evolving React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
+The main purpose of this repository is to continue evolving React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bug fixes and improvements. Read below to learn how you can take part in improving React.
 
 ### [Code of Conduct](https://code.fb.com/codeofconduct)
 
@@ -67,11 +67,11 @@ Facebook has adopted a Code of Conduct that we expect project participants to ad
 
 ### [Contributing Guide](https://legacy.reactjs.org/docs/how-to-contribute.html)
 
-Read our [contributing guide](https://legacy.reactjs.org/docs/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
+Read our [contributing guide](https://legacy.reactjs.org/docs/how-to-contribute.html) to learn about our development process, how to propose bug fixes and improvements, and how to build and test your changes to React.
 
 ### Good First Issues
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [good first issues](https://github.com/facebook/react/labels/good%20first%20issue) that contain bugs that have a relatively limited scope. This is a great place to get started.
+To help you get your feet wet and get familiar with our contribution process, we have a list of [good first issues](https://github.com/facebook/react/labels/good%20first%20issue) that contain bugs with a relatively limited scope. This is a great place to get started.
 
 ### License
 
