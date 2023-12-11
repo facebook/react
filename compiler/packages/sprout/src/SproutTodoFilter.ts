@@ -423,6 +423,7 @@ const skipFilter = new Set([
 
   // TODO: 🌲
   "forest-basic",
+  "forest-basic-jsx",
 
   // TODO: we probably want to always skip these
   "rules-of-hooks/rules-of-hooks-0592bd574811",
