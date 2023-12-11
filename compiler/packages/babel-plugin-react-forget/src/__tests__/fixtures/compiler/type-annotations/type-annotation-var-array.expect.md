@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableUseTypeAnnotations
 function Component(props: { id: number }) {
   const x: number[] = makeArray(props.id);
   const y = x.at(0);
@@ -22,7 +23,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { unstable_useMemoCache as useMemoCache } from "react"; // @enableUseTypeAnnotations
 function Component(props) {
   const $ = useMemoCache(4);
   let t0;

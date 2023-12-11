@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @flow
+// @flow @enableUseTypeAnnotations
 import { identity } from "shared-runtime";
 
 function Component(props: {id: number}) {

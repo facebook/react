@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableUseTypeAnnotations
 function useArray(items: Array<number>) {
   // With type information we know that the callback cannot escape
   // and does not need to be memoized, only the result needs to be
@@ -19,7 +20,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { unstable_useMemoCache as useMemoCache } from "react"; // @enableUseTypeAnnotations
 function useArray(items) {
   const $ = useMemoCache(3);
   let t1;

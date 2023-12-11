@@ -114,6 +114,14 @@ const EnvironmentConfigSchema = z.object({
    */
   memoizeJsxElements: z.boolean().default(true),
 
+  /**
+   * Enable use of type annotations in the source to drive type inference. By default
+   * Forget attemps to infer types using only information that is guaranteed correct
+   * given the source, and does not trust user-supplied type annotations. This mode
+   * enables trusting user type annotations.
+   */
+  enableUseTypeAnnotations: z.boolean().default(false),
+
   /*
    * Enable validation of hooks to partially check that the component honors the rules of hooks.
    * When disabled, the component is assumed to follow the rules (though the Babel plugin looks

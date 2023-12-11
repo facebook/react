@@ -137,12 +137,20 @@ function* generateInstructionTypes(
     }
 
     case "StoreLocal": {
-      yield equation(
-        value.lvalue.place.identifier.type,
-        value.value.identifier.type
-      );
-      yield equation(value.type, value.lvalue.place.identifier.type);
-      yield equation(left, value.type);
+      if (env.config.enableUseTypeAnnotations) {
+        yield equation(
+          value.lvalue.place.identifier.type,
+          value.value.identifier.type
+        );
+        yield equation(value.type, value.lvalue.place.identifier.type);
+        yield equation(left, value.type);
+      } else {
+        yield equation(left, value.value.identifier.type);
+        yield equation(
+          value.lvalue.place.identifier.type,
+          value.value.identifier.type
+        );
+      }
       break;
     }
 
@@ -263,8 +271,12 @@ function* generateInstructionTypes(
     }
 
     case "TypeCastExpression": {
-      yield equation(value.type, value.value.identifier.type);
-      yield equation(left, value.type);
+      if (env.config.enableUseTypeAnnotations) {
+        yield equation(value.type, value.value.identifier.type);
+        yield equation(left, value.type);
+      } else {
+        yield equation(left, value.value.identifier.type);
+      }
       break;
     }
 

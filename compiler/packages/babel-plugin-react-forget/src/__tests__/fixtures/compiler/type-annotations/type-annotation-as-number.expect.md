@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableUseTypeAnnotations
 import { identity } from "shared-runtime";
 
 function Component(props: { id: number }) {
@@ -20,6 +21,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+// @enableUseTypeAnnotations
 import { identity } from "shared-runtime";
 
 function Component(props) {

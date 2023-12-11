@@ -1,3 +1,4 @@
+// @enableUseTypeAnnotations
 function Component(props: { id: number }) {
   const x = makeArray(props.id) as number[];
   const y = x.at(0);
