@@ -1508,10 +1508,17 @@ function codegenInstructionValue(
       break;
     }
     case "TypeCastExpression": {
-      value = t.typeCastExpression(
-        codegenPlaceToExpression(cx, instrValue.value),
-        instrValue.type
-      );
+      if (t.isTSType(instrValue.typeAnnotation)) {
+        value = t.tsAsExpression(
+          codegenPlaceToExpression(cx, instrValue.value),
+          instrValue.typeAnnotation
+        );
+      } else {
+        value = t.typeCastExpression(
+          codegenPlaceToExpression(cx, instrValue.value),
+          t.typeAnnotation(instrValue.typeAnnotation)
+        );
+      }
       break;
     }
     case "LogicalExpression": {

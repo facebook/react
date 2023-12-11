@@ -718,7 +718,8 @@ export type InstructionValue =
   | {
       kind: "TypeCastExpression";
       value: Place;
-      type: t.TypeAnnotation;
+      typeAnnotation: t.FlowType | t.TSType;
+      type: Type;
       loc: SourceLocation;
     }
   | {

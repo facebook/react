@@ -42,6 +42,7 @@ import {
   SpreadPattern,
   ThrowTerminal,
   makeInstructionId,
+  makeType,
 } from "./HIR";
 import HIRBuilder, { Bindings } from "./HIRBuilder";
 
@@ -2150,7 +2151,18 @@ function lowerExpression(
       return {
         kind: "TypeCastExpression",
         value: lowerExpressionToTemporary(builder, expr.get("expression")),
-        type: expr.get("typeAnnotation").node,
+        typeAnnotation: expr.get("typeAnnotation").get("typeAnnotation").node,
+        type: makeType(),
+        loc: exprLoc,
+      };
+    }
+    case "TSAsExpression": {
+      let expr = exprPath as NodePath<t.TSAsExpression>;
+      return {
+        kind: "TypeCastExpression",
+        value: lowerExpressionToTemporary(builder, expr.get("expression")),
+        typeAnnotation: expr.get("typeAnnotation").node,
+        type: makeType(),
         loc: exprLoc,
       };
     }
