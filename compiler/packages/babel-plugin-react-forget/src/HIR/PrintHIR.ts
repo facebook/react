@@ -373,7 +373,9 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       break;
     }
     case "TypeCastExpression": {
-      value = `TypeCast ${printPlace(instrValue.value)}`;
+      value = `TypeCast ${printPlace(instrValue.value)}: ${printType(
+        instrValue.type
+      )}`;
       break;
     }
     case "JsxExpression": {

@@ -2,12 +2,14 @@
 ## Input
 
 ```javascript
-import { identity } from "shared-runtime";
-
 function Component(props: { id: number }) {
-  const x = [props.id] as number[];
-  const y = identity(x[0]);
+  const x = makeArray(props.id) as number[];
+  const y = x.at(0);
   return y;
+}
+
+function makeArray<T>(x: T): Array<T> {
+  return [x];
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -21,21 +23,40 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-import { identity } from "shared-runtime";
-
 function Component(props) {
-  const $ = useMemoCache(2);
+  const $ = useMemoCache(4);
   let t0;
   if ($[0] !== props.id) {
-    const x = [props.id] as number[];
-    t0 = identity(x[0]);
+    t0 = makeArray(props.id);
     $[0] = props.id;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const y = t0;
+  const x = t0 as number[];
+  let t1;
+  if ($[2] !== x) {
+    t1 = x.at(0);
+    $[2] = x;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  const y = t1;
   return y;
+}
+
+function makeArray(x) {
+  const $ = useMemoCache(2);
+  let t0;
+  if ($[0] !== x) {
+    t0 = [x];
+    $[0] = x;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

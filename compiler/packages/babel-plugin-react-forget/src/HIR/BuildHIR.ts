@@ -41,10 +41,12 @@ import {
   SourceLocation,
   SpreadPattern,
   ThrowTerminal,
+  Type,
   makeInstructionId,
   makeType,
 } from "./HIR";
 import HIRBuilder, { Bindings } from "./HIRBuilder";
+import { BuiltInArrayId } from "./ObjectShape";
 
 /*
  * *******************************************************************************************
@@ -2148,21 +2150,23 @@ function lowerExpression(
     }
     case "TypeCastExpression": {
       let expr = exprPath as NodePath<t.TypeCastExpression>;
+      const typeAnnotation = expr.get("typeAnnotation").get("typeAnnotation");
       return {
         kind: "TypeCastExpression",
         value: lowerExpressionToTemporary(builder, expr.get("expression")),
-        typeAnnotation: expr.get("typeAnnotation").get("typeAnnotation").node,
-        type: makeType(),
+        typeAnnotation: typeAnnotation.node,
+        type: lowerType(builder, typeAnnotation),
         loc: exprLoc,
       };
     }
     case "TSAsExpression": {
       let expr = exprPath as NodePath<t.TSAsExpression>;
+      const typeAnnotation = expr.get("typeAnnotation");
       return {
         kind: "TypeCastExpression",
         value: lowerExpressionToTemporary(builder, expr.get("expression")),
-        typeAnnotation: expr.get("typeAnnotation").node,
-        type: makeType(),
+        typeAnnotation: typeAnnotation.node,
+        type: lowerType(builder, typeAnnotation),
         loc: exprLoc,
       };
     }
@@ -3790,4 +3794,53 @@ function gatherCapturedDeps(
 
 function notNull<T>(value: T | null): value is T {
   return value !== null;
+}
+
+function lowerType(
+  _builder: HIRBuilder,
+  path: NodePath<t.FlowType | t.TSType>
+): Type {
+  const node = path.node;
+  switch (node.type) {
+    case "GenericTypeAnnotation": {
+      const typeAnnotation = path as NodePath<t.GenericTypeAnnotation>;
+      const id = typeAnnotation.get("id");
+      if (id.node.type === "Identifier" && id.node.name === "Array") {
+        return { kind: "Object", shapeId: BuiltInArrayId };
+      }
+      return makeType();
+    }
+    case "TSTypeReference": {
+      const typeReference = path as NodePath<t.TSTypeReference>;
+      const typeName = typeReference.get("typeName").node;
+      if (typeName.type === "Identifier" && typeName.name === "Array") {
+        return { kind: "Object", shapeId: BuiltInArrayId };
+      }
+      return makeType();
+    }
+    case "ArrayTypeAnnotation":
+    case "TSArrayType": {
+      return { kind: "Object", shapeId: BuiltInArrayId };
+    }
+    case "BooleanLiteralTypeAnnotation":
+    case "BooleanTypeAnnotation":
+    case "NullLiteralTypeAnnotation":
+    case "NumberLiteralTypeAnnotation":
+    case "NumberTypeAnnotation":
+    case "StringLiteralTypeAnnotation":
+    case "StringTypeAnnotation":
+    case "TSBooleanKeyword":
+    case "TSNullKeyword":
+    case "TSNumberKeyword":
+    case "TSStringKeyword":
+    case "TSSymbolKeyword":
+    case "TSUndefinedKeyword":
+    case "TSVoidKeyword":
+    case "VoidTypeAnnotation": {
+      return { kind: "Primitive" };
+    }
+    default: {
+      return makeType();
+    }
+  }
 }

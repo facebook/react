@@ -1,9 +1,11 @@
-import { identity } from "shared-runtime";
-
 function Component(props: { id: number }) {
-  const x = [props.id] as number[];
-  const y = identity(x[0]);
+  const x = makeArray(props.id) as number[];
+  const y = x.at(0);
   return y;
+}
+
+function makeArray<T>(x: T): Array<T> {
+  return [x];
 }
 
 export const FIXTURE_ENTRYPOINT = {

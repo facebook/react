@@ -262,7 +262,8 @@ function* generateInstructionTypes(
     }
 
     case "TypeCastExpression": {
-      yield equation(left, value.value.identifier.type);
+      yield equation(value.type, value.value.identifier.type);
+      yield equation(left, value.type);
       break;
     }
 

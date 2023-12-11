@@ -127,6 +127,10 @@ export function makeObject_Primitives(): StringKeyedObject {
   return { a: 0, b: "value1", c: true };
 }
 
+export function makeArray<T>(value: T): Array<T> {
+  return [value];
+}
+
 export function addOne(value: number): number {
   return value + 1;
 }

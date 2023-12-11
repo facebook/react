@@ -3,11 +3,11 @@
 
 ```javascript
 // @flow
-import { identity } from "shared-runtime";
+import { identity, makeArray } from "shared-runtime";
 
 function Component(props: { id: number }) {
-  const x = ([props.id]: Array<number>);
-  const y = identity(x[0]);
+  const x = (makeArray(props.id): Array<number>);
+  const y = x.at(0);
   return y;
 }
 
@@ -22,20 +22,28 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-import { identity } from "shared-runtime";
+import { identity, makeArray } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(2);
+  const $ = useMemoCache(4);
   let t0;
   if ($[0] !== props.id) {
-    const x = ([props.id]: Array<number>);
-    t0 = identity(x[0]);
+    t0 = makeArray(props.id);
     $[0] = props.id;
     $[1] = t0;
   } else {
     t0 = $[1];
   }
-  const y = t0;
+  const x = (t0: Array<number>);
+  let t1;
+  if ($[2] !== x) {
+    t1 = x.at(0);
+    $[2] = x;
+    $[3] = t1;
+  } else {
+    t1 = $[3];
+  }
+  const y = t1;
   return y;
 }
 
