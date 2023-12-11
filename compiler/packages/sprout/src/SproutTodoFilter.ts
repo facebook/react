@@ -422,8 +422,11 @@ const skipFilter = new Set([
   "readonly-object-method-calls-mutable-lambda",
 
   // TODO: 🌲
-  "forest-basic",
-  "forest-basic-jsx",
+  "forest/forest-basic",
+  "forest/forest-basic-jsx",
+  "forest/forest-primitive-operations",
+  "forest/computed-load-props",
+  "forest/property-load-props",
 
   // TODO: we probably want to always skip these
   "rules-of-hooks/rules-of-hooks-0592bd574811",
