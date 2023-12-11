@@ -15,6 +15,7 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
+  makeType,
 } from "../HIR";
 import { eachPatternOperand, mapPatternOperands } from "../HIR/visitors";
 import { ReactiveFunctionTransform, visitReactiveFunction } from "./visitors";
@@ -177,6 +178,7 @@ function transformDestructuring(
           place: original,
         },
         value: temporary,
+        type: makeType(),
         loc: destructure.loc,
       },
       loc: instr.loc,

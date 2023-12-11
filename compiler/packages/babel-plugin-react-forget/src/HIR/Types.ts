@@ -90,6 +90,50 @@ export function makeType(): TypeVar {
   };
 }
 
+/**
+ * Duplicates the given type, copying types that are exact while creating fresh
+ * type identifiers for any abstract types.
+ */
+export function duplicateType(type: Type): Type {
+  switch (type.kind) {
+    case "Function": {
+      return {
+        kind: "Function",
+        return: duplicateType(type.return),
+        shapeId: type.shapeId,
+      };
+    }
+    case "Object": {
+      return { kind: "Object", shapeId: type.shapeId };
+    }
+    case "ObjectMethod": {
+      return { kind: "ObjectMethod" };
+    }
+    case "Phi": {
+      return {
+        kind: "Phi",
+        operands: type.operands.map((operand) => duplicateType(operand)),
+      };
+    }
+    case "Poly": {
+      return { kind: "Poly" };
+    }
+    case "Primitive": {
+      return { kind: "Primitive" };
+    }
+    case "Property": {
+      return {
+        kind: "Property",
+        object: duplicateType(type.object),
+        propertyName: type.propertyName,
+      };
+    }
+    case "Type": {
+      return makeType();
+    }
+  }
+}
+
 export function typeEquals(tA: Type, tB: Type): boolean {
   if (tA.kind !== tB.kind) return false;
   return (

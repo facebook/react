@@ -1591,6 +1591,7 @@ function lowerExpression(
             kind: "StoreLocal",
             lvalue: { kind: InstructionKind.Const, place: { ...place } },
             value: last,
+            type: makeType(),
             loc: exprLoc,
           });
         }
@@ -1632,6 +1633,7 @@ function lowerExpression(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
           value: consequent,
+          type: makeType(),
           loc: exprLoc,
         });
         return {
@@ -1650,6 +1652,7 @@ function lowerExpression(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
           value: alternate,
+          type: makeType(),
           loc: exprLoc,
         });
         return {
@@ -1700,6 +1703,7 @@ function lowerExpression(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
           value: { ...leftPlace },
+          type: makeType(),
           loc: leftPlace.loc,
         });
         return {
@@ -1716,6 +1720,7 @@ function lowerExpression(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
           value: { ...right },
+          type: makeType(),
           loc: right.loc,
         });
         return {
@@ -1815,15 +1820,29 @@ function lowerExpression(
             right,
             loc: exprLoc,
           });
-          lowerValueToTemporary(builder, {
-            kind: getStoreKind(builder, leftExpr),
-            lvalue: {
-              place: { ...identifier },
-              kind: InstructionKind.Reassign,
-            },
-            value: { ...binaryPlace },
-            loc: exprLoc,
-          });
+          const kind = getStoreKind(builder, leftExpr);
+          if (kind === "StoreLocal") {
+            lowerValueToTemporary(builder, {
+              kind: "StoreLocal",
+              lvalue: {
+                place: { ...identifier },
+                kind: InstructionKind.Reassign,
+              },
+              value: { ...binaryPlace },
+              type: makeType(),
+              loc: exprLoc,
+            });
+          } else {
+            lowerValueToTemporary(builder, {
+              kind: "StoreContext",
+              lvalue: {
+                place: { ...identifier },
+                kind: InstructionKind.Reassign,
+              },
+              value: { ...binaryPlace },
+              loc: exprLoc,
+            });
+          }
           return { kind: "LoadLocal", place: identifier, loc: exprLoc };
         }
         case "MemberExpression": {
@@ -2272,6 +2291,7 @@ function lowerOptionalMemberExpression(
             kind: "StoreLocal",
             lvalue: { kind: InstructionKind.Const, place: { ...place } },
             value: { ...temp },
+            type: makeType(),
             loc,
           });
           return {
@@ -2326,6 +2346,7 @@ function lowerOptionalMemberExpression(
       kind: "StoreLocal",
       lvalue: { kind: InstructionKind.Const, place: { ...place } },
       value: { ...temp },
+      type: makeType(),
       loc,
     });
     return {
@@ -2382,6 +2403,7 @@ function lowerOptionalCallExpression(
             kind: "StoreLocal",
             lvalue: { kind: InstructionKind.Const, place: { ...place } },
             value: { ...temp },
+            type: makeType(),
             loc,
           });
           return {
@@ -2483,6 +2505,7 @@ function lowerOptionalCallExpression(
       kind: "StoreLocal",
       lvalue: { kind: InstructionKind.Const, place: { ...place } },
       value: { ...temp },
+      type: makeType(),
       loc,
     });
     return {
@@ -3215,10 +3238,22 @@ function lowerAssignment(
           loc,
         });
       } else {
+        const typeAnnotation = lvalue.get("typeAnnotation");
+        let type: Type;
+        if (typeAnnotation.isTSTypeAnnotation()) {
+          const typePath = typeAnnotation.get("typeAnnotation");
+          type = lowerType(builder, typePath);
+        } else if (typeAnnotation.isTypeAnnotation()) {
+          const typePath = typeAnnotation.get("typeAnnotation");
+          type = lowerType(builder, typePath);
+        } else {
+          type = makeType();
+        }
         temporary = lowerValueToTemporary(builder, {
           kind: "StoreLocal",
           lvalue: { place: { ...place }, kind },
           value,
+          type,
           loc,
         });
       }
@@ -3525,6 +3560,7 @@ function lowerAssignment(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...temp } },
           value: { ...defaultValue },
+          type: makeType(),
           loc,
         });
         return {
@@ -3541,6 +3577,7 @@ function lowerAssignment(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...temp } },
           value: { ...value },
+          type: makeType(),
           loc,
         });
         return {

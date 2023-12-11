@@ -676,6 +676,7 @@ export type InstructionValue =
       kind: "StoreLocal";
       lvalue: LValue;
       value: Place;
+      type: Type;
       loc: SourceLocation;
     }
   | {

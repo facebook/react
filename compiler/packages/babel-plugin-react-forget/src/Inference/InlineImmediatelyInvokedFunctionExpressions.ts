@@ -245,6 +245,7 @@ function rewriteBlock(
       kind: "StoreLocal",
       lvalue: { kind: InstructionKind.Reassign, place: { ...returnValue } },
       value: terminal.value,
+      type: makeType(),
       loc: terminal.loc,
     },
   });
