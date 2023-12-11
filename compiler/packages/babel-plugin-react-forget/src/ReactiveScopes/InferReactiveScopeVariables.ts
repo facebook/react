@@ -234,22 +234,24 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
     case "StoreLocal":
     case "LoadGlobal":
     case "TypeCastExpression":
-    case "BinaryExpression":
     case "LoadLocal":
     case "LoadContext":
     case "StoreContext":
-    case "PropertyLoad":
     case "PropertyDelete":
     case "ComputedLoad":
     case "ComputedDelete":
     case "JSXText":
-    case "UnaryExpression":
     case "TemplateLiteral":
     case "Primitive":
     case "NextIterableOf":
     case "NextPropertyOf":
     case "Debugger": {
       return false;
+    }
+    case "UnaryExpression":
+    case "BinaryExpression":
+    case "PropertyLoad": {
+      return env.config.enableForest;
     }
     case "CallExpression":
     case "MethodCall": {

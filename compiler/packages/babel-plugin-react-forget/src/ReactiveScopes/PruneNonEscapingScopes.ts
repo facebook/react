@@ -107,10 +107,7 @@ import {
  *     conditional node with an aliased dep promotes to aliased).
  * 4. Finally we prune scopes whose outputs weren't marked.
  */
-export function pruneNonEscapingScopes(
-  fn: ReactiveFunction,
-  options: MemoizationOptions
-): void {
+export function pruneNonEscapingScopes(fn: ReactiveFunction): void {
   /*
    * First build up a map of which instructions are involved in creating which values,
    * and which values are returned.
@@ -123,11 +120,7 @@ export function pruneNonEscapingScopes(
       state.declare(param.place.identifier.id);
     }
   }
-  visitReactiveFunction(
-    fn,
-    new CollectDependenciesVisitor(fn.env, options),
-    state
-  );
+  visitReactiveFunction(fn, new CollectDependenciesVisitor(fn.env), state);
 
   // log(() => prettyFormat(state));
 
@@ -147,6 +140,7 @@ export function pruneNonEscapingScopes(
 
 export type MemoizationOptions = {
   memoizeJsxElements: boolean;
+  forceMemoizePrimitives: boolean;
 };
 
 // Describes how to determine whether a value should be memoized, relative to dependees and dependencies
@@ -468,12 +462,12 @@ function computeMemoizationInputs(
     case "JSXText":
     case "BinaryExpression":
     case "UnaryExpression": {
+      const level = options.forceMemoizePrimitives
+        ? MemoizationLevel.Memoized
+        : MemoizationLevel.Never;
       return {
         // All of these instructions return a primitive value and never need to be memoized
-        lvalues:
-          lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Never }]
-            : [],
+        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
         rvalues: [],
       };
     }
@@ -589,12 +583,12 @@ function computeMemoizationInputs(
     }
     case "ComputedLoad":
     case "PropertyLoad": {
+      const level = options.forceMemoizePrimitives
+        ? MemoizationLevel.Memoized
+        : MemoizationLevel.Conditional;
       return {
         // Indirection for the inner value, memoized if the value is
-        lvalues:
-          lvalue !== null
-            ? [{ place: lvalue, level: MemoizationLevel.Conditional }]
-            : [],
+        lvalues: lvalue !== null ? [{ place: lvalue, level }] : [],
         /*
          * Only the object is aliased to the result, and the result only needs to be
          * memoized if the object is
@@ -768,10 +762,14 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
   env: Environment;
   options: MemoizationOptions;
 
-  constructor(env: Environment, options: MemoizationOptions) {
+  constructor(env: Environment) {
     super();
     this.env = env;
-    this.options = options;
+    this.options = {
+      memoizeJsxElements:
+        this.env.config.memoizeJsxElements && !this.env.config.enableForest,
+      forceMemoizePrimitives: this.env.config.enableForest,
+    };
   }
 
   override visitInstruction(

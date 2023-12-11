@@ -279,11 +279,7 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  let memoizeJsxElements = env.config.memoizeJsxElements;
-  if (env.config.enableForest) {
-    memoizeJsxElements = false;
-  }
-  pruneNonEscapingScopes(reactiveFunction, { memoizeJsxElements });
+  pruneNonEscapingScopes(reactiveFunction);
   yield log({
     kind: "reactive",
     name: "PruneNonEscapingDependencies",
