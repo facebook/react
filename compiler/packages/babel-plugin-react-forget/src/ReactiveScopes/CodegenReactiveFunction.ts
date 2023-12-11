@@ -104,10 +104,15 @@ export function codegenFunction(
   return compileResult;
 }
 
-function codegenReactiveFunction(
-  fn: ReactiveFunction
+export function codegenReactiveFunction(
+  fn: ReactiveFunction,
+  parentContext: Context | null = null
 ): Result<CodegenFunction, CompilerError> {
-  const cx = new Context(fn.env, fn.id ?? "[[ anonymous ]]");
+  const cx = new Context(
+    fn.env,
+    fn.id ?? "[[ anonymous ]]",
+    parentContext?.temp ?? null
+  );
   for (const param of fn.params) {
     if (param.kind === "Identifier") {
       cx.temp.set(param.identifier.id, null);
@@ -184,13 +189,18 @@ class Context {
   fnName: string;
   #nextCacheIndex: number = 0;
   #declarations: Set<IdentifierId> = new Set();
-  temp: Temporaries = new Map();
+  temp: Temporaries;
   errors: CompilerError = new CompilerError();
   objectMethods: Map<IdentifierId, ObjectMethod> = new Map();
 
-  constructor(env: Environment, fnName: string) {
+  constructor(
+    env: Environment,
+    fnName: string,
+    temporaries: Temporaries | null = null
+  ) {
     this.env = env;
     this.fnName = fnName;
+    this.temp = temporaries !== null ? new Map(temporaries) : new Map();
   }
   get nextCacheIndex(): number {
     return this.#nextCacheIndex++;
@@ -1515,7 +1525,7 @@ function codegenInstructionValue(
       pruneUnusedLabels(reactiveFunction);
       pruneUnusedLValues(reactiveFunction);
       renameVariables(reactiveFunction);
-      const fn = codegenReactiveFunction(reactiveFunction).unwrap();
+      const fn = codegenReactiveFunction(reactiveFunction, cx).unwrap();
       if (instrValue.expr.type === "ArrowFunctionExpression") {
         let body: t.BlockStatement | t.Expression = fn.body;
         if (body.body.length === 1) {

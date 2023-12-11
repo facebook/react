@@ -313,10 +313,6 @@ function* runWithEnvironment(
     });
   }
 
-  if (env.config.enableForest) {
-    yield* lowerToForest(reactiveFunction);
-  }
-
   promoteUsedTemporaries(reactiveFunction);
   yield log({
     kind: "reactive",
@@ -354,6 +350,10 @@ function* runWithEnvironment(
 
   if (env.config.validateMemoizedEffectDependencies) {
     validateMemoizedEffectDependencies(reactiveFunction);
+  }
+
+  if (env.config.enableForest) {
+    yield* lowerToForest(reactiveFunction);
   }
 
   const ast = codegenFunction(reactiveFunction).unwrap();

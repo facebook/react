@@ -52,6 +52,7 @@ export async function compile(
   version = compilerVersion;
   const { input, snapshot: expected, snapshotPath: outputPath } = fixture;
   const basename = getBasename(fixture);
+  const expectError = isExpectError(fixture);
 
   // Input will be null if the input file did not exist, in which case the output file
   // is stale
@@ -89,6 +90,9 @@ export async function compile(
         parseConfigPragma
       ).code ?? null;
   } catch (e) {
+    if (isOnlyFixture && !expectError) {
+      console.error(e.stack);
+    }
     e.message = e.message.replace(/\u001b[^m]*m/g, "");
     error = e;
   }
@@ -104,7 +108,7 @@ export async function compile(
   }
 
   let unexpectedError: string | null = null;
-  if (isExpectError(fixture)) {
+  if (expectError) {
     if (error === null) {
       unexpectedError = `Expected an error to be thrown for fixture: '${basename}', remove the 'error.' prefix if an error is not expected.`;
     }
