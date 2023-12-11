@@ -206,6 +206,10 @@ export class ReactiveFunctionVisitor<TState = void> {
   }
 }
 
+export type TransformedValue =
+  | { kind: "keep" }
+  | { kind: "replace"; value: ReactiveValue };
+
 export type Transformed<T> =
   | { kind: "remove" }
   | { kind: "keep" }
@@ -293,6 +297,203 @@ export class ReactiveFunctionTransform<
   ): Transformed<ReactiveStatement> {
     this.visitScope(scope, state);
     return { kind: "keep" };
+  }
+
+  transformValue(
+    id: InstructionId,
+    value: ReactiveValue,
+    state: TState
+  ): TransformedValue {
+    this.visitValue(id, value, state);
+    return { kind: "keep" };
+  }
+
+  override traverseValue(
+    id: InstructionId,
+    value: ReactiveValue,
+    state: TState
+  ): void {
+    switch (value.kind) {
+      case "OptionalExpression": {
+        const nextValue = this.transformValue(id, value.value, state);
+        if (nextValue.kind === "replace") {
+          value.value = nextValue.value;
+        }
+        break;
+      }
+      case "LogicalExpression": {
+        const left = this.transformValue(id, value.left, state);
+        if (left.kind === "replace") {
+          value.left = left.value;
+        }
+        const right = this.transformValue(id, value.right, state);
+        if (right.kind === "replace") {
+          value.right = right.value;
+        }
+        break;
+      }
+      case "ConditionalExpression": {
+        const test = this.transformValue(id, value.test, state);
+        if (test.kind === "replace") {
+          value.test = test.value;
+        }
+        const consequent = this.transformValue(id, value.consequent, state);
+        if (consequent.kind === "replace") {
+          value.consequent = consequent.value;
+        }
+        const alternate = this.transformValue(id, value.alternate, state);
+        if (alternate.kind === "replace") {
+          value.alternate = alternate.value;
+        }
+        break;
+      }
+      case "SequenceExpression": {
+        for (const instr of value.instructions) {
+          this.visitInstruction(instr, state);
+        }
+        const nextValue = this.transformValue(value.id, value.value, state);
+        if (nextValue.kind === "replace") {
+          value.value = nextValue.value;
+        }
+        break;
+      }
+      default: {
+        for (const place of eachReactiveValueOperand(value)) {
+          this.visitPlace(id, place, state);
+        }
+      }
+    }
+  }
+
+  override traverseInstruction(
+    instruction: ReactiveInstruction,
+    state: TState
+  ): void {
+    this.visitID(instruction.id, state);
+    for (const operand of eachInstructionLValue(instruction)) {
+      this.visitLValue(instruction.id, operand, state);
+    }
+    const nextValue = this.transformValue(
+      instruction.id,
+      instruction.value,
+      state
+    );
+    if (nextValue.kind === "replace") {
+      instruction.value = nextValue.value;
+    }
+  }
+
+  override traverseTerminal(
+    stmt: ReactiveTerminalStatement,
+    state: TState
+  ): void {
+    const { terminal } = stmt;
+    if (terminal.id !== null) {
+      this.visitID(terminal.id, state);
+    }
+    switch (terminal.kind) {
+      case "break":
+      case "continue": {
+        break;
+      }
+      case "return": {
+        this.visitPlace(terminal.id, terminal.value, state);
+        break;
+      }
+      case "throw": {
+        this.visitPlace(terminal.id, terminal.value, state);
+        break;
+      }
+      case "for": {
+        const init = this.transformValue(terminal.id, terminal.init, state);
+        if (init.kind === "replace") {
+          terminal.init = init.value;
+        }
+        const test = this.transformValue(terminal.id, terminal.test, state);
+        if (test.kind === "replace") {
+          terminal.test = test.value;
+        }
+        if (terminal.update !== null) {
+          const update = this.transformValue(
+            terminal.id,
+            terminal.update,
+            state
+          );
+          if (update.kind === "replace") {
+            terminal.update = update.value;
+          }
+        }
+        this.visitBlock(terminal.loop, state);
+        break;
+      }
+      case "for-of": {
+        const init = this.transformValue(terminal.id, terminal.init, state);
+        if (init.kind === "replace") {
+          terminal.init = init.value;
+        }
+        this.visitBlock(terminal.loop, state);
+        break;
+      }
+      case "for-in": {
+        const init = this.transformValue(terminal.id, terminal.init, state);
+        if (init.kind === "replace") {
+          terminal.init = init.value;
+        }
+        this.visitBlock(terminal.loop, state);
+        break;
+      }
+      case "do-while": {
+        this.visitBlock(terminal.loop, state);
+        const test = this.transformValue(terminal.id, terminal.test, state);
+        if (test.kind === "replace") {
+          terminal.test = test.value;
+        }
+        break;
+      }
+      case "while": {
+        const test = this.transformValue(terminal.id, terminal.test, state);
+        if (test.kind === "replace") {
+          terminal.test = test.value;
+        }
+        this.visitBlock(terminal.loop, state);
+        break;
+      }
+      case "if": {
+        this.visitPlace(terminal.id, terminal.test, state);
+        this.visitBlock(terminal.consequent, state);
+        if (terminal.alternate !== null) {
+          this.visitBlock(terminal.alternate, state);
+        }
+        break;
+      }
+      case "switch": {
+        this.visitPlace(terminal.id, terminal.test, state);
+        for (const case_ of terminal.cases) {
+          if (case_.test !== null) {
+            this.visitPlace(terminal.id, case_.test, state);
+          }
+          if (case_.block !== undefined) {
+            this.visitBlock(case_.block, state);
+          }
+        }
+        break;
+      }
+      case "label": {
+        this.visitBlock(terminal.block, state);
+        break;
+      }
+      case "try": {
+        this.visitBlock(terminal.block, state);
+        this.visitBlock(terminal.handler, state);
+        break;
+      }
+      default: {
+        assertExhaustive(
+          terminal,
+          `Unexpected terminal kind '${(terminal as any).kind}'`
+        );
+      }
+    }
   }
 }
 

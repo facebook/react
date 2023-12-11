@@ -339,7 +339,13 @@ export function mapInstructionOperands(
   instr: Instruction,
   fn: (place: Place) => Place
 ): void {
-  const instrValue = instr.value;
+  mapInstructionValueOperands(instr.value, fn);
+}
+
+export function mapInstructionValueOperands(
+  instrValue: InstructionValue,
+  fn: (place: Place) => Place
+): void {
   switch (instrValue.kind) {
     case "BinaryExpression": {
       instrValue.left = fn(instrValue.left);
