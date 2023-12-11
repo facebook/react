@@ -22,7 +22,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { useState, unstable_useMemoCache as useMemoCache } from "react";
 function component() {
-  const $ = useMemoCache(4);
+  const $ = useMemoCache(3);
   const [x, setX] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -33,13 +33,12 @@ function component() {
   }
   const handler = t0;
   let t1;
-  if ($[1] !== handler || $[2] !== x) {
+  if ($[1] !== x) {
     t1 = <input onChange={handler} value={x} />;
-    $[1] = handler;
-    $[2] = x;
-    $[3] = t1;
+    $[1] = x;
+    $[2] = t1;
   } else {
-    t1 = $[3];
+    t1 = $[2];
   }
   return t1;
 }

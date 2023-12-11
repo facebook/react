@@ -5,12 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  IdentifierId,
-  ReactiveFunction,
-  ReactiveScopeBlock,
-  isSetStateType,
-} from "../HIR";
+import { IdentifierId, ReactiveFunction, ReactiveScopeBlock } from "../HIR";
 import { collectReactiveIdentifiers } from "./CollectReactiveIdentifiers";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
@@ -34,8 +29,7 @@ class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
   ): void {
     this.traverseScope(scope, state);
     for (const dep of scope.scope.dependencies) {
-      const isReactive =
-        state.has(dep.identifier.id) && !isSetStateType(dep.identifier);
+      const isReactive = state.has(dep.identifier.id);
       if (!isReactive) {
         scope.scope.dependencies.delete(dep);
       }

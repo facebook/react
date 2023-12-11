@@ -15,7 +15,7 @@ function component() {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function component() {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(2);
   const [x, setX] = useState(0);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
@@ -26,12 +26,11 @@ function component() {
   }
   const handler = t0;
   let t1;
-  if ($[1] !== handler) {
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = <Foo handler={handler} />;
-    $[1] = handler;
-    $[2] = t1;
+    $[1] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[1];
   }
   return t1;
 }
