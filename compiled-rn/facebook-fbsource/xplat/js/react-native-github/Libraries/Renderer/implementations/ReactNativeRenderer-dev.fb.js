@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dfd02eaf29e944e9f458476582b7ac96>>
+ * @generated SignedSource<<8bffe72f6c7ee5bca8e6688740fa89a4>>
  */
 
 "use strict";
@@ -2953,6 +2953,8 @@ to return true:wantsResponderID|                            |
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
+    var syncLaneExpirationMs = 250;
+    var transitionLaneExpirationMs = 5000;
     var createRootStrictEffectsByDefault = false;
     var enableLazyContextPropagation = false;
     var enableAsyncActions = false;
@@ -5255,7 +5257,7 @@ to return true:wantsResponderID|                            |
           // to fix the starvation. However, this scenario supports the idea that
           // expiration times are an important safeguard when starvation
           // does happen.
-          return currentTime + 250;
+          return currentTime + syncLaneExpirationMs;
 
         case DefaultHydrationLane:
         case DefaultLane:
@@ -5275,7 +5277,7 @@ to return true:wantsResponderID|                            |
         case TransitionLane13:
         case TransitionLane14:
         case TransitionLane15:
-          return currentTime + 5000;
+          return currentTime + transitionLaneExpirationMs;
 
         case RetryLane1:
         case RetryLane2:
@@ -28208,7 +28210,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-0ae2c000";
+    var ReactVersion = "18.3.0-canary-00e6ae33";
 
     function createPortal$1(
       children,

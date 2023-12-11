@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ad4f3cc032aebbca30e14b6cadc89a2a>>
+ * @generated SignedSource<<1664f9f3eec9720b0472e436e7889c65>>
  */
 
 "use strict";
@@ -143,6 +143,8 @@ if (__DEV__) {
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
     var createRootStrictEffectsByDefault = false;
+    var syncLaneExpirationMs = 250;
+    var transitionLaneExpirationMs = 5000;
     var enableLazyContextPropagation = false;
     var enableLegacyHidden = false;
     var enableAsyncActions = true;
@@ -1389,7 +1391,7 @@ if (__DEV__) {
           // to fix the starvation. However, this scenario supports the idea that
           // expiration times are an important safeguard when starvation
           // does happen.
-          return currentTime + 250;
+          return currentTime + syncLaneExpirationMs;
 
         case DefaultHydrationLane:
         case DefaultLane:
@@ -1409,7 +1411,7 @@ if (__DEV__) {
         case TransitionLane13:
         case TransitionLane14:
         case TransitionLane15:
-          return currentTime + 5000;
+          return currentTime + transitionLaneExpirationMs;
 
         case RetryLane1:
         case RetryLane2:
@@ -25474,7 +25476,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-40f653d13-20231208";
+    var ReactVersion = "18.3.0-canary-0cdfef19b-20231211";
 
     // Might add PROFILE later.
 
