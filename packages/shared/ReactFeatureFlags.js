@@ -130,6 +130,9 @@ export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
  * Enables an expiration time for retry lanes to avoid starvation.
  */
 export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
