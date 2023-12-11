@@ -138,6 +138,8 @@ if (__DEV__) {
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
+    var syncLaneExpirationMs = 250;
+    var transitionLaneExpirationMs = 5000;
     var createRootStrictEffectsByDefault = false;
     var enableLazyContextPropagation = false;
     var enableLegacyHidden = false;
@@ -1491,7 +1493,7 @@ if (__DEV__) {
           // to fix the starvation. However, this scenario supports the idea that
           // expiration times are an important safeguard when starvation
           // does happen.
-          return currentTime + 250;
+          return currentTime + syncLaneExpirationMs;
 
         case DefaultHydrationLane:
         case DefaultLane:
@@ -1511,7 +1513,7 @@ if (__DEV__) {
         case TransitionLane13:
         case TransitionLane14:
         case TransitionLane15:
-          return currentTime + 5000;
+          return currentTime + transitionLaneExpirationMs;
 
         case RetryLane1:
         case RetryLane2:
@@ -25929,7 +25931,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-7278ec4c";
+    var ReactVersion = "18.3.0-www-modern-25845ae4";
 
     // Might add PROFILE later.
 

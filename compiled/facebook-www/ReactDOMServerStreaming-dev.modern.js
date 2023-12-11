@@ -347,7 +347,8 @@ if (__DEV__) {
         dynamicFeatureFlags.enableCustomElementPropertySupport,
       enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
       enableUseDeferredValueInitialArg =
-        dynamicFeatureFlags.enableUseDeferredValueInitialArg; // On WWW, true is used for a new modern build.
+        dynamicFeatureFlags.enableUseDeferredValueInitialArg;
+    // On WWW, true is used for a new modern build.
     var enableFloat = true;
 
     // $FlowFixMe[method-unbinding]

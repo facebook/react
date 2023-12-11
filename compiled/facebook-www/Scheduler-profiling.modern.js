@@ -15,8 +15,11 @@
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart &&
   __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(Error());
-var enableProfilingFeatureFlag =
-  require("SchedulerFeatureFlags").enableProfiling;
+var dynamicFeatureFlags = require("SchedulerFeatureFlags"),
+  enableProfilingFeatureFlag = dynamicFeatureFlags.enableProfiling,
+  userBlockingPriorityTimeout = dynamicFeatureFlags.userBlockingPriorityTimeout,
+  normalPriorityTimeout = dynamicFeatureFlags.normalPriorityTimeout,
+  lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout;
 function push(heap, node) {
   var index = heap.length;
   heap.push(node);
@@ -422,16 +425,16 @@ exports.unstable_scheduleCallback = function (
       var timeout = -1;
       break;
     case 2:
-      timeout = 250;
+      timeout = userBlockingPriorityTimeout;
       break;
     case 5:
       timeout = 1073741823;
       break;
     case 4:
-      timeout = 1e4;
+      timeout = lowPriorityTimeout;
       break;
     default:
-      timeout = 5e3;
+      timeout = normalPriorityTimeout;
   }
   timeout = options + timeout;
   priorityLevel = {

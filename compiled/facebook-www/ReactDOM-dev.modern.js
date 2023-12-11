@@ -134,7 +134,11 @@ if (__DEV__) {
       disableSchedulerTimeoutInWorkLoop =
         dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
       enableUseDeferredValueInitialArg =
-        dynamicFeatureFlags.enableUseDeferredValueInitialArg; // On WWW, true is used for a new modern build.
+        dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+      retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
+      syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
+      transitionLaneExpirationMs =
+        dynamicFeatureFlags.transitionLaneExpirationMs; // On WWW, true is used for a new modern build.
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
@@ -1498,7 +1502,7 @@ if (__DEV__) {
           // to fix the starvation. However, this scenario supports the idea that
           // expiration times are an important safeguard when starvation
           // does happen.
-          return currentTime + 250;
+          return currentTime + syncLaneExpirationMs;
 
         case DefaultHydrationLane:
         case DefaultLane:
@@ -1518,7 +1522,7 @@ if (__DEV__) {
         case TransitionLane13:
         case TransitionLane14:
         case TransitionLane15:
-          return currentTime + 5000;
+          return currentTime + transitionLaneExpirationMs;
 
         case RetryLane1:
         case RetryLane2:
@@ -1529,7 +1533,9 @@ if (__DEV__) {
           // crashes. There must be some other underlying bug; not super urgent but
           // ideally should figure out why and fix it. Unfortunately we don't have
           // a repro for the crashes, only detected via production metrics.
-          return enableRetryLaneExpiration ? currentTime + 5000 : NoTimestamp;
+          return enableRetryLaneExpiration
+            ? currentTime + retryLaneExpirationMs
+            : NoTimestamp;
 
         case SelectiveHydrationLane:
         case IdleHydrationLane:
@@ -34714,7 +34720,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-c3c79046";
+    var ReactVersion = "18.3.0-www-modern-67189941";
 
     function createPortal$1(
       children,

@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-0699b388";
+    var ReactVersion = "18.3.0-www-classic-4929d908";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -350,7 +350,8 @@ if (__DEV__) {
         dynamicFeatureFlags.enableCustomElementPropertySupport,
       enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
       enableUseDeferredValueInitialArg =
-        dynamicFeatureFlags.enableUseDeferredValueInitialArg; // On WWW, false is used for a new modern build.
+        dynamicFeatureFlags.enableUseDeferredValueInitialArg;
+    // On WWW, false is used for a new modern build.
     var enableFloat = true;
 
     // $FlowFixMe[method-unbinding]

@@ -24,8 +24,14 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var _require = require("SchedulerFeatureFlags"), // $FlowFixMe[cannot-resolve-module]
-      enableProfilingFeatureFlag = _require.enableProfiling;
+    // $FlowFixMe[cannot-resolve-module]
+    var dynamicFeatureFlags = require("SchedulerFeatureFlags");
+
+    var enableProfilingFeatureFlag = dynamicFeatureFlags.enableProfiling;
+    var userBlockingPriorityTimeout =
+        dynamicFeatureFlags.userBlockingPriorityTimeout,
+      normalPriorityTimeout = dynamicFeatureFlags.normalPriorityTimeout,
+      lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout;
     var enableProfiling = enableProfilingFeatureFlag;
     var enableIsInputPendingContinuous = true;
     var frameYieldMs = 5;
@@ -268,15 +274,7 @@ if (__DEV__) {
     // Math.pow(2, 30) - 1
     // 0b111111111111111111111111111111
 
-    var maxSigned31BitInt = 1073741823; // Times out immediately
-
-    var IMMEDIATE_PRIORITY_TIMEOUT = -1; // Eventually times out
-
-    var USER_BLOCKING_PRIORITY_TIMEOUT = 250;
-    var NORMAL_PRIORITY_TIMEOUT = 5000;
-    var LOW_PRIORITY_TIMEOUT = 10000; // Never times out
-
-    var IDLE_PRIORITY_TIMEOUT = maxSigned31BitInt; // Tasks are stored on a min heap
+    var maxSigned31BitInt = 1073741823; // Tasks are stored on a min heap
 
     var taskQueue = [];
     var timerQueue = []; // Incrementing id counter. Used to maintain insertion order.
@@ -567,24 +565,29 @@ if (__DEV__) {
 
       switch (priorityLevel) {
         case ImmediatePriority:
-          timeout = IMMEDIATE_PRIORITY_TIMEOUT;
+          // Times out immediately
+          timeout = -1;
           break;
 
         case UserBlockingPriority:
-          timeout = USER_BLOCKING_PRIORITY_TIMEOUT;
+          // Eventually times out
+          timeout = userBlockingPriorityTimeout;
           break;
 
         case IdlePriority:
-          timeout = IDLE_PRIORITY_TIMEOUT;
+          // Never times out
+          timeout = maxSigned31BitInt;
           break;
 
         case LowPriority:
-          timeout = LOW_PRIORITY_TIMEOUT;
+          // Eventually times out
+          timeout = lowPriorityTimeout;
           break;
 
         case NormalPriority:
         default:
-          timeout = NORMAL_PRIORITY_TIMEOUT;
+          // Eventually times out
+          timeout = normalPriorityTimeout;
           break;
       }
 

@@ -16,8 +16,10 @@ if (__DEV__) {
   (function () {
     "use strict";
 
-    var _require = require("SchedulerFeatureFlags"), // $FlowFixMe[cannot-resolve-module]
-      enableProfilingFeatureFlag = _require.enableProfiling;
+    // $FlowFixMe[cannot-resolve-module]
+    var dynamicFeatureFlags = require("SchedulerFeatureFlags");
+
+    var enableProfilingFeatureFlag = dynamicFeatureFlags.enableProfiling;
     var enableProfiling = enableProfilingFeatureFlag;
 
     function push(heap, node) {

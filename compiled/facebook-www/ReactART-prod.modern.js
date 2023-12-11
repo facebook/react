@@ -80,6 +80,9 @@ var ReactSharedInternals =
     dynamicFeatureFlags.disableSchedulerTimeoutInWorkLoop,
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+  retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
+  syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
+  transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -370,7 +373,7 @@ function computeExpirationTime(lane, currentTime) {
     case 2:
     case 4:
     case 8:
-      return currentTime + 250;
+      return currentTime + syncLaneExpirationMs;
     case 16:
     case 32:
     case 64:
@@ -389,12 +392,14 @@ function computeExpirationTime(lane, currentTime) {
     case 524288:
     case 1048576:
     case 2097152:
-      return currentTime + 5e3;
+      return currentTime + transitionLaneExpirationMs;
     case 4194304:
     case 8388608:
     case 16777216:
     case 33554432:
-      return enableRetryLaneExpiration ? currentTime + 5e3 : -1;
+      return enableRetryLaneExpiration
+        ? currentTime + retryLaneExpirationMs
+        : -1;
     case 67108864:
     case 134217728:
     case 268435456:
@@ -9908,7 +9913,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-bc6ddf84",
+    version: "18.3.0-www-modern-6fb46ffb",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1302 = {
@@ -9939,7 +9944,7 @@ var internals$jscomp$inline_1302 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-bc6ddf84"
+  reconcilerVersion: "18.3.0-www-modern-6fb46ffb"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1303 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
