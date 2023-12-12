@@ -26,7 +26,7 @@ export const FIXTURE_ENTRYPOINT = {
 import { unstable_useMemoCache as useMemoCache } from "react";
 import { createHookWrapper, mutateAndReturn } from "shared-runtime";
 function useHook(t18) {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(4);
   const { value } = t18;
   let t0;
   if ($[0] !== value) {
@@ -38,15 +38,16 @@ function useHook(t18) {
   }
   const x = t0;
   let t1;
-  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[2] !== x) {
     t1 = {
       getValue() {
         return x;
       },
     };
-    $[2] = t1;
+    $[2] = x;
+    $[3] = t1;
   } else {
-    t1 = $[2];
+    t1 = $[3];
   }
   const obj = t1;
   return obj;

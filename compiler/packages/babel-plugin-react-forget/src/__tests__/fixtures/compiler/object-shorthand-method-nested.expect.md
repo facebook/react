@@ -35,11 +35,11 @@ import { useState, unstable_useMemoCache as useMemoCache } from "react";
 import { createHookWrapper } from "shared-runtime";
 
 function useHook(t21) {
-  const $ = useMemoCache(1);
+  const $ = useMemoCache(3);
   const { value } = t21;
   const [state] = useState(false);
   let t0;
-  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+  if ($[0] !== value || $[1] !== state) {
     t0 = {
       getX() {
         return {
@@ -51,9 +51,11 @@ function useHook(t21) {
         };
       },
     };
-    $[0] = t0;
+    $[0] = value;
+    $[1] = state;
+    $[2] = t0;
   } else {
-    t0 = $[0];
+    t0 = $[2];
   }
   return t0;
 }

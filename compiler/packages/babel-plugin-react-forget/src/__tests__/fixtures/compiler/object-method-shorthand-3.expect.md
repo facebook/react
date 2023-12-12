@@ -25,17 +25,28 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
 import { createHookWrapper, mutate } from "shared-runtime";
 
 function useHook(a) {
-  const x = { a };
-  const obj = {
-    method() {
-      mutate(x);
-      return x;
-    },
-  };
-  return obj.method();
+  const $ = useMemoCache(2);
+  let t0;
+  if ($[0] !== a) {
+    const x = { a };
+    const obj = {
+      method() {
+        mutate(x);
+        return x;
+      },
+    };
+
+    t0 = obj.method();
+    $[0] = a;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  return t0;
 }
 
 export const FIXTURE_ENTRYPOINT = {

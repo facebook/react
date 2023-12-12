@@ -28,7 +28,7 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 import { createHookWrapper } from "shared-runtime";
 
 function useHook(t16) {
-  const $ = useMemoCache(7);
+  const $ = useMemoCache(8);
   const { a, b, c } = t16;
   let t0;
   if ($[0] !== a) {
@@ -38,16 +38,16 @@ function useHook(t16) {
   } else {
     t0 = $[1];
   }
-  let t1;
-  if ($[2] !== c) {
-    t1 = { c };
-    $[2] = c;
-    $[3] = t1;
-  } else {
-    t1 = $[3];
-  }
   let t2;
-  if ($[4] !== t0 || $[5] !== t1) {
+  if ($[2] !== b || $[3] !== c || $[4] !== t0) {
+    let t1;
+    if ($[6] !== c) {
+      t1 = { c };
+      $[6] = c;
+      $[7] = t1;
+    } else {
+      t1 = $[7];
+    }
     t2 = {
       x: t0,
       y() {
@@ -55,11 +55,12 @@ function useHook(t16) {
       },
       z: t1,
     };
+    $[2] = b;
+    $[3] = c;
     $[4] = t0;
-    $[5] = t1;
-    $[6] = t2;
+    $[5] = t2;
   } else {
-    t2 = $[6];
+    t2 = $[5];
   }
   return t2;
 }

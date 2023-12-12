@@ -68,6 +68,12 @@ export function Set_union<T>(a: Set<T>, b: Set<T>): Set<T> {
   return union;
 }
 
+export function nonNull<T extends NonNullable<U>, U>(
+  value: T | null | undefined
+): value is T {
+  return value != null;
+}
+
 export function hasNode<T>(
   input: NodePath<T | null | undefined>
 ): input is NodePath<NonNullable<T>> {

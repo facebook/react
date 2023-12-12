@@ -35,6 +35,7 @@ import {
 } from "../Optimization";
 import {
   CodegenFunction,
+  alignObjectMethodScopes,
   alignReactiveScopesToBlockScopes,
   assertScopeInstructionsWithinScopes,
   buildReactiveBlocks,
@@ -43,7 +44,6 @@ import {
   extractScopeDeclarationsFromDestructuring,
   flattenReactiveLoops,
   flattenScopesWithHooks,
-  flattenScopesWithObjectMethods,
   inferReactiveScopeVariables,
   memoizeFbtOperandsInSameScope,
   mergeOverlappingReactiveScopes,
@@ -198,6 +198,13 @@ function* runWithEnvironment(
   inferReactiveScopeVariables(hir);
   yield log({ kind: "hir", name: "InferReactiveScopeVariables", value: hir });
 
+  alignObjectMethodScopes(hir);
+  yield log({
+    kind: "hir",
+    name: "AlignObjectMethodScopes",
+    value: hir,
+  });
+
   const reactiveFunction = buildReactiveFunction(hir);
   yield log({
     kind: "reactive",
@@ -262,13 +269,6 @@ function* runWithEnvironment(
   yield log({
     kind: "reactive",
     name: "FlattenScopesWithHooks",
-    value: reactiveFunction,
-  });
-
-  flattenScopesWithObjectMethods(reactiveFunction);
-  yield log({
-    kind: "reactive",
-    name: "FlattenScopesWithObjectMethods",
     value: reactiveFunction,
   });
 

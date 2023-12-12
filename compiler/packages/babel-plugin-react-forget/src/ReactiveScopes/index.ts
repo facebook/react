@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export { alignObjectMethodScopes } from "./AlignObjectMethodScopes";
 export { alignReactiveScopesToBlockScopes } from "./AlignReactiveScopesToBlockScopes";
 export { assertScopeInstructionsWithinScopes } from "./AssertScopeInstructionsWithinScope";
 export { buildReactiveBlocks } from "./BuildReactiveBlocks";
@@ -16,7 +17,6 @@ export {
 export { extractScopeDeclarationsFromDestructuring } from "./ExtractScopeDeclarationsFromDestructuring";
 export { flattenReactiveLoops } from "./FlattenReactiveLoops";
 export { flattenScopesWithHooks } from "./FlattenScopesWithHooks";
-export { flattenScopesWithObjectMethods } from "./FlattenScopesWithObjectMethods";
 export { inferReactiveScopeVariables } from "./InferReactiveScopeVariables";
 export { memoizeFbtOperandsInSameScope } from "./MemoizeFbtOperandsInSameScope";
 export { mergeOverlappingReactiveScopes } from "./MergeOverlappingReactiveScopes";
