@@ -20,7 +20,7 @@ ${s}
 export function writeOutputToString(
   input: string,
   output: string | null,
-  error: Error | null
+  errorMessage: string | null
 ) {
   // leading newline intentional
   let result = `
@@ -39,13 +39,11 @@ ${output == null ? "[ none ]" : wrapWithTripleBackticks(output, "javascript")}
     result += "\n";
   }
 
-  if (error != null) {
-    const errorMessage = error.message.replace(/^\/.*?:\s/, "");
-
+  if (errorMessage != null) {
     result += `
 ## Error
 
-${wrapWithTripleBackticks(errorMessage)}
+${wrapWithTripleBackticks(errorMessage.replace(/^\/.*?:\s/, ""))}
           \n`;
   }
   return result + `      `;

@@ -66,7 +66,7 @@ export async function compile(
   }
 
   let code: string | null = null;
-  let error: Error | null = null;
+  let error: string | null = null;
   try {
     // NOTE: we intentionally require lazily here so that we can clear the require cache
     // and load fresh versions of the compiler when `compilerVersion` changes.
@@ -93,17 +93,15 @@ export async function compile(
     if (isOnlyFixture && !expectError) {
       console.error(e.stack);
     }
-    e.message = e.message.replace(/\u001b[^m]*m/g, "");
-    error = e;
+    error = e.message.replace(/\u001b[^m]*m/g, "");
   }
 
   // Promote console errors so they can be recorded in fixture output
   for (const consoleError of seenConsoleErrors) {
     if (error != null) {
-      error.message = `${error.message}\n\n${consoleError}`;
+      error = `${error}\n\n${consoleError}`;
     } else {
-      error = new Error(consoleError);
-      error.name = "ConsoleError";
+      error = `ConsoleError: ${consoleError}`;
     }
   }
 
@@ -114,7 +112,7 @@ export async function compile(
     }
   } else {
     if (error !== null) {
-      unexpectedError = `Expected fixture '${basename}' to succeed but it failed with error:\n\n${error.message}`;
+      unexpectedError = `Expected fixture '${basename}' to succeed but it failed with error:\n\n${error}`;
     } else if (code == null || code.length === 0) {
       unexpectedError = `Expected output for fixture '${basename}'.`;
     }
