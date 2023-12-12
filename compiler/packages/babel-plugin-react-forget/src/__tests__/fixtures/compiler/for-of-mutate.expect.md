@@ -2,13 +2,19 @@
 ## Input
 
 ```javascript
-import { makeObject_Primitives, mutate, Stringify } from "shared-runtime";
+import {
+  makeObject_Primitives,
+  mutateAndReturn,
+  Stringify,
+} from "shared-runtime";
 
 function Component(_props) {
   const collection = [makeObject_Primitives()];
   const results = [];
   for (const item of collection) {
-    results.push(<div key={Stringify(item)}>{Stringify(mutate(item))}</div>);
+    results.push(
+      <div key={Stringify(item)}>{Stringify(mutateAndReturn(item))}</div>
+    );
   }
   return <div>{results}</div>;
 }
@@ -25,7 +31,11 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-import { makeObject_Primitives, mutate, Stringify } from "shared-runtime";
+import {
+  makeObject_Primitives,
+  mutateAndReturn,
+  Stringify,
+} from "shared-runtime";
 
 function Component(_props) {
   const $ = useMemoCache(1);
@@ -34,7 +44,9 @@ function Component(_props) {
     const collection = [makeObject_Primitives()];
     const results = [];
     for (const item of collection) {
-      results.push(<div key={Stringify(item)}>{Stringify(mutate(item))}</div>);
+      results.push(
+        <div key={Stringify(item)}>{Stringify(mutateAndReturn(item))}</div>
+      );
     }
 
     t0 = <div>{results}</div>;
@@ -54,4 +66,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) <div><div><div></div></div></div>
+(kind: ok) <div><div><div>{"a":0,"b":"value1","c":true,"wat0":"joe"}</div></div></div>
