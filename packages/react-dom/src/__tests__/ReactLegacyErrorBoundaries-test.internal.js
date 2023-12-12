@@ -832,6 +832,7 @@ describe('ReactLegacyErrorBoundaries', () => {
   });
 
   if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+    // @gate !disableLegacyContext
     // @gate !disableLegacyMode
     it('renders an error state if module-style context provider throws in componentWillMount', () => {
       function BrokenComponentWillMountWithContext() {

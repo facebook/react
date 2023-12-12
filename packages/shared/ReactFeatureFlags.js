@@ -140,8 +140,8 @@ export const transitionLaneExpirationMs = 5000;
 // -----------------------------------------------------------------------------
 const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
-// Not ready to break experimental yet.
-export const disableLegacyContext = false;
+// Removes legacy style context
+export const disableLegacyContext = __NEXT_MAJOR__;
 
 // Not ready to break experimental yet.
 // Disable javascript: URL strings in href for XSS protection.
