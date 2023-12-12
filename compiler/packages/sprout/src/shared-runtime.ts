@@ -6,7 +6,7 @@
  */
 
 import { IntlVariations, IntlViewerContext, init } from "fbt";
-import React from "react";
+import React, { FunctionComponent } from "react";
 
 /**
  * This file is meant for use by `runner-evaluator` and fixture tests.
@@ -81,7 +81,7 @@ export function mutateAndReturnNewValue<T>(arg: T): string {
 export function setProperty(arg: any, property: any): void {
   // don't mutate primitive
   if (typeof arg === null || typeof arg !== "object") {
-    return;
+    return arg;
   }
 
   let count: number = 0;
@@ -90,7 +90,7 @@ export function setProperty(arg: any, property: any): void {
     key = "wat" + count;
     if (!Object.hasOwn(arg, key)) {
       arg[key] = property;
-      return;
+      return arg;
     }
     count++;
   }
@@ -195,16 +195,39 @@ export function RenderPropAsChild(props: {
 }
 
 export function Stringify(props: any): React.ReactElement {
-  return React.createElement("div", null, toJSON(props));
+  return React.createElement(
+    "div",
+    null,
+    toJSON(props, props?.shouldInvokeFns)
+  );
+}
+
+export function createHookWrapper<TProps, TRet>(
+  useMaybeHook: (props: TProps) => TRet
+): FunctionComponent<TProps> {
+  return function Component(props: TProps): React.ReactElement {
+    const result = useMaybeHook(props);
+    return Stringify({
+      result: result,
+      shouldInvokeFns: true,
+    });
+  };
 }
 
 // helper functions
-export function toJSON(value: any) {
+export function toJSON(value: any, invokeFns: boolean = false) {
   const seen = new Map();
 
   return JSON.stringify(value, (_key: string, val: any) => {
     if (typeof val === "function") {
-      return `[[ function params=${val.length} ]]`;
+      if (val.length === 0 && invokeFns) {
+        return {
+          kind: "Function",
+          result: val(),
+        };
+      } else {
+        return `[[ function params=${val.length} ]]`;
+      }
     } else if (typeof val === "object") {
       let id = seen.get(val);
       if (id != null) {
@@ -235,5 +258,5 @@ export const ObjectWithHooks = {
   },
   useIdentity<T>(arg: T): T {
     return arg;
-  }
+  },
 };

@@ -1,5 +1,5 @@
-// @debug
-function Component({ a, b }) {
+import { createHookWrapper } from "shared-runtime";
+function useHook({ a, b }) {
   return {
     x: function () {
       return [a];
@@ -11,6 +11,6 @@ function Component({ a, b }) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
-  params: [{ x: 1 }, { a: 2 }],
+  fn: createHookWrapper(useHook),
+  params: [{ a: 1, b: 2 }],
 };

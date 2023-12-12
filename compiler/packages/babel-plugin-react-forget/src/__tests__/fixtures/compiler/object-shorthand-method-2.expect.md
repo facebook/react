@@ -2,7 +2,9 @@
 ## Input
 
 ```javascript
-function Component({ a, b, c }) {
+import { createHookWrapper } from "shared-runtime";
+
+function useHook({ a, b, c }) {
   return {
     x: [a],
     y() {
@@ -13,8 +15,8 @@ function Component({ a, b, c }) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
-  params: [{ x: 1 }, { a: 2 }, { b: 2 }],
+  fn: createHookWrapper(useHook),
+  params: [{ a: 1, b: 2, c: 2 }],
 };
 
 ```
@@ -23,7 +25,9 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function Component(t16) {
+import { createHookWrapper } from "shared-runtime";
+
+function useHook(t16) {
   const $ = useMemoCache(7);
   const { a, b, c } = t16;
   let t0;
@@ -61,11 +65,11 @@ function Component(t16) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
-  params: [{ x: 1 }, { a: 2 }, { b: 2 }],
+  fn: createHookWrapper(useHook),
+  params: [{ a: 1, b: 2, c: 2 }],
 };
 
 ```
       
 ### Eval output
-(kind: ok) {"x":[null],"y":"[[ function params=0 ]]","z":{}}
+(kind: ok) <div>{"result":{"x":[1],"y":{"kind":"Function","result":[2]},"z":{"c":2}},"shouldInvokeFns":true}</div>

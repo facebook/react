@@ -2,9 +2,9 @@
 ## Input
 
 ```javascript
-import { mutate } from "shared-runtime";
+import { createHookWrapper, mutate } from "shared-runtime";
 
-function Component(a) {
+function useHook(a) {
   const x = { a };
   let obj = {
     method() {
@@ -16,7 +16,7 @@ function Component(a) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
+  fn: createHookWrapper(useHook),
   params: [{ x: 1 }],
 };
 
@@ -25,9 +25,9 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { mutate } from "shared-runtime";
+import { createHookWrapper, mutate } from "shared-runtime";
 
-function Component(a) {
+function useHook(a) {
   const x = { a };
   const obj = {
     method() {
@@ -39,11 +39,11 @@ function Component(a) {
 }
 
 export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
+  fn: createHookWrapper(useHook),
   params: [{ x: 1 }],
 };
 
 ```
       
 ### Eval output
-(kind: ok) {"a":{"x":1},"wat0":"joe"}
+(kind: ok) <div>{"result":{"a":{"x":1},"wat0":"joe"},"shouldInvokeFns":true}</div>
