@@ -235,7 +235,8 @@ export function getChildHostContext(
     type === 'RCTMultilineTextInputView' || // iOS
     type === 'RCTSinglelineTextInputView' || // iOS
     type === 'RCTText' ||
-    type === 'RCTVirtualText';
+    type === 'RCTVirtualText' ||
+    type === 'RCTTextImproved';
 
   // TODO: If this is an offscreen host container, we should reuse the
   // parent context.

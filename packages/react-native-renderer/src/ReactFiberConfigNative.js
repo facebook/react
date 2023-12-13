@@ -208,7 +208,8 @@ export function getChildHostContext(
     type === 'RCTMultilineTextInputView' || // iOS
     type === 'RCTSinglelineTextInputView' || // iOS
     type === 'RCTText' ||
-    type === 'RCTVirtualText';
+    type === 'RCTVirtualText' ||
+    type === 'RCTTextImproved';
 
   if (prevIsInAParentText !== isInAParentText) {
     return {isInAParentText};
