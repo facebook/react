@@ -37,5 +37,4 @@ export {
   useDebugValue,
   useMemo,
   version,
-  unstable_useMemoCache,
 } from './React';

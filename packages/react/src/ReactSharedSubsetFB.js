@@ -8,4 +8,5 @@
  */
 
 export * from './ReactSharedSubset';
+export {unstable_useMemoCache} from './React';
 export {jsx, jsxs, jsxDEV} from './jsx/ReactJSX';
