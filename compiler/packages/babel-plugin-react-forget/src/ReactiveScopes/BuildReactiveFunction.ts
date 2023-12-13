@@ -940,12 +940,14 @@ class Driver {
       case "optional": {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
-        CompilerError.invariant(testBlock.terminal.kind === "branch", {
-          reason: `Unexpected terminal kind '${testBlock.terminal.kind}' for optional call test block`,
-          description: null,
-          loc: testBlock.terminal.loc,
-          suggestions: null,
-        });
+        if (testBlock.terminal.kind !== "branch") {
+          CompilerError.throwTodo({
+            reason: `Unexpected terminal kind '${testBlock.terminal.kind}' for optional test block`,
+            description: null,
+            loc: testBlock.terminal.loc,
+            suggestions: null,
+          });
+        }
         const consequent = this.visitValueBlock(
           testBlock.terminal.consequent,
           terminal.loc
@@ -980,12 +982,14 @@ class Driver {
       case "logical": {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
-        CompilerError.invariant(testBlock.terminal.kind === "branch", {
-          reason: `Unexpected terminal kind '${testBlock.terminal.kind}' for logical test block`,
-          description: null,
-          loc: testBlock.terminal.loc,
-          suggestions: null,
-        });
+        if (testBlock.terminal.kind !== "branch") {
+          CompilerError.throwTodo({
+            reason: `Unexpected terminal kind '${testBlock.terminal.kind}' for logical test block`,
+            description: null,
+            loc: testBlock.terminal.loc,
+            suggestions: null,
+          });
+        }
 
         const leftFinal = this.visitValueBlock(
           testBlock.terminal.consequent,
@@ -1026,12 +1030,14 @@ class Driver {
       case "ternary": {
         const test = this.visitValueBlock(terminal.test, terminal.loc);
         const testBlock = this.cx.ir.blocks.get(test.block)!;
-        CompilerError.invariant(testBlock.terminal.kind === "branch", {
-          reason: `Unexpected terminal kind '${testBlock.terminal.kind}' for ternary test block`,
-          description: null,
-          loc: testBlock.terminal.loc,
-          suggestions: null,
-        });
+        if (testBlock.terminal.kind !== "branch") {
+          CompilerError.throwTodo({
+            reason: `Unexpected terminal kind '${testBlock.terminal.kind}' for ternary test block`,
+            description: null,
+            loc: testBlock.terminal.loc,
+            suggestions: null,
+          });
+        }
         const consequent = this.visitValueBlock(
           testBlock.terminal.consequent,
           terminal.loc

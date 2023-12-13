@@ -6,7 +6,7 @@ import { useNoAlias } from "shared-runtime";
 
 function useFoo(props: { value: { x: string; y: string } | null }) {
   const value = props.value;
-  return useNoAlias(value?.x, value?.y) ?? {};
+  return useNoAlias(value?.x, value?.y) ? {} : null;
 }
 
 export const FIXTURE_ENTRYPONT = {
@@ -20,7 +20,7 @@ export const FIXTURE_ENTRYPONT = {
 ## Error
 
 ```
-[ReactForget] Invariant: Unexpected terminal kind 'optional' for logical test block (5:5)
+[ReactForget] Todo: Unexpected terminal kind 'optional' for ternary test block (5:5)
 ```
           
       
