@@ -17,6 +17,7 @@ import {
   HIRFunction,
   IdentifierId,
   Place,
+  SourceLocation,
   getHookKind,
 } from "../HIR/HIR";
 import {
@@ -109,32 +110,47 @@ export function validateHooksUsage(fn: HIRFunction): void {
     current = dominators.get(current);
   }
 
-  const errors = new CompilerError();
+  const errorsByPlace = new Map<SourceLocation, CompilerErrorDetail>();
   function recordConditionalHookError(place: Place): void {
+    // Once a particular hook has a conditional call error, don't report any further issues for this hook
     setKind(place, Kind.Error);
-    errors.pushErrorDetail(
-      new CompilerErrorDetail({
-        description: null,
-        reason:
-          "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
-        loc: place.loc,
-        severity: ErrorSeverity.InvalidReact,
-        suggestions: null,
-      })
-    );
+
+    const reason =
+      "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)";
+    const previousError = errorsByPlace.get(place.loc);
+
+    /*
+     * In some circumstances such as optional calls, we may first encounter a "hook may not be referenced as normal values" error.
+     * If that same place is also used as a conditional call, upgrade the error to a conditonal hook error
+     */
+    if (previousError === undefined || previousError.reason !== reason) {
+      errorsByPlace.set(
+        place.loc,
+        new CompilerErrorDetail({
+          description: null,
+          reason:
+            "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
+          loc: place.loc,
+          severity: ErrorSeverity.InvalidReact,
+          suggestions: null,
+        })
+      );
+    }
   }
   function recordInvalidHookUsageError(place: Place): void {
-    setKind(place, Kind.Error);
-    errors.pushErrorDetail(
-      new CompilerErrorDetail({
-        description: null,
-        reason:
-          "Hooks may not be referenced as normal values, they must be called. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
-        loc: typeof place.loc !== "symbol" ? place.loc : null,
-        severity: ErrorSeverity.InvalidReact,
-        suggestions: null,
-      })
-    );
+    if (!errorsByPlace.has(place.loc)) {
+      errorsByPlace.set(
+        place.loc,
+        new CompilerErrorDetail({
+          description: null,
+          reason:
+            "Hooks may not be referenced as normal values, they must be called. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
+          loc: place.loc,
+          severity: ErrorSeverity.InvalidReact,
+          suggestions: null,
+        })
+      );
+    }
   }
 
   const valueKinds = new Map<IdentifierId, Kind>();
@@ -374,6 +390,10 @@ export function validateHooksUsage(fn: HIRFunction): void {
     }
   }
 
+  const errors = new CompilerError();
+  for (const [, error] of errorsByPlace) {
+    errors.push(error);
+  }
   if (errors.hasErrors()) {
     throw errors;
   }
