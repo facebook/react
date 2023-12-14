@@ -1,27 +1,15 @@
 /* global chrome */
-
 import type {BrowserTheme} from 'react-devtools-shared/src/devtools/views/DevTools';
-
 export let IS_EDGE;
 export let IS_FIREFOX;
 export let IS_CHROME;
-
 function getBrowserData() {
   if (navigator.userAgentData) {
-    navigator.userAgentData.brands.forEach(item => {
-      switch (item.brand.toLowerCase()) {
-        case 'google chrome':
-          IS_CHROME = true;
-          break;
-        case 'firefox':
-          IS_FIREFOX = true;
-          break;
-        case 'edge':
-          IS_EDGE = true;
-          break;
-      }
-    });
-} else {
+    const brandItems = navigator.userAgentData.brands;
+    IS_EDGE = brandItems.some(item => item.brand === 'Microsoft Edge');
+    IS_FIREFOX = brandItems.some(item => item.brand === 'Mozilla Firefox');
+    IS_CHROME = brandItems.some(item => item.brand === 'Google Chrome');
+  } else {
     IS_EDGE = navigator.userAgent.indexOf('Edg') >= 0;
     IS_FIREFOX = navigator.userAgent.indexOf('Firefox') >= 0;
     IS_CHROME = IS_EDGE === false && IS_FIREFOX === false;
@@ -29,9 +17,7 @@ function getBrowserData() {
 }
 
 getBrowserData();
-
 export type BrowserName = 'Chrome' | 'Firefox' | 'Edge';
-
 export function getBrowserName(): BrowserName {
   if (IS_EDGE) {
     return 'Edge';
@@ -65,6 +51,5 @@ export function getBrowserTheme(): BrowserTheme {
     }
   }
 }
-
 export const COMPACT_VERSION_NAME = 'compact';
 export const EXTENSION_CONTAINED_VERSIONS = [COMPACT_VERSION_NAME];
