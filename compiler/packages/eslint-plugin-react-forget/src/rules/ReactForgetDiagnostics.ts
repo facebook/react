@@ -12,6 +12,8 @@ import type { SourceLocation as BabelSourceLocation } from "@babel/types";
 import ReactForgetBabelPlugin, {
   CompilerSuggestionOperation,
   ErrorSeverity,
+  parsePluginOptions,
+  validateEnvironmentConfig,
   type CompilerError,
   type CompilerErrorDetail,
   type PluginOptions,
@@ -22,8 +24,6 @@ import * as HermesParser from "hermes-parser";
 type CompilerErrorDetailWithLoc = Omit<CompilerErrorDetail, "loc"> & {
   loc: BabelSourceLocation;
 };
-
-type UserProvidedLogger = (...args: unknown[]) => void;
 
 function assertExhaustive(_: never, errorMsg: string): never {
   throw new Error(errorMsg);
@@ -61,10 +61,6 @@ const COMPILER_OPTIONS: Partial<PluginOptions> = {
   noEmit: true,
   compilationMode: "infer",
   panicThreshold: "CRITICAL_ERRORS",
-  environment: {
-    validateHooksUsage: true,
-    validateNoSetStateInRender: true,
-  },
 };
 
 const rule: Rule.RuleModule = {
@@ -76,18 +72,25 @@ const rule: Rule.RuleModule = {
     },
     fixable: "code",
     hasSuggestions: true,
+    // validation is done at runtime with zod
+    schema: [{ type: "object", additionalProperties: true }],
   },
   create(context: Rule.RuleContext) {
-    let logger: UserProvidedLogger | null = null;
-    if (
-      context.options[0] != null &&
-      typeof context.options[0] === "function"
-    ) {
-      logger = context.options[0];
-    }
     // Compat with older versions of eslint
     const sourceCode = context.sourceCode?.text ?? context.getSourceCode().text;
     const filename = context.filename ?? context.getFilename();
+    const options: PluginOptions = {
+      ...parsePluginOptions(context.options[0] ?? {}),
+      ...COMPILER_OPTIONS,
+    };
+
+    try {
+      options.environment = validateEnvironmentConfig(
+        options.environment ?? {}
+      );
+    } catch (err) {
+      options.logger?.logEvent("", err);
+    }
 
     const babelAST = HermesParser.parse(sourceCode, {
       babel: true,
@@ -103,7 +106,7 @@ const rule: Rule.RuleModule = {
           retainLines: true,
           plugins: [
             [PluginProposalPrivateMethods, { loose: true }],
-            [ReactForgetBabelPlugin, COMPILER_OPTIONS],
+            [ReactForgetBabelPlugin, options],
           ],
           sourceType: "module",
         });
@@ -172,8 +175,8 @@ const rule: Rule.RuleModule = {
               suggest,
             });
           }
-        } else if (logger != null) {
-          logger(err);
+        } else {
+          options.logger?.logEvent("", err);
         }
       }
     }
