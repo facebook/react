@@ -8,3 +8,4 @@
  */
 
 // Exported for runtimes that don't support Promise instrumentation for async debugging.
+export function initAsyncDebugInfo(): void {}

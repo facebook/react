@@ -70,6 +70,7 @@ import {
   requestStorage,
   prepareHostDispatcher,
   createHints,
+  initAsyncDebugInfo,
 } from './ReactFlightServerConfig';
 
 import {
@@ -116,6 +117,8 @@ import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
+
+initAsyncDebugInfo();
 
 const ObjectPrototype = Object.prototype;
 
