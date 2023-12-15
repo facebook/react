@@ -5,12 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {
-  CompilerError,
-  Effect,
-  ValueKind,
-  validateEnvironmentConfig,
-} from "..";
+import { Effect, validateEnvironmentConfig } from "..";
+import { ValueKind } from "../HIR";
 
 describe("parseConfigPragma()", () => {
   it("passing null throws", () => {

@@ -15,7 +15,7 @@ function Foo() {
 ## Error
 
 ```
-[ReactForget] InvalidReact: This mutates a global or a variable after it was passed to React, which means that React cannot observe changes to it (4:4)
+[ReactForget] InvalidReact: Writing to a variable defined outside a component or hook is not allowed. Consider using an effect. (4:4)
 ```
           
       

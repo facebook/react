@@ -16,7 +16,7 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: This mutates a global or a variable after it was passed to React, which means that React cannot observe changes to it (5:5)
+[ReactForget] InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX. (5:5)
 ```
           
       

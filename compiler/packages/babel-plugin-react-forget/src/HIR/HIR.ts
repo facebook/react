@@ -942,6 +942,33 @@ export type Identifier = {
   type: Type;
 };
 
+export type AbstractValue = {
+  kind: ValueKind;
+  reason: ReadonlySet<ValueReason>;
+};
+
+/**
+ * The reason for the kind of a value.
+ */
+export enum ValueReason {
+  /**
+   * Defined outside the React function.
+   */
+  Global = "global",
+
+  /**
+   * Used in a JSX expression.
+   */
+  JsxCaptured = "jsx-captured",
+
+  /**
+   * Return value of a function with known frozen return value, e.g. `useState`.
+   */
+  KnownReturnSignature = "known-return-signature",
+
+  Other = "other",
+}
+
 /*
  * Distinguish between different kinds of values relevant to inference purposes:
  * see the main docblock for the module for details.
