@@ -7,13 +7,15 @@
  * @flow
  */
 
+import type {ClientReference} from './ReactFlightClientConfigFBBundler';
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
   Destination,
   Chunk,
   PrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
-import type {ClientManifest} from './ReactFlightReferencesFB';
+
+import {setClientReferenceImplementation} from './ReactFlightReferencesFB';
 
 import {
   createRequest,
@@ -24,10 +26,9 @@ import {
 import {setByteLengthOfChunkImplementation} from 'react-server/src/ReactServerStreamConfig';
 
 export {
-  registerClientReference,
-  registerServerReference,
   getRequestedClientReferencesKeys,
   clearRequestedClientReferencesKeysSet,
+  setClientReferenceInterface,
 } from './ReactFlightReferencesFB';
 
 type Options = {
@@ -37,7 +38,6 @@ type Options = {
 function renderToDestination(
   destination: Destination,
   model: ReactClientValue,
-  bundlerConfig: ClientManifest,
   options?: Options,
 ): void {
   if (!configured) {
@@ -47,7 +47,7 @@ function renderToDestination(
   }
   const request = createRequest(
     model,
-    bundlerConfig,
+    null,
     options ? options.onError : undefined,
   );
   startWork(request);
@@ -56,12 +56,14 @@ function renderToDestination(
 
 type Config = {
   byteLength: (chunk: Chunk | PrecomputedChunk) => number,
+  ClientReferenceImplementation: {...},
 };
 
 let configured = false;
 
 function setConfig(config: Config): void {
   setByteLengthOfChunkImplementation(config.byteLength);
+  setClientReferenceImplementation(config.ClientReferenceImplementation);
   configured = true;
 }
 
