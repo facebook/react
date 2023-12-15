@@ -153,6 +153,10 @@ export function throwInput(x: Object): never {
   throw x;
 }
 
+export function logValue<T>(value: T): void {
+  console.log(value);
+}
+
 export function useHook(): Object {
   return makeObject_Primitives();
 }
