@@ -16,3 +16,5 @@ export * from 'react-dom-bindings/src/server/ReactFlightServerConfigDOM';
 export const supportsRequestStorage = true;
 export const requestStorage: AsyncLocalStorage<Request> =
   new AsyncLocalStorage();
+
+export * from '../ReactFlightServerConfigDebugNoop';

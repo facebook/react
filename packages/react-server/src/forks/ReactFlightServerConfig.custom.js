@@ -11,6 +11,8 @@ import type {Request} from 'react-server/src/ReactFlightServer';
 
 export * from '../ReactFlightServerConfigBundlerCustom';
 
+export * from '../ReactFlightServerConfigDebugNoop';
+
 export type Hints = any;
 export type HintCode = any;
 // eslint-disable-next-line no-unused-vars

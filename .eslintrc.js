@@ -532,6 +532,7 @@ module.exports = {
     trustedTypes: 'readonly',
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
     globalThis: 'readonly',
   },
 };
