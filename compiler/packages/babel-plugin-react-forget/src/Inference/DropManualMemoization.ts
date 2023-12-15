@@ -8,16 +8,17 @@
 import { CompilerError } from "..";
 import {
   Effect,
+  FunctionExpression,
   HIRFunction,
   IdentifierId,
   Instruction,
   Place,
   SpreadPattern,
   makeInstructionId,
-  markInstructionIds,
 } from "../HIR";
 import { createTemporaryPlace } from "../HIR/HIRBuilder";
 import { HookKind } from "../HIR/ObjectShape";
+import { eachInstructionValueOperand } from "../HIR/visitors";
 
 /*
  * Removes manual memoization using the `useMemo` and `useCallback` APIs. This pass is designed
@@ -28,6 +29,7 @@ import { HookKind } from "../HIR/ObjectShape";
  * eg `React.useMemo()`.
  */
 export function dropManualMemoization(func: HIRFunction): void {
+  const functions = new Map<IdentifierId, FunctionExpression>();
   const hooks = new Map<IdentifierId, HookKind>();
   const react = new Set<IdentifierId>();
   let hasChanges = false;
@@ -35,10 +37,11 @@ export function dropManualMemoization(func: HIRFunction): void {
     let nextInstructions: Array<Instruction> | null = null;
     for (let i = 0; i < block.instructions.length; i++) {
       const instr = block.instructions[i]!;
-      if (nextInstructions !== null) {
-        nextInstructions.push(instr);
-      }
       switch (instr.value.kind) {
+        case "FunctionExpression": {
+          functions.set(instr.lvalue.identifier.id, instr.value);
+          break;
+        }
         case "LoadGlobal": {
           if (
             instr.value.name === "useMemo" ||
@@ -109,6 +112,7 @@ export function dropManualMemoization(func: HIRFunction): void {
                   args: [],
                   loc: instr.value.loc,
                 };
+
                 if (
                   func.env.config.enablePreserveExistingMemoizationGuarantees
                 ) {
@@ -137,7 +141,29 @@ export function dropManualMemoization(func: HIRFunction): void {
                   const temp = createTemporaryPlace(func.env);
                   instr.lvalue = { ...temp };
                   nextInstructions =
-                    nextInstructions ?? block.instructions.slice(0, i + 1);
+                    nextInstructions ?? block.instructions.slice(0, i);
+
+                  const functionExpression = functions.get(fn.identifier.id);
+                  if (functionExpression !== undefined) {
+                    for (const operand of eachInstructionValueOperand(
+                      functionExpression
+                    )) {
+                      const operandLValue = createTemporaryPlace(func.env);
+                      nextInstructions.push({
+                        id: makeInstructionId(0),
+                        lvalue: operandLValue,
+                        value: {
+                          kind: "Memoize",
+                          value: { ...operand },
+                          loc: instr.loc,
+                        },
+                        loc: instr.loc,
+                      });
+                    }
+                  }
+
+                  nextInstructions.push(instr);
+
                   nextInstructions.push({
                     id: makeInstructionId(0),
                     lvalue,
@@ -148,7 +174,12 @@ export function dropManualMemoization(func: HIRFunction): void {
                     },
                     loc: instr.loc,
                   });
+                } else {
+                  if (nextInstructions !== null) {
+                    nextInstructions.push(instr);
+                  }
                 }
+                continue;
               }
             } else if (hookKind === "useCallback") {
               const [fn] = instr.value.args as Array<
@@ -229,6 +260,9 @@ export function dropManualMemoization(func: HIRFunction): void {
           break;
         }
       }
+      if (nextInstructions !== null) {
+        nextInstructions.push(instr);
+      }
     }
     if (nextInstructions !== null) {
       block.instructions = nextInstructions;
@@ -236,6 +270,6 @@ export function dropManualMemoization(func: HIRFunction): void {
     }
   }
   if (hasChanges) {
-    markInstructionIds(func.body);
+    // markInstructionIds(func.body);
   }
 }

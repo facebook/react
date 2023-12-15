@@ -313,7 +313,14 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
     case "StoreContext": {
       return false;
     }
-    case "Memoize":
+    case "Memoize": {
+      /**
+       * This instruction is used by the @enablePreserveExistingMemoizationGuarantees feature
+       * to preserve information about memoization semantics in the original code. We can't
+       * DCE without losing the memoization guarantees.
+       */
+      return false;
+    }
     case "RegExpLiteral":
     case "LoadGlobal":
     case "ArrayExpression":

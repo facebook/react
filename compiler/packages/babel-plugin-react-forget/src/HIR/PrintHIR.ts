@@ -494,6 +494,8 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "ObjectMethod":
     case "FunctionExpression": {
+      const kind =
+        instrValue.kind === "FunctionExpression" ? "Function" : "ObjectMethod";
       const name = getFunctionName(instrValue, "");
       const fn = printFunction(instrValue.loweredFunc.func)
         .split("\n")
@@ -505,7 +507,7 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       const context = instrValue.loweredFunc.func.context
         .map((dep) => printPlace(dep))
         .join(",");
-      value = `Function ${name} @deps[${deps}] @context[${context}]:\n${fn}`;
+      value = `${kind} ${name} @deps[${deps}] @context[${context}]:\n${fn}`;
       break;
     }
     case "TaggedTemplateExpression": {

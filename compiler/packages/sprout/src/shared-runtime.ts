@@ -153,6 +153,10 @@ export function throwInput(x: Object): never {
   throw x;
 }
 
+export function useHook(): Object {
+  return makeObject_Primitives();
+}
+
 const noAliasObject = Object.freeze({});
 export function useNoAlias(...args: Array<any>): object {
   return noAliasObject;
