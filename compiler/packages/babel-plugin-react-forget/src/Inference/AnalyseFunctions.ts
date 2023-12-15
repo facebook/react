@@ -10,12 +10,11 @@ import {
   Effect,
   HIRFunction,
   Identifier,
-  isRefValueType,
-  isSetStateType,
-  isUseRefType,
   LoweredFunction,
   Place,
   ReactiveScopeDependency,
+  isRefValueType,
+  isUseRefType,
 } from "../HIR";
 import { deadCodeElimination } from "../Optimization";
 import { inferReactiveScopeVariables } from "../ReactiveScopes";
@@ -139,11 +138,7 @@ function infer(
       name = dep.identifier.name;
     }
 
-    if (
-      isUseRefType(dep.identifier) ||
-      isRefValueType(dep.identifier) ||
-      isSetStateType(dep.identifier)
-    ) {
+    if (isUseRefType(dep.identifier) || isRefValueType(dep.identifier)) {
       /*
        * TODO: this is a hack to ensure we treat functions which reference refs
        * as having a capture and therefore being considered mutable. this ensures
