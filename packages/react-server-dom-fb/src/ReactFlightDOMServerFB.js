@@ -28,7 +28,7 @@ import {setByteLengthOfChunkImplementation} from 'react-server/src/ReactServerSt
 export {
   getRequestedClientReferencesKeys,
   clearRequestedClientReferencesKeysSet,
-  setClientReferenceInterface,
+  setClientReferenceImplementation,
 } from './ReactFlightReferencesFB';
 
 type Options = {
