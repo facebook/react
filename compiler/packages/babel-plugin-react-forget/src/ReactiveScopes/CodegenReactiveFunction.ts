@@ -1019,7 +1019,8 @@ function createCallExpression(
 
   const hookGuard = config.enableEmitHookGuards;
   if (hookGuard != null && isHook) {
-    const iife = t.arrowFunctionExpression(
+    const iife = t.functionExpression(
+      null,
       [],
       t.blockStatement([
         createHookGuard(

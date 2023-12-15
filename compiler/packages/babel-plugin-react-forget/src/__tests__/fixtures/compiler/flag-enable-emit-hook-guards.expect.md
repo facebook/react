@@ -66,7 +66,7 @@ function Component(t47) {
     } else {
       t0 = $[0];
     }
-    const [state, setState] = (() => {
+    const [state, setState] = (function () {
       try {
         $dispatcherGuard(2);
         return useState(t0);
@@ -92,7 +92,7 @@ function Component(t47) {
       t1 = $[2];
       t2 = $[3];
     }
-    (() => {
+    (function () {
       try {
         $dispatcherGuard(2);
         return useEffect(t1, t2);
@@ -101,11 +101,11 @@ function Component(t47) {
       }
     })();
     print(identity(value + state));
-    return (() => {
+    return (function () {
       try {
         $dispatcherGuard(2);
         return ObjectWithHooks.useIdentity(
-          (() => {
+          (function () {
             try {
               $dispatcherGuard(2);
               return useContext(MyContext);
