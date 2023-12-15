@@ -119,6 +119,10 @@ const EnvironmentConfigSchema = z.object({
    * Our recommendation is to first try running your application with this flag enabled, then attempt
    * to disable this flag and see what changes or breaks. This will mostly likely be effects that
    * depend on referential equality, which can be refactored (TODO guide for this).
+   *
+   * NOTE: this mode treats freeze as a transitive operation for function expressions. This means
+   * that if a useEffect or useCallback references a function value, that function value will be
+   * considered frozen, and in turn all of its referenced variables will be considered frozen as well.
    */
   enablePreserveExistingMemoizationGuarantees: z.boolean().default(false),
 
@@ -244,41 +248,6 @@ const EnvironmentConfigSchema = z.object({
    *
    */
   enableEmitInstrumentForget: ExternalFunctionSchema.nullish(),
-
-  /*
-   * Forget infers certain operations as "freezing" a value, such that those
-   * values should not be subsequently mutated. By default this freeze operation
-   * applies to the value itself and its direct aliases, but not values captured
-   * by the value being frozen.
-   *
-   * In the following, passing `x` to JSX freezes it, which includes freezing `y`
-   * and `z` which x may alias:
-   *
-   * ```
-   * let x;
-   * if (cond) {
-   *    x = y
-   * } else {
-   *    x = z;
-   * }
-   * <div>{x}</div>
-   * ```
-   *
-   * However, in the following example we currently only consider x itself to be
-   * frozen, not `y` or `z`:
-   *
-   * ```
-   * let y = ...;
-   * let z = ...;
-   * let x = () => { return [y, z]; };
-   * <div>{x}</div>
-   * ```
-   *
-   * With this flag enabled, function expression dependencies (values closed over)
-   * are transitively frozen when the function itself is frozen. So in this case,
-   * `y` and `z` would be frozen when `x` is frozen.
-   */
-  enableTransitivelyFreezeFunctionExpressions: z.boolean().default(false),
 
   // Enable merging consecutive scopes that invalidate together.
   enableMergeConsecutiveScopes: z.boolean().default(true),

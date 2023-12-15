@@ -49,28 +49,47 @@ import {
 } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(1);
-  const object = makeObject_Primitives();
-
-  useHook();
-
-  const log = () => {
-    logValue(object);
-  };
-
-  const onClick = () => {
-    log();
-  };
-
-  identity(object);
+  const $ = useMemoCache(4);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <div onClick={onClick} />;
+    t0 = makeObject_Primitives();
     $[0] = t0;
   } else {
     t0 = $[0];
   }
-  return t0;
+  const object = t0;
+
+  useHook();
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = () => {
+      logValue(object);
+    };
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const log = t1;
+  let t2;
+  if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+    t2 = () => {
+      log();
+    };
+    $[2] = t2;
+  } else {
+    t2 = $[2];
+  }
+  const onClick = t2;
+
+  identity(object);
+  let t3;
+  if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+    t3 = <div onClick={onClick} />;
+    $[3] = t3;
+  } else {
+    t3 = $[3];
+  }
+  return t3;
 }
 
 export const FIXTURE_ENTRYPOINT = {

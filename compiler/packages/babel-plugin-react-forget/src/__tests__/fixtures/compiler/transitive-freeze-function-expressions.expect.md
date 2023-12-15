@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enableTransitivelyFreezeFunctionExpressions
+// @enablePreserveExistingMemoizationGuarantees
 function Component(props) {
   const { data, loadNext, isLoadingNext } =
     usePaginationFragment(props.key).items ?? [];
@@ -31,7 +31,7 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableTransitivelyFreezeFunctionExpressions
+import { unstable_useMemoCache as useMemoCache } from "react"; // @enablePreserveExistingMemoizationGuarantees
 function Component(props) {
   const $ = useMemoCache(10);
   const { data, loadNext, isLoadingNext } =
