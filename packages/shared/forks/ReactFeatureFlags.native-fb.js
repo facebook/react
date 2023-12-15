@@ -29,6 +29,7 @@ export const {
 // The rest of the flags are static for better dead code elimination.
 export const disableModulePatternComponents = true;
 export const enableDebugTracing = false;
+export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
