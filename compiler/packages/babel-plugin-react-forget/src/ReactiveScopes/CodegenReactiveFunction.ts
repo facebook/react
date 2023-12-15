@@ -1628,6 +1628,10 @@ function codegenInstructionValue(
       );
       break;
     }
+    case "Memoize": {
+      value = codegenPlaceToExpression(cx, instrValue.value);
+      break;
+    }
     case "Debugger":
     case "DeclareLocal":
     case "DeclareContext":

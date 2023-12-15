@@ -15,11 +15,14 @@ import {
   BasicBlock,
   BlockId,
   BlockKind,
+  Effect,
+  GeneratedSource,
   GotoVariant,
   HIR,
   Identifier,
   IdentifierId,
   Instruction,
+  Place,
   Terminal,
   makeBlockId,
   makeInstructionId,
@@ -855,4 +858,20 @@ export function removeUnnecessaryTryCatch(fn: HIR): void {
       };
     }
   }
+}
+
+export function createTemporaryPlace(env: Environment): Place {
+  return {
+    kind: "Identifier",
+    identifier: {
+      id: env.nextIdentifierId,
+      mutableRange: { start: makeInstructionId(0), end: makeInstructionId(0) },
+      name: null,
+      scope: null,
+      type: makeType(),
+    },
+    reactive: false,
+    effect: Effect.Unknown,
+    loc: GeneratedSource,
+  };
 }

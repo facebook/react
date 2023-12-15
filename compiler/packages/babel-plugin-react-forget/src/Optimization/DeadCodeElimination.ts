@@ -313,6 +313,7 @@ function pruneableValue(value: InstructionValue, state: State): boolean {
     case "StoreContext": {
       return false;
     }
+    case "Memoize":
     case "RegExpLiteral":
     case "LoadGlobal":
     case "ArrayExpression":

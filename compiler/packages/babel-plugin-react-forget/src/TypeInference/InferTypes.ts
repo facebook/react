@@ -280,6 +280,11 @@ function* generateInstructionTypes(
       break;
     }
 
+    case "Memoize": {
+      yield equation(left, value.value.identifier.type);
+      break;
+    }
+
     case "PropertyDelete":
     case "ComputedDelete": {
       yield equation(left, { kind: "Primitive" });

@@ -102,6 +102,26 @@ export type Hook = z.infer<typeof HookSchema>;
 const EnvironmentConfigSchema = z.object({
   customHooks: z.map(z.string(), HookSchema).optional().default(new Map()),
 
+  /**
+   * Enable using information from existing useMemo/useCallback to understand when a value is done
+   * being mutated. With this mode enabled, Forget will still discard the actual useMemo/useCallback
+   * calls and may memoize slightly differently. However, it will assume that the values produced
+   * are not subsequently modified, guaranteeing that the value will be memoized.
+   *
+   * By preserving guarantees about when values are memoized, this option preserves any existing
+   * behavior that depends on referential equality in the original program. Notably, this preserves
+   * existing effect behavior (how often effects fire) for effects that rely on referential equality.
+   *
+   * When disabled, Forget will not only prune useMemo and useCallback calls but also completely ignore
+   * them, not using any information from them to guide compilation. Therefore, disabling this flag
+   * will produce output that mimics the result from removing all memoization.
+   *
+   * Our recommendation is to first try running your application with this flag enabled, then attempt
+   * to disable this flag and see what changes or breaks. This will mostly likely be effects that
+   * depend on referential equality, which can be refactored (TODO guide for this).
+   */
+  enablePreserveExistingMemoizationGuarantees: z.boolean().default(false),
+
   // 🌲
   enableForest: z.boolean().default(false),
   // <🌲>

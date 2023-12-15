@@ -471,6 +471,7 @@ function computeMemoizationInputs(
         rvalues: [],
       };
     }
+    case "Memoize":
     case "Await":
     case "TypeCastExpression":
     case "NextIterableOf": {

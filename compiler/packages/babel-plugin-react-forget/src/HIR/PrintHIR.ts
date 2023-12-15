@@ -594,6 +594,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
       } ${printPlace(instrValue.value)}`;
       break;
     }
+    case "Memoize": {
+      value = `Memoize ${printPlace(instrValue.value)}`;
+      break;
+    }
     default: {
       assertExhaustive(
         instrValue,

@@ -846,6 +846,12 @@ export type InstructionValue =
   // `debugger` statement
   | { kind: "Debugger"; loc: SourceLocation }
   /*
+   * Represents semantic information from useMemo/useCallback that the developer
+   * has indicated a particular value should be memoized. This value is ignored
+   * unless the TODO flag is enabled.
+   */
+  | { kind: "Memoize"; value: Place; loc: SourceLocation }
+  /*
    * Catch-all for statements such as type imports, nested class declarations, etc
    * which are not directly represented, but included for completeness and to allow
    * passing through in codegen.

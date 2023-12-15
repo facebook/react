@@ -209,6 +209,10 @@ export function* eachInstructionValueOperand(
       yield instrValue.value;
       break;
     }
+    case "Memoize": {
+      yield instrValue.value;
+      break;
+    }
     case "Debugger":
     case "RegExpLiteral":
     case "LoadGlobal":
@@ -507,6 +511,10 @@ export function mapInstructionValueOperands(
     }
     case "PostfixUpdate":
     case "PrefixUpdate": {
+      instrValue.value = fn(instrValue.value);
+      break;
+    }
+    case "Memoize": {
       instrValue.value = fn(instrValue.value);
       break;
     }

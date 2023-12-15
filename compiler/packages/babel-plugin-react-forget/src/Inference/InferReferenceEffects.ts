@@ -1162,6 +1162,17 @@ function inferBlock(
         state.alias(lvalue, instrValue.value);
         continue;
       }
+      case "Memoize": {
+        state.initialize(instrValue, {
+          kind: ValueKind.Frozen,
+          reason: new Set([ValueReason.Other]),
+        });
+        state.reference(instrValue.value, Effect.Freeze, ValueReason.Other);
+        const lvalue = instr.lvalue;
+        lvalue.effect = Effect.ConditionallyMutate;
+        state.alias(lvalue, instrValue.value);
+        continue;
+      }
       case "LoadLocal": {
         const lvalue = instr.lvalue;
         const effect =
