@@ -38,11 +38,7 @@ export function isClientReference(reference: mixed): boolean {
   if (ClientReferenceImpl == null) {
     throw new Error('Expected ClientReferenceImpl.');
   }
-  if (reference instanceof ClientReferenceImpl) {
-    return true;
-  }
-
-  return false;
+  return reference instanceof ClientReferenceImpl;
 }
 
 export function getClientReferenceKey<T>(
