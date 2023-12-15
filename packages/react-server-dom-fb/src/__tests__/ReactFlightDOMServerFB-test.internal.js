@@ -97,7 +97,7 @@ describe('ReactFlightDOM for FB', () => {
     ReactServerDOMServer = require('../ReactFlightDOMServerFB');
     ReactServerDOMServer.setConfig({
       byteLength: str => Buffer.byteLength(str),
-      ClientReferenceImplementation: ClientReferenceImpl,
+      isClientReference: reference => reference instanceof ClientReferenceImpl,
     });
 
     // This reset is to load modules for the SSR/Browser scope.

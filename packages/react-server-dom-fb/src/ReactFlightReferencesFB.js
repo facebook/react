@@ -27,18 +27,19 @@ export type ClientReferenceMetadata = {
 
 export type ServerReferenceId = string;
 
-let ClientReferenceImpl: {...} | null = null;
-export function setClientReferenceImplementation(clientReferenceImpl: {
-  ...
-}): void {
-  ClientReferenceImpl = clientReferenceImpl;
+let checkIsClientReference: (clientReference: mixed) => boolean;
+
+export function setCheckIsClientReference(
+  impl: (clientReference: mixed) => boolean,
+): void {
+  checkIsClientReference = impl;
 }
 
 export function isClientReference(reference: mixed): boolean {
-  if (ClientReferenceImpl == null) {
-    throw new Error('Expected ClientReferenceImpl.');
+  if (checkIsClientReference == null) {
+    throw new Error('Expected implementation for checkIsClientReference.');
   }
-  return reference instanceof ClientReferenceImpl;
+  return checkIsClientReference(reference);
 }
 
 export function getClientReferenceKey<T>(
