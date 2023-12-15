@@ -12,16 +12,27 @@ import {
 } from "shared-runtime";
 
 function Component(props) {
+  // With the feature enabled these variables are inferred as frozen as of
+  // the useMemo call
   const free = makeObject_Primitives();
   const free2 = makeObject_Primitives();
   const part = free2.part;
+
+  // Thus their mutable range ends prior to this hook call, and both the above
+  // values and the useMemo block value can be memoized
   useHook();
+
   const object = useMemo(() => {
     const x = makeObject_Primitives();
     x.value = props.value;
     mutate(x, free, part);
     return x;
   }, [props.value]);
+
+  // These calls should be inferred as non-mutating due to the above freeze inference
+  identity(free);
+  identity(part);
+
   return object;
 }
 
@@ -63,6 +74,7 @@ function Component(props) {
   }
   const free2 = t1;
   const part = free2.part;
+
   useHook();
   let t39;
   let x;
@@ -77,6 +89,9 @@ function Component(props) {
   }
   t39 = x;
   const object = t39;
+
+  identity(free);
+  identity(part);
   return object;
 }
 

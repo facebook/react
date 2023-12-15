@@ -21,6 +21,9 @@ function Component(props) {
     mutate(x, free, part);
     return x;
   }, [props.value]);
+
+  identity(free);
+  identity(part);
   return object;
 }
 

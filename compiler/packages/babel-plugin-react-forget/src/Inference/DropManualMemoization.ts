@@ -130,12 +130,12 @@ export function dropManualMemoization(func: HIRFunction): void {
                    *   $1 = LoadGlobal useMemo       // load the useMemo global (dead code)
                    *   $2 = FunctionExpression ...   // memo function
                    *   $3 = ArrayExpression [ ... ]  // deps array (dead code)
-                   *   $5 = Call $2 ()               // invoke the memo function itself
-                   *   $4 = Memoize $5               // preserve memo information
+                   *   .. = Memoize ...              // memoize dependencies
+                   *   $4 = Call $2 ()               // invoke the memo function itself
+                   *   .. = Memoize $4               // preserve memo information
                    *
-                   * Note that we synthesize a new temporary for the call ($5) and use
-                   * the original lvalue for the result of the Memoize instruction, so that
-                   * we don't have to rewrite subsequent instructions.
+                   * Note that Memoize does not produce a result and is called for its side
+                   * effects only.
                    */
                   nextInstructions =
                     nextInstructions ?? block.instructions.slice(0, i);
@@ -194,13 +194,13 @@ export function dropManualMemoization(func: HIRFunction): void {
                *   $1 = LoadGlobal useCallback
                *   $2 = FunctionExpression ...   // the callback being memoized
                *   $3 = ArrayExpression ...      // deps array
-               *   $3 = Call $1 ( $2, $3 )       // invoke useCallback
+               *   $4 = Call $1 ( $2, $3 )       // invoke useCallback
                *
                * after:
                *   $1 = LoadGlobal useCallback   // dead code
                *   $2 = FunctionExpression ...   // the callback being memoized
                *   $3 = ArrayExpression ...      // deps array (dead code)
-               *   $3 = LoadLocal $2             // reference the function
+               *   $4 = LoadLocal $2             // reference the function
                */
               if (fn.kind === "Identifier") {
                 instr.value = {
@@ -227,15 +227,18 @@ export function dropManualMemoization(func: HIRFunction): void {
                    *   $1 = LoadGlobal useCallback   // dead code
                    *   $2 = FunctionExpression ...   // the callback being memoized
                    *   $3 = ArrayExpression ...      // deps array (dead code)
-                   *   $3 = LoadLocal $2             // reference the function
+                   *   $4 = LoadLocal $2             // reference the function
                    *
                    * With flag enabled:
                    *   $1 = LoadGlobal useCallback   // dead code
                    *   $2 = FunctionExpression ...   // the callback being memoized
                    *   $3 = ArrayExpression ...      // deps array (dead code)
-                   *   $3 = Memoize $2             // reference the function
+                   *   .. = Memoize ...              // memoize dependencies
+                   *   $n = Memoize $2               // reference the function
+                   *   $4 = LoadLocal $2             // reference the function
                    *
-                   * Note the s/LoadLocal/Memoize/
+                   * Note that Memoize does not produce a result and is called for its side effects
+                   * only.
                    */
                   const functionExpression = functions.get(fn.identifier.id);
                   if (functionExpression !== undefined) {

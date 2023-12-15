@@ -25,6 +25,9 @@ function Component(props) {
     mutate(x, free, part);
     return x;
   }, [props.value]);
+
+  identity(free);
+  identity(part);
   return object;
 }
 
@@ -60,6 +63,9 @@ function Component(props) {
   mutate(x, free, part);
   t39 = x;
   const object = t39;
+
+  identity(free);
+  identity(part);
   return object;
 }
 
