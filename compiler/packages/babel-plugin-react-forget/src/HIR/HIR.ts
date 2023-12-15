@@ -849,6 +849,10 @@ export type InstructionValue =
    * Represents semantic information from useMemo/useCallback that the developer
    * has indicated a particular value should be memoized. This value is ignored
    * unless the TODO flag is enabled.
+   *
+   * NOTE: the Memoize instruction is intended for side-effects only, and is pruned
+   * during codegen. It can't be pruned during DCE because we need to preserve the
+   * instruction so it can be visible in InferReferenceEffects.
    */
   | { kind: "Memoize"; value: Place; loc: SourceLocation }
   /*

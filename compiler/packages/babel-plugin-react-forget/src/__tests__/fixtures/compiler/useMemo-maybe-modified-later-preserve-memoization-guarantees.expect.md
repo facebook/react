@@ -28,7 +28,7 @@ import { identity, makeObject_Primitives, mutate } from "shared-runtime";
 
 function Component(props) {
   const $ = useMemoCache(1);
-  let t15;
+  let t7;
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = makeObject_Primitives();
@@ -36,8 +36,8 @@ function Component(props) {
   } else {
     t0 = $[0];
   }
-  t15 = t0;
-  const object = t15;
+  t7 = t0;
+  const object = t7;
   identity(object);
   return object;
 }

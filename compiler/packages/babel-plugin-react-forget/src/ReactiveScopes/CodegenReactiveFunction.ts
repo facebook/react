@@ -835,6 +835,8 @@ function codegenInstructionNullable(
         assertExhaustive(kind, `Unexpected instruction kind '${kind}'`);
       }
     }
+  } else if (instr.value.kind === "Memoize") {
+    return null;
   } else if (instr.value.kind === "Debugger") {
     return t.debuggerStatement();
   } else if (instr.value.kind === "ObjectMethod") {
@@ -1628,10 +1630,7 @@ function codegenInstructionValue(
       );
       break;
     }
-    case "Memoize": {
-      value = codegenPlaceToExpression(cx, instrValue.value);
-      break;
-    }
+    case "Memoize":
     case "Debugger":
     case "DeclareLocal":
     case "DeclareContext":

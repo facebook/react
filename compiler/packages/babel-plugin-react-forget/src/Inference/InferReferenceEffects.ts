@@ -1163,14 +1163,14 @@ function inferBlock(
         continue;
       }
       case "Memoize": {
-        state.initialize(instrValue, {
-          kind: ValueKind.Frozen,
-          reason: new Set([ValueReason.Other]),
-        });
         state.reference(instrValue.value, Effect.Freeze, ValueReason.Other);
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
-        state.alias(lvalue, instrValue.value);
+        state.initialize(instrValue, {
+          kind: ValueKind.Immutable,
+          reason: new Set([ValueReason.Other]),
+        });
+        state.define(lvalue, instrValue);
         continue;
       }
       case "LoadLocal": {

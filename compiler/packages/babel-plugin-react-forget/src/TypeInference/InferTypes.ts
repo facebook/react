@@ -280,11 +280,6 @@ function* generateInstructionTypes(
       break;
     }
 
-    case "Memoize": {
-      yield equation(left, value.value.identifier.type);
-      break;
-    }
-
     case "PropertyDelete":
     case "ComputedDelete": {
       yield equation(left, { kind: "Primitive" });
@@ -319,7 +314,9 @@ function* generateInstructionTypes(
     case "NextIterableOf":
     case "UnsupportedNode":
     case "Debugger":
+    case "Memoize": {
       break;
+    }
     default:
       assertExhaustive(value, `Unhandled instruction value kind: ${value}`);
   }

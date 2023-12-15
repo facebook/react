@@ -453,6 +453,7 @@ function computeMemoizationInputs(
       };
     }
     case "NextPropertyOf":
+    case "Memoize":
     case "Debugger":
     case "ComputedDelete":
     case "PropertyDelete":
@@ -471,7 +472,6 @@ function computeMemoizationInputs(
         rvalues: [],
       };
     }
-    case "Memoize":
     case "Await":
     case "TypeCastExpression":
     case "NextIterableOf": {

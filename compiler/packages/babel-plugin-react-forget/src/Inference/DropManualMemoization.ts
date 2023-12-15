@@ -137,9 +137,6 @@ export function dropManualMemoization(func: HIRFunction): void {
                    * the original lvalue for the result of the Memoize instruction, so that
                    * we don't have to rewrite subsequent instructions.
                    */
-                  const lvalue = instr.lvalue;
-                  const temp = createTemporaryPlace(func.env);
-                  instr.lvalue = { ...temp };
                   nextInstructions =
                     nextInstructions ?? block.instructions.slice(0, i);
 
@@ -148,10 +145,10 @@ export function dropManualMemoization(func: HIRFunction): void {
                     for (const operand of eachInstructionValueOperand(
                       functionExpression
                     )) {
-                      const operandLValue = createTemporaryPlace(func.env);
+                      const temp = createTemporaryPlace(func.env);
                       nextInstructions.push({
                         id: makeInstructionId(0),
-                        lvalue: operandLValue,
+                        lvalue: temp,
                         value: {
                           kind: "Memoize",
                           value: { ...operand },
@@ -164,12 +161,13 @@ export function dropManualMemoization(func: HIRFunction): void {
 
                   nextInstructions.push(instr);
 
+                  const temp = createTemporaryPlace(func.env);
                   nextInstructions.push({
                     id: makeInstructionId(0),
-                    lvalue,
+                    lvalue: temp,
                     value: {
                       kind: "Memoize",
-                      value: temp,
+                      value: { ...instr.lvalue },
                       loc: instr.loc,
                     },
                     loc: instr.loc,
