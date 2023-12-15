@@ -172,12 +172,8 @@ export function dropManualMemoization(func: HIRFunction): void {
                     },
                     loc: instr.loc,
                   });
-                } else {
-                  if (nextInstructions !== null) {
-                    nextInstructions.push(instr);
-                  }
+                  continue;
                 }
-                continue;
               }
             } else if (hookKind === "useCallback") {
               const [fn] = instr.value.args as Array<
@@ -207,9 +203,22 @@ export function dropManualMemoization(func: HIRFunction): void {
                *   $3 = LoadLocal $2             // reference the function
                */
               if (fn.kind === "Identifier") {
+                instr.value = {
+                  kind: "LoadLocal",
+                  place: {
+                    kind: "Identifier",
+                    identifier: fn.identifier,
+                    effect: Effect.Unknown,
+                    reactive: false,
+                    loc: instr.value.loc,
+                  },
+                  loc: instr.value.loc,
+                };
                 if (
                   func.env.config.enablePreserveExistingMemoizationGuarantees
                 ) {
+                  nextInstructions =
+                    nextInstructions ?? block.instructions.slice(0, i);
                   /**
                    * With the flag enabled the output changes to use a Memoize instruction instead
                    * a loadlocal to load the function expression into the original temporary:
@@ -228,29 +237,44 @@ export function dropManualMemoization(func: HIRFunction): void {
                    *
                    * Note the s/LoadLocal/Memoize/
                    */
-                  instr.value = {
-                    kind: "Memoize",
+                  const functionExpression = functions.get(fn.identifier.id);
+                  if (functionExpression !== undefined) {
+                    for (const operand of eachInstructionValueOperand(
+                      functionExpression
+                    )) {
+                      const temp = createTemporaryPlace(func.env);
+                      nextInstructions.push({
+                        id: makeInstructionId(0),
+                        lvalue: temp,
+                        value: {
+                          kind: "Memoize",
+                          value: { ...operand },
+                          loc: instr.loc,
+                        },
+                        loc: instr.loc,
+                      });
+                    }
+                  }
+                  nextInstructions.push(instr);
+
+                  const temp = createTemporaryPlace(func.env);
+                  nextInstructions.push({
+                    id: makeInstructionId(0),
+                    lvalue: { ...temp },
                     value: {
-                      kind: "Identifier",
-                      identifier: fn.identifier,
-                      effect: Effect.Unknown,
-                      reactive: false,
+                      kind: "Memoize",
+                      value: {
+                        kind: "Identifier",
+                        identifier: fn.identifier,
+                        effect: Effect.Unknown,
+                        reactive: false,
+                        loc: instr.value.loc,
+                      },
                       loc: instr.value.loc,
                     },
-                    loc: instr.value.loc,
-                  };
-                } else {
-                  instr.value = {
-                    kind: "LoadLocal",
-                    place: {
-                      kind: "Identifier",
-                      identifier: fn.identifier,
-                      effect: Effect.Unknown,
-                      reactive: false,
-                      loc: instr.value.loc,
-                    },
-                    loc: instr.value.loc,
-                  };
+                    loc: instr.loc,
+                  });
+                  continue;
                 }
               }
             }
