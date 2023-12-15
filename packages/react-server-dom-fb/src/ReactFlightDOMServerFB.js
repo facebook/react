@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {ClientReference} from './ReactFlightClientConfigFBBundler';
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {
   Destination,
