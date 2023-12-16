@@ -1,7 +1,3 @@
-
-## Input
-
-```javascript
 // @enablePreserveExistingMemoizationGuarantees
 import { useCallback, useRef } from "react";
 
@@ -14,6 +10,7 @@ function Component(props) {
     ref.current.inner = event.target.value;
   });
 
+  // The ref is modified later, extending its range and preventing memoization of onChange
   ref.current.inner = null;
 
   return <input onChange={onChange} />;
@@ -23,16 +20,3 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{}],
 };
-
-```
-
-
-## Error
-
-```
-[ReactForget] InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (7:11)
-
-[ReactForget] InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (7:11)
-```
-          
-      

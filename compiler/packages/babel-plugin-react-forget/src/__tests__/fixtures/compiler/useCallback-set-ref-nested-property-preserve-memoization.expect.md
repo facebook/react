@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @enablePreserveExistingMemoizationGuarantees:false
+// @enablePreserveExistingMemoizationGuarantees
 import { useCallback, useRef } from "react";
 
 function Component(props) {
@@ -13,8 +13,6 @@ function Component(props) {
     // @enablePreserveExistingMemoizationGuarantees mode
     ref.current.inner = event.target.value;
   });
-
-  ref.current.inner = null;
 
   return <input onChange={onChange} />;
 }
@@ -29,7 +27,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-// @enablePreserveExistingMemoizationGuarantees:false
+// @enablePreserveExistingMemoizationGuarantees
 import {
   useCallback,
   useRef,
@@ -37,23 +35,34 @@ import {
 } from "react";
 
 function Component(props) {
-  const $ = useMemoCache(2);
-  const ref = useRef({ inner: null });
-
-  const onChange = (event) => {
-    ref.current.inner = event.target.value;
-  };
-
-  ref.current.inner = null;
+  const $ = useMemoCache(4);
   let t0;
-  if ($[0] !== onChange) {
-    t0 = <input onChange={onChange} />;
-    $[0] = onChange;
-    $[1] = t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = { inner: null };
+    $[0] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[0];
   }
-  return t0;
+  const ref = useRef(t0);
+  let t1;
+  if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
+    t1 = (event) => {
+      ref.current.inner = event.target.value;
+    };
+    $[1] = t1;
+  } else {
+    t1 = $[1];
+  }
+  const onChange = t1;
+  let t2;
+  if ($[2] !== onChange) {
+    t2 = <input onChange={onChange} />;
+    $[2] = onChange;
+    $[3] = t2;
+  } else {
+    t2 = $[3];
+  }
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {
