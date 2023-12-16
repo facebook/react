@@ -30,7 +30,7 @@ The documentation is divided into several sections:
 * [Installation](https://react.dev/learn/installation)
 * [Describing the UI](https://react.dev/learn/describing-the-ui)
 * [Adding Interactivity](https://react.dev/learn/adding-interactivity)
-* [Manging State](https://react.dev/learn/managing-state)
+* [Managing State](https://react.dev/learn/managing-state)
 * [Advanced Guides](https://react.dev/learn/escape-hatches)
 * [API Reference](https://react.dev/reference/react)
 * [Where to Get Support](https://react.dev/community)
