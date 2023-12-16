@@ -16,7 +16,7 @@ import {
   SpreadPattern,
   makeInstructionId,
 } from "../HIR";
-import { createTemporaryPlace } from "../HIR/HIRBuilder";
+import { createTemporaryPlace, markInstructionIds } from "../HIR/HIRBuilder";
 import { HookKind } from "../HIR/ObjectShape";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 
@@ -114,7 +114,8 @@ export function dropManualMemoization(func: HIRFunction): void {
                 };
 
                 if (
-                  func.env.config.enablePreserveExistingMemoizationGuarantees
+                  func.env.config.enablePreserveExistingMemoizationGuarantees ||
+                  func.env.config.validatePreserveExistingMemoizationGuarantees
                 ) {
                   /**
                    * When this flag is enabled we also compile in a 'Memoize' instruction
@@ -215,7 +216,8 @@ export function dropManualMemoization(func: HIRFunction): void {
                   loc: instr.value.loc,
                 };
                 if (
-                  func.env.config.enablePreserveExistingMemoizationGuarantees
+                  func.env.config.enablePreserveExistingMemoizationGuarantees ||
+                  func.env.config.validatePreserveExistingMemoizationGuarantees
                 ) {
                   nextInstructions =
                     nextInstructions ?? block.instructions.slice(0, i);
@@ -295,6 +297,6 @@ export function dropManualMemoization(func: HIRFunction): void {
     }
   }
   if (hasChanges) {
-    // markInstructionIds(func.body);
+    markInstructionIds(func.body);
   }
 }

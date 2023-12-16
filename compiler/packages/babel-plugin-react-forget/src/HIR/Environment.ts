@@ -126,6 +126,21 @@ const EnvironmentConfigSchema = z.object({
    */
   enablePreserveExistingMemoizationGuarantees: z.boolean().default(false),
 
+  /**
+   * Validates that all useMemo/useCallback values are also memoized by Forget. This mode can be
+   * used with or without @enablePreserveExistingMemoizationGuarantees.
+   *
+   * With enablePreserveExistingMemoizationGuarantees, this validation enables automatically and
+   * verifies that Forget was able to preserve manual memoization semantics under that mode's
+   * additional assumptions about the input.
+   *
+   * With enablePreserveExistingMemoizationGuarantees off, this validation ignores manual memoization
+   * when determining program behavior, and only uses information from useMemo/useCallback to check
+   * that the memoization was preserved. This can be useful for determining where referential equalities
+   * may change under Forget.
+   */
+  validatePreserveExistingMemoizationGuarantees: z.boolean().default(false),
+
   // 🌲
   enableForest: z.boolean().default(false),
   // <🌲>

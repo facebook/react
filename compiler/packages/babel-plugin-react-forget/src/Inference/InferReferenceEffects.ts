@@ -1163,7 +1163,11 @@ function inferBlock(
         continue;
       }
       case "Memoize": {
-        state.reference(instrValue.value, Effect.Freeze, ValueReason.Other);
+        if (env.config.enablePreserveExistingMemoizationGuarantees) {
+          state.reference(instrValue.value, Effect.Freeze, ValueReason.Other);
+        } else {
+          state.reference(instrValue.value, Effect.Read, ValueReason.Other);
+        }
         const lvalue = instr.lvalue;
         lvalue.effect = Effect.ConditionallyMutate;
         state.initialize(instrValue, {

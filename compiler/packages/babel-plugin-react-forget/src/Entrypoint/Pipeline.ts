@@ -349,7 +349,10 @@ function* runWithEnvironment(
     validateMemoizedEffectDependencies(reactiveFunction);
   }
 
-  if (env.config.enablePreserveExistingMemoizationGuarantees) {
+  if (
+    env.config.enablePreserveExistingMemoizationGuarantees ||
+    env.config.validatePreserveExistingMemoizationGuarantees
+  ) {
     validatePreservedManualMemoization(reactiveFunction);
   }
 
