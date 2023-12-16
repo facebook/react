@@ -229,6 +229,8 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 // issues in DEV builds.
 export const enableDebugTracing = false;
 
+export const enableAsyncDebugInfo = __EXPERIMENTAL__;
+
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
