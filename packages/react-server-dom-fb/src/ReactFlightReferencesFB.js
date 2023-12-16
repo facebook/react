@@ -35,6 +35,10 @@ export function setCheckIsClientReference(
   checkIsClientReference = impl;
 }
 
+export function registerClientReference<T>(
+  clientReference: ClientReference<T>,
+): void {}
+
 export function isClientReference(reference: mixed): boolean {
   if (checkIsClientReference == null) {
     throw new Error('Expected implementation for checkIsClientReference.');
@@ -56,6 +60,14 @@ export function resolveClientReferenceMetadata<T>(
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
   return {moduleId: clientReference.getModuleId(), exportName: 'default'};
+}
+
+export function registerServerReference<T>(
+  serverReference: ServerReference<T>,
+  id: string,
+  exportName: null | string,
+): ServerReference<T> {
+  throw new Error('registerServerReference: Not Implemented.');
 }
 
 export function isServerReference<T>(reference: T): boolean {

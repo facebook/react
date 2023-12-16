@@ -25,6 +25,8 @@ import {
 import {setByteLengthOfChunkImplementation} from 'react-server/src/ReactServerStreamConfig';
 
 export {
+  registerClientReference,
+  registerServerReference,
   getRequestedClientReferencesKeys,
   clearRequestedClientReferencesKeysSet,
   setCheckIsClientReference,
