@@ -74,6 +74,7 @@ import {
   validateMemoizedEffectDependencies,
   validateNoRefAccessInRender,
   validateNoSetStateInRender,
+  validatePreservedManualMemoization,
   validateUseMemo,
 } from "../Validation";
 
@@ -346,6 +347,10 @@ function* runWithEnvironment(
 
   if (env.config.validateMemoizedEffectDependencies) {
     validateMemoizedEffectDependencies(reactiveFunction);
+  }
+
+  if (env.config.enablePreserveExistingMemoizationGuarantees) {
+    validatePreservedManualMemoization(reactiveFunction);
   }
 
   if (env.config.enableForest) {
