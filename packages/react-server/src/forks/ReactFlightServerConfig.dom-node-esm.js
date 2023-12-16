@@ -17,5 +17,5 @@ export const supportsRequestStorage = true;
 export const requestStorage: AsyncLocalStorage<Request> =
   new AsyncLocalStorage();
 
-export {createHook as createAsyncHook} from 'async_hooks';
+export {createHook as createAsyncHook, executionAsyncId} from 'async_hooks';
 export * from '../ReactFlightServerConfigDebugNode';

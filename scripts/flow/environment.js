@@ -322,6 +322,7 @@ declare class AsyncLocalStorage<T> {
 
 declare var async_hooks: {
   createHook(callbacks: any): any,
+  executionAsyncId(): number,
 };
 
 declare module 'node:worker_threads' {

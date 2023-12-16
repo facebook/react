@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {createAsyncHook} from './ReactFlightServerConfig';
+import {createAsyncHook, executionAsyncId} from './ReactFlightServerConfig';
 import {enableAsyncDebugInfo} from 'shared/ReactFeatureFlags';
 
 // Initialize the tracing of async operations.
@@ -23,6 +23,7 @@ export function initAsyncDebugInfo(): void {
       },
       promiseResolve(asyncId: number): void {
         // TODO
+        executionAsyncId();
       },
       destroy(asyncId: number): void {
         // TODO
