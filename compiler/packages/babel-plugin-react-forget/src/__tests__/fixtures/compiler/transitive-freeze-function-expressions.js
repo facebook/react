@@ -1,4 +1,4 @@
-// @enablePreserveExistingMemoizationGuarantees
+// @enableTransitivelyFreezeFunctionExpressions
 function Component(props) {
   const { data, loadNext, isLoadingNext } =
     usePaginationFragment(props.key).items ?? [];

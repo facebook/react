@@ -354,7 +354,10 @@ class InferenceState {
               reason: reasonSet,
             });
 
-            if (this.#env.config.enablePreserveExistingMemoizationGuarantees) {
+            if (
+              this.#env.config.enablePreserveExistingMemoizationGuarantees ||
+              this.#env.config.enableTransitivelyFreezeFunctionExpressions
+            ) {
               if (value.kind === "FunctionExpression") {
                 for (const operand of eachInstructionValueOperand(value)) {
                   this.reference(operand, Effect.Freeze, ValueReason.Other);

@@ -210,6 +210,14 @@ const EnvironmentConfigSchema = z.object({
    */
   enableAssumeHooksFollowRulesOfReact: z.boolean().default(false),
 
+  /**
+   * When enabled, the compiler assumes that any values are not subsequently
+   * modified after they are captured by a function passed to React. For example,
+   * if a value `x` is referenced inside a function expression passed to `useEffect`,
+   * then this flag will assume that `x` is not subusequently modified.
+   */
+  enableTransitivelyFreezeFunctionExpressions: z.boolean().default(false),
+
   /*
    * When enabled, removes *all* memoization from the function: this includes
    * removing manually added useMemo/useCallback as well as not adding Forget's
