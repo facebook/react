@@ -105,10 +105,7 @@ function isComponentOrHookLike(
 ): boolean {
   const functionName = getFunctionName(node);
   // Check if the name is component or hook like:
-  if (
-    functionName !== null &&
-    (isComponentName(functionName) || isHook(functionName))
-  ) {
+  if (functionName !== null && isComponentName(functionName)) {
     return (
       // As an added check we also look for hook invocations or JSX
       callsHooksOrCreatesJsx(node) &&
@@ -119,7 +116,11 @@ function isComponentOrHookLike(
        */
       node.get("params").length <= 1
     );
+  } else if (functionName !== null && isHook(functionName)) {
+    // Hooks have hook invocations or JSX, but can take any # of arguments
+    return callsHooksOrCreatesJsx(node);
   }
+
   /*
    * Otherwise for function or arrow function expressions, check if they
    * appear as the argument to React.forwardRef() or React.memo():
