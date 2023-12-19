@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-806ab62c";
+    var ReactVersion = "18.3.0-www-classic-350ad947";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -11034,8 +11034,11 @@ if (__DEV__) {
     // of the request is less critical than the observability of the execution. For renders and resumes however we
     // prioritize speed of the request.
 
-    function getThrownInfo(node) {
-      if (node) {
+    function getThrownInfo(request, node) {
+      if (
+        node && // Always produce a stack in dev
+        true
+      ) {
         return {
           componentStack: getStackFromNode(node)
         };
@@ -11212,7 +11215,7 @@ if (__DEV__) {
       } catch (error) {
         contentRootSegment.status = ERRORED;
         newBoundary.status = CLIENT_RENDERED;
-        var thrownInfo = getThrownInfo(task.componentStack);
+        var thrownInfo = getThrownInfo(request, task.componentStack);
         var errorDigest;
 
         {
@@ -11354,7 +11357,7 @@ if (__DEV__) {
         }
       } catch (error) {
         resumedBoundary.status = CLIENT_RENDERED;
-        var thrownInfo = getThrownInfo(task.componentStack);
+        var thrownInfo = getThrownInfo(request, task.componentStack);
         var errorDigest;
 
         {
@@ -12272,7 +12275,7 @@ if (__DEV__) {
             // replay nodes which might be Suspense boundaries which are able to
             // absorb the error and we can still continue with siblings.
 
-            var thrownInfo = getThrownInfo(task.componentStack);
+            var thrownInfo = getThrownInfo(request, task.componentStack);
             erroredReplay(
               request,
               task.blockedBoundary,
@@ -12621,7 +12624,7 @@ if (__DEV__) {
           // absorb the error and we can still continue with siblings.
           // This is an error, stash the component stack if it is null.
 
-          var thrownInfo = getThrownInfo(task.componentStack);
+          var thrownInfo = getThrownInfo(request, task.componentStack);
           erroredReplay(
             request,
             task.blockedBoundary,
@@ -13117,7 +13120,7 @@ if (__DEV__) {
           boundary.status = CLIENT_RENDERED; // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
           // boundary the message is referring to
 
-          var _errorInfo = getThrownInfo(task.componentStack);
+          var _errorInfo = getThrownInfo(request, task.componentStack);
 
           var _errorDigest = logRecoverableError(request, error, _errorInfo);
 
@@ -13402,7 +13405,7 @@ if (__DEV__) {
           }
         }
 
-        var errorInfo = getThrownInfo(task.componentStack);
+        var errorInfo = getThrownInfo(request, task.componentStack);
         task.abortSet.delete(task);
         segment.status = ERRORED;
         erroredTask(request, task.blockedBoundary, x, errorInfo);
@@ -13487,7 +13490,7 @@ if (__DEV__) {
 
         task.replay.pendingTasks--;
         task.abortSet.delete(task);
-        var errorInfo = getThrownInfo(task.componentStack);
+        var errorInfo = getThrownInfo(request, task.componentStack);
         erroredReplay(
           request,
           task.blockedBoundary,

@@ -3542,24 +3542,24 @@ function createPendingSegment(
 function createBuiltInComponentStack(task, type) {
   return { tag: 0, parent: task.componentStack, type: type };
 }
-function getThrownInfo(node) {
-  if (node) {
+function getThrownInfo(request, node) {
+  if (node && null !== request.trackedPostpones) {
     try {
-      var info = "";
+      request = "";
       do {
         switch (node.tag) {
           case 0:
-            info += describeBuiltInComponentFrame(node.type, null, null);
+            request += describeBuiltInComponentFrame(node.type, null, null);
             break;
           case 1:
-            info += describeNativeComponentFrame(node.type, !1);
+            request += describeNativeComponentFrame(node.type, !1);
             break;
           case 2:
-            info += describeNativeComponentFrame(node.type, !0);
+            request += describeNativeComponentFrame(node.type, !0);
         }
         node = node.parent;
       } while (node);
-      var JSCompiler_temp = info;
+      var JSCompiler_temp = request;
     } catch (x) {
       JSCompiler_temp =
         "\nError generating stack: " + x.message + "\n" + x.stack;
@@ -3916,7 +3916,7 @@ function renderElement(
           } catch (error) {
             (contentRootSegment.status = 4),
               (contextType$jscomp$0.status = 4),
-              (contextType = getThrownInfo(task.componentStack)),
+              (contextType = getThrownInfo(request, task.componentStack)),
               (initialState = logRecoverableError(request, error, contextType)),
               (contextType$jscomp$0.errorDigest = initialState);
           } finally {
@@ -4163,7 +4163,7 @@ function renderNodeDestructive(
                       )
                         throw (task.node === node && (task.replay = replay), x);
                       task.replay.pendingTasks--;
-                      props = getThrownInfo(task.componentStack);
+                      props = getThrownInfo(request, task.componentStack);
                       key = request;
                       request = task.blockedBoundary;
                       prevThenableState = x;
@@ -4239,7 +4239,10 @@ function renderNodeDestructive(
                         }
                       } catch (error) {
                         (resumedBoundary.status = 4),
-                          (childNodes = getThrownInfo(task.componentStack)),
+                          (childNodes = getThrownInfo(
+                            request,
+                            task.componentStack
+                          )),
                           (replay = logRecoverableError(
                             request,
                             error,
@@ -4403,7 +4406,7 @@ function renderChildrenArray(request, task, children, childIndex) {
           )
             throw x;
           task.replay.pendingTasks--;
-          children = getThrownInfo(task.componentStack);
+          children = getThrownInfo(request, task.componentStack);
           var boundary = task.blockedBoundary,
             error = x;
           children = logRecoverableError(request, error, children);
@@ -4642,7 +4645,7 @@ function abortTask(task, request, error) {
     boundary.pendingTasks--,
       4 !== boundary.status &&
         ((boundary.status = 4),
-        (task = getThrownInfo(task.componentStack)),
+        (task = getThrownInfo(request, task.componentStack)),
         (task = logRecoverableError(request, error, task)),
         (boundary.errorDigest = task),
         boundary.parentFlushed &&
@@ -4839,7 +4842,10 @@ function performWork(request$jscomp$2) {
               } else {
                 task.replay.pendingTasks--;
                 task.abortSet.delete(task);
-                var errorInfo = getThrownInfo(task.componentStack);
+                var errorInfo = getThrownInfo(
+                  request$jscomp$0,
+                  task.componentStack
+                );
                 request = void 0;
                 var request$jscomp$1 = request$jscomp$0,
                   boundary = task.blockedBoundary,
@@ -4912,7 +4918,10 @@ function performWork(request$jscomp$2) {
               x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
               task.thenableState = getThenableStateAfterSuspending();
             } else {
-              var errorInfo$jscomp$0 = getThrownInfo(task.componentStack);
+              var errorInfo$jscomp$0 = getThrownInfo(
+                request,
+                task.componentStack
+              );
               task.abortSet.delete(task);
               request$jscomp$1.status = 4;
               var boundary$jscomp$0 = task.blockedBoundary;
@@ -5580,4 +5589,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-bace4ea3";
+exports.version = "18.3.0-www-modern-5f7638f4";

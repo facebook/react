@@ -3357,24 +3357,24 @@ function createPendingSegment(
 function createBuiltInComponentStack(task, type) {
   return { tag: 0, parent: task.componentStack, type: type };
 }
-function getThrownInfo(node) {
-  if (node) {
+function getThrownInfo(request, node) {
+  if (node && null !== request.trackedPostpones) {
     try {
-      var info = "";
+      request = "";
       do {
         switch (node.tag) {
           case 0:
-            info += describeBuiltInComponentFrame(node.type, null, null);
+            request += describeBuiltInComponentFrame(node.type, null, null);
             break;
           case 1:
-            info += describeNativeComponentFrame(node.type, !1);
+            request += describeNativeComponentFrame(node.type, !1);
             break;
           case 2:
-            info += describeNativeComponentFrame(node.type, !0);
+            request += describeNativeComponentFrame(node.type, !0);
         }
         node = node.parent;
       } while (node);
-      var JSCompiler_temp = info;
+      var JSCompiler_temp = request;
     } catch (x) {
       JSCompiler_temp =
         "\nError generating stack: " + x.message + "\n" + x.stack;
@@ -3734,7 +3734,7 @@ function renderElement(
           } catch (error) {
             (contentRootSegment.status = 4),
               (contextType$jscomp$0.status = 4),
-              (contextType = getThrownInfo(task.componentStack)),
+              (contextType = getThrownInfo(request, task.componentStack)),
               (initialState = logRecoverableError(request, error, contextType)),
               (contextType$jscomp$0.errorDigest = initialState);
           } finally {
@@ -3993,7 +3993,7 @@ function renderNodeDestructive(
                       )
                         throw (task.node === node && (task.replay = replay), x);
                       task.replay.pendingTasks--;
-                      props = getThrownInfo(task.componentStack);
+                      props = getThrownInfo(request, task.componentStack);
                       key = request;
                       request = task.blockedBoundary;
                       prevThenableState = x;
@@ -4069,7 +4069,10 @@ function renderNodeDestructive(
                         }
                       } catch (error) {
                         (resumedBoundary.status = 4),
-                          (childNodes = getThrownInfo(task.componentStack)),
+                          (childNodes = getThrownInfo(
+                            request,
+                            task.componentStack
+                          )),
                           (replay = logRecoverableError(
                             request,
                             error,
@@ -4236,7 +4239,7 @@ function renderChildrenArray(request, task, children, childIndex) {
           )
             throw x;
           task.replay.pendingTasks--;
-          children = getThrownInfo(task.componentStack);
+          children = getThrownInfo(request, task.componentStack);
           var boundary = task.blockedBoundary,
             error = x;
           children = logRecoverableError(request, error, children);
@@ -4478,7 +4481,7 @@ function abortTask(task, request, error) {
     boundary.pendingTasks--,
       4 !== boundary.status &&
         ((boundary.status = 4),
-        (task = getThrownInfo(task.componentStack)),
+        (task = getThrownInfo(request, task.componentStack)),
         (task = logRecoverableError(request, error, task)),
         (boundary.errorDigest = task),
         boundary.parentFlushed &&
@@ -5229,7 +5232,10 @@ exports.renderNextChunk = function (stream) {
               } else {
                 task$jscomp$0.replay.pendingTasks--;
                 task$jscomp$0.abortSet.delete(task$jscomp$0);
-                var errorInfo = getThrownInfo(task$jscomp$0.componentStack),
+                var errorInfo = getThrownInfo(
+                    request,
+                    task$jscomp$0.componentStack
+                  ),
                   boundary = task$jscomp$0.blockedBoundary,
                   replayNodes = task$jscomp$0.replay.nodes,
                   resumeSlots = task$jscomp$0.replay.slots;
@@ -5297,6 +5303,7 @@ exports.renderNextChunk = function (stream) {
                 task$jscomp$0.thenableState = getThenableStateAfterSuspending();
               } else {
                 var errorInfo$jscomp$0 = getThrownInfo(
+                  request,
                   task$jscomp$0.componentStack
                 );
                 task$jscomp$0.abortSet.delete(task$jscomp$0);
