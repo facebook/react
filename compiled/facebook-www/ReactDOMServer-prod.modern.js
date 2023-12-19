@@ -591,8 +591,8 @@ function pushAttribute(target, name, value) {
             case "symbol":
               return;
             case "boolean":
-              var prefix$7 = name.toLowerCase().slice(0, 5);
-              if ("data-" !== prefix$7 && "aria-" !== prefix$7) return;
+              var prefix = name.toLowerCase().slice(0, 5);
+              if ("data-" !== prefix && "aria-" !== prefix) return;
           }
           target.push(" ", name, '="', escapeTextForBrowser(value), '"');
         }
@@ -2483,16 +2483,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     );
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1659 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1589 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1674 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1675 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1676 = new Set(),
-    JSCompiler_object_inline_styles_1677 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1678 = new Set(),
-    JSCompiler_object_inline_scripts_1679 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1680 = new Set(),
-    JSCompiler_object_inline_preloads_1681 = {
+  var JSCompiler_object_inline_preconnects_1604 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1605 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1606 = new Set(),
+    JSCompiler_object_inline_styles_1607 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1608 = new Set(),
+    JSCompiler_object_inline_scripts_1609 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1610 = new Set(),
+    JSCompiler_object_inline_preloads_1611 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2529,7 +2529,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1678.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1608.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src));
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
@@ -2570,7 +2570,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1678.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1608.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i)
@@ -2585,7 +2585,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push('" async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1659,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1589,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2606,14 +2606,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     importMapChunks: [],
     preloadChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1674,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1675,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1676,
-    styles: JSCompiler_object_inline_styles_1677,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1678,
-    scripts: JSCompiler_object_inline_scripts_1679,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1680,
-    preloads: JSCompiler_object_inline_preloads_1681,
+    preconnects: JSCompiler_object_inline_preconnects_1604,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1605,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1606,
+    styles: JSCompiler_object_inline_styles_1607,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1608,
+    scripts: JSCompiler_object_inline_scripts_1609,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1610,
+    preloads: JSCompiler_object_inline_preloads_1611,
     boundaryResources: null,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
@@ -2703,149 +2703,6 @@ function getComponentNameFromType(type) {
         } catch (x) {}
     }
   return null;
-}
-var prefix;
-function describeBuiltInComponentFrame(name) {
-  if (void 0 === prefix)
-    try {
-      throw Error();
-    } catch (x) {
-      var match = x.stack.trim().match(/\n( *(at )?)/);
-      prefix = (match && match[1]) || "";
-    }
-  return "\n" + prefix + name;
-}
-var reentry = !1;
-function describeNativeComponentFrame(fn, construct) {
-  if (!fn || reentry) return "";
-  reentry = !0;
-  var previousPrepareStackTrace = Error.prepareStackTrace;
-  Error.prepareStackTrace = void 0;
-  var RunInRootFrame = {
-    DetermineComponentFrameRoot: function () {
-      try {
-        if (construct) {
-          var Fake = function () {
-            throw Error();
-          };
-          Object.defineProperty(Fake.prototype, "props", {
-            set: function () {
-              throw Error();
-            }
-          });
-          if ("object" === typeof Reflect && Reflect.construct) {
-            try {
-              Reflect.construct(Fake, []);
-            } catch (x) {
-              var control = x;
-            }
-            Reflect.construct(fn, [], Fake);
-          } else {
-            try {
-              Fake.call();
-            } catch (x$17) {
-              control = x$17;
-            }
-            fn.call(Fake.prototype);
-          }
-        } else {
-          try {
-            throw Error();
-          } catch (x$18) {
-            control = x$18;
-          }
-          (Fake = fn()) &&
-            "function" === typeof Fake.catch &&
-            Fake.catch(function () {});
-        }
-      } catch (sample) {
-        if (sample && control && "string" === typeof sample.stack)
-          return [sample.stack, control.stack];
-      }
-      return [null, null];
-    }
-  };
-  RunInRootFrame.DetermineComponentFrameRoot.displayName =
-    "DetermineComponentFrameRoot";
-  var namePropDescriptor = Object.getOwnPropertyDescriptor(
-    RunInRootFrame.DetermineComponentFrameRoot,
-    "name"
-  );
-  namePropDescriptor &&
-    namePropDescriptor.configurable &&
-    Object.defineProperty(RunInRootFrame.DetermineComponentFrameRoot, "name", {
-      value: "DetermineComponentFrameRoot"
-    });
-  try {
-    var _RunInRootFrame$Deter = RunInRootFrame.DetermineComponentFrameRoot(),
-      sampleStack = _RunInRootFrame$Deter[0],
-      controlStack = _RunInRootFrame$Deter[1];
-    if (sampleStack && controlStack) {
-      var sampleLines = sampleStack.split("\n"),
-        controlLines = controlStack.split("\n");
-      for (
-        namePropDescriptor = RunInRootFrame = 0;
-        RunInRootFrame < sampleLines.length &&
-        !sampleLines[RunInRootFrame].includes("DetermineComponentFrameRoot");
-
-      )
-        RunInRootFrame++;
-      for (
-        ;
-        namePropDescriptor < controlLines.length &&
-        !controlLines[namePropDescriptor].includes(
-          "DetermineComponentFrameRoot"
-        );
-
-      )
-        namePropDescriptor++;
-      if (
-        RunInRootFrame === sampleLines.length ||
-        namePropDescriptor === controlLines.length
-      )
-        for (
-          RunInRootFrame = sampleLines.length - 1,
-            namePropDescriptor = controlLines.length - 1;
-          1 <= RunInRootFrame &&
-          0 <= namePropDescriptor &&
-          sampleLines[RunInRootFrame] !== controlLines[namePropDescriptor];
-
-        )
-          namePropDescriptor--;
-      for (
-        ;
-        1 <= RunInRootFrame && 0 <= namePropDescriptor;
-        RunInRootFrame--, namePropDescriptor--
-      )
-        if (sampleLines[RunInRootFrame] !== controlLines[namePropDescriptor]) {
-          if (1 !== RunInRootFrame || 1 !== namePropDescriptor) {
-            do
-              if (
-                (RunInRootFrame--,
-                namePropDescriptor--,
-                0 > namePropDescriptor ||
-                  sampleLines[RunInRootFrame] !==
-                    controlLines[namePropDescriptor])
-              ) {
-                var frame =
-                  "\n" +
-                  sampleLines[RunInRootFrame].replace(" at new ", " at ");
-                fn.displayName &&
-                  frame.includes("<anonymous>") &&
-                  (frame = frame.replace("<anonymous>", fn.displayName));
-                return frame;
-              }
-            while (1 <= RunInRootFrame && 0 <= namePropDescriptor);
-          }
-          break;
-        }
-    }
-  } finally {
-    (reentry = !1), (Error.prepareStackTrace = previousPrepareStackTrace);
-  }
-  return (previousPrepareStackTrace = fn ? fn.displayName || fn.name : "")
-    ? describeBuiltInComponentFrame(previousPrepareStackTrace)
-    : "";
 }
 var emptyContextObject = {},
   currentActiveSnapshot = null;
@@ -3218,11 +3075,11 @@ function useFormState(action, initialState, permalink) {
       });
     return [initialState, action];
   }
-  var boundAction$23 = action.bind(null, initialState);
+  var boundAction$20 = action.bind(null, initialState);
   return [
     initialState,
     function (payload) {
-      boundAction$23(payload);
+      boundAction$20(payload);
     }
   ];
 }
@@ -3409,8 +3266,7 @@ function createRequest(
     rootFormatContext,
     emptyContextObject,
     null,
-    emptyTreeContext,
-    null
+    emptyTreeContext
   );
   pingedTasks.push(children);
   return resumableState;
@@ -3449,8 +3305,7 @@ function createRenderTask(
   formatContext,
   legacyContext,
   context,
-  treeContext,
-  componentStack
+  treeContext
 ) {
   request.allPendingTasks++;
   null === blockedBoundary
@@ -3471,7 +3326,6 @@ function createRenderTask(
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
-    componentStack: componentStack,
     thenableState: thenableState
   };
   abortSet.add(task);
@@ -3489,8 +3343,7 @@ function createReplayTask(
   formatContext,
   legacyContext,
   context,
-  treeContext,
-  componentStack
+  treeContext
 ) {
   request.allPendingTasks++;
   null === blockedBoundary
@@ -3512,7 +3365,6 @@ function createReplayTask(
     legacyContext: legacyContext,
     context: context,
     treeContext: treeContext,
-    componentStack: componentStack,
     thenableState: thenableState
   };
   abortSet.add(task);
@@ -3539,38 +3391,15 @@ function createPendingSegment(
     textEmbedded: textEmbedded
   };
 }
-function createBuiltInComponentStack(task, type) {
-  return { tag: 0, parent: task.componentStack, type: type };
-}
-function getThrownInfo(node) {
-  if (node) {
-    try {
-      var info = "";
-      do {
-        switch (node.tag) {
-          case 0:
-            info += describeBuiltInComponentFrame(node.type, null, null);
-            break;
-          case 1:
-            info += describeNativeComponentFrame(node.type, !1);
-            break;
-          case 2:
-            info += describeNativeComponentFrame(node.type, !0);
-        }
-        node = node.parent;
-      } while (node);
-      var JSCompiler_temp = info;
-    } catch (x) {
-      JSCompiler_temp =
-        "\nError generating stack: " + x.message + "\n" + x.stack;
-    }
-    JSCompiler_temp = { componentStack: JSCompiler_temp };
-  } else JSCompiler_temp = {};
-  return JSCompiler_temp;
-}
-function logRecoverableError(request, error, errorInfo) {
-  request = request.onError(error, errorInfo);
-  if (null == request || "string" === typeof request) return request;
+function logRecoverableError(request, error) {
+  request = request.onError(error);
+  if (null != request && "string" !== typeof request)
+    throw Error(
+      'onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "' +
+        typeof request +
+        '" instead'
+    );
+  return request;
 }
 function fatalError(request, error) {
   var onShellError = request.onShellError;
@@ -3611,7 +3440,7 @@ function finishFunctionComponent(
       (task.treeContext = keyPath))
     : didEmitFormStateMarkers
     ? renderNode(request, task, children, -1)
-    : renderNodeDestructive(request, task, null, children, -1);
+    : renderNodeDestructiveImpl(request, task, null, children, -1);
   task.keyPath = formStateCount;
 }
 function resolveDefaultProps(Component, baseProps) {
@@ -3636,48 +3465,50 @@ function renderElement(
 ) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
-      prevThenableState = task.componentStack;
-      task.componentStack = { tag: 2, parent: task.componentStack, type: type };
-      ref = emptyContextObject;
+      prevThenableState = emptyContextObject;
       var contextType = type.contextType;
       "object" === typeof contextType &&
         null !== contextType &&
-        (ref = contextType._currentValue2);
-      ref = new type(props, ref);
-      var initialState = void 0 !== ref.state ? ref.state : null;
-      ref.updater = classComponentUpdater;
-      ref.props = props;
-      ref.state = initialState;
+        (prevThenableState = contextType._currentValue2);
+      prevThenableState = new type(props, prevThenableState);
+      ref = void 0 !== prevThenableState.state ? prevThenableState.state : null;
+      prevThenableState.updater = classComponentUpdater;
+      prevThenableState.props = props;
+      prevThenableState.state = ref;
       contextType = { queue: [], replace: !1 };
-      ref._reactInternals = contextType;
+      prevThenableState._reactInternals = contextType;
       var contextType$jscomp$0 = type.contextType;
-      ref.context =
+      prevThenableState.context =
         "object" === typeof contextType$jscomp$0 &&
         null !== contextType$jscomp$0
           ? contextType$jscomp$0._currentValue2
           : emptyContextObject;
       contextType$jscomp$0 = type.getDerivedStateFromProps;
       "function" === typeof contextType$jscomp$0 &&
-        ((contextType$jscomp$0 = contextType$jscomp$0(props, initialState)),
-        (initialState =
+        ((contextType$jscomp$0 = contextType$jscomp$0(props, ref)),
+        (ref =
           null === contextType$jscomp$0 || void 0 === contextType$jscomp$0
-            ? initialState
-            : assign({}, initialState, contextType$jscomp$0)),
-        (ref.state = initialState));
+            ? ref
+            : assign({}, ref, contextType$jscomp$0)),
+        (prevThenableState.state = ref));
       if (
         "function" !== typeof type.getDerivedStateFromProps &&
-        "function" !== typeof ref.getSnapshotBeforeUpdate &&
-        ("function" === typeof ref.UNSAFE_componentWillMount ||
-          "function" === typeof ref.componentWillMount)
+        "function" !== typeof prevThenableState.getSnapshotBeforeUpdate &&
+        ("function" === typeof prevThenableState.UNSAFE_componentWillMount ||
+          "function" === typeof prevThenableState.componentWillMount)
       )
         if (
-          ((type = ref.state),
-          "function" === typeof ref.componentWillMount &&
-            ref.componentWillMount(),
-          "function" === typeof ref.UNSAFE_componentWillMount &&
-            ref.UNSAFE_componentWillMount(),
-          type !== ref.state &&
-            classComponentUpdater.enqueueReplaceState(ref, ref.state, null),
+          ((type = prevThenableState.state),
+          "function" === typeof prevThenableState.componentWillMount &&
+            prevThenableState.componentWillMount(),
+          "function" === typeof prevThenableState.UNSAFE_componentWillMount &&
+            prevThenableState.UNSAFE_componentWillMount(),
+          type !== prevThenableState.state &&
+            classComponentUpdater.enqueueReplaceState(
+              prevThenableState,
+              prevThenableState.state,
+              null
+            ),
           null !== contextType.queue && 0 < contextType.queue.length)
         )
           if (
@@ -3687,10 +3518,12 @@ function renderElement(
             (contextType.replace = !1),
             contextType$jscomp$0 && 1 === type.length)
           )
-            ref.state = type[0];
+            prevThenableState.state = type[0];
           else {
-            contextType = contextType$jscomp$0 ? type[0] : ref.state;
-            initialState = !0;
+            contextType = contextType$jscomp$0
+              ? type[0]
+              : prevThenableState.state;
+            ref = !0;
             for (
               contextType$jscomp$0 = contextType$jscomp$0 ? 1 : 0;
               contextType$jscomp$0 < type.length;
@@ -3699,31 +3532,24 @@ function renderElement(
               var partial = type[contextType$jscomp$0];
               partial =
                 "function" === typeof partial
-                  ? partial.call(ref, contextType, props, void 0)
+                  ? partial.call(prevThenableState, contextType, props, void 0)
                   : partial;
               null != partial &&
-                (initialState
-                  ? ((initialState = !1),
+                (ref
+                  ? ((ref = !1),
                     (contextType = assign({}, contextType, partial)))
                   : assign(contextType, partial));
             }
-            ref.state = contextType;
+            prevThenableState.state = contextType;
           }
         else contextType.queue = null;
-      props = ref.render();
+      props = prevThenableState.render();
       type = task.keyPath;
       task.keyPath = keyPath;
-      renderNodeDestructive(request, task, null, props, -1);
+      renderNodeDestructiveImpl(request, task, null, props, -1);
       task.keyPath = type;
-      task.componentStack = prevThenableState;
     } else
-      (ref = task.componentStack),
-        (task.componentStack = {
-          tag: 1,
-          parent: task.componentStack,
-          type: type
-        }),
-        (currentlyRenderingComponent = {}),
+      (currentlyRenderingComponent = {}),
         (currentlyRenderingTask = task),
         (currentlyRenderingRequest = request),
         (currentlyRenderingKeyPath = keyPath),
@@ -3741,41 +3567,37 @@ function renderElement(
           0 !== localIdCounter,
           formStateCounter,
           formStateMatchingIndex
-        ),
-        (task.componentStack = ref);
-  else if ("string" === typeof type) {
-    prevThenableState = task.componentStack;
-    task.componentStack = createBuiltInComponentStack(task, type);
-    ref = task.blockedSegment;
-    if (null === ref)
-      (ref = props.children),
+        );
+  else if ("string" === typeof type)
+    if (((prevThenableState = task.blockedSegment), null === prevThenableState))
+      (prevThenableState = props.children),
         (contextType = task.formatContext),
-        (initialState = task.keyPath),
+        (ref = task.keyPath),
         (task.formatContext = getChildFormatContext(contextType, type, props)),
         (task.keyPath = keyPath),
-        renderNode(request, task, ref, -1),
+        renderNode(request, task, prevThenableState, -1),
         (task.formatContext = contextType),
-        (task.keyPath = initialState);
+        (task.keyPath = ref);
     else {
-      initialState = pushStartInstance(
-        ref.chunks,
+      ref = pushStartInstance(
+        prevThenableState.chunks,
         type,
         props,
         request.resumableState,
         request.renderState,
         task.formatContext,
-        ref.lastPushedText
+        prevThenableState.lastPushedText
       );
-      ref.lastPushedText = !1;
+      prevThenableState.lastPushedText = !1;
       contextType = task.formatContext;
       contextType$jscomp$0 = task.keyPath;
       task.formatContext = getChildFormatContext(contextType, type, props);
       task.keyPath = keyPath;
-      renderNode(request, task, initialState, -1);
+      renderNode(request, task, ref, -1);
       task.formatContext = contextType;
       task.keyPath = contextType$jscomp$0;
       a: {
-        keyPath = ref.chunks;
+        task = prevThenableState.chunks;
         request = request.resumableState;
         switch (type) {
           case "title":
@@ -3809,12 +3631,11 @@ function renderElement(
               break a;
             }
         }
-        keyPath.push(endChunkForTag(type));
+        task.push(endChunkForTag(type));
       }
-      ref.lastPushedText = !1;
+      prevThenableState.lastPushedText = !1;
     }
-    task.componentStack = prevThenableState;
-  } else {
+  else {
     switch (type) {
       case REACT_LEGACY_HIDDEN_TYPE:
       case REACT_DEBUG_TRACING_MODE_TYPE:
@@ -3823,29 +3644,26 @@ function renderElement(
       case REACT_FRAGMENT_TYPE:
         type = task.keyPath;
         task.keyPath = keyPath;
-        renderNodeDestructive(request, task, null, props.children, -1);
+        renderNodeDestructiveImpl(request, task, null, props.children, -1);
         task.keyPath = type;
         return;
       case REACT_OFFSCREEN_TYPE:
         "hidden" !== props.mode &&
           ((type = task.keyPath),
           (task.keyPath = keyPath),
-          renderNodeDestructive(request, task, null, props.children, -1),
+          renderNodeDestructiveImpl(request, task, null, props.children, -1),
           (task.keyPath = type));
         return;
       case REACT_SUSPENSE_LIST_TYPE:
-        type = task.componentStack;
-        task.componentStack = createBuiltInComponentStack(task, "SuspenseList");
-        prevThenableState = task.keyPath;
+        type = task.keyPath;
         task.keyPath = keyPath;
-        renderNodeDestructive(request, task, null, props.children, -1);
-        task.keyPath = prevThenableState;
-        task.componentStack = type;
+        renderNodeDestructiveImpl(request, task, null, props.children, -1);
+        task.keyPath = type;
         return;
       case REACT_SCOPE_TYPE:
         type = task.keyPath;
         task.keyPath = keyPath;
-        renderNodeDestructive(request, task, null, props.children, -1);
+        renderNodeDestructiveImpl(request, task, null, props.children, -1);
         task.keyPath = type;
         return;
       case REACT_SUSPENSE_TYPE:
@@ -3859,29 +3677,24 @@ function renderElement(
             task.keyPath = type;
           }
         } else {
-          var previousComponentStack = task.componentStack;
-          type = task.componentStack = createBuiltInComponentStack(
-            task,
-            "Suspense"
-          );
-          var prevKeyPath = task.keyPath;
-          prevThenableState = task.blockedBoundary;
+          partial = task.keyPath;
+          type = task.blockedBoundary;
           var parentSegment = task.blockedSegment;
-          ref = props.fallback;
+          prevThenableState = props.fallback;
           var content = props.children;
           props = new Set();
-          contextType$jscomp$0 = createSuspenseBoundary(request, props);
+          ref = createSuspenseBoundary(request, props);
           null !== request.trackedPostpones &&
-            (contextType$jscomp$0.trackedContentKeyPath = keyPath);
-          partial = createPendingSegment(
+            (ref.trackedContentKeyPath = keyPath);
+          contextType$jscomp$0 = createPendingSegment(
             request,
             parentSegment.chunks.length,
-            contextType$jscomp$0,
+            ref,
             task.formatContext,
             !1,
             !1
           );
-          parentSegment.children.push(partial);
+          parentSegment.children.push(contextType$jscomp$0);
           parentSegment.lastPushedText = !1;
           var contentRootSegment = createPendingSegment(
             request,
@@ -3892,10 +3705,9 @@ function renderElement(
             !1
           );
           contentRootSegment.parentFlushed = !0;
-          task.blockedBoundary = contextType$jscomp$0;
+          task.blockedBoundary = ref;
           task.blockedSegment = contentRootSegment;
-          request.renderState.boundaryResources =
-            contextType$jscomp$0.resources;
+          request.renderState.boundaryResources = ref.resources;
           task.keyPath = keyPath;
           try {
             if (
@@ -3905,58 +3717,46 @@ function renderElement(
                   contentRootSegment.textEmbedded &&
                   contentRootSegment.chunks.push("\x3c!-- --\x3e")),
               (contentRootSegment.status = 1),
-              queueCompletedSegment(contextType$jscomp$0, contentRootSegment),
-              0 === contextType$jscomp$0.pendingTasks &&
-                0 === contextType$jscomp$0.status)
+              queueCompletedSegment(ref, contentRootSegment),
+              0 === ref.pendingTasks && 0 === ref.status)
             ) {
-              contextType$jscomp$0.status = 1;
-              task.componentStack = previousComponentStack;
+              ref.status = 1;
               break a;
             }
           } catch (error) {
             (contentRootSegment.status = 4),
-              (contextType$jscomp$0.status = 4),
-              (contextType = getThrownInfo(task.componentStack)),
-              (initialState = logRecoverableError(request, error, contextType)),
-              (contextType$jscomp$0.errorDigest = initialState);
+              (ref.status = 4),
+              (contextType = logRecoverableError(request, error)),
+              (ref.errorDigest = contextType);
           } finally {
-            (request.renderState.boundaryResources = prevThenableState
-              ? prevThenableState.resources
+            (request.renderState.boundaryResources = type
+              ? type.resources
               : null),
-              (task.blockedBoundary = prevThenableState),
+              (task.blockedBoundary = type),
               (task.blockedSegment = parentSegment),
-              (task.keyPath = prevKeyPath),
-              (task.componentStack = previousComponentStack);
+              (task.keyPath = partial);
           }
           contextType = [keyPath[0], "Suspense Fallback", keyPath[2]];
-          initialState = request.trackedPostpones;
-          null !== initialState &&
-            ((previousComponentStack = [
-              contextType[1],
-              contextType[2],
-              [],
-              null
-            ]),
-            initialState.workingMap.set(contextType, previousComponentStack),
-            5 === contextType$jscomp$0.status
-              ? (initialState.workingMap.get(keyPath)[4] =
-                  previousComponentStack)
-              : (contextType$jscomp$0.trackedFallbackNode =
-                  previousComponentStack));
+          partial = request.trackedPostpones;
+          null !== partial &&
+            ((parentSegment = [contextType[1], contextType[2], [], null]),
+            partial.workingMap.set(contextType, parentSegment),
+            5 === ref.status
+              ? (partial.workingMap.get(keyPath)[4] = parentSegment)
+              : (ref.trackedFallbackNode = parentSegment));
           task = createRenderTask(
             request,
             null,
-            ref,
-            -1,
             prevThenableState,
-            partial,
+            -1,
+            type,
+            contextType$jscomp$0,
             props,
             contextType,
             task.formatContext,
             task.legacyContext,
             task.context,
-            task.treeContext,
-            type
+            task.treeContext
           );
           request.pingedTasks.push(task);
         }
@@ -3965,12 +3765,6 @@ function renderElement(
     if ("object" === typeof type && null !== type)
       switch (type.$$typeof) {
         case REACT_FORWARD_REF_TYPE:
-          contextType = task.componentStack;
-          task.componentStack = {
-            tag: 1,
-            parent: task.componentStack,
-            type: type.render
-          };
           type = type.render;
           currentlyRenderingComponent = {};
           currentlyRenderingTask = task;
@@ -3991,7 +3785,6 @@ function renderElement(
             formStateCounter,
             formStateMatchingIndex
           );
-          task.componentStack = contextType;
           return;
         case REACT_MEMO_TYPE:
           type = type.type;
@@ -4007,23 +3800,26 @@ function renderElement(
           );
           return;
         case REACT_PROVIDER_TYPE:
-          ref = props.children;
+          contextType = props.children;
           prevThenableState = task.keyPath;
           type = type._context;
           props = props.value;
-          contextType = type._currentValue2;
+          ref = type._currentValue2;
           type._currentValue2 = props;
-          initialState = currentActiveSnapshot;
+          contextType$jscomp$0 = currentActiveSnapshot;
           currentActiveSnapshot = props = {
-            parent: initialState,
-            depth: null === initialState ? 0 : initialState.depth + 1,
+            parent: contextType$jscomp$0,
+            depth:
+              null === contextType$jscomp$0
+                ? 0
+                : contextType$jscomp$0.depth + 1,
             context: type,
-            parentValue: contextType,
+            parentValue: ref,
             value: props
           };
           task.context = props;
           task.keyPath = keyPath;
-          renderNodeDestructive(request, task, null, ref, -1);
+          renderNodeDestructiveImpl(request, task, null, contextType, -1);
           request = currentActiveSnapshot;
           if (null === request) throw Error(formatProdErrorMessage(403));
           keyPath = request.parentValue;
@@ -4040,12 +3836,10 @@ function renderElement(
           props = props(type._currentValue2);
           type = task.keyPath;
           task.keyPath = keyPath;
-          renderNodeDestructive(request, task, null, props, -1);
+          renderNodeDestructiveImpl(request, task, null, props, -1);
           task.keyPath = type;
           return;
         case REACT_LAZY_TYPE:
-          ref = task.componentStack;
-          task.componentStack = createBuiltInComponentStack(task, "Lazy");
           contextType = type._init;
           type = contextType(type._payload);
           props = resolveDefaultProps(type, props);
@@ -4058,7 +3852,6 @@ function renderElement(
             props,
             void 0
           );
-          task.componentStack = ref;
           return;
       }
     throw Error(
@@ -4093,7 +3886,7 @@ function resumeNode(request, task, segmentId, node, childIndex) {
     (task.replay = prevReplay), (task.blockedSegment = null);
   }
 }
-function renderNodeDestructive(
+function renderNodeDestructiveImpl(
   request,
   task,
   prevThenableState,
@@ -4130,14 +3923,10 @@ function renderNodeDestructive(
                   if (4 === node.length) {
                     if (null !== name && name !== node[0])
                       throw Error(formatProdErrorMessage(490, node[0], name));
-                    var childNodes = node[2];
-                    name = node[3];
-                    node = task.node;
-                    task.replay = {
-                      nodes: childNodes,
-                      slots: name,
-                      pendingTasks: 1
-                    };
+                    name = node[2];
+                    node = node[3];
+                    keyOrIndex = task.node;
+                    task.replay = { nodes: name, slots: node, pendingTasks: 1 };
                     try {
                       renderElement(
                         request,
@@ -4161,22 +3950,20 @@ function renderNodeDestructive(
                         (x === SuspenseException ||
                           "function" === typeof x.then)
                       )
-                        throw (task.node === node && (task.replay = replay), x);
+                        throw (
+                          (task.node === keyOrIndex && (task.replay = replay),
+                          x)
+                        );
                       task.replay.pendingTasks--;
-                      props = getThrownInfo(task.componentStack);
                       key = request;
                       request = task.blockedBoundary;
                       prevThenableState = x;
-                      props = logRecoverableError(
-                        key,
-                        prevThenableState,
-                        props
-                      );
+                      props = logRecoverableError(key, prevThenableState);
                       abortRemainingReplayNodes(
                         key,
                         request,
-                        childNodes,
                         name,
+                        node,
                         prevThenableState,
                         props
                       );
@@ -4198,11 +3985,8 @@ function renderNodeDestructive(
                       ref = node[3];
                       name = null === node[4] ? [] : node[4][2];
                       node = null === node[4] ? null : node[4][3];
-                      keyOrIndex = task.componentStack;
-                      var suspenseComponentStack = (task.componentStack =
-                          createBuiltInComponentStack(task, "Suspense")),
-                        prevKeyPath = task.keyPath,
-                        previousReplaySet = task.replay,
+                      keyOrIndex = task.keyPath;
+                      var previousReplaySet = task.replay,
                         parentBoundary = task.blockedBoundary,
                         content = props.children;
                       props = props.fallback;
@@ -4239,12 +4023,7 @@ function renderNodeDestructive(
                         }
                       } catch (error) {
                         (resumedBoundary.status = 4),
-                          (childNodes = getThrownInfo(task.componentStack)),
-                          (replay = logRecoverableError(
-                            request,
-                            error,
-                            childNodes
-                          )),
+                          (replay = logRecoverableError(request, error)),
                           (resumedBoundary.errorDigest = replay),
                           task.replay.pendingTasks--,
                           request.clientRenderedBoundaries.push(
@@ -4256,8 +4035,7 @@ function renderNodeDestructive(
                           : null),
                           (task.blockedBoundary = parentBoundary),
                           (task.replay = previousReplaySet),
-                          (task.keyPath = prevKeyPath),
-                          (task.componentStack = keyOrIndex);
+                          (task.keyPath = keyOrIndex);
                       }
                       task = createReplayTask(
                         request,
@@ -4271,8 +4049,7 @@ function renderNodeDestructive(
                         task.formatContext,
                         task.legacyContext,
                         task.context,
-                        task.treeContext,
-                        suspenseComponentStack
+                        task.treeContext
                       );
                       request.pingedTasks.push(task);
                     }
@@ -4296,12 +4073,15 @@ function renderNodeDestructive(
         case REACT_PORTAL_TYPE:
           throw Error(formatProdErrorMessage(257));
         case REACT_LAZY_TYPE:
-          props = task.componentStack;
-          task.componentStack = createBuiltInComponentStack(task, "Lazy");
-          key = node$jscomp$0._init;
-          node$jscomp$0 = key(node$jscomp$0._payload);
-          task.componentStack = props;
-          renderNodeDestructive(request, task, null, node$jscomp$0, childIndex);
+          props = node$jscomp$0._init;
+          node$jscomp$0 = props(node$jscomp$0._payload);
+          renderNodeDestructiveImpl(
+            request,
+            task,
+            null,
+            node$jscomp$0,
+            childIndex
+          );
           return;
       }
       if (isArrayImpl(node$jscomp$0)) {
@@ -4325,7 +4105,7 @@ function renderNodeDestructive(
         return;
       }
       if ("function" === typeof node$jscomp$0.then)
-        return renderNodeDestructive(
+        return renderNodeDestructiveImpl(
           request,
           task,
           null,
@@ -4336,7 +4116,7 @@ function renderNodeDestructive(
         node$jscomp$0.$$typeof === REACT_CONTEXT_TYPE ||
         node$jscomp$0.$$typeof === REACT_SERVER_CONTEXT_TYPE
       )
-        return renderNodeDestructive(
+        return renderNodeDestructiveImpl(
           request,
           task,
           null,
@@ -4403,17 +4183,17 @@ function renderChildrenArray(request, task, children, childIndex) {
           )
             throw x;
           task.replay.pendingTasks--;
-          children = getThrownInfo(task.componentStack);
+          children = request;
           var boundary = task.blockedBoundary,
             error = x;
-          children = logRecoverableError(request, error, children);
+          request = logRecoverableError(children, error);
           abortRemainingReplayNodes(
-            request,
+            children,
             boundary,
             childIndex,
             node,
             error,
-            children
+            request
           );
         }
         task.replay = replay;
@@ -4455,11 +4235,10 @@ function renderNode(request, task, node, childIndex) {
     previousContext = task.context,
     previousKeyPath = task.keyPath,
     previousTreeContext = task.treeContext,
-    previousComponentStack = task.componentStack,
     segment = task.blockedSegment;
   if (null === segment)
     try {
-      return renderNodeDestructive(request, task, null, node, childIndex);
+      return renderNodeDestructiveImpl(request, task, null, node, childIndex);
     } catch (thrownValue) {
       if (
         (resetHooksState(),
@@ -4484,8 +4263,7 @@ function renderNode(request, task, node, childIndex) {
           task.formatContext,
           task.legacyContext,
           task.context,
-          task.treeContext,
-          null !== task.componentStack ? task.componentStack.parent : null
+          task.treeContext
         ).ping;
         node.then(request, request);
         task.formatContext = previousFormatContext;
@@ -4493,7 +4271,6 @@ function renderNode(request, task, node, childIndex) {
         task.context = previousContext;
         task.keyPath = previousKeyPath;
         task.treeContext = previousTreeContext;
-        task.componentStack = previousComponentStack;
         switchContext(previousContext);
         return;
       }
@@ -4502,16 +4279,16 @@ function renderNode(request, task, node, childIndex) {
     var childrenLength = segment.children.length,
       chunkLength = segment.chunks.length;
     try {
-      return renderNodeDestructive(request, task, null, node, childIndex);
-    } catch (thrownValue$38) {
+      return renderNodeDestructiveImpl(request, task, null, node, childIndex);
+    } catch (thrownValue$35) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$38 === SuspenseException
+          thrownValue$35 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$38),
+            : thrownValue$35),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -4540,8 +4317,7 @@ function renderNode(request, task, node, childIndex) {
           task.formatContext,
           task.legacyContext,
           task.context,
-          task.treeContext,
-          null !== task.componentStack ? task.componentStack.parent : null
+          task.treeContext
         ).ping;
         node.then(request, request);
         task.formatContext = previousFormatContext;
@@ -4549,7 +4325,6 @@ function renderNode(request, task, node, childIndex) {
         task.context = previousContext;
         task.keyPath = previousKeyPath;
         task.treeContext = previousTreeContext;
-        task.componentStack = previousComponentStack;
         switchContext(previousContext);
         return;
       }
@@ -4616,17 +4391,17 @@ function abortTask(task, request, error) {
     segment = task.blockedSegment;
   null !== segment && (segment.status = 3);
   if (null === boundary) {
-    if (((boundary = {}), 1 !== request.status && 2 !== request.status)) {
+    if (1 !== request.status && 2 !== request.status) {
       task = task.replay;
       if (null === task) {
-        logRecoverableError(request, error, boundary);
+        logRecoverableError(request, error);
         fatalError(request, error);
         return;
       }
       task.pendingTasks--;
       0 === task.pendingTasks &&
         0 < task.nodes.length &&
-        ((boundary = logRecoverableError(request, error, boundary)),
+        ((boundary = logRecoverableError(request, error)),
         abortRemainingReplayNodes(
           request,
           null,
@@ -4642,9 +4417,7 @@ function abortTask(task, request, error) {
     boundary.pendingTasks--,
       4 !== boundary.status &&
         ((boundary.status = 4),
-        (task = getThrownInfo(task.componentStack)),
-        (task = logRecoverableError(request, error, task)),
-        (boundary.errorDigest = task),
+        (boundary.errorDigest = logRecoverableError(request, error)),
         boundary.parentFlushed &&
           request.clientRenderedBoundaries.push(boundary)),
       boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
@@ -4712,7 +4485,7 @@ function safelyEmitEarlyPreloads(request, shellComplete) {
       }
     }
   } catch (error) {
-    logRecoverableError(request, error, {});
+    logRecoverableError(request, error);
   }
 }
 function completeShell(request) {
@@ -4807,7 +4580,7 @@ function performWork(request$jscomp$2) {
             try {
               var prevThenableState = task.thenableState;
               task.thenableState = null;
-              renderNodeDestructive(
+              renderNodeDestructiveImpl(
                 request$jscomp$0,
                 task,
                 prevThenableState,
@@ -4839,18 +4612,13 @@ function performWork(request$jscomp$2) {
               } else {
                 task.replay.pendingTasks--;
                 task.abortSet.delete(task);
-                var errorInfo = getThrownInfo(task.componentStack);
                 request = void 0;
                 var request$jscomp$1 = request$jscomp$0,
                   boundary = task.blockedBoundary,
                   error$jscomp$0 = x,
                   replayNodes = task.replay.nodes,
                   resumeSlots = task.replay.slots;
-                request = logRecoverableError(
-                  request$jscomp$1,
-                  error$jscomp$0,
-                  errorInfo
-                );
+                request = logRecoverableError(request$jscomp$1, error$jscomp$0);
                 abortRemainingReplayNodes(
                   request$jscomp$1,
                   boundary,
@@ -4881,7 +4649,7 @@ function performWork(request$jscomp$2) {
           try {
             var prevThenableState$jscomp$0 = task.thenableState;
             task.thenableState = null;
-            renderNodeDestructive(
+            renderNodeDestructiveImpl(
               request,
               task,
               prevThenableState$jscomp$0,
@@ -4912,15 +4680,10 @@ function performWork(request$jscomp$2) {
               x$jscomp$0.then(ping$jscomp$0, ping$jscomp$0);
               task.thenableState = getThenableStateAfterSuspending();
             } else {
-              var errorInfo$jscomp$0 = getThrownInfo(task.componentStack);
               task.abortSet.delete(task);
               request$jscomp$1.status = 4;
               var boundary$jscomp$0 = task.blockedBoundary;
-              request$jscomp$0 = logRecoverableError(
-                request,
-                x$jscomp$0,
-                errorInfo$jscomp$0
-              );
+              request$jscomp$0 = logRecoverableError(request, x$jscomp$0);
               null === boundary$jscomp$0
                 ? fatalError(request, x$jscomp$0)
                 : (boundary$jscomp$0.pendingTasks--,
@@ -4943,7 +4706,7 @@ function performWork(request$jscomp$2) {
       null !== request$jscomp$2.destination &&
         flushCompletedQueues(request$jscomp$2, request$jscomp$2.destination);
     } catch (error) {
-      logRecoverableError(request$jscomp$2, error, {}),
+      logRecoverableError(request$jscomp$2, error),
         fatalError(request$jscomp$2, error);
     } finally {
       (currentResumableState = prevResumableState),
@@ -5403,13 +5166,13 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$42 = partialBoundaries[i];
+      var boundary$37 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
         clientRenderedBoundaries.renderState.boundaryResources =
-          boundary$42.resources;
-        var completedSegments = boundary$42.completedSegments;
+          boundary$37.resources;
+        var completedSegments = boundary$37.completedSegments;
         for (
           resumableState$jscomp$0 = 0;
           resumableState$jscomp$0 < completedSegments.length;
@@ -5419,7 +5182,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$42,
+              boundary$37,
               completedSegments[resumableState$jscomp$0]
             )
           ) {
@@ -5431,7 +5194,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$0);
         JSCompiler_inline_result = writeResourcesForBoundary(
           boundary,
-          boundary$42.resources,
+          boundary$37.resources,
           clientRenderedBoundaries.renderState
         );
       }
@@ -5480,18 +5243,6 @@ function enqueueFlush(request) {
       : (request.flushScheduled = !1);
   }
 }
-function startFlowing(request, destination) {
-  if (1 === request.status)
-    (request.status = 2), destination.destroy(request.fatalError);
-  else if (2 !== request.status && null === request.destination) {
-    request.destination = destination;
-    try {
-      flushCompletedQueues(request, destination);
-    } catch (error) {
-      logRecoverableError(request, error, {}), fatalError(request, error);
-    }
-  }
-}
 function abort(request, reason) {
   try {
     var abortableTasks = request.abortableTasks;
@@ -5505,8 +5256,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$44) {
-    logRecoverableError(request, error$44, {}), fatalError(request, error$44);
+  } catch (error$39) {
+    logRecoverableError(request, error$39), fatalError(request, error$39);
   }
 }
 function onError() {}
@@ -5517,8 +5268,18 @@ function renderToStringImpl(
   abortReason
 ) {
   var didFatal = !1,
-    fatalError = null,
+    fatalError$jscomp$0 = null,
     result = "",
+    destination = {
+      push: function (chunk) {
+        null !== chunk && (result += chunk);
+        return !0;
+      },
+      destroy: function (error) {
+        didFatal = !0;
+        fatalError$jscomp$0 = error;
+      }
+    },
     readyToStream = !1;
   options = createResumableState(
     options ? options.identifierPrefix : void 0,
@@ -5544,17 +5305,18 @@ function renderToStringImpl(
   null === children.trackedPostpones &&
     safelyEmitEarlyPreloads(children, 0 === children.pendingRootTasks);
   abort(children, abortReason);
-  startFlowing(children, {
-    push: function (chunk) {
-      null !== chunk && (result += chunk);
-      return !0;
-    },
-    destroy: function (error) {
-      didFatal = !0;
-      fatalError = error;
+  if (1 === children.status)
+    (children.status = 2), destination.destroy(children.fatalError);
+  else if (2 !== children.status && null === children.destination) {
+    children.destination = destination;
+    try {
+      flushCompletedQueues(children, destination);
+    } catch (error) {
+      logRecoverableError(children, error), fatalError(children, error);
     }
-  });
-  if (didFatal && fatalError !== abortReason) throw fatalError;
+  }
+  if (didFatal && fatalError$jscomp$0 !== abortReason)
+    throw fatalError$jscomp$0;
   if (!readyToStream) throw Error(formatProdErrorMessage(426));
   return result;
 }
@@ -5580,4 +5342,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-bace4ea3";
+exports.version = "18.3.0-www-modern-67826092";
