@@ -12,24 +12,29 @@
 
 "use strict";
 var ReactDOM = require("react-dom"),
-  React = require("react");
+  React = require("react"),
+  requestedClientReferencesKeys = new Set(),
+  checkIsClientReference;
+function isClientReference(reference) {
+  if (null == checkIsClientReference)
+    throw Error("Expected implementation for checkIsClientReference.");
+  return checkIsClientReference(reference);
+}
 require("ReactFeatureFlags");
 var byteLengthImpl = null;
 function writeChunkAndReturn(destination, chunk) {
   destination.write(chunk);
   return !0;
 }
-var registeredClientReferences = new Map(),
-  requestedClientReferencesKeys = new Set(),
-  ReactDOMFlightServerDispatcher = {
-    prefetchDNS: prefetchDNS,
-    preconnect: preconnect,
-    preload: preload,
-    preloadModule: preloadModule,
-    preinitStyle: preinitStyle,
-    preinitScript: preinitScript,
-    preinitModuleScript: preinitModuleScript
-  };
+var ReactDOMFlightServerDispatcher = {
+  prefetchDNS: prefetchDNS,
+  preconnect: preconnect,
+  preload: preload,
+  preloadModule: preloadModule,
+  preinitStyle: preinitStyle,
+  preinitScript: preinitScript,
+  preinitModuleScript: preinitModuleScript
+};
 function prefetchDNS(href) {
   if ("string" === typeof href && href) {
     var request = currentRequest ? currentRequest : null;
@@ -647,8 +652,7 @@ function attemptResolveElement(
       "Refs cannot be used in Server Components, nor passed to Client Components."
     );
   if ("function" === typeof type) {
-    if (registeredClientReferences.has(type))
-      return [REACT_ELEMENT_TYPE, type, key, props];
+    if (isClientReference(type)) return [REACT_ELEMENT_TYPE, type, key, props];
     thenableIndexCounter = 0;
     thenableState = prevThenableState;
     props = type(props);
@@ -666,8 +670,7 @@ function attemptResolveElement(
       ? props.children
       : [REACT_ELEMENT_TYPE, type, key, props];
   if (null != type && "object" === typeof type) {
-    if (registeredClientReferences.has(type))
-      return [REACT_ELEMENT_TYPE, type, key, props];
+    if (isClientReference(type)) return [REACT_ELEMENT_TYPE, type, key, props];
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE:
         var init = type._init;
@@ -727,15 +730,9 @@ function serializeByValueID(id) {
   return "$" + id.toString(16);
 }
 function serializeClientReference(request, parent, key, clientReference) {
-  var JSCompiler_inline_result =
-    registeredClientReferences.get(clientReference);
-  if (null != JSCompiler_inline_result)
-    requestedClientReferencesKeys.add(JSCompiler_inline_result.moduleId),
-      (JSCompiler_inline_result = JSCompiler_inline_result.moduleId);
-  else
-    throw Error(
-      "Expected client reference " + clientReference + " to be registered."
-    );
+  var JSCompiler_inline_result = clientReference.getModuleId();
+  requestedClientReferencesKeys.add(JSCompiler_inline_result);
+  JSCompiler_inline_result = clientReference.getModuleId();
   var writtenClientReferences = request.writtenClientReferences,
     existingId = writtenClientReferences.get(JSCompiler_inline_result);
   if (void 0 !== existingId)
@@ -743,16 +740,13 @@ function serializeClientReference(request, parent, key, clientReference) {
       ? "$L" + existingId.toString(16)
       : serializeByValueID(existingId);
   try {
-    var metadata = registeredClientReferences.get(clientReference);
-    if (null != metadata) var JSCompiler_inline_result$jscomp$0 = metadata;
-    else
-      throw Error(
-        "Expected client reference " + clientReference + " to be registered."
-      );
-    clientReference = JSCompiler_inline_result$jscomp$0;
+    var clientReferenceMetadata = {
+      moduleId: clientReference.getModuleId(),
+      exportName: "default"
+    };
     request.pendingChunks++;
     var importId = request.nextChunkId++,
-      json = stringify(clientReference),
+      json = stringify(clientReferenceMetadata),
       processedChunk = importId.toString(16) + ":I" + json + "\n";
     request.completedImportChunks.push(processedChunk);
     writtenClientReferences.set(JSCompiler_inline_result, importId);
@@ -852,7 +846,7 @@ function resolveModelToJSON(request, parent, key, value) {
     }
   if (null === value) return null;
   if ("object" === typeof value) {
-    if (registeredClientReferences.has(value))
+    if (isClientReference(value))
       return serializeClientReference(request, parent, key, value);
     parent = request.writtenObjects;
     key = parent.get(value);
@@ -944,7 +938,7 @@ function resolveModelToJSON(request, parent, key, value) {
     );
   if ("undefined" === typeof value) return "$undefined";
   if ("function" === typeof value) {
-    if (registeredClientReferences.has(value))
+    if (isClientReference(value))
       return serializeClientReference(request, parent, key, value);
     throw Error("isServerReference: Not Implemented.");
   }
@@ -1135,31 +1129,16 @@ exports.clearRequestedClientReferencesKeysSet = function () {
 exports.getRequestedClientReferencesKeys = function () {
   return Array.from(requestedClientReferencesKeys);
 };
-exports.registerClientReference = function (clientReference, moduleId) {
-  registeredClientReferences.set(clientReference, {
-    moduleId: moduleId,
-    exportName: "default"
-  });
-  return clientReference;
-};
+exports.registerClientReference = function () {};
 exports.registerServerReference = function () {
   throw Error("registerServerReference: Not Implemented.");
 };
-exports.renderToDestination = function (
-  destination,
-  model,
-  bundlerConfig,
-  options
-) {
+exports.renderToDestination = function (destination, model, options) {
   if (!configured)
     throw Error(
       "Please make sure to call `setConfig(...)` before calling `renderToDestination`."
     );
-  model = createRequest(
-    model,
-    bundlerConfig,
-    options ? options.onError : void 0
-  );
+  model = createRequest(model, null, options ? options.onError : void 0);
   model.flushScheduled = null !== model.destination;
   performWork(model);
   if (1 === model.status)
@@ -1175,7 +1154,11 @@ exports.renderToDestination = function (
     }
   }
 };
+exports.setCheckIsClientReference = function (impl) {
+  checkIsClientReference = impl;
+};
 exports.setConfig = function (config) {
   byteLengthImpl = config.byteLength;
+  checkIsClientReference = config.isClientReference;
   configured = !0;
 };

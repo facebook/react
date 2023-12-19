@@ -19,6 +19,48 @@ if (__DEV__) {
     var ReactDOM = require("react-dom");
     var React = require("react");
 
+    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line no-unused-vars
+    var requestedClientReferencesKeys = new Set();
+    var checkIsClientReference;
+    function setCheckIsClientReference(impl) {
+      checkIsClientReference = impl;
+    }
+    function registerClientReference(clientReference) {}
+    function isClientReference(reference) {
+      if (checkIsClientReference == null) {
+        throw new Error("Expected implementation for checkIsClientReference.");
+      }
+
+      return checkIsClientReference(reference);
+    }
+    function getClientReferenceKey(clientReference) {
+      var moduleId = clientReference.getModuleId();
+      requestedClientReferencesKeys.add(moduleId);
+      return clientReference.getModuleId();
+    }
+    function resolveClientReferenceMetadata(config, clientReference) {
+      return {
+        moduleId: clientReference.getModuleId(),
+        exportName: "default"
+      };
+    }
+    function registerServerReference(serverReference, id, exportName) {
+      throw new Error("registerServerReference: Not Implemented.");
+    }
+    function isServerReference(reference) {
+      throw new Error("isServerReference: Not Implemented.");
+    }
+    function getServerReferenceId(config, serverReference) {
+      throw new Error("getServerReferenceId: Not Implemented.");
+    }
+    function getRequestedClientReferencesKeys() {
+      return Array.from(requestedClientReferencesKeys);
+    }
+    function clearRequestedClientReferencesKeysSet() {
+      requestedClientReferencesKeys.clear();
+    }
+
     // This refers to a WWW module.
     var warningWWW = require("warning");
     function error(format) {
@@ -106,61 +148,6 @@ if (__DEV__) {
     function closeWithError(destination, error) {
       destination.onError(error);
       destination.close();
-    }
-
-    // eslint-disable-next-line no-unused-vars
-    // eslint-disable-next-line no-unused-vars
-    var registeredClientReferences = new Map();
-    var requestedClientReferencesKeys = new Set();
-    function registerClientReference(clientReference, moduleId) {
-      var exportName = "default"; // Currently, we only support modules with `default` export
-
-      registeredClientReferences.set(clientReference, {
-        moduleId: moduleId,
-        exportName: exportName
-      });
-      return clientReference;
-    }
-    function isClientReference(reference) {
-      return registeredClientReferences.has(reference);
-    }
-    function getClientReferenceKey(clientReference) {
-      var reference = registeredClientReferences.get(clientReference);
-
-      if (reference != null) {
-        requestedClientReferencesKeys.add(reference.moduleId);
-        return reference.moduleId;
-      }
-
-      throw new Error(
-        "Expected client reference " + clientReference + " to be registered."
-      );
-    }
-    function resolveClientReferenceMetadata(config, clientReference) {
-      var metadata = registeredClientReferences.get(clientReference);
-
-      if (metadata != null) {
-        return metadata;
-      }
-
-      throw new Error(
-        "Expected client reference " + clientReference + " to be registered."
-      );
-    }
-    function registerServerReference(serverReference, exportName) {
-      throw new Error("registerServerReference: Not Implemented.");
-    }
-    function isServerReference(reference) {
-      throw new Error("isServerReference: Not Implemented.");
-    }
-    function getServerReferenceId(config, serverReference) {
-      throw new Error("getServerReferenceId: Not Implemented.");
-    }
-    function getRequestedClientReferencesKeys() {
-      return Array.from(requestedClientReferencesKeys);
-    }
-    function clearRequestedClientReferencesKeysSet() {
-      requestedClientReferencesKeys.clear();
     }
 
     function getServerReferenceBoundArguments(config, serverReference) {
@@ -2546,7 +2533,7 @@ if (__DEV__) {
       return rootContextSnapshot;
     }
 
-    function renderToDestination(destination, model, bundlerConfig, options) {
+    function renderToDestination(destination, model, options) {
       if (!configured) {
         throw new Error(
           "Please make sure to call `setConfig(...)` before calling `renderToDestination`."
@@ -2555,7 +2542,7 @@ if (__DEV__) {
 
       var request = createRequest(
         model,
-        bundlerConfig,
+        null,
         options ? options.onError : undefined
       );
       startWork(request);
@@ -2566,6 +2553,7 @@ if (__DEV__) {
 
     function setConfig(config) {
       setByteLengthOfChunkImplementation(config.byteLength);
+      setCheckIsClientReference(config.isClientReference);
       configured = true;
     }
 
@@ -2575,6 +2563,7 @@ if (__DEV__) {
     exports.registerClientReference = registerClientReference;
     exports.registerServerReference = registerServerReference;
     exports.renderToDestination = renderToDestination;
+    exports.setCheckIsClientReference = setCheckIsClientReference;
     exports.setConfig = setConfig;
   })();
 }
