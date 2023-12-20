@@ -65,7 +65,9 @@ export function printReactiveScopeSummary(scope: ReactiveScope): string {
     )}]`
   );
   if (scope.earlyReturnValue !== null) {
-    items.push(`earlyReturn=${scope.earlyReturnValue.value}`);
+    items.push(
+      `earlyReturn={id: ${scope.earlyReturnValue.value}, label: ${scope.earlyReturnValue.label}}`
+    );
   }
   return items.join(" ");
 }

@@ -1080,7 +1080,11 @@ export type ReactiveScope = {
    *
    * This value is null for scopes that do not contain early returns.
    */
-  earlyReturnValue: { value: IdentifierId; loc: SourceLocation } | null;
+  earlyReturnValue: {
+    value: IdentifierId;
+    loc: SourceLocation;
+    label: string;
+  } | null;
 
   /*
    * Some passes may merge scopes together. The merged set contains the
