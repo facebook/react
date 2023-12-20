@@ -1,3 +1,4 @@
+// @enableEarlyReturnInReactiveScopes:false
 function Component(props) {
   let x = [];
   if (props.cond) {

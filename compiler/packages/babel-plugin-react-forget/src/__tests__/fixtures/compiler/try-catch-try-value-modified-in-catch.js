@@ -1,4 +1,3 @@
-// @enableEarlyReturnInReactiveScopes
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {

@@ -280,10 +280,10 @@ const EnvironmentConfigSchema = z.object({
    * This is relatively infrequent, as reactive scopes generally span
    * up to but excluding return statements.
    *
-   * When disabled (default), the compiler will skip any functions which
+   * When disabled, the compiler will error (bailout) on any functions which
    * would create a reactive scope that contains a return statement.
    */
-  enableEarlyReturnInReactiveScopes: z.boolean().default(false),
+  enableEarlyReturnInReactiveScopes: z.boolean().default(true),
 
   // Enable validation of mutable ranges
   assertValidMutableRanges: z.boolean().default(false),

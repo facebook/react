@@ -1,4 +1,3 @@
-// @enableEarlyReturnInReactiveScopes
 import { makeArray } from "shared-runtime";
 
 /**

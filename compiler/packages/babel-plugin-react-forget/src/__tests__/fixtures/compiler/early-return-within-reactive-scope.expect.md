@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @enableEarlyReturnInReactiveScopes
 import { makeArray } from "shared-runtime";
 
 function Component(props) {
@@ -42,7 +41,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableEarlyReturnInReactiveScopes
+import { unstable_useMemoCache as useMemoCache } from "react";
 import { makeArray } from "shared-runtime";
 
 function Component(props) {

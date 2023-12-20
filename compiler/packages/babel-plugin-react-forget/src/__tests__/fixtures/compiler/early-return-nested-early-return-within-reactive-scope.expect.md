@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @enableEarlyReturnInReactiveScopes
 function Component(props) {
   let x = [];
   if (props.cond) {
@@ -30,7 +29,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableEarlyReturnInReactiveScopes
+import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
   const $ = useMemoCache(5);
   let t53;
