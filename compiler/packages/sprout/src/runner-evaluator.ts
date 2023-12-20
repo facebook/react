@@ -45,7 +45,14 @@ export type EvaluatorResult = {
 const EntrypointSchema = z.strictObject({
   fn: z.union([z.function(), z.object({})]),
   params: z.array(z.any()),
+
+  // DEPRECATED, unused
   isComponent: z.optional(z.boolean()),
+
+  // if enabled, the `fn` is assumed to be a component and this is assumed
+  // to be an array of props. the component is mounted once and rendered
+  // once per set of props in this array.
+  sequentialRenders: z.optional(z.nullable(z.array(z.any()))).default(null),
 });
 const ExportSchema = z.object({
   FIXTURE_ENTRYPOINT: EntrypointSchema,
@@ -62,6 +69,35 @@ function WrapperTestComponent(props: { fn: any; params: Array<any> }) {
     return toJSON(result);
   }
 }
+
+function renderComponentSequentiallyForEachProps(
+  fn: any,
+  sequentialRenders: Array<any>
+): string {
+  if (sequentialRenders.length === 0) {
+    throw new Error(
+      "Expected at least one set of props when using `sequentialRenders`"
+    );
+  }
+  const initialProps = sequentialRenders[0]!;
+  const results = [];
+  const { rerender, container } = render(
+    React.createElement(WrapperTestComponent, { fn, params: [initialProps] })
+  );
+  results.push(container.innerHTML);
+
+  for (let i = 1; i < sequentialRenders.length; i++) {
+    rerender(
+      React.createElement(WrapperTestComponent, {
+        fn,
+        params: [sequentialRenders[i]],
+      })
+    );
+    results.push(container.innerHTML);
+  }
+  return results.join("\n");
+}
+
 type FixtureEvaluatorResult = Omit<EvaluatorResult, "logs">;
 (globalThis as any).evaluateFixtureExport = function (
   exports: unknown
@@ -78,7 +114,17 @@ type FixtureEvaluatorResult = Omit<EvaluatorResult, "logs">;
     };
   }
   const entrypoint = parsedExportResult.data.FIXTURE_ENTRYPOINT;
-  if (typeof entrypoint.fn === "object") {
+  if (entrypoint.sequentialRenders !== null) {
+    const result = renderComponentSequentiallyForEachProps(
+      entrypoint.fn,
+      entrypoint.sequentialRenders
+    );
+
+    return {
+      kind: "ok",
+      value: result ?? "null",
+    };
+  } else if (typeof entrypoint.fn === "object") {
     // Try to run fixture as a react component. This is necessary because not
     // all components are functions (some are ForwardRef or Memo objects).
     const result = render(

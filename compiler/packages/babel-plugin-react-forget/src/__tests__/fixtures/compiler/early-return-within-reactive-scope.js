@@ -1,4 +1,6 @@
 // @enableEarlyReturnInReactiveScopes
+import { makeArray } from "shared-runtime";
+
 function Component(props) {
   let x = [];
   if (props.cond) {
@@ -6,11 +8,27 @@ function Component(props) {
     // oops no memo!
     return x;
   } else {
-    return foo();
+    return makeArray(props.b);
   }
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: true, a: 42 }],
+  params: [],
+  sequentialRenders: [
+    // pattern 1
+    { cond: true, a: 42 },
+    { cond: true, a: 42 },
+    // pattern 2
+    { cond: false, b: 3.14 },
+    { cond: false, b: 3.14 },
+    // pattern 1
+    { cond: true, a: 42 },
+    // pattern 2
+    { cond: false, b: 3.14 },
+    // pattern 1
+    { cond: true, a: 42 },
+    // pattern 2
+    { cond: false, b: 3.14 },
+  ],
 };
