@@ -42,17 +42,32 @@ export function printReactiveFunction(fn: ReactiveFunction): string {
 }
 
 export function printReactiveScopeSummary(scope: ReactiveScope): string {
-  return `scope @${scope.id} [${scope.range.start}:${
-    scope.range.end
-  }] dependencies=[${Array.from(scope.dependencies)
-    .map((dep) => printDependency(dep))
-    .join(", ")}] declarations=[${Array.from(scope.declarations)
-    .map(([, decl]) =>
-      printIdentifier({ ...decl.identifier, scope: decl.scope })
-    )
-    .join(", ")}] reassignments=[${Array.from(scope.reassignments).map(
-    (reassign) => printIdentifier(reassign)
-  )}]`;
+  const items = [];
+  // If the scope has a return value it needs a label
+  items.push("scope");
+  items.push(`@${scope.id}`);
+  items.push(`[${scope.range.start}:${scope.range.end}]`);
+  items.push(
+    `dependencies=[${Array.from(scope.dependencies)
+      .map((dep) => printDependency(dep))
+      .join(", ")}]`
+  );
+  items.push(
+    `declarations=[${Array.from(scope.declarations)
+      .map(([, decl]) =>
+        printIdentifier({ ...decl.identifier, scope: decl.scope })
+      )
+      .join(", ")}]`
+  );
+  items.push(
+    `reassignments=[${Array.from(scope.reassignments).map((reassign) =>
+      printIdentifier(reassign)
+    )}]`
+  );
+  if (scope.earlyReturnValue !== null) {
+    items.push(`earlyReturn=${scope.earlyReturnValue.value}`);
+  }
+  return items.join(" ");
 }
 
 export function writeReactiveBlock(

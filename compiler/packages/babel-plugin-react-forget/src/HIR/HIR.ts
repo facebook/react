@@ -1053,9 +1053,34 @@ export function isMutableEffect(
 export type ReactiveScope = {
   id: ScopeId;
   range: MutableRange;
+
+  /**
+   * The inputs to this reactive scope
+   */
   dependencies: ReactiveScopeDependencies;
+
+  /**
+   * The set of values produced by this scope. This may be empty
+   * for scopes that produce reassignments only.
+   */
   declarations: Map<IdentifierId, ReactiveScopeDeclaration>;
+
+  /**
+   * A mutable range may sometimes include a reassignment of some variable.
+   * This is the set of identifiers which are reassigned by this scope.
+   */
   reassignments: Set<Identifier>;
+
+  /**
+   * Reactive scopes may contain a return statement, which needs to be replayed
+   * whenever the inputs to the scope have not changed since the previous execution.
+   * If the reactive scope has an early return, this variable stores the temporary
+   * identifier to which the return value will be assigned. See PropagateEarlyReturns
+   * for more about how early returns in reactive scopes are compiled and represented.
+   *
+   * This value is null for scopes that do not contain early returns.
+   */
+  earlyReturnValue: { value: IdentifierId; loc: SourceLocation } | null;
 
   /*
    * Some passes may merge scopes together. The merged set contains the

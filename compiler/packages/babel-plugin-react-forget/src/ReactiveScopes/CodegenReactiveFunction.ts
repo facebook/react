@@ -451,11 +451,20 @@ function codegenReactiveScope(
   const computationBlock = codegenBlock(cx, block);
   computationBlock.body.push(...cacheStoreStatements);
   const memoBlock = t.blockStatement(cacheLoadStatements);
-  const memoStatement = t.ifStatement(
-    testCondition,
-    computationBlock,
-    memoBlock
-  );
+
+  let memoStatement;
+  if (scope.earlyReturnValue !== null) {
+    // Has early return
+    CompilerError.throwTodo({
+      reason: `Codegen support for reactive scopes with early return`,
+      loc: scope.earlyReturnValue.loc,
+      description: null,
+      suggestions: null,
+    });
+  } else {
+    memoStatement = t.ifStatement(testCondition, computationBlock, memoBlock);
+  }
+
   if (cx.env.config.enableMemoizationComments) {
     if (changeExpressionComments.length) {
       t.addComment(
