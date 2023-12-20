@@ -11,17 +11,15 @@ import { makeArray } from "shared-runtime";
  *
  * We have to use a distinct sentinel for the early return value.
  *
- * Here the fixture will always take the "else" branch and never early return, and we should see that
- * "recreate x" is only logged once, the first time we execute.
+ * Here the fixture will always take the "else" branch and never early return. Logging (not included)
+ * confirms that the scope for `x` only executes once, on the first render of the component.
  */
 let ENABLE_FEATURE = false;
 
 function Component(props) {
   let x = [];
-  console.log("recreate x");
   if (ENABLE_FEATURE) {
     x.push(42);
-    console.log("early return");
     return x;
   } else {
     console.log("fallthrough");

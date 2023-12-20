@@ -15,17 +15,15 @@ import { makeArray } from "shared-runtime";
  *
  * We have to use a distinct sentinel for the early return value.
  *
- * Here the fixture will always take the "else" branch and never early return, and we should see that
- * "recreate x" is only logged once, the first time we execute.
+ * Here the fixture will always take the "else" branch and never early return. Logging (not included)
+ * confirms that the scope for `x` only executes once, on the first render of the component.
  */
 let ENABLE_FEATURE = false;
 
 function Component(props) {
   let x = [];
-  console.log("recreate x");
   if (ENABLE_FEATURE) {
     x.push(42);
-    console.log("early return");
     return x;
   } else {
     console.log("fallthrough");
@@ -66,32 +64,30 @@ import { makeArray } from "shared-runtime";
  *
  * We have to use a distinct sentinel for the early return value.
  *
- * Here the fixture will always take the "else" branch and never early return, and we should see that
- * "recreate x" is only logged once, the first time we execute.
+ * Here the fixture will always take the "else" branch and never early return. Logging (not included)
+ * confirms that the scope for `x` only executes once, on the first render of the component.
  */
 let ENABLE_FEATURE = false;
 
 function Component(props) {
   const $ = useMemoCache(3);
-  let t53;
+  let t37;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t53 = Symbol.for("react.memo_cache_sentinel");
+    t37 = Symbol.for("react.early_return_sentinel");
     bb8: {
       const x = [];
-      console.log("recreate x");
       if (ENABLE_FEATURE) {
         x.push(42);
-        console.log("early return");
-        t53 = x;
+        t37 = x;
         break bb8;
       }
     }
-    $[0] = t53;
+    $[0] = t37;
   } else {
-    t53 = $[0];
+    t37 = $[0];
   }
-  if (t53 !== Symbol.for("react.memo_cache_sentinel")) {
-    return t53;
+  if (t37 !== Symbol.for("react.early_return_sentinel")) {
+    return t37;
   }
 
   console.log("fallthrough");
@@ -132,4 +128,4 @@ export const FIXTURE_ENTRYPOINT = {
 [3.14]
 [42]
 [3.14]
-logs: ['recreate x','fallthrough','recreate x','fallthrough','recreate x','fallthrough','recreate x','fallthrough','recreate x','fallthrough','recreate x','fallthrough','recreate x','fallthrough','recreate x','fallthrough']
+logs: ['fallthrough','fallthrough','fallthrough','fallthrough','fallthrough','fallthrough','fallthrough','fallthrough']

@@ -19,6 +19,7 @@ import {
   makeType,
 } from "../HIR";
 import { createTemporaryPlace } from "../HIR/HIRBuilder";
+import { EARLY_RETURN_SENTINEL } from "./CodegenReactiveFunction";
 import { ReactiveFunctionTransform, Transformed } from "./visitors";
 
 /**
@@ -191,7 +192,7 @@ class Transform extends ReactiveFunctionTransform<State> {
               lvalue: { ...argTemp },
               value: {
                 kind: "Primitive",
-                value: "react.memo_cache_sentinel",
+                value: EARLY_RETURN_SENTINEL,
                 loc,
               },
             },

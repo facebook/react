@@ -37,7 +37,7 @@ function Component(props) {
   let x;
   let t43;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    t43 = Symbol.for("react.memo_cache_sentinel");
+    t43 = Symbol.for("react.early_return_sentinel");
     bb25: {
       x = [];
       try {
@@ -59,7 +59,7 @@ function Component(props) {
     x = $[0];
     t43 = $[1];
   }
-  if (t43 !== Symbol.for("react.memo_cache_sentinel")) {
+  if (t43 !== Symbol.for("react.early_return_sentinel")) {
     return t43;
   }
   return x;

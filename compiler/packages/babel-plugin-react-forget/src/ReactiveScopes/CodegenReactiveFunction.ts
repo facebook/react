@@ -42,6 +42,9 @@ import { buildReactiveFunction } from "./BuildReactiveFunction";
 import { SINGLE_CHILD_FBT_TAGS } from "./MemoizeFbtOperandsInSameScope";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
+export const MEMO_CACHE_SENTINEL = "react.memo_cache_sentinel";
+export const EARLY_RETURN_SENTINEL = "react.early_return_sentinel";
+
 export type CodegenFunction = {
   type: "CodegenFunction";
   id: t.Identifier | null;
@@ -443,7 +446,7 @@ function codegenReactiveScope(
       ),
       t.callExpression(
         t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
-        [t.stringLiteral("react.memo_cache_sentinel")]
+        [t.stringLiteral(MEMO_CACHE_SENTINEL)]
       )
     );
   }
@@ -516,7 +519,7 @@ function codegenReactiveScope(
           t.identifier(scope.earlyReturnValue.value.name!),
           t.callExpression(
             t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
-            [t.stringLiteral("react.memo_cache_sentinel")]
+            [t.stringLiteral(EARLY_RETURN_SENTINEL)]
           )
         ),
         t.blockStatement([

@@ -78,7 +78,7 @@ function ComponentA(props) {
   let a_DEBUG;
   let t37;
   if ($[0] !== props.a || $[1] !== props.b || $[2] !== props.d) {
-    t37 = Symbol.for("react.memo_cache_sentinel");
+    t37 = Symbol.for("react.early_return_sentinel");
     bb7: {
       a_DEBUG = [];
       a_DEBUG.push(props.a);
@@ -98,7 +98,7 @@ function ComponentA(props) {
     a_DEBUG = $[3];
     t37 = $[4];
   }
-  if (t37 !== Symbol.for("react.memo_cache_sentinel")) {
+  if (t37 !== Symbol.for("react.early_return_sentinel")) {
     return t37;
   }
   return a_DEBUG;
@@ -134,7 +134,7 @@ function ComponentC(props) {
   let a;
   let t47;
   if ($[0] !== props) {
-    t47 = Symbol.for("react.memo_cache_sentinel");
+    t47 = Symbol.for("react.early_return_sentinel");
     bb7: {
       a = [];
       a.push(props.a);
@@ -153,7 +153,7 @@ function ComponentC(props) {
     a = $[1];
     t47 = $[2];
   }
-  if (t47 !== Symbol.for("react.memo_cache_sentinel")) {
+  if (t47 !== Symbol.for("react.early_return_sentinel")) {
     return t47;
   }
   return a;
@@ -167,7 +167,7 @@ function ComponentD(props) {
   let a;
   let t47;
   if ($[0] !== props) {
-    t47 = Symbol.for("react.memo_cache_sentinel");
+    t47 = Symbol.for("react.early_return_sentinel");
     bb7: {
       a = [];
       a.push(props.a);
@@ -186,7 +186,7 @@ function ComponentD(props) {
     a = $[1];
     t47 = $[2];
   }
-  if (t47 !== Symbol.for("react.memo_cache_sentinel")) {
+  if (t47 !== Symbol.for("react.early_return_sentinel")) {
     return t47;
   }
   return a;

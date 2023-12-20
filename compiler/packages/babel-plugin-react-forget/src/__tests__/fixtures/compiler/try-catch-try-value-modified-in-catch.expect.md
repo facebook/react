@@ -34,7 +34,7 @@ function Component(props) {
   const $ = useMemoCache(3);
   let t49;
   if ($[0] !== props.y || $[1] !== props.e) {
-    t49 = Symbol.for("react.memo_cache_sentinel");
+    t49 = Symbol.for("react.early_return_sentinel");
     bb18: {
       try {
         const y = [];
@@ -56,7 +56,7 @@ function Component(props) {
   } else {
     t49 = $[2];
   }
-  if (t49 !== Symbol.for("react.memo_cache_sentinel")) {
+  if (t49 !== Symbol.for("react.early_return_sentinel")) {
     return t49;
   }
 }
