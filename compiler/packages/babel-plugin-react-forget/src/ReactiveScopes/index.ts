@@ -23,6 +23,7 @@ export { mergeOverlappingReactiveScopes } from "./MergeOverlappingReactiveScopes
 export { mergeReactiveScopesThatInvalidateTogether } from "./MergeReactiveScopesThatInvalidateTogether";
 export { printReactiveFunction } from "./PrintReactiveFunction";
 export { promoteUsedTemporaries } from "./PromoteUsedTemporaries";
+export { propagateEarlyReturns } from "./PropagateEarlyReturns";
 export { propagateScopeDependencies } from "./PropagateScopeDependencies";
 export { pruneAllReactiveScopes } from "./PruneAllReactiveScopes";
 export { pruneHoistedContexts } from "./PruneHoistedContexts";

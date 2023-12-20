@@ -49,6 +49,7 @@ import {
   mergeOverlappingReactiveScopes,
   mergeReactiveScopesThatInvalidateTogether,
   promoteUsedTemporaries,
+  propagateEarlyReturns,
   propagateScopeDependencies,
   pruneAllReactiveScopes,
   pruneHoistedContexts,
@@ -283,7 +284,7 @@ function* runWithEnvironment(
   pruneNonEscapingScopes(reactiveFunction);
   yield log({
     kind: "reactive",
-    name: "PruneNonEscapingDependencies",
+    name: "PruneNonEscapingScopes",
     value: reactiveFunction,
   });
 
@@ -291,6 +292,13 @@ function* runWithEnvironment(
   yield log({
     kind: "reactive",
     name: "PruneNonReactiveDependencies",
+    value: reactiveFunction,
+  });
+
+  propagateEarlyReturns(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "PropagateEarlyReturns",
     value: reactiveFunction,
   });
 

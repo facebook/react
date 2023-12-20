@@ -872,19 +872,35 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
   Set<IdentifierId>
 > {
   override transformScope(
-    scope: ReactiveScopeBlock,
+    scopeBlock: ReactiveScopeBlock,
     state: Set<IdentifierId>
   ): Transformed<ReactiveStatement> {
-    this.visitScope(scope, state);
+    this.visitScope(scopeBlock, state);
+
+    /**
+     * Scopes may initially appear "empty" because the value being memoized
+     * is early-returned from within the scope. For now we intentionaly keep
+     * these scopes, and let them get pruned later by PruneUnusedScopes
+     * _after_ handling the early-return case in PropagateEarlyReturns.
+     */
+    if (
+      scopeBlock.scope.declarations.size === 0 &&
+      scopeBlock.scope.reassignments.size === 0
+    ) {
+      return { kind: "keep" };
+    }
+
     const hasMemoizedOutput =
-      Array.from(scope.scope.declarations.keys()).some((id) => state.has(id)) ||
-      Array.from(scope.scope.reassignments).some((identifier) =>
+      Array.from(scopeBlock.scope.declarations.keys()).some((id) =>
+        state.has(id)
+      ) ||
+      Array.from(scopeBlock.scope.reassignments).some((identifier) =>
         state.has(identifier.id)
       );
     if (hasMemoizedOutput) {
       return { kind: "keep" };
     } else {
-      return { kind: "replace-many", value: scope.instructions };
+      return { kind: "replace-many", value: scopeBlock.instructions };
     }
   }
 }

@@ -2,7 +2,7 @@
 ## Input
 
 ```javascript
-// @validateNoSetStateInRender
+// @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
 function Component(props) {
   const logEvent = useLogging(props.appId);
   const [currentStep, setCurrentStep] = useState(0);
@@ -33,47 +33,62 @@ function Component(props) {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @validateNoSetStateInRender
+import { unstable_useMemoCache as useMemoCache } from "react"; // @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(7);
   const logEvent = useLogging(props.appId);
   const [currentStep, setCurrentStep] = useState(0);
-
-  const onSubmit = (errorEvent) => {
-    logEvent(errorEvent);
-    setCurrentStep(1);
-  };
+  let t0;
+  if ($[0] !== logEvent) {
+    t0 = (errorEvent) => {
+      logEvent(errorEvent);
+      setCurrentStep(1);
+    };
+    $[0] = logEvent;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const onSubmit = t0;
   switch (currentStep) {
     case 0: {
-      let t0;
-      if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-        t0 = <OtherComponent data={{ foo: "bar" }} />;
-        $[0] = t0;
+      let t1;
+      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
+        t1 = <OtherComponent data={{ foo: "bar" }} />;
+        $[2] = t1;
       } else {
-        t0 = $[0];
+        t1 = $[2];
       }
-      return t0;
+      return t1;
     }
     case 1: {
-      let t1;
-      if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-        t1 = { foo: "joe" };
-        $[1] = t1;
+      let t2;
+      if ($[3] === Symbol.for("react.memo_cache_sentinel")) {
+        t2 = { foo: "joe" };
+        $[3] = t2;
       } else {
-        t1 = $[1];
+        t2 = $[3];
       }
-      return <OtherComponent data={t1} onSubmit={onSubmit} />;
+      let t3;
+      if ($[4] !== onSubmit) {
+        t3 = <OtherComponent data={t2} onSubmit={onSubmit} />;
+        $[4] = onSubmit;
+        $[5] = t3;
+      } else {
+        t3 = $[5];
+      }
+      return t3;
     }
     default: {
       logEvent("Invalid step");
-      let t2;
-      if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-        t2 = <OtherComponent data={null} />;
-        $[2] = t2;
+      let t4;
+      if ($[6] === Symbol.for("react.memo_cache_sentinel")) {
+        t4 = <OtherComponent data={null} />;
+        $[6] = t4;
       } else {
-        t2 = $[2];
+        t4 = $[6];
       }
-      return t2;
+      return t4;
     }
   }
 }

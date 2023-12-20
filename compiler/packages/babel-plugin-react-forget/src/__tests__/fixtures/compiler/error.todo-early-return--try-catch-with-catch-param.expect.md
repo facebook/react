@@ -24,30 +24,11 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
 
-## Code
 
-```javascript
-const { throwInput } = require("shared-runtime");
-
-function Component(props) {
-  const x = [];
-  try {
-    throwInput(x);
-  } catch (t22) {
-    const e = t22;
-
-    e.push(null);
-    return e;
-  }
-  return x;
-}
-
-export const FIXTURE_ENTRYPOINT = {
-  fn: Component,
-  params: [{}],
-};
+## Error
 
 ```
+[ReactForget] Todo: Support early return within a reactive scope (11:11)
+```
+          
       
-### Eval output
-(kind: ok) [null]

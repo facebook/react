@@ -1,4 +1,4 @@
-// @validateNoSetStateInRender
+// @validateNoSetStateInRender @enableAssumeHooksFollowRulesOfReact
 function Component(props) {
   const logEvent = useLogging(props.appId);
   const [currentStep, setCurrentStep] = useState(0);
