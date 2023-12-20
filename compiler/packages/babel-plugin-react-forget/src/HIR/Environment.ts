@@ -275,6 +275,16 @@ const EnvironmentConfigSchema = z.object({
   // Enable merging consecutive scopes that invalidate together.
   enableMergeConsecutiveScopes: z.boolean().default(true),
 
+  /**
+   * Enable support for reactive scopes that contain an early return.
+   * This is relatively infrequent, as reactive scopes generally span
+   * up to but excluding return statements.
+   *
+   * When disabled (default), the compiler will skip any functions which
+   * would create a reactive scope that contains a return statement.
+   */
+  enableEarlyReturnInReactiveScopes: z.boolean().default(false),
+
   // Enable validation of mutable ranges
   assertValidMutableRanges: z.boolean().default(false),
 

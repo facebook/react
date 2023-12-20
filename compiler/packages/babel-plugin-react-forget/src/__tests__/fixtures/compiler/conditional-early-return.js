@@ -1,3 +1,5 @@
+// @enableEarlyReturnInReactiveScopes
+
 /**
  * props.b does *not* influence `a`
  */
@@ -51,3 +53,8 @@ function ComponentD(props) {
   a.push(props.d);
   return a;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: ComponentA,
+  params: [{ a: 1, b: false, d: 3 }],
+};

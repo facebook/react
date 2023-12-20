@@ -1,7 +1,4 @@
-
-## Input
-
-```javascript
+// @enableEarlyReturnInReactiveScopes
 const { throwInput } = require("shared-runtime");
 
 function Component(props) {
@@ -21,14 +18,3 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{}],
 };
-
-```
-
-
-## Error
-
-```
-[ReactForget] Todo: Support early return within a reactive scope (11:11)
-```
-          
-      

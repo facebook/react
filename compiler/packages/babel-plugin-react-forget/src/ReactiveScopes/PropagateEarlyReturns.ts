@@ -6,13 +6,20 @@
  */
 
 import { visitReactiveFunction } from ".";
-import { CompilerError } from "..";
+import { CompilerError, Effect } from "..";
 import {
+  Environment,
+  InstructionKind,
   ReactiveFunction,
+  ReactiveScope,
   ReactiveScopeBlock,
+  ReactiveStatement,
   ReactiveTerminalStatement,
+  makeInstructionId,
+  makeType,
 } from "../HIR";
-import { ReactiveFunctionVisitor } from "./visitors";
+import { createTemporaryPlace } from "../HIR/HIRBuilder";
+import { ReactiveFunctionTransform, Transformed } from "./visitors";
 
 /**
  * TODO: Actualy propagate early return information, for now we throw a Todo bailout.
@@ -43,78 +50,279 @@ import { ReactiveFunctionVisitor } from "./visitors";
  * - Label the scope
  * - Synthesize a new temporary, eg `t0`, and set it as a declaration of the scope.
  *   This will represent the possibly-unset return value for that scope.
- * - Make the first instruction of the scope a reassignment of that temporary,
+ * - Make the first instruction of the scope the declaration of that temporary,
  *   assigning a sentinel value (can reuse the same symbol as we use for cache slots).
  *   This assignment ensures that if we don't take an early return, that the value
  *   is the sentinel.
  * - Replace all `return` statements with:
  *   - An assignment of the temporary with the value being returned.
- *   - An assignment of the temporary into a cache slot, so it can be retrieved in the
- *     scope's "else" branch.
  *   - A `break` to the reactive scope's label.
- * - Finally, add code _after_ the reactive scope that checks the temporary. If
- *   it equals the sentinel value do nothing; else return its value.
+ *
+ * Finally, CodegenReactiveScope adds an if check following the reactive scope:
+ * if the early return temporary value is *not* the sentinel value, we early return
+ * it. Otherwise, execution continues.
  *
  * For the above example that looks roughly like:
  *
- * ```javascript
- * let t0; // temporary for early return;
- * bb1: if (props.cond !== $[0]) {
- *   // reset the temporary
- *   t0 = Symbol.for('react.forget');
- *   // original code
- *   let x = [];
- *   if (props.cond) {
- *     x.push(12);
- *     // replace the early return w assignment and break
- *     t0 = x;
- *     $[2] = t0;
- *     break bb1
- *   } else {
- *     let t1;
- *     if ($[1] === Symbol.for('react.forget')) {
- *       t1 = foo();
- *       $[1] = t1;
+ * ```
+ * let t0;
+ * if (props.cond !== $[0]) {
+ *   t0 = Symbol.for('react.memo_cache_sentinel');
+ *   bb0: {
+ *     let x = [];
+ *     if (props.cond) {
+ *       x.push(12);
+ *       t0 = x;
+ *       break bb0;
  *     } else {
- *       t1 = $[1];
+ *       let t1;
+ *       if ($[1] === Symbol.for('react.memo_cache_sentinel')) {
+ *         t1 = foo();
+ *         $[1] = t1;
+ *       } else {
+ *         t1 = $[1];
+ *       }
+ *       t0 = t1;
+ *       break bb0;
  *     }
- *     // Replace early return w assignment and break;
- *     t0 = t1;
- *     $[2] = t0;
- *     break bb1;
  *   }
+ *   $[0] = props.cond;
+ *   $[2] = t0;
  * } else {
  *   t0 = $[2];
  * }
- * if (t0 !== Symbol.for('react.forget')) {
+ * // This part added in CodegenReactiveScope:
+ * if (t0 !== Symbol.for('react.memo_cache_sentinel')) {
  *   return t0;
  * }
  * ```
  */
 export function propagateEarlyReturns(fn: ReactiveFunction): void {
-  visitReactiveFunction(fn, new Visitor(), false);
+  visitReactiveFunction(fn, new Transform(fn.env), {
+    withinReactiveScope: false,
+    earlyReturnValue: null,
+  });
 }
 
-class Visitor extends ReactiveFunctionVisitor<boolean> {
-  override visitScope(
-    scopeBlock: ReactiveScopeBlock,
-    _withinReactiveScope: boolean
-  ): void {
-    this.traverseScope(scopeBlock, true);
+type State = {
+  /**
+   * Are we within a reactive scope? We use this for two things:
+   * - When we find an early return, transform it to an assign+break
+   *   only if we're in a reactive scope
+   * - Annotate reactive scopes that contain early returns...but only
+   *   the outermost reactive scope, we can't do this for nested
+   *   scopes.
+   */
+  withinReactiveScope: boolean;
+
+  /**
+   * Store early return information to bubble it back up to the outermost
+   * reactive scope
+   */
+  earlyReturnValue: ReactiveScope["earlyReturnValue"];
+};
+
+class Transform extends ReactiveFunctionTransform<State> {
+  env: Environment;
+  constructor(env: Environment) {
+    super();
+    this.env = env;
   }
 
-  override visitTerminal(
-    stmt: ReactiveTerminalStatement,
-    withinReactiveScope: boolean
+  override visitScope(
+    scopeBlock: ReactiveScopeBlock,
+    parentState: State
   ): void {
-    if (withinReactiveScope && stmt.terminal.kind === "return") {
-      CompilerError.throwTodo({
-        reason: `Support early return within a reactive scope`,
-        loc: stmt.terminal.value.loc,
-        description: null,
-        suggestions: null,
-      });
+    const innerState: State = {
+      withinReactiveScope: true,
+      earlyReturnValue: parentState.earlyReturnValue,
+    };
+    this.traverseScope(scopeBlock, innerState);
+
+    const earlyReturnValue = innerState.earlyReturnValue;
+    if (earlyReturnValue !== null) {
+      if (!parentState.withinReactiveScope) {
+        // This is the outermost scope wrapping an early return, store the early return information
+        scopeBlock.scope.earlyReturnValue = earlyReturnValue;
+        scopeBlock.scope.declarations.set(earlyReturnValue.value.id, {
+          identifier: earlyReturnValue.value,
+          scope: scopeBlock.scope,
+        });
+
+        const instructions = scopeBlock.instructions;
+        const loc = earlyReturnValue.loc;
+        const sentinelTemp = createTemporaryPlace(this.env);
+        const symbolTemp = createTemporaryPlace(this.env);
+        const forTemp = createTemporaryPlace(this.env);
+        const argTemp = createTemporaryPlace(this.env);
+        scopeBlock.instructions = [
+          {
+            kind: "instruction",
+            instruction: {
+              id: makeInstructionId(0),
+              loc,
+              lvalue: { ...symbolTemp },
+              value: {
+                kind: "LoadGlobal",
+                name: "Symbol",
+                loc,
+              },
+            },
+          },
+          {
+            kind: "instruction",
+            instruction: {
+              id: makeInstructionId(0),
+              loc,
+              lvalue: { ...forTemp },
+              value: {
+                kind: "PropertyLoad",
+                object: { ...symbolTemp },
+                property: "for",
+                loc,
+              },
+            },
+          },
+          {
+            kind: "instruction",
+            instruction: {
+              id: makeInstructionId(0),
+              loc,
+              lvalue: { ...argTemp },
+              value: {
+                kind: "Primitive",
+                value: "react.memo_cache_sentinel",
+                loc,
+              },
+            },
+          },
+          {
+            kind: "instruction",
+            instruction: {
+              id: makeInstructionId(0),
+              loc,
+              lvalue: { ...sentinelTemp },
+              value: {
+                kind: "MethodCall",
+                receiver: symbolTemp,
+                property: forTemp,
+                args: [argTemp],
+                loc,
+              },
+            },
+          },
+          {
+            kind: "instruction",
+            instruction: {
+              id: makeInstructionId(0),
+              loc,
+              lvalue: null,
+              value: {
+                kind: "StoreLocal",
+                loc,
+                type: makeType(),
+                lvalue: {
+                  kind: InstructionKind.Let,
+                  place: {
+                    kind: "Identifier",
+                    effect: Effect.ConditionallyMutate,
+                    loc,
+                    reactive: true,
+                    identifier: earlyReturnValue.value,
+                  },
+                },
+                value: { ...sentinelTemp },
+              },
+            },
+          },
+          {
+            kind: "terminal",
+            label: earlyReturnValue.label,
+            terminal: {
+              kind: "label",
+              id: makeInstructionId(0),
+              block: instructions,
+            },
+          },
+        ];
+      } else {
+        /*
+         * Not the outermost scope, but we save the early return information in case there are other
+         * early returns within the same outermost scope
+         */
+        parentState.earlyReturnValue = earlyReturnValue;
+      }
     }
-    this.traverseTerminal(stmt, withinReactiveScope);
+  }
+
+  override transformTerminal(
+    stmt: ReactiveTerminalStatement,
+    state: State
+  ): Transformed<ReactiveStatement> {
+    if (state.withinReactiveScope && stmt.terminal.kind === "return") {
+      if (!this.env.config.enableEarlyReturnInReactiveScopes) {
+        CompilerError.throwTodo({
+          reason: `Support early return within a reactive scope`,
+          loc: stmt.terminal.value.loc,
+          description: null,
+          suggestions: null,
+        });
+      }
+      const loc = stmt.terminal.value.loc;
+      let earlyReturnValue: ReactiveScope["earlyReturnValue"];
+      if (state.earlyReturnValue !== null) {
+        earlyReturnValue = state.earlyReturnValue;
+      } else {
+        const identifier = createTemporaryPlace(this.env).identifier;
+        identifier.name = `t${identifier.id}`;
+        earlyReturnValue = {
+          label: this.env.nextBlockId,
+          loc,
+          value: identifier,
+        };
+      }
+      state.earlyReturnValue = earlyReturnValue;
+      return {
+        kind: "replace-many",
+        value: [
+          {
+            kind: "instruction",
+            instruction: {
+              id: makeInstructionId(0),
+              loc,
+              lvalue: null,
+              value: {
+                kind: "StoreLocal",
+                loc,
+                type: makeType(),
+                lvalue: {
+                  kind: InstructionKind.Reassign,
+                  place: {
+                    kind: "Identifier",
+                    identifier: earlyReturnValue.value,
+                    effect: Effect.Capture,
+                    loc,
+                    reactive: true,
+                  },
+                },
+                value: stmt.terminal.value,
+              },
+            },
+          },
+          {
+            kind: "terminal",
+            label: null,
+            terminal: {
+              kind: "break",
+              id: makeInstructionId(0),
+              implicit: false,
+              label: earlyReturnValue.label,
+            },
+          },
+        ],
+      };
+    }
+    this.traverseTerminal(stmt, state);
+    return { kind: "keep" };
   }
 }

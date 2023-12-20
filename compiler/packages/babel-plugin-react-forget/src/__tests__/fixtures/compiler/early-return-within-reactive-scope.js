@@ -1,17 +1,13 @@
+// @enableEarlyReturnInReactiveScopes
 function Component(props) {
   let x = [];
-  let y = null;
   if (props.cond) {
     x.push(props.a);
     // oops no memo!
     return x;
   } else {
-    y = foo();
-    if (props.b) {
-      return;
-    }
+    return foo();
   }
-  return y;
 }
 
 export const FIXTURE_ENTRYPOINT = {

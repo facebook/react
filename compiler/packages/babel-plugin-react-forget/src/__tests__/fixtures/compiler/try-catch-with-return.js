@@ -1,6 +1,6 @@
+// @enableEarlyReturnInReactiveScopes
 const { shallowCopy, throwInput } = require("shared-runtime");
 
-// @debug
 function Component(props) {
   let x = [];
   try {

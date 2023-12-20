@@ -452,87 +452,6 @@ function codegenReactiveScope(
   computationBlock.body.push(...cacheStoreStatements);
   const memoBlock = t.blockStatement(cacheLoadStatements);
 
-  if (scope.earlyReturnValue !== null) {
-    /**
-     * Handle early return. PropagateEarlyReturns should already have
-     * converted the actual return statements within the block into
-     * the appropriate form, so we just have to add the appropriate
-     * wrapping code.
-     *
-     * Example:
-     *
-     * ```
-     * if (input !== $[0]) {
-     *    let t0 = Symbol.for('react.memo_cache_sentinel');
-     *   label: {
-     *     ... memo block ...
-     *     if (cond) {
-     *       // this part is already rewritten by PropagateEarlyReturns
-     *       t0 = ...; // save the early return value
-     *       break label;
-     *     }
-     *     ... more memo block...
-     *   }
-     *   $[1] = t0;
-     *   if (t0 !== Symbol.for('react.memo_cache_sentinel')) {
-     *     return t0;
-     *   }
-     * } else {
-     *   ...
-     *   const t0 = $[1];
-     *   if (t0 !== Symbol.for('react.memo_cache_sentinel')) {
-     *     return t0;
-     *   }
-     * }
-     * ```
-     *
-     * TODO: factor out the common if-return from the if/else branches
-     * We can lift the temporary (here `t0`) to the outer block,
-     * then move the `if (t0 !== sentinel) { return t0 }` to after the
-     * memo block if/else, since both branches need to execute that check.
-     */
-    const index = cx.nextCacheIndex;
-    const identifier = t.identifier(`t${cx.env.nextIdentifierId}`);
-    const sentinel = t.callExpression(
-      t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
-      [t.stringLiteral("react.memo_cache_sentinel")]
-    );
-    computationBlock = t.blockStatement([
-      t.variableDeclaration("let", [
-        t.variableDeclarator(identifier, sentinel),
-      ]),
-      t.labeledStatement(
-        t.identifier(scope.earlyReturnValue.label),
-        computationBlock
-      ),
-      t.expressionStatement(
-        t.assignmentExpression(
-          "=",
-          t.memberExpression(t.identifier("$"), t.numericLiteral(index), true),
-          identifier
-        )
-      ),
-      t.ifStatement(
-        t.binaryExpression("!==", identifier, sentinel),
-        t.blockStatement([t.returnStatement(identifier)])
-      ),
-    ]);
-
-    memoBlock.body.push(
-      ...[
-        t.variableDeclaration("const", [
-          t.variableDeclarator(
-            identifier,
-            t.memberExpression(t.identifier("$"), t.numericLiteral(index), true)
-          ),
-        ]),
-        t.ifStatement(
-          t.binaryExpression("!==", identifier, sentinel),
-          t.blockStatement([t.returnStatement(identifier)])
-        ),
-      ]
-    );
-  }
   const memoStatement = t.ifStatement(
     testCondition,
     computationBlock,
@@ -588,6 +507,24 @@ function codegenReactiveScope(
     }
   }
   statements.push(memoStatement);
+
+  if (scope.earlyReturnValue !== null) {
+    statements.push(
+      t.ifStatement(
+        t.binaryExpression(
+          "!==",
+          t.identifier(scope.earlyReturnValue.value.name!),
+          t.callExpression(
+            t.memberExpression(t.identifier("Symbol"), t.identifier("for")),
+            [t.stringLiteral("react.memo_cache_sentinel")]
+          )
+        ),
+        t.blockStatement([
+          t.returnStatement(t.identifier(scope.earlyReturnValue.value.name!)),
+        ])
+      )
+    );
+  }
 }
 
 function codegenTerminal(

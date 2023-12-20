@@ -28,6 +28,7 @@ class Transform extends ReactiveFunctionTransform<void> {
   ): Transformed<ReactiveStatement> {
     this.visitScope(scopeBlock, state);
     if (
+      scopeBlock.scope.earlyReturnValue === null &&
       scopeBlock.scope.reassignments.size === 0 &&
       (scopeBlock.scope.declarations.size === 0 ||
         /*

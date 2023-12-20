@@ -1,7 +1,4 @@
-
-## Input
-
-```javascript
+// @enableEarlyReturnInReactiveScopes
 function Component(props) {
   let x = [];
   if (props.cond) {
@@ -23,14 +20,3 @@ export const FIXTURE_ENTRYPOINT = {
   fn: Component,
   params: [{ cond: true, a: 42, b: 3.14 }],
 };
-
-```
-
-
-## Error
-
-```
-[ReactForget] Todo: Support early return within a reactive scope (9:9)
-```
-          
-      
