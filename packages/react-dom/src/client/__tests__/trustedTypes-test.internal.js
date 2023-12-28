@@ -16,11 +16,12 @@ describe('when Trusted Types are available in global object', () => {
   let container;
   let ttObject1;
   let ttObject2;
+  let fakeTTObjects;
 
   beforeEach(() => {
     jest.resetModules();
     container = document.createElement('div');
-    const fakeTTObjects = new Set();
+    fakeTTObjects = new Set();
     window.trustedTypes = {
       isHTML: function (value) {
         if (this !== window.trustedTypes) {
@@ -28,11 +29,12 @@ describe('when Trusted Types are available in global object', () => {
         }
         return fakeTTObjects.has(value);
       },
-      isScript: () => false,
-      isScriptURL: () => false,
+      isScript: value => fakeTTObjects.has(value),
+      isScriptURL: value => fakeTTObjects.has(value),
     };
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableTrustedTypesIntegration = true;
+    ReactFeatureFlags.disableJavaScriptURLs = true;
     React = require('react');
     ReactDOM = require('react-dom');
     ttObject1 = {
@@ -147,6 +149,51 @@ describe('when Trusted Types are available in global object', () => {
       expect(setAttributeCalls[0][1]).toBe('class');
       // Ensure it didn't get stringified when passed to a DOM sink:
       expect(setAttributeCalls[0][2]).toBe(ttObject2);
+    } finally {
+      Element.prototype.setAttribute = setAttribute;
+    }
+  });
+
+  it('should not stringify attributes that go through sanitizeURL', () => {
+    const setAttribute = Element.prototype.setAttribute;
+    try {
+      const setAttributeCalls = [];
+      Element.prototype.setAttribute = function (name, value) {
+        setAttributeCalls.push([this, name.toLowerCase(), value]);
+        return setAttribute.apply(this, arguments);
+      };
+      const trustedScriptUrlHttps = {
+        toString: () => 'https://ok.example',
+      };
+      fakeTTObjects.add(trustedScriptUrlHttps);
+      // It's not a matching type (under Trusted Types a.href a string will do),
+      // but a.href undergoes URL and we're only testing if the value was
+      // passed unmodified to setAttribute.
+      ReactDOM.render(<a href={trustedScriptUrlHttps} />, container);
+      expect(setAttributeCalls.length).toBe(1);
+      expect(setAttributeCalls[0][0]).toBe(container.firstChild);
+      expect(setAttributeCalls[0][1]).toBe('href');
+      // Ensure it didn't get stringified when passed to a DOM sink:
+      expect(setAttributeCalls[0][2]).toBe(trustedScriptUrlHttps);
+    } finally {
+      Element.prototype.setAttribute = setAttribute;
+    }
+  });
+
+  it('should sanitize attributes even if they are Trusted Types', () => {
+    const setAttribute = Element.prototype.setAttribute;
+    try {
+      const trustedScriptUrlJavascript = {
+        // eslint-disable-next-line no-script-url
+        toString: () => 'javascript:notfine',
+      };
+      fakeTTObjects.add(trustedScriptUrlJavascript);
+      // Assert that the URL sanitization will correctly unwrap and verify the
+      // value.
+      ReactDOM.render(<a href={trustedScriptUrlJavascript} />, container);
+      expect(container.innerHTML).toBe(
+        '<a href="javascript:throw new Error(\'React has blocked a javascript: URL as a security precaution.\')"></a>',
+      );
     } finally {
       Element.prototype.setAttribute = setAttribute;
     }

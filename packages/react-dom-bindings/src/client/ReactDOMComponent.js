@@ -70,7 +70,6 @@ import {
   enableClientRenderFallbackOnTextMismatch,
   enableFormActions,
   disableIEWorkarounds,
-  enableTrustedTypesIntegration,
   enableFilterEmptyStringAttributesDOM,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -473,9 +472,8 @@ function setProp(
       if (__DEV__) {
         checkAttributeStringCoercion(value, key);
       }
-      const sanitizedValue = (sanitizeURL(
-        enableTrustedTypesIntegration ? value : '' + (value: any),
-      ): any);
+      const attributeValue = (value: any);
+      const sanitizedValue = (sanitizeURL(attributeValue): any);
       domElement.setAttribute(key, sanitizedValue);
       break;
     }
@@ -561,9 +559,8 @@ function setProp(
       if (__DEV__) {
         checkAttributeStringCoercion(value, key);
       }
-      const sanitizedValue = (sanitizeURL(
-        enableTrustedTypesIntegration ? value : '' + (value: any),
-      ): any);
+      const attributeValue = (value: any);
+      const sanitizedValue = (sanitizeURL(attributeValue): any);
       domElement.setAttribute(key, sanitizedValue);
       break;
     }
@@ -662,9 +659,7 @@ function setProp(
       if (__DEV__) {
         checkAttributeStringCoercion(value, key);
       }
-      const sanitizedValue = (sanitizeURL(
-        enableTrustedTypesIntegration ? value : '' + (value: any),
-      ): any);
+      const sanitizedValue = (sanitizeURL((value: any)): any);
       domElement.setAttributeNS(xlinkNamespace, 'xlink:href', sanitizedValue);
       break;
     }
@@ -690,10 +685,7 @@ function setProp(
         if (__DEV__) {
           checkAttributeStringCoercion(value, key);
         }
-        domElement.setAttribute(
-          key,
-          enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
-        );
+        domElement.setAttribute(key, (value: any));
       } else {
         domElement.removeAttribute(key);
       }
