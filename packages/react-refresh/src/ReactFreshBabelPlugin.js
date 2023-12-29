@@ -230,6 +230,22 @@ export default function (babel, opts = {}) {
       case 'React.useImperativeHandle':
       case 'useDebugValue':
       case 'React.useDebugValue':
+      case 'useId':
+      case 'React.useId':
+      case 'useDeferredValue':
+      case 'React.useDeferredValue':
+      case 'useTransition':
+      case 'React.useTransition':
+      case 'useInsertionEffect':
+      case 'React.useInsertionEffect':
+      case 'useSyncExternalStore':
+      case 'React.useSyncExternalStore':
+      case 'useFormStatus':
+      case 'React.useFormStatus':
+      case 'useFormState':
+      case 'React.useFormState':
+      case 'useOptimistic':
+      case 'React.useOptimistic':
         return true;
       default:
         return false;
