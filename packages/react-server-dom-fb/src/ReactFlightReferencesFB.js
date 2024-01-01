@@ -7,15 +7,16 @@
  * @flow
  */
 
-export opaque type ClientManifest = mixed;
+export type ClientManifest = null;
 
 // eslint-disable-next-line no-unused-vars
 export type ServerReference<T> = string;
 
 // eslint-disable-next-line no-unused-vars
-export type ClientReference<T> = string;
+export type ClientReference<T> = {
+  getModuleId(): ClientReferenceKey,
+};
 
-const registeredClientReferences = new Map<mixed, ClientReferenceMetadata>();
 const requestedClientReferencesKeys = new Set<ClientReferenceKey>();
 
 export type ClientReferenceKey = string;
@@ -26,54 +27,45 @@ export type ClientReferenceMetadata = {
 
 export type ServerReferenceId = string;
 
-export function registerClientReference<T>(
-  clientReference: ClientReference<T>,
-  moduleId: ClientReferenceKey,
-): ClientReference<T> {
-  const exportName = 'default'; // Currently, we only support modules with `default` export
-  registeredClientReferences.set(clientReference, {
-    moduleId,
-    exportName,
-  });
+let checkIsClientReference: (clientReference: mixed) => boolean;
 
-  return clientReference;
+export function setCheckIsClientReference(
+  impl: (clientReference: mixed) => boolean,
+): void {
+  checkIsClientReference = impl;
 }
 
-export function isClientReference<T>(reference: T): boolean {
-  return registeredClientReferences.has(reference);
+export function registerClientReference<T>(
+  clientReference: ClientReference<T>,
+): void {}
+
+export function isClientReference(reference: mixed): boolean {
+  if (checkIsClientReference == null) {
+    throw new Error('Expected implementation for checkIsClientReference.');
+  }
+  return checkIsClientReference(reference);
 }
 
 export function getClientReferenceKey<T>(
   clientReference: ClientReference<T>,
 ): ClientReferenceKey {
-  const reference = registeredClientReferences.get(clientReference);
-  if (reference != null) {
-    requestedClientReferencesKeys.add(reference.moduleId);
-    return reference.moduleId;
-  }
+  const moduleId = clientReference.getModuleId();
+  requestedClientReferencesKeys.add(moduleId);
 
-  throw new Error(
-    'Expected client reference ' + clientReference + ' to be registered.',
-  );
+  return clientReference.getModuleId();
 }
 
 export function resolveClientReferenceMetadata<T>(
   config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  const metadata = registeredClientReferences.get(clientReference);
-  if (metadata != null) {
-    return metadata;
-  }
-
-  throw new Error(
-    'Expected client reference ' + clientReference + ' to be registered.',
-  );
+  return {moduleId: clientReference.getModuleId(), exportName: 'default'};
 }
 
 export function registerServerReference<T>(
   serverReference: ServerReference<T>,
-  exportName: string,
+  id: string,
+  exportName: null | string,
 ): ServerReference<T> {
   throw new Error('registerServerReference: Not Implemented.');
 }

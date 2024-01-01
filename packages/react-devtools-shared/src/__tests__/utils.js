@@ -19,7 +19,9 @@ export function act(
   recursivelyFlush: boolean = true,
 ): void {
   const {act: actTestRenderer} = require('react-test-renderer');
-  const actDOM = require('react').unstable_act;
+  // Use `require('react-dom/test-utils').act` as a fallback for React 17, which can be used in integration tests for React DevTools.
+  const actDOM =
+    require('react').unstable_act || require('react-dom/test-utils').act;
 
   actDOM(() => {
     actTestRenderer(() => {
@@ -44,7 +46,9 @@ export async function actAsync(
   recursivelyFlush: boolean = true,
 ): Promise<void> {
   const {act: actTestRenderer} = require('react-test-renderer');
-  const actDOM = require('react').unstable_act;
+  // Use `require('react-dom/test-utils').act` as a fallback for React 17, which can be used in integration tests for React DevTools.
+  const actDOM =
+    require('react').unstable_act || require('react-dom/test-utils').act;
 
   await actDOM(async () => {
     await actTestRenderer(async () => {

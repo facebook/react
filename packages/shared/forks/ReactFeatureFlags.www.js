@@ -33,6 +33,9 @@ export const {
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,
   enableUseDeferredValueInitialArg,
+  retryLaneExpirationMs,
+  syncLaneExpirationMs,
+  transitionLaneExpirationMs,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -112,6 +115,8 @@ export const forceConcurrentByDefaultForTesting = false;
 
 export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
+
+export const enableAsyncDebugInfo = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

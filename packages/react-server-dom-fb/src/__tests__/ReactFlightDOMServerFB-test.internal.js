@@ -28,7 +28,6 @@ let ReactDOMClient;
 let ReactServerDOMServer;
 let ReactServerDOMClient;
 let Suspense;
-let registerClientReference;
 
 class Destination {
   #buffer = '';
@@ -57,14 +56,22 @@ class Destination {
   onError() {}
 }
 
+class ClientReferenceImpl {
+  constructor(moduleId) {
+    this.moduleId = moduleId;
+  }
+
+  getModuleId() {
+    return this.moduleId;
+  }
+}
+
 describe('ReactFlightDOM for FB', () => {
   beforeEach(() => {
     // For this first reset we are going to load the dom-node version of react-server-dom-turbopack/server
     // This can be thought of as essentially being the React Server Components scope with react-server
     // condition
     jest.resetModules();
-    registerClientReference =
-      require('../ReactFlightReferencesFB').registerClientReference;
 
     jest.mock('react', () => require('react/src/ReactSharedSubsetFB'));
 
@@ -78,8 +85,7 @@ describe('ReactFlightDOM for FB', () => {
     });
 
     clientExports = value => {
-      registerClientReference(value, value.name);
-      return value;
+      return new ClientReferenceImpl(value.name);
     };
 
     moduleMap = {
@@ -91,6 +97,7 @@ describe('ReactFlightDOM for FB', () => {
     ReactServerDOMServer = require('../ReactFlightDOMServerFB');
     ReactServerDOMServer.setConfig({
       byteLength: str => Buffer.byteLength(str),
+      isClientReference: reference => reference instanceof ClientReferenceImpl,
     });
 
     // This reset is to load modules for the SSR/Browser scope.

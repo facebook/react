@@ -12,6 +12,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
+export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -51,7 +52,11 @@ export const enableUseEffectEventHook = false;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
+
 export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
