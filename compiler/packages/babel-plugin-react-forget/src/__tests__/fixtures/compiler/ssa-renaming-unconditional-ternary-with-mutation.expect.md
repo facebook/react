@@ -19,13 +19,22 @@ function foo(props) {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function foo(props) {
-  const $ = useMemoCache(2);
+  const $ = useMemoCache(5);
   let x;
   if ($[0] !== props) {
     x = [];
     x.push(props.bar);
-    props.cond ? ((x = []), x.push(props.foo)) : ((x = []), x.push(props.bar));
-    mut(x);
+    if ($[2] !== props || $[3] !== x) {
+      props.cond
+        ? ((x = []), x.push(props.foo))
+        : ((x = []), x.push(props.bar));
+      mut(x);
+      $[2] = props;
+      $[3] = x;
+      $[4] = x;
+    } else {
+      x = $[4];
+    }
     $[0] = props;
     $[1] = x;
   } else {

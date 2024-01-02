@@ -10,8 +10,10 @@ import {
   Place,
   ReactiveBlock,
   ReactiveFunction,
+  ReactiveInstruction,
   ReactiveScope,
   ScopeId,
+  makeInstructionId,
 } from "../HIR/HIR";
 import { getPlaceScope } from "./BuildReactiveBlocks";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
@@ -79,6 +81,40 @@ class Visitor extends ReactiveFunctionVisitor<Context> {
       state.visitScope(scope);
     }
   }
+
+  override visitInstruction(instr: ReactiveInstruction, state: Context): void {
+    switch (instr.value.kind) {
+      case "SequenceExpression":
+      case "ConditionalExpression":
+      case "LogicalExpression": {
+        const prevScopeCount = state.currentScopes().length;
+        this.traverseInstruction(instr, state);
+
+        /**
+         * These compound value types can have nested sequences of instructions
+         * with scopes that start "partway" through a block-level instruction.
+         * This would cause the start of the scope to not align with any block-level
+         * instruction and get skipped by the later BuildReactiveBlocks pass.
+         *
+         * Here we detect scopes created within compound instructions and align the
+         * start of these scopes to the outer instruction id to ensure the scopes
+         * aren't skipped.
+         */
+        const scopes = state.currentScopes();
+        for (let i = prevScopeCount; i < scopes.length; i++) {
+          const scope = scopes[i];
+          scope.scope.range.start = makeInstructionId(
+            Math.min(instr.id, scope.scope.range.start)
+          );
+        }
+        break;
+      }
+      default: {
+        this.traverseInstruction(instr, state);
+      }
+    }
+  }
+
   override visitBlock(block: ReactiveBlock, state: Context): void {
     state.enter(() => {
       this.traverseBlock(block, state);
@@ -107,6 +143,10 @@ class Context {
    * the above data structures they're in, to avoid tracking the same scope twice.
    */
   #seenScopes: Set<ScopeId> = new Set();
+
+  currentScopes(): Array<PendingReactiveScope> {
+    return this.#blockScopes.at(-1) ?? [];
+  }
 
   enter(fn: () => void): void {
     this.#blockScopes.push([]);
