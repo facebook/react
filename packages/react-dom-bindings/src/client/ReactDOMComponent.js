@@ -2940,7 +2940,19 @@ function formatProps(props): string {
         trimmedValue = value.slice(0, 30) + '...';
       }
       if (typeof value === 'string') {
-        str += ' ' + attributeName + '=' + trimmedValue + '';
+        let insideQuotes = false
+        if (value.startsWith('&quot;') && value.endsWith('&quot;')) {
+          insideQuotes = true
+        } else if (value.startsWith('&apos;') && value.endsWith('&apos;')) {
+          insideQuotes = true
+        }
+        if (insideQuotes) {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          str += ' ' + attributeName + '={' + trimmedValue + '}';
+        } else {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          str += ' ' + attributeName + '=' + trimmedValue + '';
+        }
       } else {
         str += ' ' + attributeName + '={' + trimmedValue + '}';
       }
@@ -2968,14 +2980,35 @@ function formatElement(element, indentation, formattedChildren) {
   return str;
 }
 
+function formatDocumentNode(node) {
+  const children = [];
+  let formattedChildren = null;
+  let child = node.firstChild;
+  if (child !== null) {
+    while (true) {
+      children.push(formatNode(child, ''));
+      child = child.nextSibling;
+      if (child === null) {
+        break;
+      }
+    }
+    formattedChildren = children.join('\n');
+  }
+  return formatElement(node, '', formattedChildren);
+}
+
 function formatNode(node, indentation) {
   switch (node.nodeType) {
     // TODO: use constants
+    case Node.DOCUMENT_NODE:
+    case Node.DOCUMENT_FRAGMENT_NODE: {
+      return formatDocumentNode(node);
+    }
     case Node.ELEMENT_NODE:
       return formatElement(node, indentation, null);
     case Node.TEXT_NODE:
       // TODO: trim
-      return indentation + node.textContent;
+      return indentation + '"' + node.nodeValue + '"';
     default:
       return '';
   }
@@ -3081,8 +3114,7 @@ export function warnForDeletedHydratableElement(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'The content rendered by the server and the client did not match ' +
-      'because the server has rendered an extra text node. ' +
+      'The server has rendered an extra text node. ' +
       'The mismatch occurred inside of this parent:\n\n%s',
       formatDiffForExtraServerNode(parentNode, child),
     );
@@ -3099,8 +3131,7 @@ export function warnForDeletedHydratableText(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'The content rendered by the server and the client did not match ' +
-      'because the server has rendered an extra text node. ' +
+      'The server has rendered an extra text node. ' +
       'The mismatch occurred inside of this parent:\n\n%s',
       formatDiffForExtraServerNode(parentNode, child),
     );
@@ -3119,8 +3150,7 @@ export function warnForInsertedHydratedElement(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'The content rendered by the server and the client did not match ' +
-      'because the server has rendered an extra text node. ' +
+      'The server has rendered an extra text node. ' +
       'The mismatch occurred inside of this parent:\n\n%s',
       formatDiffForExtraClientNode(parentNode, formatTagWithProps(tag, props), lastHydratedChild),
     );
@@ -3145,8 +3175,7 @@ export function warnForInsertedHydratedText(
     }
     didWarnInvalidHydration = true;
     console.error(
-      'The content rendered by the server and the client did not match ' +
-      'because the client has rendered an extra element. ' +
+      'The server has rendered an extra text node. ' +
       'The mismatch occurred inside of this parent:\n\n%s',
       formatDiffForExtraClientNode(parentNode, text, lastHydratedChild),
     );
