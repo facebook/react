@@ -2980,6 +2980,7 @@ function formatElement(element, indentation, formattedChildren) {
   return str;
 }
 
+// todo: haven't tested yet
 function formatDocumentNode(node) {
   const children = [];
   let formattedChildren = null;
