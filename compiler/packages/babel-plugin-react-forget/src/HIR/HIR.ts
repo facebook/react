@@ -637,6 +637,7 @@ export type CallExpression = {
   callee: Place;
   args: Array<Place | SpreadPattern>;
   loc: SourceLocation;
+  typeArguments?: Array<t.FlowType>;
 };
 
 /*
@@ -712,7 +713,7 @@ export type InstructionValue =
   | MethodCall
   | {
       kind: "UnaryExpression";
-      operator: string;
+      operator: t.UnaryExpression["operator"];
       value: Place;
       loc: SourceLocation;
     }

@@ -422,11 +422,12 @@ const skipFilter = new Set([
   "readonly-object-method-calls-mutable-lambda",
 
   // TODO: 🌲
-  "forest/forest-basic",
-  "forest/forest-basic-jsx",
-  "forest/forest-primitive-operations",
-  "forest/computed-load-props",
-  "forest/property-load-props",
+  "forest/forest-basic.flow",
+  "forest/forest-basic-jsx.flow",
+  "forest/forest-typing.flow",
+  "forest/forest-primitive-operations.flow",
+  "forest/computed-load-props.flow",
+  "forest/property-load-props.flow",
 
   // TODO: we probably want to always skip these
   "rules-of-hooks/rules-of-hooks-0592bd574811",
@@ -519,7 +520,7 @@ const skipFilter = new Set([
   "bug-jsx-memberexpr-tag-in-lambda",
   "bug-invalid-code-when-bailout",
   "component-syntax-ref-gating.flow",
-  
+
   // 'react-forget-runtime' not yet supported
   "flag-enable-emit-hook-guards",
 ]);

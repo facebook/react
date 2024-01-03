@@ -14,8 +14,8 @@ import {
 } from "../CompilerError";
 import {
   ExternalFunction,
+  parseEnvironmentConfig,
   tryParseExternalFunction,
-  validateEnvironmentConfig,
 } from "../HIR/Environment";
 import { CodegenFunction } from "../ReactiveScopes";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
@@ -67,12 +67,12 @@ function isConfigError(err: unknown): boolean {
   return false;
 }
 
-type BabelFn =
+export type BabelFn =
   | NodePath<t.FunctionDeclaration>
   | NodePath<t.FunctionExpression>
   | NodePath<t.ArrowFunctionExpression>;
 
-type CompileResult = {
+export type CompileResult = {
   originalFn: BabelFn;
   compiledFn: CodegenFunction;
 };
@@ -115,7 +115,7 @@ function handleError(
   }
 }
 
-function createNewFunctionNode(
+export function createNewFunctionNode(
   originalFn: BabelFn,
   compiledFn: CodegenFunction
 ): t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression {
@@ -182,6 +182,8 @@ export function compileProgram(
   pass: CompilerPass
 ): void {
   const options = parsePluginOptions(pass.opts);
+  const environment = parseEnvironmentConfig(pass.opts.environment ?? {});
+
   /*
    * Record lint errors and critical errors as depending on Forget's config,
    * we may still need to run Forget's analysis on every function (even if we
@@ -224,7 +226,8 @@ export function compileProgram(
        * TODO(lauren): Remove pass.opts.environment nullcheck once PluginOptions
        * is validated
        */
-      const config = validateEnvironmentConfig(pass.opts.environment ?? {});
+      const config = environment.unwrap();
+
       compiledFn = compileFn(fn, config);
       pass.opts.logger?.logEvent(pass.filename, {
         kind: "CompileSuccess",

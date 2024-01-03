@@ -8,7 +8,6 @@
 import { NodePath } from "@babel/traverse";
 import * as t from "@babel/types";
 import prettyFormat from "pretty-format";
-import { lowerToForest } from "../Forest";
 import {
   HIRFunction,
   ReactiveFunction,
@@ -362,10 +361,6 @@ function* runWithEnvironment(
     env.config.validatePreserveExistingMemoizationGuarantees
   ) {
     validatePreservedManualMemoization(reactiveFunction);
-  }
-
-  if (env.config.enableForest) {
-    yield* lowerToForest(reactiveFunction);
   }
 
   const ast = codegenFunction(reactiveFunction).unwrap();

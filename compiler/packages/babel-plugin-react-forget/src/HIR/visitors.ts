@@ -14,6 +14,7 @@ import {
   Pattern,
   Place,
   ReactiveInstruction,
+  ReactiveValue,
   SpreadPattern,
   Terminal,
 } from "./HIR";
@@ -24,20 +25,26 @@ export function* eachInstructionLValue(
   if (instr.lvalue !== null) {
     yield instr.lvalue;
   }
-  switch (instr.value.kind) {
+  yield* eachInstructionValueLValue(instr.value);
+}
+
+export function* eachInstructionValueLValue(
+  value: ReactiveValue
+): Iterable<Place> {
+  switch (value.kind) {
     case "DeclareLocal":
     case "DeclareContext":
     case "StoreLocal": {
-      yield instr.value.lvalue.place;
+      yield value.lvalue.place;
       break;
     }
     case "Destructure": {
-      yield* eachPatternOperand(instr.value.lvalue.pattern);
+      yield* eachPatternOperand(value.lvalue.pattern);
       break;
     }
     case "PostfixUpdate":
     case "PrefixUpdate": {
-      yield instr.value.lvalue;
+      yield value.lvalue;
       break;
     }
   }

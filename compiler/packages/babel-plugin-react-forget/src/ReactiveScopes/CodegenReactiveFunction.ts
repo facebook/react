@@ -1164,6 +1164,17 @@ function codegenInstructionValue(
       break;
     }
     case "CallExpression": {
+      if (cx.env.config.enableForest) {
+        const callee = codegenPlaceToExpression(cx, instrValue.callee);
+        const args = instrValue.args.map((arg) => codegenArgument(cx, arg));
+        value = t.callExpression(callee, args);
+        if (instrValue.typeArguments != null) {
+          value.typeArguments = t.typeParameterInstantiation(
+            instrValue.typeArguments
+          );
+        }
+        break;
+      }
       const isHook = getHookKind(cx.env, instrValue.callee.identifier) != null;
       const callee = codegenPlaceToExpression(cx, instrValue.callee);
       const args = instrValue.args.map((arg) => codegenArgument(cx, arg));

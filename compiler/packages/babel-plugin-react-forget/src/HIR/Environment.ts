@@ -6,9 +6,10 @@
  */
 
 import * as t from "@babel/types";
-import { z } from "zod";
+import { ZodError, z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { CompilerError } from "../CompilerError";
+import { Err, Ok, Result } from "../Utils/Result";
 import { log } from "../Utils/logger";
 import {
   DEFAULT_GLOBALS,
@@ -506,6 +507,17 @@ export function isHookName(name: string): boolean {
    * }
    */
   return /^use[A-Z0-9]/.test(name);
+}
+
+export function parseEnvironmentConfig(
+  partialConfig: PartialEnvironmentConfig
+): Result<EnvironmentConfig, ZodError<PartialEnvironmentConfig>> {
+  const config = EnvironmentConfigSchema.safeParse(partialConfig);
+  if (config.success) {
+    return Ok(config.data);
+  } else {
+    return Err(config.error);
+  }
 }
 
 export function validateEnvironmentConfig(
