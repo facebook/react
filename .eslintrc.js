@@ -504,7 +504,6 @@ module.exports = {
     React$Node: 'readonly',
     React$Portal: 'readonly',
     React$Ref: 'readonly',
-    React$StatelessFunctionalComponent: 'readonly',
     ReadableStreamController: 'readonly',
     RequestInfo: 'readonly',
     RequestOptions: 'readonly',
