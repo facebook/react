@@ -357,7 +357,7 @@ export function jsxDEV(type, config, maybeKey, source, self) {
 
 /**
  * Create and return a new ReactElement of the given type.
- * See https://reactjs.org/docs/react-api.html#createelement
+ * See https://react.dev/reference/react/createElement
  */
 export function createElement(type, config, children) {
   let propName;
