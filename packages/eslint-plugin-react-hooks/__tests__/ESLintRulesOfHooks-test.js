@@ -521,6 +521,29 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        const A = () => {
+          return 'A'
+        };
+        const B = () => {
+          useState(0);
+          return 'B';
+        };
+        A.B = B;
+      `,
+    },
+    {
+      code: normalizeIndent`
+        const A = () => {
+          return 'A'
+        }
+        A.B = () => {
+          useState(0);
+          return 'B';
+        }
+      `,
+    },
   ],
   invalid: [
     {
