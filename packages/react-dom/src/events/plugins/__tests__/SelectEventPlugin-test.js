@@ -188,7 +188,7 @@ describe('SelectEventPlugin', () => {
     // Make sure the event was not called before we emit the selection change event
     expect(onSelect).toHaveBeenCalledTimes(0);
 
-    // This is dispatched e.g. when using CMD+a on macOS
+    // This is dispatched e.g. when using `command+a` on macOS
     document.dispatchEvent(
       new Event('selectionchange', {bubbles: false, cancelable: false}),
     );

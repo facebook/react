@@ -208,7 +208,7 @@ describe('SimpleEventPlugin', function () {
             ref={el => (button = el)}
             onFocus={this.increment}
             onClick={() => {
-              // The focus call synchronously dispatches a nested event. All of
+              // The focus called synchronously dispatches a nested event. All of
               // the updates in this handler should be batched together.
               this.increment();
               button.focus();
