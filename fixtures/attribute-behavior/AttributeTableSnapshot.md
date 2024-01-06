@@ -294,7 +294,7 @@
 | `action=(string 'on')`| (changed)| `"http://localhost:3000/on"` |
 | `action=(string 'off')`| (changed)| `"http://localhost:3000/off"` |
 | `action=(symbol)`| (initial, warning)| `"http://localhost:3000/"` |
-| `action=(function)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(function)`| (changed, ssr error, ssr mismatch)| `"javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"` |
 | `action=(null)`| (initial)| `"http://localhost:3000/"` |
 | `action=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
@@ -2568,8 +2568,8 @@
 | `defaultChecked=(string 'false')`| (changed)| `<boolean: true>` |
 | `defaultChecked=(string 'on')`| (changed)| `<boolean: true>` |
 | `defaultChecked=(string 'off')`| (changed)| `<boolean: true>` |
-| `defaultChecked=(symbol)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `defaultChecked=(function)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `defaultChecked=(symbol)`| (initial)| `<boolean: false>` |
+| `defaultChecked=(function)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(null)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -4176,25 +4176,25 @@
 ## `formAction` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `formAction=(string)`| (changed)| `"https://reactjs.com/"` |
-| `formAction=(empty string)`| (initial)| `"http://localhost:3000/"` |
-| `formAction=(array with string)`| (changed)| `"https://reactjs.com/"` |
-| `formAction=(empty array)`| (initial)| `"http://localhost:3000/"` |
-| `formAction=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
-| `formAction=(numeric string)`| (changed)| `"http://localhost:3000/42"` |
-| `formAction=(-1)`| (changed)| `"http://localhost:3000/-1"` |
-| `formAction=(0)`| (changed)| `"http://localhost:3000/0"` |
-| `formAction=(integer)`| (changed)| `"http://localhost:3000/1"` |
+| `formAction=(string)`| (changed, warning)| `"https://reactjs.com/"` |
+| `formAction=(empty string)`| (initial, warning)| `"http://localhost:3000/"` |
+| `formAction=(array with string)`| (changed, warning)| `"https://reactjs.com/"` |
+| `formAction=(empty array)`| (initial, warning)| `"http://localhost:3000/"` |
+| `formAction=(object)`| (changed, warning)| `"http://localhost:3000/result%20of%20toString()"` |
+| `formAction=(numeric string)`| (changed, warning)| `"http://localhost:3000/42"` |
+| `formAction=(-1)`| (changed, warning)| `"http://localhost:3000/-1"` |
+| `formAction=(0)`| (changed, warning)| `"http://localhost:3000/0"` |
+| `formAction=(integer)`| (changed, warning)| `"http://localhost:3000/1"` |
 | `formAction=(NaN)`| (changed, warning)| `"http://localhost:3000/NaN"` |
-| `formAction=(float)`| (changed)| `"http://localhost:3000/99.99"` |
+| `formAction=(float)`| (changed, warning)| `"http://localhost:3000/99.99"` |
 | `formAction=(true)`| (initial, warning)| `"http://localhost:3000/"` |
 | `formAction=(false)`| (initial, warning)| `"http://localhost:3000/"` |
-| `formAction=(string 'true')`| (changed)| `"http://localhost:3000/true"` |
-| `formAction=(string 'false')`| (changed)| `"http://localhost:3000/false"` |
-| `formAction=(string 'on')`| (changed)| `"http://localhost:3000/on"` |
-| `formAction=(string 'off')`| (changed)| `"http://localhost:3000/off"` |
+| `formAction=(string 'true')`| (changed, warning)| `"http://localhost:3000/true"` |
+| `formAction=(string 'false')`| (changed, warning)| `"http://localhost:3000/false"` |
+| `formAction=(string 'on')`| (changed, warning)| `"http://localhost:3000/on"` |
+| `formAction=(string 'off')`| (changed, warning)| `"http://localhost:3000/off"` |
 | `formAction=(symbol)`| (initial, warning)| `"http://localhost:3000/"` |
-| `formAction=(function)`| (initial, warning)| `"http://localhost:3000/"` |
+| `formAction=(function)`| (changed, warning, ssr error, ssr mismatch)| `"javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"` |
 | `formAction=(null)`| (initial)| `"http://localhost:3000/"` |
 | `formAction=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
@@ -5052,7 +5052,7 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `href=(string)`| (changed)| `"https://reactjs.com/"` |
-| `href=(empty string)`| (changed)| `"http://localhost:3000/"` |
+| `href=(empty string)`| (initial, warning)| `<empty string>` |
 | `href=(array with string)`| (changed)| `"https://reactjs.com/"` |
 | `href=(empty array)`| (changed)| `"http://localhost:3000/"` |
 | `href=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
@@ -9877,7 +9877,7 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `src=(string)`| (changed)| `"https://reactjs.com/"` |
-| `src=(empty string)`| (changed)| `"http://localhost:3000/"` |
+| `src=(empty string)`| (initial, warning)| `<empty string>` |
 | `src=(array with string)`| (changed)| `"https://reactjs.com/"` |
 | `src=(empty array)`| (changed)| `"http://localhost:3000/"` |
 | `src=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
