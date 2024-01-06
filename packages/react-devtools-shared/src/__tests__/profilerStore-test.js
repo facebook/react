@@ -187,7 +187,7 @@ describe('ProfilerStore', () => {
       utils.act(() => {
         const {
           ElementTypeHostComponent,
-        } = require('react-devtools-shared/src/types');
+        } = require('react-devtools-shared/src/frontend/types');
         store.componentFilters = [
           utils.createElementTypeFilter(ElementTypeHostComponent),
         ];

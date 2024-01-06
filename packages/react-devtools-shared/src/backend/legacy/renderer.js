@@ -13,7 +13,7 @@ import {
   ElementTypeRoot,
   ElementTypeHostComponent,
   ElementTypeOtherOrUnknown,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import {getUID, utfEncodeString, printOperationsArray} from '../../utils';
 import {
   cleanForBridge,
@@ -50,7 +50,7 @@ import type {
 import type {
   ComponentFilter,
   ElementType,
-} from 'react-devtools-shared/src/types';
+} from 'react-devtools-shared/src/frontend/types';
 import type {InspectedElement, SerializedElement} from '../types';
 
 export type InternalInstance = Object;
@@ -1101,6 +1101,10 @@ export function attach(
 
   function unpatchConsoleForStrictMode() {}
 
+  function hasFiberWithId(id: number): boolean {
+    return idToInternalInstanceMap.has(id);
+  }
+
   return {
     clearErrorsAndWarnings,
     clearErrorsForFiberID,
@@ -1124,6 +1128,7 @@ export function attach(
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
     handlePostCommitFiberRoot,
+    hasFiberWithId,
     inspectElement,
     logElementToConsole,
     overrideError,

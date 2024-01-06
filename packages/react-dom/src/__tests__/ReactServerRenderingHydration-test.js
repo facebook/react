@@ -732,4 +732,23 @@ describe('ReactDOMServerHydration', () => {
     expect(c.current.name).toBe('c');
     expect(c.current.value).toBe('C');
   });
+
+  // @gate enableFormActions
+  it('allows rendering extra hidden inputs immediately before a text instance', async () => {
+    const element = document.createElement('div');
+    element.innerHTML =
+      '<button><input name="a" value="A" type="hidden" />Click <!-- -->me</button>';
+    const button = element.firstChild;
+    const ref = React.createRef();
+    const extraText = 'me';
+
+    await act(() => {
+      ReactDOMClient.hydrateRoot(
+        element,
+        <button ref={ref}>Click {extraText}</button>,
+      );
+    });
+
+    expect(ref.current).toBe(button);
+  });
 });

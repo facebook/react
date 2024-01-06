@@ -117,7 +117,7 @@ describe('ReactSuspense', () => {
 
     // Render an empty shell
     const root = ReactTestRenderer.create(<Foo />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['Foo']);
@@ -158,7 +158,7 @@ describe('ReactSuspense', () => {
         </Suspense>
       </>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -217,26 +217,14 @@ describe('ReactSuspense', () => {
         <Text text="Initial" />
       </>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
     await waitForAll(['Initial']);
     expect(root).toMatchRenderedOutput('Initial');
 
     // The update will suspend.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        root.update(
-          <>
-            <Suspense fallback={<Text text="Loading..." />}>
-              <Async />
-            </Suspense>
-            <Text text="After Suspense" />
-            <Text text="Sibling" />
-          </>,
-        );
-      });
-    } else {
+    React.startTransition(() => {
       root.update(
         <>
           <Suspense fallback={<Text text="Loading..." />}>
@@ -246,7 +234,7 @@ describe('ReactSuspense', () => {
           <Text text="Sibling" />
         </>,
       );
-    }
+    });
 
     // Yield past the Suspense boundary but don't complete the last sibling.
     await waitFor(['Suspend!', 'Loading...', 'After Suspense']);
@@ -280,7 +268,7 @@ describe('ReactSuspense', () => {
     }
 
     const root = ReactTestRenderer.create(<Foo />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['Foo', 'Suspend! [A]', 'Loading...']);
@@ -315,7 +303,7 @@ describe('ReactSuspense', () => {
     }
 
     const root = ReactTestRenderer.create(<Foo />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['Foo', 'Suspend! [A]', 'Loading...']);
@@ -339,7 +327,7 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AB');
   });
 
-  // @gate !enableSyncDefaultUpdates
+  // @gate forceConcurrentByDefaultForTesting
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already skipped over a lower priority update in " +
@@ -365,7 +353,7 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(null, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
 
       root.update(<App shouldSuspend={false} step={0} />);
@@ -468,7 +456,7 @@ describe('ReactSuspense', () => {
     }
 
     const root = ReactTestRenderer.create(<App />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
     await waitForAll(['Suspend! [default]', 'Loading...']);
 
@@ -514,7 +502,7 @@ describe('ReactSuspense', () => {
     }
 
     const root = ReactTestRenderer.create(<App />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
     await waitForAll(['Suspend! [default]', 'Loading...']);
 
@@ -557,7 +545,7 @@ describe('ReactSuspense', () => {
         </Suspense>
       </App>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
     await waitForAll(['Suspend! [default]', 'Loading...']);
@@ -601,7 +589,7 @@ describe('ReactSuspense', () => {
         </Suspense>
       </App>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
     await waitForAll(['Suspend! [default]', 'Loading...']);
@@ -643,7 +631,7 @@ describe('ReactSuspense', () => {
     }
 
     const root = ReactTestRenderer.create(<App />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['Child 1', 'create layout']);
@@ -911,7 +899,7 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
 
       // Initial render
@@ -1002,7 +990,7 @@ describe('ReactSuspense', () => {
       }
 
       const root = ReactTestRenderer.create(<App />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
 
       await waitForAll(['Suspend! [Child 1]', 'Loading...']);

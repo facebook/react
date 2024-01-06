@@ -364,6 +364,18 @@ function createModelReject<T>(chunk: SomeChunk<T>): (error: mixed) => void {
   return (error: mixed) => triggerErrorOnChunk(chunk, error);
 }
 
+function getOutlinedModel(response: Response, id: number): any {
+  const chunk = getChunk(response, id);
+  if (chunk.status === RESOLVED_MODEL) {
+    initializeModelChunk(chunk);
+  }
+  if (chunk.status !== INITIALIZED) {
+    // We know that this is emitted earlier so otherwise it's an error.
+    throw chunk.reason;
+  }
+  return chunk.value;
+}
+
 function parseModelString(
   response: Response,
   parentObject: Object,
@@ -389,17 +401,9 @@ function parseModelString(
       case 'F': {
         // Server Reference
         const id = parseInt(value.slice(2), 16);
-        const chunk = getChunk(response, id);
-        if (chunk.status === RESOLVED_MODEL) {
-          initializeModelChunk(chunk);
-        }
-        if (chunk.status !== INITIALIZED) {
-          // We know that this is emitted earlier so otherwise it's an error.
-          throw chunk.reason;
-        }
         // TODO: Just encode this in the reference inline instead of as a model.
         const metaData: {id: ServerReferenceId, bound: Thenable<Array<any>>} =
-          chunk.value;
+          getOutlinedModel(response, id);
         return loadServerReference(
           response,
           metaData.id,
@@ -408,6 +412,18 @@ function parseModelString(
           parentObject,
           key,
         );
+      }
+      case 'Q': {
+        // Map
+        const id = parseInt(value.slice(2), 16);
+        const data = getOutlinedModel(response, id);
+        return new Map(data);
+      }
+      case 'W': {
+        // Set
+        const id = parseInt(value.slice(2), 16);
+        const data = getOutlinedModel(response, id);
+        return new Set(data);
       }
       case 'K': {
         // FormData

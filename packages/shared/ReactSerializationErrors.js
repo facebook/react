@@ -19,6 +19,7 @@ import {
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import isArray from 'shared/isArray';
+import getPrototypeOf from 'shared/getPrototypeOf';
 
 // Used for DEV messages to keep track of which parent rendered some props,
 // in case they error.
@@ -35,7 +36,7 @@ function isObjectPrototype(object: any): boolean {
   }
   // It might be an object from a different Realm which is
   // still just a plain simple object.
-  if (Object.getPrototypeOf(object)) {
+  if (getPrototypeOf(object)) {
     return false;
   }
   const names = Object.getOwnPropertyNames(object);
@@ -48,7 +49,7 @@ function isObjectPrototype(object: any): boolean {
 }
 
 export function isSimpleObject(object: any): boolean {
-  if (!isObjectPrototype(Object.getPrototypeOf(object))) {
+  if (!isObjectPrototype(getPrototypeOf(object))) {
     return false;
   }
   const names = Object.getOwnPropertyNames(object);

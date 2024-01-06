@@ -479,6 +479,48 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function App() {
+          const text = use(Promise.resolve('A'));
+          return <Text text={text} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        import * as React from 'react';
+        function App() {
+          if (shouldShowText) {
+            const text = use(query);
+            const data = React.use(thing);
+            const data2 = react.use(thing2);
+            return <Text text={text} />
+          }
+          return <Text text={shouldFetchBackupText ? use(backupQuery) : "Nothing to see here"} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          let data = [];
+          for (const query of queries) {
+            const text = use(item);
+            data.push(text);
+          }
+          return <Child data={data} />
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          const data = someCallback((x) => use(x));
+          return <Child data={data} />
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -1042,6 +1084,74 @@ const tests = {
       `,
       errors: [classError('useState')],
     },
+    {
+      code: normalizeIndent`
+        async function AsyncComponent() {
+          useState();
+        }
+      `,
+      errors: [asyncComponentHookError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        async function useAsyncHook() {
+          useState();
+        }
+      `,
+      errors: [asyncComponentHookError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        Hook.use();
+        Hook._use();
+        Hook.useState();
+        Hook._useState();
+        Hook.use42();
+        Hook.useHook();
+        Hook.use_hook();
+      `,
+      errors: [
+        topLevelError('Hook.use'),
+        topLevelError('Hook.useState'),
+        topLevelError('Hook.use42'),
+        topLevelError('Hook.useHook'),
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function notAComponent() {
+          use(promise);
+        }
+      `,
+      errors: [functionError('use', 'notAComponent')],
+    },
+    {
+      code: normalizeIndent`
+        const text = use(promise);
+        function App() {
+          return <Text text={text} />
+        }
+      `,
+      errors: [topLevelError('use')],
+    },
+    {
+      code: normalizeIndent`
+        class C {
+          m() {
+            use(promise);
+          }
+        }
+      `,
+      errors: [classError('use')],
+    },
+    {
+      code: normalizeIndent`
+        async function AsyncComponent() {
+          use();
+        }
+      `,
+      errors: [asyncComponentHookError('use')],
+    },
   ],
 };
 
@@ -1143,45 +1253,6 @@ if (__EXPERIMENTAL__) {
         }
       `,
     },
-    {
-      code: normalizeIndent`
-        function App() {
-          const text = use(Promise.resolve('A'));
-          return <Text text={text} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function App() {
-          if (shouldShowText) {
-            const text = use(query);
-            return <Text text={text} />
-          }
-          return <Text text={shouldFetchBackupText ? use(backupQuery) : "Nothing to see here"} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function App() {
-          let data = [];
-          for (const query of queries) {
-            const text = use(item);
-            data.push(text);
-          }
-          return <Child data={data} />
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function App() {
-          const data = someCallback((x) => use(x));
-          return <Child data={data} />
-        }
-      `,
-    },
   ];
   tests.invalid = [
     ...tests.invalid,
@@ -1256,50 +1327,6 @@ if (__EXPERIMENTAL__) {
       `,
       errors: [useEffectEventError('onClick')],
     },
-    {
-      code: normalizeIndent`
-        Hook.use();
-        Hook._use();
-        Hook.useState();
-        Hook._useState();
-        Hook.use42();
-        Hook.useHook();
-        Hook.use_hook();
-      `,
-      errors: [
-        topLevelError('Hook.use'),
-        topLevelError('Hook.useState'),
-        topLevelError('Hook.use42'),
-        topLevelError('Hook.useHook'),
-      ],
-    },
-    {
-      code: normalizeIndent`
-        function notAComponent() {
-          use(promise);
-        }
-      `,
-      errors: [functionError('use', 'notAComponent')],
-    },
-    {
-      code: normalizeIndent`
-        const text = use(promise);
-        function App() {
-          return <Text text={text} />
-        }
-      `,
-      errors: [topLevelError('use')],
-    },
-    {
-      code: normalizeIndent`
-        class C {
-          m() {
-            use(promise);
-          }
-        }
-      `,
-      errors: [classError('use')],
-    },
   ];
 }
 
@@ -1365,6 +1392,12 @@ function useEffectEventError(fn) {
     message:
       `\`${fn}\` is a function created with React Hook "useEffectEvent", and can only be called from ` +
       'the same component. They cannot be assigned to variables or passed down.',
+  };
+}
+
+function asyncComponentHookError(fn) {
+  return {
+    message: `React Hook "${fn}" cannot be called in an async function.`,
   };
 }
 

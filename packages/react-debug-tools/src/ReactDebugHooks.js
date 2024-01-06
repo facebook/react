@@ -8,9 +8,6 @@
  */
 
 import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
   StartTransitionOptions,
@@ -29,6 +26,7 @@ import {
   ContextProvider,
   ForwardRef,
 } from 'react-reconciler/src/ReactWorkTags';
+import {REACT_MEMO_CACHE_SENTINEL} from 'shared/ReactSymbols';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -38,7 +36,6 @@ type HookLogEntry = {
   primitive: string,
   stackError: Error,
   value: mixed,
-  ...
 };
 
 let hookLog: Array<HookLogEntry> = [];
@@ -51,19 +48,9 @@ type Dispatch<A> = A => void;
 
 let primitiveStackCache: null | Map<string, Array<any>> = null;
 
-type MemoCache = {
-  data: Array<Array<any>>,
-  index: number,
-};
-
-type FunctionComponentUpdateQueue = {
-  memoCache?: MemoCache | null,
-};
-
 type Hook = {
   memoizedState: any,
   next: Hook | null,
-  updateQueue: FunctionComponentUpdateQueue | null,
 };
 
 function getPrimitiveStackCache(): Map<string, Array<any>> {
@@ -106,7 +93,9 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
   return primitiveStackCache;
 }
 
+let currentFiber: null | Fiber = null;
 let currentHook: null | Hook = null;
+
 function nextHook(): null | Hook {
   const hook = currentHook;
   if (hook !== null) {
@@ -273,23 +262,6 @@ function useMemo<T>(
   return value;
 }
 
-function useMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  // useMutableSource() composes multiple hooks internally.
-  // Advance the current hook index the same number of times
-  // so that subsequent hooks have the right memoized state.
-  nextHook(); // MutableSource
-  nextHook(); // State
-  nextHook(); // Effect
-  nextHook(); // Effect
-  const value = getSnapshot(source._source);
-  hookLog.push({primitive: 'MutableSource', stackError: new Error(), value});
-  return value;
-}
-
 function useSyncExternalStore<T>(
   subscribe: (() => void) => () => void,
   getSnapshot: () => T,
@@ -326,7 +298,7 @@ function useTransition(): [
   return [false, callback => {}];
 }
 
-function useDeferredValue<T>(value: T): T {
+function useDeferredValue<T>(value: T, initialValue?: T): T {
   const hook = nextHook();
   hookLog.push({
     primitive: 'DeferredValue',
@@ -347,35 +319,32 @@ function useId(): string {
   return id;
 }
 
+// useMemoCache is an implementation detail of Forget's memoization
+// it should not be called directly in user-generated code
 function useMemoCache(size: number): Array<any> {
-  const hook = nextHook();
-  let memoCache: MemoCache;
-  if (
-    hook !== null &&
-    hook.updateQueue !== null &&
-    hook.updateQueue.memoCache != null
-  ) {
-    memoCache = hook.updateQueue.memoCache;
-  } else {
-    memoCache = {
-      data: [],
-      index: 0,
-    };
+  const fiber = currentFiber;
+  // Don't throw, in case this is called from getPrimitiveStackCache
+  if (fiber == null) {
+    return [];
+  }
+
+  // $FlowFixMe[incompatible-use]: updateQueue is mixed
+  const memoCache = fiber.updateQueue?.memoCache;
+  if (memoCache == null) {
+    return [];
   }
 
   let data = memoCache.data[memoCache.index];
   if (data === undefined) {
-    const MEMO_CACHE_SENTINEL = Symbol.for('react.memo_cache_sentinel');
-    data = new Array(size);
+    data = memoCache.data[memoCache.index] = new Array(size);
     for (let i = 0; i < size; i++) {
-      data[i] = MEMO_CACHE_SENTINEL;
+      data[i] = REACT_MEMO_CACHE_SENTINEL;
     }
   }
-  hookLog.push({
-    primitive: 'MemoCache',
-    stackError: new Error(),
-    value: data,
-  });
+
+  // We don't write anything to hookLog on purpose, so this hook remains invisible to users.
+
+  memoCache.index++;
   return data;
 }
 
@@ -396,7 +365,6 @@ const Dispatcher: DispatcherType = {
   useRef,
   useState,
   useTransition,
-  useMutableSource,
   useSyncExternalStore,
   useDeferredValue,
   useId,
@@ -439,7 +407,6 @@ export type HooksNode = {
   value: mixed,
   subHooks: Array<HooksNode>,
   hookSource?: HookSource,
-  ...
 };
 export type HooksTree = Array<HooksNode>;
 
@@ -746,7 +713,7 @@ export function inspectHooks<Props>(
   renderFunction: Props => React$Node,
   props: Props,
   currentDispatcher: ?CurrentDispatcherRef,
-  includeHooksSource?: boolean = false,
+  includeHooksSource: boolean = false,
 ): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -755,9 +722,11 @@ export function inspectHooks<Props>(
   }
 
   const previousDispatcher = currentDispatcher.current;
-  let readHookLog;
   currentDispatcher.current = DispatcherProxy;
+
+  let readHookLog;
   let ancestorStackError;
+
   try {
     ancestorStackError = new Error();
     renderFunction(props);
@@ -837,7 +806,7 @@ function resolveDefaultProps(Component: any, baseProps: any) {
 export function inspectHooksOfFiber(
   fiber: Fiber,
   currentDispatcher: ?CurrentDispatcherRef,
-  includeHooksSource?: boolean = false,
+  includeHooksSource: boolean = false,
 ): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -854,19 +823,25 @@ export function inspectHooksOfFiber(
       'Unknown Fiber. Needs to be a function component to inspect hooks.',
     );
   }
+
   // Warm up the cache so that it doesn't consume the currentHook.
   getPrimitiveStackCache();
+
+  // Set up the current hook so that we can step through and read the
+  // current state from them.
+  currentHook = (fiber.memoizedState: Hook);
+  currentFiber = fiber;
+
   const type = fiber.type;
   let props = fiber.memoizedProps;
   if (type !== fiber.elementType) {
     props = resolveDefaultProps(type, props);
   }
-  // Set up the current hook so that we can step through and read the
-  // current state from them.
-  currentHook = (fiber.memoizedState: Hook);
-  const contextMap = new Map<ReactContext<$FlowFixMe>, $FlowFixMe>();
+
+  const contextMap = new Map<ReactContext<any>, any>();
   try {
     setupContexts(contextMap, fiber);
+
     if (fiber.tag === ForwardRef) {
       return inspectHooksOfForwardRef(
         type.render,
@@ -876,9 +851,12 @@ export function inspectHooksOfFiber(
         includeHooksSource,
       );
     }
+
     return inspectHooks(type, props, currentDispatcher, includeHooksSource);
   } finally {
+    currentFiber = null;
     currentHook = null;
+
     restoreContexts(contextMap);
   }
 }

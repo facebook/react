@@ -150,7 +150,7 @@ describe('ReactProfiler DevTools integration', () => {
       return text;
     }
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
 
     // Commit something
     root.update(<Text text="A" />);
@@ -161,13 +161,9 @@ describe('ReactProfiler DevTools integration', () => {
     // for updates.
     Scheduler.unstable_advanceTime(10000);
     // Schedule an update.
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        root.update(<Text text="B" />);
-      });
-    } else {
+    React.startTransition(() => {
       root.update(<Text text="B" />);
-    }
+    });
 
     // Update B should not instantly expire.
     await waitFor([]);

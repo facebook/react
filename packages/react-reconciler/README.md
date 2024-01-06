@@ -129,14 +129,6 @@ There is a second purpose to this method. It lets you specify whether there is s
 
 If you don't want to do anything here, you should return `false`.
 
-#### `prepareUpdate(instance, type, oldProps, newProps, rootContainer, hostContext)`
-
-React calls this method so that you can compare the previous and the next props, and decide whether you need to update the underlying instance or not. If you don't need to update it, return `null`. If you need to update it, you can return an arbitrary object representing the changes that need to happen. Then in `commitUpdate` you would need to apply those changes to the instance.
-
-This method happens **in the render phase**. It should only *calculate* the update — but not apply it! For example, the DOM renderer returns an array that looks like `[prop1, value1, prop2, value2, ...]` for all props that have actually changed. And only in `commitUpdate` it applies those changes. You should calculate as much as you can in `prepareUpdate` so that `commitUpdate` can be very fast and straightforward.
-
-See the meaning of `rootContainer` and `hostContext` in the `createInstance` documentation.
-
 #### `shouldSetTextContent(type, props)`
 
 Some target platforms support setting an instance's text content without manually creating a text node. For example, in the DOM, you can set `node.textContent` instead of creating a text node and appending it.
@@ -300,9 +292,9 @@ The `internalHandle` data structure is meant to be opaque. If you bend the rules
 
 If you never return `true` from `finalizeInitialChildren`, you can leave it empty.
 
-#### `commitUpdate(instance, updatePayload, type, prevProps, nextProps, internalHandle)`
+#### `commitUpdate(instance, type, prevProps, nextProps, internalHandle)`
 
-This method should mutate the `instance` according to the set of changes in `updatePayload`. Here, `updatePayload` is the object that you've returned from `prepareUpdate` and has an arbitrary structure that makes sense for your renderer. For example, the DOM renderer returns an update payload like `[prop1, value1, prop2, value2, ...]` from `prepareUpdate`, and that structure gets passed into `commitUpdate`. Ideally, all the diffing and calculation should happen inside `prepareUpdate` so that `commitUpdate` can be fast and straightforward.
+This method should mutate the `instance` to match `nextProps`.
 
 The `internalHandle` data structure is meant to be opaque. If you bend the rules and rely on its internal fields, be aware that it may change significantly between versions. You're taking on additional maintenance risk by reading from it, and giving up all guarantees if you write something to it.
 

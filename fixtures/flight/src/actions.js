@@ -18,3 +18,7 @@ export async function greet(formData) {
   }
   return 'Hi ' + name + '!';
 }
+
+export async function increment(n) {
+  return n + 1;
+}
