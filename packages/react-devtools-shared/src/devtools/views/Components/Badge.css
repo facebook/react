@@ -9,9 +9,3 @@
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-monospace-small);
 }
-
-.ExtraLabel {
-  font-family: var(--font-family-monospace);
-  font-size: var(--font-size-monospace-small);
-  color: var(--color-component-badge-count);
-}

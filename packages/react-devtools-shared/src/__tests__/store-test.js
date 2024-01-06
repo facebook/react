@@ -693,13 +693,13 @@ describe('Store', () => {
       };
       const Wrapper = ({shouldSuspense}) => (
         <React.Fragment>
-          <React.SuspenseList revealOrder="forwards" tail="collapsed">
+          <React.unstable_SuspenseList revealOrder="forwards" tail="collapsed">
             <Component key="A" />
             <React.Suspense fallback={<Loading />}>
               {shouldSuspense ? <SuspendingComponent /> : <Component key="B" />}
             </React.Suspense>
             <Component key="C" />
-          </React.SuspenseList>
+          </React.unstable_SuspenseList>
         </React.Fragment>
       );
 

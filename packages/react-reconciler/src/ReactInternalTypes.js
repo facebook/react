@@ -11,13 +11,11 @@ import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
   ReactContext,
-  MutableSourceSubscribeFn,
-  MutableSourceGetSnapshotFn,
-  MutableSourceVersion,
-  MutableSource,
   StartTransitionOptions,
   Wakeable,
   Usable,
+  ReactFormState,
+  Awaited,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -54,11 +52,11 @@ export type HookType =
   | 'useDebugValue'
   | 'useDeferredValue'
   | 'useTransition'
-  | 'useMutableSource'
   | 'useSyncExternalStore'
   | 'useId'
   | 'useCacheRefresh'
-  | 'useOptimistic';
+  | 'useOptimistic'
+  | 'useFormState';
 
 export type ContextDependency<T> = {
   context: ReactContext<T>,
@@ -237,11 +235,6 @@ type BaseFiberRootProperties = {
   context: Object | null,
   pendingContext: Object | null,
 
-  // Used by useMutableSource hook to avoid tearing during hydration.
-  mutableSourceEagerHydrationData?: Array<
-    MutableSource<any> | MutableSourceVersion,
-  > | null,
-
   // Used to create a linked list that represent all the roots that have
   // pending work scheduled on them.
   next: FiberRoot | null,
@@ -257,8 +250,8 @@ type BaseFiberRootProperties = {
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
   expiredLanes: Lanes,
-  mutableReadLanes: Lanes,
   errorRecoveryDisabledLanes: Lanes,
+  shellSuspendCounter: number,
 
   finishedLanes: Lanes,
 
@@ -279,6 +272,8 @@ type BaseFiberRootProperties = {
     error: mixed,
     errorInfo: {digest?: ?string, componentStack?: ?string},
   ) => void,
+
+  formState: ReactFormState<any, any> | null,
 };
 
 // The following attributes are only used by DevTools and are only present in DEV builds.
@@ -405,16 +400,11 @@ export type Dispatcher = {
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useDeferredValue<T>(value: T): T,
+  useDeferredValue<T>(value: T, initialValue?: T): T,
   useTransition(): [
     boolean,
     (callback: () => void, options?: StartTransitionOptions) => void,
   ],
-  useMutableSource<TSource, Snapshot>(
-    source: MutableSource<TSource>,
-    getSnapshot: MutableSourceGetSnapshotFn<TSource, Snapshot>,
-    subscribe: MutableSourceSubscribeFn<TSource, Snapshot>,
-  ): Snapshot,
   useSyncExternalStore<T>(
     subscribe: (() => void) => () => void,
     getSnapshot: () => T,
@@ -428,6 +418,11 @@ export type Dispatcher = {
     passthrough: S,
     reducer: ?(S, A) => S,
   ) => [S, (A) => void],
+  useFormState?: <S, P>(
+    action: (Awaited<S>, P) => S,
+    initialState: Awaited<S>,
+    permalink?: string,
+  ) => [Awaited<S>, (P) => void],
 };
 
 export type CacheDispatcher = {

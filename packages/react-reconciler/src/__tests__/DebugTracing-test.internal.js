@@ -19,7 +19,7 @@ describe('DebugTracing', () => {
 
   const SYNC_LANE_STRING = '0b0000000000000000000000000000010';
   const DEFAULT_LANE_STRING = '0b0000000000000000000000000100000';
-  const RETRY_LANE_STRING = '0b0000000100000000000000000000000';
+  const RETRY_LANE_STRING = '0b0000000010000000000000000000000';
 
   global.IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -67,7 +67,7 @@ describe('DebugTracing', () => {
         <React.unstable_DebugTracingMode>
           <div />
         </React.unstable_DebugTracingMode>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       ),
     );
     expect(logs).toEqual([]);
@@ -179,7 +179,7 @@ describe('DebugTracing', () => {
             <Example />
           </React.Suspense>
         </React.unstable_DebugTracingMode>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       ),
     );
 
@@ -216,7 +216,7 @@ describe('DebugTracing', () => {
             </React.Suspense>
           </Wrapper>
         </React.unstable_DebugTracingMode>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       ),
     );
 
@@ -247,7 +247,7 @@ describe('DebugTracing', () => {
         <React.unstable_DebugTracingMode>
           <Example />
         </React.unstable_DebugTracingMode>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       ),
     );
 
@@ -278,7 +278,7 @@ describe('DebugTracing', () => {
           <React.unstable_DebugTracingMode>
             <Example />
           </React.unstable_DebugTracingMode>,
-          {unstable_isConcurrent: true},
+          {isConcurrent: true},
         ),
       );
     }).toErrorDev('Cannot update during an existing state transition');
@@ -305,7 +305,7 @@ describe('DebugTracing', () => {
         <React.unstable_DebugTracingMode>
           <Example />
         </React.unstable_DebugTracingMode>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       ),
     );
 
@@ -333,7 +333,7 @@ describe('DebugTracing', () => {
         <React.unstable_DebugTracingMode>
           <Example />
         </React.unstable_DebugTracingMode>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
     });
     expect(logs).toEqual([
@@ -358,7 +358,7 @@ describe('DebugTracing', () => {
         <React.unstable_DebugTracingMode>
           <Example />
         </React.unstable_DebugTracingMode>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
     });
 
@@ -381,7 +381,7 @@ describe('DebugTracing', () => {
         <React.unstable_DebugTracingMode>
           <Example />
         </React.unstable_DebugTracingMode>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       ),
     );
 

@@ -34,7 +34,7 @@ describe('ReactFresh', () => {
       ReactDOM = require('react-dom');
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').act;
+      act = React.unstable_act;
       internalAct = require('internal-test-utils').act;
 
       const InternalTestUtils = require('internal-test-utils');
@@ -3792,7 +3792,7 @@ describe('ReactFresh', () => {
       React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').act;
+      act = React.unstable_act;
       internalAct = require('internal-test-utils').act;
 
       // Important! Inject into the global hook *after* ReactDOM runs:

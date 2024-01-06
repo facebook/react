@@ -29,7 +29,10 @@ import type {
   LocationKeyToHookSourceAndMetadata,
 } from './loadSourceAndMetadata';
 import type {HookSource} from 'react-debug-tools/src/ReactDebugHooks';
-import type {HookNames, LRUCache} from 'react-devtools-shared/src/types';
+import type {
+  HookNames,
+  LRUCache,
+} from 'react-devtools-shared/src/frontend/types';
 
 type AST = mixed;
 

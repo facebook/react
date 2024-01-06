@@ -20,7 +20,8 @@ import {
   processBinaryChunk,
   close,
 } from 'react-client/src/ReactFlightClient';
-import {processStringChunk} from '../../react-client/src/ReactFlightClient';
+
+import {createServerReference as createServerReferenceImpl} from 'react-client/src/ReactFlightReplyClient';
 
 function noServerCall() {
   throw new Error(
@@ -34,21 +35,27 @@ export function createServerReference<A: Iterable<any>, T>(
   id: any,
   callServer: any,
 ): (...A) => Promise<T> {
-  return noServerCall;
+  return createServerReferenceImpl(id, noServerCall);
 }
+
+export type Options = {
+  nonce?: string,
+};
 
 function createFromNodeStream<T>(
   stream: Readable,
   moduleRootPath: string,
-  moduleBaseURL: string, // TODO: Used for preloading hints
+  moduleBaseURL: string,
+  options?: Options,
 ): Thenable<T> {
-  const response: Response = createResponse(moduleRootPath, noServerCall);
+  const response: Response = createResponse(
+    moduleRootPath,
+    moduleBaseURL,
+    noServerCall,
+    options && typeof options.nonce === 'string' ? options.nonce : undefined,
+  );
   stream.on('data', chunk => {
-    if (typeof chunk === 'string') {
-      processStringChunk(response, chunk, 0);
-    } else {
-      processBinaryChunk(response, chunk);
-    }
+    processBinaryChunk(response, chunk);
   });
   stream.on('error', error => {
     reportGlobalError(response, error);

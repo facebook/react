@@ -49,7 +49,6 @@ export const resetAfterCommit = $$$config.resetAfterCommit;
 export const createInstance = $$$config.createInstance;
 export const appendInitialChild = $$$config.appendInitialChild;
 export const finalizeInitialChildren = $$$config.finalizeInitialChildren;
-export const prepareUpdate = $$$config.prepareUpdate;
 export const shouldSetTextContent = $$$config.shouldSetTextContent;
 export const createTextInstance = $$$config.createTextInstance;
 export const scheduleTimeout = $$$config.scheduleTimeout;
@@ -142,6 +141,8 @@ export const getSuspenseInstanceFallbackErrorDetails =
   $$$config.getSuspenseInstanceFallbackErrorDetails;
 export const registerSuspenseInstanceRetry =
   $$$config.registerSuspenseInstanceRetry;
+export const canHydrateFormStateMarker = $$$config.canHydrateFormStateMarker;
+export const isFormStateMarkerMatching = $$$config.isFormStateMarkerMatching;
 export const getNextHydratableSibling = $$$config.getNextHydratableSibling;
 export const getFirstHydratableChild = $$$config.getFirstHydratableChild;
 export const getFirstHydratableChildWithinContainer =

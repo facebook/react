@@ -82,10 +82,8 @@ export type TransitionStatus = mixed;
 
 const NO_CONTEXT = {};
 const UPPERCASE_CONTEXT = {};
-const UPDATE_SIGNAL = {};
 if (__DEV__) {
   Object.freeze(NO_CONTEXT);
-  Object.freeze(UPDATE_SIGNAL);
 }
 
 function createReactNoop(reconciler: Function, useMutation: boolean) {
@@ -222,13 +220,11 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   function cloneInstance(
     instance: Instance,
-    updatePayload: null | Object,
     type: string,
     oldProps: Props,
     newProps: Props,
-    internalInstanceHandle: Object,
     keepChildren: boolean,
-    recyclableInstance: null | Instance,
+    children: ?$ReadOnlyArray<Instance>,
   ): Instance {
     if (__DEV__) {
       checkPropStringCoercion(newProps.children, 'children');
@@ -237,7 +233,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       id: instance.id,
       type: type,
       parent: instance.parent,
-      children: keepChildren ? instance.children : [],
+      children: keepChildren ? instance.children : children ?? [],
       text: shouldSetTextContent(type, newProps)
         ? computeText((newProps.children: any) + '', instance.context)
         : null,
@@ -451,21 +447,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       props: Props,
     ): boolean {
       return false;
-    },
-
-    prepareUpdate(
-      instance: Instance,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-    ): null | {...} {
-      if (oldProps === null) {
-        throw new Error('Should have old props');
-      }
-      if (newProps === null) {
-        throw new Error('Should have new props');
-      }
-      return UPDATE_SIGNAL;
     },
 
     shouldSetTextContent,
@@ -722,9 +703,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         cloneInstance,
         clearContainer,
 
-        createContainerChildSet(
-          container: Container,
-        ): Array<Instance | TextInstance> {
+        createContainerChildSet(): Array<Instance | TextInstance> {
           return [];
         },
 
@@ -760,18 +739,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           instance: Instance,
           type: string,
           props: Props,
-          internalInstanceHandle: Object,
         ): Instance {
-          const clone = cloneInstance(
-            instance,
-            null,
-            type,
-            props,
-            props,
-            internalInstanceHandle,
-            true,
-            null,
-          );
+          const clone = cloneInstance(instance, type, props, props, true, null);
           clone.hidden = true;
           return clone;
         },
@@ -779,7 +748,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         cloneHiddenTextInstance(
           instance: TextInstance,
           text: string,
-          internalInstanceHandle: Object,
         ): TextInstance {
           const clone = {
             text: instance.text,

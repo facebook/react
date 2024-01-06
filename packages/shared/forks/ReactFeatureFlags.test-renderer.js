@@ -12,6 +12,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
+export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -24,6 +25,9 @@ export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableCacheElement = __EXPERIMENTAL__;
 export const enableFetchInstrumentation = true;
 export const enableFormActions = true; // Doesn't affect Test Renderer
+export const enableBinaryFlight = true;
+export const enableTaint = true;
+export const enablePostpone = false;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
@@ -47,6 +51,11 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
+export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
+
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 
@@ -59,22 +68,24 @@ export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = true;
-export const enableUseMutableSource = false;
+export const enableServerContext = false;
 
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;
-export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 export const enableDeferRootSchedulingToMicrotask = true;
 
-export const diffInCommitPhase = true;
-export const enableAsyncActions = false;
+export const enableAsyncActions = true;
 
 export const alwaysThrottleRetries = true;
+
+export const useMicrotasksForSchedulingInFabric = false;
+export const passChildrenWhenCloningPersistedNodes = false;
+export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

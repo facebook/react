@@ -39,6 +39,7 @@ import {
   dispatchCommand,
   sendAccessibilityEvent,
   getNodeFromInternalInstanceHandle,
+  isChildPublicInstance,
 } from './ReactNativePublicCompat';
 import {getPublicInstanceFromInternalInstanceHandle} from './ReactFiberConfigFabric';
 
@@ -128,6 +129,8 @@ export {
   // instance handles we use to dispatch events. This provides a way to access
   // the public instances we created from them (potentially created lazily).
   getPublicInstanceFromInternalInstanceHandle,
+  // DEV-only:
+  isChildPublicInstance,
 };
 
 injectIntoDevTools({
@@ -137,6 +140,7 @@ injectIntoDevTools({
   version: ReactVersion,
   rendererPackageName: 'react-native-renderer',
   rendererConfig: {
+    getInspectorDataForInstance,
     getInspectorDataForViewTag: getInspectorDataForViewTag,
     getInspectorDataForViewAtPoint: getInspectorDataForViewAtPoint.bind(
       null,

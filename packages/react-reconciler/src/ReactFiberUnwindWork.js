@@ -14,7 +14,6 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {TracingMarkerInstance} from './ReactFiberTracingMarkerComponent';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource';
 import {
   ClassComponent,
   HostRoot,
@@ -103,7 +102,6 @@ function unwindWork(
       popRootTransition(workInProgress, root, renderLanes);
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
-      resetMutableSourceWorkInProgressVersions();
       const flags = workInProgress.flags;
       if (
         (flags & ShouldCapture) !== NoFlags &&
@@ -234,7 +232,6 @@ function unwindInterruptedWork(
       popRootTransition(interruptedWork, root, renderLanes);
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
-      resetMutableSourceWorkInProgressVersions();
       break;
     }
     case HostHoistable:

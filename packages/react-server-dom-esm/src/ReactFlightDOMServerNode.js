@@ -22,6 +22,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFlightServer';
 
@@ -36,7 +37,15 @@ import {
   getRoot,
 } from 'react-server/src/ReactFlightReplyServer';
 
-import {decodeAction} from 'react-server/src/ReactFlightActionServer';
+import {
+  decodeAction,
+  decodeFormState,
+} from 'react-server/src/ReactFlightActionServer';
+
+export {
+  registerServerReference,
+  registerClientReference,
+} from './ReactFlightESMReferences';
 
 function createDrainHandler(destination: Destination, request: Request) {
   return () => startFlowing(request, destination);
@@ -44,6 +53,7 @@ function createDrainHandler(destination: Destination, request: Request) {
 
 type Options = {
   onError?: (error: mixed) => void,
+  onPostpone?: (reason: string) => void,
   context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 };
@@ -64,6 +74,7 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
+    options ? options.onPostpone : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
@@ -80,6 +91,7 @@ function renderToPipeableStream(
       return destination;
     },
     abort(reason: mixed) {
+      stopFlowing(request);
       abort(request, reason);
     },
   };
@@ -131,7 +143,11 @@ function decodeReplyFromBusboy<T>(
     close(response);
   });
   busboyStream.on('error', err => {
-    reportGlobalError(response, err);
+    reportGlobalError(
+      response,
+      // $FlowFixMe[incompatible-call] types Error and mixed are incompatible
+      err,
+    );
   });
   return getRoot(response);
 }
@@ -146,8 +162,9 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(moduleBasePath, '', body);
+  const root = getRoot<T>(response);
   close(response);
-  return getRoot(response);
+  return root;
 }
 
 export {
@@ -155,4 +172,5 @@ export {
   decodeReplyFromBusboy,
   decodeReply,
   decodeAction,
+  decodeFormState,
 };

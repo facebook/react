@@ -1256,6 +1256,22 @@ describe('ReactDOMEventListener', () => {
         },
       });
     });
+
+    it('onScrollEnd', () => {
+      testNonBubblingEvent({
+        type: 'div',
+        reactEvent: 'onScrollEnd',
+        reactEventType: 'scrollend',
+        nativeEvent: 'scrollend',
+        dispatch(node) {
+          const e = new Event('scrollend', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
   });
 
   // The tests for these events are currently very limited

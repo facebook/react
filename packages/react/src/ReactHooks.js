@@ -9,9 +9,6 @@
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {
-  MutableSource,
-  MutableSourceGetSnapshotFn,
-  MutableSourceSubscribeFn,
   ReactContext,
   StartTransitionOptions,
   Usable,
@@ -184,23 +181,14 @@ export function useTransition(): [
   return dispatcher.useTransition();
 }
 
-export function useDeferredValue<T>(value: T): T {
+export function useDeferredValue<T>(value: T, initialValue?: T): T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useDeferredValue(value);
+  return dispatcher.useDeferredValue(value, initialValue);
 }
 
 export function useId(): string {
   const dispatcher = resolveDispatcher();
   return dispatcher.useId();
-}
-
-export function useMutableSource<Source, Snapshot>(
-  source: MutableSource<Source>,
-  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
-): Snapshot {
-  const dispatcher = resolveDispatcher();
-  return dispatcher.useMutableSource(source, getSnapshot, subscribe);
 }
 
 export function useSyncExternalStore<T>(

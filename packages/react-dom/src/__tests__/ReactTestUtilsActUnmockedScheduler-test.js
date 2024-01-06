@@ -37,7 +37,7 @@ beforeEach(() => {
   yields = [];
   React = require('react');
   ReactDOM = require('react-dom');
-  act = require('react-dom/test-utils').act;
+  act = React.unstable_act;
   container = document.createElement('div');
   document.body.appendChild(container);
 });

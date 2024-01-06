@@ -31,11 +31,14 @@ export {
   unstable_createEventHandle,
   unstable_renderSubtreeIntoContainer,
   unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
-  useFormStatus as experimental_useFormStatus,
+  useFormStatus,
+  useFormState,
   prefetchDNS,
   preconnect,
   preload,
+  preloadModule,
   preinit,
+  preinitModule,
   version,
 } from './src/client/ReactDOM';
 

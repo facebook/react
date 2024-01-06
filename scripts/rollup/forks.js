@@ -1,5 +1,6 @@
 'use strict';
 
+const fs = require('node:fs');
 const {bundleTypes, moduleTypes} = require('./bundles');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 
@@ -28,6 +29,22 @@ const __EXPERIMENTAL__ =
     ? RELEASE_CHANNEL === 'experimental'
     : true;
 
+function findNearestExistingForkFile(path, segmentedIdentifier, suffix) {
+  const segments = segmentedIdentifier.split('-');
+  while (segments.length) {
+    const candidate = segments.join('-');
+    const forkPath = path + candidate + suffix;
+    try {
+      fs.statSync(forkPath);
+      return forkPath;
+    } catch (error) {
+      // Try the next candidate.
+    }
+    segments.pop();
+  }
+  return null;
+}
+
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
 
@@ -43,8 +60,14 @@ const forks = Object.freeze({
     entry,
     dependencies
   ) => {
-    if (entry === 'react' || entry === 'react/src/ReactSharedSubset.js') {
-      return './packages/react/src/ReactSharedInternals.js';
+    if (entry === 'react') {
+      return './packages/react/src/ReactSharedInternalsClient.js';
+    }
+    if (
+      entry === 'react/src/ReactSharedSubset.js' ||
+      entry === 'react/src/ReactSharedSubsetFB.js'
+    ) {
+      return './packages/react/src/ReactSharedInternalsServer.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
@@ -67,7 +90,11 @@ const forks = Object.freeze({
     entry,
     dependencies
   ) => {
-    if (entry === 'react-dom' || entry === 'react-dom/server-rendering-stub') {
+    if (
+      entry === 'react-dom' ||
+      entry === 'react-dom/server-rendering-stub' ||
+      entry === 'react-dom/src/ReactDOMSharedSubset.js'
+    ) {
       return './packages/react-dom/src/ReactDOMSharedInternals.js';
     }
     if (
@@ -193,12 +220,12 @@ const forks = Object.freeze({
     }
   },
 
-  './packages/react/src/ReactSharedInternals.js': (bundleType, entry) => {
+  './packages/react/src/ReactSharedInternalsClient.js': (bundleType, entry) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
       case UMD_PROFILING:
-        return './packages/react/src/forks/ReactSharedInternals.umd.js';
+        return './packages/react/src/forks/ReactSharedInternalsClient.umd.js';
       default:
         return null;
     }
@@ -261,7 +288,16 @@ const forks = Object.freeze({
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (let rendererInfo of inlinedHostConfigs) {
       if (rendererInfo.entryPoints.indexOf(entry) !== -1) {
-        return `./packages/react-reconciler/src/forks/ReactFiberConfig.${rendererInfo.shortName}.js`;
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-reconciler/src/forks/ReactFiberConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(
@@ -289,7 +325,16 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-server/src/forks/ReactServerStreamConfig.${rendererInfo.shortName}.js`;
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-server/src/forks/ReactServerStreamConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(
@@ -317,7 +362,16 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-server/src/forks/ReactFizzConfig.${rendererInfo.shortName}.js`;
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-server/src/forks/ReactFizzConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(
@@ -345,7 +399,23 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-server/src/forks/ReactFlightServerConfig.${rendererInfo.shortName}.js`;
+        if (rendererInfo.isFlightSupported === false) {
+          return new Error(
+            `Expected not to use ReactFlightServerConfig with "${entry}" entry point ` +
+              'in ./scripts/shared/inlinedHostConfigs.js. Update the renderer config to ' +
+              'activate flight suppport and add a matching fork implementation for ReactFlightServerConfig.'
+          );
+        }
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-server/src/forks/ReactFlightServerConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(
@@ -373,7 +443,23 @@ const forks = Object.freeze({
         if (!rendererInfo.isServerSupported) {
           return null;
         }
-        return `./packages/react-client/src/forks/ReactFlightClientConfig.${rendererInfo.shortName}.js`;
+        if (rendererInfo.isFlightSupported === false) {
+          return new Error(
+            `Expected not to use ReactFlightClientConfig with "${entry}" entry point ` +
+              'in ./scripts/shared/inlinedHostConfigs.js. Update the renderer config to ' +
+              'activate flight suppport and add a matching fork implementation for ReactFlightClientConfig.'
+          );
+        }
+        const foundFork = findNearestExistingForkFile(
+          './packages/react-client/src/forks/ReactFlightClientConfig.',
+          rendererInfo.shortName,
+          '.js'
+        );
+        if (foundFork) {
+          return foundFork;
+        }
+        // fall through to error
+        break;
       }
     }
     throw new Error(
