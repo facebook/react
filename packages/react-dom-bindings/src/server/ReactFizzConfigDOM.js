@@ -1290,7 +1290,7 @@ function pushAttribute(
     case 'disableRemotePlayback':
     case 'formNoValidate':
     case 'hidden':
-    case enableNewBooleanProps ? 'inert' : 'formNoValidate':
+    case 'inert':
     case 'loop':
     case 'noModule':
     case 'noValidate':
@@ -1302,16 +1302,20 @@ function pushAttribute(
     case 'scoped':
     case 'seamless':
     case 'itemScope': {
-      // Boolean
-      if (value && typeof value !== 'function' && typeof value !== 'symbol') {
-        target.push(
-          attributeSeparator,
-          stringToChunk(name),
-          attributeEmptyString,
-        );
+      const isNewBooleanProp = name === 'inert';
+      if (enableNewBooleanProps || !isNewBooleanProp) {
+        // Boolean
+        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+          target.push(
+            attributeSeparator,
+            stringToChunk(name),
+            attributeEmptyString,
+          );
+        }
+        return;
       }
-      return;
     }
+    // eslint-disable-next-line no-fallthrough -- Re-enable once enableNewBooleanProps is removed.
     case 'capture':
     case 'download': {
       // Overloaded Boolean
