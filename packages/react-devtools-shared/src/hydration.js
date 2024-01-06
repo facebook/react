@@ -14,9 +14,12 @@ import {
   getInObject,
   formatDataForPreview,
   setInObject,
-} from './utils';
+} from 'react-devtools-shared/src/utils';
 
-import type {DehydratedData} from './devtools/views/Components/types';
+import type {
+  DehydratedData,
+  InspectedElementPath,
+} from 'react-devtools-shared/src/frontend/types';
 
 export const meta = {
   inspectable: (Symbol('inspectable'): symbol),
@@ -123,7 +126,7 @@ export function dehydrate(
   unserializable: Array<Array<string | number>>,
   path: Array<string | number>,
   isPathAllowed: (path: Array<string | number>) => boolean,
-  level?: number = 0,
+  level: number = 0,
 ): $PropertyType<DehydratedData, 'data'> {
   const type = getDataType(data);
 
@@ -365,7 +368,7 @@ export function dehydrate(
 export function fillInPath(
   object: Object,
   data: DehydratedData,
-  path: Array<string | number>,
+  path: InspectedElementPath,
   value: any,
 ) {
   const target = getInObject(object, path);
@@ -424,7 +427,7 @@ export function hydrate(
       parent[last] = undefined;
     } else {
       // Replace the string keys with Symbols so they're non-enumerable.
-      const replaced: {[key: symbol]: boolean | string, ...} = {};
+      const replaced: {[key: symbol]: boolean | string} = {};
       replaced[meta.inspectable] = !!value.inspectable;
       replaced[meta.inspected] = false;
       replaced[meta.name] = value.name;

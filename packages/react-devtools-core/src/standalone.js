@@ -33,7 +33,7 @@ import {
 import {localStorageSetItem} from 'react-devtools-shared/src/storage';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {InspectedElement} from 'react-devtools-shared/src/frontend/types';
 
 installHook(window);
 
@@ -299,8 +299,8 @@ type LoggerOptions = {
 };
 
 function startServer(
-  port?: number = 8097,
-  host?: string = 'localhost',
+  port: number = 8097,
+  host: string = 'localhost',
   httpsOptions?: ServerOptions,
   loggerOptions?: LoggerOptions,
 ): {close(): void} {

@@ -31,9 +31,8 @@ export const enableComponentStackLocations = true;
 
 // TODO: Finish rolling out in www
 export const enableClientRenderFallbackOnTextMismatch = true;
-
-// Recoil still uses useMutableSource in www, need to delete
-export const enableUseMutableSource = false;
+export const enableFormActions = true;
+export const enableAsyncActions = true;
 
 // Not sure if www still uses this. We don't have a replacement but whatever we
 // replace it with will likely be different than what's already there, so we
@@ -85,7 +84,11 @@ export const enableLegacyCache = __EXPERIMENTAL__;
 export const enableCacheElement = __EXPERIMENTAL__;
 export const enableFetchInstrumentation = true;
 
-export const enableFormActions = __EXPERIMENTAL__;
+export const enableBinaryFlight = __EXPERIMENTAL__;
+
+export const enableTaint = __EXPERIMENTAL__;
+
+export const enablePostpone = __EXPERIMENTAL__;
 
 export const enableTransitionTracing = false;
 
@@ -102,8 +105,6 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-export const enableHostSingletons = true;
-
 export const enableFloat = true;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for
@@ -117,12 +118,21 @@ export const enableUseEffectEventHook = __EXPERIMENTAL__;
 // (handled with an MutationObserver) instead of inline-scripts
 export const enableFizzExternalRuntime = true;
 
-// Performance related test
-export const diffInCommitPhase = __EXPERIMENTAL__;
-
-export const enableAsyncActions = __EXPERIMENTAL__;
-
 export const alwaysThrottleRetries = true;
+
+export const useMicrotasksForSchedulingInFabric = false;
+
+export const passChildrenWhenCloningPersistedNodes = false;
+
+export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+
+/**
+ * Enables an expiration time for retry lanes to avoid starvation.
+ */
+export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -145,12 +155,11 @@ export const disableLegacyContext = false;
 export const enableUseRefAccessWarning = false;
 
 // Enables time slicing for updates that aren't wrapped in startTransition.
-export const enableSyncDefaultUpdates = true;
+export const forceConcurrentByDefaultForTesting = false;
 
-export const enableUnifiedSyncLane = __EXPERIMENTAL__;
+export const enableUnifiedSyncLane = true;
 
-// Adds an opt-in to time slicing for updates that aren't wrapped in
-// startTransition. Only relevant when enableSyncDefaultUpdates is disabled.
+// Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
 export const allowConcurrentByDefault = false;
 
 // -----------------------------------------------------------------------------
@@ -220,10 +229,12 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 // issues in DEV builds.
 export const enableDebugTracing = false;
 
+export const enableAsyncDebugInfo = __EXPERIMENTAL__;
+
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableServerContext = true;
+export const enableServerContext = __EXPERIMENTAL__;
 
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
@@ -238,3 +249,4 @@ export const consoleManagedByDevToolsDuringStrictMode = true;
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
 export const useModernStrictMode = false;
+export const enableDO_NOT_USE_disableStrictPassiveEffect = false;

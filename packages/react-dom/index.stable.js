@@ -19,9 +19,13 @@ export {
   unmountComponentAtNode,
   unstable_batchedUpdates,
   unstable_renderSubtreeIntoContainer,
+  useFormStatus,
+  useFormState,
   prefetchDNS,
   preconnect,
   preload,
+  preloadModule,
   preinit,
+  preinitModule,
   version,
 } from './src/client/ReactDOM';

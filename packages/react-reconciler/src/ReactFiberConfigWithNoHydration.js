@@ -21,12 +21,13 @@ function shim(...args: any): empty {
 // Hydration (when unsupported)
 export type SuspenseInstance = mixed;
 export const supportsHydration = false;
-export const isHydratableType = shim;
 export const isHydratableText = shim;
 export const isSuspenseInstancePending = shim;
 export const isSuspenseInstanceFallback = shim;
 export const getSuspenseInstanceFallbackErrorDetails = shim;
 export const registerSuspenseInstanceRetry = shim;
+export const canHydrateFormStateMarker = shim;
+export const isFormStateMarkerMatching = shim;
 export const getNextHydratableSibling = shim;
 export const getFirstHydratableChild = shim;
 export const getFirstHydratableChildWithinContainer = shim;

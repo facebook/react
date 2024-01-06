@@ -84,7 +84,7 @@ describe('useSubscription', () => {
     await act(() => {
       renderer = ReactTestRenderer.create(
         <Subscription source={observable} />,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
     });
     assertLog(['default']);
@@ -136,7 +136,7 @@ describe('useSubscription', () => {
     await act(() => {
       renderer = ReactTestRenderer.create(
         <Subscription source={observable} />,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
     });
     assertLog(['initial']);
@@ -185,7 +185,7 @@ describe('useSubscription', () => {
     await act(() => {
       renderer = ReactTestRenderer.create(
         <Subscription source={observableA} />,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
     });
 
@@ -244,7 +244,7 @@ describe('useSubscription', () => {
     await act(() => {
       renderer = ReactTestRenderer.create(
         <Subscription source={observableA} />,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
     });
 
@@ -331,7 +331,7 @@ describe('useSubscription', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<Parent observed={observableA} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
     assertLog(['Child: a-0', 'Grandchild: a-0']);
@@ -339,13 +339,9 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          renderer.update(<Parent observed={observableB} />);
-        });
-      } else {
+      React.startTransition(() => {
         renderer.update(<Parent observed={observableB} />);
-      }
+      });
 
       await waitFor(['Child: b-0']);
       expect(log).toEqual(['Parent.componentDidMount']);
@@ -438,7 +434,7 @@ describe('useSubscription', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<Parent observed={observableA} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
     assertLog(['Child: a-0', 'Grandchild: a-0']);
@@ -447,13 +443,9 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     await act(async () => {
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          renderer.update(<Parent observed={observableB} />);
-        });
-      } else {
+      React.startTransition(() => {
         renderer.update(<Parent observed={observableB} />);
-      }
+      });
       await waitFor(['Child: b-0']);
       expect(log).toEqual([]);
 
@@ -540,7 +532,7 @@ describe('useSubscription', () => {
     await act(() => {
       renderer = ReactTestRenderer.create(
         <Subscription source={eventHandler} />,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
     });
     assertLog([true]);
@@ -574,7 +566,7 @@ describe('useSubscription', () => {
     await act(() => {
       renderer = ReactTestRenderer.create(
         <Subscription subscription={subscription1} />,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
     });
     await waitForAll([]);
@@ -615,7 +607,7 @@ describe('useSubscription', () => {
           <Subscriber id="first" />
           <Subscriber id="second" />
         </React.Fragment>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
       await waitForAll(['render:first:A', 'render:second:A']);
 
@@ -632,21 +624,13 @@ describe('useSubscription', () => {
       // Interrupt with a second mutation "C" -> "D".
       // This update will not be eagerly evaluated,
       // but useSubscription() should eagerly close over the updated value to avoid tearing.
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          mutate('C');
-        });
-      } else {
+      React.startTransition(() => {
         mutate('C');
-      }
+      });
       await waitFor(['render:first:C', 'render:second:C']);
-      if (gate(flags => flags.enableSyncDefaultUpdates)) {
-        React.startTransition(() => {
-          mutate('D');
-        });
-      } else {
+      React.startTransition(() => {
         mutate('D');
-      }
+      });
       await waitForAll(['render:first:D', 'render:second:D']);
 
       // No more pending updates

@@ -21,7 +21,9 @@ import {saveModule} from 'react-noop-renderer/flight-modules';
 
 import ReactFlightServer from 'react-server/flight';
 
-type Destination = Array<string>;
+type Destination = Array<Uint8Array>;
+
+const textEncoder = new TextEncoder();
 
 const ReactNoopFlightServer = ReactFlightServer({
   scheduleWork(callback: () => void) {
@@ -39,13 +41,13 @@ const ReactNoopFlightServer = ReactFlightServer({
   close(destination: Destination): void {},
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
-  stringToChunk(content: string): string {
-    return content;
+  stringToChunk(content: string): Uint8Array {
+    return textEncoder.encode(content);
   },
-  stringToPrecomputedChunk(content: string): string {
-    return content;
+  stringToPrecomputedChunk(content: string): Uint8Array {
+    return textEncoder.encode(content);
   },
-  clonePrecomputedChunk(chunk: string): string {
+  clonePrecomputedChunk(chunk: Uint8Array): Uint8Array {
     return chunk;
   },
   isClientReference(reference: Object): boolean {

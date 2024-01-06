@@ -7,8 +7,13 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
-import type {BootstrapScriptDescriptor} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {ReactNodeList, ReactFormState} from 'shared/ReactTypes';
+import type {
+  BootstrapScriptDescriptor,
+  HeadersDescriptor,
+} from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
+import type {ImportMap} from '../shared/ReactDOMTypes';
+import type {ErrorInfo, PostponeInfo} from 'react-server/src/ReactFizzServer';
 
 import ReactVersion from 'shared/ReactVersion';
 
@@ -16,11 +21,13 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  stopFlowing,
   abort,
 } from 'react-server/src/ReactFizzServer';
 
 import {
-  createResponseState,
+  createResumableState,
+  createRenderState,
   createRootFormatContext,
 } from 'react-dom-bindings/src/server/ReactFizzConfigDOM';
 
@@ -33,8 +40,13 @@ type Options = {
   bootstrapModules?: Array<string | BootstrapScriptDescriptor>,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
-  onError?: (error: mixed) => ?string,
+  onError?: (error: mixed, errorInfo: ErrorInfo) => ?string,
+  onPostpone?: (reason: string, postponeInfo: PostponeInfo) => void,
   unstable_externalRuntimeSrc?: string | BootstrapScriptDescriptor,
+  importMap?: ImportMap,
+  formState?: ReactFormState<any, any> | null,
+  onHeaders?: (headers: Headers) => void,
+  maxHeadersLength?: number,
 };
 
 // TODO: Move to sub-classing ReadableStream.
@@ -63,7 +75,8 @@ function renderToReadableStream(
             startFlowing(request, controller);
           },
           cancel: (reason): ?Promise<void> => {
-            abort(request);
+            stopFlowing(request);
+            abort(request, reason);
           },
         },
         // $FlowFixMe[prop-missing] size() methods are not allowed on byte streams.
@@ -80,15 +93,32 @@ function renderToReadableStream(
       allReady.catch(() => {});
       reject(error);
     }
+
+    const onHeaders = options ? options.onHeaders : undefined;
+    let onHeadersImpl;
+    if (onHeaders) {
+      onHeadersImpl = (headersDescriptor: HeadersDescriptor) => {
+        onHeaders(new Headers(headersDescriptor));
+      };
+    }
+
+    const resumableState = createResumableState(
+      options ? options.identifierPrefix : undefined,
+      options ? options.unstable_externalRuntimeSrc : undefined,
+      options ? options.bootstrapScriptContent : undefined,
+      options ? options.bootstrapScripts : undefined,
+      options ? options.bootstrapModules : undefined,
+    );
     const request = createRequest(
       children,
-      createResponseState(
-        options ? options.identifierPrefix : undefined,
+      resumableState,
+      createRenderState(
+        resumableState,
         options ? options.nonce : undefined,
-        options ? options.bootstrapScriptContent : undefined,
-        options ? options.bootstrapScripts : undefined,
-        options ? options.bootstrapModules : undefined,
         options ? options.unstable_externalRuntimeSrc : undefined,
+        options ? options.importMap : undefined,
+        onHeadersImpl,
+        options ? options.maxHeadersLength : undefined,
       ),
       createRootFormatContext(options ? options.namespaceURI : undefined),
       options ? options.progressiveChunkSize : undefined,
@@ -97,6 +127,8 @@ function renderToReadableStream(
       onShellReady,
       onShellError,
       onFatalError,
+      options ? options.onPostpone : undefined,
+      options ? options.formState : undefined,
     );
     if (options && options.signal) {
       const signal = options.signal;

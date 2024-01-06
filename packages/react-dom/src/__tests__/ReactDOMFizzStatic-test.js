@@ -13,6 +13,7 @@
 let JSDOM;
 let Stream;
 let React;
+let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzStatic;
 let Suspense;
@@ -29,6 +30,7 @@ describe('ReactDOMFizzStatic', () => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static');
@@ -84,6 +86,10 @@ describe('ReactDOMFizzStatic', () => {
       if (node.nodeName === 'SCRIPT') {
         const script = document.createElement('script');
         script.textContent = node.textContent;
+        for (let i = 0; i < node.attributes.length; i++) {
+          const attribute = node.attributes[i];
+          script.setAttribute(attribute.name, attribute.value);
+        }
         fakeBody.removeChild(node);
         container.appendChild(script);
       } else {
@@ -98,7 +104,7 @@ describe('ReactDOMFizzStatic', () => {
     while (node) {
       if (node.nodeType === 1) {
         if (
-          node.tagName !== 'SCRIPT' &&
+          (node.tagName !== 'SCRIPT' || node.hasAttribute('type')) &&
           node.tagName !== 'TEMPLATE' &&
           node.tagName !== 'template' &&
           !node.hasAttribute('hidden') &&
@@ -218,11 +224,13 @@ describe('ReactDOMFizzStatic', () => {
       );
     }
 
-    const promise = ReactDOMFizzStatic.prerenderToNodeStreams(<App />);
+    const promise = ReactDOMFizzStatic.prerenderToNodeStream(<App />);
 
     resolveText('Hello');
 
     const result = await promise;
+
+    expect(result.postponed).toBe(null);
 
     await act(async () => {
       result.prelude.pipe(writable);
@@ -234,5 +242,97 @@ describe('ReactDOMFizzStatic', () => {
     });
 
     expect(getVisibleChildren(container)).toEqual(<div>Hello</div>);
+  });
+
+  // @gate experimental
+  it('should support importMap option', async () => {
+    const importMap = {
+      foo: 'path/to/foo.js',
+    };
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(
+      <html>
+        <body>hello world</body>
+      </html>,
+      {importMap},
+    );
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual([
+      <script type="importmap">{JSON.stringify(importMap)}</script>,
+      'hello world',
+    ]);
+  });
+
+  // @gate experimental
+  it('supports onHeaders', async () => {
+    let headers;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('image', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preload('font', {as: 'font'});
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      onHeaders,
+    });
+    expect(headers).toEqual({
+      Link: `
+<font>; rel=preload; as="font"; crossorigin="",
+ <image>; rel=preload; as="image"; fetchpriority="high"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual('hello');
+  });
+
+  // @gate experimental && enablePostpone
+  it('includes stylesheet preloads in onHeaders when postponing in the Shell', async () => {
+    let headers;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('image', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preinit('style', {as: 'style'});
+      React.unstable_postpone();
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      onHeaders,
+    });
+    expect(headers).toEqual({
+      Link: `
+<image>; rel=preload; as="image"; fetchpriority="high",
+ <style>; rel=preload; as="style"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(undefined);
   });
 });

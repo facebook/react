@@ -23,13 +23,13 @@ import type {SuspenseState, RetryQueue} from './ReactFiberSuspenseComponent';
 import type {UpdateQueue} from './ReactFiberClassUpdateQueue';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks';
 import type {Wakeable} from 'shared/ReactTypes';
-import {isOffscreenManual} from './ReactFiberOffscreenComponent';
+import {isOffscreenManual} from './ReactFiberActivityComponent';
 import type {
   OffscreenState,
   OffscreenInstance,
   OffscreenQueue,
   OffscreenProps,
-} from './ReactFiberOffscreenComponent';
+} from './ReactFiberActivityComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {RootState} from './ReactFiberRoot';
@@ -53,8 +53,6 @@ import {
   enableUseEffectEventHook,
   enableFloat,
   enableLegacyHidden,
-  enableHostSingletons,
-  diffInCommitPhase,
   alwaysThrottleRetries,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -210,7 +208,7 @@ import {
   OffscreenVisible,
   OffscreenDetached,
   OffscreenPassiveEffectsConnected,
-} from './ReactFiberOffscreenComponent';
+} from './ReactFiberActivityComponent';
 import {
   TransitionRoot,
   TransitionTracingMarker,
@@ -1528,9 +1526,7 @@ function hideOrUnhideAllChildren(finishedWork: Fiber, isHidden: boolean) {
         (enableFloat && supportsResources
           ? node.tag === HostHoistable
           : false) ||
-        (enableHostSingletons && supportsSingletons
-          ? node.tag === HostSingleton
-          : false)
+        (supportsSingletons ? node.tag === HostSingleton : false)
       ) {
         if (hostSubtreeRoot === null) {
           hostSubtreeRoot = node;
@@ -1697,6 +1693,7 @@ function detachFiberAfterEffects(fiber: Fiber) {
   fiber.stateNode = null;
 
   if (__DEV__) {
+    fiber._debugSource = null;
     fiber._debugOwner = null;
   }
 
@@ -1724,7 +1721,7 @@ function emptyPortalContainer(current: Fiber) {
     ...
   } = current.stateNode;
   const {containerInfo} = portal;
-  const emptyChildSet = createContainerChildSet(containerInfo);
+  const emptyChildSet = createContainerChildSet();
   replaceContainerChildren(containerInfo, emptyChildSet);
 }
 
@@ -1748,9 +1745,7 @@ function isHostParent(fiber: Fiber): boolean {
     fiber.tag === HostComponent ||
     fiber.tag === HostRoot ||
     (enableFloat && supportsResources ? fiber.tag === HostHoistable : false) ||
-    (enableHostSingletons && supportsSingletons
-      ? fiber.tag === HostSingleton
-      : false) ||
+    (supportsSingletons ? fiber.tag === HostSingleton : false) ||
     fiber.tag === HostPortal
   );
 }
@@ -1777,9 +1772,7 @@ function getHostSibling(fiber: Fiber): ?Instance {
     while (
       node.tag !== HostComponent &&
       node.tag !== HostText &&
-      (!(enableHostSingletons && supportsSingletons)
-        ? true
-        : node.tag !== HostSingleton) &&
+      (!supportsSingletons ? true : node.tag !== HostSingleton) &&
       node.tag !== DehydratedFragment
     ) {
       // If it is not host node and, we might have a host node inside it.
@@ -1810,7 +1803,7 @@ function commitPlacement(finishedWork: Fiber): void {
     return;
   }
 
-  if (enableHostSingletons && supportsSingletons) {
+  if (supportsSingletons) {
     if (finishedWork.tag === HostSingleton) {
       // Singletons are already in the Host and don't need to be placed
       // Since they operate somewhat like Portals though their children will
@@ -1823,7 +1816,7 @@ function commitPlacement(finishedWork: Fiber): void {
 
   switch (parentFiber.tag) {
     case HostSingleton: {
-      if (enableHostSingletons && supportsSingletons) {
+      if (supportsSingletons) {
         const parent: Instance = parentFiber.stateNode;
         const before = getHostSibling(finishedWork);
         // We only have the top Fiber that was inserted but we need to recurse down its
@@ -1879,7 +1872,7 @@ function insertOrAppendPlacementNodeIntoContainer(
     }
   } else if (
     tag === HostPortal ||
-    (enableHostSingletons && supportsSingletons ? tag === HostSingleton : false)
+    (supportsSingletons ? tag === HostSingleton : false)
   ) {
     // If the insertion itself is a portal, then we don't want to traverse
     // down its children. Instead, we'll get insertions from each child in
@@ -1914,7 +1907,7 @@ function insertOrAppendPlacementNode(
     }
   } else if (
     tag === HostPortal ||
-    (enableHostSingletons && supportsSingletons ? tag === HostSingleton : false)
+    (supportsSingletons ? tag === HostSingleton : false)
   ) {
     // If the insertion itself is a portal, then we don't want to traverse
     // down its children. Instead, we'll get insertions from each child in
@@ -2048,7 +2041,7 @@ function commitDeletionEffectsOnFiber(
       // Fall through
     }
     case HostSingleton: {
-      if (enableHostSingletons && supportsSingletons) {
+      if (supportsSingletons) {
         if (!offscreenSubtreeWasHidden) {
           safelyDetachRef(deletedFiber, nearestMountedAncestor);
         }
@@ -2692,23 +2685,17 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
-            if (updatePayload !== null) {
-              try {
-                commitUpdate(
-                  finishedWork.stateNode,
-                  updatePayload,
-                  finishedWork.type,
-                  current.memoizedProps,
-                  finishedWork.memoizedProps,
-                  finishedWork,
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error,
-                );
-              }
+            try {
+              commitUpdate(
+                finishedWork.stateNode,
+                updatePayload,
+                finishedWork.type,
+                current.memoizedProps,
+                finishedWork.memoizedProps,
+                finishedWork,
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }
@@ -2717,7 +2704,7 @@ function commitMutationEffectsOnFiber(
       // Fall through
     }
     case HostSingleton: {
-      if (enableHostSingletons && supportsSingletons) {
+      if (supportsSingletons) {
         if (flags & Update) {
           const previousWork = finishedWork.alternate;
           if (previousWork === null) {
@@ -2776,23 +2763,17 @@ function commitMutationEffectsOnFiber(
             const updatePayload: null | UpdatePayload =
               (finishedWork.updateQueue: any);
             finishedWork.updateQueue = null;
-            if (updatePayload !== null || diffInCommitPhase) {
-              try {
-                commitUpdate(
-                  instance,
-                  updatePayload,
-                  type,
-                  oldProps,
-                  newProps,
-                  finishedWork,
-                );
-              } catch (error) {
-                captureCommitPhaseError(
-                  finishedWork,
-                  finishedWork.return,
-                  error,
-                );
-              }
+            try {
+              commitUpdate(
+                instance,
+                updatePayload,
+                type,
+                oldProps,
+                newProps,
+                finishedWork,
+              );
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
             }
           }
         }
@@ -4572,10 +4553,12 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
       }
       case ClassComponent: {
         const instance = fiber.stateNode;
-        try {
-          instance.componentDidMount();
-        } catch (error) {
-          captureCommitPhaseError(fiber, fiber.return, error);
+        if (typeof instance.componentDidMount === 'function') {
+          try {
+            instance.componentDidMount();
+          } catch (error) {
+            captureCommitPhaseError(fiber, fiber.return, error);
+          }
         }
         break;
       }

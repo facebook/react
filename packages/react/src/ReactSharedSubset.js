@@ -10,8 +10,11 @@
 // Patch fetch
 import './ReactFetch';
 
+export {default as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './ReactSharedInternalsServer';
+
+export {default as __SECRET_SERVER_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED} from './ReactServerSharedInternals';
+
 export {
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   Children,
   Fragment,
   Profiler,

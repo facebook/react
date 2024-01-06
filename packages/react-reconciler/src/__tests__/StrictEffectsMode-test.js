@@ -76,7 +76,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -129,7 +129,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -182,7 +182,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -233,7 +233,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -286,7 +286,7 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+      ReactTestRenderer.create(<App />, {isConcurrent: true});
     });
 
     if (supportsDoubleInvokeEffects()) {
@@ -322,7 +322,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -334,6 +334,47 @@ describe('StrictEffectsMode', () => {
       ]);
     } else {
       assertLog(['componentDidMount']);
+    }
+
+    await act(() => {
+      renderer.update(<App text={'update'} />);
+    });
+
+    assertLog(['componentDidUpdate']);
+
+    await act(() => {
+      renderer.unmount();
+    });
+
+    assertLog(['componentWillUnmount']);
+  });
+
+  it('invokes componentWillUnmount for class components without componentDidMount', async () => {
+    class App extends React.PureComponent {
+      componentDidUpdate() {
+        Scheduler.log('componentDidUpdate');
+      }
+
+      componentWillUnmount() {
+        Scheduler.log('componentWillUnmount');
+      }
+
+      render() {
+        return this.props.text;
+      }
+    }
+
+    let renderer;
+    await act(() => {
+      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
+        isConcurrent: true,
+      });
+    });
+
+    if (supportsDoubleInvokeEffects()) {
+      assertLog(['componentWillUnmount']);
+    } else {
+      assertLog([]);
     }
 
     await act(() => {
@@ -397,7 +438,7 @@ describe('StrictEffectsMode', () => {
 
     await act(() => {
       ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -461,7 +502,7 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+      ReactTestRenderer.create(<App />, {isConcurrent: true});
     });
 
     if (supportsDoubleInvokeEffects()) {
@@ -545,7 +586,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -567,6 +608,81 @@ describe('StrictEffectsMode', () => {
         'useLayoutEffect mount',
         'useEffect mount',
       ]);
+    }
+
+    await act(() => {
+      renderer.update(<App text={'mount'} />);
+    });
+
+    assertLog([
+      'useLayoutEffect unmount',
+      'useLayoutEffect mount',
+      'useEffect unmount',
+      'useEffect mount',
+    ]);
+
+    await act(() => {
+      renderer.unmount();
+    });
+
+    assertLog([
+      'componentWillUnmount',
+      'useLayoutEffect unmount',
+      'useEffect unmount',
+    ]);
+  });
+
+  it('classes without componentDidMount and functions are double invoked together correctly', async () => {
+    class ClassChild extends React.PureComponent {
+      componentWillUnmount() {
+        Scheduler.log('componentWillUnmount');
+      }
+
+      render() {
+        return this.props.text;
+      }
+    }
+
+    function FunctionChild({text}) {
+      React.useEffect(() => {
+        Scheduler.log('useEffect mount');
+        return () => Scheduler.log('useEffect unmount');
+      });
+      React.useLayoutEffect(() => {
+        Scheduler.log('useLayoutEffect mount');
+        return () => Scheduler.log('useLayoutEffect unmount');
+      });
+      return text;
+    }
+
+    function App({text}) {
+      return (
+        <>
+          <ClassChild text={text} />
+          <FunctionChild text={text} />
+        </>
+      );
+    }
+
+    let renderer;
+    await act(() => {
+      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
+        isConcurrent: true,
+      });
+    });
+
+    if (supportsDoubleInvokeEffects()) {
+      assertLog([
+        'useLayoutEffect mount',
+        'useEffect mount',
+        'componentWillUnmount',
+        'useLayoutEffect unmount',
+        'useEffect unmount',
+        'useLayoutEffect mount',
+        'useEffect mount',
+      ]);
+    } else {
+      assertLog(['useLayoutEffect mount', 'useEffect mount']);
     }
 
     await act(() => {

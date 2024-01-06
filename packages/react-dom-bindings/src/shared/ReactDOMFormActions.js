@@ -8,6 +8,7 @@
  */
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {Awaited} from 'shared/ReactTypes';
 
 import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -72,5 +73,19 @@ export function useFormStatus(): FormStatus {
     const dispatcher = resolveDispatcher();
     // $FlowFixMe[not-a-function] We know this exists because of the feature check above.
     return dispatcher.useHostTransitionStatus();
+  }
+}
+
+export function useFormState<S, P>(
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void] {
+  if (!(enableFormActions && enableAsyncActions)) {
+    throw new Error('Not implemented.');
+  } else {
+    const dispatcher = resolveDispatcher();
+    // $FlowFixMe[not-a-function] This is unstable, thus optional
+    return dispatcher.useFormState(action, initialState, permalink);
   }
 }

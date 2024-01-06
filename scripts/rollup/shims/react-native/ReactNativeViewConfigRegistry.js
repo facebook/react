@@ -14,7 +14,7 @@ import {type ViewConfig} from './ReactNativeTypes';
 import invariant from 'invariant';
 
 // Event configs
-const customBubblingEventTypes: {
+export const customBubblingEventTypes: {
   [eventName: string]: $ReadOnly<{
     phasedRegistrationNames: $ReadOnly<{
       captured: string,
@@ -22,17 +22,12 @@ const customBubblingEventTypes: {
       skipBubbling?: ?boolean,
     }>,
   }>,
-  ...
 } = {};
-const customDirectEventTypes: {
+export const customDirectEventTypes: {
   [eventName: string]: $ReadOnly<{
     registrationName: string,
   }>,
-  ...
 } = {};
-
-exports.customBubblingEventTypes = customBubblingEventTypes;
-exports.customDirectEventTypes = customDirectEventTypes;
 
 const viewConfigCallbacks = new Map<string, ?() => ViewConfig>();
 const viewConfigs = new Map<string, ViewConfig>();
@@ -75,7 +70,7 @@ function processEventTypes(viewConfig: ViewConfig): void {
  * A callback is provided to load the view config from UIManager.
  * The callback is deferred until the view is actually rendered.
  */
-exports.register = function (name: string, callback: () => ViewConfig): string {
+export function register(name: string, callback: () => ViewConfig): string {
   invariant(
     !viewConfigCallbacks.has(name),
     'Tried to register two views with the same name %s',
@@ -89,14 +84,14 @@ exports.register = function (name: string, callback: () => ViewConfig): string {
   );
   viewConfigCallbacks.set(name, callback);
   return name;
-};
+}
 
 /**
  * Retrieves a config for the specified view.
  * If this is the first time the view has been used,
  * This configuration will be lazy-loaded from UIManager.
  */
-exports.get = function (name: string): ViewConfig {
+export function get(name: string): ViewConfig {
   let viewConfig;
   if (!viewConfigs.has(name)) {
     const callback = viewConfigCallbacks.get(name);
@@ -124,4 +119,4 @@ exports.get = function (name: string): ViewConfig {
   }
   invariant(viewConfig, 'View config not found for name %s', name);
   return viewConfig;
-};
+}

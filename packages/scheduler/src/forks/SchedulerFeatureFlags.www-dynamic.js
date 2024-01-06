@@ -12,3 +12,7 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const enableProfiling = __VARIANT__;
+
+export const userBlockingPriorityTimeout = 250;
+export const normalPriorityTimeout = 5000;
+export const lowPriorityTimeout = 10000;

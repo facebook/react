@@ -12,14 +12,16 @@ import typeof ReactTestRenderer from 'react-test-renderer';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
-import type {ElementType} from 'react-devtools-shared/src/types';
+import type {ElementType} from 'react-devtools-shared/src/frontend/types';
 
 export function act(
   callback: Function,
   recursivelyFlush: boolean = true,
 ): void {
   const {act: actTestRenderer} = require('react-test-renderer');
-  const {act: actDOM} = require('react-dom/test-utils');
+  // Use `require('react-dom/test-utils').act` as a fallback for React 17, which can be used in integration tests for React DevTools.
+  const actDOM =
+    require('react').unstable_act || require('react-dom/test-utils').act;
 
   actDOM(() => {
     actTestRenderer(() => {
@@ -44,7 +46,9 @@ export async function actAsync(
   recursivelyFlush: boolean = true,
 ): Promise<void> {
   const {act: actTestRenderer} = require('react-test-renderer');
-  const {act: actDOM} = require('react-dom/test-utils');
+  // Use `require('react-dom/test-utils').act` as a fallback for React 17, which can be used in integration tests for React DevTools.
+  const actDOM =
+    require('react').unstable_act || require('react-dom/test-utils').act;
 
   await actDOM(async () => {
     await actTestRenderer(async () => {
@@ -86,7 +90,7 @@ export function createDisplayNameFilter(
   source: string,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   let isValid = true;
   try {
     new RegExp(source); // eslint-disable-line no-new
@@ -102,7 +106,7 @@ export function createDisplayNameFilter(
 }
 
 export function createHOCFilter(isEnabled: boolean = true) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   return {
     type: Types.ComponentFilterHOC,
     isEnabled,
@@ -114,7 +118,7 @@ export function createElementTypeFilter(
   elementType: ElementType,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   return {
     type: Types.ComponentFilterElementType,
     isEnabled,
@@ -126,7 +130,7 @@ export function createLocationFilter(
   source: string,
   isEnabled: boolean = true,
 ) {
-  const Types = require('react-devtools-shared/src/types');
+  const Types = require('react-devtools-shared/src/frontend/types');
   let isValid = true;
   try {
     new RegExp(source); // eslint-disable-line no-new
@@ -152,7 +156,7 @@ export function getRendererID(): number {
     return rendererInterface.renderer.rendererPackageName === 'react-dom';
   });
 
-  if (ids == null) {
+  if (id == null) {
     throw Error('Could not find renderer.');
   }
 

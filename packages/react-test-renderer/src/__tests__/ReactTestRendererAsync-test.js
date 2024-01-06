@@ -34,7 +34,7 @@ describe('ReactTestRendererAsync', () => {
       return props.children;
     }
     const renderer = ReactTestRenderer.create(<Foo>Hi</Foo>, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     // Before flushing, nothing has mounted.
@@ -68,7 +68,7 @@ describe('ReactTestRendererAsync', () => {
       );
     }
     const renderer = ReactTestRenderer.create(<Parent step={1} />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['A:1', 'B:1', 'C:1']);
@@ -95,17 +95,11 @@ describe('ReactTestRendererAsync', () => {
     }
 
     let renderer;
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        renderer = ReactTestRenderer.create(<Parent step={1} />, {
-          unstable_isConcurrent: true,
-        });
-      });
-    } else {
+    React.startTransition(() => {
       renderer = ReactTestRenderer.create(<Parent step={1} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
-    }
+    });
 
     // Flush the first two siblings
     await waitFor(['A:1', 'B:1']);
@@ -141,17 +135,11 @@ describe('ReactTestRendererAsync', () => {
     }
 
     let renderer;
-    if (gate(flags => flags.enableSyncDefaultUpdates)) {
-      React.startTransition(() => {
-        renderer = ReactTestRenderer.create(<Example step={1} />, {
-          unstable_isConcurrent: true,
-        });
-      });
-    } else {
+    React.startTransition(() => {
       renderer = ReactTestRenderer.create(<Example step={1} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
-    }
+    });
 
     // Flush the some of the changes, but don't commit
     await waitFor(['A:1']);
