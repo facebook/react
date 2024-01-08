@@ -542,8 +542,7 @@ const tests = {
           useEffect(() => {});
         };
       `,
-    }
-
+    },
   ],
   invalid: [
     {

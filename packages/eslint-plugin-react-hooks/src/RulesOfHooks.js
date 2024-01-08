@@ -51,7 +51,10 @@ function isComponentName(node) {
       return /^[A-Z]/.test(node.name);
 
     case 'MemberExpression':
-      return node?.property?.type === 'Identifier' && /^[A-Z]/.test(node.property.name)
+      return (
+        node?.property?.type === 'Identifier' &&
+        /^[A-Z]/.test(node.property.name)
+      );
 
     default:
       return false;
