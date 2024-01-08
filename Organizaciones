@@ -1,0 +1,36 @@
+Documentos de GitHub
+Organizaciones /Administrar la configuración de la organización /Administrar la política de aprobación de confirmación
+Administrar la política de aprobación de confirmaciones para su organización
+En este articulo
+Acerca de las aprobaciones de confirmaciones
+Gestionar aprobaciones de compromisos obligatorios para su organización
+Puede solicitar a los usuarios que firmen automáticamente todas las confirmaciones que realicen en la interfaz web de GitHub en los repositorios propiedad de su organización.
+
+¿Quién puede utilizar esta función?
+Los propietarios de la organización pueden exigir que todas las confirmaciones a los repositorios propiedad de la organización sean aprobadas por el autor de la confirmación.
+
+Acerca de las aprobaciones de confirmaciones
+Para afirmar que una confirmación cumple con las reglas y las licencias que rigen un repositorio, muchas organizaciones exigen que los desarrolladores aprueben cada confirmación. Si su organización requiere aprobaciones de confirmación, puede hacer que la aprobación sea una parte fluida del proceso de confirmación habilitando aprobaciones de confirmación obligatorias para los usuarios que se comprometen a través de la interfaz web de GitHub. Después de habilitar las firmas de confirmación obligatorias para una organización, el autor de la confirmación aprobará automáticamente cada confirmación realizada en los repositorios de esa organización a través de la interfaz web de GitHub.
+
+Las personas con acceso de administrador a un repositorio también pueden habilitar aprobaciones de confirmación obligatorias en el nivel del repositorio. Para obtener más información, consulte " Administrar la política de aprobación de confirmaciones para su repositorio ".
+
+Las aprobaciones de confirmaciones obligatorias solo se aplican a las confirmaciones realizadas a través de la interfaz web. Para las confirmaciones realizadas a través de la interfaz de línea de comandos de Git, el autor de la confirmación debe firmar la confirmación usando la --signoffopción. Para obtener más información, consulte la documentación de Git .
+
+Puede determinar si un repositorio al que está contribuyendo tiene habilitadas las aprobaciones de confirmación obligatorias comprobando el encabezado del formulario de confirmación en la parte inferior del archivo que está editando. Una vez habilitada la aprobación de confirmación obligatoria, el encabezado dirá "Aprobar y confirmar cambios".
+
+Captura de pantalla del formulario de confirmación en un repositorio.  El título del formulario es "Cerrar y confirmar cambios".
+
+Antes de aprobar una confirmación, debe asegurarse de que ésta cumpla con las reglas y las licencias que rigen el repositorio con el que se está comprometiendo. El repositorio puede utilizar un acuerdo de aprobación, como el Certificado de origen de desarrollador de la Fundación Linux. Para obtener más información, consulte el Certificado de origen del desarrollador .
+
+Aprobar una confirmación es diferente a firmar una confirmación. Para obtener más información sobre cómo firmar una confirmación, consulte " Acerca de la verificación de firma de confirmación ".
+
+Gestionar aprobaciones de compromisos obligatorios para su organización
+En la esquina superior derecha de GitHub.com, selecciona tu foto de perfil y luego haz clic en  Tus organizaciones .
+
+Captura de pantalla del menú desplegable debajo de la foto de perfil de @octocat.  "Sus organizaciones" está delineada en naranja oscuro.
+
+Junto a la organización, haz clic en Configuración .
+
+En la sección "Código, planificación y automatización" de la barra lateral, seleccione Repositorio y luego haga clic en Valores predeterminados del repositorio .
+
+Seleccione o anule la selección de Requerir que los contribuyentes firmen las confirmaciones basadas en web .
