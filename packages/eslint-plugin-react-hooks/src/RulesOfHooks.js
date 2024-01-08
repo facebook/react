@@ -46,7 +46,16 @@ function isHook(node) {
  */
 
 function isComponentName(node) {
-  return node.type === 'Identifier' && /^[A-Z]/.test(node.name);
+  switch (node.type) {
+    case 'Identifier':
+      return /^[A-Z]/.test(node.name);
+
+    case 'MemberExpression':
+      return node?.property?.type === 'Identifier' && /^[A-Z]/.test(node.property.name)
+
+    default:
+      return false;
+  }
 }
 
 function isReactFunction(node, functionName) {

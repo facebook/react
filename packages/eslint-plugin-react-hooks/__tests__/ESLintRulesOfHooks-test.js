@@ -21,7 +21,7 @@ ESLintTester.setDefaultConfig({
 
 /**
  * A string template tag that removes padding from the left side of multi-line strings
- * @param {Array} strings array of code strings (only one expected)
+ * @param {string[]} strings array of code strings (only one expected)
  */
 function normalizeIndent(strings) {
   const codeLines = strings[0].split('\n');
@@ -521,6 +521,29 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        // Valid because compound functions can call hooks.
+        function Parent() {
+          return <></>
+        };
+
+        Parent.Child = () => {
+          useHook();
+        };
+      `,
+    },
+    {
+      code: normalizeIndent`
+        // Valid properties of type functions on objects can call hooks.
+        const Obj = {};
+
+        Obj.Test.Test2 = () => {
+          useEffect(() => {});
+        };
+      `,
+    }
+
   ],
   invalid: [
     {
