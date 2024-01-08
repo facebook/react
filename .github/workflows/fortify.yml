@@ -1,0 +1,98 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+################################################################################################################################################
+# Fortify lets you build secure software fast with an appsec platform that automates testing throughout the DevSecOps pipeline. Fortify static,#
+# dynamic, interactive, and runtime security testing is available on premises or as a service. To learn more about Fortify, start a free trial #
+# or contact our sales team, visit microfocus.com/appsecurity.                                                                                 #
+#                                                                                                                                              #
+# Use this workflow template as a basis for integrating Fortify on Demand Static Application Security Testing(SAST) into your GitHub workflows.#
+# This template demonstrates the steps to prepare the code+dependencies, initiate a scan, download results once complete and import into       #
+# GitHub Security Code Scanning Alerts. Existing customers should review inputs and environment variables below to configure scanning against  #
+# an existing application in your Fortify on Demand tenant. Additional information is available in the comments throughout the workflow, the   #
+# documentation for the Fortify actions used, and the Fortify on Demand / ScanCentral Client product documentation. If you need additional     #
+# assistance with configuration, feel free to create a help ticket in the Fortify on Demand portal.                                            #
+################################################################################################################################################
+
+name: Fortify on Demand Scan
+
+# TODO: Customize trigger events based on your DevSecOps processes and typical FoD SAST scan time
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+  schedule:
+    - cron: '29 14 * * 5'
+
+jobs:
+  FoD-SAST-Scan:
+    # Use the appropriate runner for building your source code.
+    # TODO: Use a Windows runner for .NET projects that use msbuild. Additional changes to RUN commands will be required to switch to Windows syntax.
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      # Check out source code
+      - name: Check Out Source Code
+        uses: actions/checkout@v3
+
+      # Java is required to run the various Fortify utilities.
+      # When scanning a Java application, please use the appropriate Java version for building your application.
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: 8
+          distribution: 'temurin'
+
+      # Prepare source+dependencies for upload. The default example is for a Maven project that uses pom.xml.
+      # TODO: Update PACKAGE_OPTS based on the ScanCentral Client documentation for your project's included tech stack(s). Helpful hints:
+      #   ScanCentral Client will download dependencies for maven (-bt mvn) and gradle (-bt gradle).
+      #   ScanCentral Client can download dependencies for msbuild projects (-bt msbuild); however, you must convert the workflow to use a Windows runner.
+      #   ScanCentral has additional options that should be set for PHP and Python projects
+      #   For other build tools, add your build commands to download necessary dependencies and prepare according to Fortify on Demand Packaging documentation.
+      #   ScanCentral Client documentation is located at https://www.microfocus.com/documentation/fortify-software-security-center/
+      - name: Download Fortify ScanCentral Client
+        uses: fortify/gha-setup-scancentral-client@5b7382f8234fb9840958c49d5f32ae854115f9f3
+      - name: Package Code + Dependencies
+        run: scancentral package $PACKAGE_OPTS -o package.zip
+        env:
+          PACKAGE_OPTS: "-bt mvn"
+
+      # Start Fortify on Demand SAST scan and wait until results complete. For more information on FoDUploader commands, see https://github.com/fod-dev/fod-uploader-java
+      # TODO: Update ENV variables for your application and create the necessary GitHub Secrets.  Helpful hints:
+      #   Credentials and release ID should be obtained from your FoD tenant (either Personal Access Token or API Key can be used).
+      #   Automated Audit preference should be configured for the release's Static Scan Settings in the Fortify on Demand portal.
+      - name: Download Fortify on Demand Universal CI Tool
+        uses: fortify/gha-setup-fod-uploader@6e6bb8a33cb476e240929fa8ebc739ff110e7433
+      - name: Perform SAST Scan
+        run: java -jar $FOD_UPLOAD_JAR -z package.zip -aurl $FOD_API_URL -purl $FOD_URL -rid "$FOD_RELEASE_ID" -tc "$FOD_TENANT" -uc "$FOD_USER" "$FOD_PAT" $FOD_UPLOADER_OPTS -n "$FOD_UPLOADER_NOTES"
+        env:
+          FOD_URL: "https://ams.fortify.com/"
+          FOD_API_URL: "https://api.ams.fortify.com/"
+          FOD_TENANT: ${{ secrets.FOD_TENANT }}
+          FOD_USER: ${{ secrets.FOD_USER }}
+          FOD_PAT: ${{ secrets.FOD_PAT }}
+          FOD_RELEASE_ID: ${{ secrets.FOD_RELEASE_ID }}
+          FOD_UPLOADER_OPTS: "-ep 2 -pp 0 -I 1 -apf"
+          FOD_UPLOADER_NOTES: 'Triggered by GitHub Actions (${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})'
+
+      # Once scan completes, pull SAST issues from Fortify on Demand and generate SARIF output.
+      - name: Export results to GitHub-optimized SARIF
+        uses: fortify/gha-export-vulnerabilities@fcb374411cff9809028c911dabb8b57dbdae623b
+        with:
+          fod_base_url: "https://ams.fortify.com/"
+          fod_tenant: ${{ secrets.FOD_TENANT }}
+          fod_user: ${{ secrets.FOD_USER }}
+          fod_password: ${{ secrets.FOD_PAT }}
+          fod_release_id: ${{ secrets.FOD_RELEASE_ID }}
+
+      # Import Fortify on Demand results to GitHub Security Code Scanning
+      - name: Import Results
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ./gh-fortify-sast.sarif
