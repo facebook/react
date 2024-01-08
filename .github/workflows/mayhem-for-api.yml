@@ -1,0 +1,41 @@
+name: "Mayhem for API"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
+
+jobs:
+  mayhem-for-api:
+    name: Mayhem for API
+    # Mayhem for API runs on linux, mac and windows
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v3
+
+      # Run your API in the background. Ideally, the API would run in debug
+      # mode & send stacktraces back on "500 Internal Server Error" responses
+      # (don't do this in production though!)
+      - name: Start your API
+        run: ./run_your_api.sh & # <- ✏️ update this
+
+      - name: Mayhem for API
+        uses: ForAllSecure/mapi-action@193b709971cc377675e33284aecbf9229853e010
+        continue-on-error: true
+        with:
+          mapi-token: ${{ secrets.MAPI_TOKEN }}
+          api-url: http://localhost:8080 # <- ✏️ update this
+          api-spec: http://localhost:8080/openapi.json # <- ✏️ update this
+          duration: 60
+          sarif-report: mapi.sarif
+
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: mapi.sarif
