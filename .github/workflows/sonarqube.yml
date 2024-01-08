@@ -1,0 +1,66 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# This workflow helps you trigger a SonarQube analysis of your code and populates
+# GitHub Code Scanning alerts with the vulnerabilities found.
+# (this feature is available starting from SonarQube 9.7, Developer Edition and above)
+
+# 1. Make sure you add a valid GitHub configuration to your SonarQube (Administration > DevOps platforms > GitHub)
+
+# 2. Import your project on SonarQube
+#     * Add your repository as a new project by clicking "Create project" from your homepage.
+#
+# 3. Select GitHub Actions as your CI and follow the tutorial
+#     * a. Generate a new token and add it to your GitHub repository's secrets using the name SONAR_TOKEN
+#          (On SonarQube, click on your avatar on top-right > My account > Security or ask your administrator)
+#
+#     * b. Copy/paste your SonarQube host URL to your GitHub repository's secrets using the name SONAR_HOST_URL
+#
+#     * c. Copy/paste the project Key into the args parameter below
+#          (You'll find this information in SonarQube by following the tutorial or by clicking on Project Information at the top-right of your project's homepage)
+
+# Feel free to take a look at our documentation (https://docs.sonarqube.org/latest/analysis/github-integration/)
+# or reach out to our community forum if you need some help (https://community.sonarsource.com/c/sq/10)
+
+name: SonarQube analysis
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+permissions:
+  pull-requests: read # allows SonarQube to decorate PRs with analysis results
+
+jobs:
+  Analysis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Analyze with SonarQube
+
+        # You can pin the exact commit or the version.
+        # uses: SonarSource/sonarqube-scan-action@v1.1.0
+        uses: SonarSource/sonarqube-scan-action@7295e71c9583053f5bf40e9d4068a0c974603ec8
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}   # Generate a token on SonarQube, add it to the secrets of this repo with the name SONAR_TOKEN (Settings > Secrets > Actions > add new repository secret)
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}   # add the URL of your instance to the secrets of this repo with the name SONAR_HOST_URL (Settings > Secrets > Actions > add new repository secret)
+        with:
+          # Additional arguments for the sonarcloud scanner
+          args:
+            # Unique key of your project. You can find it in SonarQube > [my project] > Project Information (top-right menu)
+            # mandatory
+            -Dsonar.projectKey=
+            # Comma-separated paths to directories containing main source files.
+            #-Dsonar.sources= # optional, default is project base directory
+            # When you need the analysis to take place in a directory other than the one from which it was launched
+            #-Dsonar.projectBaseDir= # optional, default is .
+            # Comma-separated paths to directories containing test source files.
+            #-Dsonar.tests= # optional. For more info about Code Coverage, please refer to https://docs.sonarcloud.io/enriching/test-coverage/overview/
+            # Adds more detail to both client and server-side analysis logs, activating DEBUG mode for the scanner, and adding client-side environment variables and system properties to the server-side log of analysis report processing.
+            #-Dsonar.verbose= # optional, default is false
