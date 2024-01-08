@@ -1,0 +1,47 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# This is a basic workflow to help you get started with Using Jscrambler Code Integrity Action.
+# It automates the protection of your JavaScript Applications, so you can run it whenever a new version of your application is built.
+# A Jscrambler account is required to use this Workflow.
+#
+# More info can be found here : https://docs.jscrambler.com/latest/code-integrity/documentation/github-ci-integration
+
+name: Jscrambler Code Integrity
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run build
+      - name: Jscrambler Code Integrity
+        id: jscrambler
+        # the complete list of inputs can be found here: https://github.com/marketplace/actions/jscrambler#inputs
+        uses: jscrambler/code-integrity-actions/protect@ab65962a2ecffcc362b75a997e24a181d0bde5fb
+        with:
+          application-id: ${{ secrets.JSCRAMBLER_APPLICATION_ID }}  # This value should be created within your Jscrambler account
+          secret-key: ${{ secrets.JSCRAMBLER_SECRET_KEY }}          # This value can be found in your Jscrambler account
+          access-key: ${{ secrets.JSCRAMBLER_ACCESS_KEY }}          # This value can be found in your Jscrambler account
+          jscrambler-config-path: jscrambler.json                   # Download from your Jscrambler account
+          files-src: |                                              # List of Files to be protected
+            dist/**/*
+          files-dest: .
