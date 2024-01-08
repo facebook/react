@@ -384,6 +384,7 @@ if (__DEV__) {
 
     var ScheduleRetry = StoreConsistency;
     var ShouldSuspendCommit = Visibility;
+    var DidDefer = ContentReset;
     var LifecycleEffectMask =
       Passive$1 | Update | Callback | Ref | Snapshot | StoreConsistency; // Union of all commit flags (flags with the lifetime of a particular commit)
 
@@ -20492,9 +20493,26 @@ if (__DEV__) {
       return hasSuspenseListContext(suspenseContext, ForceSuspenseFallback);
     }
 
-    function getRemainingWorkInPrimaryTree(current, renderLanes) {
-      // TODO: Should not remove render lanes that were pinged during this render
-      return removeLanes(current.childLanes, renderLanes);
+    function getRemainingWorkInPrimaryTree(
+      current,
+      primaryTreeDidDefer,
+      renderLanes
+    ) {
+      var remainingLanes =
+        current !== null
+          ? removeLanes(current.childLanes, renderLanes)
+          : NoLanes;
+
+      if (primaryTreeDidDefer) {
+        // A useDeferredValue hook spawned a deferred task inside the primary tree.
+        // Ensure that we retry this component at the deferred priority.
+        // TODO: We could make this a per-subtree value instead of a global one.
+        // Would need to track it on the context stack somehow, similar to what
+        // we'd have to do for resumable contexts.
+        remainingLanes = mergeLanes(remainingLanes, peekDeferredLane());
+      }
+
+      return remainingLanes;
     }
 
     function updateSuspenseComponent(current, workInProgress, renderLanes) {
@@ -20514,7 +20532,12 @@ if (__DEV__) {
         // rendering the fallback children.
         showFallback = true;
         workInProgress.flags &= ~DidCapture;
-      } // OK, the next part is confusing. We're about to reconcile the Suspense
+      } // Check if the primary children spawned a deferred task (useDeferredValue)
+      // during the first pass.
+
+      var didPrimaryChildrenDefer =
+        (workInProgress.flags & DidDefer) !== NoFlags$1;
+      workInProgress.flags &= ~DidDefer; // OK, the next part is confusing. We're about to reconcile the Suspense
       // boundary's children. This involves some custom reconciliation logic. Two
       // main reasons this is so complicated.
       //
@@ -20585,6 +20608,11 @@ if (__DEV__) {
           var primaryChildFragment = workInProgress.child;
           primaryChildFragment.memoizedState =
             mountSuspenseOffscreenState(renderLanes);
+          primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+            current,
+            didPrimaryChildrenDefer,
+            renderLanes
+          );
           workInProgress.memoizedState = SUSPENDED_MARKER;
 
           if (enableTransitionTracing) {
@@ -20625,6 +20653,11 @@ if (__DEV__) {
           var _primaryChildFragment = workInProgress.child;
           _primaryChildFragment.memoizedState =
             mountSuspenseOffscreenState(renderLanes);
+          _primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+            current,
+            didPrimaryChildrenDefer,
+            renderLanes
+          );
           workInProgress.memoizedState = SUSPENDED_MARKER; // TODO: Transition Tracing is not yet implemented for CPU Suspense.
           // Since nothing actually suspended, there will nothing to ping this to
           // get it started back up to attempt the next item. While in terms of
@@ -20657,6 +20690,7 @@ if (__DEV__) {
               current,
               workInProgress,
               didSuspend,
+              didPrimaryChildrenDefer,
               nextProps,
               _dehydrated,
               prevState,
@@ -20720,6 +20754,7 @@ if (__DEV__) {
 
           _primaryChildFragment2.childLanes = getRemainingWorkInPrimaryTree(
             current,
+            didPrimaryChildrenDefer,
             renderLanes
           );
           workInProgress.memoizedState = SUSPENDED_MARKER;
@@ -21079,6 +21114,7 @@ if (__DEV__) {
       current,
       workInProgress,
       didSuspend,
+      didPrimaryChildrenDefer,
       nextProps,
       suspenseInstance,
       suspenseState,
@@ -21304,6 +21340,11 @@ if (__DEV__) {
           var _primaryChildFragment4 = workInProgress.child;
           _primaryChildFragment4.memoizedState =
             mountSuspenseOffscreenState(renderLanes);
+          _primaryChildFragment4.childLanes = getRemainingWorkInPrimaryTree(
+            current,
+            didPrimaryChildrenDefer,
+            renderLanes
+          );
           workInProgress.memoizedState = SUSPENDED_MARKER;
           return fallbackChildFragment;
         }
@@ -30838,8 +30879,20 @@ if (__DEV__) {
           // Everything else is spawned as a transition.
           workInProgressDeferredLane = requestTransitionLane();
         }
+      } // Mark the parent Suspense boundary so it knows to spawn the deferred lane.
+
+      var suspenseHandler = getSuspenseHandler();
+
+      if (suspenseHandler !== null) {
+        // TODO: As an optimization, we shouldn't entangle the lanes at the root; we
+        // can entangle them using the baseLanes of the Suspense boundary instead.
+        // We only need to do something special if there's no Suspense boundary.
+        suspenseHandler.flags |= DidDefer;
       }
 
+      return workInProgressDeferredLane;
+    }
+    function peekDeferredLane() {
       return workInProgressDeferredLane;
     }
     function scheduleUpdateOnFiber(root, fiber, lane) {
@@ -31477,7 +31530,7 @@ if (__DEV__) {
         // The render unwound without completing the tree. This happens in special
         // cases where need to exit the current render without producing a
         // consistent tree or committing.
-        markRootSuspended(root, lanes, NoLane);
+        markRootSuspended(root, lanes, workInProgressDeferredLane);
         ensureRootIsScheduled(root);
         return null;
       } // We now have a consistent tree. Because this is a sync render, we
@@ -35344,7 +35397,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-4a767f88";
+    var ReactVersion = "18.3.0-www-modern-3ae51a18";
 
     function createPortal$1(
       children,
