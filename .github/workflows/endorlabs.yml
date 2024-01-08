@@ -1,0 +1,46 @@
+name: Endor Labs
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '42 16 * * 0'
+jobs:
+  scan:
+    permissions:
+      security-events: write # Used to upload sarif artifact to GitHub
+      contents: read # Used to checkout a private repository by actions/checkout.
+      actions: read # Required for private repositories to upload sarif files. GitHub Advanced Security licenses are required.
+      id-token: write # Used for keyless authentication to Endor Labs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    #### Package Build Instructions
+    ### Use this section to define the build steps used by your software package.
+    ### Endor Labs builds your software for you where possible but the required build tools must be made availible.
+    # - name: Setup Java
+    #   uses: actions/setup-java@v3
+    #   with:
+    #     distribution: 'microsoft'
+    #     java-version: '17'
+    # - name: Build Package
+    #   run: mvn clean install
+    - name: Endor Labs scan pull request
+      if: github.event_name == 'pull_request'
+      uses: endorlabs/github-action@b51bd06466b545f01a6ac788e3e1147695d3936c
+      with:
+        namespace: "example" # Modify the namespace to your Endor Labs tenant namespace.
+        sarif_file: findings.sarif
+    - name: Endor Labs scan monitor
+      if: github.event_name == 'push'
+      uses: endorlabs/github-action@b51bd06466b545f01a6ac788e3e1147695d3936c
+      with:
+        namespace: "example" # Modify the namespace to your Endor Labs tenant namespace.
+        ci_run: "false"
+        sarif_file: findings.sarif
+    - name: Upload SARIF to github
+      uses: github/codeql-action/upload-sarif@9885f86fab4879632b7e44514f19148225dfbdcd
+      with:
+        sarif_file: findings.sarif
