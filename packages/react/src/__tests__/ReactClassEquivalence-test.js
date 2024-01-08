@@ -31,7 +31,7 @@ function runJest(testFile) {
   const command = process.env.npm_lifecycle_event;
   const defaultReporter = '--reporters=default';
   const equivalenceReporter =
-    '--reporters=<rootDir>/scripts/jest/spec-equivalence-reporter/equivalenceReporter.js';
+    '--reporters=' + __dirname + '/../../../../scripts/jest/spec-equivalence-reporter/equivalenceReporter.js';
   if (!command.startsWith('test')) {
     throw new Error(
       'Expected this test to run as a result of one of test commands.',
