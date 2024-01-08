@@ -1,0 +1,63 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+#           🦅 STACKHAWK        https://stackhawk.com
+
+# The StackHawk HawkScan action makes it easy to integrate dynamic application security testing (DAST) into your
+# CI pipeline. See the Getting Started guide (https://docs.stackhawk.com/hawkscan/) to get up and running with
+# StackHawk quickly.
+
+# To use this workflow, you must:
+#
+# 1.  Create an API Key and Application: Sign up for a free StackHawk account to obtain an API Key and
+#     create your first app and configuration file at https://app.stackhawk.com.
+#
+# 2.  Save your API Key as a Secret: Save your API key as a GitHub Secret named HAWK_API_KEY.
+#
+# 3.  Add your Config File: Add your stackhawk.yml configuration file to the base of your repository directory.
+#
+# 4.  Set the Scan Failure Threshold: Add the hawk.failureThreshold configuration option
+#     (https://docs.stackhawk.com/hawkscan/configuration/#hawk) to your stackhawk.yml configuration file. If your scan
+#     produces alerts that meet or exceed the hawk.failureThreshold alert level, the scan will return exit code 42
+#     and trigger a Code Scanning alert with a link to your scan results.
+#
+# 5.  Update the "Start your service" Step: Update the "Start your service" step in the StackHawk workflow below to
+#     start your service so that it can be scanned with the "Run HawkScan" step.
+
+
+name: "StackHawk"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '36 6 * * 3'
+
+permissions:
+  contents: read
+
+jobs:
+  stackhawk:
+    permissions:
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for stackhawk/hawkscan-action to upload code scanning alert info
+    name: StackHawk
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Start your service
+        run: ./your-service.sh &                  # ✏️ Update this to run your own service to be scanned
+
+      - name: Run HawkScan
+        uses: stackhawk/hawkscan-action@4c3258cd62248dac6d9fe91dd8d45928c697dee0
+        continue-on-error: true                   # ✏️ Set to false to break your build on scan errors
+        with:
+          apiKey: ${{ secrets.HAWK_API_KEY }}
+          codeScanningAlerts: true
+          githubToken: ${{ github.token }}
