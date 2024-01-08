@@ -1,0 +1,62 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Sysdig - Build, scan, push and upload sarif report
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '43 16 * * 2'
+
+permissions:
+  contents: read
+
+jobs:
+
+  build:
+
+    permissions:
+      checks: write # for sysdiglabs/scan-action to publish the checks
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Build the Docker image
+      # Tag image to be built
+      # Change ${{ github.repository }} variable by another image name if you want but don't forget changing also image-tag below
+      run: docker build . --file Dockerfile --tag ${{ github.repository }}:latest
+
+    - name: Sysdig Secure Inline Scan
+      id: scan
+      uses: sysdiglabs/scan-action@768d7626a14897e0948ea89c8437dd46a814b163
+      with:
+        # Tag of the image to analyse.
+        # Change ${{ github.repository }} variable by another image name if you want but don't forget changing also image-tag above
+        image-tag: ${{ github.repository }}:latest
+        # API token for Sysdig Scanning auth
+        sysdig-secure-token: ${{ secrets.SYSDIG_SECURE_TOKEN}}
+        # Sysdig secure endpoint. Please read: https://docs.sysdig.com/en/docs/administration/saas-regions-and-ip-ranges/
+        # US-East https://secure.sysdig.com
+        # US-West https://us2.app.sysdig.com
+        # EU      https://eu1.app.sysdig.com
+        sysdig-secure-url: https://us2.app.sysdig.com
+        dockerfile-path: ./Dockerfile
+        input-type: docker-daemon
+        ignore-failed-scan: true
+        # Sysdig inline scanner requires privileged rights
+        run-as-user: root
+
+    - uses: github/codeql-action/upload-sarif@v2
+      #Upload SARIF file
+      if: always()
+      with:
+        sarif_file: ${{ steps.scan.outputs.sarifReport }}
