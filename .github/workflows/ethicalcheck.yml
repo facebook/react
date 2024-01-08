@@ -1,0 +1,69 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# EthicalCheck addresses the critical need to continuously security test APIs in development and in production.
+
+# EthicalCheck provides the industry’s only free & automated API security testing service that uncovers security vulnerabilities using OWASP API list.
+# Developers relies on EthicalCheck to evaluate every update and release, ensuring that no APIs go to production with exploitable vulnerabilities.
+
+# You develop the application and API, we bring complete and continuous security testing to you, accelerating development.
+
+# Know your API and Applications are secure with EthicalCheck – our free & automated API security testing service.
+
+# How EthicalCheck works?
+# EthicalCheck functions in the following simple steps.
+# 1. Security Testing.
+# Provide your OpenAPI specification or start with a public Postman collection URL.
+# EthicalCheck instantly instrospects your API and creates a map of API endpoints for security testing.
+# It then automatically creates hundreds of security tests that are non-intrusive to comprehensively and completely test for authentication, authorizations, and OWASP bugs your API. The tests addresses the OWASP API Security categories including OAuth 2.0, JWT, Rate Limit etc.
+
+# 2. Reporting.
+# EthicalCheck generates security test report that includes all the tested endpoints, coverage graph, exceptions, and vulnerabilities.
+# Vulnerabilities are fully triaged, it contains CVSS score, severity, endpoint information, and OWASP tagging.
+
+
+# This is a starter workflow to help you get started with EthicalCheck Actions
+
+name: EthicalCheck-Workflow
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  # Customize trigger events based on your DevSecOps processes.
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  schedule:
+    - cron: '16 10 * * 3'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  Trigger_EthicalCheck:
+    permissions:
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
+    runs-on: ubuntu-latest
+
+    steps:
+       - name: EthicalCheck  Free & Automated API Security Testing Service
+         uses: apisec-inc/ethicalcheck-action@005fac321dd843682b1af6b72f30caaf9952c641
+         with:
+          # The OpenAPI Specification URL or Swagger Path or Public Postman collection URL.
+          oas-url: "http://netbanking.apisec.ai:8080/v2/api-docs"
+          # The email address to which the penetration test report will be sent.
+          email: "xxx@apisec.ai"
+          sarif-result-file: "ethicalcheck-results.sarif"
+
+       - name: Upload sarif file to repository
+         uses: github/codeql-action/upload-sarif@v2
+         with:
+          sarif_file: ./ethicalcheck-results.sarif
+
