@@ -536,7 +536,7 @@ const tests = {
     {
       code: normalizeIndent`
         // Valid properties of type functions on objects can call hooks.
-        const Obj = {};
+        const Obj = { Test: {} };
 
         Obj.Test.Test2 = () => {
           useEffect(() => {});
