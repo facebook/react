@@ -120,5 +120,7 @@ export const enableServerComponentKeys = true;
 // because JSX is an extremely hot path.
 export const enableRefAsProp = false;
 
+export const enableReactTestRendererWarning = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

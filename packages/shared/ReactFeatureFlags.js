@@ -204,6 +204,9 @@ export const enableUnifiedSyncLane = true;
 // Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
 export const allowConcurrentByDefault = false;
 
+// Warn on any usage of ReactTestRenderer
+export const enableReactTestRendererWarning = false;
+
 // -----------------------------------------------------------------------------
 // React DOM Chopping Block
 //
