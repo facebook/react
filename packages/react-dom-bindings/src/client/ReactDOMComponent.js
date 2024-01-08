@@ -1099,6 +1099,10 @@ export function setInitialProperties(
           }
         }
       }
+      // Fix #27858: input[type="file"] has cancel event
+      if (type === 'file') {
+        listenToNonDelegatedEvent('cancel', domElement);
+      }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       validateInputProps(domElement, props);
@@ -2747,6 +2751,10 @@ export function diffHydratedProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
+      // Fix #27858: input[type="file"] has cancel event
+      if (props.type === 'file') {
+        listenToNonDelegatedEvent('cancel', domElement);
+      }
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
       validateInputProps(domElement, props);
