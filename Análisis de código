@@ -1,0 +1,127 @@
+Documentación de GitHub
+Seguridad de código/Análisis de código/Integrar con el escaneo de código/Carga de un archivo de SARIF
+Subir un archivo SARIF a GitHub
+En este artículo
+Acerca de la carga de archivos SARIF para code scanning
+Cargar un análisis de code scanning con GitHub Actions
+Información adicional
+Puedes cargar archivos SARIF de herramientas de análisis estático de terceros a GitHub y ver las alertas de code scanning en tu repositorio.
+
+Quién puede usar esta característica
+People with write permissions to a repository can upload code scanning data generated outside GitHub.
+
+Importante
+
+Code scanning está disponible para todos los repositorios públicos en GitHub.com. Code scanning también está disponible para los repositorios privados que pertenecen a las organizaciones que usan GitHub Enterprise Cloud y que tienen una licencia de GitHub Advanced Security. Para obtener más información, vea «Acerca de GitHub Advanced Security».
+
+Acerca de la carga de archivos SARIF para code scanning
+GitHub crea alertas de code scanning en un repositorio utilizando información de los archivos de Formato de Intercambio para Resultados de Análisis Estático (SARIF). El archivo SARIF puede generarse desde una herramienta de análisis compatible con SARIF que ejecutes en el mismo flujo de trabajo de GitHub Actions que utilizaste para cargar el archivo. Como alternativa, cuando se genere el archivo como un artefacto fuera de tu repositorio, puedes cargar el archivo SARIF directamente a algún repositorio y utilizar el flujo de trabajo para subir este archivo. Para obtener más información, vea «Administración de alertas de examen de código para el repositorio».
+
+Puedes generar archivos SARIF utilizando muchas herramientas de prueba de seguridad para análisis estático, incluyendo a CodeQL. Los resultados deben usar la versión 2.1.0 de SARIF. Para obtener más información, vea «Soporte de SARIF para escaneo de código».
+
+Puedes cargar los resultados utilizando GitHub Actions, la API de code scanning o la CodeQL CLI. El mejor método de carga dependerá de cómo generas el archivo SARIF, por ejemplo, si utilizas:
+
+GitHub Actions para ejecutar la acción de CodeQL, no hay que hacer nada más. La acción de CodeQL carga el archivo de SARIF automáticamente cuando completa el análisis.
+GitHub Actions para ejecutar una herramienta de análisis compatible con SARIF, podías actualizar el flujo de trabajo para que incluya un último paso que cargue los resultados (míralo más adelante).
+CodeQL CLI para ejecutar code scanning en el sistema de CI, puedes usar la CLI para cargar los resultados en GitHub (para más información, consulta "Configuración de la CLI de CodeQL").
+Una herramienta que genera resultados como un artefacto fuera del repositorio, puedes usar la API code scanning para cargar el archivo (para más información, consulta "Examen del código").
+Nota: En el caso de los repositorios internos y privados, el code scanning estará disponible cuando se habiliten las características de la GitHub Advanced Security para el repositorio. Si ves el error Advanced Security must be enabled for this repository to use code scanning, comprueba que GitHub Advanced Security esté habilitado. Para obtener más información, vea «Administración de la configuración de seguridad y análisis para el repositorio».
+
+Cargar un análisis de code scanning con GitHub Actions
+Para utilizar las GitHub Actions para cargar un archivo SARIF de terceros en un repositorio, necesitas un flujo de trabajo. Para obtener más información, vea «Más información sobre las Acciones de GitHub».
+
+El flujo de trabajo tendrá que usar la acción upload-sarif, que forma parte del repositorio github/codeql-action. Tiene parámetros de entrada que puedes utilizar para configurar la carga. Los parámetros de entrada principales que utilizarás serán:
+
+sarif-file, que configura el archivo o directorio de los archivos SARIF que se van a cargar. La ruta de acceso del directorio o archivo es relativa a la raíz del repositorio.
+category (opcional), que asigna una categoría para los resultados en el archivo SARIF. Esto te permite analizar la misma confirmación de varias formas y revisar los resultados utilizando la vista del code scanning en GitHub. Por ejemplo, puedes analizar herramientas múltiples y, en los mono-repositorios, puedes analizar pedazos diferentes del repositorio con base en el subconjunto de archivos que cambiaron.
+Para más información, vea la acción upload-sarif.
+
+La acción upload-sarif se puede configurar para ejecutarse cuando se producen los eventos push y scheduled. Para más información sobre eventos de GitHub Actions, consulta "Eventos que desencadenan flujos de trabajo".
+
+Si el archivo SARIF no incluye partialFingerprints, la acción upload-sarif calculará el campo partialFingerprints automáticamente e intentará evitar alertas duplicadas. GitHub solo puede crear partialFingerprints cuando el repositorio contiene el archivo SARIF y el código fuente usado en el análisis estático. Para más información sobre cómo evitar alertas duplicadas, consulta "Soporte de SARIF para escaneo de código".
+
+Puedes comprobar que las propiedades SARIF tienen el tamaño compatible para la carga y que el archivo es compatible con el examen de código. Para más información, consulta "Soporte de SARIF para escaneo de código".
+
+Ejemplo de flujo de trabajo para los archivos SARIF generados fuera de un repositorio
+Puedes crear un nuevo flujo de trabajo que cargue archivos SARIF después de que los confirmes en tu repositorio. Esto resulta útil cuando el archivo SARIF se genera como un artefacto fuera del repositorio.
+
+Este ejemplo de flujo de trabajo se ejecuta cada que las confirmaciones se cargan al repositorio. La acción usa la propiedad partialFingerprints para determinar si se han producido cambios. Además de ejecutarse cuando se insertan confirmaciones, el flujo de trabajo está programado para ejecutarse una vez a la semana. Para obtener más información, vea «Eventos que desencadenan flujos de trabajo».
+
+Este flujo de trabajo carga el archivo results.sarif ubicado en la raíz del repositorio. Para más información sobre cómo crear un archivo de flujo de trabajo, consulta "Más información sobre las Acciones de GitHub".
+
+Como alternativa, puedes modificar este flujo de trabajo para cargar un directorio de archivos SARIF. Por ejemplo, podría colocar todos los archivos SARIF en un directorio en la raíz del repositorio denominado sarif-output y establecer el parámetro de entrada de la acción sarif_file en sarif-output. Tenga en cuenta que si carga un directorio, cada archivo SARIF debe incluir un valor runAutomationDetails.id único para definir la categoría de los resultados. Para obtener más información, vea «Soporte de SARIF para escaneo de código».
+
+name: "Upload SARIF"
+
+# Run workflow each time code is pushed to your repository and on a schedule.
+# The scheduled workflow runs every Thursday at 15:45 UTC.
+on:
+  push:
+  schedule:
+    - cron: '45 15 * * 4'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+    steps:
+      # This step checks out a copy of your repository.
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: results.sarif
+          # Optional category for the results
+          # Used to differentiate multiple results for one commit
+          category: my-analysis-tool
+Ejemplo de flujo de trabajo que ejecuta la herramienta de análisis ESLint
+Si genera el archivo SARIF de terceros como parte de un flujo de trabajo de integración continua (CI), puede agregar la acción upload-sarif como un paso después de ejecutar las pruebas de CI. Si aún no tienes un flujo de trabajo de IC, puedes crearlo utilizando una plantilla de GitHub Actions. Para obtener más información, consulta el "Guía de inicio rápido para GitHub Actions".
+
+Este ejemplo de flujo de trabajo se ejecuta cada que las confirmaciones se cargan al repositorio. La acción usa la propiedad partialFingerprints para determinar si se han producido cambios. Además de ejecutarse cuando se insertan confirmaciones, el flujo de trabajo está programado para ejecutarse una vez a la semana. Para obtener más información, vea «Eventos que desencadenan flujos de trabajo».
+
+El flujo de trabajo muestra un ejemplo de ejecución de la herramienta de análisis estático ESLint como un paso en un flujo de trabajo. El paso Run ESLint ejecuta la herramienta ESLint y genera el archivo results.sarif. Después, el flujo de trabajo carga el archivo results.sarif en GitHub mediante la acción upload-sarif. Para más información sobre cómo crear un archivo de flujo de trabajo, consulta "Entender las GitHub Actions".
+
+name: "ESLint analysis"
+
+# Run workflow each time code is pushed to your repository and on a schedule.
+# The scheduled workflow runs every Wednesday at 15:45 UTC.
+on:
+  push:
+  schedule:
+    - cron: '45 15 * * 3'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      # required for all workflows
+      security-events: write
+      # only required for workflows in private repositories
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run npm install
+        run: npm install
+      # Runs the ESlint code analysis
+      - name: Run ESLint
+        # eslint exits 1 if it finds anything to report
+        run: node_modules/.bin/eslint build docs lib script spec-main -f node_modules/@microsoft/eslint-formatter-sarif/sarif.js -o results.sarif || true
+      # Uploads results.sarif to GitHub repository using the upload-sarif action
+      - uses: github/codeql-action/upload-sarif@v2
+        with:
+          # Path to SARIF file relative to the root of the repository
+          sarif_file: results.sarif
+Información adicional
+"Solución de problemas de carga de archivos SARIF"
+"Sintaxis del flujo de trabajo para Acciones de GitHub"
+"Visualizar el historial de ejecución del flujo de trabajo"
+"Acerca de la CLI de CodeQL"
+"Examen del código"
