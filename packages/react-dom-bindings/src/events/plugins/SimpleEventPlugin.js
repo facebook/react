@@ -220,12 +220,13 @@ function extractEvents(
         nativeEvent,
         nativeEventTarget,
       );
-      const isBubblingPhase = event.eventPhase === 3;
-      // should not fire native cancel event on bubblingPhase
+      const isAtTarget = event.eventPhase === 2;
+      // native cancel event should only fired on AT_TARGET
+      // https://developer.mozilla.org/en-US/docs/Web/API/Event/eventPhase
       if (
         domEventName === 'cancel' &&
         (eventSystemFlags & IS_NON_DELEGATED) !== 0 &&
-        isBubblingPhase
+        !isAtTarget
       ) {
         return;
       }
