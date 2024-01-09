@@ -994,6 +994,8 @@ function renderSuspenseBoundary(
     }
     encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo);
 
+    untrackBoundary(request, newBoundary);
+
     // We don't need to decrement any task numbers because we didn't spawn any new task.
     // We don't need to schedule any task because we know the parent has written yet.
     // We do need to fallthrough to create the fallback though.
@@ -2672,6 +2674,34 @@ function trackPostpone(
   }
 }
 
+// In case a boundary errors, we need to stop tracking it because we won't
+// resume it.
+function untrackBoundary(request: Request, boundary: SuspenseBoundary) {
+  const trackedPostpones = request.trackedPostpones;
+  if (trackedPostpones === null) {
+    return;
+  }
+  const boundaryKeyPath = boundary.trackedContentKeyPath;
+  if (boundaryKeyPath === null) {
+    return;
+  }
+  const boundaryNode: void | ReplayNode =
+    trackedPostpones.workingMap.get(boundaryKeyPath);
+  if (boundaryNode === undefined) {
+    return;
+  }
+
+  // Downgrade to plain ReplayNode since we won't replay through it.
+  // $FlowFixMe[cannot-write]: We intentionally downgrade this to the other tuple.
+  boundaryNode.length = 4;
+  // Remove any resumable slots.
+  boundaryNode[2] = [];
+  boundaryNode[3] = null;
+
+  // TODO: We should really just remove the boundary from all parent paths too so
+  // we don't replay the path to it.
+}
+
 function injectPostponedHole(
   request: Request,
   task: RenderTask,
@@ -3007,6 +3037,7 @@ function erroredTask(
     if (boundary.status !== CLIENT_RENDERED) {
       boundary.status = CLIENT_RENDERED;
       encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
+      untrackBoundary(request, boundary);
 
       // Regardless of what happens next, this boundary won't be displayed,
       // so we can flush it, if the parent already flushed.
@@ -3191,6 +3222,8 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         }
       }
       encodeErrorForBoundary(boundary, errorDigest, errorMessage, errorInfo);
+
+      untrackBoundary(request, boundary);
 
       if (boundary.parentFlushed) {
         request.clientRenderedBoundaries.push(boundary);
