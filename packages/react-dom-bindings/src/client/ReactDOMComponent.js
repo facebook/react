@@ -66,7 +66,6 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import sanitizeURL from '../shared/sanitizeURL';
 
 import {
-  enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
   enableFormActions,
   disableIEWorkarounds,
@@ -882,9 +881,7 @@ function setProp(
     }
     case 'innerText':
     case 'textContent':
-      if (enableCustomElementPropertySupport) {
-        break;
-      }
+      break;
     // Fall through
     default: {
       if (
@@ -990,9 +987,7 @@ function setPropOnCustomElement(
     }
     case 'innerText': // Properties
     case 'textContent':
-      if (enableCustomElementPropertySupport) {
-        break;
-      }
+      break;
     // Fall through
     default: {
       if (registrationNameDependencies.hasOwnProperty(key)) {
@@ -1000,15 +995,7 @@ function setPropOnCustomElement(
           warnForInvalidEventListener(key, value);
         }
       } else {
-        if (enableCustomElementPropertySupport) {
-          setValueForPropertyOnCustomComponent(domElement, key, value);
-        } else {
-          if (typeof value === 'boolean') {
-            // Special case before the new flag is on
-            value = '' + (value: any);
-          }
-          setValueForAttribute(domElement, key, value);
-        }
+        setValueForPropertyOnCustomComponent(domElement, key, value);
       }
     }
   }
@@ -2211,30 +2198,28 @@ function diffHydratedCustomComponent(
       case 'offsetHeight':
       case 'isContentEditable':
       case 'outerText':
-      case 'outerHTML':
-        if (enableCustomElementPropertySupport) {
-          extraAttributes.delete(propKey.toLowerCase());
-          if (__DEV__) {
-            console.error(
-              'Assignment to read-only property will result in a no-op: `%s`',
-              propKey,
-            );
-          }
-          continue;
-        }
-      // Fall through
-      case 'className':
-        if (enableCustomElementPropertySupport) {
-          // className is a special cased property on the server to render as an attribute.
-          extraAttributes.delete('class');
-          const serverValue = getValueForAttributeOnCustomComponent(
-            domElement,
-            'class',
-            value,
+      case 'outerHTML': {
+        extraAttributes.delete(propKey.toLowerCase());
+        if (__DEV__) {
+          console.error(
+            'Assignment to read-only property will result in a no-op: `%s`',
+            propKey,
           );
-          warnForPropDifference('className', serverValue, value);
-          continue;
         }
+        continue;
+      }
+      // Fall through
+      case 'className': {
+        // className is a special cased property on the server to render as an attribute.
+        extraAttributes.delete('class');
+        const serverValue = getValueForAttributeOnCustomComponent(
+          domElement,
+          'class',
+          value,
+        );
+        warnForPropDifference('className', serverValue, value);
+        continue;
+      }
       // Fall through
       default: {
         // This is a DEV-only path

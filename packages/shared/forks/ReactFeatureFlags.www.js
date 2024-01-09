@@ -26,7 +26,6 @@ export const {
   enableUnifiedSyncLane,
   enableRetryLaneExpiration,
   enableTransitionTracing,
-  enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
   enableAsyncActions,
   alwaysThrottleRetries,

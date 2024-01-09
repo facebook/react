@@ -23,7 +23,6 @@ export const enableLazyContextPropagation = __VARIANT__;
 export const forceConcurrentByDefaultForTesting = __VARIANT__;
 export const enableUnifiedSyncLane = __VARIANT__;
 export const enableTransitionTracing = __VARIANT__;
-export const enableCustomElementPropertySupport = __VARIANT__;
 export const enableDeferRootSchedulingToMicrotask = __VARIANT__;
 export const enableAsyncActions = __VARIANT__;
 export const alwaysThrottleRetries = __VARIANT__;

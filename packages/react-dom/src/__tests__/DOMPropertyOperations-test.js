@@ -10,10 +10,7 @@
 'use strict';
 
 // Set by `yarn test-fire`.
-const {
-  enableCustomElementPropertySupport,
-  disableInputAttributeSyncing,
-} = require('shared/ReactFeatureFlags');
+const {disableInputAttributeSyncing} = require('shared/ReactFeatureFlags');
 
 describe('DOMPropertyOperations', () => {
   let React;
@@ -170,7 +167,6 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.hasAttribute('value')).toBe(false);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element custom events lowercase', () => {
       const oncustomevent = jest.fn();
       function Test() {
@@ -184,7 +180,6 @@ describe('DOMPropertyOperations', () => {
       expect(oncustomevent).toHaveBeenCalledTimes(1);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element custom events uppercase', () => {
       const oncustomevent = jest.fn();
       function Test() {
@@ -198,7 +193,6 @@ describe('DOMPropertyOperations', () => {
       expect(oncustomevent).toHaveBeenCalledTimes(1);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element custom event with dash in name', () => {
       const oncustomevent = jest.fn();
       function Test() {
@@ -212,7 +206,6 @@ describe('DOMPropertyOperations', () => {
       expect(oncustomevent).toHaveBeenCalledTimes(1);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element remove event handler', () => {
       const oncustomevent = jest.fn();
       function Test(props) {
@@ -259,12 +252,8 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.getAttribute('onstring')).toBe('hello');
       expect(customElement.getAttribute('onobj')).toBe('[object Object]');
       expect(customElement.getAttribute('onarray')).toBe('one,two');
-      expect(customElement.getAttribute('ontrue')).toBe(
-        enableCustomElementPropertySupport ? '' : 'true',
-      );
-      expect(customElement.getAttribute('onfalse')).toBe(
-        enableCustomElementPropertySupport ? null : 'false',
-      );
+      expect(customElement.getAttribute('ontrue')).toBe('');
+      expect(customElement.getAttribute('onfalse')).toBe(null);
 
       // Dispatch the corresponding event names to make sure that nothing crashes.
       customElement.dispatchEvent(new Event('string'));
@@ -298,7 +287,6 @@ describe('DOMPropertyOperations', () => {
       expect(syntheticClickEvent.nativeEvent).toBe(nativeClickEvent);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom elements should have working onChange event listeners', () => {
       let reactChangeEvent = null;
       const eventHandler = jest.fn(event => (reactChangeEvent = event));
@@ -349,7 +337,6 @@ describe('DOMPropertyOperations', () => {
       expect(eventHandler).toHaveBeenCalledTimes(expectedHandlerCallCount);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom elements should have separate onInput and onChange handling', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -373,7 +360,6 @@ describe('DOMPropertyOperations', () => {
       expect(changeEventHandler).toHaveBeenCalledTimes(1);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom elements should be able to remove and re-add custom event listeners', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -648,7 +634,6 @@ describe('DOMPropertyOperations', () => {
       expect(customOnClickHandler).toHaveBeenCalledTimes(0);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('onChange/onInput/onClick on div with various types of children', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -833,7 +818,6 @@ describe('DOMPropertyOperations', () => {
       expect(onClickHandler).toBeCalledTimes(1);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element onChange/onInput/onClick with event target custom element child', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -867,7 +851,6 @@ describe('DOMPropertyOperations', () => {
       expect(onClickHandler).toBeCalledTimes(1);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom elements should allow custom events with capture event listeners', () => {
       const oncustomeventCapture = jest.fn();
       const oncustomevent = jest.fn();
@@ -903,7 +886,6 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.hasChildNodes()).toBe(false);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('innerText should not work on custom elements', () => {
       const container = document.createElement('div');
       ReactDOM.render(<my-custom-element innerText="foo" />, container);
@@ -918,7 +900,6 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.hasChildNodes()).toBe(false);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('textContent should not work on custom elements', () => {
       const container = document.createElement('div');
       ReactDOM.render(<my-custom-element textContent="foo" />, container);
@@ -933,7 +914,6 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.hasChildNodes()).toBe(false);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('values should not be converted to booleans when assigning into custom elements', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -966,7 +946,6 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.foo).toBe(null);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('boolean props should not be stringified in attributes', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -981,7 +960,6 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.getAttribute('foo')).toBe(null);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element custom event handlers assign multiple types', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -1030,7 +1008,6 @@ describe('DOMPropertyOperations', () => {
       expect(customelement.getAttribute('oncustomevent')).toBe(null);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element custom event handlers assign multiple types with setter', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -1085,7 +1062,6 @@ describe('DOMPropertyOperations', () => {
       expect(customelement.getAttribute('oncustomevent')).toBe(null);
     });
 
-    // @gate enableCustomElementPropertySupport
     it('assigning to a custom element property should not remove attributes', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
@@ -1107,7 +1083,6 @@ describe('DOMPropertyOperations', () => {
       expect(customElement.getAttribute('foo')).toBe('one');
     });
 
-    // @gate enableCustomElementPropertySupport
     it('custom element properties should accept functions', () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
