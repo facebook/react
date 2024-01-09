@@ -10840,7 +10840,8 @@ if (__DEV__) {
           errorDigest = logRecoverableError(request, error, thrownInfo);
         }
 
-        encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo); // We don't need to decrement any task numbers because we didn't spawn any new task.
+        encodeErrorForBoundary(newBoundary, errorDigest, error, thrownInfo);
+        untrackBoundary(request, newBoundary); // We don't need to decrement any task numbers because we didn't spawn any new task.
         // We don't need to schedule any task because we know the parent has written yet.
         // We do need to fallthrough to create the fallback though.
       } finally {
@@ -12316,6 +12317,34 @@ if (__DEV__) {
       task.treeContext = prevTreeContext;
       task.keyPath = prevKeyPath;
     }
+    // resume it.
+
+    function untrackBoundary(request, boundary) {
+      var trackedPostpones = request.trackedPostpones;
+
+      if (trackedPostpones === null) {
+        return;
+      }
+
+      var boundaryKeyPath = boundary.trackedContentKeyPath;
+
+      if (boundaryKeyPath === null) {
+        return;
+      }
+
+      var boundaryNode = trackedPostpones.workingMap.get(boundaryKeyPath);
+
+      if (boundaryNode === undefined) {
+        return;
+      } // Downgrade to plain ReplayNode since we won't replay through it.
+      // $FlowFixMe[cannot-write]: We intentionally downgrade this to the other tuple.
+
+      boundaryNode.length = 4; // Remove any resumable slots.
+
+      boundaryNode[2] = [];
+      boundaryNode[3] = null; // TODO: We should really just remove the boundary from all parent paths too so
+      // we don't replay the path to it.
+    }
 
     function spawnNewSuspendedReplayTask(request, task, thenableState, x) {
       var newTask = createReplayTask(
@@ -12539,7 +12568,8 @@ if (__DEV__) {
 
         if (boundary.status !== CLIENT_RENDERED) {
           boundary.status = CLIENT_RENDERED;
-          encodeErrorForBoundary(boundary, errorDigest, error, errorInfo); // Regardless of what happens next, this boundary won't be displayed,
+          encodeErrorForBoundary(boundary, errorDigest, error, errorInfo);
+          untrackBoundary(request, boundary); // Regardless of what happens next, this boundary won't be displayed,
           // so we can flush it, if the parent already flushed.
 
           if (boundary.parentFlushed) {
@@ -12751,6 +12781,7 @@ if (__DEV__) {
             errorMessage,
             _errorInfo
           );
+          untrackBoundary(request, boundary);
 
           if (boundary.parentFlushed) {
             request.clientRenderedBoundaries.push(boundary);

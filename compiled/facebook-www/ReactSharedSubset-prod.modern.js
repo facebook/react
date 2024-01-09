@@ -489,4 +489,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-73b83dcd";
+exports.version = "18.3.0-www-modern-9282fd09";

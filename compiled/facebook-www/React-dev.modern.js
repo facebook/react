@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-b06e722a";
+    var ReactVersion = "18.3.0-www-modern-5ca2fa17";
 
     // ATTENTION
     // When adding new symbols to this file,

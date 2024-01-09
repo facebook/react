@@ -3981,7 +3981,8 @@ function renderElement(
                 error,
                 previousComponentStack
               )),
-              (ref.errorDigest = JSCompiler_inline_result);
+              (ref.errorDigest = JSCompiler_inline_result),
+              untrackBoundary(request, ref);
           } finally {
             (request.renderState.boundaryResources = contextKey
               ? contextKey.resources
@@ -4527,6 +4528,15 @@ function renderChildrenArray(request, task, children, childIndex) {
   task.treeContext = replay;
   task.keyPath = prevKeyPath;
 }
+function untrackBoundary(request, boundary) {
+  request = request.trackedPostpones;
+  null !== request &&
+    ((boundary = boundary.trackedContentKeyPath),
+    null !== boundary &&
+      ((boundary = request.workingMap.get(boundary)),
+      void 0 !== boundary &&
+        ((boundary.length = 4), (boundary[2] = []), (boundary[3] = null))));
+}
 function renderNode(request, task, node, childIndex) {
   var previousFormatContext = task.formatContext,
     previousLegacyContext = task.legacyContext,
@@ -4723,6 +4733,7 @@ function abortTask(task, request, error) {
         (task = getThrownInfo(request, task.componentStack)),
         (task = logRecoverableError(request, error, task)),
         (boundary.errorDigest = task),
+        untrackBoundary(request, boundary),
         boundary.parentFlushed &&
           request.clientRenderedBoundaries.push(boundary)),
       boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
@@ -5011,6 +5022,7 @@ function performWork(request$jscomp$2) {
                   4 !== boundary$jscomp$0.status &&
                     ((boundary$jscomp$0.status = 4),
                     (boundary$jscomp$0.errorDigest = request$jscomp$0),
+                    untrackBoundary(request, boundary$jscomp$0),
                     boundary$jscomp$0.parentFlushed &&
                       request.clientRenderedBoundaries.push(
                         boundary$jscomp$0
@@ -5664,4 +5676,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-ef6a5528";
+exports.version = "18.3.0-www-classic-3dabb062";

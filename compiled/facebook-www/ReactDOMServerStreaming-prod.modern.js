@@ -3736,7 +3736,8 @@ function renderElement(
               (contextType$jscomp$0.status = 4),
               (contextType = getThrownInfo(request, task.componentStack)),
               (initialState = logRecoverableError(request, error, contextType)),
-              (contextType$jscomp$0.errorDigest = initialState);
+              (contextType$jscomp$0.errorDigest = initialState),
+              untrackBoundary(request, contextType$jscomp$0);
           } finally {
             (request.renderState.boundaryResources = prevThenableState
               ? prevThenableState.resources
@@ -4285,6 +4286,15 @@ function renderChildrenArray(request, task, children, childIndex) {
   task.treeContext = replay;
   task.keyPath = prevKeyPath;
 }
+function untrackBoundary(request, boundary) {
+  request = request.trackedPostpones;
+  null !== request &&
+    ((boundary = boundary.trackedContentKeyPath),
+    null !== boundary &&
+      ((boundary = request.workingMap.get(boundary)),
+      void 0 !== boundary &&
+        ((boundary.length = 4), (boundary[2] = []), (boundary[3] = null))));
+}
 function renderNode(request, task, node, childIndex) {
   var previousFormatContext = task.formatContext,
     previousLegacyContext = task.legacyContext,
@@ -4484,6 +4494,7 @@ function abortTask(task, request, error) {
         (task = getThrownInfo(request, task.componentStack)),
         (task = logRecoverableError(request, error, task)),
         (boundary.errorDigest = task),
+        untrackBoundary(request, boundary),
         boundary.parentFlushed &&
           request.clientRenderedBoundaries.push(boundary)),
       boundary.fallbackAbortableTasks.forEach(function (fallbackTask) {
@@ -5320,6 +5331,7 @@ exports.renderNextChunk = function (stream) {
                     4 !== boundary$jscomp$0.status &&
                       ((boundary$jscomp$0.status = 4),
                       (boundary$jscomp$0.errorDigest = errorDigest),
+                      untrackBoundary(request, boundary$jscomp$0),
                       boundary$jscomp$0.parentFlushed &&
                         request.clientRenderedBoundaries.push(
                           boundary$jscomp$0
