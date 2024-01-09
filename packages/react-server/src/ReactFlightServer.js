@@ -504,7 +504,7 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
   return lazyType;
 }
 
-function attemptResolveElement(
+function renderElement(
   request: Request,
   type: any,
   key: null | React$Key,
@@ -574,7 +574,7 @@ function attemptResolveElement(
         const payload = type._payload;
         const init = type._init;
         const wrappedType = init(payload);
-        return attemptResolveElement(
+        return renderElement(
           request,
           wrappedType,
           key,
@@ -589,7 +589,7 @@ function attemptResolveElement(
         return render(props, undefined);
       }
       case REACT_MEMO_TYPE: {
-        return attemptResolveElement(
+        return renderElement(
           request,
           type.type,
           key,
@@ -1018,7 +1018,7 @@ function resolveModelToJSON(
           // TODO: Concatenate keys of parents onto children.
           const element: React$Element<any> = (value: any);
           // Attempt to render the Server Component.
-          value = attemptResolveElement(
+          value = renderElement(
             request,
             element.type,
             element.key,
@@ -1551,7 +1551,7 @@ function retryTask(request: Request, task: Task): void {
       // Doing this here lets us reuse this same task if the next component
       // also suspends.
       task.model = value;
-      value = attemptResolveElement(
+      value = renderElement(
         request,
         element.type,
         element.key,
@@ -1576,7 +1576,7 @@ function retryTask(request: Request, task: Task): void {
         // TODO: Concatenate keys of parents onto children.
         const nextElement: React$Element<any> = (value: any);
         task.model = value;
-        value = attemptResolveElement(
+        value = renderElement(
           request,
           nextElement.type,
           nextElement.key,
