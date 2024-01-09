@@ -1041,9 +1041,6 @@ export function setInitialProperties(
       if (__DEV__) {
         checkControlledValueProps('input', props);
       }
-      // We listen to this event in case to ensure emulated bubble
-      // listeners still fire for the invalid event.
-      listenToNonDelegatedEvent('invalid', domElement);
 
       let name = null;
       let type = null;
@@ -1099,7 +1096,9 @@ export function setInitialProperties(
           }
         }
       }
-      // Fix #27858: input[type="file"] has cancel event
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       if (type === 'file') {
         listenToNonDelegatedEvent('cancel', domElement);
       }
@@ -2751,7 +2750,6 @@ export function diffHydratedProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      // Fix #27858: input[type="file"] has cancel event
       if (props.type === 'file') {
         listenToNonDelegatedEvent('cancel', domElement);
       }

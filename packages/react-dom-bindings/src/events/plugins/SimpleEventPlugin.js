@@ -46,6 +46,7 @@ import {
 import {
   IS_EVENT_HANDLE_NON_MANAGED_NODE,
   IS_CAPTURE_PHASE,
+  IS_NON_DELEGATED,
 } from '../EventSystemFlags';
 
 import getEventCharCode from '../getEventCharCode';
@@ -219,6 +220,15 @@ function extractEvents(
         nativeEvent,
         nativeEventTarget,
       );
+      const isBubblingPhase = event.eventPhase === 3;
+      // should not fire native cancel event on bubblingPhase
+      if (
+        domEventName === 'cancel' &&
+        (eventSystemFlags & IS_NON_DELEGATED) !== 0 &&
+        isBubblingPhase
+      ) {
+        return;
+      }
       dispatchQueue.push({event, listeners});
     }
   }

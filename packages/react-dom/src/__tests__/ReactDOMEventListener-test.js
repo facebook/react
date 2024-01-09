@@ -302,6 +302,32 @@ describe('ReactDOMEventListener', () => {
     expect(handleCancel).toHaveBeenCalledTimes(1);
   });
 
+  it('should not bubble cancel event for file input', () => {
+    const container = document.createElement('input');
+    document.body.appendChild(container);
+
+    const inputFileRef = React.createRef();
+    const dialogRef = React.createRef();
+
+    const handleFileCancel = jest.fn();
+    const handleDialogCancel = jest.fn();
+    ReactDOM.render(
+      <dialog ref={dialogRef} onCancel={handleDialogCancel}>
+        <input ref={inputFileRef} type="file" onCancel={handleFileCancel} />
+      </dialog>,
+      container,
+    );
+
+    inputFileRef.current.dispatchEvent(
+      new Event('cancel', {
+        // https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/cancel_event
+        bubbles: true,
+      }),
+    );
+    expect(handleFileCancel).toHaveBeenCalledTimes(1);
+    expect(handleDialogCancel).toHaveBeenCalledTimes(1);
+  });
+
   // This tests an implementation detail that submit/reset events are listened to
   // at the document level, which is necessary for event replaying to work.
   // They bubble in all modern browsers.
