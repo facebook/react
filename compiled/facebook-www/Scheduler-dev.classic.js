@@ -31,12 +31,14 @@ if (__DEV__) {
     var userBlockingPriorityTimeout =
         dynamicFeatureFlags.userBlockingPriorityTimeout,
       normalPriorityTimeout = dynamicFeatureFlags.normalPriorityTimeout,
-      lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout;
+      lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout,
+      enableIsInputPending = dynamicFeatureFlags.enableIsInputPending,
+      enableIsInputPendingContinuous =
+        dynamicFeatureFlags.enableIsInputPendingContinuous,
+      frameYieldMs = dynamicFeatureFlags.frameYieldMs,
+      continuousYieldMs = dynamicFeatureFlags.continuousYieldMs,
+      maxYieldMs = dynamicFeatureFlags.maxYieldMs;
     var enableProfiling = enableProfilingFeatureFlag;
-    var enableIsInputPendingContinuous = true;
-    var frameYieldMs = 5;
-    var continuousYieldMs = 10;
-    var maxYieldMs = 10;
 
     function push(heap, node) {
       var index = heap.length;
@@ -703,7 +705,7 @@ if (__DEV__) {
       // wasn't accompanied by a call to `requestPaint`, or other main thread tasks
       // like network events.
 
-      {
+      if (enableIsInputPending) {
         if (needsPaint) {
           // There's a pending paint (signaled by `requestPaint`). Yield now.
           return true;
@@ -734,6 +736,7 @@ if (__DEV__) {
 
     function requestPaint() {
       if (
+        enableIsInputPending &&
         navigator !== undefined && // $FlowFixMe[prop-missing]
         navigator.scheduling !== undefined && // $FlowFixMe[incompatible-type]
         navigator.scheduling.isInputPending !== undefined

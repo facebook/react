@@ -14,7 +14,13 @@
 var dynamicFeatureFlags = require("SchedulerFeatureFlags"),
   userBlockingPriorityTimeout = dynamicFeatureFlags.userBlockingPriorityTimeout,
   normalPriorityTimeout = dynamicFeatureFlags.normalPriorityTimeout,
-  lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout;
+  lowPriorityTimeout = dynamicFeatureFlags.lowPriorityTimeout,
+  enableIsInputPending = dynamicFeatureFlags.enableIsInputPending,
+  enableIsInputPendingContinuous =
+    dynamicFeatureFlags.enableIsInputPendingContinuous,
+  frameYieldMs = dynamicFeatureFlags.frameYieldMs,
+  continuousYieldMs = dynamicFeatureFlags.continuousYieldMs,
+  maxYieldMs = dynamicFeatureFlags.maxYieldMs;
 function push(heap, node) {
   var index = heap.length;
   heap.push(node);
@@ -94,7 +100,7 @@ var taskQueue = [],
     void 0 !== navigator.scheduling.isInputPending
       ? navigator.scheduling.isInputPending.bind(navigator.scheduling)
       : null,
-  continuousOptions = { includeContinuous: !0 };
+  continuousOptions = { includeContinuous: enableIsInputPendingContinuous };
 function advanceTimers(currentTime) {
   for (var timer = peek(timerQueue); null !== timer; ) {
     if (null === timer.callback) pop(timerQueue);
@@ -120,17 +126,19 @@ function handleTimeout(currentTime) {
 }
 var isMessageLoopRunning = !1,
   taskTimeoutID = -1,
-  frameInterval = 5,
+  frameInterval = frameYieldMs,
   startTime = -1,
   needsPaint = !1;
 function shouldYieldToHost() {
   var timeElapsed = exports.unstable_now() - startTime;
   if (timeElapsed < frameInterval) return !1;
-  if (needsPaint) return !0;
-  if (10 > timeElapsed) {
-    if (null !== isInputPending) return isInputPending();
-  } else if (10 > timeElapsed && null !== isInputPending)
-    return isInputPending(continuousOptions);
+  if (enableIsInputPending) {
+    if (needsPaint) return !0;
+    if (timeElapsed < continuousYieldMs) {
+      if (null !== isInputPending) return isInputPending();
+    } else if (timeElapsed < maxYieldMs && null !== isInputPending)
+      return isInputPending(continuousOptions);
+  }
   return !0;
 }
 function performWorkUntilDeadline() {
@@ -251,7 +259,7 @@ exports.unstable_forceFrameRate = function (fps) {
     ? console.error(
         "forceFrameRate takes a positive int between 0 and 125, forcing frame rates higher than 125 fps is not supported"
       )
-    : (frameInterval = 0 < fps ? Math.floor(1e3 / fps) : 5);
+    : (frameInterval = 0 < fps ? Math.floor(1e3 / fps) : frameYieldMs);
 };
 exports.unstable_getCurrentPriorityLevel = function () {
   return currentPriorityLevel;
@@ -281,7 +289,8 @@ exports.unstable_pauseExecution = function () {
   isSchedulerPaused = !0;
 };
 exports.unstable_requestPaint = function () {
-  void 0 !== navigator &&
+  enableIsInputPending &&
+    void 0 !== navigator &&
     void 0 !== navigator.scheduling &&
     void 0 !== navigator.scheduling.isInputPending &&
     (needsPaint = !0);
