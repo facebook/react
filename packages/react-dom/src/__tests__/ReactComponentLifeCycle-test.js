@@ -9,8 +9,11 @@
 
 'use strict';
 
+let act;
+
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactTestUtils;
 let PropTypes;
 
@@ -88,13 +91,17 @@ function getLifeCycleState(instance): ComponentLifeCycle {
 describe('ReactComponentLifeCycle', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    act = require('internal-test-utils').act;
+
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
   });
 
-  it('should not reuse an instance when it has been unmounted', () => {
+  it('should not reuse an instance when it has been unmounted', async () => {
     const container = document.createElement('div');
 
     class StatefulComponent extends React.Component {
@@ -299,21 +306,27 @@ describe('ReactComponentLifeCycle', () => {
     }).toErrorDev('Component is accessing isMounted inside its render()');
   });
 
-  it('isMounted should return false when unmounted', () => {
+  it('isMounted should return false when unmounted', async () => {
     class Component extends React.Component {
       render() {
         return <div />;
       }
     }
 
-    const container = document.createElement('div');
-    const instance = ReactDOM.render(<Component />, container);
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    const instanceRef = React.createRef();
+    await act(() => {
+      root.render(<Component ref={instanceRef} />);
+    });
+    const instance = instanceRef.current;
 
     // No longer a public API, but we can test that it works internally by
     // reaching into the updater.
     expect(instance.updater.isMounted(instance)).toBe(true);
 
-    ReactDOM.unmountComponentAtNode(container);
+    await act(() => {
+      root.unmount();
+    });
 
     expect(instance.updater.isMounted(instance)).toBe(false);
   });
@@ -337,7 +350,7 @@ describe('ReactComponentLifeCycle', () => {
     }).toErrorDev('Component is accessing findDOMNode inside its render()');
   });
 
-  it('should carry through each of the phases of setup', () => {
+  it('should carry through each of the phases of setup', async () => {
     class LifeCycleComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -390,15 +403,17 @@ describe('ReactComponentLifeCycle', () => {
 
     // A component that is merely "constructed" (as in "constructor") but not
     // yet initialized, or rendered.
-    //
-    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
 
-    let instance;
-    expect(() => {
-      instance = ReactDOM.render(<LifeCycleComponent />, container);
+    const instanceRef = React.createRef();
+    await expect(async () => {
+      await act(() => {
+        root.render(<LifeCycleComponent ref={instanceRef} />);
+      });
     }).toErrorDev(
       'LifeCycleComponent is accessing isMounted inside its render() function',
     );
+    const instance = instanceRef.current;
 
     // getInitialState
     expect(instance._testJournal.returnedFromGetInitialState).toEqual(
@@ -437,7 +452,9 @@ describe('ReactComponentLifeCycle', () => {
 
     expect(getLifeCycleState(instance)).toBe('MOUNTED');
 
-    ReactDOM.unmountComponentAtNode(container);
+    await act(() => {
+      root.unmount();
+    });
 
     expect(instance._testJournal.stateAtStartOfWillUnmount).toEqual(
       WILL_UNMOUNT_STATE,
@@ -450,14 +467,15 @@ describe('ReactComponentLifeCycle', () => {
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
   });
 
-  it('should not throw when updating an auxiliary component', () => {
+  it('should not throw when updating an auxiliary component', async () => {
     class Tooltip extends React.Component {
       render() {
         return <div>{this.props.children}</div>;
       }
 
       componentDidMount() {
-        this.container = document.createElement('div');
+        const container = document.createElement('div');
+        this.root = ReactDOMClient.createRoot(container);
         this.updateTooltip();
       }
 
@@ -468,7 +486,7 @@ describe('ReactComponentLifeCycle', () => {
       updateTooltip = () => {
         // Even though this.props.tooltip has an owner, updating it shouldn't
         // throw here because it's mounted as a root component
-        ReactDOM.render(this.props.tooltip, this.container);
+        this.root.render(this.props.tooltip, this.container);
       };
     }
 
@@ -484,12 +502,16 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
-    ReactDOM.render(<Component text="uno" tooltipText="one" />, container);
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(<Component text="uno" tooltipText="one" />);
+    });
 
     // Since `instance` is a root component, we can set its props. This also
     // makes Tooltip rerender the tooltip component, which shouldn't throw.
-    ReactDOM.render(<Component text="dos" tooltipText="two" />, container);
+    await act(() => {
+      root.render(<Component text="dos" tooltipText="two" />);
+    });
   });
 
   it('should allow state updates in componentDidMount', () => {
@@ -520,7 +542,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(instance.state.stateField).toBe('goodbye');
   });
 
-  it('should call nested legacy lifecycle methods in the right order', () => {
+  it('should call nested legacy lifecycle methods in the right order', async () => {
     let log;
     const logger = function (msg) {
       return function () {
@@ -563,9 +585,11 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     log = [];
-    ReactDOM.render(<Outer x={1} />, container);
+    await act(() => {
+      root.render(<Outer x={1} />);
+    });
     expect(log).toEqual([
       'outer componentWillMount',
       'inner componentWillMount',
@@ -575,7 +599,9 @@ describe('ReactComponentLifeCycle', () => {
 
     // Dedup warnings
     log = [];
-    ReactDOM.render(<Outer x={2} />, container);
+    await act(() => {
+      root.render(<Outer x={2} />);
+    });
     expect(log).toEqual([
       'outer componentWillReceiveProps',
       'outer shouldComponentUpdate',
@@ -588,14 +614,16 @@ describe('ReactComponentLifeCycle', () => {
     ]);
 
     log = [];
-    ReactDOM.unmountComponentAtNode(container);
+    await act(() => {
+      root.unmount();
+    });
     expect(log).toEqual([
       'outer componentWillUnmount',
       'inner componentWillUnmount',
     ]);
   });
 
-  it('should call nested new lifecycle methods in the right order', () => {
+  it('should call nested new lifecycle methods in the right order', async () => {
     let log;
     const logger = function (msg) {
       return function () {
@@ -640,9 +668,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+
     log = [];
-    ReactDOM.render(<Outer x={1} />, container);
+    await act(() => {
+      root.render(<Outer x={1} />);
+    });
     expect(log).toEqual([
       'outer getDerivedStateFromProps',
       'inner getDerivedStateFromProps',
@@ -652,7 +683,9 @@ describe('ReactComponentLifeCycle', () => {
 
     // Dedup warnings
     log = [];
-    ReactDOM.render(<Outer x={2} />, container);
+    await act(() => {
+      root.render(<Outer x={2} />);
+    });
     expect(log).toEqual([
       'outer getDerivedStateFromProps',
       'outer shouldComponentUpdate',
@@ -665,14 +698,16 @@ describe('ReactComponentLifeCycle', () => {
     ]);
 
     log = [];
-    ReactDOM.unmountComponentAtNode(container);
+    await act(() => {
+      root.unmount();
+    });
     expect(log).toEqual([
       'outer componentWillUnmount',
       'inner componentWillUnmount',
     ]);
   });
 
-  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', async () => {
     class Component extends React.Component {
       state = {};
       static getDerivedStateFromProps() {
@@ -692,9 +727,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
-    expect(() => {
-      expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          root.render(<Component />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.',
       );
     }).toWarnDev(
@@ -707,7 +746,7 @@ describe('ReactComponentLifeCycle', () => {
     );
   });
 
-  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', async () => {
     class Component extends React.Component {
       state = {};
       getSnapshotBeforeUpdate() {
@@ -728,10 +767,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
-    expect(() => {
-      expect(() =>
-        ReactDOM.render(<Component value={1} />, container),
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await expect(
+        async () =>
+          await act(() => {
+            root.render(<Component value={1} />);
+          }),
       ).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.',
       );
@@ -743,10 +785,13 @@ describe('ReactComponentLifeCycle', () => {
       ],
       {withoutStack: true},
     );
-    ReactDOM.render(<Component value={2} />, container);
+
+    await act(() => {
+      root.render(<Component value={2} />);
+    });
   });
 
-  it('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', () => {
+  it('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', async () => {
     class Component extends React.Component {
       state = {};
       static getDerivedStateFromProps() {
@@ -766,18 +811,21 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
-    expect(() =>
-      ReactDOM.render(<Component value={1} />, container),
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(
+      async () =>
+        await act(() => {
+          root.render(<Component value={1} />);
+        }),
     ).toErrorDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.',
     );
-    ReactDOM.render(<Component value={2} />, container);
+    await act(() => {
+      root.render(<Component value={2} />);
+    });
   });
 
-  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
-    const container = document.createElement('div');
-
+  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', async () => {
     class AllLegacyLifecycles extends React.Component {
       state = {};
       static getDerivedStateFromProps() {
@@ -791,10 +839,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      expect(() =>
-        ReactDOM.render(<AllLegacyLifecycles />, container),
-      ).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          root.render(<AllLegacyLifecycles />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -822,7 +873,11 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillMount />, container)).toErrorDev(
+    await expect(async () => {
+      await act(() => {
+        root.render(<WillMount />);
+      });
+    }).toErrorDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
         'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
@@ -842,9 +897,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      expect(() =>
-        ReactDOM.render(<WillMountAndUpdate />, container),
+    await expect(async () => {
+      await expect(
+        async () =>
+          await act(() => {
+            root.render(<WillMountAndUpdate />);
+          }),
       ).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
@@ -868,8 +926,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toErrorDev(
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          root.render(<WillReceiveProps />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
@@ -881,9 +943,7 @@ describe('ReactComponentLifeCycle', () => {
     });
   });
 
-  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
-    const container = document.createElement('div');
-
+  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', async () => {
     class AllLegacyLifecycles extends React.Component {
       state = {};
       getSnapshotBeforeUpdate() {}
@@ -896,10 +956,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      expect(() =>
-        ReactDOM.render(<AllLegacyLifecycles />, container),
-      ).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          root.render(<AllLegacyLifecycles />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'AllLegacyLifecycles uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -926,7 +989,11 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillMount />, container)).toErrorDev(
+    await expect(async () => {
+      await act(() => {
+        root.render(<WillMount />);
+      });
+    }).toErrorDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
         'WillMount uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
@@ -945,10 +1012,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      expect(() =>
-        ReactDOM.render(<WillMountAndUpdate />, container),
-      ).toErrorDev(
+    await expect(async () => {
+      await expect(async () => {
+        await act(() => {
+          root.render(<WillMountAndUpdate />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillMountAndUpdate uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -970,8 +1039,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toErrorDev(
+    await expect(async () => {
+      await expect(
+        async () =>
+          await act(() => {
+            root.render(<WillReceiveProps />);
+          }),
+      ).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillReceiveProps uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
@@ -984,7 +1058,7 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('calls effects on module-pattern component', function () {
+    it('calls effects on module-pattern component', async () => {
       const log = [];
 
       function Parent() {
@@ -1019,17 +1093,21 @@ describe('ReactComponentLifeCycle', () => {
         x: PropTypes.number,
       };
 
-      const div = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div),
-      ).toErrorDev(
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await expect(async () => {
+        await act(() => {
+          root.render(<Parent ref={c => c && log.push('ref')} />);
+        });
+      }).toErrorDev(
         'Warning: The <Parent /> component appears to be a function component that returns a class instance. ' +
           'Change Parent to a class that extends React.Component instead. ' +
           "If you can't use a class try assigning the prototype on the function as a workaround. " +
           '`Parent.prototype = React.Component.prototype`. ' +
           "Don't use an arrow function since it cannot be called with `new` by React.",
       );
-      ReactDOM.render(<Parent ref={c => c && log.push('ref')} />, div);
+      await act(() => {
+        root.render(<Parent ref={c => c && log.push('ref')} />);
+      });
 
       expect(log).toEqual([
         'will mount',
@@ -1044,7 +1122,7 @@ describe('ReactComponentLifeCycle', () => {
     });
   }
 
-  it('should warn if getDerivedStateFromProps returns undefined', () => {
+  it('should warn if getDerivedStateFromProps returns undefined', async () => {
     class MyComponent extends React.Component {
       state = {};
       static getDerivedStateFromProps() {}
@@ -1053,17 +1131,23 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() => {
+        root.render(<MyComponent />);
+      });
+    }).toErrorDev(
       'MyComponent.getDerivedStateFromProps(): A valid state object (or null) must ' +
         'be returned. You have returned undefined.',
     );
 
     // De-duped
-    ReactDOM.render(<MyComponent />, div);
+    await act(() => {
+      root.render(<MyComponent />);
+    });
   });
 
-  it('should warn if state is not initialized before getDerivedStateFromProps', () => {
+  it('should warn if state is not initialized before getDerivedStateFromProps', async () => {
     class MyComponent extends React.Component {
       static getDerivedStateFromProps() {
         return null;
@@ -1073,8 +1157,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() => {
+        root.render(<MyComponent />);
+      });
+    }).toErrorDev(
       '`MyComponent` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `MyComponent`. ' +
@@ -1082,10 +1170,12 @@ describe('ReactComponentLifeCycle', () => {
     );
 
     // De-duped
-    ReactDOM.render(<MyComponent />, div);
+    await act(() => {
+      root.render(<MyComponent />);
+    });
   });
 
-  it('should invoke both deprecated and new lifecycles if both are present', () => {
+  it('should invoke both deprecated and new lifecycles if both are present', async () => {
     const log = [];
 
     class MyComponent extends React.Component {
@@ -1112,8 +1202,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent foo="bar" />, div)).toWarnDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() => {
+        root.render(<MyComponent foo="bar" />);
+      });
+    }).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillReceiveProps has been renamed',
@@ -1125,7 +1219,9 @@ describe('ReactComponentLifeCycle', () => {
 
     log.length = 0;
 
-    ReactDOM.render(<MyComponent foo="baz" />, div);
+    await act(() => {
+      root.render(<MyComponent foo="baz" />);
+    });
     expect(log).toEqual([
       'componentWillReceiveProps',
       'UNSAFE_componentWillReceiveProps',
@@ -1134,7 +1230,7 @@ describe('ReactComponentLifeCycle', () => {
     ]);
   });
 
-  it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
+  it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', async () => {
     const divRef = React.createRef();
     let childInstance;
 
@@ -1171,23 +1267,28 @@ describe('ReactComponentLifeCycle', () => {
 
     const container = document.createElement('div');
     document.body.appendChild(container);
-    try {
-      ReactDOM.render(<Parent />, container);
-      expect(divRef.current.textContent).toBe('remote:0, local:0');
+    const root = ReactDOMClient.createRoot(container);
 
-      // Trigger setState() calls
+    await act(() => {
+      root.render(<Parent />);
+    });
+    expect(divRef.current.textContent).toBe('remote:0, local:0');
+
+    // Trigger setState() calls
+    await act(() => {
       childInstance.updateState();
-      expect(divRef.current.textContent).toBe('remote:1, local:1');
+    });
+    expect(divRef.current.textContent).toBe('remote:1, local:1');
 
-      // Trigger batched setState() calls
+    // Trigger batched setState() calls
+    await act(() => {
       divRef.current.click();
-      expect(divRef.current.textContent).toBe('remote:2, local:2');
-    } finally {
-      document.body.removeChild(container);
-    }
+    });
+    expect(divRef.current.textContent).toBe('remote:2, local:2');
+    document.body.removeChild(container);
   });
 
-  it('should pass the return value from getSnapshotBeforeUpdate to componentDidUpdate', () => {
+  it('should pass the return value from getSnapshotBeforeUpdate to componentDidUpdate', async () => {
     const log = [];
 
     class MyComponent extends React.Component {
@@ -1216,22 +1317,24 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-    ReactDOM.render(
-      <div>
-        <MyComponent value="foo" />
-      </div>,
-      div,
-    );
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(
+        <div>
+          <MyComponent value="foo" />
+        </div>,
+      );
+    });
     expect(log).toEqual(['render']);
     log.length = 0;
 
-    ReactDOM.render(
-      <div>
-        <MyComponent value="bar" />
-      </div>,
-      div,
-    );
+    await act(() => {
+      root.render(
+        <div>
+          <MyComponent value="bar" />
+        </div>,
+      );
+    });
     expect(log).toEqual([
       'render',
       'getSnapshotBeforeUpdate() prevProps:foo prevState:1',
@@ -1239,12 +1342,13 @@ describe('ReactComponentLifeCycle', () => {
     ]);
     log.length = 0;
 
-    ReactDOM.render(
-      <div>
-        <MyComponent value="baz" />
-      </div>,
-      div,
-    );
+    await act(() => {
+      root.render(
+        <div>
+          <MyComponent value="baz" />
+        </div>,
+      );
+    });
     expect(log).toEqual([
       'render',
       'getSnapshotBeforeUpdate() prevProps:bar prevState:2',
@@ -1252,11 +1356,13 @@ describe('ReactComponentLifeCycle', () => {
     ]);
     log.length = 0;
 
-    ReactDOM.render(<div />, div);
+    await act(() => {
+      root.render(<div />);
+    });
     expect(log).toEqual([]);
   });
 
-  it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
+  it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', async () => {
     const divRef = React.createRef();
     class SimpleComponent extends React.Component {
       constructor(props) {
@@ -1282,15 +1388,18 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-
-    ReactDOM.render(<SimpleComponent value="initial" />, div);
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(<SimpleComponent value="initial" />);
+    });
     expect(divRef.current.textContent).toBe('value: initial');
-    ReactDOM.render(<SimpleComponent value="updated" />, div);
+    await act(() => {
+      root.render(<SimpleComponent value="updated" />);
+    });
     expect(divRef.current.textContent).toBe('value: updated');
   });
 
-  it('should call getSnapshotBeforeUpdate before mutations are committed', () => {
+  it('should call getSnapshotBeforeUpdate before mutations are committed', async () => {
     const log = [];
 
     class MyComponent extends React.Component {
@@ -1315,12 +1424,16 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-    ReactDOM.render(<MyComponent value="foo" />, div);
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(<MyComponent value="foo" />);
+    });
     expect(log).toEqual(['render']);
     log.length = 0;
 
-    ReactDOM.render(<MyComponent value="bar" />, div);
+    await act(() => {
+      root.render(<MyComponent value="bar" />);
+    });
     expect(log).toEqual([
       'render',
       'getSnapshotBeforeUpdate',
@@ -1329,7 +1442,7 @@ describe('ReactComponentLifeCycle', () => {
     log.length = 0;
   });
 
-  it('should warn if getSnapshotBeforeUpdate returns undefined', () => {
+  it('should warn if getSnapshotBeforeUpdate returns undefined', async () => {
     class MyComponent extends React.Component {
       getSnapshotBeforeUpdate() {}
       componentDidUpdate() {}
@@ -1338,18 +1451,27 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-    ReactDOM.render(<MyComponent value="foo" />, div);
-    expect(() => ReactDOM.render(<MyComponent value="bar" />, div)).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(<MyComponent value="foo" />);
+    });
+
+    await expect(async () => {
+      await act(() => {
+        root.render(<MyComponent value="bar" />);
+      });
+    }).toErrorDev(
       'MyComponent.getSnapshotBeforeUpdate(): A snapshot value (or null) must ' +
         'be returned. You have returned undefined.',
     );
 
     // De-duped
-    ReactDOM.render(<MyComponent value="baz" />, div);
+    await act(() => {
+      root.render(<MyComponent value="baz" />);
+    });
   });
 
-  it('should warn if getSnapshotBeforeUpdate is defined with no componentDidUpdate', () => {
+  it('should warn if getSnapshotBeforeUpdate is defined with no componentDidUpdate', async () => {
     class MyComponent extends React.Component {
       getSnapshotBeforeUpdate() {
         return null;
@@ -1359,17 +1481,23 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() => {
+        root.render(<MyComponent />);
+      });
+    }).toErrorDev(
       'MyComponent: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
         'This component defines getSnapshotBeforeUpdate() only.',
     );
 
     // De-duped
-    ReactDOM.render(<MyComponent />, div);
+    await act(() => {
+      root.render(<MyComponent />);
+    });
   });
 
-  it('warns about deprecated unsafe lifecycles', function () {
+  it('warns about deprecated unsafe lifecycles', async () => {
     class MyComponent extends React.Component {
       componentWillMount() {}
       componentWillReceiveProps() {}
@@ -1379,8 +1507,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent x={1} />, container)).toWarnDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+
+    await expect(async () => {
+      await act(() => {
+        root.render(<MyComponent x={1} />);
+      });
+    }).toWarnDev(
       [
         /* eslint-disable max-len */
         `Warning: componentWillMount has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
@@ -1408,14 +1541,18 @@ Please update the following components: MyComponent`,
     );
 
     // Dedupe check (update and instantiate new)
-    ReactDOM.render(<MyComponent x={2} />, container);
-    ReactDOM.render(<MyComponent key="new" x={1} />, container);
+    await act(() => {
+      root.render(<MyComponent x={2} />);
+    });
+    await act(() => {
+      root.render(<MyComponent key="new" x={1} />);
+    });
   });
 
   describe('react-lifecycles-compat', () => {
     const {polyfill} = require('react-lifecycles-compat');
 
-    it('should not warn for components with polyfilled getDerivedStateFromProps', () => {
+    it('should not warn for components with polyfilled getDerivedStateFromProps', async () => {
       class PolyfilledComponent extends React.Component {
         state = {};
         static getDerivedStateFromProps() {
@@ -1428,16 +1565,17 @@ Please update the following components: MyComponent`,
 
       polyfill(PolyfilledComponent);
 
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <PolyfilledComponent />
-        </React.StrictMode>,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => {
+        root.render(
+          <React.StrictMode>
+            <PolyfilledComponent />
+          </React.StrictMode>,
+        );
+      });
     });
 
-    it('should not warn for components with polyfilled getSnapshotBeforeUpdate', () => {
+    it('should not warn for components with polyfilled getSnapshotBeforeUpdate', async () => {
       class PolyfilledComponent extends React.Component {
         getSnapshotBeforeUpdate() {
           return null;
@@ -1450,13 +1588,14 @@ Please update the following components: MyComponent`,
 
       polyfill(PolyfilledComponent);
 
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <React.StrictMode>
-          <PolyfilledComponent />
-        </React.StrictMode>,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => {
+        root.render(
+          <React.StrictMode>
+            <PolyfilledComponent />
+          </React.StrictMode>,
+        );
+      });
     });
   });
 });
