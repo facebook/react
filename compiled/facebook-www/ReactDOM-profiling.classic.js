@@ -99,9 +99,13 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
+var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function getComponentNameFromType(type) {
   if (null == type) return null;
-  if ("function" === typeof type) return type.displayName || type.name || null;
+  if ("function" === typeof type)
+    return type.$$typeof === REACT_CLIENT_REFERENCE
+      ? null
+      : type.displayName || type.name || null;
   if ("string" === typeof type) return type;
   switch (type) {
     case REACT_FRAGMENT_TYPE:
@@ -17360,7 +17364,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1884 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-14352275",
+  version: "18.3.0-www-classic-f1e06a21",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17404,7 +17408,7 @@ var devToolsConfig$jscomp$inline_1884 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-14352275"
+  reconcilerVersion: "18.3.0-www-classic-f1e06a21"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17728,7 +17732,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-14352275";
+exports.version = "18.3.0-www-classic-f1e06a21";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

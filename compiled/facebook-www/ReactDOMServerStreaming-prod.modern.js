@@ -2509,10 +2509,14 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
     "react.default_value"
   ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
-  MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+  MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
+  REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function getComponentNameFromType(type) {
   if (null == type) return null;
-  if ("function" === typeof type) return type.displayName || type.name || null;
+  if ("function" === typeof type)
+    return type.$$typeof === REACT_CLIENT_REFERENCE
+      ? null
+      : type.displayName || type.name || null;
   if ("string" === typeof type) return type;
   switch (type) {
     case REACT_FRAGMENT_TYPE:

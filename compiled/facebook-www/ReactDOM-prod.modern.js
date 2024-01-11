@@ -813,6 +813,7 @@ function describeFiber(fiber) {
       return "";
   }
 }
+Symbol.for("react.client.reference");
 function getToStringValue(value) {
   switch (typeof value) {
     case "boolean":
@@ -16117,7 +16118,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1758 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-6172d9bb",
+  version: "18.3.0-www-modern-b1186d41",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2109 = {
@@ -16148,7 +16149,7 @@ var internals$jscomp$inline_2109 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-6172d9bb"
+  reconcilerVersion: "18.3.0-www-modern-b1186d41"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2110 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16413,4 +16414,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-6172d9bb";
+exports.version = "18.3.0-www-modern-b1186d41";

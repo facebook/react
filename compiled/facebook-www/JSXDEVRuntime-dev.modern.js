@@ -109,7 +109,7 @@ if (__DEV__) {
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
     // On WWW, true is used for a new modern build.
 
-    var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference");
+    var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
     function isValidElementType(type) {
       if (typeof type === "string" || typeof type === "function") {
         return true;
@@ -141,7 +141,7 @@ if (__DEV__) {
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used
           // with.
-          type.$$typeof === REACT_CLIENT_REFERENCE$1 ||
+          type.$$typeof === REACT_CLIENT_REFERENCE$2 ||
           type.getModuleId !== undefined
         ) {
           return true;
@@ -166,7 +166,9 @@ if (__DEV__) {
 
     function getContextName(type) {
       return type.displayName || "Context";
-    } // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
+    }
+
+    var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference"); // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
 
     function getComponentNameFromType(type) {
       if (type == null) {
@@ -174,16 +176,12 @@ if (__DEV__) {
         return null;
       }
 
-      {
-        if (typeof type.tag === "number") {
-          error(
-            "Received an unexpected object in getComponentNameFromType(). " +
-              "This is likely a bug in React. Please file an issue."
-          );
-        }
-      }
-
       if (typeof type === "function") {
+        if (type.$$typeof === REACT_CLIENT_REFERENCE$1) {
+          // TODO: Create a convention for naming client references with debug info.
+          return null;
+        }
+
         return type.displayName || type.name || null;
       }
 
@@ -223,6 +221,15 @@ if (__DEV__) {
       }
 
       if (typeof type === "object") {
+        {
+          if (typeof type.tag === "number") {
+            error(
+              "Received an unexpected object in getComponentNameFromType(). " +
+                "This is likely a bug in React. Please file an issue."
+            );
+          }
+        }
+
         switch (type.$$typeof) {
           case REACT_CONTEXT_TYPE:
             var context = type;
@@ -1252,10 +1259,7 @@ if (__DEV__) {
         var info = getDeclarationErrorAddendum();
 
         if (!info) {
-          var parentName =
-            typeof parentType === "string"
-              ? parentType
-              : parentType.displayName || parentType.name;
+          var parentName = getComponentNameFromType(parentType);
 
           if (parentName) {
             info =

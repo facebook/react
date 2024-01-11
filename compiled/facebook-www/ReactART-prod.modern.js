@@ -111,6 +111,7 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
+Symbol.for("react.client.reference");
 function getNearestMountedFiber(fiber) {
   var node = fiber,
     nearestMounted = fiber;
@@ -9956,7 +9957,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-b4b662e4",
+    version: "18.3.0-www-modern-bab56d31",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1305 = {
@@ -9987,7 +9988,7 @@ var internals$jscomp$inline_1305 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-b4b662e4"
+  reconcilerVersion: "18.3.0-www-modern-bab56d31"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1306 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
