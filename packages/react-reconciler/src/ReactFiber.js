@@ -580,7 +580,7 @@ export function createFiberFromTypeAndProps(
         }
       // Fall through
       default: {
-        if (typeof type === 'object' && type !== null) {
+        if (type !== null && typeof type === 'object') {
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
               fiberTag = ContextProvider;
