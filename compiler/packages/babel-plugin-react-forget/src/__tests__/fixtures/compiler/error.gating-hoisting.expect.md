@@ -14,7 +14,7 @@ function Foo_withRef(props, ref) {
 ## Error
 
 ```
-[ReactForget] Invariant: Encountered Foo_withRef used before declaration which breaks Forget's gating codegen due to hoisting. Rewrite the reference to not use hoisting to fix this issue (3:3)
+[ReactForget] Invariant: Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting. Rewrite the reference to Foo_withRef to not rely on hoisting to fix this issue (3:3)
 ```
           
       

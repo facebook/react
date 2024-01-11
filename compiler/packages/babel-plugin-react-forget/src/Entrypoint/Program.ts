@@ -646,9 +646,8 @@ function checkFunctionReferencedBeforeDeclarationAtTopLevel(
       if (scope === null) {
         errors.pushErrorDetail(
           new CompilerErrorDetail({
-            reason: `Encountered ${fn.name} used before declaration which breaks Forget's gating codegen due to hoisting`,
-            description:
-              "Rewrite the reference to not use hoisting to fix this issue",
+            reason: `Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting`,
+            description: `Rewrite the reference to ${fn.name} to not rely on hoisting to fix this issue`,
             loc: fn.loc ?? null,
             suggestions: null,
             severity: ErrorSeverity.Invariant,

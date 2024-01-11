@@ -12,7 +12,7 @@ component Foo(ref: React.RefSetter<Controls>) {
 ## Error
 
 ```
-[ReactForget] Invariant: Encountered Foo_withRef used before declaration which breaks Forget's gating codegen due to hoisting. Rewrite the reference to not use hoisting to fix this issue (2:2)
+[ReactForget] Invariant: Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting. Rewrite the reference to Foo_withRef to not rely on hoisting to fix this issue (2:2)
 ```
           
       
