@@ -11,7 +11,6 @@ function Component(props) {
   const onClick = () => {
     setX(true);
     ref.current = true;
-    foo.current = true;
   };
   return <div onClick={onClick}>{React.cloneElement(props.children)}</div>;
 }
@@ -30,33 +29,39 @@ import { unstable_useMemoCache as useMemoCache } from "react";
 const FooContext = React.createContext({ current: null });
 
 function Component(props) {
-  const $ = useMemoCache(5);
-  const foo = React.useContext(FooContext);
+  const $ = useMemoCache(6);
+  React.useContext(FooContext);
   const ref = React.useRef();
   const [x, setX] = React.useState(false);
-  const onClick = () => {
-    setX(true);
-    ref.current = true;
-    foo.current = true;
-  };
   let t0;
-  if ($[0] !== props.children) {
-    t0 = React.cloneElement(props.children);
-    $[0] = props.children;
-    $[1] = t0;
+  if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
+    t0 = () => {
+      setX(true);
+      ref.current = true;
+    };
+    $[0] = t0;
   } else {
-    t0 = $[1];
+    t0 = $[0];
   }
+  const onClick = t0;
   let t1;
-  if ($[2] !== onClick || $[3] !== t0) {
-    t1 = <div onClick={onClick}>{t0}</div>;
-    $[2] = onClick;
-    $[3] = t0;
-    $[4] = t1;
+  if ($[1] !== props.children) {
+    t1 = React.cloneElement(props.children);
+    $[1] = props.children;
+    $[2] = t1;
   } else {
-    t1 = $[4];
+    t1 = $[2];
   }
-  return t1;
+  let t2;
+  if ($[3] !== onClick || $[4] !== t1) {
+    t2 = <div onClick={onClick}>{t1}</div>;
+    $[3] = onClick;
+    $[4] = t1;
+    $[5] = t2;
+  } else {
+    t2 = $[5];
+  }
+  return t2;
 }
 
 export const FIXTURE_ENTRYPOINT = {

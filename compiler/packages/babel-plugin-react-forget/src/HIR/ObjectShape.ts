@@ -6,7 +6,7 @@
  */
 
 import { CompilerError } from "../CompilerError";
-import { Effect, ValueKind } from "./HIR";
+import { Effect, ValueKind, ValueReason } from "./HIR";
 import {
   BuiltInType,
   FunctionType,
@@ -139,6 +139,13 @@ export type FunctionSignature = {
   restParam: Effect | null;
   returnType: BuiltInType | PolyType;
   returnValueKind: ValueKind;
+
+  /**
+   * For functions that return frozen/immutable values, the reason provides a more
+   * precise error message for any (invalid) mutations of the value.
+   */
+  returnValueReason?: ValueReason;
+
   calleeEffect: Effect;
   hookKind: HookKind | null;
   /*

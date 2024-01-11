@@ -977,6 +977,11 @@ export enum ValueReason {
    */
   KnownReturnSignature = "known-return-signature",
 
+  /**
+   * A value returned from `useContext`
+   */
+  Context = "context",
+
   Other = "other",
 }
 

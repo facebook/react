@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Effect, ValueKind } from "./HIR";
+import { Effect, ValueKind, ValueReason } from "./HIR";
 import {
   BUILTIN_SHAPES,
   BuiltInArrayId,
@@ -248,7 +248,8 @@ const BUILTIN_HOOKS: Array<[string, BuiltInType]> = [
       returnType: { kind: "Poly" },
       calleeEffect: Effect.Read,
       hookKind: "useContext",
-      returnValueKind: ValueKind.Mutable,
+      returnValueKind: ValueKind.Frozen,
+      returnValueReason: ValueReason.Context,
     }),
   ],
   [

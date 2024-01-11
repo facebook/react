@@ -7,7 +7,6 @@ function Component(props) {
   const onClick = () => {
     setX(true);
     ref.current = true;
-    foo.current = true;
   };
   return <div onClick={onClick}>{React.cloneElement(props.children)}</div>;
 }

@@ -20,27 +20,11 @@ function Component(props) {
 
 ```
 
-## Code
 
-```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
-function Component(props) {
-  const $ = useMemoCache(2);
-  const FooContext = useContext(Foo);
-
-  const onClick = () => {
-    FooContext.current = true;
-  };
-  let t0;
-  if ($[0] !== onClick) {
-    t0 = <div onClick={onClick} />;
-    $[0] = onClick;
-    $[1] = t0;
-  } else {
-    t0 = $[1];
-  }
-  return t0;
-}
+## Error
 
 ```
+[ReactForget] InvalidReact: Mutating a value returned from 'useContext()', which should not be mutated. (12:12)
+```
+          
       

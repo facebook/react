@@ -935,7 +935,10 @@ function inferBlock(
           signature !== null
             ? {
                 kind: signature.returnValueKind,
-                reason: new Set([ValueReason.KnownReturnSignature]),
+                reason: new Set([
+                  signature.returnValueReason ??
+                    ValueReason.KnownReturnSignature,
+                ]),
               }
             : { kind: ValueKind.Mutable, reason: new Set([ValueReason.Other]) };
         let hasCaptureArgument = false;
@@ -1496,6 +1499,8 @@ function getWriteErrorReason(abstractValue: AbstractValue): string {
     return "Writing to a variable defined outside a component or hook is not allowed. Consider using an effect.";
   } else if (abstractValue.reason.has(ValueReason.JsxCaptured)) {
     return "Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX.";
+  } else if (abstractValue.reason.has(ValueReason.Context)) {
+    return `Mutating a value returned from 'useContext()', which should not be mutated.`;
   } else if (abstractValue.reason.has(ValueReason.KnownReturnSignature)) {
     return "Mutating a value returned from a function that should not be mutated.";
   } else {
