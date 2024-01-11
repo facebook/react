@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<98d1b8b04c6fa3a6d1a3f5d4d992bfdb>>
+ * @generated SignedSource<<09dbf4f778ca917e96108791bdd4cd8e>>
  */
 
 "use strict";
@@ -59,9 +59,13 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
+var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function getComponentNameFromType(type) {
   if (null == type) return null;
-  if ("function" === typeof type) return type.displayName || type.name || null;
+  if ("function" === typeof type)
+    return type.$$typeof === REACT_CLIENT_REFERENCE
+      ? null
+      : type.displayName || type.name || null;
   if ("string" === typeof type) return type;
   switch (type) {
     case REACT_FRAGMENT_TYPE:
@@ -9117,7 +9121,7 @@ var devToolsConfig$jscomp$inline_1037 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-6639ed3b3-20240111",
+  version: "18.3.0-canary-0ac3ea471-20240111",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1230 = {
@@ -9148,7 +9152,7 @@ var internals$jscomp$inline_1230 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-6639ed3b3-20240111"
+  reconcilerVersion: "18.3.0-canary-0ac3ea471-20240111"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1231 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

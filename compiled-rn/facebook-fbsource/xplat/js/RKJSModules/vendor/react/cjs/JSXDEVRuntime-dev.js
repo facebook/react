@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8170be8fec46751a1d737fb773d9ff2c>>
+ * @generated SignedSource<<3b95e8aa7ce2e31fd615f920b4402e91>>
  */
 
 "use strict";
@@ -106,7 +106,7 @@ if (__DEV__) {
     var enableScopeAPI = false;
     var enableTransitionTracing = false;
 
-    var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference");
+    var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
     function isValidElementType(type) {
       if (typeof type === "string" || typeof type === "function") {
         return true;
@@ -138,7 +138,7 @@ if (__DEV__) {
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used
           // with.
-          type.$$typeof === REACT_CLIENT_REFERENCE$1 ||
+          type.$$typeof === REACT_CLIENT_REFERENCE$2 ||
           type.getModuleId !== undefined
         ) {
           return true;
@@ -163,7 +163,9 @@ if (__DEV__) {
 
     function getContextName(type) {
       return type.displayName || "Context";
-    } // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
+    }
+
+    var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference"); // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
 
     function getComponentNameFromType(type) {
       if (type == null) {
@@ -171,16 +173,12 @@ if (__DEV__) {
         return null;
       }
 
-      {
-        if (typeof type.tag === "number") {
-          error(
-            "Received an unexpected object in getComponentNameFromType(). " +
-              "This is likely a bug in React. Please file an issue."
-          );
-        }
-      }
-
       if (typeof type === "function") {
+        if (type.$$typeof === REACT_CLIENT_REFERENCE$1) {
+          // TODO: Create a convention for naming client references with debug info.
+          return null;
+        }
+
         return type.displayName || type.name || null;
       }
 
@@ -209,6 +207,15 @@ if (__DEV__) {
       }
 
       if (typeof type === "object") {
+        {
+          if (typeof type.tag === "number") {
+            error(
+              "Received an unexpected object in getComponentNameFromType(). " +
+                "This is likely a bug in React. Please file an issue."
+            );
+          }
+        }
+
         switch (type.$$typeof) {
           case REACT_CONTEXT_TYPE:
             var context = type;
@@ -917,10 +924,7 @@ if (__DEV__) {
         var info = getDeclarationErrorAddendum();
 
         if (!info) {
-          var parentName =
-            typeof parentType === "string"
-              ? parentType
-              : parentType.displayName || parentType.name;
+          var parentName = getComponentNameFromType(parentType);
 
           if (parentName) {
             info =

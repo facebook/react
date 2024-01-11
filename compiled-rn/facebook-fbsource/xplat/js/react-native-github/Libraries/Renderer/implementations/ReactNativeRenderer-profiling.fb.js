@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d8d5c9abf0e6899876388e15f62fa764>>
+ * @generated SignedSource<<52366b4580e0960513a2a83f552181c8>>
  */
 
 "use strict";
@@ -1196,9 +1196,13 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
+var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function getComponentNameFromType(type) {
   if (null == type) return null;
-  if ("function" === typeof type) return type.displayName || type.name || null;
+  if ("function" === typeof type)
+    return type.$$typeof === REACT_CLIENT_REFERENCE
+      ? null
+      : type.displayName || type.name || null;
   if ("string" === typeof type) return type;
   switch (type) {
     case REACT_FRAGMENT_TYPE:
@@ -10472,7 +10476,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1194 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-2e447814",
+    version: "18.3.0-canary-0210e876",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10528,7 +10532,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-2e447814"
+  reconcilerVersion: "18.3.0-canary-0210e876"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<30dfd0a48c1491cc7311d26c4bb6319c>>
+ * @generated SignedSource<<10e5144158c797ac98aa209565dacfa5>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-6639ed3b3-20240111";
+    var ReactVersion = "18.3.0-canary-0ac3ea471-20240111";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -585,7 +585,9 @@ if (__DEV__) {
 
     function getContextName(type) {
       return type.displayName || "Context";
-    } // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
+    }
+
+    var REACT_CLIENT_REFERENCE$3 = Symbol.for("react.client.reference"); // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
 
     function getComponentNameFromType(type) {
       if (type == null) {
@@ -593,16 +595,12 @@ if (__DEV__) {
         return null;
       }
 
-      {
-        if (typeof type.tag === "number") {
-          error(
-            "Received an unexpected object in getComponentNameFromType(). " +
-              "This is likely a bug in React. Please file an issue."
-          );
-        }
-      }
-
       if (typeof type === "function") {
+        if (type.$$typeof === REACT_CLIENT_REFERENCE$3) {
+          // TODO: Create a convention for naming client references with debug info.
+          return null;
+        }
+
         return type.displayName || type.name || null;
       }
 
@@ -631,6 +629,15 @@ if (__DEV__) {
       }
 
       if (typeof type === "object") {
+        {
+          if (typeof type.tag === "number") {
+            error(
+              "Received an unexpected object in getComponentNameFromType(). " +
+                "This is likely a bug in React. Please file an issue."
+            );
+          }
+        }
+
         switch (type.$$typeof) {
           case REACT_CONTEXT_TYPE:
             var context = type;
@@ -2378,10 +2385,7 @@ if (__DEV__) {
       var info = getDeclarationErrorAddendum$1();
 
       if (!info) {
-        var parentName =
-          typeof parentType === "string"
-            ? parentType
-            : parentType.displayName || parentType.name;
+        var parentName = getComponentNameFromType(parentType);
 
         if (parentName) {
           info =
@@ -3471,10 +3475,7 @@ if (__DEV__) {
         var info = getDeclarationErrorAddendum();
 
         if (!info) {
-          var parentName =
-            typeof parentType === "string"
-              ? parentType
-              : parentType.displayName || parentType.name;
+          var parentName = getComponentNameFromType(parentType);
 
           if (parentName) {
             info =

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<54456b8469c88ba73c0c7167b4b27e53>>
+ * @generated SignedSource<<8093e023e848964848b2e08a5762599f>>
  */
 
 "use strict";
@@ -5400,7 +5400,9 @@ to return true:wantsResponderID|                            |
 
     function getContextName$1(type) {
       return type.displayName || "Context";
-    } // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
+    }
+
+    var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"); // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
 
     function getComponentNameFromType(type) {
       if (type == null) {
@@ -5408,16 +5410,12 @@ to return true:wantsResponderID|                            |
         return null;
       }
 
-      {
-        if (typeof type.tag === "number") {
-          error(
-            "Received an unexpected object in getComponentNameFromType(). " +
-              "This is likely a bug in React. Please file an issue."
-          );
-        }
-      }
-
       if (typeof type === "function") {
+        if (type.$$typeof === REACT_CLIENT_REFERENCE) {
+          // TODO: Create a convention for naming client references with debug info.
+          return null;
+        }
+
         return type.displayName || type.name || null;
       }
 
@@ -5446,6 +5444,15 @@ to return true:wantsResponderID|                            |
       }
 
       if (typeof type === "object") {
+        {
+          if (typeof type.tag === "number") {
+            error(
+              "Received an unexpected object in getComponentNameFromType(). " +
+                "This is likely a bug in React. Please file an issue."
+            );
+          }
+        }
+
         switch (type.$$typeof) {
           case REACT_CONTEXT_TYPE:
             var context = type;
@@ -27822,7 +27829,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-2e719699";
+    var ReactVersion = "18.3.0-canary-247f0e0d";
 
     function createPortal$1(
       children,

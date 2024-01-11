@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7675e37d0e91749a042e16dc06ad0c35>>
+ * @generated SignedSource<<2607cd5e41323c146ac09ecbb5682ce5>>
  */
 
 "use strict";
@@ -1817,9 +1817,13 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
+var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function getComponentNameFromType(type) {
   if (null == type) return null;
-  if ("function" === typeof type) return type.displayName || type.name || null;
+  if ("function" === typeof type)
+    return type.$$typeof === REACT_CLIENT_REFERENCE
+      ? null
+      : type.displayName || type.name || null;
   if ("string" === typeof type) return type;
   switch (type) {
     case REACT_FRAGMENT_TYPE:
@@ -10250,7 +10254,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1131 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-23b711f1",
+    version: "18.3.0-canary-1b36a89c",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10306,7 +10310,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-23b711f1"
+  reconcilerVersion: "18.3.0-canary-1b36a89c"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(
