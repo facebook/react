@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8b9384a5c33886e7b65364a52f97f065>>
+ * @generated SignedSource<<54456b8469c88ba73c0c7167b4b27e53>>
  */
 
 "use strict";
@@ -27822,7 +27822,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-26f7930f";
+    var ReactVersion = "18.3.0-canary-2e719699";
 
     function createPortal$1(
       children,
@@ -28364,158 +28364,6 @@ to return true:wantsResponderID|                            |
       return instanceCache.get(tag) || null;
     }
 
-    /**
-     * In the future, we should cleanup callbacks by cancelling them instead of
-     * using this.
-     */
-    function mountSafeCallback_NOT_REALLY_SAFE(context, callback) {
-      return function () {
-        if (!callback) {
-          return undefined;
-        } // This protects against createClass() components.
-        // We don't know if there is code depending on it.
-        // We intentionally don't use isMounted() because even accessing
-        // isMounted property on a React ES6 class will trigger a warning.
-
-        if (typeof context.__isMounted === "boolean") {
-          if (!context.__isMounted) {
-            return undefined;
-          }
-        } // FIXME: there used to be other branches that protected
-        // against unmounted host components. But RN host components don't
-        // define isMounted() anymore, so those checks didn't do anything.
-        // They caused false positive warning noise so we removed them:
-        // https://github.com/facebook/react-native/issues/18868#issuecomment-413579095
-        // However, this means that the callback is NOT guaranteed to be safe
-        // for host components. The solution we should implement is to make
-        // UIManager.measure() and similar calls truly cancelable. Then we
-        // can change our own code calling them to cancel when something unmounts.
-
-        return callback.apply(context, arguments);
-      };
-    }
-    function warnForStyleProps(props, validAttributes) {
-      {
-        for (var key in validAttributes.style) {
-          if (!(validAttributes[key] || props[key] === undefined)) {
-            error(
-              "You are setting the style `{ %s" +
-                ": ... }` as a prop. You " +
-                "should nest it in a style object. " +
-                "E.g. `{ style: { %s" +
-                ": ... } }`",
-              key,
-              key
-            );
-          }
-        }
-      }
-    }
-
-    var ReactNativeFiberHostComponent = /*#__PURE__*/ (function () {
-      function ReactNativeFiberHostComponent(
-        tag,
-        viewConfig,
-        internalInstanceHandleDEV
-      ) {
-        this._children = void 0;
-        this._nativeTag = void 0;
-        this._internalFiberInstanceHandleDEV = void 0;
-        this.viewConfig = void 0;
-        this._nativeTag = tag;
-        this._children = [];
-        this.viewConfig = viewConfig;
-
-        {
-          this._internalFiberInstanceHandleDEV = internalInstanceHandleDEV;
-        }
-      }
-
-      var _proto = ReactNativeFiberHostComponent.prototype;
-
-      _proto.blur = function blur() {
-        ReactNativePrivateInterface.TextInputState.blurTextInput(this);
-      };
-
-      _proto.focus = function focus() {
-        ReactNativePrivateInterface.TextInputState.focusTextInput(this);
-      };
-
-      _proto.measure = function measure(callback) {
-        ReactNativePrivateInterface.UIManager.measure(
-          this._nativeTag,
-          mountSafeCallback_NOT_REALLY_SAFE(this, callback)
-        );
-      };
-
-      _proto.measureInWindow = function measureInWindow(callback) {
-        ReactNativePrivateInterface.UIManager.measureInWindow(
-          this._nativeTag,
-          mountSafeCallback_NOT_REALLY_SAFE(this, callback)
-        );
-      };
-
-      _proto.measureLayout = function measureLayout(
-        relativeToNativeNode,
-        onSuccess,
-        onFail
-        /* currently unused */
-      ) {
-        var relativeNode;
-
-        if (typeof relativeToNativeNode === "number") {
-          // Already a node handle
-          relativeNode = relativeToNativeNode;
-        } else {
-          var nativeNode = relativeToNativeNode;
-
-          if (nativeNode._nativeTag) {
-            relativeNode = nativeNode._nativeTag;
-          }
-        }
-
-        if (relativeNode == null) {
-          {
-            error(
-              "Warning: ref.measureLayout must be called with a node handle or a ref to a native component."
-            );
-          }
-
-          return;
-        }
-
-        ReactNativePrivateInterface.UIManager.measureLayout(
-          this._nativeTag,
-          relativeNode,
-          mountSafeCallback_NOT_REALLY_SAFE(this, onFail),
-          mountSafeCallback_NOT_REALLY_SAFE(this, onSuccess)
-        );
-      };
-
-      _proto.setNativeProps = function setNativeProps(nativeProps) {
-        {
-          warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
-        }
-
-        var updatePayload = create(
-          nativeProps,
-          this.viewConfig.validAttributes
-        ); // Avoid the overhead of bridge calls if there's no update.
-        // This is an expensive no-op for Android, and causes an unnecessary
-        // view invalidation for certain components (eg RCTTextInput) on iOS.
-
-        if (updatePayload != null) {
-          ReactNativePrivateInterface.UIManager.updateView(
-            this._nativeTag,
-            this.viewConfig.uiViewClassName,
-            updatePayload
-          );
-        }
-      };
-
-      return ReactNativeFiberHostComponent;
-    })();
-
     var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
     function findHostInstance_DEPRECATED(componentOrHandle) {
       {
@@ -28712,20 +28560,17 @@ to return true:wantsResponderID|                            |
       {
         // Paper
         if (
-          parentInstance instanceof ReactNativeFiberHostComponent ||
-          childInstance instanceof ReactNativeFiberHostComponent
+          // $FlowExpectedError[incompatible-type]
+          // $FlowExpectedError[prop-missing] Don't check via `instanceof ReactNativeFiberHostComponent`, so it won't be leaked to Fabric.
+          parentInstance._internalFiberInstanceHandleDEV && // $FlowExpectedError[incompatible-type]
+          // $FlowExpectedError[prop-missing] Don't check via `instanceof ReactNativeFiberHostComponent`, so it won't be leaked to Fabric.
+          childInstance._internalFiberInstanceHandleDEV
         ) {
-          if (
-            parentInstance instanceof ReactNativeFiberHostComponent &&
-            childInstance instanceof ReactNativeFiberHostComponent
-          ) {
-            return doesFiberContain(
-              parentInstance._internalFiberInstanceHandleDEV,
-              childInstance._internalFiberInstanceHandleDEV
-            );
-          } // Means that one instance is from Fabric and other is from Paper.
-
-          return false;
+          return doesFiberContain(
+            // $FlowExpectedError[incompatible-call]
+            parentInstance._internalFiberInstanceHandleDEV, // $FlowExpectedError[incompatible-call]
+            childInstance._internalFiberInstanceHandleDEV
+          );
         }
 
         var parentInternalInstanceHandle = // $FlowExpectedError[incompatible-call] Type for parentInstance should have been PublicInstance from ReactFiberConfigFabric.
@@ -28745,7 +28590,7 @@ to return true:wantsResponderID|                            |
             parentInternalInstanceHandle,
             childInternalInstanceHandle
           );
-        }
+        } // Means that one instance is from Fabric and other is from Paper.
 
         return false;
       }
