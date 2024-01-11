@@ -1009,6 +1009,22 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient.read(transport);
   });
 
+  it('should warn in DEV a child is missing keys', () => {
+    function ParentClient({children}) {
+      return children;
+    }
+    const Parent = clientReference(ParentClient);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <Parent>{Array(6).fill(<div>no key</div>)}</Parent>,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://reactjs.org/link/warning-keys for more information.',
+    );
+  });
+
   it('should error if a class instance is passed to a host component', () => {
     class Foo {
       method() {}
