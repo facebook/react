@@ -28,6 +28,7 @@ import {push, pop, peek} from '../SchedulerMinHeap';
 
 // TODO: Use symbols?
 import {
+  NoPriority,
   ImmediatePriority,
   UserBlockingPriority,
   NormalPriority,
@@ -88,8 +89,8 @@ var taskIdCounter = 1;
 // Pausing the scheduler is useful for debugging.
 var isSchedulerPaused = false;
 
-var currentTask = null;
-var currentPriorityLevel = NormalPriority;
+let currentTask: Task | null = null;
+let currentPriorityLevel: PriorityLevel = NoPriority;
 
 // This is set while performing work, to prevent re-entrance.
 var isPerformingWork = false;
