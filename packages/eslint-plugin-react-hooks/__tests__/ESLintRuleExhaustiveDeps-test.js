@@ -8185,7 +8185,7 @@ describe('react-hooks', () => {
     ecmaFeatures: {
       jsx: true,
     },
-    ecmaVersion: 6,
+    ecmaVersion: 14,
     sourceType: 'module',
   };
 
