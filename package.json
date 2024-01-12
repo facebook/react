@@ -76,7 +76,7 @@
     "jest-environment-jsdom": "^29.4.2",
     "jest-snapshot-serializer-raw": "^1.2.0",
     "minimatch": "^3.0.4",
-    "minimist": "^1.2.3",
+    "minimist": "^1.2.6",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "prettier": "3.0.3",
