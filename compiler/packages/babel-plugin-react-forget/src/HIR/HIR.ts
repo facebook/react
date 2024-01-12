@@ -982,6 +982,11 @@ export enum ValueReason {
    */
   Context = "context",
 
+  /**
+   * Props of a component or arguments of a hook.
+   */
+  ReactiveFunctionArgument = "reactive-function-argument",
+
   Other = "other",
 }
 
