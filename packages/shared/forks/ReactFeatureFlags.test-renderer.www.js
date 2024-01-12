@@ -12,6 +12,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer.www';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
+export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -42,13 +43,18 @@ export const disableModulePatternComponents = true;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = false;
-export const enableUseMemoCacheHook = false;
+export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = false;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
+
+export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
 
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
@@ -57,7 +63,7 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = false;
+export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = false;
 
@@ -67,7 +73,6 @@ export const enableServerContext = false;
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;
-export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;

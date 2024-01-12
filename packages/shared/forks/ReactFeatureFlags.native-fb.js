@@ -18,15 +18,18 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
 export const {
-  enableUseRefAccessWarning,
-  enableDeferRootSchedulingToMicrotask,
   alwaysThrottleRetries,
-  useMicrotasksForSchedulingInFabric,
+  enableDeferRootSchedulingToMicrotask,
+  enableUnifiedSyncLane,
+  enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes,
+  useMicrotasksForSchedulingInFabric,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
+export const disableModulePatternComponents = true;
 export const enableDebugTracing = false;
+export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = __PROFILE__;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
@@ -54,7 +57,6 @@ export const enableSuspenseCallback = false;
 export const disableLegacyContext = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
-export const disableModulePatternComponents = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 export const enableCPUSuspense = true;
@@ -66,13 +68,17 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const enableGetInspectorDataForInstanceInProduction = true;
 
+export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
+
 export const createRootStrictEffectsByDefault = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = true;
 export const forceConcurrentByDefaultForTesting = false;
-export const enableUnifiedSyncLane = false;
 export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = false;
 
@@ -82,7 +88,6 @@ export const enableServerContext = false;
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;
-export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;

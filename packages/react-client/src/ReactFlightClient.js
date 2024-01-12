@@ -572,11 +572,11 @@ function createServerReferenceProxy<A: Iterable<any>, T>(
     }
     // Since this is a fake Promise whose .then doesn't chain, we have to wrap it.
     // TODO: Remove the wrapper once that's fixed.
-    return ((Promise.resolve(p): any): Promise<Array<any>>).then(function (
-      bound,
-    ) {
-      return callServer(metaData.id, bound.concat(args));
-    });
+    return ((Promise.resolve(p): any): Promise<Array<any>>).then(
+      function (bound) {
+        return callServer(metaData.id, bound.concat(args));
+      },
+    );
   };
   registerServerReference(proxy, metaData);
   return proxy;

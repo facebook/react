@@ -213,7 +213,7 @@ describe(`onRender`, () => {
           <Yield value="last" />
         </React.Profiler>,
         {
-          unstable_isConcurrent: true,
+          isConcurrent: true,
         },
       );
     });
@@ -752,7 +752,7 @@ describe(`onRender`, () => {
             <Yield renderTime={2} />
             <Yield renderTime={3} />
           </React.Profiler>,
-          {unstable_isConcurrent: true},
+          {isConcurrent: true},
         );
       });
 
@@ -793,7 +793,7 @@ describe(`onRender`, () => {
               <Yield renderTime={17} />
             </React.Profiler>
           </React.Profiler>,
-          {unstable_isConcurrent: true},
+          {isConcurrent: true},
         );
       });
 
@@ -844,7 +844,7 @@ describe(`onRender`, () => {
             <Yield renderTime={10} />
             <Yield renderTime={20} />
           </React.Profiler>,
-          {unstable_isConcurrent: true},
+          {isConcurrent: true},
         );
       });
 
@@ -897,7 +897,7 @@ describe(`onRender`, () => {
           <Yield renderTime={6} />
           <Yield renderTime={15} />
         </React.Profiler>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
 
       // Render everything initially.
@@ -1002,7 +1002,7 @@ describe(`onRender`, () => {
           <FirstComponent />
           <SecondComponent />
         </React.Profiler>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       );
 
       // Render everything initially.

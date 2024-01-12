@@ -31,15 +31,12 @@ export type ReactProvider<T> = {
   props: {
     value: T,
     children?: ReactNodeList,
-    ...
   },
-  ...
 };
 
 export type ReactProviderType<T> = {
   $$typeof: symbol | number,
   _context: ReactContext<T>,
-  ...
 };
 
 export type ReactConsumer<T> = {
@@ -49,9 +46,7 @@ export type ReactConsumer<T> = {
   ref: null,
   props: {
     children: (value: T) => ReactNodeList,
-    ...
   },
-  ...
 };
 
 export type ReactContext<T> = {
@@ -71,7 +66,6 @@ export type ReactContext<T> = {
   // only used by ServerContext
   _defaultValue: T,
   _globalName: string,
-  ...
 };
 
 export type ServerContextJSONValue =
@@ -91,7 +85,6 @@ export type ReactPortal = {
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
-  ...
 };
 
 export type RefObject = {
@@ -104,7 +97,7 @@ export type ReactScope = {
 
 export type ReactScopeQuery = (
   type: string,
-  props: {[string]: mixed, ...},
+  props: {[string]: mixed},
   instance: mixed,
 ) => boolean;
 
@@ -184,3 +177,13 @@ export type ReactFormState<S, ReferenceId> = [
   ReferenceId /* Server Reference ID */,
   number /* number of bound arguments */,
 ];
+
+export type Awaited<T> = T extends null | void
+  ? T // special case for `null | undefined` when not in `--strictNullChecks` mode
+  : T extends Object // `await` only unwraps object types with a callable then. Non-object types are not unwrapped.
+  ? T extends {then(onfulfilled: infer F): any} // thenable, extracts the first argument to `then()`
+    ? F extends (value: infer V) => any // if the argument to `then` is callable, extracts the argument
+      ? Awaited<V> // recursively unwrap the value
+      : empty // the argument to `then` was not callable.
+    : T // argument was not an object
+  : T; // non-thenable

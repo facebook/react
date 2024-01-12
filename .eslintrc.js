@@ -327,6 +327,7 @@ module.exports = {
         'packages/react-server-dom-esm/**/*.js',
         'packages/react-server-dom-webpack/**/*.js',
         'packages/react-server-dom-turbopack/**/*.js',
+        'packages/react-server-dom-fb/**/*.js',
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',
         'packages/react-devtools-extensions/**/*.js',
@@ -531,6 +532,7 @@ module.exports = {
     trustedTypes: 'readonly',
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
     globalThis: 'readonly',
   },
 };

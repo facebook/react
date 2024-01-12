@@ -35,10 +35,7 @@ import {
   NoFlags,
   DidCapture,
 } from './ReactFiberFlags';
-import {
-  enableHostSingletons,
-  enableClientRenderFallbackOnTextMismatch,
-} from 'shared/ReactFeatureFlags';
+import {enableClientRenderFallbackOnTextMismatch} from 'shared/ReactFeatureFlags';
 
 import {
   createFiberFromHostInstanceForDeletion,
@@ -426,7 +423,7 @@ function throwOnHydrationMismatch(fiber: Fiber) {
 }
 
 function claimHydratableSingleton(fiber: Fiber): void {
-  if (enableHostSingletons && supportsSingletons) {
+  if (supportsSingletons) {
     if (!isHydrating) {
       return;
     }
@@ -801,7 +798,7 @@ function popHydrationState(fiber: Fiber): boolean {
   }
 
   let shouldClear = false;
-  if (enableHostSingletons && supportsSingletons) {
+  if (supportsSingletons) {
     // With float we never clear the Root, or Singleton instances. We also do not clear Instances
     // that have singleton text content
     if (

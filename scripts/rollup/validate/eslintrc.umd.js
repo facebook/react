@@ -59,6 +59,7 @@ module.exports = {
 
     // Temp
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
 
     // Flight Webpack
     __webpack_chunk_load__: 'readonly',

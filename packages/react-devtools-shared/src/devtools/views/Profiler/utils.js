@@ -8,7 +8,7 @@
  */
 
 import {PROFILER_EXPORT_VERSION} from 'react-devtools-shared/src/constants';
-import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
+import {backendToFrontendSerializedElementMapper} from 'react-devtools-shared/src/utils';
 
 import type {ProfilingDataBackend} from 'react-devtools-shared/src/backend/types';
 import type {
@@ -106,20 +106,9 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
             timestamp: commitDataBackend.timestamp,
             updaters:
               commitDataBackend.updaters !== null
-                ? commitDataBackend.updaters.map(serializedElement => {
-                    const [
-                      serializedElementDisplayName,
-                      serializedElementHocDisplayNames,
-                    ] = separateDisplayNameAndHOCs(
-                      serializedElement.displayName,
-                      serializedElement.type,
-                    );
-                    return {
-                      ...serializedElement,
-                      displayName: serializedElementDisplayName,
-                      hocDisplayNames: serializedElementHocDisplayNames,
-                    };
-                  })
+                ? commitDataBackend.updaters.map(
+                    backendToFrontendSerializedElementMapper,
+                  )
                 : null,
           }),
         );
