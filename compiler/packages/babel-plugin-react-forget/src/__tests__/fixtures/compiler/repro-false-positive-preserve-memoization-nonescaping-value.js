@@ -1,28 +1,25 @@
-
-## Input
-
-```javascript
 // @validatePreserveExistingMemoizationGuarantees @enableAssumeHooksFollowRulesOfReact @enableTransitivelyFreezeFunctionExpressions
+import { useCallback } from "react";
+
 function Component({ entity, children }) {
   // showMessage doesn't escape so we don't memoize it.
   // However, validatePreserveExistingMemoizationGuarantees only sees that the scope
   // doesn't exist, and thinks the memoization was missed instead of being intentionally dropped.
   const showMessage = useCallback(() => entity != null);
 
-  if (!showMessage) {
+  if (!showMessage()) {
     return children;
   }
 
-  return <Message>{children}</Message>;
+  return <div>{children}</div>;
 }
 
-```
-
-
-## Error
-
-```
-[ReactForget] InvalidReact: This value was manually memoized, but cannot be memoized under Forget because it may be mutated after it is memoized (6:6)
-```
-          
-      
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [
+    {
+      entity: { name: "Sathya" },
+      children: [<div key="gsathya">Hi Sathya!</div>],
+    },
+  ],
+};

@@ -871,6 +871,8 @@ class CollectDependenciesVisitor extends ReactiveFunctionVisitor<State> {
 class PruneScopesTransform extends ReactiveFunctionTransform<
   Set<IdentifierId>
 > {
+  prunedScopes: Set<ScopeId> = new Set();
+
   override transformScope(
     scopeBlock: ReactiveScopeBlock,
     state: Set<IdentifierId>
@@ -900,7 +902,32 @@ class PruneScopesTransform extends ReactiveFunctionTransform<
     if (hasMemoizedOutput) {
       return { kind: "keep" };
     } else {
+      this.prunedScopes.add(scopeBlock.scope.id);
       return { kind: "replace-many", value: scopeBlock.instructions };
     }
+  }
+
+  override transformInstruction(
+    instruction: ReactiveInstruction,
+    state: Set<IdentifierId>
+  ): Transformed<ReactiveStatement> {
+    this.traverseInstruction(instruction, state);
+
+    /**
+     * If we pruned the scope for a non-escaping value, we know it doesn't
+     * need to be memoized. Remove associated `Memoize` instructions so that
+     * we don't report false positives on "missing" memoization of these values.
+     */
+    if (instruction.value.kind === "Memoize") {
+      const identifier = instruction.value.value.identifier;
+      if (
+        identifier.scope !== null &&
+        this.prunedScopes.has(identifier.scope.id)
+      ) {
+        return { kind: "remove" };
+      }
+    }
+
+    return { kind: "keep" };
   }
 }
