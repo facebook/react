@@ -26,7 +26,7 @@
     "cross-spawn": "^5.0.1",
     "electron": "^23.1.2",
     "ip": "^1.1.4",
-    "minimist": "^1.2.3",
+    "minimist": "^1.2.6",
     "react-devtools-core": "5.0.0",
     "update-notifier": "^2.1.0"
   }
