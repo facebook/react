@@ -18,9 +18,6 @@
     "sprout:build": "yarn workspace sprout run build",
     "sprout:ci": "yarn sprout:build && yarn sprout",
     "ts:analyze-trace": "scripts/ts-analyze-trace.sh",
-    "test262": "yarn run --silent test262-harness --preprocessor=scripts/test262-preprocessor.js",
-    "test262:all": "yarn run --silent test262 '../../test262/test/**/*.js'",
-    "test262:ci": "scripts/test262.sh",
     "prettier": "node ./scripts/prettier.js write-changed",
     "prettier:all": "node ./scripts/prettier.js write",
     "prettier:ci": "prettier --check .",
@@ -66,7 +63,6 @@
     "react-dom": "^0.0.0-experimental-493f72b0a-20230727",
     "rimraf": "^3.0.2",
     "rollup-plugin-license": "^3.2.0",
-    "test262-harness": "^8.0.0",
     "ts-jest": "^29.1.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.1.0"

@@ -22,7 +22,6 @@ const files = glob.sync("**/*.{js,ts,tsx,jsx}", {
   ignore: [
     "**/dist/**",
     "**/node_modules/**",
-    "test262/**",
     "react/**",
     "forget-feedback/**",
     "packages/js-fuzzer/**",

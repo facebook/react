@@ -52,9 +52,6 @@ const SKIPPED_DIRECTORIES = [
     'poppler',
     'sqlite',
 
-    // Causes lots of failures.
-    'test262',
-
     // Unavailable debug.Debug.
     'v8/test/debugger',
     'v8/test/inspector',

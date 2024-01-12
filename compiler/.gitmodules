@@ -1,4 +1,0 @@
-[submodule "test262"]
-	path = test262
-	url = https://github.com/tc39/test262
-	shallow = true

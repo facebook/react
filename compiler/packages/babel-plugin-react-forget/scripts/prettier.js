@@ -34,7 +34,6 @@ const files = glob
       "packages/demo-todolist-next/**",
       "packages/demo-todolist-playground/**",
       "packages/eslint-browser/**",
-      "test262/**",
       "**/__tests__/fixtures/**/*.flow.js",
     ],
   })
