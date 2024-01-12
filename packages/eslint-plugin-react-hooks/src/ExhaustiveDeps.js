@@ -855,7 +855,9 @@ export default {
           return true;
         }
         const declaredDepKeys = declaredDependencies.map(dep => dep.key);
-        return declaredDepKeys.join(',') === declaredDepKeys.toSorted().join(',');
+        return (
+          declaredDepKeys.join(',') === declaredDepKeys.toSorted().join(',')
+        );
       }
       if (areDeclaredDepsAlphabetized()) {
         suggestedDeps.sort();
