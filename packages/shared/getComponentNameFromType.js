@@ -52,21 +52,19 @@ function getContextName(type: ReactContext<any>) {
   return type.displayName || 'Context';
 }
 
+const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
+
 // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
 export default function getComponentNameFromType(type: mixed): string | null {
   if (type == null) {
     // Host root, text node or just invalid type.
     return null;
   }
-  if (__DEV__) {
-    if (typeof (type: any).tag === 'number') {
-      console.error(
-        'Received an unexpected object in getComponentNameFromType(). ' +
-          'This is likely a bug in React. Please file an issue.',
-      );
-    }
-  }
   if (typeof type === 'function') {
+    if ((type: any).$$typeof === REACT_CLIENT_REFERENCE) {
+      // TODO: Create a convention for naming client references with debug info.
+      return null;
+    }
     return (type: any).displayName || type.name || null;
   }
   if (typeof type === 'string') {
@@ -96,6 +94,14 @@ export default function getComponentNameFromType(type: mixed): string | null {
       }
   }
   if (typeof type === 'object') {
+    if (__DEV__) {
+      if (typeof (type: any).tag === 'number') {
+        console.error(
+          'Received an unexpected object in getComponentNameFromType(). ' +
+            'This is likely a bug in React. Please file an issue.',
+        );
+      }
+    }
     switch (type.$$typeof) {
       case REACT_CONTEXT_TYPE:
         const context: ReactContext<any> = (type: any);

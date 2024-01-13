@@ -90,6 +90,7 @@ import {
   ShouldCapture,
   ForceClientRender,
   Passive,
+  DidDefer,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -257,6 +258,7 @@ import {
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
+  peekDeferredLane,
 } from './ReactFiberWorkLoop';
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
@@ -2228,9 +2230,22 @@ function shouldRemainOnFallback(
   );
 }
 
-function getRemainingWorkInPrimaryTree(current: Fiber, renderLanes: Lanes) {
-  // TODO: Should not remove render lanes that were pinged during this render
-  return removeLanes(current.childLanes, renderLanes);
+function getRemainingWorkInPrimaryTree(
+  current: Fiber | null,
+  primaryTreeDidDefer: boolean,
+  renderLanes: Lanes,
+) {
+  let remainingLanes =
+    current !== null ? removeLanes(current.childLanes, renderLanes) : NoLanes;
+  if (primaryTreeDidDefer) {
+    // A useDeferredValue hook spawned a deferred task inside the primary tree.
+    // Ensure that we retry this component at the deferred priority.
+    // TODO: We could make this a per-subtree value instead of a global one.
+    // Would need to track it on the context stack somehow, similar to what
+    // we'd have to do for resumable contexts.
+    remainingLanes = mergeLanes(remainingLanes, peekDeferredLane());
+  }
+  return remainingLanes;
 }
 
 function updateSuspenseComponent(
@@ -2258,6 +2273,11 @@ function updateSuspenseComponent(
     showFallback = true;
     workInProgress.flags &= ~DidCapture;
   }
+
+  // Check if the primary children spawned a deferred task (useDeferredValue)
+  // during the first pass.
+  const didPrimaryChildrenDefer = (workInProgress.flags & DidDefer) !== NoFlags;
+  workInProgress.flags &= ~DidDefer;
 
   // OK, the next part is confusing. We're about to reconcile the Suspense
   // boundary's children. This involves some custom reconciliation logic. Two
@@ -2329,6 +2349,11 @@ function updateSuspenseComponent(
       const primaryChildFragment: Fiber = (workInProgress.child: any);
       primaryChildFragment.memoizedState =
         mountSuspenseOffscreenState(renderLanes);
+      primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+        current,
+        didPrimaryChildrenDefer,
+        renderLanes,
+      );
       workInProgress.memoizedState = SUSPENDED_MARKER;
       if (enableTransitionTracing) {
         const currentTransitions = getPendingTransitions();
@@ -2368,6 +2393,11 @@ function updateSuspenseComponent(
       const primaryChildFragment: Fiber = (workInProgress.child: any);
       primaryChildFragment.memoizedState =
         mountSuspenseOffscreenState(renderLanes);
+      primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+        current,
+        didPrimaryChildrenDefer,
+        renderLanes,
+      );
       workInProgress.memoizedState = SUSPENDED_MARKER;
 
       // TODO: Transition Tracing is not yet implemented for CPU Suspense.
@@ -2402,6 +2432,7 @@ function updateSuspenseComponent(
           current,
           workInProgress,
           didSuspend,
+          didPrimaryChildrenDefer,
           nextProps,
           dehydrated,
           prevState,
@@ -2464,6 +2495,7 @@ function updateSuspenseComponent(
       }
       primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
         current,
+        didPrimaryChildrenDefer,
         renderLanes,
       );
       workInProgress.memoizedState = SUSPENDED_MARKER;
@@ -2834,6 +2866,7 @@ function updateDehydratedSuspenseComponent(
   current: Fiber,
   workInProgress: Fiber,
   didSuspend: boolean,
+  didPrimaryChildrenDefer: boolean,
   nextProps: any,
   suspenseInstance: SuspenseInstance,
   suspenseState: SuspenseState,
@@ -3063,6 +3096,11 @@ function updateDehydratedSuspenseComponent(
       const primaryChildFragment: Fiber = (workInProgress.child: any);
       primaryChildFragment.memoizedState =
         mountSuspenseOffscreenState(renderLanes);
+      primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+        current,
+        didPrimaryChildrenDefer,
+        renderLanes,
+      );
       workInProgress.memoizedState = SUSPENDED_MARKER;
       return fallbackChildFragment;
     }
