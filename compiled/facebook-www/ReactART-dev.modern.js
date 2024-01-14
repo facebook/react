@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-e805922c";
+    var ReactVersion = "18.3.0-www-modern-dc8082dd";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -8801,10 +8801,19 @@ if (__DEV__) {
         queue.pending = null;
       }
 
-      if (baseQueue !== null) {
+      var baseState = hook.baseState;
+
+      if (baseQueue === null) {
+        // If there are no pending updates, then the memoized state should be the
+        // same as the base state. Currently these only diverge in the case of
+        // useOptimistic, because useOptimistic accepts a new baseState on
+        // every render.
+        hook.memoizedState = baseState; // We don't need to call markWorkInProgressReceivedUpdate because
+        // baseState is derived from other reactive values.
+      } else {
         // We have a queue to process.
         var first = baseQueue.next;
-        var newState = hook.baseState;
+        var newState = baseState;
         var newBaseState = null;
         var newBaseQueueFirst = null;
         var newBaseQueueLast = null;

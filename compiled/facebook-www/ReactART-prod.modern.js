@@ -2667,9 +2667,10 @@ function updateReducerImpl(hook, current, reducer) {
     current.baseQueue = baseQueue = pendingQueue;
     queue.pending = null;
   }
-  if (null !== baseQueue) {
+  pendingQueue = hook.baseState;
+  if (null === baseQueue) hook.memoizedState = pendingQueue;
+  else {
     current = baseQueue.next;
-    pendingQueue = hook.baseState;
     var newBaseQueueFirst = (baseFirst = null),
       newBaseQueueLast = null,
       update = current;
@@ -9957,7 +9958,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-bab56d31",
+    version: "18.3.0-www-modern-31c1a5e7",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1305 = {
@@ -9988,7 +9989,7 @@ var internals$jscomp$inline_1305 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-bab56d31"
+  reconcilerVersion: "18.3.0-www-modern-31c1a5e7"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1306 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

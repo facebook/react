@@ -3686,9 +3686,10 @@ function updateReducerImpl(hook, current, reducer) {
     current.baseQueue = baseQueue = pendingQueue;
     queue.pending = null;
   }
-  if (null !== baseQueue) {
+  pendingQueue = hook.baseState;
+  if (null === baseQueue) hook.memoizedState = pendingQueue;
+  else {
     current = baseQueue.next;
-    pendingQueue = hook.baseState;
     var newBaseQueueFirst = (baseFirst = null),
       newBaseQueueLast = null,
       update = current;
@@ -16924,7 +16925,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1828 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-23db00d6",
+  version: "18.3.0-www-classic-6f4b3c51",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2179 = {
@@ -16954,7 +16955,7 @@ var internals$jscomp$inline_2179 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-23db00d6"
+  reconcilerVersion: "18.3.0-www-classic-6f4b3c51"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2180 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17442,4 +17443,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-23db00d6";
+exports.version = "18.3.0-www-classic-6f4b3c51";

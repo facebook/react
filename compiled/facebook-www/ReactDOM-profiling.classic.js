@@ -3740,9 +3740,10 @@ function updateReducerImpl(hook, current, reducer) {
     current.baseQueue = baseQueue = pendingQueue;
     queue.pending = null;
   }
-  if (null !== baseQueue) {
+  pendingQueue = hook.baseState;
+  if (null === baseQueue) hook.memoizedState = pendingQueue;
+  else {
     current = baseQueue.next;
-    pendingQueue = hook.baseState;
     var newBaseQueueFirst = (baseFirst = null),
       newBaseQueueLast = null,
       update = current;
@@ -17364,7 +17365,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1884 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-f1e06a21",
+  version: "18.3.0-www-classic-3a859445",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17408,7 +17409,7 @@ var devToolsConfig$jscomp$inline_1884 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-f1e06a21"
+  reconcilerVersion: "18.3.0-www-classic-3a859445"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17732,7 +17733,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-f1e06a21";
+exports.version = "18.3.0-www-classic-3a859445";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
