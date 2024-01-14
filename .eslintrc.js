@@ -504,7 +504,6 @@ module.exports = {
     React$Node: 'readonly',
     React$Portal: 'readonly',
     React$Ref: 'readonly',
-    React$StatelessFunctionalComponent: 'readonly',
     ReadableStreamController: 'readonly',
     RequestInfo: 'readonly',
     RequestOptions: 'readonly',
@@ -532,6 +531,7 @@ module.exports = {
     trustedTypes: 'readonly',
     IS_REACT_ACT_ENVIRONMENT: 'readonly',
     AsyncLocalStorage: 'readonly',
+    async_hooks: 'readonly',
     globalThis: 'readonly',
   },
 };

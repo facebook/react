@@ -819,6 +819,52 @@ describe('ReactAsyncActions', () => {
   });
 
   // @gate enableAsyncActions
+  test(
+    'regression: when there are no pending transitions, useOptimistic should ' +
+      'always return the passthrough value',
+    async () => {
+      let setCanonicalState;
+      function App() {
+        const [canonicalState, _setCanonicalState] = useState(0);
+        const [optimisticState] = useOptimistic(canonicalState);
+        setCanonicalState = _setCanonicalState;
+
+        return (
+          <>
+            <div>
+              <Text text={'Canonical: ' + canonicalState} />
+            </div>
+            <div>
+              <Text text={'Optimistic: ' + optimisticState} />
+            </div>
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() => root.render(<App />));
+      assertLog(['Canonical: 0', 'Optimistic: 0']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <div>Canonical: 0</div>
+          <div>Optimistic: 0</div>
+        </>,
+      );
+
+      // Update the canonical state. The optimistic state should update, too,
+      // even though there was no transition, and no call to setOptimisticState.
+      await act(() => setCanonicalState(1));
+      assertLog(['Canonical: 1', 'Optimistic: 1']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <div>Canonical: 1</div>
+          <div>Optimistic: 1</div>
+        </>,
+      );
+    },
+  );
+
+  // @gate enableAsyncActions
   test('regression: useOptimistic during setState-in-render', async () => {
     // This is a regression test for a very specific case where useOptimistic is
     // the first hook in the component, it has a pending update, and a later

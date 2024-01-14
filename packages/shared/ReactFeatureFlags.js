@@ -130,6 +130,9 @@ export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
  * Enables an expiration time for retry lanes to avoid starvation.
  */
 export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -225,6 +228,8 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 // stuff. Intended to enable React core members to more easily debug scheduling
 // issues in DEV builds.
 export const enableDebugTracing = false;
+
+export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;

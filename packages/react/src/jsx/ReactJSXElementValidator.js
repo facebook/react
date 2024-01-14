@@ -108,10 +108,7 @@ function getCurrentComponentErrorInfo(parentType) {
     let info = getDeclarationErrorAddendum();
 
     if (!info) {
-      const parentName =
-        typeof parentType === 'string'
-          ? parentType
-          : parentType.displayName || parentType.name;
+      const parentName = getComponentNameFromType(parentType);
       if (parentName) {
         info = `\n\nCheck the top-level render call using <${parentName}>.`;
       }

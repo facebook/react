@@ -590,6 +590,29 @@ describe('ReactFlightDOMBrowser', () => {
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
+  it('should warn in DEV a child is missing keys', async () => {
+    function ParentClient({children}) {
+      return children;
+    }
+    const Parent = clientExports(ParentClient);
+    const ParentModule = clientExports({Parent: ParentClient});
+    await expect(async () => {
+      const stream = ReactServerDOMServer.renderToReadableStream(
+        <>
+          <Parent>{Array(6).fill(<div>no key</div>)}</Parent>
+          <ParentModule.Parent>
+            {Array(6).fill(<div>no key</div>)}
+          </ParentModule.Parent>
+        </>,
+        webpackMap,
+      );
+      await ReactServerDOMClient.createFromReadableStream(stream);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://reactjs.org/link/warning-keys for more information.',
+    );
+  });
+
   it('basic use(promise)', async () => {
     function Server() {
       return (

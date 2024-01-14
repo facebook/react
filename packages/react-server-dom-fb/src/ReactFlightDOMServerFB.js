@@ -13,7 +13,8 @@ import type {
   Chunk,
   PrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
-import type {ClientManifest} from './ReactFlightReferencesFB';
+
+import {setCheckIsClientReference} from './ReactFlightReferencesFB';
 
 import {
   createRequest,
@@ -28,6 +29,7 @@ export {
   registerServerReference,
   getRequestedClientReferencesKeys,
   clearRequestedClientReferencesKeysSet,
+  setCheckIsClientReference,
 } from './ReactFlightReferencesFB';
 
 type Options = {
@@ -37,7 +39,6 @@ type Options = {
 function renderToDestination(
   destination: Destination,
   model: ReactClientValue,
-  bundlerConfig: ClientManifest,
   options?: Options,
 ): void {
   if (!configured) {
@@ -47,7 +48,7 @@ function renderToDestination(
   }
   const request = createRequest(
     model,
-    bundlerConfig,
+    null,
     options ? options.onError : undefined,
   );
   startWork(request);
@@ -56,12 +57,14 @@ function renderToDestination(
 
 type Config = {
   byteLength: (chunk: Chunk | PrecomputedChunk) => number,
+  isClientReference: (reference: mixed) => boolean,
 };
 
 let configured = false;
 
 function setConfig(config: Config): void {
   setByteLengthOfChunkImplementation(config.byteLength);
+  setCheckIsClientReference(config.isClientReference);
   configured = true;
 }
 

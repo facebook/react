@@ -373,18 +373,6 @@ jobs:
             yarn predev
             yarn test --maxWorkers=2
 
-  test_fuzz:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - setup_node_modules
-      - run:
-          name: Run fuzz tests
-          command: |
-            FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
-            FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci
-
   publish_prerelease:
     parameters:
       commit_sha:
@@ -528,19 +516,6 @@ workflows:
       - run_devtools_e2e_tests:
           requires:
             - build_devtools_and_process_artifacts
-
-  fuzz_tests:
-    unless: << pipeline.parameters.prerelease_commit_sha >>
-    triggers:
-      - schedule:
-          # Fuzz tests run hourly
-          cron: "0 * * * *"
-          filters:
-            branches:
-              only:
-                - main
-    jobs:
-      - test_fuzz
 
   devtools_regression_tests:
     unless: << pipeline.parameters.prerelease_commit_sha >>
