@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1c328ab6e9e5cacb27445a075ae945c2>>
+ * @generated SignedSource<<7117023f3b40093a08a4623516c9c86b>>
  */
 
 "use strict";
@@ -11770,10 +11770,19 @@ to return true:wantsResponderID|                            |
         queue.pending = null;
       }
 
-      if (baseQueue !== null) {
+      var baseState = hook.baseState;
+
+      if (baseQueue === null) {
+        // If there are no pending updates, then the memoized state should be the
+        // same as the base state. Currently these only diverge in the case of
+        // useOptimistic, because useOptimistic accepts a new baseState on
+        // every render.
+        hook.memoizedState = baseState; // We don't need to call markWorkInProgressReceivedUpdate because
+        // baseState is derived from other reactive values.
+      } else {
         // We have a queue to process.
         var first = baseQueue.next;
-        var newState = hook.baseState;
+        var newState = baseState;
         var newBaseState = null;
         var newBaseQueueFirst = null;
         var newBaseQueueLast = null;
@@ -28270,7 +28279,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-5c402d39";
+    var ReactVersion = "18.3.0-canary-e2b49fad";
 
     function createPortal$1(
       children,
