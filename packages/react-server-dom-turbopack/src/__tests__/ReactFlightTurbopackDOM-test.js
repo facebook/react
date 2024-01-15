@@ -41,7 +41,7 @@ describe('ReactFlightDOM', () => {
     jest.mock('react-server-dom-turbopack/server', () =>
       require('react-server-dom-turbopack/server.node.unbundled'),
     );
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
 
     const TurbopackMock = require('./utils/TurbopackMock');
     clientExports = TurbopackMock.clientExports;
