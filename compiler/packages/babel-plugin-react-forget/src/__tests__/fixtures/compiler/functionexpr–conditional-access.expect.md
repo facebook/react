@@ -2,6 +2,7 @@
 ## Input
 
 ```javascript
+// @enableTreatFunctionDepsAsConditional
 function Component(props) {
   function getLength() {
     return props.bar.length;
@@ -12,7 +13,7 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ bar: [] }],
+  params: [{ bar: null }],
 };
 
 ```
@@ -20,15 +21,15 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react";
+import { unstable_useMemoCache as useMemoCache } from "react"; // @enableTreatFunctionDepsAsConditional
 function Component(props) {
   const $ = useMemoCache(5);
   let t0;
-  if ($[0] !== props.bar.length) {
+  if ($[0] !== props) {
     t0 = function getLength() {
       return props.bar.length;
     };
-    $[0] = props.bar.length;
+    $[0] = props;
     $[1] = t0;
   } else {
     t0 = $[1];
@@ -48,10 +49,10 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ bar: [] }],
+  params: [{ bar: null }],
 };
 
 ```
       
 ### Eval output
-(kind: ok) 0
+(kind: ok) null

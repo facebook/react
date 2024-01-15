@@ -63,7 +63,11 @@ export function propagateScopeDependencies(fn: ReactiveFunction): void {
       });
     }
   }
-  visitReactiveFunction(fn, new PropagationVisitor(), context);
+  visitReactiveFunction(
+    fn,
+    new PropagationVisitor(fn.env.config.enableTreatFunctionDepsAsConditional),
+    context
+  );
 }
 
 type TemporariesUsedOutsideDefiningScope = {
@@ -466,6 +470,14 @@ class Context {
 }
 
 class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
+  enableTreatFunctionDepsAsConditional = false;
+
+  constructor(enableTreatFunctionDepsAsConditional: boolean) {
+    super();
+    this.enableTreatFunctionDepsAsConditional =
+      enableTreatFunctionDepsAsConditional;
+  }
+
   override visitScope(scope: ReactiveScopeBlock, context: Context): void {
     const scopeDependencies = context.enter(scope.scope, () => {
       this.visitBlock(scope.instructions, context);
@@ -545,6 +557,20 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
           this.visitInstruction(instr, context);
         }
         this.visitInstructionValue(context, id, value.value, null);
+        break;
+      }
+      case "FunctionExpression": {
+        if (this.enableTreatFunctionDepsAsConditional) {
+          context.enterConditional(() => {
+            for (const operand of eachInstructionValueOperand(value)) {
+              context.visitOperand(operand);
+            }
+          });
+        } else {
+          for (const operand of eachInstructionValueOperand(value)) {
+            context.visitOperand(operand);
+          }
+        }
         break;
       }
       default: {

@@ -1,3 +1,4 @@
+// @enableTreatFunctionDepsAsConditional
 function Component(props) {
   function getLength() {
     return props.bar.length;
@@ -8,5 +9,5 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ bar: [] }],
+  params: [{ bar: null }],
 };
