@@ -322,6 +322,28 @@ const EnvironmentConfigSchema = z.object({
    * simulate unexpected exceptions e.g. errors from babel functions.
    */
   throwUnknownException__testonly: z.boolean().default(false),
+
+  /**
+   * Enables deps of a function epxression to be treated as conditional. This
+   * makes sure we don't load a dep when it's a property (to check if it has
+   * changed) and instead check the receiver.
+   *
+   * This makes sure we don't end up throwing when the reciver is null. Consider
+   * this code:
+   *
+   * ```
+   * function getLength() {
+   *   return props.bar.length;
+   * }
+   * ```
+   *
+   * It's only safe to memoize `getLength` against props, not props.bar, as
+   * props.bar could be null when this `getLength` function is created.
+   *
+   * This does cause the memoization to now be coarse grained, which is
+   * non-ideal.
+   */
+  enableTreatFunctionDepsAsConditional: z.boolean().default(false),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
