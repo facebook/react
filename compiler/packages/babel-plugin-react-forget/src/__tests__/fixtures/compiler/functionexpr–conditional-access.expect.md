@@ -1,0 +1,57 @@
+
+## Input
+
+```javascript
+function Component(props) {
+  function getLength() {
+    return props.bar.length;
+  }
+
+  return props.bar && getLength();
+}
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ bar: [] }],
+};
+
+```
+
+## Code
+
+```javascript
+import { unstable_useMemoCache as useMemoCache } from "react";
+function Component(props) {
+  const $ = useMemoCache(5);
+  let t0;
+  if ($[0] !== props.bar.length) {
+    t0 = function getLength() {
+      return props.bar.length;
+    };
+    $[0] = props.bar.length;
+    $[1] = t0;
+  } else {
+    t0 = $[1];
+  }
+  const getLength = t0;
+  let t1;
+  if ($[2] !== props.bar || $[3] !== getLength) {
+    t1 = props.bar && getLength();
+    $[2] = props.bar;
+    $[3] = getLength;
+    $[4] = t1;
+  } else {
+    t1 = $[4];
+  }
+  return t1;
+}
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{ bar: [] }],
+};
+
+```
+      
+### Eval output
+(kind: ok) 0
