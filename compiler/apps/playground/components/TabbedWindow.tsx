@@ -78,7 +78,7 @@ function TabbedWindowItem({
           {tabs.get(name) ?? <div>No output for {name}</div>}
         </div>
       ) : (
-        <div className="relative items-center h-full px-4 py-8 align-middle border-r border-grey-200">
+        <div className="relative items-center h-full px-1 py-8 align-middle border-r border-grey-200">
           <button
             style={{ transform: "rotate(90deg) translate(-50%)" }}
             onClick={toggleTabs}
