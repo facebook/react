@@ -276,6 +276,10 @@ export function isSynchronousXHRSupported(): boolean {
   );
 }
 
+export function isLocationReloadSupported(): boolean {
+  return typeof window?.location?.reload === 'function';
+}
+
 export function gt(a: string = '', b: string = ''): boolean {
   return compareVersions(a, b) === 1;
 }
