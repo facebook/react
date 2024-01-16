@@ -35,7 +35,7 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
-import {cache} from './ReactCache';
+import {cache} from './ReactCacheClient';
 import {postpone} from './ReactPostpone';
 import {
   getCacheSignal,
