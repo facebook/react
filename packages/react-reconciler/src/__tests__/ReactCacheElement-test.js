@@ -2,6 +2,7 @@ let React;
 let ReactNoop;
 let Cache;
 let getCacheSignal;
+let getCacheForType;
 let Scheduler;
 let assertLog;
 let act;
@@ -10,9 +11,7 @@ let Activity;
 let useCacheRefresh;
 let startTransition;
 let useState;
-let cache;
 
-let getTextCache;
 let textCaches;
 let seededCache;
 
@@ -26,9 +25,9 @@ describe('ReactCacheElement', () => {
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     Suspense = React.Suspense;
-    cache = React.cache;
     Activity = React.unstable_Activity;
     getCacheSignal = React.unstable_getCacheSignal;
+    getCacheForType = React.unstable_getCacheForType;
     useCacheRefresh = React.unstable_useCacheRefresh;
     startTransition = React.startTransition;
     useState = React.useState;
@@ -38,59 +37,57 @@ describe('ReactCacheElement', () => {
 
     textCaches = [];
     seededCache = null;
-
-    if (gate(flags => flags.enableCache)) {
-      getTextCache = cache(() => {
-        if (seededCache !== null) {
-          // Trick to seed a cache before it exists.
-          // TODO: Need a built-in API to seed data before the initial render (i.e.
-          // not a refresh because nothing has mounted yet).
-          const textCache = seededCache;
-          seededCache = null;
-          return textCache;
-        }
-
-        const data = new Map();
-        const version = textCaches.length + 1;
-        const textCache = {
-          version,
-          data,
-          resolve(text) {
-            const record = data.get(text);
-            if (record === undefined) {
-              const newRecord = {
-                status: 'resolved',
-                value: text,
-                cleanupScheduled: false,
-              };
-              data.set(text, newRecord);
-            } else if (record.status === 'pending') {
-              record.value.resolve();
-            }
-          },
-          reject(text, error) {
-            const record = data.get(text);
-            if (record === undefined) {
-              const newRecord = {
-                status: 'rejected',
-                value: error,
-                cleanupScheduled: false,
-              };
-              data.set(text, newRecord);
-            } else if (record.status === 'pending') {
-              record.value.reject();
-            }
-          },
-        };
-        textCaches.push(textCache);
-        return textCache;
-      });
-    }
   });
+
+  function createTextCache() {
+    if (seededCache !== null) {
+      // Trick to seed a cache before it exists.
+      // TODO: Need a built-in API to seed data before the initial render (i.e.
+      // not a refresh because nothing has mounted yet).
+      const textCache = seededCache;
+      seededCache = null;
+      return textCache;
+    }
+
+    const data = new Map();
+    const version = textCaches.length + 1;
+    const textCache = {
+      version,
+      data,
+      resolve(text) {
+        const record = data.get(text);
+        if (record === undefined) {
+          const newRecord = {
+            status: 'resolved',
+            value: text,
+            cleanupScheduled: false,
+          };
+          data.set(text, newRecord);
+        } else if (record.status === 'pending') {
+          record.value.resolve();
+        }
+      },
+      reject(text, error) {
+        const record = data.get(text);
+        if (record === undefined) {
+          const newRecord = {
+            status: 'rejected',
+            value: error,
+            cleanupScheduled: false,
+          };
+          data.set(text, newRecord);
+        } else if (record.status === 'pending') {
+          record.value.reject();
+        }
+      },
+    };
+    textCaches.push(textCache);
+    return textCache;
+  }
 
   function readText(text) {
     const signal = getCacheSignal ? getCacheSignal() : null;
-    const textCache = getTextCache();
+    const textCache = getCacheForType(createTextCache);
     const record = textCache.data.get(text);
     if (record !== undefined) {
       if (!record.cleanupScheduled) {
@@ -167,7 +164,7 @@ describe('ReactCacheElement', () => {
 
   function seedNextTextCache(text) {
     if (seededCache === null) {
-      seededCache = getTextCache();
+      seededCache = createTextCache();
     }
     seededCache.resolve(text);
   }
@@ -182,7 +179,7 @@ describe('ReactCacheElement', () => {
     }
   }
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('render Cache component', async () => {
     const root = ReactNoop.createRoot();
     await act(() => {
@@ -191,7 +188,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Hi');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('mount new data', async () => {
     const root = ReactNoop.createRoot();
     await act(() => {
@@ -220,7 +217,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCache
+  // @gate enableCacheElement
   test('root acts as implicit cache boundary', async () => {
     const root = ReactNoop.createRoot();
     await act(() => {
@@ -247,7 +244,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('multiple new Cache boundaries in the same mount share the same, fresh root cache', async () => {
     function App() {
       return (
@@ -290,7 +287,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('multiple new Cache boundaries in the same update share the same, fresh cache', async () => {
     function App({showMore}) {
       return showMore ? (
@@ -342,7 +339,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test(
     'nested cache boundaries share the same cache as the root during ' +
       'the initial render',
@@ -382,7 +379,7 @@ describe('ReactCacheElement', () => {
     },
   );
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('new content inside an existing Cache boundary should re-use already cached data', async () => {
     function App({showMore}) {
       return (
@@ -426,7 +423,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('a new Cache boundary uses fresh cache', async () => {
     // The only difference from the previous test is that the "Show More"
     // content is wrapped in a nested <Cache /> boundary
@@ -484,7 +481,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('inner/outer cache boundaries uses the same cache instance on initial render', async () => {
     const root = ReactNoop.createRoot();
 
@@ -566,7 +563,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('inner/ outer cache boundaries added in the same update use the same cache instance', async () => {
     const root = ReactNoop.createRoot();
 
@@ -655,7 +652,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCache
+  // @gate enableCacheElement
   test('refresh a cache boundary', async () => {
     let refresh;
     function App() {
@@ -705,7 +702,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('refresh the root cache', async () => {
     let refresh;
     function App() {
@@ -753,7 +750,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('refresh the root cache without a transition', async () => {
     let refresh;
     function App() {
@@ -808,20 +805,11 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('refresh a cache with seed data', async () => {
-    let refreshWithSeed;
+    let refresh;
     function App() {
-      const refresh = useCacheRefresh();
-      const [seed, setSeed] = useState({fn: null});
-      if (seed.fn) {
-        seed.fn();
-        seed.fn = null;
-      }
-      refreshWithSeed = fn => {
-        setSeed({fn});
-        refresh();
-      };
+      refresh = useCacheRefresh();
       return <AsyncText showVersion={true} text="A" />;
     }
 
@@ -851,12 +839,11 @@ describe('ReactCacheElement', () => {
       // server mutation.
       // TODO: Seeding multiple typed textCaches. Should work by calling `refresh`
       // multiple times with different key/value pairs
-      startTransition(() =>
-        refreshWithSeed(() => {
-          const textCache = getTextCache();
-          textCache.resolve('A');
-        }),
-      );
+      startTransition(() => {
+        const textCache = createTextCache();
+        textCache.resolve('A');
+        startTransition(() => refresh(createTextCache, textCache));
+      });
     });
     // The root should re-render without a cache miss.
     // The cache is not cleared up yet, since it's still reference by the root
@@ -871,7 +858,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('refreshing a parent cache also refreshes its children', async () => {
     let refreshShell;
     function RefreshShell() {
@@ -946,7 +933,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test(
     'refreshing a cache boundary does not refresh the other boundaries ' +
       'that mounted at the same time (i.e. the ones that share the same cache)',
@@ -1027,7 +1014,7 @@ describe('ReactCacheElement', () => {
     },
   );
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test(
     'mount a new Cache boundary in a sibling while simultaneously ' +
       'resolving a Suspense boundary',
@@ -1096,7 +1083,7 @@ describe('ReactCacheElement', () => {
     },
   );
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('cache pool is cleared once transitions that depend on it commit their shell', async () => {
     function Child({text}) {
       return (
@@ -1189,7 +1176,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('cache pool is not cleared by arbitrary commits', async () => {
     function App() {
       return (
@@ -1268,7 +1255,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('cache boundary uses a fresh cache when its key changes', async () => {
     const root = ReactNoop.createRoot();
     seedNextTextCache('A');
@@ -1307,7 +1294,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('overlapping transitions after an initial mount use the same fresh cache', async () => {
     const root = ReactNoop.createRoot();
     await act(() => {
@@ -1375,7 +1362,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('overlapping updates after an initial mount use the same fresh cache', async () => {
     const root = ReactNoop.createRoot();
     await act(() => {
@@ -1438,7 +1425,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test('cleans up cache only used in an aborted transition', async () => {
     const root = ReactNoop.createRoot();
     seedNextTextCache('A');
@@ -1493,7 +1480,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test.skip('if a root cache refresh never commits its fresh cache is released', async () => {
     const root = ReactNoop.createRoot();
     let refresh;
@@ -1535,7 +1522,7 @@ describe('ReactCacheElement', () => {
     expect(root).toMatchRenderedOutput('Bye!');
   });
 
-  // @gate enableCacheElement && enableCache
+  // @gate enableCacheElement
   test.skip('if a cache boundary refresh never commits its fresh cache is released', async () => {
     const root = ReactNoop.createRoot();
     let refresh;
