@@ -170,7 +170,7 @@ const rule: Rule.RuleModule = {
               }
             }
             context.report({
-              message: `[ReactForget] ${detail.reason}`,
+              message: detail.reason,
               loc: detail.loc,
               suggest,
             });

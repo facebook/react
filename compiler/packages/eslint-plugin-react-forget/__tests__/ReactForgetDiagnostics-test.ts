@@ -104,7 +104,7 @@ const tests: ForgetTestCases = {
       errors: [
         {
           message:
-            "[ReactForget] React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior",
+            "React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior",
           suggestions: [
             {
               output: normalizeIndent`
