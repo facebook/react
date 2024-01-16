@@ -127,6 +127,7 @@ import {
   Visibility,
   MountPassiveDev,
   MountLayoutDev,
+  DidDefer,
 } from './ReactFiberFlags';
 import {
   NoLanes,
@@ -714,6 +715,20 @@ export function requestDeferredLane(): Lane {
       workInProgressDeferredLane = requestTransitionLane();
     }
   }
+
+  // Mark the parent Suspense boundary so it knows to spawn the deferred lane.
+  const suspenseHandler = getSuspenseHandler();
+  if (suspenseHandler !== null) {
+    // TODO: As an optimization, we shouldn't entangle the lanes at the root; we
+    // can entangle them using the baseLanes of the Suspense boundary instead.
+    // We only need to do something special if there's no Suspense boundary.
+    suspenseHandler.flags |= DidDefer;
+  }
+
+  return workInProgressDeferredLane;
+}
+
+export function peekDeferredLane(): Lane {
   return workInProgressDeferredLane;
 }
 
@@ -1361,7 +1376,7 @@ export function performSyncWorkOnRoot(root: FiberRoot, lanes: Lanes): null {
     // The render unwound without completing the tree. This happens in special
     // cases where need to exit the current render without producing a
     // consistent tree or committing.
-    markRootSuspended(root, lanes, NoLane);
+    markRootSuspended(root, lanes, workInProgressDeferredLane);
     ensureRootIsScheduled(root);
     return null;
   }
