@@ -1,7 +1,7 @@
 {
-  "name": "eslint-plugin-react-forget",
+  "name": "eslint-plugin-react-compiler",
   "version": "0.0.0",
-  "description": "ESLint plugin for React Forget",
+  "description": "ESLint plugin to display errors found by the React compiler.",
   "keywords": [
     "eslint",
     "eslintplugin",

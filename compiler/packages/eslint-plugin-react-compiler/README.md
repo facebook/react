@@ -1,6 +1,6 @@
-# eslint-plugin-react-forget
+# eslint-plugin-react-compiler
 
-ESLint plugin for React Forget
+ESLint plugin surfacing problematic React code found by the React compiler.
 
 ## Installation
 
@@ -10,20 +10,20 @@ You'll first need to install [ESLint](https://eslint.org/):
 npm i eslint --save-dev
 ```
 
-Next, install `eslint-plugin-react-forget`:
+Next, install `eslint-plugin-react-compiler`:
 
 ```sh
-npm install eslint-plugin-react-forget --save-dev
+npm install eslint-plugin-react-compiler --save-dev
 ```
 
 ## Usage
 
-Add `react-forget` to the plugins section of your `.eslintrc` configuration file. You can omit the `eslint-plugin-` prefix:
+Add `react-compiler` to the plugins section of your `.eslintrc` configuration file. You can omit the `eslint-plugin-` prefix:
 
 ```json
 {
     "plugins": [
-        "react-forget"
+        "react-compiler"
     ]
 }
 ```
@@ -34,7 +34,7 @@ Then configure the rules you want to use under the rules section.
 ```json
 {
     "rules": {
-        "react-forget/rule-name": 2
+        "react-compiler/rule-name": 2
     }
 }
 ```
@@ -44,5 +44,3 @@ Then configure the rules you want to use under the rules section.
 <!-- begin auto-generated rules list -->
 TODO: Run eslint-doc-generator to generate the rules list.
 <!-- end auto-generated rules list -->
-
-
