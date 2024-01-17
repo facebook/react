@@ -1107,6 +1107,7 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
+  // @gate enableAsyncActions
   it('should support useOptimistic hook', () => {
     const useOptimistic = React.useOptimistic;
     function Foo() {
