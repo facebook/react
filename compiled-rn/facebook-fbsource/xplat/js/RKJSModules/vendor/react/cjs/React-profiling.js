@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e9bba84e09b058c7ba4cbba532a17a04>>
+ * @generated SignedSource<<f970a167227dc5d72ad0fc9ab65f8518>>
  */
 
 "use strict";
@@ -249,12 +249,6 @@ function lazyInitializer(payload) {
   if (1 === payload._status) return payload._result.default;
   throw payload._result;
 }
-function createCacheRoot() {
-  return new WeakMap();
-}
-function createCacheNode() {
-  return { s: 0, v: void 0, o: null, p: null };
-}
 var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
 function jsx$1(type, config, maybeKey) {
@@ -324,42 +318,7 @@ exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
   ReactSharedInternals;
 exports.cache = function (fn) {
   return function () {
-    var dispatcher = ReactCurrentCache.current;
-    if (!dispatcher) return fn.apply(null, arguments);
-    var fnMap = dispatcher.getCacheForType(createCacheRoot);
-    dispatcher = fnMap.get(fn);
-    void 0 === dispatcher &&
-      ((dispatcher = createCacheNode()), fnMap.set(fn, dispatcher));
-    fnMap = 0;
-    for (var l = arguments.length; fnMap < l; fnMap++) {
-      var arg = arguments[fnMap];
-      if (
-        "function" === typeof arg ||
-        ("object" === typeof arg && null !== arg)
-      ) {
-        var objectCache = dispatcher.o;
-        null === objectCache && (dispatcher.o = objectCache = new WeakMap());
-        dispatcher = objectCache.get(arg);
-        void 0 === dispatcher &&
-          ((dispatcher = createCacheNode()), objectCache.set(arg, dispatcher));
-      } else
-        (objectCache = dispatcher.p),
-          null === objectCache && (dispatcher.p = objectCache = new Map()),
-          (dispatcher = objectCache.get(arg)),
-          void 0 === dispatcher &&
-            ((dispatcher = createCacheNode()),
-            objectCache.set(arg, dispatcher));
-    }
-    if (1 === dispatcher.s) return dispatcher.v;
-    if (2 === dispatcher.s) throw dispatcher.v;
-    try {
-      var result = fn.apply(null, arguments);
-      fnMap = dispatcher;
-      fnMap.s = 1;
-      return (fnMap.v = result);
-    } catch (error) {
-      throw ((result = dispatcher), (result.s = 2), (result.v = error), error);
-    }
+    return fn.apply(null, arguments);
   };
 };
 exports.cloneElement = function (element, config, children) {
@@ -576,7 +535,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-f16344ea6-20240116";
+exports.version = "18.3.0-canary-5c607369c-20240116";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
