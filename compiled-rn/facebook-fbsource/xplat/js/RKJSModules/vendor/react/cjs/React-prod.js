@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0e17d6b3fe815dee43646c53805b2e2b>>
+ * @generated SignedSource<<e61b0483b88bb8d41bee65d1d3f6e785>>
  */
 
 "use strict";
@@ -133,6 +133,15 @@ function isValidElement(object) {
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 }
+var ReactCurrentDispatcher = { current: null },
+  ReactCurrentCache = { current: null },
+  ReactCurrentBatchConfig = { transition: null },
+  ReactSharedInternals = {
+    ReactCurrentDispatcher: ReactCurrentDispatcher,
+    ReactCurrentCache: ReactCurrentCache,
+    ReactCurrentBatchConfig: ReactCurrentBatchConfig,
+    ReactCurrentOwner: ReactCurrentOwner$1
+  };
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
   return (
@@ -269,22 +278,13 @@ function lazyInitializer(payload) {
   if (1 === payload._status) return payload._result.default;
   throw payload._result;
 }
-var ReactCurrentCache = { current: null };
 function createCacheRoot() {
   return new WeakMap();
 }
 function createCacheNode() {
   return { s: 0, v: void 0, o: null, p: null };
 }
-var ReactCurrentDispatcher = { current: null },
-  ReactCurrentBatchConfig = { transition: null },
-  ReactSharedInternals = {
-    ReactCurrentDispatcher: ReactCurrentDispatcher,
-    ReactCurrentCache: ReactCurrentCache,
-    ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-    ReactCurrentOwner: ReactCurrentOwner$1
-  },
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
+var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
 function jsx$1(type, config, maybeKey) {
   var propName,
@@ -580,4 +580,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-5d1b15a4f-20240116";
+exports.version = "18.3.0-canary-f16344ea6-20240116";

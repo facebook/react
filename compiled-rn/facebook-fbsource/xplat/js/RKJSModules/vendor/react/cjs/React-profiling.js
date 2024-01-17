@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7061ca7e747d07e88c59d3657809f1b8>>
+ * @generated SignedSource<<e9bba84e09b058c7ba4cbba532a17a04>>
  */
 
 "use strict";
@@ -104,6 +104,15 @@ function isValidElement(object) {
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 }
+var ReactCurrentDispatcher = { current: null },
+  ReactCurrentCache = { current: null },
+  ReactCurrentBatchConfig = { transition: null },
+  ReactSharedInternals = {
+    ReactCurrentDispatcher: ReactCurrentDispatcher,
+    ReactCurrentCache: ReactCurrentCache,
+    ReactCurrentBatchConfig: ReactCurrentBatchConfig,
+    ReactCurrentOwner: ReactCurrentOwner$1
+  };
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
   return (
@@ -240,22 +249,13 @@ function lazyInitializer(payload) {
   if (1 === payload._status) return payload._result.default;
   throw payload._result;
 }
-var ReactCurrentCache = { current: null };
 function createCacheRoot() {
   return new WeakMap();
 }
 function createCacheNode() {
   return { s: 0, v: void 0, o: null, p: null };
 }
-var ReactCurrentDispatcher = { current: null },
-  ReactCurrentBatchConfig = { transition: null },
-  ReactSharedInternals = {
-    ReactCurrentDispatcher: ReactCurrentDispatcher,
-    ReactCurrentCache: ReactCurrentCache,
-    ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-    ReactCurrentOwner: ReactCurrentOwner$1
-  },
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
+var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
 function jsx$1(type, config, maybeKey) {
   var propName,
@@ -576,7 +576,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-5d1b15a4f-20240116";
+exports.version = "18.3.0-canary-f16344ea6-20240116";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
