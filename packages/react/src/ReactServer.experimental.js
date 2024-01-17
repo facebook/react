@@ -38,7 +38,7 @@ import {
 import {forwardRef} from './ReactForwardRef';
 import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
-import {cache} from './ReactCache';
+import {cache} from './ReactCacheServer';
 import {startTransition} from './ReactStartTransition';
 import {postpone} from './ReactPostpone';
 import version from 'shared/ReactVersion';
