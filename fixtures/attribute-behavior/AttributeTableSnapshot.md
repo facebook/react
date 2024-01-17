@@ -8476,52 +8476,52 @@
 ## `popoverTarget` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `popoverTarget=(string)`| (initial, warning)| `<null>` |
-| `popoverTarget=(empty string)`| (initial, warning)| `<null>` |
-| `popoverTarget=(array with string)`| (initial, warning)| `<null>` |
-| `popoverTarget=(empty array)`| (initial, warning)| `<null>` |
-| `popoverTarget=(object)`| (initial, warning)| `<null>` |
-| `popoverTarget=(numeric string)`| (initial, warning)| `<null>` |
-| `popoverTarget=(-1)`| (initial, warning)| `<null>` |
-| `popoverTarget=(0)`| (initial, warning)| `<null>` |
-| `popoverTarget=(integer)`| (initial, warning)| `<null>` |
+| `popoverTarget=(string)`| (initial)| `<null>` |
+| `popoverTarget=(empty string)`| (initial)| `<null>` |
+| `popoverTarget=(array with string)`| (initial)| `<null>` |
+| `popoverTarget=(empty array)`| (initial)| `<null>` |
+| `popoverTarget=(object)`| (initial)| `<null>` |
+| `popoverTarget=(numeric string)`| (initial)| `<null>` |
+| `popoverTarget=(-1)`| (initial)| `<null>` |
+| `popoverTarget=(0)`| (initial)| `<null>` |
+| `popoverTarget=(integer)`| (initial)| `<null>` |
 | `popoverTarget=(NaN)`| (initial, warning)| `<null>` |
-| `popoverTarget=(float)`| (initial, warning)| `<null>` |
+| `popoverTarget=(float)`| (initial)| `<null>` |
 | `popoverTarget=(true)`| (initial, warning)| `<null>` |
 | `popoverTarget=(false)`| (initial, warning)| `<null>` |
-| `popoverTarget=(string 'true')`| (initial, warning)| `<null>` |
-| `popoverTarget=(string 'false')`| (initial, warning)| `<null>` |
-| `popoverTarget=(string 'on')`| (initial, warning)| `<null>` |
-| `popoverTarget=(string 'off')`| (initial, warning)| `<null>` |
+| `popoverTarget=(string 'true')`| (initial)| `<null>` |
+| `popoverTarget=(string 'false')`| (initial)| `<null>` |
+| `popoverTarget=(string 'on')`| (initial)| `<null>` |
+| `popoverTarget=(string 'off')`| (initial)| `<null>` |
 | `popoverTarget=(symbol)`| (initial, warning)| `<null>` |
 | `popoverTarget=(function)`| (initial, warning)| `<null>` |
-| `popoverTarget=(null)`| (initial, warning)| `<null>` |
-| `popoverTarget=(undefined)`| (initial, warning)| `<null>` |
+| `popoverTarget=(null)`| (initial)| `<null>` |
+| `popoverTarget=(undefined)`| (initial)| `<null>` |
 
 ## `popoverTargetAction` (on `<button>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `popoverTargetAction=(string)`| (changed, warning)| `"show"` |
-| `popoverTargetAction=(empty string)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(array with string)`| (changed, warning)| `"show"` |
-| `popoverTargetAction=(empty array)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(object)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(numeric string)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(-1)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(0)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(integer)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(string)`| (changed)| `"show"` |
+| `popoverTargetAction=(empty string)`| (initial)| `"toggle"` |
+| `popoverTargetAction=(array with string)`| (changed)| `"show"` |
+| `popoverTargetAction=(empty array)`| (initial)| `"toggle"` |
+| `popoverTargetAction=(object)`| (initial)| `"toggle"` |
+| `popoverTargetAction=(numeric string)`| (initial)| `"toggle"` |
+| `popoverTargetAction=(-1)`| (initial)| `"toggle"` |
+| `popoverTargetAction=(0)`| (initial)| `"toggle"` |
+| `popoverTargetAction=(integer)`| (initial)| `"toggle"` |
 | `popoverTargetAction=(NaN)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(float)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(float)`| (initial)| `"toggle"` |
 | `popoverTargetAction=(true)`| (initial, warning)| `"toggle"` |
 | `popoverTargetAction=(false)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(string 'true')`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(string 'false')`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(string 'on')`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(string 'off')`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(string 'true')`| (initial)| `"toggle"` |
+| `popoverTargetAction=(string 'false')`| (initial)| `"toggle"` |
+| `popoverTargetAction=(string 'on')`| (initial)| `"toggle"` |
+| `popoverTargetAction=(string 'off')`| (initial)| `"toggle"` |
 | `popoverTargetAction=(symbol)`| (initial, warning)| `"toggle"` |
 | `popoverTargetAction=(function)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(null)`| (initial, warning)| `"toggle"` |
-| `popoverTargetAction=(undefined)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(null)`| (initial)| `"toggle"` |
+| `popoverTargetAction=(undefined)`| (initial)| `"toggle"` |
 
 ## `poster` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
