@@ -22,13 +22,11 @@ export const customBubblingEventTypes: {
       skipBubbling?: ?boolean,
     }>,
   }>,
-  ...
 } = {};
 export const customDirectEventTypes: {
   [eventName: string]: $ReadOnly<{
     registrationName: string,
   }>,
-  ...
 } = {};
 
 const viewConfigCallbacks = new Map<string, ?() => ViewConfig>();

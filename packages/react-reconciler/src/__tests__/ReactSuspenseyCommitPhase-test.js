@@ -4,7 +4,7 @@ let ReactNoop;
 let resolveSuspenseyThing;
 let getSuspenseyThingStatus;
 let Suspense;
-let Offscreen;
+let Activity;
 let SuspenseList;
 let useMemo;
 let Scheduler;
@@ -23,7 +23,7 @@ describe('ReactSuspenseyCommitPhase', () => {
     if (gate(flags => flags.enableSuspenseList)) {
       SuspenseList = React.unstable_SuspenseList;
     }
-    Offscreen = React.unstable_Offscreen;
+    Activity = React.unstable_Activity;
     useMemo = React.useMemo;
     startTransition = React.startTransition;
     resolveSuspenseyThing = ReactNoop.resolveSuspenseyThing;
@@ -206,7 +206,7 @@ describe('ReactSuspenseyCommitPhase', () => {
     // TODO: Notice that none of these items appear until they've all loaded.
     // That's not ideal; we should commit each row as it becomes ready to
     // commit. That means we need to prepare both the fallback and the primary
-    // tree during the render phase. Related to Offscreen, too.
+    // tree during the render phase. Related to Activity, too.
     resolveSuspenseyThing('A');
     expect(root).toMatchRenderedOutput('Loading ALoading BLoading C');
     resolveSuspenseyThing('B');
@@ -269,7 +269,7 @@ describe('ReactSuspenseyCommitPhase', () => {
     );
   });
 
-  // @gate enableOffscreen
+  // @gate enableActivity
   test("host instances don't suspend during prerendering, but do suspend when they are revealed", async () => {
     function More() {
       Scheduler.log('More');
@@ -282,7 +282,7 @@ describe('ReactSuspenseyCommitPhase', () => {
       return (
         <>
           <div>Main Content</div>
-          <Offscreen mode={showMore ? 'visible' : 'hidden'}>{more}</Offscreen>
+          <Activity mode={showMore ? 'visible' : 'hidden'}>{more}</Activity>
         </>
       );
     }

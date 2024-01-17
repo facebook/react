@@ -17,7 +17,7 @@ import ContextMenuItem from '../../ContextMenu/ContextMenuItem';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Icon from '../Icon';
-import HocBadges from './HocBadges';
+import InspectedElementBadges from './InspectedElementBadges';
 import InspectedElementContextTree from './InspectedElementContextTree';
 import InspectedElementErrorsAndWarningsTree from './InspectedElementErrorsAndWarningsTree';
 import InspectedElementHooksTree from './InspectedElementHooksTree';
@@ -26,7 +26,7 @@ import InspectedElementStateTree from './InspectedElementStateTree';
 import InspectedElementStyleXPlugin from './InspectedElementStyleXPlugin';
 import InspectedElementSuspenseToggle from './InspectedElementSuspenseToggle';
 import NativeStyleEditor from './NativeStyleEditor';
-import Badge from './Badge';
+import ElementBadges from './ElementBadges';
 import {useHighlightNativeElement} from '../hooks';
 import {
   copyInspectedElementPath as copyInspectedElementPathAPI,
@@ -41,12 +41,8 @@ import type {ContextMenuContextType} from '../context';
 import type {
   Element,
   InspectedElement,
-  SerializedElement,
 } from 'react-devtools-shared/src/frontend/types';
-import type {
-  ElementType,
-  HookNames,
-} from 'react-devtools-shared/src/frontend/types';
+import type {HookNames} from 'react-devtools-shared/src/frontend/types';
 import type {ToggleParseHookNames} from './InspectedElementContext';
 
 export type CopyPath = (path: Array<string | number>) => void;
@@ -90,7 +86,7 @@ export default function InspectedElementView({
   return (
     <Fragment>
       <div className={styles.InspectedElement}>
-        <HocBadges element={element} />
+        <InspectedElementBadges element={element} />
 
         <InspectedElementPropsTree
           bridge={bridge}
@@ -152,17 +148,20 @@ export default function InspectedElementView({
             className={styles.Owners}
             data-testname="InspectedElementView-Owners">
             <div className={styles.OwnersHeader}>rendered by</div>
+
             {showOwnersList &&
-              ((owners: any): Array<SerializedElement>).map(owner => (
+              owners?.map(owner => (
                 <OwnerView
                   key={owner.id}
                   displayName={owner.displayName || 'Anonymous'}
                   hocDisplayNames={owner.hocDisplayNames}
+                  compiledWithForget={owner.compiledWithForget}
                   id={owner.id}
                   isInStore={store.containsElement(owner.id)}
                   type={owner.type}
                 />
               ))}
+
             {rootType !== null && (
               <div className={styles.OwnersMetaField}>{rootType}</div>
             )}
@@ -286,17 +285,17 @@ function Source({fileName, lineNumber}: SourceProps) {
 type OwnerViewProps = {
   displayName: string,
   hocDisplayNames: Array<string> | null,
+  compiledWithForget: boolean,
   id: number,
   isInStore: boolean,
-  type: ElementType,
 };
 
 function OwnerView({
   displayName,
   hocDisplayNames,
+  compiledWithForget,
   id,
   isInStore,
-  type,
 }: OwnerViewProps) {
   const dispatch = useContext(TreeDispatcherContext);
   const {highlightNativeElement, clearHighlightNativeElement} =
@@ -313,25 +312,25 @@ function OwnerView({
     });
   }, [dispatch, id]);
 
-  const onMouseEnter = () => highlightNativeElement(id);
-
-  const onMouseLeave = clearHighlightNativeElement;
-
   return (
     <Button
       key={id}
       className={styles.OwnerButton}
       disabled={!isInStore}
       onClick={handleClick}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}>
+      onMouseEnter={() => highlightNativeElement(id)}
+      onMouseLeave={clearHighlightNativeElement}>
       <span className={styles.OwnerContent}>
         <span
           className={`${styles.Owner} ${isInStore ? '' : styles.NotInStore}`}
           title={displayName}>
           {displayName}
         </span>
-        <Badge hocDisplayNames={hocDisplayNames} type={type} />
+
+        <ElementBadges
+          hocDisplayNames={hocDisplayNames}
+          compiledWithForget={compiledWithForget}
+        />
       </span>
     </Button>
   );

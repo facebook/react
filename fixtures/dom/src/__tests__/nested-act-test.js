@@ -20,7 +20,7 @@ describe('unmocked scheduler', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    DOMAct = require('react-dom/test-utils').act;
+    DOMAct = React.unstable_act;
     TestRenderer = require('react-test-renderer');
     TestAct = TestRenderer.act;
   });
@@ -61,7 +61,7 @@ describe('mocked scheduler', () => {
       require.requireActual('scheduler/unstable_mock')
     );
     React = require('react');
-    DOMAct = require('react-dom/test-utils').act;
+    DOMAct = React.unstable_act;
     TestRenderer = require('react-test-renderer');
     TestAct = TestRenderer.act;
   });

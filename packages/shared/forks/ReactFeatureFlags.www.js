@@ -24,6 +24,7 @@ export const {
   enableUseRefAccessWarning,
   enableLazyContextPropagation,
   enableUnifiedSyncLane,
+  enableRetryLaneExpiration,
   enableTransitionTracing,
   enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
@@ -32,6 +33,9 @@ export const {
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,
   enableUseDeferredValueInitialArg,
+  retryLaneExpirationMs,
+  syncLaneExpirationMs,
+  transitionLaneExpirationMs,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -53,7 +57,6 @@ export const enableCPUSuspense = true;
 export const enableFloat = true;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
-export const enableHostSingletons = true;
 export const enableClientRenderFallbackOnTextMismatch = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 
@@ -75,7 +78,7 @@ export const enableFetchInstrumentation = false;
 
 export const enableFormActions = false;
 
-export const enableBinaryFlight = true;
+export const enableBinaryFlight = false;
 export const enableTaint = false;
 
 export const enablePostpone = false;
@@ -112,6 +115,8 @@ export const forceConcurrentByDefaultForTesting = false;
 
 export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
+
+export const enableAsyncDebugInfo = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

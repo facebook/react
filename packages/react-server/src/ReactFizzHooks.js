@@ -15,6 +15,7 @@ import type {
   Thenable,
   Usable,
   ReactCustomFormAction,
+  Awaited,
 } from 'shared/ReactTypes';
 
 import type {ResumableState} from './ReactFizzConfig';
@@ -612,10 +613,10 @@ function createPostbackFormStateKey(
 }
 
 function useFormState<S, P>(
-  action: (S, P) => Promise<S>,
-  initialState: S,
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
   permalink?: string,
-): [S, (P) => void] {
+): [Awaited<S>, (P) => void] {
   resolveCurrentlyRenderingComponent();
 
   // Count the number of useFormState hooks per component. We also use this to

@@ -123,7 +123,7 @@ describe('ReactDOM HostSingleton', () => {
       : children;
   }
 
-  // @gate enableHostSingletons && enableFloat
+  // @gate enableFloat
   it('warns if you render the same singleton twice at the same time', async () => {
     const root = ReactDOMClient.createRoot(document);
     root.render(
@@ -208,16 +208,8 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons && enableFloat
+  // @gate enableFloat
   it('renders into html, head, and body persistently so the node identities never change and extraneous styles are retained', async () => {
-    gate(flags => {
-      if (flags.enableHostSingletons !== true) {
-        // We throw here because when this test fails it ends up with sync work in a microtask
-        // that throws after the expectTestToFail check asserts the failure. this causes even the
-        // expected failure to fail. This just fails explicitly and early
-        throw new Error('manually opting out of test');
-      }
-    });
     // Server render some html that will get replaced with a client render
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -601,7 +593,6 @@ describe('ReactDOM HostSingleton', () => {
   });
 
   // This test is not supported in this implementation. If we reintroduce insertion edge we should revisit
-  // @gate enableHostSingletons
   xit('is able to maintain insertions in head and body between tree-adjacent Nodes', async () => {
     // Server render some html and hydrate on the client
     await actIntoEmptyDocument(() => {
@@ -732,7 +723,6 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons
   it('clears persistent head and body when html is the container', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -785,7 +775,6 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons
   it('clears persistent head when it is the container', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -817,7 +806,7 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons && enableFloat
+  // @gate enableFloat
   it('clears persistent body when it is the container', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
@@ -974,7 +963,6 @@ describe('ReactDOM HostSingleton', () => {
     );
   });
 
-  // @gate enableHostSingletons
   it('allows for hydrating without a head', async () => {
     await actIntoEmptyDocument(() => {
       const {pipe} = ReactDOMFizzServer.renderToPipeableStream(
