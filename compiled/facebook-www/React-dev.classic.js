@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-classic-6f4b3c51";
+    var ReactVersion = "18.3.0-www-classic-28af9135";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1014,660 +1014,6 @@ if (__DEV__) {
       );
     }
 
-    var SEPARATOR = ".";
-    var SUBSEPARATOR = ":";
-    /**
-     * Escape and wrap key so it is safe to use as a reactid
-     *
-     * @param {string} key to be escaped.
-     * @return {string} the escaped key.
-     */
-
-    function escape(key) {
-      var escapeRegex = /[=:]/g;
-      var escaperLookup = {
-        "=": "=0",
-        ":": "=2"
-      };
-      var escapedString = key.replace(escapeRegex, function (match) {
-        return escaperLookup[match];
-      });
-      return "$" + escapedString;
-    }
-    /**
-     * TODO: Test that a single child and an array with one item have the same key
-     * pattern.
-     */
-
-    var didWarnAboutMaps = false;
-    var userProvidedKeyEscapeRegex = /\/+/g;
-
-    function escapeUserProvidedKey(text) {
-      return text.replace(userProvidedKeyEscapeRegex, "$&/");
-    }
-    /**
-     * Generate a key string that identifies a element within a set.
-     *
-     * @param {*} element A element that could contain a manual key.
-     * @param {number} index Index that is used if a manual key is not provided.
-     * @return {string}
-     */
-
-    function getElementKey(element, index) {
-      // Do some typechecking here since we call this blindly. We want to ensure
-      // that we don't block potential future ES APIs.
-      if (
-        typeof element === "object" &&
-        element !== null &&
-        element.key != null
-      ) {
-        // Explicit key
-        {
-          checkKeyStringCoercion(element.key);
-        }
-
-        return escape("" + element.key);
-      } // Implicit key determined by the index in the set
-
-      return index.toString(36);
-    }
-
-    function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
-      var type = typeof children;
-
-      if (type === "undefined" || type === "boolean") {
-        // All of the above are perceived as null.
-        children = null;
-      }
-
-      var invokeCallback = false;
-
-      if (children === null) {
-        invokeCallback = true;
-      } else {
-        switch (type) {
-          case "string":
-          case "number":
-            invokeCallback = true;
-            break;
-
-          case "object":
-            switch (children.$$typeof) {
-              case REACT_ELEMENT_TYPE:
-              case REACT_PORTAL_TYPE:
-                invokeCallback = true;
-            }
-        }
-      }
-
-      if (invokeCallback) {
-        var _child = children;
-        var mappedChild = callback(_child); // If it's the only child, treat the name as if it was wrapped in an array
-        // so that it's consistent if the number of children grows:
-
-        var childKey =
-          nameSoFar === "" ? SEPARATOR + getElementKey(_child, 0) : nameSoFar;
-
-        if (isArray(mappedChild)) {
-          var escapedChildKey = "";
-
-          if (childKey != null) {
-            escapedChildKey = escapeUserProvidedKey(childKey) + "/";
-          }
-
-          mapIntoArray(mappedChild, array, escapedChildKey, "", function (c) {
-            return c;
-          });
-        } else if (mappedChild != null) {
-          if (isValidElement$1(mappedChild)) {
-            {
-              // The `if` statement here prevents auto-disabling of the safe
-              // coercion ESLint rule, so we must manually disable it below.
-              // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
-              if (
-                mappedChild.key &&
-                (!_child || _child.key !== mappedChild.key)
-              ) {
-                checkKeyStringCoercion(mappedChild.key);
-              }
-            }
-
-            mappedChild = cloneAndReplaceKey(
-              mappedChild, // Keep both the (mapped) and old keys if they differ, just as
-              // traverseAllChildren used to do for objects as children
-              escapedPrefix + // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
-                (mappedChild.key && (!_child || _child.key !== mappedChild.key)
-                  ? escapeUserProvidedKey(
-                      // $FlowFixMe[unsafe-addition]
-                      "" + mappedChild.key // eslint-disable-line react-internal/safe-string-coercion
-                    ) + "/"
-                  : "") +
-                childKey
-            );
-          }
-
-          array.push(mappedChild);
-        }
-
-        return 1;
-      }
-
-      var child;
-      var nextName;
-      var subtreeCount = 0; // Count of children found in the current subtree.
-
-      var nextNamePrefix =
-        nameSoFar === "" ? SEPARATOR : nameSoFar + SUBSEPARATOR;
-
-      if (isArray(children)) {
-        for (var i = 0; i < children.length; i++) {
-          child = children[i];
-          nextName = nextNamePrefix + getElementKey(child, i);
-          subtreeCount += mapIntoArray(
-            child,
-            array,
-            escapedPrefix,
-            nextName,
-            callback
-          );
-        }
-      } else {
-        var iteratorFn = getIteratorFn(children);
-
-        if (typeof iteratorFn === "function") {
-          var iterableChildren = children;
-
-          {
-            // Warn about using Maps as children
-            if (iteratorFn === iterableChildren.entries) {
-              if (!didWarnAboutMaps) {
-                warn(
-                  "Using Maps as children is not supported. " +
-                    "Use an array of keyed ReactElements instead."
-                );
-              }
-
-              didWarnAboutMaps = true;
-            }
-          }
-
-          var iterator = iteratorFn.call(iterableChildren);
-          var step;
-          var ii = 0; // $FlowFixMe[incompatible-use] `iteratorFn` might return null according to typing.
-
-          while (!(step = iterator.next()).done) {
-            child = step.value;
-            nextName = nextNamePrefix + getElementKey(child, ii++);
-            subtreeCount += mapIntoArray(
-              child,
-              array,
-              escapedPrefix,
-              nextName,
-              callback
-            );
-          }
-        } else if (type === "object") {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          var childrenString = String(children);
-          throw new Error(
-            "Objects are not valid as a React child (found: " +
-              (childrenString === "[object Object]"
-                ? "object with keys {" + Object.keys(children).join(", ") + "}"
-                : childrenString) +
-              "). " +
-              "If you meant to render a collection of children, use an array " +
-              "instead."
-          );
-        }
-      }
-
-      return subtreeCount;
-    }
-    /**
-     * Maps children that are typically specified as `props.children`.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrenmap
-     *
-     * The provided mapFunction(child, index) will be called for each
-     * leaf child.
-     *
-     * @param {?*} children Children tree container.
-     * @param {function(*, int)} func The map function.
-     * @param {*} context Context for mapFunction.
-     * @return {object} Object containing the ordered map of results.
-     */
-
-    function mapChildren(children, func, context) {
-      if (children == null) {
-        // $FlowFixMe limitation refining abstract types in Flow
-        return children;
-      }
-
-      var result = [];
-      var count = 0;
-      mapIntoArray(children, result, "", "", function (child) {
-        return func.call(context, child, count++);
-      });
-      return result;
-    }
-    /**
-     * Count the number of children that are typically specified as
-     * `props.children`.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrencount
-     *
-     * @param {?*} children Children tree container.
-     * @return {number} The number of children.
-     */
-
-    function countChildren(children) {
-      var n = 0;
-      mapChildren(children, function () {
-        n++; // Don't return anything
-      });
-      return n;
-    }
-    /**
-     * Iterates through children that are typically specified as `props.children`.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrenforeach
-     *
-     * The provided forEachFunc(child, index) will be called for each
-     * leaf child.
-     *
-     * @param {?*} children Children tree container.
-     * @param {function(*, int)} forEachFunc
-     * @param {*} forEachContext Context for forEachContext.
-     */
-
-    function forEachChildren(children, forEachFunc, forEachContext) {
-      mapChildren(
-        children, // $FlowFixMe[missing-this-annot]
-        function () {
-          forEachFunc.apply(this, arguments); // Don't return anything.
-        },
-        forEachContext
-      );
-    }
-    /**
-     * Flatten a children object (typically specified as `props.children`) and
-     * return an array with appropriately re-keyed children.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrentoarray
-     */
-
-    function toArray(children) {
-      return (
-        mapChildren(children, function (child) {
-          return child;
-        }) || []
-      );
-    }
-    /**
-     * Returns the first child in a collection of children and verifies that there
-     * is only one child in the collection.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrenonly
-     *
-     * The current implementation of this function assumes that a single child gets
-     * passed without a wrapper, but the purpose of this helper function is to
-     * abstract away the particular structure of children.
-     *
-     * @param {?object} children Child collection structure.
-     * @return {ReactElement} The first and only `ReactElement` contained in the
-     * structure.
-     */
-
-    function onlyChild(children) {
-      if (!isValidElement$1(children)) {
-        throw new Error(
-          "React.Children.only expected to receive a single React element child."
-        );
-      }
-
-      return children;
-    }
-
-    function createContext(defaultValue) {
-      // TODO: Second argument used to be an optional `calculateChangedBits`
-      // function. Warn to reserve for future use?
-      var context = {
-        $$typeof: REACT_CONTEXT_TYPE,
-        // As a workaround to support multiple concurrent renderers, we categorize
-        // some renderers as primary and others as secondary. We only expect
-        // there to be two concurrent renderers at most: React Native (primary) and
-        // Fabric (secondary); React DOM (primary) and React ART (secondary).
-        // Secondary renderers store their context values on separate fields.
-        _currentValue: defaultValue,
-        _currentValue2: defaultValue,
-        // Used to track how many concurrent renderers this context currently
-        // supports within in a single renderer. Such as parallel server rendering.
-        _threadCount: 0,
-        // These are circular
-        Provider: null,
-        Consumer: null,
-        // Add these to use same hidden class in VM as ServerContext
-        _defaultValue: null,
-        _globalName: null
-      };
-      context.Provider = {
-        $$typeof: REACT_PROVIDER_TYPE,
-        _context: context
-      };
-      var hasWarnedAboutUsingNestedContextConsumers = false;
-      var hasWarnedAboutUsingConsumerProvider = false;
-      var hasWarnedAboutDisplayNameOnConsumer = false;
-
-      {
-        // A separate object, but proxies back to the original context object for
-        // backwards compatibility. It has a different $$typeof, so we can properly
-        // warn for the incorrect usage of Context as a Consumer.
-        var Consumer = {
-          $$typeof: REACT_CONTEXT_TYPE,
-          _context: context
-        }; // $FlowFixMe[prop-missing]: Flow complains about not setting a value, which is intentional here
-
-        Object.defineProperties(Consumer, {
-          Provider: {
-            get: function () {
-              if (!hasWarnedAboutUsingConsumerProvider) {
-                hasWarnedAboutUsingConsumerProvider = true;
-
-                error(
-                  "Rendering <Context.Consumer.Provider> is not supported and will be removed in " +
-                    "a future major release. Did you mean to render <Context.Provider> instead?"
-                );
-              }
-
-              return context.Provider;
-            },
-            set: function (_Provider) {
-              context.Provider = _Provider;
-            }
-          },
-          _currentValue: {
-            get: function () {
-              return context._currentValue;
-            },
-            set: function (_currentValue) {
-              context._currentValue = _currentValue;
-            }
-          },
-          _currentValue2: {
-            get: function () {
-              return context._currentValue2;
-            },
-            set: function (_currentValue2) {
-              context._currentValue2 = _currentValue2;
-            }
-          },
-          _threadCount: {
-            get: function () {
-              return context._threadCount;
-            },
-            set: function (_threadCount) {
-              context._threadCount = _threadCount;
-            }
-          },
-          Consumer: {
-            get: function () {
-              if (!hasWarnedAboutUsingNestedContextConsumers) {
-                hasWarnedAboutUsingNestedContextConsumers = true;
-
-                error(
-                  "Rendering <Context.Consumer.Consumer> is not supported and will be removed in " +
-                    "a future major release. Did you mean to render <Context.Consumer> instead?"
-                );
-              }
-
-              return context.Consumer;
-            }
-          },
-          displayName: {
-            get: function () {
-              return context.displayName;
-            },
-            set: function (displayName) {
-              if (!hasWarnedAboutDisplayNameOnConsumer) {
-                warn(
-                  "Setting `displayName` on Context.Consumer has no effect. " +
-                    "You should set it directly on the context with Context.displayName = '%s'.",
-                  displayName
-                );
-
-                hasWarnedAboutDisplayNameOnConsumer = true;
-              }
-            }
-          }
-        }); // $FlowFixMe[prop-missing]: Flow complains about missing properties because it doesn't understand defineProperty
-
-        context.Consumer = Consumer;
-      }
-
-      {
-        context._currentRenderer = null;
-        context._currentRenderer2 = null;
-      }
-
-      return context;
-    }
-
-    var Uninitialized = -1;
-    var Pending = 0;
-    var Resolved = 1;
-    var Rejected = 2;
-
-    function lazyInitializer(payload) {
-      if (payload._status === Uninitialized) {
-        var ctor = payload._result;
-        var thenable = ctor(); // Transition to the next state.
-        // This might throw either because it's missing or throws. If so, we treat it
-        // as still uninitialized and try again next time. Which is the same as what
-        // happens if the ctor or any wrappers processing the ctor throws. This might
-        // end up fixing it if the resolution was a concurrency bug.
-
-        thenable.then(
-          function (moduleObject) {
-            if (
-              payload._status === Pending ||
-              payload._status === Uninitialized
-            ) {
-              // Transition to the next state.
-              var resolved = payload;
-              resolved._status = Resolved;
-              resolved._result = moduleObject;
-            }
-          },
-          function (error) {
-            if (
-              payload._status === Pending ||
-              payload._status === Uninitialized
-            ) {
-              // Transition to the next state.
-              var rejected = payload;
-              rejected._status = Rejected;
-              rejected._result = error;
-            }
-          }
-        );
-
-        if (payload._status === Uninitialized) {
-          // In case, we're still uninitialized, then we're waiting for the thenable
-          // to resolve. Set it as pending in the meantime.
-          var pending = payload;
-          pending._status = Pending;
-          pending._result = thenable;
-        }
-      }
-
-      if (payload._status === Resolved) {
-        var moduleObject = payload._result;
-
-        {
-          if (moduleObject === undefined) {
-            error(
-              "lazy: Expected the result of a dynamic imp" +
-                "ort() call. " +
-                "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
-                "const MyComponent = lazy(() => imp" +
-                "ort('./MyComponent'))\n\n" +
-                "Did you accidentally put curly braces around the import?",
-              moduleObject
-            );
-          }
-        }
-
-        {
-          if (!("default" in moduleObject)) {
-            error(
-              "lazy: Expected the result of a dynamic imp" +
-                "ort() call. " +
-                "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
-                "const MyComponent = lazy(() => imp" +
-                "ort('./MyComponent'))",
-              moduleObject
-            );
-          }
-        }
-
-        return moduleObject.default;
-      } else {
-        throw payload._result;
-      }
-    }
-
-    function lazy(ctor) {
-      var payload = {
-        // We use these fields to store the result.
-        _status: Uninitialized,
-        _result: ctor
-      };
-      var lazyType = {
-        $$typeof: REACT_LAZY_TYPE,
-        _payload: payload,
-        _init: lazyInitializer
-      };
-
-      {
-        // In production, this would just set it on the object.
-        var defaultProps;
-        var propTypes; // $FlowFixMe[prop-missing]
-
-        Object.defineProperties(lazyType, {
-          defaultProps: {
-            configurable: true,
-            get: function () {
-              return defaultProps;
-            },
-            // $FlowFixMe[missing-local-annot]
-            set: function (newDefaultProps) {
-              error(
-                "React.lazy(...): It is not supported to assign `defaultProps` to " +
-                  "a lazy component import. Either specify them where the component " +
-                  "is defined, or create a wrapping component around it."
-              );
-
-              defaultProps = newDefaultProps; // Match production behavior more closely:
-              // $FlowFixMe[prop-missing]
-
-              Object.defineProperty(lazyType, "defaultProps", {
-                enumerable: true
-              });
-            }
-          },
-          propTypes: {
-            configurable: true,
-            get: function () {
-              return propTypes;
-            },
-            // $FlowFixMe[missing-local-annot]
-            set: function (newPropTypes) {
-              error(
-                "React.lazy(...): It is not supported to assign `propTypes` to " +
-                  "a lazy component import. Either specify them where the component " +
-                  "is defined, or create a wrapping component around it."
-              );
-
-              propTypes = newPropTypes; // Match production behavior more closely:
-              // $FlowFixMe[prop-missing]
-
-              Object.defineProperty(lazyType, "propTypes", {
-                enumerable: true
-              });
-            }
-          }
-        });
-      }
-
-      return lazyType;
-    }
-
-    function forwardRef(render) {
-      {
-        if (render != null && render.$$typeof === REACT_MEMO_TYPE) {
-          error(
-            "forwardRef requires a render function but received a `memo` " +
-              "component. Instead of forwardRef(memo(...)), use " +
-              "memo(forwardRef(...))."
-          );
-        } else if (typeof render !== "function") {
-          error(
-            "forwardRef requires a render function but was given %s.",
-            render === null ? "null" : typeof render
-          );
-        } else {
-          if (render.length !== 0 && render.length !== 2) {
-            error(
-              "forwardRef render functions accept exactly two parameters: props and ref. %s",
-              render.length === 1
-                ? "Did you forget to use the ref parameter?"
-                : "Any additional parameter will be undefined."
-            );
-          }
-        }
-
-        if (render != null) {
-          if (render.defaultProps != null || render.propTypes != null) {
-            error(
-              "forwardRef render functions do not support propTypes or defaultProps. " +
-                "Did you accidentally pass a React component?"
-            );
-          }
-        }
-      }
-
-      var elementType = {
-        $$typeof: REACT_FORWARD_REF_TYPE,
-        render: render
-      };
-
-      {
-        var ownName;
-        Object.defineProperty(elementType, "displayName", {
-          enumerable: false,
-          configurable: true,
-          get: function () {
-            return ownName;
-          },
-          set: function (name) {
-            ownName = name; // The inner component shouldn't inherit this display name in most cases,
-            // because the component may be used elsewhere.
-            // But it's nice for anonymous functions to inherit the name,
-            // so that our component-stack generation logic will display their frames.
-            // An anonymous function generally suggests a pattern like:
-            //   React.forwardRef((props, ref) => {...});
-            // This kind of inner function is not used elsewhere so the side effect is okay.
-
-            if (!render.name && !render.displayName) {
-              render.displayName = name;
-            }
-          }
-        });
-      }
-
-      return elementType;
-    }
-
     var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
     function isValidElementType(type) {
       if (typeof type === "string" || typeof type === "function") {
@@ -1708,335 +1054,6 @@ if (__DEV__) {
       }
 
       return false;
-    }
-
-    function memo(type, compare) {
-      {
-        if (!isValidElementType(type)) {
-          error(
-            "memo: The first argument must be a component. Instead " +
-              "received: %s",
-            type === null ? "null" : typeof type
-          );
-        }
-      }
-
-      var elementType = {
-        $$typeof: REACT_MEMO_TYPE,
-        type: type,
-        compare: compare === undefined ? null : compare
-      };
-
-      {
-        var ownName;
-        Object.defineProperty(elementType, "displayName", {
-          enumerable: false,
-          configurable: true,
-          get: function () {
-            return ownName;
-          },
-          set: function (name) {
-            ownName = name; // The inner component shouldn't inherit this display name in most cases,
-            // because the component may be used elsewhere.
-            // But it's nice for anonymous functions to inherit the name,
-            // so that our component-stack generation logic will display their frames.
-            // An anonymous function generally suggests a pattern like:
-            //   React.memo((props) => {...});
-            // This kind of inner function is not used elsewhere so the side effect is okay.
-
-            if (!type.name && !type.displayName) {
-              type.displayName = name;
-            }
-          }
-        });
-      }
-
-      return elementType;
-    }
-
-    /**
-     * Keeps track of the current Cache dispatcher.
-     */
-    var ReactCurrentCache = {
-      current: null
-    };
-
-    var UNTERMINATED = 0;
-    var TERMINATED = 1;
-    var ERRORED = 2;
-
-    function createCacheRoot() {
-      return new WeakMap();
-    }
-
-    function createCacheNode() {
-      return {
-        s: UNTERMINATED,
-        // status, represents whether the cached computation returned a value or threw an error
-        v: undefined,
-        // value, either the cached result or an error, depending on s
-        o: null,
-        // object cache, a WeakMap where non-primitive arguments are stored
-        p: null // primitive cache, a regular Map where primitive arguments are stored.
-      };
-    }
-
-    function cache(fn) {
-      return function () {
-        var dispatcher = ReactCurrentCache.current;
-
-        if (!dispatcher) {
-          // If there is no dispatcher, then we treat this as not being cached.
-          // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
-          return fn.apply(null, arguments);
-        }
-
-        var fnMap = dispatcher.getCacheForType(createCacheRoot);
-        var fnNode = fnMap.get(fn);
-        var cacheNode;
-
-        if (fnNode === undefined) {
-          cacheNode = createCacheNode();
-          fnMap.set(fn, cacheNode);
-        } else {
-          cacheNode = fnNode;
-        }
-
-        for (var i = 0, l = arguments.length; i < l; i++) {
-          var arg = arguments[i];
-
-          if (
-            typeof arg === "function" ||
-            (typeof arg === "object" && arg !== null)
-          ) {
-            // Objects go into a WeakMap
-            var objectCache = cacheNode.o;
-
-            if (objectCache === null) {
-              cacheNode.o = objectCache = new WeakMap();
-            }
-
-            var objectNode = objectCache.get(arg);
-
-            if (objectNode === undefined) {
-              cacheNode = createCacheNode();
-              objectCache.set(arg, cacheNode);
-            } else {
-              cacheNode = objectNode;
-            }
-          } else {
-            // Primitives go into a regular Map
-            var primitiveCache = cacheNode.p;
-
-            if (primitiveCache === null) {
-              cacheNode.p = primitiveCache = new Map();
-            }
-
-            var primitiveNode = primitiveCache.get(arg);
-
-            if (primitiveNode === undefined) {
-              cacheNode = createCacheNode();
-              primitiveCache.set(arg, cacheNode);
-            } else {
-              cacheNode = primitiveNode;
-            }
-          }
-        }
-
-        if (cacheNode.s === TERMINATED) {
-          return cacheNode.v;
-        }
-
-        if (cacheNode.s === ERRORED) {
-          throw cacheNode.v;
-        }
-
-        try {
-          // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
-          var result = fn.apply(null, arguments);
-          var terminatedNode = cacheNode;
-          terminatedNode.s = TERMINATED;
-          terminatedNode.v = result;
-          return result;
-        } catch (error) {
-          // We store the first error that's thrown and rethrow it.
-          var erroredNode = cacheNode;
-          erroredNode.s = ERRORED;
-          erroredNode.v = error;
-          throw error;
-        }
-      };
-    }
-
-    /**
-     * Keeps track of the current dispatcher.
-     */
-    var ReactCurrentDispatcher$1 = {
-      current: null
-    };
-
-    function resolveDispatcher() {
-      var dispatcher = ReactCurrentDispatcher$1.current;
-
-      {
-        if (dispatcher === null) {
-          error(
-            "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for" +
-              " one of the following reasons:\n" +
-              "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
-              "2. You might be breaking the Rules of Hooks\n" +
-              "3. You might have more than one copy of React in the same app\n" +
-              "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
-          );
-        }
-      } // Will result in a null access error if accessed outside render phase. We
-      // intentionally don't throw our own error because this is in a hot path.
-      // Also helps ensure this is inlined.
-
-      return dispatcher;
-    }
-
-    function getCacheSignal() {
-      var dispatcher = ReactCurrentCache.current;
-
-      if (!dispatcher) {
-        // If we have no cache to associate with this call, then we don't know
-        // its lifetime. We abort early since that's safer than letting it live
-        // for ever. Unlike just caching which can be a functional noop outside
-        // of React, these should generally always be associated with some React
-        // render but we're not limiting quite as much as making it a Hook.
-        // It's safer than erroring early at runtime.
-        var controller = new AbortController();
-        var reason = new Error(
-          "This CacheSignal was requested outside React which means that it is " +
-            "immediately aborted."
-        );
-        controller.abort(reason);
-        return controller.signal;
-      }
-
-      return dispatcher.getCacheSignal();
-    }
-    function getCacheForType(resourceType) {
-      var dispatcher = ReactCurrentCache.current;
-
-      if (!dispatcher) {
-        // If there is no dispatcher, then we treat this as not being cached.
-        return resourceType();
-      }
-
-      return dispatcher.getCacheForType(resourceType);
-    }
-    function useContext(Context) {
-      var dispatcher = resolveDispatcher();
-
-      {
-        // TODO: add a more generic warning for invalid values.
-        if (Context._context !== undefined) {
-          var realContext = Context._context; // Don't deduplicate because this legitimately causes bugs
-          // and nobody should be using this in existing code.
-
-          if (realContext.Consumer === Context) {
-            error(
-              "Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be " +
-                "removed in a future major release. Did you mean to call useContext(Context) instead?"
-            );
-          } else if (realContext.Provider === Context) {
-            error(
-              "Calling useContext(Context.Provider) is not supported. " +
-                "Did you mean to call useContext(Context) instead?"
-            );
-          }
-        }
-      }
-
-      return dispatcher.useContext(Context);
-    }
-    function useState(initialState) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useState(initialState);
-    }
-    function useReducer(reducer, initialArg, init) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useReducer(reducer, initialArg, init);
-    }
-    function useRef(initialValue) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useRef(initialValue);
-    }
-    function useEffect(create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useEffect(create, deps);
-    }
-    function useInsertionEffect(create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useInsertionEffect(create, deps);
-    }
-    function useLayoutEffect(create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useLayoutEffect(create, deps);
-    }
-    function useCallback(callback, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useCallback(callback, deps);
-    }
-    function useMemo(create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useMemo(create, deps);
-    }
-    function useImperativeHandle(ref, create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useImperativeHandle(ref, create, deps);
-    }
-    function useDebugValue(value, formatterFn) {
-      {
-        var dispatcher = resolveDispatcher();
-        return dispatcher.useDebugValue(value, formatterFn);
-      }
-    }
-    function useTransition() {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useTransition();
-    }
-    function useDeferredValue(value, initialValue) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useDeferredValue(value, initialValue);
-    }
-    function useId() {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useId();
-    }
-    function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useSyncExternalStore(
-        subscribe,
-        getSnapshot,
-        getServerSnapshot
-      );
-    }
-    function useCacheRefresh() {
-      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-      return dispatcher.useCacheRefresh();
-    }
-    function use(usable) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.use(usable);
-    }
-    function useMemoCache(size) {
-      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-      return dispatcher.useMemoCache(size);
-    }
-    function useEffectEvent(callback) {
-      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-      return dispatcher.useEffectEvent(callback);
-    }
-    function useOptimistic(passthrough, reducer) {
-      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
-
-      return dispatcher.useOptimistic(passthrough, reducer);
     }
 
     // Helpers to patch console.logs to avoid logging during side-effect free
@@ -2135,6 +1152,20 @@ if (__DEV__) {
         }
       }
     }
+
+    /**
+     * Keeps track of the current dispatcher.
+     */
+    var ReactCurrentDispatcher$1 = {
+      current: null
+    };
+
+    /**
+     * Keeps track of the current Cache dispatcher.
+     */
+    var ReactCurrentCache = {
+      current: null
+    };
 
     /**
      * Keeps track of the current batch's configuration such as how long an update
@@ -3044,6 +2075,979 @@ if (__DEV__) {
       return newElement;
     }
 
+    var createElement = createElementWithValidation;
+    var cloneElement = cloneElementWithValidation;
+    var createFactory = createFactoryWithValidation;
+
+    var SEPARATOR = ".";
+    var SUBSEPARATOR = ":";
+    /**
+     * Escape and wrap key so it is safe to use as a reactid
+     *
+     * @param {string} key to be escaped.
+     * @return {string} the escaped key.
+     */
+
+    function escape(key) {
+      var escapeRegex = /[=:]/g;
+      var escaperLookup = {
+        "=": "=0",
+        ":": "=2"
+      };
+      var escapedString = key.replace(escapeRegex, function (match) {
+        return escaperLookup[match];
+      });
+      return "$" + escapedString;
+    }
+    /**
+     * TODO: Test that a single child and an array with one item have the same key
+     * pattern.
+     */
+
+    var didWarnAboutMaps = false;
+    var userProvidedKeyEscapeRegex = /\/+/g;
+
+    function escapeUserProvidedKey(text) {
+      return text.replace(userProvidedKeyEscapeRegex, "$&/");
+    }
+    /**
+     * Generate a key string that identifies a element within a set.
+     *
+     * @param {*} element A element that could contain a manual key.
+     * @param {number} index Index that is used if a manual key is not provided.
+     * @return {string}
+     */
+
+    function getElementKey(element, index) {
+      // Do some typechecking here since we call this blindly. We want to ensure
+      // that we don't block potential future ES APIs.
+      if (
+        typeof element === "object" &&
+        element !== null &&
+        element.key != null
+      ) {
+        // Explicit key
+        {
+          checkKeyStringCoercion(element.key);
+        }
+
+        return escape("" + element.key);
+      } // Implicit key determined by the index in the set
+
+      return index.toString(36);
+    }
+
+    function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
+      var type = typeof children;
+
+      if (type === "undefined" || type === "boolean") {
+        // All of the above are perceived as null.
+        children = null;
+      }
+
+      var invokeCallback = false;
+
+      if (children === null) {
+        invokeCallback = true;
+      } else {
+        switch (type) {
+          case "string":
+          case "number":
+            invokeCallback = true;
+            break;
+
+          case "object":
+            switch (children.$$typeof) {
+              case REACT_ELEMENT_TYPE:
+              case REACT_PORTAL_TYPE:
+                invokeCallback = true;
+            }
+        }
+      }
+
+      if (invokeCallback) {
+        var _child = children;
+        var mappedChild = callback(_child); // If it's the only child, treat the name as if it was wrapped in an array
+        // so that it's consistent if the number of children grows:
+
+        var childKey =
+          nameSoFar === "" ? SEPARATOR + getElementKey(_child, 0) : nameSoFar;
+
+        if (isArray(mappedChild)) {
+          var escapedChildKey = "";
+
+          if (childKey != null) {
+            escapedChildKey = escapeUserProvidedKey(childKey) + "/";
+          }
+
+          mapIntoArray(mappedChild, array, escapedChildKey, "", function (c) {
+            return c;
+          });
+        } else if (mappedChild != null) {
+          if (isValidElement$1(mappedChild)) {
+            {
+              // The `if` statement here prevents auto-disabling of the safe
+              // coercion ESLint rule, so we must manually disable it below.
+              // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
+              if (
+                mappedChild.key &&
+                (!_child || _child.key !== mappedChild.key)
+              ) {
+                checkKeyStringCoercion(mappedChild.key);
+              }
+            }
+
+            mappedChild = cloneAndReplaceKey(
+              mappedChild, // Keep both the (mapped) and old keys if they differ, just as
+              // traverseAllChildren used to do for objects as children
+              escapedPrefix + // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
+                (mappedChild.key && (!_child || _child.key !== mappedChild.key)
+                  ? escapeUserProvidedKey(
+                      // $FlowFixMe[unsafe-addition]
+                      "" + mappedChild.key // eslint-disable-line react-internal/safe-string-coercion
+                    ) + "/"
+                  : "") +
+                childKey
+            );
+          }
+
+          array.push(mappedChild);
+        }
+
+        return 1;
+      }
+
+      var child;
+      var nextName;
+      var subtreeCount = 0; // Count of children found in the current subtree.
+
+      var nextNamePrefix =
+        nameSoFar === "" ? SEPARATOR : nameSoFar + SUBSEPARATOR;
+
+      if (isArray(children)) {
+        for (var i = 0; i < children.length; i++) {
+          child = children[i];
+          nextName = nextNamePrefix + getElementKey(child, i);
+          subtreeCount += mapIntoArray(
+            child,
+            array,
+            escapedPrefix,
+            nextName,
+            callback
+          );
+        }
+      } else {
+        var iteratorFn = getIteratorFn(children);
+
+        if (typeof iteratorFn === "function") {
+          var iterableChildren = children;
+
+          {
+            // Warn about using Maps as children
+            if (iteratorFn === iterableChildren.entries) {
+              if (!didWarnAboutMaps) {
+                warn(
+                  "Using Maps as children is not supported. " +
+                    "Use an array of keyed ReactElements instead."
+                );
+              }
+
+              didWarnAboutMaps = true;
+            }
+          }
+
+          var iterator = iteratorFn.call(iterableChildren);
+          var step;
+          var ii = 0; // $FlowFixMe[incompatible-use] `iteratorFn` might return null according to typing.
+
+          while (!(step = iterator.next()).done) {
+            child = step.value;
+            nextName = nextNamePrefix + getElementKey(child, ii++);
+            subtreeCount += mapIntoArray(
+              child,
+              array,
+              escapedPrefix,
+              nextName,
+              callback
+            );
+          }
+        } else if (type === "object") {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          var childrenString = String(children);
+          throw new Error(
+            "Objects are not valid as a React child (found: " +
+              (childrenString === "[object Object]"
+                ? "object with keys {" + Object.keys(children).join(", ") + "}"
+                : childrenString) +
+              "). " +
+              "If you meant to render a collection of children, use an array " +
+              "instead."
+          );
+        }
+      }
+
+      return subtreeCount;
+    }
+    /**
+     * Maps children that are typically specified as `props.children`.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrenmap
+     *
+     * The provided mapFunction(child, index) will be called for each
+     * leaf child.
+     *
+     * @param {?*} children Children tree container.
+     * @param {function(*, int)} func The map function.
+     * @param {*} context Context for mapFunction.
+     * @return {object} Object containing the ordered map of results.
+     */
+
+    function mapChildren(children, func, context) {
+      if (children == null) {
+        // $FlowFixMe limitation refining abstract types in Flow
+        return children;
+      }
+
+      var result = [];
+      var count = 0;
+      mapIntoArray(children, result, "", "", function (child) {
+        return func.call(context, child, count++);
+      });
+      return result;
+    }
+    /**
+     * Count the number of children that are typically specified as
+     * `props.children`.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrencount
+     *
+     * @param {?*} children Children tree container.
+     * @return {number} The number of children.
+     */
+
+    function countChildren(children) {
+      var n = 0;
+      mapChildren(children, function () {
+        n++; // Don't return anything
+      });
+      return n;
+    }
+    /**
+     * Iterates through children that are typically specified as `props.children`.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrenforeach
+     *
+     * The provided forEachFunc(child, index) will be called for each
+     * leaf child.
+     *
+     * @param {?*} children Children tree container.
+     * @param {function(*, int)} forEachFunc
+     * @param {*} forEachContext Context for forEachContext.
+     */
+
+    function forEachChildren(children, forEachFunc, forEachContext) {
+      mapChildren(
+        children, // $FlowFixMe[missing-this-annot]
+        function () {
+          forEachFunc.apply(this, arguments); // Don't return anything.
+        },
+        forEachContext
+      );
+    }
+    /**
+     * Flatten a children object (typically specified as `props.children`) and
+     * return an array with appropriately re-keyed children.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrentoarray
+     */
+
+    function toArray(children) {
+      return (
+        mapChildren(children, function (child) {
+          return child;
+        }) || []
+      );
+    }
+    /**
+     * Returns the first child in a collection of children and verifies that there
+     * is only one child in the collection.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrenonly
+     *
+     * The current implementation of this function assumes that a single child gets
+     * passed without a wrapper, but the purpose of this helper function is to
+     * abstract away the particular structure of children.
+     *
+     * @param {?object} children Child collection structure.
+     * @return {ReactElement} The first and only `ReactElement` contained in the
+     * structure.
+     */
+
+    function onlyChild(children) {
+      if (!isValidElement$1(children)) {
+        throw new Error(
+          "React.Children.only expected to receive a single React element child."
+        );
+      }
+
+      return children;
+    }
+
+    function createContext(defaultValue) {
+      // TODO: Second argument used to be an optional `calculateChangedBits`
+      // function. Warn to reserve for future use?
+      var context = {
+        $$typeof: REACT_CONTEXT_TYPE,
+        // As a workaround to support multiple concurrent renderers, we categorize
+        // some renderers as primary and others as secondary. We only expect
+        // there to be two concurrent renderers at most: React Native (primary) and
+        // Fabric (secondary); React DOM (primary) and React ART (secondary).
+        // Secondary renderers store their context values on separate fields.
+        _currentValue: defaultValue,
+        _currentValue2: defaultValue,
+        // Used to track how many concurrent renderers this context currently
+        // supports within in a single renderer. Such as parallel server rendering.
+        _threadCount: 0,
+        // These are circular
+        Provider: null,
+        Consumer: null,
+        // Add these to use same hidden class in VM as ServerContext
+        _defaultValue: null,
+        _globalName: null
+      };
+      context.Provider = {
+        $$typeof: REACT_PROVIDER_TYPE,
+        _context: context
+      };
+      var hasWarnedAboutUsingNestedContextConsumers = false;
+      var hasWarnedAboutUsingConsumerProvider = false;
+      var hasWarnedAboutDisplayNameOnConsumer = false;
+
+      {
+        // A separate object, but proxies back to the original context object for
+        // backwards compatibility. It has a different $$typeof, so we can properly
+        // warn for the incorrect usage of Context as a Consumer.
+        var Consumer = {
+          $$typeof: REACT_CONTEXT_TYPE,
+          _context: context
+        }; // $FlowFixMe[prop-missing]: Flow complains about not setting a value, which is intentional here
+
+        Object.defineProperties(Consumer, {
+          Provider: {
+            get: function () {
+              if (!hasWarnedAboutUsingConsumerProvider) {
+                hasWarnedAboutUsingConsumerProvider = true;
+
+                error(
+                  "Rendering <Context.Consumer.Provider> is not supported and will be removed in " +
+                    "a future major release. Did you mean to render <Context.Provider> instead?"
+                );
+              }
+
+              return context.Provider;
+            },
+            set: function (_Provider) {
+              context.Provider = _Provider;
+            }
+          },
+          _currentValue: {
+            get: function () {
+              return context._currentValue;
+            },
+            set: function (_currentValue) {
+              context._currentValue = _currentValue;
+            }
+          },
+          _currentValue2: {
+            get: function () {
+              return context._currentValue2;
+            },
+            set: function (_currentValue2) {
+              context._currentValue2 = _currentValue2;
+            }
+          },
+          _threadCount: {
+            get: function () {
+              return context._threadCount;
+            },
+            set: function (_threadCount) {
+              context._threadCount = _threadCount;
+            }
+          },
+          Consumer: {
+            get: function () {
+              if (!hasWarnedAboutUsingNestedContextConsumers) {
+                hasWarnedAboutUsingNestedContextConsumers = true;
+
+                error(
+                  "Rendering <Context.Consumer.Consumer> is not supported and will be removed in " +
+                    "a future major release. Did you mean to render <Context.Consumer> instead?"
+                );
+              }
+
+              return context.Consumer;
+            }
+          },
+          displayName: {
+            get: function () {
+              return context.displayName;
+            },
+            set: function (displayName) {
+              if (!hasWarnedAboutDisplayNameOnConsumer) {
+                warn(
+                  "Setting `displayName` on Context.Consumer has no effect. " +
+                    "You should set it directly on the context with Context.displayName = '%s'.",
+                  displayName
+                );
+
+                hasWarnedAboutDisplayNameOnConsumer = true;
+              }
+            }
+          }
+        }); // $FlowFixMe[prop-missing]: Flow complains about missing properties because it doesn't understand defineProperty
+
+        context.Consumer = Consumer;
+      }
+
+      {
+        context._currentRenderer = null;
+        context._currentRenderer2 = null;
+      }
+
+      return context;
+    }
+
+    var Uninitialized = -1;
+    var Pending = 0;
+    var Resolved = 1;
+    var Rejected = 2;
+
+    function lazyInitializer(payload) {
+      if (payload._status === Uninitialized) {
+        var ctor = payload._result;
+        var thenable = ctor(); // Transition to the next state.
+        // This might throw either because it's missing or throws. If so, we treat it
+        // as still uninitialized and try again next time. Which is the same as what
+        // happens if the ctor or any wrappers processing the ctor throws. This might
+        // end up fixing it if the resolution was a concurrency bug.
+
+        thenable.then(
+          function (moduleObject) {
+            if (
+              payload._status === Pending ||
+              payload._status === Uninitialized
+            ) {
+              // Transition to the next state.
+              var resolved = payload;
+              resolved._status = Resolved;
+              resolved._result = moduleObject;
+            }
+          },
+          function (error) {
+            if (
+              payload._status === Pending ||
+              payload._status === Uninitialized
+            ) {
+              // Transition to the next state.
+              var rejected = payload;
+              rejected._status = Rejected;
+              rejected._result = error;
+            }
+          }
+        );
+
+        if (payload._status === Uninitialized) {
+          // In case, we're still uninitialized, then we're waiting for the thenable
+          // to resolve. Set it as pending in the meantime.
+          var pending = payload;
+          pending._status = Pending;
+          pending._result = thenable;
+        }
+      }
+
+      if (payload._status === Resolved) {
+        var moduleObject = payload._result;
+
+        {
+          if (moduleObject === undefined) {
+            error(
+              "lazy: Expected the result of a dynamic imp" +
+                "ort() call. " +
+                "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
+                "const MyComponent = lazy(() => imp" +
+                "ort('./MyComponent'))\n\n" +
+                "Did you accidentally put curly braces around the import?",
+              moduleObject
+            );
+          }
+        }
+
+        {
+          if (!("default" in moduleObject)) {
+            error(
+              "lazy: Expected the result of a dynamic imp" +
+                "ort() call. " +
+                "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
+                "const MyComponent = lazy(() => imp" +
+                "ort('./MyComponent'))",
+              moduleObject
+            );
+          }
+        }
+
+        return moduleObject.default;
+      } else {
+        throw payload._result;
+      }
+    }
+
+    function lazy(ctor) {
+      var payload = {
+        // We use these fields to store the result.
+        _status: Uninitialized,
+        _result: ctor
+      };
+      var lazyType = {
+        $$typeof: REACT_LAZY_TYPE,
+        _payload: payload,
+        _init: lazyInitializer
+      };
+
+      {
+        // In production, this would just set it on the object.
+        var defaultProps;
+        var propTypes; // $FlowFixMe[prop-missing]
+
+        Object.defineProperties(lazyType, {
+          defaultProps: {
+            configurable: true,
+            get: function () {
+              return defaultProps;
+            },
+            // $FlowFixMe[missing-local-annot]
+            set: function (newDefaultProps) {
+              error(
+                "React.lazy(...): It is not supported to assign `defaultProps` to " +
+                  "a lazy component import. Either specify them where the component " +
+                  "is defined, or create a wrapping component around it."
+              );
+
+              defaultProps = newDefaultProps; // Match production behavior more closely:
+              // $FlowFixMe[prop-missing]
+
+              Object.defineProperty(lazyType, "defaultProps", {
+                enumerable: true
+              });
+            }
+          },
+          propTypes: {
+            configurable: true,
+            get: function () {
+              return propTypes;
+            },
+            // $FlowFixMe[missing-local-annot]
+            set: function (newPropTypes) {
+              error(
+                "React.lazy(...): It is not supported to assign `propTypes` to " +
+                  "a lazy component import. Either specify them where the component " +
+                  "is defined, or create a wrapping component around it."
+              );
+
+              propTypes = newPropTypes; // Match production behavior more closely:
+              // $FlowFixMe[prop-missing]
+
+              Object.defineProperty(lazyType, "propTypes", {
+                enumerable: true
+              });
+            }
+          }
+        });
+      }
+
+      return lazyType;
+    }
+
+    function forwardRef(render) {
+      {
+        if (render != null && render.$$typeof === REACT_MEMO_TYPE) {
+          error(
+            "forwardRef requires a render function but received a `memo` " +
+              "component. Instead of forwardRef(memo(...)), use " +
+              "memo(forwardRef(...))."
+          );
+        } else if (typeof render !== "function") {
+          error(
+            "forwardRef requires a render function but was given %s.",
+            render === null ? "null" : typeof render
+          );
+        } else {
+          if (render.length !== 0 && render.length !== 2) {
+            error(
+              "forwardRef render functions accept exactly two parameters: props and ref. %s",
+              render.length === 1
+                ? "Did you forget to use the ref parameter?"
+                : "Any additional parameter will be undefined."
+            );
+          }
+        }
+
+        if (render != null) {
+          if (render.defaultProps != null || render.propTypes != null) {
+            error(
+              "forwardRef render functions do not support propTypes or defaultProps. " +
+                "Did you accidentally pass a React component?"
+            );
+          }
+        }
+      }
+
+      var elementType = {
+        $$typeof: REACT_FORWARD_REF_TYPE,
+        render: render
+      };
+
+      {
+        var ownName;
+        Object.defineProperty(elementType, "displayName", {
+          enumerable: false,
+          configurable: true,
+          get: function () {
+            return ownName;
+          },
+          set: function (name) {
+            ownName = name; // The inner component shouldn't inherit this display name in most cases,
+            // because the component may be used elsewhere.
+            // But it's nice for anonymous functions to inherit the name,
+            // so that our component-stack generation logic will display their frames.
+            // An anonymous function generally suggests a pattern like:
+            //   React.forwardRef((props, ref) => {...});
+            // This kind of inner function is not used elsewhere so the side effect is okay.
+
+            if (!render.name && !render.displayName) {
+              render.displayName = name;
+            }
+          }
+        });
+      }
+
+      return elementType;
+    }
+
+    function memo(type, compare) {
+      {
+        if (!isValidElementType(type)) {
+          error(
+            "memo: The first argument must be a component. Instead " +
+              "received: %s",
+            type === null ? "null" : typeof type
+          );
+        }
+      }
+
+      var elementType = {
+        $$typeof: REACT_MEMO_TYPE,
+        type: type,
+        compare: compare === undefined ? null : compare
+      };
+
+      {
+        var ownName;
+        Object.defineProperty(elementType, "displayName", {
+          enumerable: false,
+          configurable: true,
+          get: function () {
+            return ownName;
+          },
+          set: function (name) {
+            ownName = name; // The inner component shouldn't inherit this display name in most cases,
+            // because the component may be used elsewhere.
+            // But it's nice for anonymous functions to inherit the name,
+            // so that our component-stack generation logic will display their frames.
+            // An anonymous function generally suggests a pattern like:
+            //   React.memo((props) => {...});
+            // This kind of inner function is not used elsewhere so the side effect is okay.
+
+            if (!type.name && !type.displayName) {
+              type.displayName = name;
+            }
+          }
+        });
+      }
+
+      return elementType;
+    }
+
+    var UNTERMINATED = 0;
+    var TERMINATED = 1;
+    var ERRORED = 2;
+
+    function createCacheRoot() {
+      return new WeakMap();
+    }
+
+    function createCacheNode() {
+      return {
+        s: UNTERMINATED,
+        // status, represents whether the cached computation returned a value or threw an error
+        v: undefined,
+        // value, either the cached result or an error, depending on s
+        o: null,
+        // object cache, a WeakMap where non-primitive arguments are stored
+        p: null // primitive cache, a regular Map where primitive arguments are stored.
+      };
+    }
+
+    function cache(fn) {
+      return function () {
+        var dispatcher = ReactCurrentCache.current;
+
+        if (!dispatcher) {
+          // If there is no dispatcher, then we treat this as not being cached.
+          // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
+          return fn.apply(null, arguments);
+        }
+
+        var fnMap = dispatcher.getCacheForType(createCacheRoot);
+        var fnNode = fnMap.get(fn);
+        var cacheNode;
+
+        if (fnNode === undefined) {
+          cacheNode = createCacheNode();
+          fnMap.set(fn, cacheNode);
+        } else {
+          cacheNode = fnNode;
+        }
+
+        for (var i = 0, l = arguments.length; i < l; i++) {
+          var arg = arguments[i];
+
+          if (
+            typeof arg === "function" ||
+            (typeof arg === "object" && arg !== null)
+          ) {
+            // Objects go into a WeakMap
+            var objectCache = cacheNode.o;
+
+            if (objectCache === null) {
+              cacheNode.o = objectCache = new WeakMap();
+            }
+
+            var objectNode = objectCache.get(arg);
+
+            if (objectNode === undefined) {
+              cacheNode = createCacheNode();
+              objectCache.set(arg, cacheNode);
+            } else {
+              cacheNode = objectNode;
+            }
+          } else {
+            // Primitives go into a regular Map
+            var primitiveCache = cacheNode.p;
+
+            if (primitiveCache === null) {
+              cacheNode.p = primitiveCache = new Map();
+            }
+
+            var primitiveNode = primitiveCache.get(arg);
+
+            if (primitiveNode === undefined) {
+              cacheNode = createCacheNode();
+              primitiveCache.set(arg, cacheNode);
+            } else {
+              cacheNode = primitiveNode;
+            }
+          }
+        }
+
+        if (cacheNode.s === TERMINATED) {
+          return cacheNode.v;
+        }
+
+        if (cacheNode.s === ERRORED) {
+          throw cacheNode.v;
+        }
+
+        try {
+          // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
+          var result = fn.apply(null, arguments);
+          var terminatedNode = cacheNode;
+          terminatedNode.s = TERMINATED;
+          terminatedNode.v = result;
+          return result;
+        } catch (error) {
+          // We store the first error that's thrown and rethrow it.
+          var erroredNode = cacheNode;
+          erroredNode.s = ERRORED;
+          erroredNode.v = error;
+          throw error;
+        }
+      };
+    }
+
+    function resolveDispatcher() {
+      var dispatcher = ReactCurrentDispatcher$1.current;
+
+      {
+        if (dispatcher === null) {
+          error(
+            "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for" +
+              " one of the following reasons:\n" +
+              "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
+              "2. You might be breaking the Rules of Hooks\n" +
+              "3. You might have more than one copy of React in the same app\n" +
+              "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
+          );
+        }
+      } // Will result in a null access error if accessed outside render phase. We
+      // intentionally don't throw our own error because this is in a hot path.
+      // Also helps ensure this is inlined.
+
+      return dispatcher;
+    }
+
+    function getCacheSignal() {
+      var dispatcher = ReactCurrentCache.current;
+
+      if (!dispatcher) {
+        // If we have no cache to associate with this call, then we don't know
+        // its lifetime. We abort early since that's safer than letting it live
+        // for ever. Unlike just caching which can be a functional noop outside
+        // of React, these should generally always be associated with some React
+        // render but we're not limiting quite as much as making it a Hook.
+        // It's safer than erroring early at runtime.
+        var controller = new AbortController();
+        var reason = new Error(
+          "This CacheSignal was requested outside React which means that it is " +
+            "immediately aborted."
+        );
+        controller.abort(reason);
+        return controller.signal;
+      }
+
+      return dispatcher.getCacheSignal();
+    }
+    function getCacheForType(resourceType) {
+      var dispatcher = ReactCurrentCache.current;
+
+      if (!dispatcher) {
+        // If there is no dispatcher, then we treat this as not being cached.
+        return resourceType();
+      }
+
+      return dispatcher.getCacheForType(resourceType);
+    }
+    function useContext(Context) {
+      var dispatcher = resolveDispatcher();
+
+      {
+        // TODO: add a more generic warning for invalid values.
+        if (Context._context !== undefined) {
+          var realContext = Context._context; // Don't deduplicate because this legitimately causes bugs
+          // and nobody should be using this in existing code.
+
+          if (realContext.Consumer === Context) {
+            error(
+              "Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be " +
+                "removed in a future major release. Did you mean to call useContext(Context) instead?"
+            );
+          } else if (realContext.Provider === Context) {
+            error(
+              "Calling useContext(Context.Provider) is not supported. " +
+                "Did you mean to call useContext(Context) instead?"
+            );
+          }
+        }
+      }
+
+      return dispatcher.useContext(Context);
+    }
+    function useState(initialState) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useState(initialState);
+    }
+    function useReducer(reducer, initialArg, init) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useReducer(reducer, initialArg, init);
+    }
+    function useRef(initialValue) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useRef(initialValue);
+    }
+    function useEffect(create, deps) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useEffect(create, deps);
+    }
+    function useInsertionEffect(create, deps) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useInsertionEffect(create, deps);
+    }
+    function useLayoutEffect(create, deps) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useLayoutEffect(create, deps);
+    }
+    function useCallback(callback, deps) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useCallback(callback, deps);
+    }
+    function useMemo(create, deps) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useMemo(create, deps);
+    }
+    function useImperativeHandle(ref, create, deps) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useImperativeHandle(ref, create, deps);
+    }
+    function useDebugValue(value, formatterFn) {
+      {
+        var dispatcher = resolveDispatcher();
+        return dispatcher.useDebugValue(value, formatterFn);
+      }
+    }
+    function useTransition() {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useTransition();
+    }
+    function useDeferredValue(value, initialValue) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useDeferredValue(value, initialValue);
+    }
+    function useId() {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useId();
+    }
+    function useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useSyncExternalStore(
+        subscribe,
+        getSnapshot,
+        getServerSnapshot
+      );
+    }
+    function useCacheRefresh() {
+      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+      return dispatcher.useCacheRefresh();
+    }
+    function use(usable) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.use(usable);
+    }
+    function useMemoCache(size) {
+      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+      return dispatcher.useMemoCache(size);
+    }
+    function useEffectEvent(callback) {
+      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+      return dispatcher.useEffectEvent(callback);
+    }
+    function useOptimistic(passthrough, reducer) {
+      var dispatcher = resolveDispatcher(); // $FlowFixMe[not-a-function] This is unstable, thus optional
+
+      return dispatcher.useOptimistic(passthrough, reducer);
+    }
+
     function startTransition(scope, options) {
       var prevTransition = ReactCurrentBatchConfig.transition;
       ReactCurrentBatchConfig.transition = {};
@@ -3436,9 +3440,6 @@ if (__DEV__) {
           }
         : enqueueTask;
 
-    var createElement = createElementWithValidation;
-    var cloneElement = cloneElementWithValidation;
-    var createFactory = createFactoryWithValidation;
     var Children = {
       map: mapChildren,
       forEach: forEachChildren,

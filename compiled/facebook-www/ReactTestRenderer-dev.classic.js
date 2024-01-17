@@ -25995,7 +25995,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-7b414a88";
+    var ReactVersion = "18.3.0-www-classic-7998f47a";
 
     // Might add PROFILE later.
 

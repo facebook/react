@@ -21,7 +21,24 @@ var assign = Object.assign,
     ReactCurrentDispatcher: ReactCurrentDispatcher,
     ReactCurrentOwner: ReactCurrentOwner$1
   },
-  ReactServerSharedInternals = { ReactCurrentCache: ReactCurrentCache },
+  ReactServerSharedInternals = { ReactCurrentCache: ReactCurrentCache };
+function formatProdErrorMessage(code) {
+  for (
+    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
+      i = 1;
+    i < arguments.length;
+    i++
+  )
+    url += "&args[]=" + encodeURIComponent(arguments[i]);
+  return (
+    "Minified React error #" +
+    code +
+    "; visit " +
+    url +
+    " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+  );
+}
+var isArrayImpl = Array.isArray,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -39,64 +56,7 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
-function formatProdErrorMessage(code) {
-  for (
-    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
-      i = 1;
-    i < arguments.length;
-    i++
-  )
-    url += "&args[]=" + encodeURIComponent(arguments[i]);
-  return (
-    "Minified React error #" +
-    code +
-    "; visit " +
-    url +
-    " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
-  );
-}
-var ReactNoopUpdateQueue = {
-    isMounted: function () {
-      return !1;
-    },
-    enqueueForceUpdate: function () {},
-    enqueueReplaceState: function () {},
-    enqueueSetState: function () {}
-  },
-  emptyObject = {};
-function Component(props, context, updater) {
-  this.props = props;
-  this.context = context;
-  this.refs = emptyObject;
-  this.updater = updater || ReactNoopUpdateQueue;
-}
-Component.prototype.isReactComponent = {};
-Component.prototype.setState = function (partialState, callback) {
-  if (
-    "object" !== typeof partialState &&
-    "function" !== typeof partialState &&
-    null != partialState
-  )
-    throw Error(formatProdErrorMessage(85));
-  this.updater.enqueueSetState(this, partialState, callback, "setState");
-};
-Component.prototype.forceUpdate = function (callback) {
-  this.updater.enqueueForceUpdate(this, callback, "forceUpdate");
-};
-function ComponentDummy() {}
-ComponentDummy.prototype = Component.prototype;
-function PureComponent(props, context, updater) {
-  this.props = props;
-  this.context = context;
-  this.refs = emptyObject;
-  this.updater = updater || ReactNoopUpdateQueue;
-}
-var pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
-pureComponentPrototype.constructor = PureComponent;
-assign(pureComponentPrototype, Component.prototype);
-pureComponentPrototype.isPureReactComponent = !0;
-var isArrayImpl = Array.isArray,
-  hasOwnProperty = Object.prototype.hasOwnProperty,
+var hasOwnProperty = Object.prototype.hasOwnProperty,
   RESERVED_PROPS$1 = { key: !0, ref: !0, __self: !0, __source: !0 };
 function cloneAndReplaceKey(oldElement, newKey) {
   return {
@@ -489,4 +449,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-06adf867";
+exports.version = "18.3.0-www-modern-40768a61";

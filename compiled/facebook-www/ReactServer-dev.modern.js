@@ -161,7 +161,11 @@ if (__DEV__) {
       ReactCurrentCache: ReactCurrentCache
     };
 
-    var ReactVersion = "18.3.0-www-modern-13822ddf";
+    var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
+
+    function isArray(a) {
+      return isArrayImpl(a);
+    }
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -201,271 +205,6 @@ if (__DEV__) {
       }
 
       return null;
-    }
-
-    var didWarnStateUpdateForUnmountedComponent = {};
-
-    function warnNoop(publicInstance, callerName) {
-      {
-        var _constructor = publicInstance.constructor;
-        var componentName =
-          (_constructor && (_constructor.displayName || _constructor.name)) ||
-          "ReactClass";
-        var warningKey = componentName + "." + callerName;
-
-        if (didWarnStateUpdateForUnmountedComponent[warningKey]) {
-          return;
-        }
-
-        error(
-          "Can't call %s on a component that is not yet mounted. " +
-            "This is a no-op, but it might indicate a bug in your application. " +
-            "Instead, assign to `this.state` directly or define a `state = {};` " +
-            "class property with the desired state in the %s component.",
-          callerName,
-          componentName
-        );
-
-        didWarnStateUpdateForUnmountedComponent[warningKey] = true;
-      }
-    }
-    /**
-     * This is the abstract API for an update queue.
-     */
-
-    var ReactNoopUpdateQueue = {
-      /**
-       * Checks whether or not this composite component is mounted.
-       * @param {ReactClass} publicInstance The instance we want to test.
-       * @return {boolean} True if mounted, false otherwise.
-       * @protected
-       * @final
-       */
-      isMounted: function (publicInstance) {
-        return false;
-      },
-
-      /**
-       * Forces an update. This should only be invoked when it is known with
-       * certainty that we are **not** in a DOM transaction.
-       *
-       * You may want to call this when you know that some deeper aspect of the
-       * component's state has changed but `setState` was not called.
-       *
-       * This will not invoke `shouldComponentUpdate`, but it will invoke
-       * `componentWillUpdate` and `componentDidUpdate`.
-       *
-       * @param {ReactClass} publicInstance The instance that should rerender.
-       * @param {?function} callback Called after component is updated.
-       * @param {?string} callerName name of the calling function in the public API.
-       * @internal
-       */
-      enqueueForceUpdate: function (publicInstance, callback, callerName) {
-        warnNoop(publicInstance, "forceUpdate");
-      },
-
-      /**
-       * Replaces all of the state. Always use this or `setState` to mutate state.
-       * You should treat `this.state` as immutable.
-       *
-       * There is no guarantee that `this.state` will be immediately updated, so
-       * accessing `this.state` after calling this method may return the old value.
-       *
-       * @param {ReactClass} publicInstance The instance that should rerender.
-       * @param {object} completeState Next state.
-       * @param {?function} callback Called after component is updated.
-       * @param {?string} callerName name of the calling function in the public API.
-       * @internal
-       */
-      enqueueReplaceState: function (
-        publicInstance,
-        completeState,
-        callback,
-        callerName
-      ) {
-        warnNoop(publicInstance, "replaceState");
-      },
-
-      /**
-       * Sets a subset of the state. This only exists because _pendingState is
-       * internal. This provides a merging strategy that is not available to deep
-       * properties which is confusing. TODO: Expose pendingState or don't use it
-       * during the merge.
-       *
-       * @param {ReactClass} publicInstance The instance that should rerender.
-       * @param {object} partialState Next partial state to be merged with state.
-       * @param {?function} callback Called after component is updated.
-       * @param {?string} Name of the calling function in the public API.
-       * @internal
-       */
-      enqueueSetState: function (
-        publicInstance,
-        partialState,
-        callback,
-        callerName
-      ) {
-        warnNoop(publicInstance, "setState");
-      }
-    };
-
-    var emptyObject = {};
-
-    {
-      Object.freeze(emptyObject);
-    }
-    /**
-     * Base class helpers for the updating state of a component.
-     */
-
-    function Component(props, context, updater) {
-      this.props = props;
-      this.context = context; // If a component has string refs, we will assign a different object later.
-
-      this.refs = emptyObject; // We initialize the default updater but the real one gets injected by the
-      // renderer.
-
-      this.updater = updater || ReactNoopUpdateQueue;
-    }
-
-    Component.prototype.isReactComponent = {};
-    /**
-     * Sets a subset of the state. Always use this to mutate
-     * state. You should treat `this.state` as immutable.
-     *
-     * There is no guarantee that `this.state` will be immediately updated, so
-     * accessing `this.state` after calling this method may return the old value.
-     *
-     * There is no guarantee that calls to `setState` will run synchronously,
-     * as they may eventually be batched together.  You can provide an optional
-     * callback that will be executed when the call to setState is actually
-     * completed.
-     *
-     * When a function is provided to setState, it will be called at some point in
-     * the future (not synchronously). It will be called with the up to date
-     * component arguments (state, props, context). These values can be different
-     * from this.* because your function may be called after receiveProps but before
-     * shouldComponentUpdate, and this new state, props, and context will not yet be
-     * assigned to this.
-     *
-     * @param {object|function} partialState Next partial state or function to
-     *        produce next partial state to be merged with current state.
-     * @param {?function} callback Called after state is updated.
-     * @final
-     * @protected
-     */
-
-    Component.prototype.setState = function (partialState, callback) {
-      if (
-        typeof partialState !== "object" &&
-        typeof partialState !== "function" &&
-        partialState != null
-      ) {
-        throw new Error(
-          "setState(...): takes an object of state variables to update or a " +
-            "function which returns an object of state variables."
-        );
-      }
-
-      this.updater.enqueueSetState(this, partialState, callback, "setState");
-    };
-    /**
-     * Forces an update. This should only be invoked when it is known with
-     * certainty that we are **not** in a DOM transaction.
-     *
-     * You may want to call this when you know that some deeper aspect of the
-     * component's state has changed but `setState` was not called.
-     *
-     * This will not invoke `shouldComponentUpdate`, but it will invoke
-     * `componentWillUpdate` and `componentDidUpdate`.
-     *
-     * @param {?function} callback Called after update is complete.
-     * @final
-     * @protected
-     */
-
-    Component.prototype.forceUpdate = function (callback) {
-      this.updater.enqueueForceUpdate(this, callback, "forceUpdate");
-    };
-    /**
-     * Deprecated APIs. These APIs used to exist on classic React classes but since
-     * we would like to deprecate them, we're not going to move them over to this
-     * modern base class. Instead, we define a getter that warns if it's accessed.
-     */
-
-    {
-      var deprecatedAPIs = {
-        isMounted: [
-          "isMounted",
-          "Instead, make sure to clean up subscriptions and pending requests in " +
-            "componentWillUnmount to prevent memory leaks."
-        ],
-        replaceState: [
-          "replaceState",
-          "Refactor your code to use setState instead (see " +
-            "https://github.com/facebook/react/issues/3236)."
-        ]
-      };
-
-      var defineDeprecationWarning = function (methodName, info) {
-        Object.defineProperty(Component.prototype, methodName, {
-          get: function () {
-            warn(
-              "%s(...) is deprecated in plain JavaScript React classes. %s",
-              info[0],
-              info[1]
-            );
-
-            return undefined;
-          }
-        });
-      };
-
-      for (var fnName in deprecatedAPIs) {
-        if (deprecatedAPIs.hasOwnProperty(fnName)) {
-          defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
-        }
-      }
-    }
-
-    function ComponentDummy() {}
-
-    ComponentDummy.prototype = Component.prototype;
-    /**
-     * Convenience component with default shallow equality check for sCU.
-     */
-
-    function PureComponent(props, context, updater) {
-      this.props = props;
-      this.context = context; // If a component has string refs, we will assign a different object later.
-
-      this.refs = emptyObject;
-      this.updater = updater || ReactNoopUpdateQueue;
-    }
-
-    var pureComponentPrototype = (PureComponent.prototype =
-      new ComponentDummy());
-    pureComponentPrototype.constructor = PureComponent; // Avoid an extra prototype jump for these methods.
-
-    assign(pureComponentPrototype, Component.prototype);
-    pureComponentPrototype.isPureReactComponent = true;
-
-    // an immutable object with a single mutable value
-    function createRef() {
-      var refObject = {
-        current: null
-      };
-
-      {
-        Object.seal(refObject);
-      }
-
-      return refObject;
-    }
-
-    var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
-
-    function isArray(a) {
-      return isArrayImpl(a);
     }
 
     /*
@@ -1067,536 +806,6 @@ if (__DEV__) {
       );
     }
 
-    var SEPARATOR = ".";
-    var SUBSEPARATOR = ":";
-    /**
-     * Escape and wrap key so it is safe to use as a reactid
-     *
-     * @param {string} key to be escaped.
-     * @return {string} the escaped key.
-     */
-
-    function escape(key) {
-      var escapeRegex = /[=:]/g;
-      var escaperLookup = {
-        "=": "=0",
-        ":": "=2"
-      };
-      var escapedString = key.replace(escapeRegex, function (match) {
-        return escaperLookup[match];
-      });
-      return "$" + escapedString;
-    }
-    /**
-     * TODO: Test that a single child and an array with one item have the same key
-     * pattern.
-     */
-
-    var didWarnAboutMaps = false;
-    var userProvidedKeyEscapeRegex = /\/+/g;
-
-    function escapeUserProvidedKey(text) {
-      return text.replace(userProvidedKeyEscapeRegex, "$&/");
-    }
-    /**
-     * Generate a key string that identifies a element within a set.
-     *
-     * @param {*} element A element that could contain a manual key.
-     * @param {number} index Index that is used if a manual key is not provided.
-     * @return {string}
-     */
-
-    function getElementKey(element, index) {
-      // Do some typechecking here since we call this blindly. We want to ensure
-      // that we don't block potential future ES APIs.
-      if (
-        typeof element === "object" &&
-        element !== null &&
-        element.key != null
-      ) {
-        // Explicit key
-        {
-          checkKeyStringCoercion(element.key);
-        }
-
-        return escape("" + element.key);
-      } // Implicit key determined by the index in the set
-
-      return index.toString(36);
-    }
-
-    function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
-      var type = typeof children;
-
-      if (type === "undefined" || type === "boolean") {
-        // All of the above are perceived as null.
-        children = null;
-      }
-
-      var invokeCallback = false;
-
-      if (children === null) {
-        invokeCallback = true;
-      } else {
-        switch (type) {
-          case "string":
-          case "number":
-            invokeCallback = true;
-            break;
-
-          case "object":
-            switch (children.$$typeof) {
-              case REACT_ELEMENT_TYPE:
-              case REACT_PORTAL_TYPE:
-                invokeCallback = true;
-            }
-        }
-      }
-
-      if (invokeCallback) {
-        var _child = children;
-        var mappedChild = callback(_child); // If it's the only child, treat the name as if it was wrapped in an array
-        // so that it's consistent if the number of children grows:
-
-        var childKey =
-          nameSoFar === "" ? SEPARATOR + getElementKey(_child, 0) : nameSoFar;
-
-        if (isArray(mappedChild)) {
-          var escapedChildKey = "";
-
-          if (childKey != null) {
-            escapedChildKey = escapeUserProvidedKey(childKey) + "/";
-          }
-
-          mapIntoArray(mappedChild, array, escapedChildKey, "", function (c) {
-            return c;
-          });
-        } else if (mappedChild != null) {
-          if (isValidElement$1(mappedChild)) {
-            {
-              // The `if` statement here prevents auto-disabling of the safe
-              // coercion ESLint rule, so we must manually disable it below.
-              // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
-              if (
-                mappedChild.key &&
-                (!_child || _child.key !== mappedChild.key)
-              ) {
-                checkKeyStringCoercion(mappedChild.key);
-              }
-            }
-
-            mappedChild = cloneAndReplaceKey(
-              mappedChild, // Keep both the (mapped) and old keys if they differ, just as
-              // traverseAllChildren used to do for objects as children
-              escapedPrefix + // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
-                (mappedChild.key && (!_child || _child.key !== mappedChild.key)
-                  ? escapeUserProvidedKey(
-                      // $FlowFixMe[unsafe-addition]
-                      "" + mappedChild.key // eslint-disable-line react-internal/safe-string-coercion
-                    ) + "/"
-                  : "") +
-                childKey
-            );
-          }
-
-          array.push(mappedChild);
-        }
-
-        return 1;
-      }
-
-      var child;
-      var nextName;
-      var subtreeCount = 0; // Count of children found in the current subtree.
-
-      var nextNamePrefix =
-        nameSoFar === "" ? SEPARATOR : nameSoFar + SUBSEPARATOR;
-
-      if (isArray(children)) {
-        for (var i = 0; i < children.length; i++) {
-          child = children[i];
-          nextName = nextNamePrefix + getElementKey(child, i);
-          subtreeCount += mapIntoArray(
-            child,
-            array,
-            escapedPrefix,
-            nextName,
-            callback
-          );
-        }
-      } else {
-        var iteratorFn = getIteratorFn(children);
-
-        if (typeof iteratorFn === "function") {
-          var iterableChildren = children;
-
-          {
-            // Warn about using Maps as children
-            if (iteratorFn === iterableChildren.entries) {
-              if (!didWarnAboutMaps) {
-                warn(
-                  "Using Maps as children is not supported. " +
-                    "Use an array of keyed ReactElements instead."
-                );
-              }
-
-              didWarnAboutMaps = true;
-            }
-          }
-
-          var iterator = iteratorFn.call(iterableChildren);
-          var step;
-          var ii = 0; // $FlowFixMe[incompatible-use] `iteratorFn` might return null according to typing.
-
-          while (!(step = iterator.next()).done) {
-            child = step.value;
-            nextName = nextNamePrefix + getElementKey(child, ii++);
-            subtreeCount += mapIntoArray(
-              child,
-              array,
-              escapedPrefix,
-              nextName,
-              callback
-            );
-          }
-        } else if (type === "object") {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          var childrenString = String(children);
-          throw new Error(
-            "Objects are not valid as a React child (found: " +
-              (childrenString === "[object Object]"
-                ? "object with keys {" + Object.keys(children).join(", ") + "}"
-                : childrenString) +
-              "). " +
-              "If you meant to render a collection of children, use an array " +
-              "instead."
-          );
-        }
-      }
-
-      return subtreeCount;
-    }
-    /**
-     * Maps children that are typically specified as `props.children`.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrenmap
-     *
-     * The provided mapFunction(child, index) will be called for each
-     * leaf child.
-     *
-     * @param {?*} children Children tree container.
-     * @param {function(*, int)} func The map function.
-     * @param {*} context Context for mapFunction.
-     * @return {object} Object containing the ordered map of results.
-     */
-
-    function mapChildren(children, func, context) {
-      if (children == null) {
-        // $FlowFixMe limitation refining abstract types in Flow
-        return children;
-      }
-
-      var result = [];
-      var count = 0;
-      mapIntoArray(children, result, "", "", function (child) {
-        return func.call(context, child, count++);
-      });
-      return result;
-    }
-    /**
-     * Count the number of children that are typically specified as
-     * `props.children`.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrencount
-     *
-     * @param {?*} children Children tree container.
-     * @return {number} The number of children.
-     */
-
-    function countChildren(children) {
-      var n = 0;
-      mapChildren(children, function () {
-        n++; // Don't return anything
-      });
-      return n;
-    }
-    /**
-     * Iterates through children that are typically specified as `props.children`.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrenforeach
-     *
-     * The provided forEachFunc(child, index) will be called for each
-     * leaf child.
-     *
-     * @param {?*} children Children tree container.
-     * @param {function(*, int)} forEachFunc
-     * @param {*} forEachContext Context for forEachContext.
-     */
-
-    function forEachChildren(children, forEachFunc, forEachContext) {
-      mapChildren(
-        children, // $FlowFixMe[missing-this-annot]
-        function () {
-          forEachFunc.apply(this, arguments); // Don't return anything.
-        },
-        forEachContext
-      );
-    }
-    /**
-     * Flatten a children object (typically specified as `props.children`) and
-     * return an array with appropriately re-keyed children.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrentoarray
-     */
-
-    function toArray(children) {
-      return (
-        mapChildren(children, function (child) {
-          return child;
-        }) || []
-      );
-    }
-    /**
-     * Returns the first child in a collection of children and verifies that there
-     * is only one child in the collection.
-     *
-     * See https://reactjs.org/docs/react-api.html#reactchildrenonly
-     *
-     * The current implementation of this function assumes that a single child gets
-     * passed without a wrapper, but the purpose of this helper function is to
-     * abstract away the particular structure of children.
-     *
-     * @param {?object} children Child collection structure.
-     * @return {ReactElement} The first and only `ReactElement` contained in the
-     * structure.
-     */
-
-    function onlyChild(children) {
-      if (!isValidElement$1(children)) {
-        throw new Error(
-          "React.Children.only expected to receive a single React element child."
-        );
-      }
-
-      return children;
-    }
-
-    var Uninitialized = -1;
-    var Pending = 0;
-    var Resolved = 1;
-    var Rejected = 2;
-
-    function lazyInitializer(payload) {
-      if (payload._status === Uninitialized) {
-        var ctor = payload._result;
-        var thenable = ctor(); // Transition to the next state.
-        // This might throw either because it's missing or throws. If so, we treat it
-        // as still uninitialized and try again next time. Which is the same as what
-        // happens if the ctor or any wrappers processing the ctor throws. This might
-        // end up fixing it if the resolution was a concurrency bug.
-
-        thenable.then(
-          function (moduleObject) {
-            if (
-              payload._status === Pending ||
-              payload._status === Uninitialized
-            ) {
-              // Transition to the next state.
-              var resolved = payload;
-              resolved._status = Resolved;
-              resolved._result = moduleObject;
-            }
-          },
-          function (error) {
-            if (
-              payload._status === Pending ||
-              payload._status === Uninitialized
-            ) {
-              // Transition to the next state.
-              var rejected = payload;
-              rejected._status = Rejected;
-              rejected._result = error;
-            }
-          }
-        );
-
-        if (payload._status === Uninitialized) {
-          // In case, we're still uninitialized, then we're waiting for the thenable
-          // to resolve. Set it as pending in the meantime.
-          var pending = payload;
-          pending._status = Pending;
-          pending._result = thenable;
-        }
-      }
-
-      if (payload._status === Resolved) {
-        var moduleObject = payload._result;
-
-        {
-          if (moduleObject === undefined) {
-            error(
-              "lazy: Expected the result of a dynamic imp" +
-                "ort() call. " +
-                "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
-                "const MyComponent = lazy(() => imp" +
-                "ort('./MyComponent'))\n\n" +
-                "Did you accidentally put curly braces around the import?",
-              moduleObject
-            );
-          }
-        }
-
-        {
-          if (!("default" in moduleObject)) {
-            error(
-              "lazy: Expected the result of a dynamic imp" +
-                "ort() call. " +
-                "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
-                "const MyComponent = lazy(() => imp" +
-                "ort('./MyComponent'))",
-              moduleObject
-            );
-          }
-        }
-
-        return moduleObject.default;
-      } else {
-        throw payload._result;
-      }
-    }
-
-    function lazy(ctor) {
-      var payload = {
-        // We use these fields to store the result.
-        _status: Uninitialized,
-        _result: ctor
-      };
-      var lazyType = {
-        $$typeof: REACT_LAZY_TYPE,
-        _payload: payload,
-        _init: lazyInitializer
-      };
-
-      {
-        // In production, this would just set it on the object.
-        var defaultProps;
-        var propTypes; // $FlowFixMe[prop-missing]
-
-        Object.defineProperties(lazyType, {
-          defaultProps: {
-            configurable: true,
-            get: function () {
-              return defaultProps;
-            },
-            // $FlowFixMe[missing-local-annot]
-            set: function (newDefaultProps) {
-              error(
-                "React.lazy(...): It is not supported to assign `defaultProps` to " +
-                  "a lazy component import. Either specify them where the component " +
-                  "is defined, or create a wrapping component around it."
-              );
-
-              defaultProps = newDefaultProps; // Match production behavior more closely:
-              // $FlowFixMe[prop-missing]
-
-              Object.defineProperty(lazyType, "defaultProps", {
-                enumerable: true
-              });
-            }
-          },
-          propTypes: {
-            configurable: true,
-            get: function () {
-              return propTypes;
-            },
-            // $FlowFixMe[missing-local-annot]
-            set: function (newPropTypes) {
-              error(
-                "React.lazy(...): It is not supported to assign `propTypes` to " +
-                  "a lazy component import. Either specify them where the component " +
-                  "is defined, or create a wrapping component around it."
-              );
-
-              propTypes = newPropTypes; // Match production behavior more closely:
-              // $FlowFixMe[prop-missing]
-
-              Object.defineProperty(lazyType, "propTypes", {
-                enumerable: true
-              });
-            }
-          }
-        });
-      }
-
-      return lazyType;
-    }
-
-    function forwardRef(render) {
-      {
-        if (render != null && render.$$typeof === REACT_MEMO_TYPE) {
-          error(
-            "forwardRef requires a render function but received a `memo` " +
-              "component. Instead of forwardRef(memo(...)), use " +
-              "memo(forwardRef(...))."
-          );
-        } else if (typeof render !== "function") {
-          error(
-            "forwardRef requires a render function but was given %s.",
-            render === null ? "null" : typeof render
-          );
-        } else {
-          if (render.length !== 0 && render.length !== 2) {
-            error(
-              "forwardRef render functions accept exactly two parameters: props and ref. %s",
-              render.length === 1
-                ? "Did you forget to use the ref parameter?"
-                : "Any additional parameter will be undefined."
-            );
-          }
-        }
-
-        if (render != null) {
-          if (render.defaultProps != null || render.propTypes != null) {
-            error(
-              "forwardRef render functions do not support propTypes or defaultProps. " +
-                "Did you accidentally pass a React component?"
-            );
-          }
-        }
-      }
-
-      var elementType = {
-        $$typeof: REACT_FORWARD_REF_TYPE,
-        render: render
-      };
-
-      {
-        var ownName;
-        Object.defineProperty(elementType, "displayName", {
-          enumerable: false,
-          configurable: true,
-          get: function () {
-            return ownName;
-          },
-          set: function (name) {
-            ownName = name; // The inner component shouldn't inherit this display name in most cases,
-            // because the component may be used elsewhere.
-            // But it's nice for anonymous functions to inherit the name,
-            // so that our component-stack generation logic will display their frames.
-            // An anonymous function generally suggests a pattern like:
-            //   React.forwardRef((props, ref) => {...});
-            // This kind of inner function is not used elsewhere so the side effect is okay.
-
-            if (!render.name && !render.displayName) {
-              render.displayName = name;
-            }
-          }
-        });
-      }
-
-      return elementType;
-    }
-
     var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
     function isValidElementType(type) {
       if (typeof type === "string" || typeof type === "function") {
@@ -1637,225 +846,6 @@ if (__DEV__) {
       }
 
       return false;
-    }
-
-    function memo(type, compare) {
-      {
-        if (!isValidElementType(type)) {
-          error(
-            "memo: The first argument must be a component. Instead " +
-              "received: %s",
-            type === null ? "null" : typeof type
-          );
-        }
-      }
-
-      var elementType = {
-        $$typeof: REACT_MEMO_TYPE,
-        type: type,
-        compare: compare === undefined ? null : compare
-      };
-
-      {
-        var ownName;
-        Object.defineProperty(elementType, "displayName", {
-          enumerable: false,
-          configurable: true,
-          get: function () {
-            return ownName;
-          },
-          set: function (name) {
-            ownName = name; // The inner component shouldn't inherit this display name in most cases,
-            // because the component may be used elsewhere.
-            // But it's nice for anonymous functions to inherit the name,
-            // so that our component-stack generation logic will display their frames.
-            // An anonymous function generally suggests a pattern like:
-            //   React.memo((props) => {...});
-            // This kind of inner function is not used elsewhere so the side effect is okay.
-
-            if (!type.name && !type.displayName) {
-              type.displayName = name;
-            }
-          }
-        });
-      }
-
-      return elementType;
-    }
-
-    var UNTERMINATED = 0;
-    var TERMINATED = 1;
-    var ERRORED = 2;
-
-    function createCacheRoot() {
-      return new WeakMap();
-    }
-
-    function createCacheNode() {
-      return {
-        s: UNTERMINATED,
-        // status, represents whether the cached computation returned a value or threw an error
-        v: undefined,
-        // value, either the cached result or an error, depending on s
-        o: null,
-        // object cache, a WeakMap where non-primitive arguments are stored
-        p: null // primitive cache, a regular Map where primitive arguments are stored.
-      };
-    }
-
-    function cache(fn) {
-      return function () {
-        var dispatcher = ReactCurrentCache.current;
-
-        if (!dispatcher) {
-          // If there is no dispatcher, then we treat this as not being cached.
-          // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
-          return fn.apply(null, arguments);
-        }
-
-        var fnMap = dispatcher.getCacheForType(createCacheRoot);
-        var fnNode = fnMap.get(fn);
-        var cacheNode;
-
-        if (fnNode === undefined) {
-          cacheNode = createCacheNode();
-          fnMap.set(fn, cacheNode);
-        } else {
-          cacheNode = fnNode;
-        }
-
-        for (var i = 0, l = arguments.length; i < l; i++) {
-          var arg = arguments[i];
-
-          if (
-            typeof arg === "function" ||
-            (typeof arg === "object" && arg !== null)
-          ) {
-            // Objects go into a WeakMap
-            var objectCache = cacheNode.o;
-
-            if (objectCache === null) {
-              cacheNode.o = objectCache = new WeakMap();
-            }
-
-            var objectNode = objectCache.get(arg);
-
-            if (objectNode === undefined) {
-              cacheNode = createCacheNode();
-              objectCache.set(arg, cacheNode);
-            } else {
-              cacheNode = objectNode;
-            }
-          } else {
-            // Primitives go into a regular Map
-            var primitiveCache = cacheNode.p;
-
-            if (primitiveCache === null) {
-              cacheNode.p = primitiveCache = new Map();
-            }
-
-            var primitiveNode = primitiveCache.get(arg);
-
-            if (primitiveNode === undefined) {
-              cacheNode = createCacheNode();
-              primitiveCache.set(arg, cacheNode);
-            } else {
-              cacheNode = primitiveNode;
-            }
-          }
-        }
-
-        if (cacheNode.s === TERMINATED) {
-          return cacheNode.v;
-        }
-
-        if (cacheNode.s === ERRORED) {
-          throw cacheNode.v;
-        }
-
-        try {
-          // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
-          var result = fn.apply(null, arguments);
-          var terminatedNode = cacheNode;
-          terminatedNode.s = TERMINATED;
-          terminatedNode.v = result;
-          return result;
-        } catch (error) {
-          // We store the first error that's thrown and rethrow it.
-          var erroredNode = cacheNode;
-          erroredNode.s = ERRORED;
-          erroredNode.v = error;
-          throw error;
-        }
-      };
-    }
-
-    function resolveDispatcher() {
-      var dispatcher = ReactCurrentDispatcher$1.current;
-
-      {
-        if (dispatcher === null) {
-          error(
-            "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for" +
-              " one of the following reasons:\n" +
-              "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
-              "2. You might be breaking the Rules of Hooks\n" +
-              "3. You might have more than one copy of React in the same app\n" +
-              "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
-          );
-        }
-      } // Will result in a null access error if accessed outside render phase. We
-      // intentionally don't throw our own error because this is in a hot path.
-      // Also helps ensure this is inlined.
-
-      return dispatcher;
-    }
-    function useContext(Context) {
-      var dispatcher = resolveDispatcher();
-
-      {
-        // TODO: add a more generic warning for invalid values.
-        if (Context._context !== undefined) {
-          var realContext = Context._context; // Don't deduplicate because this legitimately causes bugs
-          // and nobody should be using this in existing code.
-
-          if (realContext.Consumer === Context) {
-            error(
-              "Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be " +
-                "removed in a future major release. Did you mean to call useContext(Context) instead?"
-            );
-          } else if (realContext.Provider === Context) {
-            error(
-              "Calling useContext(Context.Provider) is not supported. " +
-                "Did you mean to call useContext(Context) instead?"
-            );
-          }
-        }
-      }
-
-      return dispatcher.useContext(Context);
-    }
-    function useCallback(callback, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useCallback(callback, deps);
-    }
-    function useMemo(create, deps) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useMemo(create, deps);
-    }
-    function useDebugValue(value, formatterFn) {
-      {
-        var dispatcher = resolveDispatcher();
-        return dispatcher.useDebugValue(value, formatterFn);
-      }
-    }
-    function useId() {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.useId();
-    }
-    function use(usable) {
-      var dispatcher = resolveDispatcher();
-      return dispatcher.use(usable);
     }
 
     // Helpers to patch console.logs to avoid logging during side-effect free
@@ -2764,10 +1754,775 @@ if (__DEV__) {
       return newElement;
     }
 
+    var createElement = createElementWithValidation;
+    var cloneElement = cloneElementWithValidation;
+
+    var SEPARATOR = ".";
+    var SUBSEPARATOR = ":";
+    /**
+     * Escape and wrap key so it is safe to use as a reactid
+     *
+     * @param {string} key to be escaped.
+     * @return {string} the escaped key.
+     */
+
+    function escape(key) {
+      var escapeRegex = /[=:]/g;
+      var escaperLookup = {
+        "=": "=0",
+        ":": "=2"
+      };
+      var escapedString = key.replace(escapeRegex, function (match) {
+        return escaperLookup[match];
+      });
+      return "$" + escapedString;
+    }
+    /**
+     * TODO: Test that a single child and an array with one item have the same key
+     * pattern.
+     */
+
+    var didWarnAboutMaps = false;
+    var userProvidedKeyEscapeRegex = /\/+/g;
+
+    function escapeUserProvidedKey(text) {
+      return text.replace(userProvidedKeyEscapeRegex, "$&/");
+    }
+    /**
+     * Generate a key string that identifies a element within a set.
+     *
+     * @param {*} element A element that could contain a manual key.
+     * @param {number} index Index that is used if a manual key is not provided.
+     * @return {string}
+     */
+
+    function getElementKey(element, index) {
+      // Do some typechecking here since we call this blindly. We want to ensure
+      // that we don't block potential future ES APIs.
+      if (
+        typeof element === "object" &&
+        element !== null &&
+        element.key != null
+      ) {
+        // Explicit key
+        {
+          checkKeyStringCoercion(element.key);
+        }
+
+        return escape("" + element.key);
+      } // Implicit key determined by the index in the set
+
+      return index.toString(36);
+    }
+
+    function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
+      var type = typeof children;
+
+      if (type === "undefined" || type === "boolean") {
+        // All of the above are perceived as null.
+        children = null;
+      }
+
+      var invokeCallback = false;
+
+      if (children === null) {
+        invokeCallback = true;
+      } else {
+        switch (type) {
+          case "string":
+          case "number":
+            invokeCallback = true;
+            break;
+
+          case "object":
+            switch (children.$$typeof) {
+              case REACT_ELEMENT_TYPE:
+              case REACT_PORTAL_TYPE:
+                invokeCallback = true;
+            }
+        }
+      }
+
+      if (invokeCallback) {
+        var _child = children;
+        var mappedChild = callback(_child); // If it's the only child, treat the name as if it was wrapped in an array
+        // so that it's consistent if the number of children grows:
+
+        var childKey =
+          nameSoFar === "" ? SEPARATOR + getElementKey(_child, 0) : nameSoFar;
+
+        if (isArray(mappedChild)) {
+          var escapedChildKey = "";
+
+          if (childKey != null) {
+            escapedChildKey = escapeUserProvidedKey(childKey) + "/";
+          }
+
+          mapIntoArray(mappedChild, array, escapedChildKey, "", function (c) {
+            return c;
+          });
+        } else if (mappedChild != null) {
+          if (isValidElement$1(mappedChild)) {
+            {
+              // The `if` statement here prevents auto-disabling of the safe
+              // coercion ESLint rule, so we must manually disable it below.
+              // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
+              if (
+                mappedChild.key &&
+                (!_child || _child.key !== mappedChild.key)
+              ) {
+                checkKeyStringCoercion(mappedChild.key);
+              }
+            }
+
+            mappedChild = cloneAndReplaceKey(
+              mappedChild, // Keep both the (mapped) and old keys if they differ, just as
+              // traverseAllChildren used to do for objects as children
+              escapedPrefix + // $FlowFixMe[incompatible-type] Flow incorrectly thinks React.Portal doesn't have a key
+                (mappedChild.key && (!_child || _child.key !== mappedChild.key)
+                  ? escapeUserProvidedKey(
+                      // $FlowFixMe[unsafe-addition]
+                      "" + mappedChild.key // eslint-disable-line react-internal/safe-string-coercion
+                    ) + "/"
+                  : "") +
+                childKey
+            );
+          }
+
+          array.push(mappedChild);
+        }
+
+        return 1;
+      }
+
+      var child;
+      var nextName;
+      var subtreeCount = 0; // Count of children found in the current subtree.
+
+      var nextNamePrefix =
+        nameSoFar === "" ? SEPARATOR : nameSoFar + SUBSEPARATOR;
+
+      if (isArray(children)) {
+        for (var i = 0; i < children.length; i++) {
+          child = children[i];
+          nextName = nextNamePrefix + getElementKey(child, i);
+          subtreeCount += mapIntoArray(
+            child,
+            array,
+            escapedPrefix,
+            nextName,
+            callback
+          );
+        }
+      } else {
+        var iteratorFn = getIteratorFn(children);
+
+        if (typeof iteratorFn === "function") {
+          var iterableChildren = children;
+
+          {
+            // Warn about using Maps as children
+            if (iteratorFn === iterableChildren.entries) {
+              if (!didWarnAboutMaps) {
+                warn(
+                  "Using Maps as children is not supported. " +
+                    "Use an array of keyed ReactElements instead."
+                );
+              }
+
+              didWarnAboutMaps = true;
+            }
+          }
+
+          var iterator = iteratorFn.call(iterableChildren);
+          var step;
+          var ii = 0; // $FlowFixMe[incompatible-use] `iteratorFn` might return null according to typing.
+
+          while (!(step = iterator.next()).done) {
+            child = step.value;
+            nextName = nextNamePrefix + getElementKey(child, ii++);
+            subtreeCount += mapIntoArray(
+              child,
+              array,
+              escapedPrefix,
+              nextName,
+              callback
+            );
+          }
+        } else if (type === "object") {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          var childrenString = String(children);
+          throw new Error(
+            "Objects are not valid as a React child (found: " +
+              (childrenString === "[object Object]"
+                ? "object with keys {" + Object.keys(children).join(", ") + "}"
+                : childrenString) +
+              "). " +
+              "If you meant to render a collection of children, use an array " +
+              "instead."
+          );
+        }
+      }
+
+      return subtreeCount;
+    }
+    /**
+     * Maps children that are typically specified as `props.children`.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrenmap
+     *
+     * The provided mapFunction(child, index) will be called for each
+     * leaf child.
+     *
+     * @param {?*} children Children tree container.
+     * @param {function(*, int)} func The map function.
+     * @param {*} context Context for mapFunction.
+     * @return {object} Object containing the ordered map of results.
+     */
+
+    function mapChildren(children, func, context) {
+      if (children == null) {
+        // $FlowFixMe limitation refining abstract types in Flow
+        return children;
+      }
+
+      var result = [];
+      var count = 0;
+      mapIntoArray(children, result, "", "", function (child) {
+        return func.call(context, child, count++);
+      });
+      return result;
+    }
+    /**
+     * Count the number of children that are typically specified as
+     * `props.children`.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrencount
+     *
+     * @param {?*} children Children tree container.
+     * @return {number} The number of children.
+     */
+
+    function countChildren(children) {
+      var n = 0;
+      mapChildren(children, function () {
+        n++; // Don't return anything
+      });
+      return n;
+    }
+    /**
+     * Iterates through children that are typically specified as `props.children`.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrenforeach
+     *
+     * The provided forEachFunc(child, index) will be called for each
+     * leaf child.
+     *
+     * @param {?*} children Children tree container.
+     * @param {function(*, int)} forEachFunc
+     * @param {*} forEachContext Context for forEachContext.
+     */
+
+    function forEachChildren(children, forEachFunc, forEachContext) {
+      mapChildren(
+        children, // $FlowFixMe[missing-this-annot]
+        function () {
+          forEachFunc.apply(this, arguments); // Don't return anything.
+        },
+        forEachContext
+      );
+    }
+    /**
+     * Flatten a children object (typically specified as `props.children`) and
+     * return an array with appropriately re-keyed children.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrentoarray
+     */
+
+    function toArray(children) {
+      return (
+        mapChildren(children, function (child) {
+          return child;
+        }) || []
+      );
+    }
+    /**
+     * Returns the first child in a collection of children and verifies that there
+     * is only one child in the collection.
+     *
+     * See https://reactjs.org/docs/react-api.html#reactchildrenonly
+     *
+     * The current implementation of this function assumes that a single child gets
+     * passed without a wrapper, but the purpose of this helper function is to
+     * abstract away the particular structure of children.
+     *
+     * @param {?object} children Child collection structure.
+     * @return {ReactElement} The first and only `ReactElement` contained in the
+     * structure.
+     */
+
+    function onlyChild(children) {
+      if (!isValidElement$1(children)) {
+        throw new Error(
+          "React.Children.only expected to receive a single React element child."
+        );
+      }
+
+      return children;
+    }
+
+    // an immutable object with a single mutable value
+    function createRef() {
+      var refObject = {
+        current: null
+      };
+
+      {
+        Object.seal(refObject);
+      }
+
+      return refObject;
+    }
+
     function createServerContext(globalName, defaultValue) {
       {
         throw new Error("Not implemented.");
       }
+    }
+
+    function resolveDispatcher() {
+      var dispatcher = ReactCurrentDispatcher$1.current;
+
+      {
+        if (dispatcher === null) {
+          error(
+            "Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for" +
+              " one of the following reasons:\n" +
+              "1. You might have mismatching versions of React and the renderer (such as React DOM)\n" +
+              "2. You might be breaking the Rules of Hooks\n" +
+              "3. You might have more than one copy of React in the same app\n" +
+              "See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem."
+          );
+        }
+      } // Will result in a null access error if accessed outside render phase. We
+      // intentionally don't throw our own error because this is in a hot path.
+      // Also helps ensure this is inlined.
+
+      return dispatcher;
+    }
+    function useContext(Context) {
+      var dispatcher = resolveDispatcher();
+
+      {
+        // TODO: add a more generic warning for invalid values.
+        if (Context._context !== undefined) {
+          var realContext = Context._context; // Don't deduplicate because this legitimately causes bugs
+          // and nobody should be using this in existing code.
+
+          if (realContext.Consumer === Context) {
+            error(
+              "Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be " +
+                "removed in a future major release. Did you mean to call useContext(Context) instead?"
+            );
+          } else if (realContext.Provider === Context) {
+            error(
+              "Calling useContext(Context.Provider) is not supported. " +
+                "Did you mean to call useContext(Context) instead?"
+            );
+          }
+        }
+      }
+
+      return dispatcher.useContext(Context);
+    }
+    function useCallback(callback, deps) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useCallback(callback, deps);
+    }
+    function useMemo(create, deps) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useMemo(create, deps);
+    }
+    function useDebugValue(value, formatterFn) {
+      {
+        var dispatcher = resolveDispatcher();
+        return dispatcher.useDebugValue(value, formatterFn);
+      }
+    }
+    function useId() {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.useId();
+    }
+    function use(usable) {
+      var dispatcher = resolveDispatcher();
+      return dispatcher.use(usable);
+    }
+
+    function forwardRef(render) {
+      {
+        if (render != null && render.$$typeof === REACT_MEMO_TYPE) {
+          error(
+            "forwardRef requires a render function but received a `memo` " +
+              "component. Instead of forwardRef(memo(...)), use " +
+              "memo(forwardRef(...))."
+          );
+        } else if (typeof render !== "function") {
+          error(
+            "forwardRef requires a render function but was given %s.",
+            render === null ? "null" : typeof render
+          );
+        } else {
+          if (render.length !== 0 && render.length !== 2) {
+            error(
+              "forwardRef render functions accept exactly two parameters: props and ref. %s",
+              render.length === 1
+                ? "Did you forget to use the ref parameter?"
+                : "Any additional parameter will be undefined."
+            );
+          }
+        }
+
+        if (render != null) {
+          if (render.defaultProps != null || render.propTypes != null) {
+            error(
+              "forwardRef render functions do not support propTypes or defaultProps. " +
+                "Did you accidentally pass a React component?"
+            );
+          }
+        }
+      }
+
+      var elementType = {
+        $$typeof: REACT_FORWARD_REF_TYPE,
+        render: render
+      };
+
+      {
+        var ownName;
+        Object.defineProperty(elementType, "displayName", {
+          enumerable: false,
+          configurable: true,
+          get: function () {
+            return ownName;
+          },
+          set: function (name) {
+            ownName = name; // The inner component shouldn't inherit this display name in most cases,
+            // because the component may be used elsewhere.
+            // But it's nice for anonymous functions to inherit the name,
+            // so that our component-stack generation logic will display their frames.
+            // An anonymous function generally suggests a pattern like:
+            //   React.forwardRef((props, ref) => {...});
+            // This kind of inner function is not used elsewhere so the side effect is okay.
+
+            if (!render.name && !render.displayName) {
+              render.displayName = name;
+            }
+          }
+        });
+      }
+
+      return elementType;
+    }
+
+    var Uninitialized = -1;
+    var Pending = 0;
+    var Resolved = 1;
+    var Rejected = 2;
+
+    function lazyInitializer(payload) {
+      if (payload._status === Uninitialized) {
+        var ctor = payload._result;
+        var thenable = ctor(); // Transition to the next state.
+        // This might throw either because it's missing or throws. If so, we treat it
+        // as still uninitialized and try again next time. Which is the same as what
+        // happens if the ctor or any wrappers processing the ctor throws. This might
+        // end up fixing it if the resolution was a concurrency bug.
+
+        thenable.then(
+          function (moduleObject) {
+            if (
+              payload._status === Pending ||
+              payload._status === Uninitialized
+            ) {
+              // Transition to the next state.
+              var resolved = payload;
+              resolved._status = Resolved;
+              resolved._result = moduleObject;
+            }
+          },
+          function (error) {
+            if (
+              payload._status === Pending ||
+              payload._status === Uninitialized
+            ) {
+              // Transition to the next state.
+              var rejected = payload;
+              rejected._status = Rejected;
+              rejected._result = error;
+            }
+          }
+        );
+
+        if (payload._status === Uninitialized) {
+          // In case, we're still uninitialized, then we're waiting for the thenable
+          // to resolve. Set it as pending in the meantime.
+          var pending = payload;
+          pending._status = Pending;
+          pending._result = thenable;
+        }
+      }
+
+      if (payload._status === Resolved) {
+        var moduleObject = payload._result;
+
+        {
+          if (moduleObject === undefined) {
+            error(
+              "lazy: Expected the result of a dynamic imp" +
+                "ort() call. " +
+                "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
+                "const MyComponent = lazy(() => imp" +
+                "ort('./MyComponent'))\n\n" +
+                "Did you accidentally put curly braces around the import?",
+              moduleObject
+            );
+          }
+        }
+
+        {
+          if (!("default" in moduleObject)) {
+            error(
+              "lazy: Expected the result of a dynamic imp" +
+                "ort() call. " +
+                "Instead received: %s\n\nYour code should look like: \n  " + // Break up imports to avoid accidentally parsing them as dependencies.
+                "const MyComponent = lazy(() => imp" +
+                "ort('./MyComponent'))",
+              moduleObject
+            );
+          }
+        }
+
+        return moduleObject.default;
+      } else {
+        throw payload._result;
+      }
+    }
+
+    function lazy(ctor) {
+      var payload = {
+        // We use these fields to store the result.
+        _status: Uninitialized,
+        _result: ctor
+      };
+      var lazyType = {
+        $$typeof: REACT_LAZY_TYPE,
+        _payload: payload,
+        _init: lazyInitializer
+      };
+
+      {
+        // In production, this would just set it on the object.
+        var defaultProps;
+        var propTypes; // $FlowFixMe[prop-missing]
+
+        Object.defineProperties(lazyType, {
+          defaultProps: {
+            configurable: true,
+            get: function () {
+              return defaultProps;
+            },
+            // $FlowFixMe[missing-local-annot]
+            set: function (newDefaultProps) {
+              error(
+                "React.lazy(...): It is not supported to assign `defaultProps` to " +
+                  "a lazy component import. Either specify them where the component " +
+                  "is defined, or create a wrapping component around it."
+              );
+
+              defaultProps = newDefaultProps; // Match production behavior more closely:
+              // $FlowFixMe[prop-missing]
+
+              Object.defineProperty(lazyType, "defaultProps", {
+                enumerable: true
+              });
+            }
+          },
+          propTypes: {
+            configurable: true,
+            get: function () {
+              return propTypes;
+            },
+            // $FlowFixMe[missing-local-annot]
+            set: function (newPropTypes) {
+              error(
+                "React.lazy(...): It is not supported to assign `propTypes` to " +
+                  "a lazy component import. Either specify them where the component " +
+                  "is defined, or create a wrapping component around it."
+              );
+
+              propTypes = newPropTypes; // Match production behavior more closely:
+              // $FlowFixMe[prop-missing]
+
+              Object.defineProperty(lazyType, "propTypes", {
+                enumerable: true
+              });
+            }
+          }
+        });
+      }
+
+      return lazyType;
+    }
+
+    function memo(type, compare) {
+      {
+        if (!isValidElementType(type)) {
+          error(
+            "memo: The first argument must be a component. Instead " +
+              "received: %s",
+            type === null ? "null" : typeof type
+          );
+        }
+      }
+
+      var elementType = {
+        $$typeof: REACT_MEMO_TYPE,
+        type: type,
+        compare: compare === undefined ? null : compare
+      };
+
+      {
+        var ownName;
+        Object.defineProperty(elementType, "displayName", {
+          enumerable: false,
+          configurable: true,
+          get: function () {
+            return ownName;
+          },
+          set: function (name) {
+            ownName = name; // The inner component shouldn't inherit this display name in most cases,
+            // because the component may be used elsewhere.
+            // But it's nice for anonymous functions to inherit the name,
+            // so that our component-stack generation logic will display their frames.
+            // An anonymous function generally suggests a pattern like:
+            //   React.memo((props) => {...});
+            // This kind of inner function is not used elsewhere so the side effect is okay.
+
+            if (!type.name && !type.displayName) {
+              type.displayName = name;
+            }
+          }
+        });
+      }
+
+      return elementType;
+    }
+
+    var UNTERMINATED = 0;
+    var TERMINATED = 1;
+    var ERRORED = 2;
+
+    function createCacheRoot() {
+      return new WeakMap();
+    }
+
+    function createCacheNode() {
+      return {
+        s: UNTERMINATED,
+        // status, represents whether the cached computation returned a value or threw an error
+        v: undefined,
+        // value, either the cached result or an error, depending on s
+        o: null,
+        // object cache, a WeakMap where non-primitive arguments are stored
+        p: null // primitive cache, a regular Map where primitive arguments are stored.
+      };
+    }
+
+    function cache(fn) {
+      return function () {
+        var dispatcher = ReactCurrentCache.current;
+
+        if (!dispatcher) {
+          // If there is no dispatcher, then we treat this as not being cached.
+          // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
+          return fn.apply(null, arguments);
+        }
+
+        var fnMap = dispatcher.getCacheForType(createCacheRoot);
+        var fnNode = fnMap.get(fn);
+        var cacheNode;
+
+        if (fnNode === undefined) {
+          cacheNode = createCacheNode();
+          fnMap.set(fn, cacheNode);
+        } else {
+          cacheNode = fnNode;
+        }
+
+        for (var i = 0, l = arguments.length; i < l; i++) {
+          var arg = arguments[i];
+
+          if (
+            typeof arg === "function" ||
+            (typeof arg === "object" && arg !== null)
+          ) {
+            // Objects go into a WeakMap
+            var objectCache = cacheNode.o;
+
+            if (objectCache === null) {
+              cacheNode.o = objectCache = new WeakMap();
+            }
+
+            var objectNode = objectCache.get(arg);
+
+            if (objectNode === undefined) {
+              cacheNode = createCacheNode();
+              objectCache.set(arg, cacheNode);
+            } else {
+              cacheNode = objectNode;
+            }
+          } else {
+            // Primitives go into a regular Map
+            var primitiveCache = cacheNode.p;
+
+            if (primitiveCache === null) {
+              cacheNode.p = primitiveCache = new Map();
+            }
+
+            var primitiveNode = primitiveCache.get(arg);
+
+            if (primitiveNode === undefined) {
+              cacheNode = createCacheNode();
+              primitiveCache.set(arg, cacheNode);
+            } else {
+              cacheNode = primitiveNode;
+            }
+          }
+        }
+
+        if (cacheNode.s === TERMINATED) {
+          return cacheNode.v;
+        }
+
+        if (cacheNode.s === ERRORED) {
+          throw cacheNode.v;
+        }
+
+        try {
+          // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
+          var result = fn.apply(null, arguments);
+          var terminatedNode = cacheNode;
+          terminatedNode.s = TERMINATED;
+          terminatedNode.v = result;
+          return result;
+        } catch (error) {
+          // We store the first error that's thrown and rethrow it.
+          var erroredNode = cacheNode;
+          erroredNode.s = ERRORED;
+          erroredNode.v = error;
+          throw error;
+        }
+      };
     }
 
     /**
@@ -2819,8 +2574,9 @@ if (__DEV__) {
       }
     }
 
-    var createElement = createElementWithValidation;
-    var cloneElement = cloneElementWithValidation;
+    var ReactVersion = "18.3.0-www-modern-63fd69d9";
+
+    // Patch fetch
     var Children = {
       map: mapChildren,
       forEach: forEachChildren,
