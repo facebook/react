@@ -75,4 +75,5 @@ To help you get your feet wet and get you familiar with our contribution process
 
 ### License
 
-React is [MIT licensed](./LICENSE).
+React is free to use and share because it comes with the [MIT license](./LICENSE), which means you can use it for your own projects, whether they're just for fun or for business.
+
