@@ -57,9 +57,9 @@ export {
   useSyncExternalStore,
   useTransition,
   version,
-} from './src/React';
+} from './src/ReactClient';
 
-import {useOptimistic} from './src/React';
+import {useOptimistic} from './src/ReactClient';
 
 export function experimental_useOptimistic<S, A>(
   passthrough: S,
