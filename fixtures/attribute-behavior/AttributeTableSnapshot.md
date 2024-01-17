@@ -8448,6 +8448,81 @@
 | `pointsAtZ=(null)`| (initial)| `<number: 0>` |
 | `pointsAtZ=(undefined)`| (initial)| `<number: 0>` |
 
+## `popover` (on `<div>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `popover=(string)`| (changed)| `"manual"` |
+| `popover=(empty string)`| (changed)| `"auto"` |
+| `popover=(array with string)`| (changed)| `"manual"` |
+| `popover=(empty array)`| (changed)| `"auto"` |
+| `popover=(object)`| (changed)| `"manual"` |
+| `popover=(numeric string)`| (changed)| `"manual"` |
+| `popover=(-1)`| (changed)| `"manual"` |
+| `popover=(0)`| (changed)| `"manual"` |
+| `popover=(integer)`| (changed)| `"manual"` |
+| `popover=(NaN)`| (changed, warning)| `"manual"` |
+| `popover=(float)`| (changed)| `"manual"` |
+| `popover=(true)`| (initial, warning)| `<null>` |
+| `popover=(false)`| (initial, warning)| `<null>` |
+| `popover=(string 'true')`| (changed)| `"manual"` |
+| `popover=(string 'false')`| (changed)| `"manual"` |
+| `popover=(string 'on')`| (changed)| `"manual"` |
+| `popover=(string 'off')`| (changed)| `"manual"` |
+| `popover=(symbol)`| (initial, warning)| `<null>` |
+| `popover=(function)`| (initial, warning)| `<null>` |
+| `popover=(null)`| (initial)| `<null>` |
+| `popover=(undefined)`| (initial)| `<null>` |
+
+## `popoverTarget` (on `<button>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `popoverTarget=(string)`| (initial, warning)| `<null>` |
+| `popoverTarget=(empty string)`| (initial, warning)| `<null>` |
+| `popoverTarget=(array with string)`| (initial, warning)| `<null>` |
+| `popoverTarget=(empty array)`| (initial, warning)| `<null>` |
+| `popoverTarget=(object)`| (initial, warning)| `<null>` |
+| `popoverTarget=(numeric string)`| (initial, warning)| `<null>` |
+| `popoverTarget=(-1)`| (initial, warning)| `<null>` |
+| `popoverTarget=(0)`| (initial, warning)| `<null>` |
+| `popoverTarget=(integer)`| (initial, warning)| `<null>` |
+| `popoverTarget=(NaN)`| (initial, warning)| `<null>` |
+| `popoverTarget=(float)`| (initial, warning)| `<null>` |
+| `popoverTarget=(true)`| (initial, warning)| `<null>` |
+| `popoverTarget=(false)`| (initial, warning)| `<null>` |
+| `popoverTarget=(string 'true')`| (initial, warning)| `<null>` |
+| `popoverTarget=(string 'false')`| (initial, warning)| `<null>` |
+| `popoverTarget=(string 'on')`| (initial, warning)| `<null>` |
+| `popoverTarget=(string 'off')`| (initial, warning)| `<null>` |
+| `popoverTarget=(symbol)`| (initial, warning)| `<null>` |
+| `popoverTarget=(function)`| (initial, warning)| `<null>` |
+| `popoverTarget=(null)`| (initial, warning)| `<null>` |
+| `popoverTarget=(undefined)`| (initial, warning)| `<null>` |
+
+## `popoverTargetAction` (on `<button>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `popoverTargetAction=(string)`| (changed, warning)| `"show"` |
+| `popoverTargetAction=(empty string)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(array with string)`| (changed, warning)| `"show"` |
+| `popoverTargetAction=(empty array)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(object)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(numeric string)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(-1)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(0)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(integer)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(NaN)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(float)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(true)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(false)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(string 'true')`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(string 'false')`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(string 'on')`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(string 'off')`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(symbol)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(function)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(null)`| (initial, warning)| `"toggle"` |
+| `popoverTargetAction=(undefined)`| (initial, warning)| `"toggle"` |
+
 ## `poster` (on `<video>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
