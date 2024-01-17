@@ -43,25 +43,21 @@ const RCTFabricUIManager = {
     }
     return result.join('\n');
   },
-  createNode: jest.fn(function createNode(
-    reactTag,
-    viewName,
-    rootTag,
-    props,
-    eventTarget,
-  ) {
-    if (allocatedTags.has(reactTag)) {
-      throw new Error(`Created two native views with tag ${reactTag}`);
-    }
+  createNode: jest.fn(
+    function createNode(reactTag, viewName, rootTag, props, eventTarget) {
+      if (allocatedTags.has(reactTag)) {
+        throw new Error(`Created two native views with tag ${reactTag}`);
+      }
 
-    allocatedTags.add(reactTag);
-    return {
-      reactTag: reactTag,
-      viewName: viewName,
-      props: props,
-      children: [],
-    };
-  }),
+      allocatedTags.add(reactTag);
+      return {
+        reactTag: reactTag,
+        viewName: viewName,
+        props: props,
+        children: [],
+      };
+    },
+  ),
   cloneNode: jest.fn(function cloneNode(node) {
     return {
       reactTag: node.reactTag,
@@ -70,28 +66,26 @@ const RCTFabricUIManager = {
       children: node.children,
     };
   }),
-  cloneNodeWithNewChildren: jest.fn(function cloneNodeWithNewChildren(
-    node,
-    children,
-  ) {
-    return {
-      reactTag: node.reactTag,
-      viewName: node.viewName,
-      props: node.props,
-      children: children ?? [],
-    };
-  }),
-  cloneNodeWithNewProps: jest.fn(function cloneNodeWithNewProps(
-    node,
-    newPropsDiff,
-  ) {
-    return {
-      reactTag: node.reactTag,
-      viewName: node.viewName,
-      props: {...node.props, ...newPropsDiff},
-      children: node.children,
-    };
-  }),
+  cloneNodeWithNewChildren: jest.fn(
+    function cloneNodeWithNewChildren(node, children) {
+      return {
+        reactTag: node.reactTag,
+        viewName: node.viewName,
+        props: node.props,
+        children: children ?? [],
+      };
+    },
+  ),
+  cloneNodeWithNewProps: jest.fn(
+    function cloneNodeWithNewProps(node, newPropsDiff) {
+      return {
+        reactTag: node.reactTag,
+        viewName: node.viewName,
+        props: {...node.props, ...newPropsDiff},
+        children: node.children,
+      };
+    },
+  ),
   cloneNodeWithNewChildrenAndProps: jest.fn(
     function cloneNodeWithNewChildrenAndProps(node, newPropsDiff) {
       let children = [];
@@ -171,34 +165,31 @@ const RCTFabricUIManager = {
 
     return [10, 10, 100, 100];
   }),
-  measureLayout: jest.fn(function measureLayout(
-    node,
-    relativeNode,
-    fail,
-    success,
-  ) {
-    if (typeof node !== 'object') {
-      throw new Error(
-        `Expected node to be an object, was passed "${typeof node}"`,
-      );
-    }
+  measureLayout: jest.fn(
+    function measureLayout(node, relativeNode, fail, success) {
+      if (typeof node !== 'object') {
+        throw new Error(
+          `Expected node to be an object, was passed "${typeof node}"`,
+        );
+      }
 
-    if (typeof node.viewName !== 'string') {
-      throw new Error('Expected node to be a host node.');
-    }
+      if (typeof node.viewName !== 'string') {
+        throw new Error('Expected node to be a host node.');
+      }
 
-    if (typeof relativeNode !== 'object') {
-      throw new Error(
-        `Expected relative node to be an object, was passed "${typeof relativeNode}"`,
-      );
-    }
+      if (typeof relativeNode !== 'object') {
+        throw new Error(
+          `Expected relative node to be an object, was passed "${typeof relativeNode}"`,
+        );
+      }
 
-    if (typeof relativeNode.viewName !== 'string') {
-      throw new Error('Expected relative node to be a host node.');
-    }
+      if (typeof relativeNode.viewName !== 'string') {
+        throw new Error('Expected relative node to be a host node.');
+      }
 
-    success(1, 1, 100, 100);
-  }),
+      success(1, 1, 100, 100);
+    },
+  ),
   setIsJSResponder: jest.fn(),
 };
 

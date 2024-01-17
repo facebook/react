@@ -70,6 +70,7 @@ import {
   requestStorage,
   prepareHostDispatcher,
   createHints,
+  initAsyncDebugInfo,
 } from './ReactFlightServerConfig';
 
 import {
@@ -116,6 +117,8 @@ import getPrototypeOf from 'shared/getPrototypeOf';
 import binaryToComparableString from 'shared/binaryToComparableString';
 
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
+
+initAsyncDebugInfo();
 
 const ObjectPrototype = Object.prototype;
 
@@ -407,11 +410,21 @@ function serializeThenable(request: Request, thenable: Thenable<any>): number {
       pingTask(request, newTask);
     },
     reason => {
-      newTask.status = ERRORED;
+      if (
+        enablePostpone &&
+        typeof reason === 'object' &&
+        reason !== null &&
+        (reason: any).$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (reason: any);
+        logPostpone(request, postponeInstance.message);
+        emitPostponeChunk(request, newTask.id, postponeInstance);
+      } else {
+        newTask.status = ERRORED;
+        const digest = logRecoverableError(request, reason);
+        emitErrorChunk(request, newTask.id, digest, reason);
+      }
       request.abortableTasks.delete(newTask);
-      // TODO: We should ideally do this inside performWork so it's scheduled
-      const digest = logRecoverableError(request, reason);
-      emitErrorChunk(request, newTask.id, digest, reason);
       if (request.destination !== null) {
         flushCompletedChunks(request, request.destination);
       }
@@ -1790,15 +1803,27 @@ export function abort(request: Request, reason: mixed): void {
     if (abortableTasks.size > 0) {
       // We have tasks to abort. We'll emit one error row and then emit a reference
       // to that row from every row that's still remaining.
-      const error =
-        reason === undefined
-          ? new Error('The render was aborted by the server without a reason.')
-          : reason;
-
-      const digest = logRecoverableError(request, error);
       request.pendingChunks++;
       const errorId = request.nextChunkId++;
-      emitErrorChunk(request, errorId, digest, error);
+      if (
+        enablePostpone &&
+        typeof reason === 'object' &&
+        reason !== null &&
+        (reason: any).$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (reason: any);
+        logPostpone(request, postponeInstance.message);
+        emitPostponeChunk(request, errorId, postponeInstance);
+      } else {
+        const error =
+          reason === undefined
+            ? new Error(
+                'The render was aborted by the server without a reason.',
+              )
+            : reason;
+        const digest = logRecoverableError(request, error);
+        emitErrorChunk(request, errorId, digest, error);
+      }
       abortableTasks.forEach(task => abortTask(task, request, errorId));
       abortableTasks.clear();
     }

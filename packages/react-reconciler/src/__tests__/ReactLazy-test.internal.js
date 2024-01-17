@@ -99,7 +99,7 @@ describe('ReactLazy', () => {
         <LazyText text="Hi" />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -185,7 +185,7 @@ describe('ReactLazy', () => {
         <LazyBar />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -208,7 +208,7 @@ describe('ReactLazy', () => {
     const LazyText = lazy(async () => Text);
 
     const root = ReactTestRenderer.create(null, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     let error;
@@ -242,7 +242,7 @@ describe('ReactLazy', () => {
     });
 
     const root = ReactTestRenderer.create(null, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     let error;
@@ -302,7 +302,7 @@ describe('ReactLazy', () => {
     }
 
     const root = ReactTestRenderer.create(<Parent swap={false} />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['Suspend! [LazyChildA]', 'Loading...']);
@@ -337,7 +337,7 @@ describe('ReactLazy', () => {
         <LazyText />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -394,7 +394,7 @@ describe('ReactLazy', () => {
         </Lazy>
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
     await waitForAll(['Loading...']);
@@ -440,7 +440,7 @@ describe('ReactLazy', () => {
         </Suspense>
       </>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
     await waitForAll(['Not lazy: 0', 'Loading...']);
@@ -485,7 +485,7 @@ describe('ReactLazy', () => {
         </Suspense>
       </>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
     await waitForAll(['Not lazy: 0', 'Loading...']);
@@ -561,7 +561,7 @@ describe('ReactLazy', () => {
         <LazyClass num={1} />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -691,7 +691,7 @@ describe('ReactLazy', () => {
         <LazyText />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -734,7 +734,7 @@ describe('ReactLazy', () => {
         <BadLazy />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -761,7 +761,7 @@ describe('ReactLazy', () => {
         <Lazy2 text="Hello" />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -815,7 +815,7 @@ describe('ReactLazy', () => {
         <LazyAdd inner="2" outer="2" />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -1012,7 +1012,7 @@ describe('ReactLazy', () => {
         <LazyText />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -1055,7 +1055,7 @@ describe('ReactLazy', () => {
         <LazyFoo />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -1100,7 +1100,7 @@ describe('ReactLazy', () => {
         <LazyForwardRef ref={ref} />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -1131,7 +1131,7 @@ describe('ReactLazy', () => {
         <LazyAdd outer={2} />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
     await waitForAll(['Loading...']);
@@ -1218,7 +1218,7 @@ describe('ReactLazy', () => {
         <LazyAdd outer={2} />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
     await waitForAll(['Loading...']);
@@ -1264,7 +1264,7 @@ describe('ReactLazy', () => {
         <LazyFoo ref={ref} />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -1304,7 +1304,7 @@ describe('ReactLazy', () => {
           <LazyText text="Hi" />
         </Suspense>
       </ErrorBoundary>,
-      {unstable_isConcurrent: true},
+      {isConcurrent: true},
     );
 
     await waitForAll(['Loading...']);
@@ -1412,7 +1412,7 @@ describe('ReactLazy', () => {
     }
 
     const root = ReactTestRenderer.create(<Parent swap={false} />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['Init A', 'Loading...']);
@@ -1497,7 +1497,7 @@ describe('ReactLazy', () => {
     }
 
     const root = ReactTestRenderer.create(<Parent swap={false} />, {
-      unstable_isConcurrent: false,
+      isConcurrent: false,
     });
 
     assertLog(['Init A', 'Init B', 'Loading...']);
@@ -1559,7 +1559,7 @@ describe('ReactLazy', () => {
     }
 
     const root = ReactTestRenderer.create(<Parent swap={false} />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['Init A', 'Loading...']);
@@ -1628,7 +1628,7 @@ describe('ReactLazy', () => {
     }
 
     const root = ReactTestRenderer.create(<Parent swap={false} />, {
-      unstable_isConcurrent: false,
+      isConcurrent: false,
     });
 
     assertLog(['Init A', 'Loading...']);

@@ -13,7 +13,7 @@
  *   { 0: 'MUCH ERROR', 1: 'SUCH WRONG' }
  */
 function invertObject(targetObj) {
-  const result /*: {[string]: string} */ = {};
+  const result = {};
   const mapKeys = Object.keys(targetObj);
 
   // eslint-disable-next-line no-for-of-loops/no-for-of-loops

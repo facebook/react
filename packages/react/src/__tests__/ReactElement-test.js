@@ -9,8 +9,10 @@
 
 'use strict';
 
+let act;
+
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactTestUtils;
 
 describe('ReactElement', () => {
@@ -19,8 +21,10 @@ describe('ReactElement', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    act = require('internal-test-utils').act;
+
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.
@@ -43,11 +47,10 @@ describe('ReactElement', () => {
     expect(element.props).toEqual({});
   });
 
-  it('should warn when `key` is being accessed on composite element', () => {
-    const container = document.createElement('div');
+  it('should warn when `key` is being accessed on composite element', async () => {
     class Child extends React.Component {
       render() {
-        return <div> {this.props.key} </div>;
+        return <div>{this.props.key}</div>;
       }
     }
     class Parent extends React.Component {
@@ -61,7 +64,12 @@ describe('ReactElement', () => {
         );
       }
     }
-    expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() => {
+        root.render(<Parent />);
+      });
+    }).toErrorDev(
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -80,8 +88,7 @@ describe('ReactElement', () => {
     );
   });
 
-  it('should warn when `ref` is being accessed', () => {
-    const container = document.createElement('div');
+  it('should warn when `ref` is being accessed', async () => {
     class Child extends React.Component {
       render() {
         return <div> {this.props.ref} </div>;
@@ -96,7 +103,13 @@ describe('ReactElement', () => {
         );
       }
     }
-    expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+
+    await expect(async () => {
+      await act(() => {
+        root.render(<Parent />);
+      });
+    }).toErrorDev(
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -288,7 +301,7 @@ describe('ReactElement', () => {
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
-  it('should use default prop value when removing a prop', () => {
+  it('should use default prop value when removing a prop', async () => {
     class Component extends React.Component {
       render() {
         return React.createElement('span');
@@ -297,13 +310,18 @@ describe('ReactElement', () => {
     Component.defaultProps = {fruit: 'persimmon'};
 
     const container = document.createElement('div');
-    const instance = ReactDOM.render(
-      React.createElement(Component, {fruit: 'mango'}),
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+
+    const ref = React.createRef();
+    await act(() => {
+      root.render(React.createElement(Component, {ref, fruit: 'mango'}));
+    });
+    const instance = ref.current;
     expect(instance.props.fruit).toBe('mango');
 
-    ReactDOM.render(React.createElement(Component), container);
+    await act(() => {
+      root.render(React.createElement(Component));
+    });
     expect(instance.props.fruit).toBe('persimmon');
   });
 
@@ -328,7 +346,7 @@ describe('ReactElement', () => {
     expect(inst2.props.prop).toBe(null);
   });
 
-  it('throws when changing a prop (in dev) after element creation', () => {
+  it('throws when changing a prop (in dev) after element creation', async () => {
     class Outer extends React.Component {
       render() {
         const el = <div className="moo" />;
@@ -346,15 +364,21 @@ describe('ReactElement', () => {
         return el;
       }
     }
-    const outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<Outer color="orange" />);
+    });
     if (__DEV__) {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
+      expect(container.firstChild.className).toBe('moo');
     } else {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
+      expect(container.firstChild.className).toBe('quack');
     }
   });
 
-  it('throws when adding a prop (in dev) after element creation', () => {
+  it('throws when adding a prop (in dev) after element creation', async () => {
     const container = document.createElement('div');
     class Outer extends React.Component {
       render() {
@@ -374,12 +398,15 @@ describe('ReactElement', () => {
       }
     }
     Outer.defaultProps = {sound: 'meow'};
-    const outer = ReactDOM.render(<Outer />, container);
-    expect(ReactDOM.findDOMNode(outer).textContent).toBe('meow');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Outer />);
+    });
+    expect(container.firstChild.textContent).toBe('meow');
     if (__DEV__) {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('');
+      expect(container.firstChild.className).toBe('');
     } else {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
+      expect(container.firstChild.className).toBe('quack');
     }
   });
 

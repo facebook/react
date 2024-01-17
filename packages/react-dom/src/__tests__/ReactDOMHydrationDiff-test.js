@@ -25,7 +25,7 @@ describe('ReactDOMServerHydration', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    act = require('react-dom/test-utils').act;
+    act = React.unstable_act;
 
     console.error = jest.fn();
     container = document.createElement('div');

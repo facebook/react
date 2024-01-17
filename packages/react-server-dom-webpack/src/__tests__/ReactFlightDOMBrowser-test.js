@@ -590,6 +590,29 @@ describe('ReactFlightDOMBrowser', () => {
     expect(reportedErrors).toEqual(['for reasons']);
   });
 
+  it('should warn in DEV a child is missing keys', async () => {
+    function ParentClient({children}) {
+      return children;
+    }
+    const Parent = clientExports(ParentClient);
+    const ParentModule = clientExports({Parent: ParentClient});
+    await expect(async () => {
+      const stream = ReactServerDOMServer.renderToReadableStream(
+        <>
+          <Parent>{Array(6).fill(<div>no key</div>)}</Parent>
+          <ParentModule.Parent>
+            {Array(6).fill(<div>no key</div>)}
+          </ParentModule.Parent>
+        </>,
+        webpackMap,
+      );
+      await ReactServerDOMClient.createFromReadableStream(stream);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://reactjs.org/link/warning-keys for more information.',
+    );
+  });
+
   it('basic use(promise)', async () => {
     function Server() {
       return (
@@ -1011,7 +1034,7 @@ describe('ReactFlightDOMBrowser', () => {
     const ClientRef = clientExports(Client);
 
     const stream = ReactServerDOMServer.renderToReadableStream(
-      <ClientRef action={greet.bind(null, 'Hello', 'World')} />,
+      <ClientRef action={greet.bind(null, 'Hello').bind(null, 'World')} />,
       webpackMap,
     );
 
@@ -1308,5 +1331,63 @@ describe('ReactFlightDOMBrowser', () => {
     expect(errors).toEqual([
       'The render was aborted by the server without a reason.',
     ]);
+  });
+
+  // @gate enablePostpone
+  it('postpones when abort passes a postpone signal', async () => {
+    const infinitePromise = new Promise(() => {});
+    function Server() {
+      return infinitePromise;
+    }
+
+    let postponed = null;
+    let error = null;
+
+    const controller = new AbortController();
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <Suspense fallback="Loading...">
+        <Server />
+      </Suspense>,
+      null,
+      {
+        onError(x) {
+          error = x;
+        },
+        onPostpone(reason) {
+          postponed = reason;
+        },
+        signal: controller.signal,
+      },
+    );
+
+    try {
+      React.unstable_postpone('testing postpone');
+    } catch (reason) {
+      controller.abort(reason);
+    }
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream);
+
+    function Client() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(
+        <div>
+          Shell: <Client />
+        </div>,
+      );
+    });
+    // We should have reserved the shell already. Which means that the Server
+    // Component should've been a lazy component.
+    expect(container.innerHTML).toContain('Shell:');
+    expect(container.innerHTML).toContain('Loading...');
+    expect(container.innerHTML).not.toContain('Not shown');
+
+    expect(postponed).toBe('testing postpone');
+    expect(error).toBe(null);
   });
 });

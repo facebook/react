@@ -31,7 +31,7 @@ export {
   unstable_Cache,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
-  unstable_Offscreen,
+  unstable_Activity,
   unstable_Scope,
   unstable_SuspenseList,
   unstable_getCacheSignal,

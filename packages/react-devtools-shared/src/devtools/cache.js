@@ -53,7 +53,6 @@ export type Resource<Input, Key, Value> = {
   read(Input): Value,
   preload(Input): void,
   write(Key, Value): void,
-  ...
 };
 
 const Pending = 0;

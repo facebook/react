@@ -8,7 +8,7 @@
  */
 
 // This client file is in the shared folder because it applies to both SSR and browser contexts.
-// It is the configuraiton of the FlightClient behavior which can run in either environment.
+// It is the configuration of the FlightClient behavior which can run in either environment.
 
 import type {HintCode, HintModel} from '../server/ReactFlightServerConfigDOM';
 
@@ -107,7 +107,7 @@ export function dispatchHint<Code: HintCode>(
   }
 }
 
-// Flow is having troulbe refining the HintModels so we help it a bit.
+// Flow is having trouble refining the HintModels so we help it a bit.
 // This should be compiled out in the production build.
 function refineModel<T>(code: T, model: HintModel<any>): HintModel<T> {
   return model;
