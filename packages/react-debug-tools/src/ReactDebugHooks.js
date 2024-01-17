@@ -80,7 +80,11 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
         // This type check is for Flow only.
         Dispatcher.useMemoCache(0);
       }
-      Dispatcher.useOptimistic(0);
+
+      if (typeof Dispatcher.useOptimistic === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useOptimistic(null, (s: mixed, a: mixed) => s);
+      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];
