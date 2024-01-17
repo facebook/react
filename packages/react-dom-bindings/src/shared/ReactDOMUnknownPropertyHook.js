@@ -225,6 +225,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'disableRemotePlayback':
           case 'formNoValidate':
           case 'hidden':
+          case enableNewBooleanProps ? 'inert' : 'formNoValidate':
           case 'loop':
           case 'noModule':
           case 'noValidate':
@@ -242,10 +243,6 @@ function validateProperty(tagName, name, value, eventRegistry) {
             return true;
           }
           default: {
-            // TODO: Move into above cases once enableNewBooleanProps is removed.
-            if (enableNewBooleanProps && name === 'inert') {
-              return true;
-            }
             const prefix = name.toLowerCase().slice(0, 5);
             if (prefix === 'data-' || prefix === 'aria-') {
               return true;
@@ -306,6 +303,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'disableRemotePlayback':
             case 'formNoValidate':
             case 'hidden':
+            case enableNewBooleanProps ? 'inert' : 'formNoValidate':
             case 'loop':
             case 'noModule':
             case 'noValidate':
@@ -319,11 +317,6 @@ function validateProperty(tagName, name, value, eventRegistry) {
             case 'itemScope': {
               break;
             }
-            case 'inert':
-              if (enableNewBooleanProps) {
-                break;
-              }
-            // eslint-disable-next-line no-fallthrough -- not flagged after DCE
             default: {
               return true;
             }

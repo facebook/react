@@ -724,7 +724,7 @@ function setProp(
     case 'disableRemotePlayback':
     case 'formNoValidate':
     case 'hidden':
-    case 'inert':
+    case enableNewBooleanProps ? 'inert' : 'formNoValidate':
     case 'loop':
     case 'noModule':
     case 'noValidate':
@@ -736,18 +736,14 @@ function setProp(
     case 'scoped':
     case 'seamless':
     case 'itemScope': {
-      const isNewBooleanProp = key === 'inert';
-      if (enableNewBooleanProps || !isNewBooleanProp) {
-        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
-          domElement.setAttribute(key, '');
-        } else {
-          domElement.removeAttribute(key);
-        }
-        break;
+      if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+        domElement.setAttribute(key, '');
+      } else {
+        domElement.removeAttribute(key);
       }
+      break;
     }
     // Overloaded Boolean
-    // eslint-disable-next-line no-fallthrough -- Re-enable once enableNewBooleanProps is removed.
     case 'capture':
     case 'download': {
       // An attribute that can be used as a flag as well as with a value.
@@ -2514,7 +2510,7 @@ function diffHydratedGenericElement(
       case 'disableRemotePlayback':
       case 'formNoValidate':
       case 'hidden':
-      case 'inert':
+      case enableNewBooleanProps ? 'inert' : 'formNoValidate':
       case 'loop':
       case 'noModule':
       case 'noValidate':
@@ -2526,20 +2522,16 @@ function diffHydratedGenericElement(
       case 'scoped':
       case 'seamless':
       case 'itemScope': {
-        const isNewBooleanProp = propKey === 'inert';
-        if (enableNewBooleanProps || !isNewBooleanProp) {
-          // Some of these need to be lower case to remove them from the extraAttributes list.
-          hydrateBooleanAttribute(
-            domElement,
-            propKey,
-            propKey.toLowerCase(),
-            value,
-            extraAttributes,
-          );
-          continue;
-        }
+        // Some of these need to be lower case to remove them from the extraAttributes list.
+        hydrateBooleanAttribute(
+          domElement,
+          propKey,
+          propKey.toLowerCase(),
+          value,
+          extraAttributes,
+        );
+        continue;
       }
-      // eslint-disable-next-line no-fallthrough -- Re-enable once enableNewBooleanProps is removed.
       case 'capture':
       case 'download': {
         hydrateOverloadedBooleanAttribute(
