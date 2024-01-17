@@ -42,13 +42,13 @@
     "test-utils.js",
     "unstable_testing.js",
     "unstable_server-external-runtime.js",
-    "react-dom.shared-subset.js",
+    "react-dom.react-server.js",
     "cjs/",
     "umd/"
   ],
   "exports": {
     ".": {
-      "react-server": "./react-dom.shared-subset.js",
+      "react-server": "./react-dom.react-server.js",
       "default": "./index.js"
     },
     "./client": "./client.js",

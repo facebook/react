@@ -34,7 +34,7 @@ describe('ReactFlightDOMEdge', () => {
     jest.resetModules();
 
     // Simulate the condition resolution
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.edge'),
     );
