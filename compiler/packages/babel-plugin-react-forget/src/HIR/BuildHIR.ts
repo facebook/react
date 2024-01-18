@@ -372,6 +372,9 @@ function lowerStatement(
          */
         s.traverse({
           Identifier(id: NodePath<t.Identifier>) {
+            if (!id.isReferencedIdentifier()) {
+              return;
+            }
             const binding = id.scope.getBinding(id.node.name);
             if (binding != null && hoistableBindings.has(binding)) {
               if (
