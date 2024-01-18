@@ -29,62 +29,17 @@ import { assertExhaustive, retainWhere } from "../Utils/utils";
  * Note that unreachable blocks are already pruned during HIR construction.
  */
 export function deadCodeElimination(fn: HIRFunction): void {
-  const state = new State();
-
-  /*
-   * If there are no back-edges the algorithm can terminate after a single iteration
-   * of the blocks
+  /**
+   * Phase 1: Find/mark all referenced identifiers
+   * Usages may be visited AFTER declarations if there are circular phi / data dependencies
+   * between blocks, so we wait to sweep until after fixed point iteration is complete
    */
-  const hasLoop = hasBackEdge(fn);
+  const state = findReferencedIdentifiers(fn);
 
-  const reversedBlocks = [...fn.body.blocks.values()].reverse();
-  let size = state.count;
-  do {
-    size = state.count;
-
-    /*
-     * Iterate blocks in postorder (successors before predecessors, excepting loops)
-     * to find usages before declarations
-     */
-    for (const block of reversedBlocks) {
-      for (const operand of eachTerminalOperand(block.terminal)) {
-        state.reference(operand.identifier);
-      }
-
-      for (let i = block.instructions.length - 1; i >= 0; i--) {
-        const instr = block.instructions[i]!;
-        if (
-          !state.isIdOrNameUsed(instr.lvalue.identifier) &&
-          pruneableValue(instr.value, state) &&
-          // Can't prune the last value of a value block, that's its value!
-          !(block.kind !== "block" && i === block.instructions.length - 1)
-        ) {
-          continue;
-        }
-        state.reference(instr.lvalue.identifier);
-
-        /*
-         * For the last value of a value block, if it's not pruneable we can't
-         * rewrite it. This is necessary to preserve unused value blocks
-         */
-        if (block.kind !== "block" && i === block.instructions.length - 1) {
-          for (const place of eachInstructionValueOperand(instr.value)) {
-            state.reference(place.identifier);
-          }
-          continue;
-        }
-        // Otherwise rewrite instructions to remove unused parts of them
-        visitInstruction(instr, state);
-      }
-      for (const phi of block.phis) {
-        if (state.isIdOrNameUsed(phi.id)) {
-          for (const [_pred, operand] of phi.operands) {
-            state.reference(operand);
-          }
-        }
-      }
-    }
-  } while (state.count > size && hasLoop);
+  /**
+   * Phase 2: Prune / sweep unreferenced identifiers and instructions
+   * as possible (subject to HIR structural constraints)
+   */
   for (const [, block] of fn.body.blocks) {
     for (const phi of block.phis) {
       if (!state.isIdOrNameUsed(phi.id)) {
@@ -94,6 +49,14 @@ export function deadCodeElimination(fn: HIRFunction): void {
     retainWhere(block.instructions, (instr) =>
       state.isIdOrNameUsed(instr.lvalue.identifier)
     );
+    // Rewrite retained instructions
+    for (let i = 0; i < block.instructions.length; i++) {
+      const isBlockValue =
+        block.kind !== "block" && i === block.instructions.length - 1;
+      if (!isBlockValue) {
+        rewriteInstruction(block.instructions[i], state);
+      }
+    }
   }
 }
 
@@ -134,10 +97,81 @@ class State {
   }
 }
 
-function visitInstruction(instr: Instruction, state: State): void {
+function findReferencedIdentifiers(fn: HIRFunction): State {
+  /*
+   * If there are no back-edges the algorithm can terminate after a single iteration
+   * of the blocks
+   */
+  const hasLoop = hasBackEdge(fn);
+  const reversedBlocks = [...fn.body.blocks.values()].reverse();
+
+  const state = new State();
+  let size = state.count;
+  do {
+    size = state.count;
+
+    /*
+     * Iterate blocks in postorder (successors before predecessors, excepting loops)
+     * to visit usages before declarations
+     */
+    for (const block of reversedBlocks) {
+      for (const operand of eachTerminalOperand(block.terminal)) {
+        state.reference(operand.identifier);
+      }
+
+      for (let i = block.instructions.length - 1; i >= 0; i--) {
+        const instr = block.instructions[i]!;
+        const isBlockValue =
+          block.kind !== "block" && i === block.instructions.length - 1;
+
+        if (isBlockValue) {
+          /**
+           * The last instr of a value block is never eligible for pruning,
+           * as that's the block's value. Pessimistically consider all operands
+           * as used to avoid rewriting the last instruction
+           */
+          state.reference(instr.lvalue.identifier);
+          for (const place of eachInstructionValueOperand(instr.value)) {
+            state.reference(place.identifier);
+          }
+        } else if (
+          state.isIdOrNameUsed(instr.lvalue.identifier) ||
+          !pruneableValue(instr.value, state)
+        ) {
+          state.reference(instr.lvalue.identifier);
+
+          if (instr.value.kind === "StoreLocal") {
+            /*
+             * If this is a Let/Const declaration, mark the initializer as referenced
+             * only if the ssa'ed lval is also referenced
+             */
+            if (
+              instr.value.lvalue.kind === InstructionKind.Reassign ||
+              state.isIdUsed(instr.value.lvalue.place.identifier)
+            ) {
+              state.reference(instr.value.value.identifier);
+            }
+          } else {
+            for (const operand of eachInstructionValueOperand(instr.value)) {
+              state.reference(operand.identifier);
+            }
+          }
+        }
+      }
+      for (const phi of block.phis) {
+        if (state.isIdOrNameUsed(phi.id)) {
+          for (const [_pred, operand] of phi.operands) {
+            state.reference(operand);
+          }
+        }
+      }
+    }
+  } while (state.count > size && hasLoop);
+  return state;
+}
+
+function rewriteInstruction(instr: Instruction, state: State): void {
   if (instr.value.kind === "Destructure") {
-    // Mark the value as used, not the lvalues
-    state.reference(instr.value.value.identifier);
     // Remove unused lvalues
     switch (instr.value.lvalue.pattern.kind) {
       case "ArrayPattern": {
@@ -219,16 +253,6 @@ function visitInstruction(instr: Instruction, state: State): void {
         lvalue: instr.value.lvalue,
         loc: instr.value.loc,
       };
-    } else {
-      /*
-       * Else we mark the initializer as referenced, since the variable itself is
-       * referenced
-       */
-      state.reference(instr.value.value.identifier);
-    }
-  } else {
-    for (const operand of eachInstructionValueOperand(instr.value)) {
-      state.reference(operand.identifier);
     }
   }
 }
