@@ -58,7 +58,7 @@ describe('ReactEmptyComponent', () => {
       }).not.toThrowError();
     });
 
-    it('should not produce child DOM nodes for nullish and false', () => {
+    it('should not produce child DOM nodes for nullish and false', async () => {
       class Component1 extends React.Component {
         render() {
           return nullORUndefined;
@@ -222,7 +222,7 @@ describe('ReactEmptyComponent', () => {
       },
     );
 
-    it('works when switching components', () => {
+    it('works when switching components', async () => {
       let assertions = 0;
 
       class Inner extends React.Component {
@@ -269,7 +269,7 @@ describe('ReactEmptyComponent', () => {
       expect(assertions).toBe(3);
     });
 
-    it('can render nullish at the top level', () => {
+    it('can render nullish at the top level', async () => {
       const div = document.createElement('div');
       ReactDOM.render(nullORUndefined, div);
       expect(div.innerHTML).toBe('');
@@ -313,7 +313,7 @@ describe('ReactEmptyComponent', () => {
       }).not.toThrow();
     });
 
-    it('preserves the dom node during updates', () => {
+    it('preserves the dom node during updates', async () => {
       class Empty extends React.Component {
         render() {
           return nullORUndefined;

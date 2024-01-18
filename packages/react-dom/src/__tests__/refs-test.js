@@ -396,7 +396,7 @@ describe('ref swapping', () => {
 });
 
 describe('root level refs', () => {
-  it('attaches and detaches root refs', () => {
+  it('attaches and detaches root refs', async () => {
     let inst = null;
 
     // host node
@@ -506,7 +506,7 @@ describe('creating element with string ref in constructor', () => {
 });
 
 describe('strings refs across renderers', () => {
-  it('does not break', () => {
+  it('does not break', async () => {
     class Parent extends React.Component {
       render() {
         // This component owns both refs.
@@ -571,7 +571,7 @@ describe('strings refs across renderers', () => {
 });
 
 describe('refs return clean up function', () => {
-  it('calls clean up function if it exists', () => {
+  it('calls clean up function if it exists', async () => {
     const container = document.createElement('div');
     let cleanUp = jest.fn();
     let setup = jest.fn();
@@ -635,7 +635,7 @@ describe('refs return clean up function', () => {
     expect(cleanUp).toHaveBeenCalledTimes(1);
   });
 
-  it('handles ref functions with stable identity', () => {
+  it('handles ref functions with stable identity', async () => {
     const container = document.createElement('div');
     const cleanUp = jest.fn();
     const setup = jest.fn();
@@ -664,7 +664,7 @@ describe('refs return clean up function', () => {
     expect(cleanUp).toHaveBeenCalledTimes(1);
   });
 
-  it('warns if clean up function is returned when called with null', () => {
+  it('warns if clean up function is returned when called with null', async () => {
     const container = document.createElement('div');
     const cleanUp = jest.fn();
     const setup = jest.fn();

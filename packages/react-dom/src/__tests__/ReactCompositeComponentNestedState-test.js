@@ -18,7 +18,7 @@ describe('ReactCompositeComponentNestedState-state', () => {
     ReactDOM = require('react-dom');
   });
 
-  it('should provide up to date values for props', () => {
+  it('should provide up to date values for props', async () => {
     class ParentComponent extends React.Component {
       state = {color: 'blue'};
 

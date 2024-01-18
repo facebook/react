@@ -729,7 +729,7 @@ describe('InspectedElementContext', () => {
   });
 
   // @reactVersion >= 16.0
-  it('should enable inspected values to be stored as global variables', () => {
+  it('should enable inspected values to be stored as global variables', async () => {
     const Example = () => null;
 
     const nestedObject = {
@@ -785,7 +785,7 @@ describe('InspectedElementContext', () => {
   });
 
   // @reactVersion >= 16.0
-  it('should enable inspected values to be copied to the clipboard', () => {
+  it('should enable inspected values to be copied to the clipboard', async () => {
     const Example = () => null;
 
     const nestedObject = {
@@ -842,7 +842,7 @@ describe('InspectedElementContext', () => {
   });
 
   // @reactVersion >= 16.0
-  it('should enable complex values to be copied to the clipboard', () => {
+  it('should enable complex values to be copied to the clipboard', async () => {
     const Immutable = require('immutable');
 
     const Example = () => null;

@@ -28,7 +28,7 @@ describe('SyntheticEvent', () => {
     container = null;
   });
 
-  it('should be able to `preventDefault`', () => {
+  it('should be able to `preventDefault`', async () => {
     let expectedCount = 0;
 
     const eventHandler = syntheticEvent => {
@@ -48,7 +48,7 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
-  it('should be prevented if nativeEvent is prevented', () => {
+  it('should be prevented if nativeEvent is prevented', async () => {
     let expectedCount = 0;
 
     const eventHandler = syntheticEvent => {
@@ -80,7 +80,7 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(2);
   });
 
-  it('should be able to `stopPropagation`', () => {
+  it('should be able to `stopPropagation`', async () => {
     let expectedCount = 0;
 
     const eventHandler = syntheticEvent => {

@@ -101,7 +101,7 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should update context if it changes due to setState', () => {
+  it('should update context if it changes due to setState', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -162,7 +162,7 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should update context if it changes due to re-render', () => {
+  it('should update context if it changes due to re-render', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -218,7 +218,7 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
-  it('should render portal with non-context-provider parent', () => {
+  it('should render portal with non-context-provider parent', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -242,7 +242,7 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should get context through non-context-provider parent', () => {
+  it('should get context through non-context-provider parent', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -286,7 +286,7 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should get context through middle non-context-provider layer', () => {
+  it('should get context through middle non-context-provider layer', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal1 = document.createElement('div');
@@ -337,7 +337,7 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal2.textContent).toBe('foo');
   });
 
-  it('fails gracefully when mixing React 15 and 16', () => {
+  it('fails gracefully when mixing React 15 and 16', async () => {
     class C extends React.Component {
       render() {
         return <div />;

@@ -1780,7 +1780,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('keeps a valid tree when forcing remount', () => {
+  it('keeps a valid tree when forcing remount', async () => {
     if (__DEV__) {
       const HelloV1 = prepare(() => {
         function Hello() {
@@ -3019,7 +3019,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('regression test: does not get into an infinite loop', () => {
+  it('regression test: does not get into an infinite loop', async () => {
     if (__DEV__) {
       const containerA = document.createElement('div');
       const containerB = document.createElement('div');
@@ -3481,7 +3481,7 @@ describe('ReactFresh', () => {
     });
   }
 
-  it('can update multiple roots independently', () => {
+  it('can update multiple roots independently', async () => {
     if (__DEV__) {
       // Declare the first version.
       const HelloV1 = () => {

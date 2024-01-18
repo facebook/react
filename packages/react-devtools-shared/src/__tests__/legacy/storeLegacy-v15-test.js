@@ -32,7 +32,7 @@ describe('Store (legacy)', () => {
     ReactDOM = require('react-dom');
   });
 
-  it('should not allow a root node to be collapsed', () => {
+  it('should not allow a root node to be collapsed', async () => {
     const Component = () => <div>Hi</div>;
 
     act(() =>
@@ -58,7 +58,7 @@ describe('Store (legacy)', () => {
       store.collapseNodesByDefault = false;
     });
 
-    it('should support mount and update operations', () => {
+    it('should support mount and update operations', async () => {
       const Grandparent = ({count}) => (
         <div>
           <Parent count={count} />
@@ -126,7 +126,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
-    it('should support mount and update operations for multiple roots', () => {
+    it('should support mount and update operations for multiple roots', async () => {
       const Parent = ({count}) => (
         <div>
           {new Array(count).fill(true).map((_, index) => (
@@ -204,7 +204,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
-    it('should not filter DOM nodes from the store tree', () => {
+    it('should not filter DOM nodes from the store tree', async () => {
       const Grandparent = ({flip}) => (
         <div>
           <div>
@@ -268,7 +268,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
-    it('should support collapsing parts of the tree', () => {
+    it('should support collapsing parts of the tree', async () => {
       const Grandparent = ({count}) => (
         <div>
           <Parent count={count} />
@@ -370,7 +370,7 @@ describe('Store (legacy)', () => {
       `);
     });
 
-    it('should support adding and removing children', () => {
+    it('should support adding and removing children', async () => {
       const Root = ({children}) => <div>{children}</div>;
       const Component = () => <div />;
 
@@ -428,7 +428,7 @@ describe('Store (legacy)', () => {
       `);
     });
 
-    it('should support reordering of children', () => {
+    it('should support reordering of children', async () => {
       const Root = ({children}) => <div>{children}</div>;
       const Component = () => <div />;
 
@@ -505,7 +505,7 @@ describe('Store (legacy)', () => {
       store.collapseNodesByDefault = true;
     });
 
-    it('should support mount and update operations', () => {
+    it('should support mount and update operations', async () => {
       const Parent = ({count}) => (
         <div>
           {new Array(count).fill(true).map((_, index) => (
@@ -549,7 +549,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
-    it('should support mount and update operations for multiple roots', () => {
+    it('should support mount and update operations for multiple roots', async () => {
       const Parent = ({count}) => (
         <div>
           {new Array(count).fill(true).map((_, index) => (
@@ -594,7 +594,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
-    it('should not filter DOM nodes from the store tree', () => {
+    it('should not filter DOM nodes from the store tree', async () => {
       const Grandparent = ({flip}) => (
         <div>
           <div>
@@ -657,7 +657,7 @@ describe('Store (legacy)', () => {
       expect(store).toMatchInlineSnapshot(``);
     });
 
-    it('should support expanding parts of the tree', () => {
+    it('should support expanding parts of the tree', async () => {
       const Grandparent = ({count}) => (
         <div>
           <Parent count={count} />
@@ -753,7 +753,7 @@ describe('Store (legacy)', () => {
       `);
     });
 
-    it('should support expanding deep parts of the tree', () => {
+    it('should support expanding deep parts of the tree', async () => {
       const Wrapper = ({forwardedRef}) => (
         <Nested depth={3} forwardedRef={forwardedRef} />
       );
@@ -833,7 +833,7 @@ describe('Store (legacy)', () => {
       `);
     });
 
-    it('should support reordering of children', () => {
+    it('should support reordering of children', async () => {
       const Root = ({children}) => <div>{children}</div>;
       const Component = () => <div />;
 
@@ -897,7 +897,7 @@ describe('Store (legacy)', () => {
   });
 
   describe('StrictMode compliance', () => {
-    it('should mark all elements as strict mode compliant', () => {
+    it('should mark all elements as strict mode compliant', async () => {
       const App = () => null;
 
       const container = document.createElement('div');

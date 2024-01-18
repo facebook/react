@@ -172,7 +172,7 @@ describe('ReactJSXElement', () => {
     expect(element.constructor).toBe(object.constructor);
   });
 
-  it('should use default prop value when removing a prop', () => {
+  it('should use default prop value when removing a prop', async () => {
     Component.defaultProps = {fruit: 'persimmon'};
 
     const container = document.createElement('div');

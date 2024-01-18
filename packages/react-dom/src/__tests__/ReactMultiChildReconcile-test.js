@@ -291,7 +291,7 @@ describe('ReactMultiChildReconcile', () => {
     jest.resetModules();
   });
 
-  it('should reset internal state if removed then readded in an array', () => {
+  it('should reset internal state if removed then readded in an array', async () => {
     // Test basics.
     const props = {
       usernameToStatus: {
@@ -333,7 +333,7 @@ describe('ReactMultiChildReconcile', () => {
     );
   });
 
-  it('should reset internal state if removed then readded in a legacy iterable', () => {
+  it('should reset internal state if removed then readded in a legacy iterable', async () => {
     // Test basics.
     const props = {
       usernameToStatus: {
@@ -375,7 +375,7 @@ describe('ReactMultiChildReconcile', () => {
     );
   });
 
-  it('should reset internal state if removed then readded in a modern iterable', () => {
+  it('should reset internal state if removed then readded in a modern iterable', async () => {
     // Test basics.
     const props = {
       usernameToStatus: {

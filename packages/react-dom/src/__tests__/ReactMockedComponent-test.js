@@ -30,12 +30,12 @@ describe('ReactMockedComponent', () => {
     MockedComponent.prototype.render = jest.fn();
   });
 
-  it('should allow a mocked component to be rendered', () => {
+  it('should allow a mocked component to be rendered', async () => {
     const container = document.createElement('container');
     ReactDOM.render(<MockedComponent />, container);
   });
 
-  it('should allow a mocked component to be updated in dev', () => {
+  it('should allow a mocked component to be updated in dev', async () => {
     const container = document.createElement('container');
     ReactDOM.render(<MockedComponent />, container);
     ReactDOM.render(<MockedComponent />, container);

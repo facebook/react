@@ -98,7 +98,7 @@ describe('ReactTestUtils.act()', () => {
       return null;
     }
 
-    it('does not warn in legacy mode', () => {
+    it('does not warn in legacy mode', async () => {
       expect(() => {
         ReactDOM.render(<App />, document.createElement('div'));
       }).toErrorDev([]);

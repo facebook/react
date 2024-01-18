@@ -66,7 +66,7 @@ describe('CSSPropertyOperations', () => {
     expect(html).toContain('"--someColor:#000000"');
   });
 
-  it('should set style attribute when styles exist', () => {
+  it('should set style attribute when styles exist', async () => {
     const styles = {
       backgroundColor: '#000',
       display: 'none',
@@ -87,7 +87,7 @@ describe('CSSPropertyOperations', () => {
     expect(/style=/.test(html)).toBe(false);
   });
 
-  it('should warn when using hyphenated style names', () => {
+  it('should warn when using hyphenated style names', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -105,7 +105,7 @@ describe('CSSPropertyOperations', () => {
     );
   });
 
-  it('should warn when updating hyphenated style names', () => {
+  it('should warn when updating hyphenated style names', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -131,7 +131,7 @@ describe('CSSPropertyOperations', () => {
     ]);
   });
 
-  it('warns when miscapitalizing vendored style names', () => {
+  it('warns when miscapitalizing vendored style names', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -163,7 +163,7 @@ describe('CSSPropertyOperations', () => {
     ]);
   });
 
-  it('should warn about style having a trailing semicolon', () => {
+  it('should warn about style having a trailing semicolon', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -195,7 +195,7 @@ describe('CSSPropertyOperations', () => {
     ]);
   });
 
-  it('should warn about style containing a NaN value', () => {
+  it('should warn about style containing a NaN value', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -213,7 +213,7 @@ describe('CSSPropertyOperations', () => {
     );
   });
 
-  it('should not warn when setting CSS custom properties', () => {
+  it('should not warn when setting CSS custom properties', async () => {
     class Comp extends React.Component {
       render() {
         return <div style={{'--foo-primary': 'red', backgroundColor: 'red'}} />;
@@ -224,7 +224,7 @@ describe('CSSPropertyOperations', () => {
     ReactDOM.render(<Comp />, root);
   });
 
-  it('should warn about style containing an Infinity value', () => {
+  it('should warn about style containing an Infinity value', async () => {
     class Comp extends React.Component {
       static displayName = 'Comp';
 
@@ -242,7 +242,7 @@ describe('CSSPropertyOperations', () => {
     );
   });
 
-  it('should not add units to CSS custom properties', () => {
+  it('should not add units to CSS custom properties', async () => {
     class Comp extends React.Component {
       render() {
         return <div style={{'--foo': '5'}} />;

@@ -20,7 +20,7 @@ describe('ReactEventIndependence', () => {
     ReactDOM = require('react-dom');
   });
 
-  it('does not crash with other react inside', () => {
+  it('does not crash with other react inside', async () => {
     let clicks = 0;
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -42,7 +42,7 @@ describe('ReactEventIndependence', () => {
     }
   });
 
-  it('does not crash with other react outside', () => {
+  it('does not crash with other react outside', async () => {
     let clicks = 0;
     const outer = document.createElement('div');
     document.body.appendChild(outer);
@@ -59,7 +59,7 @@ describe('ReactEventIndependence', () => {
     }
   });
 
-  it('does not when event fired on unmounted tree', () => {
+  it('does not when event fired on unmounted tree', async () => {
     let clicks = 0;
     const container = document.createElement('div');
     document.body.appendChild(container);

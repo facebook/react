@@ -144,7 +144,7 @@ describe('SimpleEventPlugin', function () {
         expectNoClickThru(mounted(element));
       });
 
-      it('should forward clicks when it becomes not disabled', () => {
+      it('should forward clicks when it becomes not disabled', async () => {
         container = document.createElement('div');
         document.body.appendChild(container);
         let element = ReactDOM.render(
@@ -158,7 +158,7 @@ describe('SimpleEventPlugin', function () {
         expectClickThru(element);
       });
 
-      it('should not forward clicks when it becomes disabled', () => {
+      it('should not forward clicks when it becomes disabled', async () => {
         container = document.createElement('div');
         document.body.appendChild(container);
         let element = ReactDOM.render(
@@ -172,7 +172,7 @@ describe('SimpleEventPlugin', function () {
         expectNoClickThru(element);
       });
 
-      it('should work correctly if the listener is changed', () => {
+      it('should work correctly if the listener is changed', async () => {
         container = document.createElement('div');
         document.body.appendChild(container);
         let element = ReactDOM.render(
@@ -188,7 +188,7 @@ describe('SimpleEventPlugin', function () {
     });
   });
 
-  it('batches updates that occur as a result of a nested event dispatch', () => {
+  it('batches updates that occur as a result of a nested event dispatch', async () => {
     container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -392,7 +392,7 @@ describe('SimpleEventPlugin', function () {
   describe('iOS bubbling click fix', function () {
     // See http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
 
-    it('does not add a local click to interactive elements', function () {
+    it('does not add a local click to interactive elements', async () => {
       container = document.createElement('div');
 
       ReactDOM.render(<button onClick={onClick} />, container);
@@ -404,7 +404,7 @@ describe('SimpleEventPlugin', function () {
       expect(onClick).toHaveBeenCalledTimes(0);
     });
 
-    it('adds a local click listener to non-interactive elements', function () {
+    it('adds a local click listener to non-interactive elements', async () => {
       container = document.createElement('div');
 
       ReactDOM.render(<div onClick={onClick} />, container);
@@ -416,7 +416,7 @@ describe('SimpleEventPlugin', function () {
       expect(onClick).toHaveBeenCalledTimes(0);
     });
 
-    it('registers passive handlers for events affected by the intervention', () => {
+    it('registers passive handlers for events affected by the intervention', async () => {
       container = document.createElement('div');
 
       const passiveEvents = [];

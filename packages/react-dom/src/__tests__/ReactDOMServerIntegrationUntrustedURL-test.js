@@ -167,7 +167,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
     },
   );
 
-  it('rejects a javascript protocol href if it is added during an update', () => {
+  it('rejects a javascript protocol href if it is added during an update', async () => {
     const container = document.createElement('div');
     ReactDOM.render(<a href="thisisfine">click me</a>, container);
     expect(() => {
@@ -325,7 +325,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     },
   );
 
-  it('rejects a javascript protocol href if it is added during an update', () => {
+  it('rejects a javascript protocol href if it is added during an update', async () => {
     const container = document.createElement('div');
     ReactDOM.render(<a href="http://thisisfine/">click me</a>, container);
     expect(container.firstChild.href).toBe('http://thisisfine/');
@@ -369,7 +369,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     expect(e.href).toBe('https://reactjs.org/');
   });
 
-  it('rejects a javascript protocol href if it is added during an update twice', () => {
+  it('rejects a javascript protocol href if it is added during an update twice', async () => {
     const container = document.createElement('div');
     ReactDOM.render(<a href="http://thisisfine/">click me</a>, container);
     expect(container.firstChild.href).toBe('http://thisisfine/');

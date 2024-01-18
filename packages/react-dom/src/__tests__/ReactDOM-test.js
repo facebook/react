@@ -23,7 +23,7 @@ describe('ReactDOM', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
-  it('should bubble onSubmit', function () {
+  it('should bubble onSubmit', async () => {
     const container = document.createElement('div');
 
     let count = 0;
@@ -121,7 +121,7 @@ describe('ReactDOM', () => {
     expect(dog.className).toBe('bigdog');
   });
 
-  it('throws in render() if the mount callback is not a function', () => {
+  it('throws in render() if the mount callback is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -173,7 +173,7 @@ describe('ReactDOM', () => {
     );
   });
 
-  it('throws in render() if the update callback is not a function', () => {
+  it('throws in render() if the update callback is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -228,7 +228,7 @@ describe('ReactDOM', () => {
     );
   });
 
-  it('preserves focus', () => {
+  it('preserves focus', async () => {
     let input;
     let input2;
     class A extends React.Component {
@@ -288,7 +288,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('calls focus() on autoFocus elements after they have been mounted to the DOM', () => {
+  it('calls focus() on autoFocus elements after they have been mounted to the DOM', async () => {
     const originalFocus = HTMLElement.prototype.focus;
 
     try {
@@ -321,7 +321,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it("shouldn't fire duplicate event handler while handling other nested dispatch", () => {
+  it("shouldn't fire duplicate event handler while handling other nested dispatch", async () => {
     const actual = [];
 
     class Wrapper extends React.Component {
@@ -366,7 +366,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('should not crash with devtools installed', () => {
+  it('should not crash with devtools installed', async () => {
     try {
       global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
         inject: function () {},
@@ -388,7 +388,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('should not crash calling findDOMNode inside a function component', () => {
+  it('should not crash calling findDOMNode inside a function component', async () => {
     const container = document.createElement('div');
 
     class Component extends React.Component {
@@ -408,7 +408,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('reports stacks with re-entrant renderToString() calls on the client', () => {
+  it('reports stacks with re-entrant renderToString() calls on the client', async () => {
     function Child2(props) {
       return <span ariaTypo3="no">{props.children}</span>;
     }

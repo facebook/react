@@ -34,7 +34,7 @@ describe('ReactStrictMode', () => {
     useReducer = React.useReducer;
   });
 
-  it('should appear in the client component stack', () => {
+  it('should appear in the client component stack', async () => {
     function Foo() {
       return <div ariaTypo="" />;
     }
@@ -75,7 +75,7 @@ describe('ReactStrictMode', () => {
   });
 
   // @gate __DEV__
-  it('should invoke precommit lifecycle methods twice', () => {
+  it('should invoke precommit lifecycle methods twice', async () => {
     let log = [];
     let shouldComponentUpdate = false;
     class ClassComponent extends React.Component {
@@ -162,7 +162,7 @@ describe('ReactStrictMode', () => {
     ]);
   });
 
-  it('should invoke setState callbacks twice', () => {
+  it('should invoke setState callbacks twice', async () => {
     let instance;
     class ClassComponent extends React.Component {
       state = {
@@ -196,7 +196,7 @@ describe('ReactStrictMode', () => {
     expect(instance.state.count).toBe(2);
   });
 
-  it('should invoke precommit lifecycle methods twice in DEV', () => {
+  it('should invoke precommit lifecycle methods twice in DEV', async () => {
     const {StrictMode} = React;
 
     let log = [];
@@ -303,7 +303,7 @@ describe('ReactStrictMode', () => {
     }
   });
 
-  it('should invoke setState callbacks twice in DEV', () => {
+  it('should invoke setState callbacks twice in DEV', async () => {
     const {StrictMode} = React;
 
     let instance;
@@ -727,7 +727,7 @@ Please update the following components: Parent`,
     await act(() => root.render(<StrictRoot foo={false} />));
   });
 
-  it('should also warn inside of "strict" mode trees', () => {
+  it('should also warn inside of "strict" mode trees', async () => {
     const {StrictMode} = React;
 
     class SyncRoot extends React.Component {
@@ -783,7 +783,7 @@ describe('symbol checks', () => {
     ReactDOMClient = require('react-dom/client');
   });
 
-  it('should switch from StrictMode to a Fragment and reset state', () => {
+  it('should switch from StrictMode to a Fragment and reset state', async () => {
     const {Fragment, StrictMode} = React;
 
     function ParentComponent({useFragment}) {
@@ -819,7 +819,7 @@ describe('symbol checks', () => {
     expect(container.textContent).toBe('count:1');
   });
 
-  it('should switch from a Fragment to StrictMode and reset state', () => {
+  it('should switch from a Fragment to StrictMode and reset state', async () => {
     const {Fragment, StrictMode} = React;
 
     function ParentComponent({useFragment}) {
@@ -855,7 +855,7 @@ describe('symbol checks', () => {
     expect(container.textContent).toBe('count:1');
   });
 
-  it('should update with StrictMode without losing state', () => {
+  it('should update with StrictMode without losing state', async () => {
     const {StrictMode} = React;
 
     function ParentComponent() {
@@ -896,7 +896,7 @@ describe('string refs', () => {
     ReactDOMClient = require('react-dom/client');
   });
 
-  it('should warn within a strict tree', () => {
+  it('should warn within a strict tree', async () => {
     const {StrictMode} = React;
 
     class OuterComponent extends React.Component {
@@ -930,7 +930,7 @@ describe('string refs', () => {
     ReactDOM.render(<OuterComponent />, container);
   });
 
-  it('should warn within a strict tree', () => {
+  it('should warn within a strict tree', async () => {
     const {StrictMode} = React;
 
     class OuterComponent extends React.Component {
@@ -986,7 +986,7 @@ describe('context legacy', () => {
   });
 
   // @gate !disableLegacyContext || !__DEV__
-  it('should warn if the legacy context API have been used in strict mode', () => {
+  it('should warn if the legacy context API have been used in strict mode', async () => {
     class LegacyContextProvider extends React.Component {
       getChildContext() {
         return {color: 'purple'};
@@ -1067,7 +1067,7 @@ describe('context legacy', () => {
     });
 
     if (ReactFeatureFlags.consoleManagedByDevToolsDuringStrictMode) {
-      it('does not disable logs for class double render', () => {
+      it('does not disable logs for class double render', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1095,7 +1095,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for class double ctor', () => {
+      it('does not disable logs for class double ctor', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1126,7 +1126,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for class double getDerivedStateFromProps', () => {
+      it('does not disable logs for class double getDerivedStateFromProps', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1158,7 +1158,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for class double shouldComponentUpdate', () => {
+      it('does not disable logs for class double shouldComponentUpdate', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1197,7 +1197,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for class state updaters', () => {
+      it('does not disable logs for class state updaters', async () => {
         spyOnDevAndProd(console, 'log');
 
         let inst;
@@ -1231,7 +1231,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('does not disable logs for function double render', () => {
+      it('does not disable logs for function double render', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1257,7 +1257,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
     } else {
-      it('disable logs for class double render', () => {
+      it('disable logs for class double render', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1285,7 +1285,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disables logs for class double ctor', () => {
+      it('disables logs for class double ctor', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1316,7 +1316,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disable logs for class double getDerivedStateFromProps', () => {
+      it('disable logs for class double getDerivedStateFromProps', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1348,7 +1348,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disable logs for class double shouldComponentUpdate', () => {
+      it('disable logs for class double shouldComponentUpdate', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;
@@ -1387,7 +1387,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disable logs for class state updaters', () => {
+      it('disable logs for class state updaters', async () => {
         spyOnDevAndProd(console, 'log');
 
         let inst;
@@ -1421,7 +1421,7 @@ describe('context legacy', () => {
         expect(console.log).toBeCalledWith('foo 1');
       });
 
-      it('disable logs for function double render', () => {
+      it('disable logs for function double render', async () => {
         spyOnDevAndProd(console, 'log');
 
         let count = 0;

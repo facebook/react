@@ -32,7 +32,7 @@ describe('SyntheticClipboardEvent', () => {
   describe('ClipboardEvent interface', () => {
     describe('clipboardData', () => {
       describe('when event has clipboardData', () => {
-        it("returns event's clipboardData", () => {
+        it("returns event's clipboardData", async () => {
           let expectedCount = 0;
 
           // Mock clipboardData since jsdom implementation doesn't have a constructor
@@ -79,7 +79,7 @@ describe('SyntheticClipboardEvent', () => {
   });
 
   describe('EventInterface', () => {
-    it('is able to `preventDefault` and `stopPropagation`', () => {
+    it('is able to `preventDefault` and `stopPropagation`', async () => {
       let expectedCount = 0;
 
       const eventHandler = event => {

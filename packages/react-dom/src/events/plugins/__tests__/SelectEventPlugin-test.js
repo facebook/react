@@ -29,7 +29,7 @@ describe('SelectEventPlugin', () => {
   });
 
   // See https://github.com/facebook/react/pull/3639 for details.
-  it('does not get confused when dependent events are registered independently', () => {
+  it('does not get confused when dependent events are registered independently', async () => {
     const select = jest.fn();
     const onSelect = event => {
       expect(typeof event).toBe('object');
@@ -74,7 +74,7 @@ describe('SelectEventPlugin', () => {
     expect(select).toHaveBeenCalledTimes(1);
   });
 
-  it('should fire `onSelect` when a listener is present', () => {
+  it('should fire `onSelect` when a listener is present', async () => {
     const select = jest.fn();
     const onSelect = event => {
       expect(typeof event).toBe('object');
@@ -108,7 +108,7 @@ describe('SelectEventPlugin', () => {
     expect(select).toHaveBeenCalledTimes(1);
   });
 
-  it('should fire `onSelectCapture` when a listener is present', () => {
+  it('should fire `onSelectCapture` when a listener is present', async () => {
     const select = jest.fn();
     const onSelectCapture = event => {
       expect(typeof event).toBe('object');
@@ -143,7 +143,7 @@ describe('SelectEventPlugin', () => {
   });
 
   // Regression test for https://github.com/facebook/react/issues/11379
-  it('should not wait for `mouseup` after receiving `dragend`', () => {
+  it('should not wait for `mouseup` after receiving `dragend`', async () => {
     const select = jest.fn();
     const onSelect = event => {
       expect(typeof event).toBe('object');
@@ -177,7 +177,7 @@ describe('SelectEventPlugin', () => {
     expect(select).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle selectionchange events', function () {
+  it('should handle selectionchange events', async () => {
     const onSelect = jest.fn();
     const node = ReactDOM.render(
       <input type="text" onSelect={onSelect} />,

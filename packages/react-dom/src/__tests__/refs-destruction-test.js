@@ -55,7 +55,7 @@ describe('refs-destruction', () => {
     };
   });
 
-  it('should remove refs when destroying the parent', () => {
+  it('should remove refs when destroying the parent', async () => {
     const container = document.createElement('div');
     const testInstance = ReactDOM.render(<TestComponent />, container);
 
@@ -70,7 +70,7 @@ describe('refs-destruction', () => {
     expect(testInstance.theInnerClassComponentRef.current).toBe(null);
   });
 
-  it('should remove refs when destroying the child', () => {
+  it('should remove refs when destroying the child', async () => {
     const container = document.createElement('div');
     const testInstance = ReactDOM.render(<TestComponent />, container);
     expect(
@@ -84,7 +84,7 @@ describe('refs-destruction', () => {
     expect(testInstance.theInnerClassComponentRef.current).toBe(null);
   });
 
-  it('should remove refs when removing the child ref attribute', () => {
+  it('should remove refs when removing the child ref attribute', async () => {
     const container = document.createElement('div');
     const testInstance = ReactDOM.render(<TestComponent />, container);
 
@@ -99,7 +99,7 @@ describe('refs-destruction', () => {
     expect(testInstance.theInnerClassComponentRef.current).toBe(null);
   });
 
-  it('should not error when destroying child with ref asynchronously', () => {
+  it('should not error when destroying child with ref asynchronously', async () => {
     class Modal extends React.Component {
       componentDidMount() {
         this.div = document.createElement('div');

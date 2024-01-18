@@ -32,7 +32,7 @@ describe('ReactDOMSelect', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
-  it('should allow setting `defaultValue`', () => {
+  it('should allow setting `defaultValue`', async () => {
     const stub = (
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -62,7 +62,7 @@ describe('ReactDOMSelect', () => {
     }).not.toThrow();
   });
 
-  it('should not control when using `defaultValue`', () => {
+  it('should not control when using `defaultValue`', async () => {
     const el = (
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -81,7 +81,7 @@ describe('ReactDOMSelect', () => {
     expect(node.value).toEqual('monkey');
   });
 
-  it('should allow setting `defaultValue` with multiple', () => {
+  it('should allow setting `defaultValue` with multiple', async () => {
     const stub = (
       <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
@@ -110,7 +110,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(true); // gorilla
   });
 
-  it('should allow setting `value`', () => {
+  it('should allow setting `value`', async () => {
     const stub = (
       <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -134,7 +134,7 @@ describe('ReactDOMSelect', () => {
     expect(node.value).toEqual('gorilla');
   });
 
-  it('should default to the first non-disabled option', () => {
+  it('should default to the first non-disabled option', async () => {
     const stub = (
       <select defaultValue="">
         <option disabled={true}>Disabled</option>
@@ -149,7 +149,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(true);
   });
 
-  it('should allow setting `value` to __proto__', () => {
+  it('should allow setting `value` to __proto__', async () => {
     const stub = (
       <select value="__proto__" onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -181,7 +181,7 @@ describe('ReactDOMSelect', () => {
     }).not.toThrow();
   });
 
-  it('should allow setting `value` with multiple', () => {
+  it('should allow setting `value` with multiple', async () => {
     const stub = (
       <select multiple={true} value={['giraffe', 'gorilla']} onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -210,7 +210,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // gorilla
   });
 
-  it('should allow setting `value` to __proto__ with multiple', () => {
+  it('should allow setting `value` to __proto__ with multiple', async () => {
     const stub = (
       <select multiple={true} value={['__proto__', 'gorilla']} onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -254,7 +254,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(true); // twelve
   });
 
-  it('should reset child options selected when they are changed and `value` is set', () => {
+  it('should reset child options selected when they are changed and `value` is set', async () => {
     const stub = <select multiple={true} value={['a', 'b']} onChange={noop} />;
     const container = document.createElement('div');
     const node = ReactDOM.render(stub, container);
@@ -273,7 +273,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // c
   });
 
-  it('should allow setting `value` with `objectToString`', () => {
+  it('should allow setting `value` with `objectToString`', async () => {
     const objectToString = {
       animal: 'giraffe',
       toString: function () {
@@ -312,7 +312,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // gorilla
   });
 
-  it('should allow switching to multiple', () => {
+  it('should allow switching to multiple', async () => {
     const stub = (
       <select defaultValue="giraffe">
         <option value="monkey">A monkey!</option>
@@ -341,7 +341,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(true); // gorilla
   });
 
-  it('should allow switching from multiple', () => {
+  it('should allow switching from multiple', async () => {
     const stub = (
       <select multiple={true} defaultValue={['giraffe', 'gorilla']}>
         <option value="monkey">A monkey!</option>
@@ -369,7 +369,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(true); // gorilla
   });
 
-  it('does not select an item when size is initially set to greater than 1', () => {
+  it('does not select an item when size is initially set to greater than 1', async () => {
     const stub = (
       <select size="2">
         <option value="monkey">A monkey!</option>
@@ -388,7 +388,7 @@ describe('ReactDOMSelect', () => {
     expect(select.selectedIndex).toBe(-1);
   });
 
-  it('should remember value when switching to uncontrolled', () => {
+  it('should remember value when switching to uncontrolled', async () => {
     const stub = (
       <select value={'giraffe'} onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -411,7 +411,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // gorilla
   });
 
-  it('should remember updated value when switching to uncontrolled', () => {
+  it('should remember updated value when switching to uncontrolled', async () => {
     const stub = (
       <select value={'giraffe'} onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -534,7 +534,7 @@ describe('ReactDOMSelect', () => {
     expect(options[2].selected).toBe(true);
   });
 
-  it('should not control defaultValue if re-adding options', () => {
+  it('should not control defaultValue if re-adding options', async () => {
     const container = document.createElement('div');
 
     const node = ReactDOM.render(
@@ -591,7 +591,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // gorilla
   });
 
-  it('should support options with dynamic children', () => {
+  it('should support options with dynamic children', async () => {
     const container = document.createElement('div');
 
     let node;
@@ -682,7 +682,7 @@ describe('ReactDOMSelect', () => {
     );
   });
 
-  it('should refresh state on change', () => {
+  it('should refresh state on change', async () => {
     const stub = (
       <select value="giraffe" onChange={noop}>
         <option value="monkey">A monkey!</option>
@@ -732,14 +732,14 @@ describe('ReactDOMSelect', () => {
     );
   });
 
-  it('should not warn about missing onChange in uncontrolled textareas', () => {
+  it('should not warn about missing onChange in uncontrolled textareas', async () => {
     const container = document.createElement('div');
     ReactDOM.render(<select />, container);
     ReactDOM.unmountComponentAtNode(container);
     ReactDOM.render(<select value={undefined} />, container);
   });
 
-  it('should be able to safely remove select onChange', () => {
+  it('should be able to safely remove select onChange', async () => {
     function changeView() {
       ReactDOM.unmountComponentAtNode(container);
     }
@@ -757,7 +757,7 @@ describe('ReactDOMSelect', () => {
     expect(() => ReactTestUtils.Simulate.change(node)).not.toThrow();
   });
 
-  it('should select grandchild options nested inside an optgroup', () => {
+  it('should select grandchild options nested inside an optgroup', async () => {
     const stub = (
       <select value="b" onChange={noop}>
         <optgroup label="group">
@@ -775,7 +775,7 @@ describe('ReactDOMSelect', () => {
     expect(node.options[2].selected).toBe(false); // c
   });
 
-  it('should allow controlling `value` in a nested render', () => {
+  it('should allow controlling `value` in a nested render', async () => {
     let selectNode;
 
     class Parent extends React.Component {
@@ -839,7 +839,7 @@ describe('ReactDOMSelect', () => {
     document.body.removeChild(container);
   });
 
-  it('should not select first option by default when multiple is set and no defaultValue is set', () => {
+  it('should not select first option by default when multiple is set and no defaultValue is set', async () => {
     const stub = (
       <select multiple={true} onChange={noop}>
         <option value="a">a</option>

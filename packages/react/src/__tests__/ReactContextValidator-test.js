@@ -72,7 +72,7 @@ describe('ReactContextValidator', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should pass next context to lifecycles', () => {
+  it('should pass next context to lifecycles', async () => {
     let componentDidMountContext;
     let componentDidUpdateContext;
     let componentWillReceivePropsContext;
@@ -369,7 +369,7 @@ describe('ReactContextValidator', () => {
     expect(childContext.foo).toBe('FOO');
   });
 
-  it('should pass next context to lifecycles', () => {
+  it('should pass next context to lifecycles', async () => {
     let componentDidMountContext;
     let componentDidUpdateContext;
     let componentWillReceivePropsContext;
@@ -447,7 +447,7 @@ describe('ReactContextValidator', () => {
     }
   });
 
-  it('should re-render PureComponents when context Provider updates', () => {
+  it('should re-render PureComponents when context Provider updates', async () => {
     let renderedContext;
 
     const Context = React.createContext();

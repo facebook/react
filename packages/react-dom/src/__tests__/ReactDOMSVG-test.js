@@ -29,7 +29,7 @@ describe('ReactDOMSVG', () => {
     expect(markup).toContain('xlink:href="http://i.imgur.com/w7GCRPb.png"');
   });
 
-  it('creates elements with SVG namespace inside SVG tag during mount', () => {
+  it('creates elements with SVG namespace inside SVG tag during mount', async () => {
     const node = document.createElement('div');
     let div,
       div2,
@@ -110,7 +110,7 @@ describe('ReactDOMSVG', () => {
     });
   });
 
-  it('creates elements with SVG namespace inside SVG tag during update', () => {
+  it('creates elements with SVG namespace inside SVG tag during update', async () => {
     let inst,
       div,
       div2,
@@ -193,7 +193,7 @@ describe('ReactDOMSVG', () => {
     });
   });
 
-  it('can render SVG into a non-React SVG tree', () => {
+  it('can render SVG into a non-React SVG tree', async () => {
     const outerSVGRoot = document.createElementNS(
       'http://www.w3.org/2000/svg',
       'svg',
@@ -209,7 +209,7 @@ describe('ReactDOMSVG', () => {
     expect(image.tagName).toBe('image');
   });
 
-  it('can render HTML into a foreignObject in non-React SVG tree', () => {
+  it('can render HTML into a foreignObject in non-React SVG tree', async () => {
     const outerSVGRoot = document.createElementNS(
       'http://www.w3.org/2000/svg',
       'svg',

@@ -172,7 +172,7 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('should update component stack after receiving next element', () => {
+  it('should update component stack after receiving next element', async () => {
     function MyComp() {
       return null;
     }

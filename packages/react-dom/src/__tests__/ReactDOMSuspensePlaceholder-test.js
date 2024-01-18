@@ -267,7 +267,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
   });
 
   // Regression test for https://github.com/facebook/react/issues/14188
-  it('can call findDOMNode() in a suspended component commit phase (#2)', () => {
+  it('can call findDOMNode() in a suspended component commit phase (#2)', async () => {
     let suspendOnce = Promise.resolve();
     function Suspend() {
       if (suspendOnce) {

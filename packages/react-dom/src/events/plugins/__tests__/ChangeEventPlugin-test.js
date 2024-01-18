@@ -83,7 +83,7 @@ describe('ChangeEventPlugin', () => {
   // keep track of the "current" value and only fire events when it changes.
   // See https://github.com/facebook/react/pull/5746.
 
-  it('should consider initial text value to be current', () => {
+  it('should consider initial text value to be current', async () => {
     let called = 0;
 
     function cb(e) {
@@ -102,7 +102,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should consider initial text value to be current (capture)', () => {
+  it('should consider initial text value to be current (capture)', async () => {
     let called = 0;
 
     function cb(e) {
@@ -121,7 +121,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should not invoke a change event for textarea same value', () => {
+  it('should not invoke a change event for textarea same value', async () => {
     let called = 0;
 
     function cb(e) {
@@ -139,7 +139,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should not invoke a change event for textarea same value (capture)', () => {
+  it('should not invoke a change event for textarea same value (capture)', async () => {
     let called = 0;
 
     function cb(e) {
@@ -157,7 +157,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should consider initial checkbox checked=true to be current', () => {
+  it('should consider initial checkbox checked=true to be current', async () => {
     let called = 0;
 
     function cb(e) {
@@ -181,7 +181,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should consider initial checkbox checked=false to be current', () => {
+  it('should consider initial checkbox checked=false to be current', async () => {
     let called = 0;
 
     function cb(e) {
@@ -205,7 +205,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should fire change for checkbox input', () => {
+  it('should fire change for checkbox input', async () => {
     let called = 0;
 
     function cb(e) {
@@ -235,7 +235,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
-  it('should not fire change setting the value programmatically', () => {
+  it('should not fire change setting the value programmatically', async () => {
     let called = 0;
 
     function cb(e) {
@@ -271,7 +271,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
-  it('should not distinguish equal string and number values', () => {
+  it('should not distinguish equal string and number values', async () => {
     let called = 0;
 
     function cb(e) {
@@ -296,7 +296,7 @@ describe('ChangeEventPlugin', () => {
   });
 
   // See a similar input test above for a detailed description of why.
-  it('should not fire change when setting checked programmatically', () => {
+  it('should not fire change when setting checked programmatically', async () => {
     let called = 0;
 
     function cb(e) {
@@ -326,13 +326,13 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
-  it('should unmount', () => {
+  it('should unmount', async () => {
     const input = ReactDOM.render(<input />, container);
 
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('should only fire change for checked radio button once', () => {
+  it('should only fire change for checked radio button once', async () => {
     let called = 0;
 
     function cb(e) {
@@ -351,7 +351,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
-  it('should track radio button cousins in a group', () => {
+  it('should track radio button cousins in a group', async () => {
     let called1 = 0;
     let called2 = 0;
 
@@ -392,7 +392,7 @@ describe('ChangeEventPlugin', () => {
     expect(called2).toBe(1);
   });
 
-  it('should deduplicate input value change events', () => {
+  it('should deduplicate input value change events', async () => {
     let called = 0;
 
     function cb(e) {
@@ -455,7 +455,7 @@ describe('ChangeEventPlugin', () => {
     });
   });
 
-  it('should listen for both change and input events when supported', () => {
+  it('should listen for both change and input events when supported', async () => {
     let called = 0;
 
     function cb(e) {
@@ -477,7 +477,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
-  it('should only fire events when the value changes for range inputs', () => {
+  it('should only fire events when the value changes for range inputs', async () => {
     let called = 0;
 
     function cb(e) {
@@ -500,7 +500,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
-  it('does not crash for nodes with custom value property', () => {
+  it('does not crash for nodes with custom value property', async () => {
     let originalCreateElement;
     // https://github.com/facebook/react/issues/10196
     try {

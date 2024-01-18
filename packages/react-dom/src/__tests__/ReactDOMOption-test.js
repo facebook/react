@@ -182,7 +182,7 @@ describe('ReactDOMOption', () => {
     expect(node.innerHTML).toBe('foobar');
   });
 
-  it('should set attribute for empty value', () => {
+  it('should set attribute for empty value', async () => {
     const container = document.createElement('div');
     const option = ReactDOM.render(<option value="" />, container);
     expect(option.hasAttribute('value')).toBe(true);
@@ -193,7 +193,7 @@ describe('ReactDOMOption', () => {
     expect(option.getAttribute('value')).toBe('lava');
   });
 
-  it('should allow ignoring `value` on option', () => {
+  it('should allow ignoring `value` on option', async () => {
     const a = 'a';
     const stub = (
       <select value="giraffe" onChange={() => {}}>

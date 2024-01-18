@@ -121,7 +121,7 @@ describe('ReactCompositeComponent-state', () => {
     };
   });
 
-  it('should support setting state', () => {
+  it('should support setting state', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -215,7 +215,7 @@ describe('ReactCompositeComponent-state', () => {
     expect(stateListener.mock.calls.join('\n')).toEqual(expected.join('\n'));
   });
 
-  it('should call componentDidUpdate of children first', () => {
+  it('should call componentDidUpdate of children first', async () => {
     const container = document.createElement('div');
 
     let ops = [];
@@ -282,7 +282,7 @@ describe('ReactCompositeComponent-state', () => {
     expect(ops).toEqual(['child did update', 'parent did update']);
   });
 
-  it('should batch unmounts', () => {
+  it('should batch unmounts', async () => {
     class Inner extends React.Component {
       render() {
         return <div />;
@@ -310,7 +310,7 @@ describe('ReactCompositeComponent-state', () => {
     }).not.toThrow();
   });
 
-  it('should update state when called from child cWRP', function () {
+  it('should update state when called from child cWRP', async () => {
     const log = [];
     class Parent extends React.Component {
       state = {value: 'one'};
@@ -350,7 +350,7 @@ describe('ReactCompositeComponent-state', () => {
     ]);
   });
 
-  it('should merge state when sCU returns false', function () {
+  it('should merge state when sCU returns false', async () => {
     const log = [];
     class Test extends React.Component {
       state = {a: 0};
@@ -377,7 +377,7 @@ describe('ReactCompositeComponent-state', () => {
     expect(log).toEqual(['scu from a to a,b', 'scu from a,b to a,b,c']);
   });
 
-  it('should treat assigning to this.state inside cWRP as a replaceState, with a warning', () => {
+  it('should treat assigning to this.state inside cWRP as a replaceState, with a warning', async () => {
     const ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
@@ -420,7 +420,7 @@ describe('ReactCompositeComponent-state', () => {
     ReactDOM.render(<Test />, container);
   });
 
-  it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {
+  it('should treat assigning to this.state inside cWM as a replaceState, with a warning', async () => {
     const ops = [];
     class Test extends React.Component {
       state = {step: 1, extra: true};
@@ -458,7 +458,7 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-    it('should support stateful module pattern components', () => {
+    it('should support stateful module pattern components', async () => {
       function Child() {
         return {
           state: {
@@ -482,7 +482,7 @@ describe('ReactCompositeComponent-state', () => {
       expect(el.textContent).toBe('count:123');
     });
 
-    it('should support getDerivedStateFromProps for module pattern components', () => {
+    it('should support getDerivedStateFromProps for module pattern components', async () => {
       function Child() {
         return {
           state: {
@@ -511,7 +511,7 @@ describe('ReactCompositeComponent-state', () => {
     });
   }
 
-  it('should support setState in componentWillUnmount', () => {
+  it('should support setState in componentWillUnmount', async () => {
     let subscription;
     class A extends React.Component {
       componentWillUnmount() {

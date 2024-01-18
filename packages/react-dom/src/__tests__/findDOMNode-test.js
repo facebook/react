@@ -37,7 +37,7 @@ describe('findDOMNode', () => {
     expect(mySameDiv).toBe(myDiv);
   });
 
-  it('findDOMNode should find dom element after an update from null', () => {
+  it('findDOMNode should find dom element after an update from null', async () => {
     function Bar({flag}) {
       if (flag) {
         return <span>A</span>;
@@ -69,7 +69,7 @@ describe('findDOMNode', () => {
     }).toThrowError('Argument appears to not be a ReactComponent. Keys: foo');
   });
 
-  it('findDOMNode should reject unmounted objects with render func', () => {
+  it('findDOMNode should reject unmounted objects with render func', async () => {
     class Foo extends React.Component {
       render() {
         return <div />;

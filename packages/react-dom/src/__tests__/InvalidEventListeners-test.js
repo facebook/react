@@ -30,7 +30,7 @@ describe('InvalidEventListeners', () => {
     container = null;
   });
 
-  it('should prevent non-function listeners, at dispatch', () => {
+  it('should prevent non-function listeners, at dispatch', async () => {
     let node;
     expect(() => {
       node = ReactDOM.render(<div onClick="not a function" />, container);
@@ -77,7 +77,7 @@ describe('InvalidEventListeners', () => {
     }
   });
 
-  it('should not prevent null listeners, at dispatch', () => {
+  it('should not prevent null listeners, at dispatch', async () => {
     const node = ReactDOM.render(<div onClick={null} />, container);
     node.dispatchEvent(
       new MouseEvent('click', {

@@ -32,7 +32,7 @@ describe('SyntheticKeyboardEvent', () => {
     describe('charCode', () => {
       describe('when event is `keypress`', () => {
         describe('when charCode is present in nativeEvent', () => {
-          it('when charCode is 0 and keyCode is 13, returns 13', () => {
+          it('when charCode is 0 and keyCode is 13, returns 13', async () => {
             let charCode = null;
             const node = ReactDOM.render(
               <input
@@ -53,7 +53,7 @@ describe('SyntheticKeyboardEvent', () => {
             expect(charCode).toBe(13);
           });
 
-          it('when charCode is 32 or bigger and keyCode is missing, returns charCode', () => {
+          it('when charCode is 32 or bigger and keyCode is missing, returns charCode', async () => {
             let charCode = null;
             const node = ReactDOM.render(
               <input
@@ -73,7 +73,7 @@ describe('SyntheticKeyboardEvent', () => {
             expect(charCode).toBe(32);
           });
 
-          it('when charCode is 13 and keyCode is missing, returns charCode', () => {
+          it('when charCode is 13 and keyCode is missing, returns charCode', async () => {
             let charCode = null;
             const node = ReactDOM.render(
               <input
@@ -96,7 +96,7 @@ describe('SyntheticKeyboardEvent', () => {
           // Firefox creates a keypress event for function keys too. This removes
           // the unwanted keypress events. Enter is however both printable and
           // non-printable. One would expect Tab to be as well (but it isn't).
-          it('when charCode is smaller than 32 but is not 13, and keyCode is missing, ignores keypress', () => {
+          it('when charCode is smaller than 32 but is not 13, and keyCode is missing, ignores keypress', async () => {
             let called = false;
             const node = ReactDOM.render(
               <input
@@ -116,7 +116,7 @@ describe('SyntheticKeyboardEvent', () => {
             expect(called).toBe(false);
           });
 
-          it('when charCode is 10, returns 13', () => {
+          it('when charCode is 10, returns 13', async () => {
             let charCode = null;
             const node = ReactDOM.render(
               <input
@@ -136,7 +136,7 @@ describe('SyntheticKeyboardEvent', () => {
             expect(charCode).toBe(13);
           });
 
-          it('when charCode is 10 and ctrl is pressed, returns 13', () => {
+          it('when charCode is 10 and ctrl is pressed, returns 13', async () => {
             let charCode = null;
             const node = ReactDOM.render(
               <input
@@ -181,7 +181,7 @@ describe('SyntheticKeyboardEvent', () => {
             charCodeDescriptor = null;
           });
 
-          it('when keyCode is 32 or bigger, returns keyCode', () => {
+          it('when keyCode is 32 or bigger, returns keyCode', async () => {
             let charCode = null;
             const node = ReactDOM.render(
               <input
@@ -201,7 +201,7 @@ describe('SyntheticKeyboardEvent', () => {
             expect(charCode).toBe(32);
           });
 
-          it('when keyCode is 13, returns 13', () => {
+          it('when keyCode is 13, returns 13', async () => {
             let charCode = null;
             const node = ReactDOM.render(
               <input
@@ -221,7 +221,7 @@ describe('SyntheticKeyboardEvent', () => {
             expect(charCode).toBe(13);
           });
 
-          it('when keyCode is smaller than 32 and is not 13, ignores keypress', () => {
+          it('when keyCode is smaller than 32 and is not 13, ignores keypress', async () => {
             let called = false;
             const node = ReactDOM.render(
               <input
@@ -244,7 +244,7 @@ describe('SyntheticKeyboardEvent', () => {
       });
 
       describe('when event is not `keypress`', () => {
-        it('returns 0', () => {
+        it('returns 0', async () => {
           let charCodeDown = null;
           let charCodeUp = null;
           const node = ReactDOM.render(
@@ -277,7 +277,7 @@ describe('SyntheticKeyboardEvent', () => {
         });
       });
 
-      it('when charCode is smaller than 32 but is not 13, and keyCode is missing, charCode is 0', () => {
+      it('when charCode is smaller than 32 but is not 13, and keyCode is missing, charCode is 0', async () => {
         let charCode = null;
         const node = ReactDOM.render(
           <input
@@ -300,7 +300,7 @@ describe('SyntheticKeyboardEvent', () => {
 
     describe('keyCode', () => {
       describe('when event is `keydown` or `keyup`', () => {
-        it('returns a passed keyCode', () => {
+        it('returns a passed keyCode', async () => {
           let keyCodeDown = null;
           let keyCodeUp = null;
           const node = ReactDOM.render(
@@ -334,7 +334,7 @@ describe('SyntheticKeyboardEvent', () => {
       });
 
       describe('when event is `keypress`', () => {
-        it('returns 0', () => {
+        it('returns 0', async () => {
           let keyCode = null;
           const node = ReactDOM.render(
             <input
@@ -358,7 +358,7 @@ describe('SyntheticKeyboardEvent', () => {
 
     describe('which', () => {
       describe('when event is `keypress`', () => {
-        it('is consistent with `charCode`', () => {
+        it('is consistent with `charCode`', async () => {
           let calls = 0;
           const node = ReactDOM.render(
             <input
@@ -397,7 +397,7 @@ describe('SyntheticKeyboardEvent', () => {
       });
 
       describe('when event is `keydown` or `keyup`', () => {
-        it('is consistent with `keyCode`', () => {
+        it('is consistent with `keyCode`', async () => {
           let calls = 0;
           const node = ReactDOM.render(
             <input
@@ -453,7 +453,7 @@ describe('SyntheticKeyboardEvent', () => {
     });
 
     describe('code', () => {
-      it('returns code on `keydown`, `keyup` and `keypress`', () => {
+      it('returns code on `keydown`, `keyup` and `keypress`', async () => {
         let codeDown = null;
         let codeUp = null;
         let codePress = null;
@@ -501,7 +501,7 @@ describe('SyntheticKeyboardEvent', () => {
   });
 
   describe('EventInterface', () => {
-    it('is able to `preventDefault` and `stopPropagation`', () => {
+    it('is able to `preventDefault` and `stopPropagation`', async () => {
       let expectedCount = 0;
       const eventHandler = event => {
         expect(event.isDefaultPrevented()).toBe(false);

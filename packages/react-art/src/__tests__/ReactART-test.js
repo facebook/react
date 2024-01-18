@@ -169,7 +169,7 @@ describe('ReactART', () => {
     testDOMNodeStructure(realNode, expectedStructure);
   });
 
-  it('should be able to reorder components', () => {
+  it('should be able to reorder components', async () => {
     const instance = ReactDOM.render(
       <TestComponent flipped={false} />,
       container,
@@ -215,7 +215,7 @@ describe('ReactART', () => {
     testDOMNodeStructure(realNode, expectedNewStructure);
   });
 
-  it('should be able to reorder many components', () => {
+  it('should be able to reorder many components', async () => {
     class Component extends React.Component {
       render() {
         const chars = this.props.chars.split('');
@@ -297,7 +297,7 @@ describe('ReactART', () => {
     expect(ref.constructor).toBe(CustomShape);
   });
 
-  it('resolves refs before componentDidUpdate', () => {
+  it('resolves refs before componentDidUpdate', async () => {
     class CustomShape extends React.Component {
       render() {
         return <Shape />;
@@ -333,7 +333,7 @@ describe('ReactART', () => {
     expect(ref.constructor).toBe(CustomShape);
   });
 
-  it('adds and updates event handlers', () => {
+  it('adds and updates event handlers', async () => {
     function render(onClick) {
       return ReactDOM.render(
         <Surface>

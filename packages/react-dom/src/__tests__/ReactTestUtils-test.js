@@ -30,7 +30,7 @@ describe('ReactTestUtils', () => {
     expect(Object.keys(ReactTestUtils.Simulate).sort()).toMatchSnapshot();
   });
 
-  it('gives Jest mocks a passthrough implementation with mockComponent()', () => {
+  it('gives Jest mocks a passthrough implementation with mockComponent()', async () => {
     class MockedComponent extends React.Component {
       render() {
         throw new Error('Should not get here.');
@@ -162,7 +162,7 @@ describe('ReactTestUtils', () => {
     expect(scryResults5.length).toBe(0);
   });
 
-  it('traverses children in the correct order', () => {
+  it('traverses children in the correct order', async () => {
     class Wrapper extends React.Component {
       render() {
         return <div>{this.props.children}</div>;
@@ -327,7 +327,7 @@ describe('ReactTestUtils', () => {
   });
 
   describe('Simulate', () => {
-    it('should change the value of an input field', () => {
+    it('should change the value of an input field', async () => {
       const obj = {
         handler: function (e) {
           e.persist();
@@ -348,7 +348,7 @@ describe('ReactTestUtils', () => {
       );
     });
 
-    it('should change the value of an input field in a component', () => {
+    it('should change the value of an input field in a component', async () => {
       class SomeComponent extends React.Component {
         inputRef = React.createRef();
         render() {
@@ -385,7 +385,7 @@ describe('ReactTestUtils', () => {
       );
     });
 
-    it('should not warn when used with extra properties', () => {
+    it('should not warn when used with extra properties', async () => {
       const CLIENT_X = 100;
 
       class Component extends React.Component {
@@ -405,7 +405,7 @@ describe('ReactTestUtils', () => {
       });
     });
 
-    it('should set the type of the event', () => {
+    it('should set the type of the event', async () => {
       let event;
       const stub = jest.fn().mockImplementation(e => {
         e.persist();

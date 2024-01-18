@@ -30,7 +30,7 @@ describe('SyntheticMouseEvent', () => {
     container = null;
   });
 
-  it('should only use values from movementX/Y when event type is mousemove', () => {
+  it('should only use values from movementX/Y when event type is mousemove', async () => {
     const events = [];
     const onMouseMove = event => {
       events.push(event.movementX);
@@ -79,7 +79,7 @@ describe('SyntheticMouseEvent', () => {
     expect(events[2]).toBe(0); // mousedown event should have movementX at 0
   });
 
-  it('should correctly calculate movementX/Y for capture phase', () => {
+  it('should correctly calculate movementX/Y for capture phase', async () => {
     const events = [];
     const onMouseMove = event => {
       events.push(['move', false, event.movementX, event.movementY]);

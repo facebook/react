@@ -34,7 +34,7 @@ describe('ReactDOMServerHydration', () => {
     act = InternalTestUtils.act;
   });
 
-  it('should have the correct mounting behavior (new hydrate API)', () => {
+  it('should have the correct mounting behavior (new hydrate API)', async () => {
     let mountCount = 0;
     let numClicks = 0;
 
@@ -122,7 +122,7 @@ describe('ReactDOMServerHydration', () => {
   // We have a polyfill for autoFocus on the client, but we intentionally don't
   // want it to call focus() when hydrating because this can mess up existing
   // focus before the JS has loaded.
-  it('should emit autofocus on the server but not focus() when hydrating', () => {
+  it('should emit autofocus on the server but not focus() when hydrating', async () => {
     const element = document.createElement('div');
     element.innerHTML = ReactDOMServer.renderToString(
       <input autoFocus={true} />,
@@ -139,7 +139,7 @@ describe('ReactDOMServerHydration', () => {
     expect(element.firstChild.focus).not.toHaveBeenCalled();
   });
 
-  it('should not focus on either server or client with autofocus={false}', () => {
+  it('should not focus on either server or client with autofocus={false}', async () => {
     const element = document.createElement('div');
     element.innerHTML = ReactDOMServer.renderToString(
       <input autoFocus={false} />,

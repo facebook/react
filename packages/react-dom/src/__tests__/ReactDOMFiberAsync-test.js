@@ -50,7 +50,7 @@ describe('ReactDOMFiberAsync', () => {
     document.body.removeChild(container);
   });
 
-  it('renders synchronously by default', () => {
+  it('renders synchronously by default', async () => {
     const ops = [];
     ReactDOM.render(<div>Hi</div>, container, () => {
       ops.push(container.textContent);
@@ -61,7 +61,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['Hi', 'Bye']);
   });
 
-  it('flushSync batches sync updates and flushes them at the end of the batch', () => {
+  it('flushSync batches sync updates and flushes them at the end of the batch', async () => {
     const ops = [];
     let instance;
 
@@ -99,7 +99,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['A', 'ABC', 'ABCD']);
   });
 
-  it('flushSync flushes updates even if nested inside another flushSync', () => {
+  it('flushSync flushes updates even if nested inside another flushSync', async () => {
     const ops = [];
     let instance;
 
@@ -141,7 +141,7 @@ describe('ReactDOMFiberAsync', () => {
     expect(ops).toEqual(['A', 'ABCD']);
   });
 
-  it('flushSync logs an error if already performing work', () => {
+  it('flushSync logs an error if already performing work', async () => {
     class Component extends React.Component {
       componentDidUpdate() {
         ReactDOM.flushSync();

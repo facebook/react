@@ -106,7 +106,7 @@ describe('ReactDOMInput', () => {
     jest.restoreAllMocks();
   });
 
-  it('should warn for controlled value of 0 with missing onChange', () => {
+  it('should warn for controlled value of 0 with missing onChange', async () => {
     expect(() => {
       ReactDOM.render(<input type="text" value={0} />, container);
     }).toErrorDev(
@@ -117,7 +117,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn for controlled value of "" with missing onChange', () => {
+  it('should warn for controlled value of "" with missing onChange', async () => {
     expect(() => {
       ReactDOM.render(<input type="text" value="" />, container);
     }).toErrorDev(
@@ -128,7 +128,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn for controlled value of "0" with missing onChange', () => {
+  it('should warn for controlled value of "0" with missing onChange', async () => {
     expect(() => {
       ReactDOM.render(<input type="text" value="0" />, container);
     }).toErrorDev(
@@ -139,7 +139,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn for controlled value of false with missing onChange', () => {
+  it('should warn for controlled value of false with missing onChange', async () => {
     expect(() =>
       ReactDOM.render(<input type="checkbox" checked={false} />, container),
     ).toErrorDev(
@@ -147,7 +147,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn with checked and no onChange handler with readOnly specified', () => {
+  it('should warn with checked and no onChange handler with readOnly specified', async () => {
     ReactDOM.render(
       <input type="checkbox" checked={false} readOnly={true} />,
       container,
@@ -166,7 +166,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should not warn about missing onChange in uncontrolled inputs', () => {
+  it('should not warn about missing onChange in uncontrolled inputs', async () => {
     ReactDOM.render(<input />, container);
     ReactDOM.unmountComponentAtNode(container);
     ReactDOM.render(<input value={undefined} />, container);
@@ -180,11 +180,11 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input type="checkbox" checked={undefined} />, container);
   });
 
-  it('should not warn with value and onInput handler', () => {
+  it('should not warn with value and onInput handler', async () => {
     ReactDOM.render(<input value="..." onInput={() => {}} />, container);
   });
 
-  it('should properly control a value even if no event listener exists', () => {
+  it('should properly control a value even if no event listener exists', async () => {
     let node;
 
     expect(() => {
@@ -204,7 +204,7 @@ describe('ReactDOMInput', () => {
     expect(isValueDirty(node)).toBe(true);
   });
 
-  it('should control a value in reentrant events', () => {
+  it('should control a value in reentrant events', async () => {
     class ControlledInputs extends React.Component {
       state = {value: 'lion'};
       a = null;
@@ -256,7 +256,7 @@ describe('ReactDOMInput', () => {
     expect(instance.switchedFocus).toBe(true);
   });
 
-  it('should control values in reentrant events with different targets', () => {
+  it('should control values in reentrant events with different targets', async () => {
     class ControlledInputs extends React.Component {
       state = {value: 'lion'};
       a = null;
@@ -300,7 +300,7 @@ describe('ReactDOMInput', () => {
   });
 
   describe('switching text inputs between numeric and string numbers', () => {
-    it('does change the number 2 to "2.0" with no change handler', () => {
+    it('does change the number 2 to "2.0" with no change handler', async () => {
       const stub = <input type="text" value={2} onChange={jest.fn()} />;
       const node = ReactDOM.render(stub, container);
 
@@ -315,7 +315,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('does change the string "2" to "2.0" with no change handler', () => {
+    it('does change the string "2" to "2.0" with no change handler', async () => {
       const stub = <input type="text" value={'2'} onChange={jest.fn()} />;
       const node = ReactDOM.render(stub, container);
 
@@ -330,7 +330,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('changes the number 2 to "2.0" using a change handler', () => {
+    it('changes the number 2 to "2.0" using a change handler', async () => {
       class Stub extends React.Component {
         state = {
           value: 2,
@@ -360,7 +360,7 @@ describe('ReactDOMInput', () => {
     });
   });
 
-  it('does change the string ".98" to "0.98" with no change handler', () => {
+  it('does change the string ".98" to "0.98" with no change handler', async () => {
     class Stub extends React.Component {
       state = {
         value: '.98',
@@ -383,7 +383,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('0.98');
   });
 
-  it('performs a state change from "" to 0', () => {
+  it('performs a state change from "" to 0', async () => {
     class Stub extends React.Component {
       state = {
         value: '',
@@ -400,7 +400,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('0');
   });
 
-  it('updates the value on radio buttons from "" to 0', function () {
+  it('updates the value on radio buttons from "" to 0', async () => {
     ReactDOM.render(
       <input type="radio" value="" onChange={function () {}} />,
       container,
@@ -413,7 +413,7 @@ describe('ReactDOMInput', () => {
     expect(container.firstChild.getAttribute('value')).toBe('0');
   });
 
-  it('updates the value on checkboxes from "" to 0', function () {
+  it('updates the value on checkboxes from "" to 0', async () => {
     ReactDOM.render(
       <input type="checkbox" value="" onChange={function () {}} />,
       container,
@@ -426,7 +426,7 @@ describe('ReactDOMInput', () => {
     expect(container.firstChild.getAttribute('value')).toBe('0');
   });
 
-  it('distinguishes precision for extra zeroes in string number values', () => {
+  it('distinguishes precision for extra zeroes in string number values', async () => {
     class Stub extends React.Component {
       state = {
         value: '3.0000',
@@ -450,7 +450,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('3');
   });
 
-  it('should display `defaultValue` of number 0', () => {
+  it('should display `defaultValue` of number 0', async () => {
     const stub = <input type="text" defaultValue={0} />;
     const node = ReactDOM.render(stub, container);
 
@@ -458,7 +458,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
-  it('only assigns defaultValue if it changes', () => {
+  it('only assigns defaultValue if it changes', async () => {
     class Test extends React.Component {
       render() {
         return <input defaultValue="0" />;
@@ -482,21 +482,21 @@ describe('ReactDOMInput', () => {
     component.forceUpdate();
   });
 
-  it('should display "true" for `defaultValue` of `true`', () => {
+  it('should display "true" for `defaultValue` of `true`', async () => {
     const stub = <input type="text" defaultValue={true} />;
     const node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('true');
   });
 
-  it('should display "false" for `defaultValue` of `false`', () => {
+  it('should display "false" for `defaultValue` of `false`', async () => {
     const stub = <input type="text" defaultValue={false} />;
     const node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('false');
   });
 
-  it('should update `defaultValue` for uncontrolled input', () => {
+  it('should update `defaultValue` for uncontrolled input', async () => {
     const node = ReactDOM.render(
       <input type="text" defaultValue="0" />,
       container,
@@ -523,7 +523,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should update `defaultValue` for uncontrolled date/time input', () => {
+  it('should update `defaultValue` for uncontrolled date/time input', async () => {
     const node = ReactDOM.render(
       <input type="date" defaultValue="1980-01-01" />,
       container,
@@ -545,7 +545,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input type="date" />, container);
   });
 
-  it('should take `defaultValue` when changing to uncontrolled input', () => {
+  it('should take `defaultValue` when changing to uncontrolled input', async () => {
     const node = ReactDOM.render(
       <input type="text" value="0" readOnly={true} />,
       container,
@@ -580,7 +580,7 @@ describe('ReactDOMInput', () => {
     expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
   });
 
-  it('should render name attribute if it is supplied', () => {
+  it('should render name attribute if it is supplied', async () => {
     const node = ReactDOM.render(<input type="text" name="name" />, container);
     expect(node.name).toBe('name');
     expect(container.firstChild.getAttribute('name')).toBe('name');
@@ -594,7 +594,7 @@ describe('ReactDOMInput', () => {
     expect(div.firstChild.getAttribute('name')).toBe('name');
   });
 
-  it('should not render name attribute if it is not supplied', () => {
+  it('should not render name attribute if it is not supplied', async () => {
     ReactDOM.render(<input type="text" />, container);
     expect(container.firstChild.getAttribute('name')).toBe(null);
   });
@@ -607,7 +607,7 @@ describe('ReactDOMInput', () => {
     expect(div.firstChild.getAttribute('name')).toBe(null);
   });
 
-  it('should display "foobar" for `defaultValue` of `objToString`', () => {
+  it('should display "foobar" for `defaultValue` of `objToString`', async () => {
     const objToString = {
       toString: function () {
         return 'foobar';
@@ -620,7 +620,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('foobar');
   });
 
-  it('should throw for date inputs if `defaultValue` is an object where valueOf() throws', () => {
+  it('should throw for date inputs if `defaultValue` is an object where valueOf() throws', async () => {
     class TemporalLike {
       valueOf() {
         // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
@@ -644,7 +644,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should throw for text inputs if `defaultValue` is an object where valueOf() throws', () => {
+  it('should throw for text inputs if `defaultValue` is an object where valueOf() throws', async () => {
     class TemporalLike {
       valueOf() {
         // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
@@ -668,7 +668,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should throw for date inputs if `value` is an object where valueOf() throws', () => {
+  it('should throw for date inputs if `value` is an object where valueOf() throws', async () => {
     class TemporalLike {
       valueOf() {
         // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
@@ -692,7 +692,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should throw for text inputs if `value` is an object where valueOf() throws', () => {
+  it('should throw for text inputs if `value` is an object where valueOf() throws', async () => {
     class TemporalLike {
       valueOf() {
         // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
@@ -716,14 +716,14 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should display `value` of number 0', () => {
+  it('should display `value` of number 0', async () => {
     const stub = <input type="text" value={0} onChange={emptyFunction} />;
     const node = ReactDOM.render(stub, container);
 
     expect(node.value).toBe('0');
   });
 
-  it('should allow setting `value` to `true`', () => {
+  it('should allow setting `value` to `true`', async () => {
     let stub = <input type="text" value="yolo" onChange={emptyFunction} />;
     const node = ReactDOM.render(stub, container);
 
@@ -736,7 +736,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('true');
   });
 
-  it('should allow setting `value` to `false`', () => {
+  it('should allow setting `value` to `false`', async () => {
     let stub = <input type="text" value="yolo" onChange={emptyFunction} />;
     const node = ReactDOM.render(stub, container);
 
@@ -749,7 +749,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('false');
   });
 
-  it('should allow setting `value` to `objToString`', () => {
+  it('should allow setting `value` to `objToString`', async () => {
     let stub = <input type="text" value="foo" onChange={emptyFunction} />;
     const node = ReactDOM.render(stub, container);
 
@@ -767,7 +767,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('foobar');
   });
 
-  it('should not incur unnecessary DOM mutations', () => {
+  it('should not incur unnecessary DOM mutations', async () => {
     ReactDOM.render(<input value="a" onChange={() => {}} />, container);
 
     const node = container.firstChild;
@@ -789,7 +789,7 @@ describe('ReactDOMInput', () => {
     expect(nodeValueSetter).toHaveBeenCalledTimes(1);
   });
 
-  it('should not incur unnecessary DOM mutations for numeric type conversion', () => {
+  it('should not incur unnecessary DOM mutations for numeric type conversion', async () => {
     ReactDOM.render(<input value="0" onChange={() => {}} />, container);
 
     const node = container.firstChild;
@@ -808,7 +808,7 @@ describe('ReactDOMInput', () => {
     expect(nodeValueSetter).toHaveBeenCalledTimes(0);
   });
 
-  it('should not incur unnecessary DOM mutations for the boolean type conversion', () => {
+  it('should not incur unnecessary DOM mutations for the boolean type conversion', async () => {
     ReactDOM.render(<input value="true" onChange={() => {}} />, container);
 
     const node = container.firstChild;
@@ -827,7 +827,7 @@ describe('ReactDOMInput', () => {
     expect(nodeValueSetter).toHaveBeenCalledTimes(0);
   });
 
-  it('should properly control a value of number `0`', () => {
+  it('should properly control a value of number `0`', async () => {
     const stub = <input type="text" value={0} onChange={emptyFunction} />;
     const node = ReactDOM.render(stub, container);
 
@@ -836,7 +836,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
-  it('should properly control 0.0 for a text input', () => {
+  it('should properly control 0.0 for a text input', async () => {
     const stub = <input type="text" value={0} onChange={emptyFunction} />;
     const node = ReactDOM.render(stub, container);
 
@@ -845,7 +845,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toBe('0');
   });
 
-  it('should properly control 0.0 for a number input', () => {
+  it('should properly control 0.0 for a number input', async () => {
     const stub = <input type="number" value={0} onChange={emptyFunction} />;
     const node = ReactDOM.render(stub, container);
 
@@ -864,7 +864,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should properly transition from an empty value to 0', function () {
+  it('should properly transition from an empty value to 0', async () => {
     ReactDOM.render(
       <input type="text" value="" onChange={emptyFunction} />,
       container,
@@ -887,7 +887,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should properly transition from 0 to an empty value', function () {
+  it('should properly transition from 0 to an empty value', async () => {
     ReactDOM.render(
       <input type="text" value={0} onChange={emptyFunction} />,
       container,
@@ -905,7 +905,7 @@ describe('ReactDOMInput', () => {
     expect(isValueDirty(node)).toBe(true);
   });
 
-  it('should properly transition a text input from 0 to an empty 0.0', function () {
+  it('should properly transition a text input from 0 to an empty 0.0', async () => {
     ReactDOM.render(
       <input type="text" value={0} onChange={emptyFunction} />,
       container,
@@ -925,7 +925,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should properly transition a number input from "" to 0', function () {
+  it('should properly transition a number input from "" to 0', async () => {
     ReactDOM.render(
       <input type="number" value="" onChange={emptyFunction} />,
       container,
@@ -945,7 +945,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should properly transition a number input from "" to "0"', function () {
+  it('should properly transition a number input from "" to "0"', async () => {
     ReactDOM.render(
       <input type="number" value="" onChange={emptyFunction} />,
       container,
@@ -965,7 +965,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should have the correct target value', () => {
+  it('should have the correct target value', async () => {
     let handled = false;
     const handler = function (event) {
       expect(event.target.nodeName).toBe('INPUT');
@@ -981,7 +981,7 @@ describe('ReactDOMInput', () => {
     expect(handled).toBe(true);
   });
 
-  it('should restore uncontrolled inputs to last defaultValue upon reset', () => {
+  it('should restore uncontrolled inputs to last defaultValue upon reset', async () => {
     const inputRef = React.createRef();
     ReactDOM.render(
       <form>
@@ -1020,7 +1020,7 @@ describe('ReactDOMInput', () => {
     expect(isValueDirty(inputRef.current)).toBe(false);
   });
 
-  it('should not set a value for submit buttons unnecessarily', () => {
+  it('should not set a value for submit buttons unnecessarily', async () => {
     const stub = <input type="submit" />;
     ReactDOM.render(stub, container);
     const node = container.firstChild;
@@ -1032,7 +1032,7 @@ describe('ReactDOMInput', () => {
     expect(node.hasAttribute('value')).toBe(false);
   });
 
-  it('should remove the value attribute on submit inputs when value is updated to undefined', () => {
+  it('should remove the value attribute on submit inputs when value is updated to undefined', async () => {
     const stub = <input type="submit" value="foo" onChange={emptyFunction} />;
     ReactDOM.render(stub, container);
 
@@ -1051,7 +1051,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe(null);
   });
 
-  it('should remove the value attribute on reset inputs when value is updated to undefined', () => {
+  it('should remove the value attribute on reset inputs when value is updated to undefined', async () => {
     const stub = <input type="reset" value="foo" onChange={emptyFunction} />;
     ReactDOM.render(stub, container);
 
@@ -1070,7 +1070,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe(null);
   });
 
-  it('should set a value on a submit input', () => {
+  it('should set a value on a submit input', async () => {
     const stub = <input type="submit" value="banana" />;
     ReactDOM.render(stub, container);
     const node = container.firstChild;
@@ -1078,7 +1078,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe('banana');
   });
 
-  it('should not set an undefined value on a submit input', () => {
+  it('should not set an undefined value on a submit input', async () => {
     const stub = <input type="submit" value={undefined} />;
     ReactDOM.render(stub, container);
     const node = container.firstChild;
@@ -1091,7 +1091,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe(null);
   });
 
-  it('should not set an undefined value on a reset input', () => {
+  it('should not set an undefined value on a reset input', async () => {
     const stub = <input type="reset" value={undefined} />;
     ReactDOM.render(stub, container);
     const node = container.firstChild;
@@ -1104,7 +1104,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe(null);
   });
 
-  it('should not set a null value on a submit input', () => {
+  it('should not set a null value on a submit input', async () => {
     const stub = <input type="submit" value={null} />;
     expect(() => {
       ReactDOM.render(stub, container);
@@ -1119,7 +1119,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe(null);
   });
 
-  it('should not set a null value on a reset input', () => {
+  it('should not set a null value on a reset input', async () => {
     const stub = <input type="reset" value={null} />;
     expect(() => {
       ReactDOM.render(stub, container);
@@ -1134,7 +1134,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe(null);
   });
 
-  it('should set a value on a reset input', () => {
+  it('should set a value on a reset input', async () => {
     const stub = <input type="reset" value="banana" />;
     ReactDOM.render(stub, container);
     const node = container.firstChild;
@@ -1142,7 +1142,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe('banana');
   });
 
-  it('should set an empty string value on a submit input', () => {
+  it('should set an empty string value on a submit input', async () => {
     const stub = <input type="submit" value="" />;
     ReactDOM.render(stub, container);
     const node = container.firstChild;
@@ -1150,7 +1150,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe('');
   });
 
-  it('should set an empty string value on a reset input', () => {
+  it('should set an empty string value on a reset input', async () => {
     const stub = <input type="reset" value="" />;
     ReactDOM.render(stub, container);
     const node = container.firstChild;
@@ -1158,7 +1158,7 @@ describe('ReactDOMInput', () => {
     expect(node.getAttribute('value')).toBe('');
   });
 
-  it('should control radio buttons', () => {
+  it('should control radio buttons', async () => {
     class RadioGroup extends React.Component {
       aRef = React.createRef();
       bRef = React.createRef();
@@ -1421,7 +1421,7 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
-  it('should check the correct radio when the selected name moves', () => {
+  it('should check the correct radio when the selected name moves', async () => {
     class App extends React.Component {
       state = {
         updated: false,
@@ -1466,7 +1466,7 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
-  it("shouldn't get tricked by changing radio names, part 2", () => {
+  it("shouldn't get tricked by changing radio names, part 2", async () => {
     ReactDOM.render(
       <div>
         <input
@@ -1520,7 +1520,7 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
-  it('should control radio buttons if the tree updates during render', () => {
+  it('should control radio buttons if the tree updates during render', async () => {
     const sharedParent = container;
     const container1 = document.createElement('div');
     const container2 = document.createElement('div');
@@ -1600,7 +1600,7 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
-  it('should control radio buttons if the tree updates during render (case 2; #26876)', () => {
+  it('should control radio buttons if the tree updates during render (case 2; #26876)', async () => {
     let thunk = null;
     function App() {
       const [disabled, setDisabled] = React.useState(false);
@@ -1677,7 +1677,7 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
-  it('should warn with value and no onChange handler and readOnly specified', () => {
+  it('should warn with value and no onChange handler and readOnly specified', async () => {
     ReactDOM.render(
       <input type="text" value="zoink" readOnly={true} />,
       container,
@@ -1698,7 +1698,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should have a this value of undefined if bind is not used', () => {
+  it('should have a this value of undefined if bind is not used', async () => {
     expect.assertions(1);
     const unboundInputOnChange = function () {
       expect(this).toBe(undefined);
@@ -1711,7 +1711,7 @@ describe('ReactDOMInput', () => {
     dispatchEventOnNode(node, 'input');
   });
 
-  it('should update defaultValue to empty string', () => {
+  it('should update defaultValue to empty string', async () => {
     ReactDOM.render(<input type="text" defaultValue={'foo'} />, container);
     if (disableInputAttributeSyncing) {
       expect(isValueDirty(container.firstChild)).toBe(false);
@@ -1727,7 +1727,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('should warn if value is null', () => {
+  it('should warn if value is null', async () => {
     expect(() =>
       ReactDOM.render(<input type="text" value={null} />, container),
     ).toErrorDev(
@@ -1740,7 +1740,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input type="text" value={null} />, container);
   });
 
-  it('should warn if checked and defaultChecked props are specified', () => {
+  it('should warn if checked and defaultChecked props are specified', async () => {
     expect(() =>
       ReactDOM.render(
         <input
@@ -1772,7 +1772,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if value and defaultValue props are specified', () => {
+  it('should warn if value and defaultValue props are specified', async () => {
     expect(() =>
       ReactDOM.render(
         <input type="text" value="foo" defaultValue="bar" readOnly={true} />,
@@ -1794,7 +1794,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if controlled input switches to uncontrolled (value is undefined)', () => {
+  it('should warn if controlled input switches to uncontrolled (value is undefined)', async () => {
     const stub = (
       <input type="text" value="controlled" onChange={emptyFunction} />
     );
@@ -1809,7 +1809,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if controlled input switches to uncontrolled (value is null)', () => {
+  it('should warn if controlled input switches to uncontrolled (value is null)', async () => {
     const stub = (
       <input type="text" value="controlled" onChange={emptyFunction} />
     );
@@ -1828,7 +1828,7 @@ describe('ReactDOMInput', () => {
     ]);
   });
 
-  it('should warn if controlled input switches to uncontrolled with defaultValue', () => {
+  it('should warn if controlled input switches to uncontrolled with defaultValue', async () => {
     const stub = (
       <input type="text" value="controlled" onChange={emptyFunction} />
     );
@@ -1848,7 +1848,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if uncontrolled input (value is undefined) switches to controlled', () => {
+  it('should warn if uncontrolled input (value is undefined) switches to controlled', async () => {
     const stub = <input type="text" />;
     ReactDOM.render(stub, container);
     expect(() =>
@@ -1863,7 +1863,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if uncontrolled input (value is null) switches to controlled', () => {
+  it('should warn if uncontrolled input (value is null) switches to controlled', async () => {
     const stub = <input type="text" value={null} />;
     expect(() => ReactDOM.render(stub, container)).toErrorDev(
       '`value` prop on `input` should not be null. ' +
@@ -1881,7 +1881,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if controlled checkbox switches to uncontrolled (checked is undefined)', () => {
+  it('should warn if controlled checkbox switches to uncontrolled (checked is undefined)', async () => {
     const stub = (
       <input type="checkbox" checked={true} onChange={emptyFunction} />
     );
@@ -1898,7 +1898,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if controlled checkbox switches to uncontrolled (checked is null)', () => {
+  it('should warn if controlled checkbox switches to uncontrolled (checked is null)', async () => {
     const stub = (
       <input type="checkbox" checked={true} onChange={emptyFunction} />
     );
@@ -1915,7 +1915,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if controlled checkbox switches to uncontrolled with defaultChecked', () => {
+  it('should warn if controlled checkbox switches to uncontrolled with defaultChecked', async () => {
     const stub = (
       <input type="checkbox" checked={true} onChange={emptyFunction} />
     );
@@ -1935,7 +1935,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if uncontrolled checkbox (checked is undefined) switches to controlled', () => {
+  it('should warn if uncontrolled checkbox (checked is undefined) switches to controlled', async () => {
     const stub = <input type="checkbox" />;
     ReactDOM.render(stub, container);
     expect(() =>
@@ -1950,7 +1950,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if uncontrolled checkbox (checked is null) switches to controlled', () => {
+  it('should warn if uncontrolled checkbox (checked is null) switches to controlled', async () => {
     const stub = <input type="checkbox" checked={null} />;
     ReactDOM.render(stub, container);
     expect(() =>
@@ -1965,7 +1965,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if controlled radio switches to uncontrolled (checked is undefined)', () => {
+  it('should warn if controlled radio switches to uncontrolled (checked is undefined)', async () => {
     const stub = <input type="radio" checked={true} onChange={emptyFunction} />;
     ReactDOM.render(stub, container);
     expect(() => ReactDOM.render(<input type="radio" />, container)).toErrorDev(
@@ -1978,7 +1978,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if controlled radio switches to uncontrolled (checked is null)', () => {
+  it('should warn if controlled radio switches to uncontrolled (checked is null)', async () => {
     const stub = <input type="radio" checked={true} onChange={emptyFunction} />;
     ReactDOM.render(stub, container);
     expect(() =>
@@ -1993,7 +1993,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if controlled radio switches to uncontrolled with defaultChecked', () => {
+  it('should warn if controlled radio switches to uncontrolled with defaultChecked', async () => {
     const stub = <input type="radio" checked={true} onChange={emptyFunction} />;
     ReactDOM.render(stub, container);
     expect(() =>
@@ -2008,7 +2008,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if uncontrolled radio (checked is undefined) switches to controlled', () => {
+  it('should warn if uncontrolled radio (checked is undefined) switches to controlled', async () => {
     const stub = <input type="radio" />;
     ReactDOM.render(stub, container);
     expect(() =>
@@ -2023,7 +2023,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should warn if uncontrolled radio (checked is null) switches to controlled', () => {
+  it('should warn if uncontrolled radio (checked is null) switches to controlled', async () => {
     const stub = <input type="radio" checked={null} />;
     ReactDOM.render(stub, container);
     expect(() =>
@@ -2038,7 +2038,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('should not warn if radio value changes but never becomes controlled', () => {
+  it('should not warn if radio value changes but never becomes controlled', async () => {
     ReactDOM.render(<input type="radio" value="value" />, container);
     ReactDOM.render(<input type="radio" />, container);
     ReactDOM.render(
@@ -2052,7 +2052,7 @@ describe('ReactDOMInput', () => {
     ReactDOM.render(<input type="radio" />, container);
   });
 
-  it('should not warn if radio value changes but never becomes uncontrolled', () => {
+  it('should not warn if radio value changes but never becomes uncontrolled', async () => {
     ReactDOM.render(
       <input type="radio" checked={false} onChange={() => null} />,
       container,
@@ -2073,7 +2073,7 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
-  it('should warn if radio checked false changes to become uncontrolled', () => {
+  it('should warn if radio checked false changes to become uncontrolled', async () => {
     ReactDOM.render(
       <input
         type="radio"
@@ -2095,7 +2095,7 @@ describe('ReactDOMInput', () => {
     );
   });
 
-  it('sets type, step, min, max before value always', () => {
+  it('sets type, step, min, max before value always', async () => {
     const log = [];
     const originalCreateElement = document.createElement;
     spyOnDevAndProd(document, 'createElement').mockImplementation(
@@ -2154,12 +2154,12 @@ describe('ReactDOMInput', () => {
     ]);
   });
 
-  it('sets value properly with type coming later in props', () => {
+  it('sets value properly with type coming later in props', async () => {
     const input = ReactDOM.render(<input value="hi" type="radio" />, container);
     expect(input.value).toBe('hi');
   });
 
-  it('does not raise a validation warning when it switches types', () => {
+  it('does not raise a validation warning when it switches types', async () => {
     class Input extends React.Component {
       state = {type: 'number', value: 1000};
 
@@ -2178,7 +2178,7 @@ describe('ReactDOMInput', () => {
     expect(node.value).toEqual('Test');
   });
 
-  it('resets value of date/time input to fix bugs in iOS Safari', () => {
+  it('resets value of date/time input to fix bugs in iOS Safari', async () => {
     function strify(x) {
       return JSON.stringify(x, null, 2);
     }
@@ -2289,7 +2289,7 @@ describe('ReactDOMInput', () => {
       };
     }
 
-    it('always sets the attribute when values change on text inputs', function () {
+    it('always sets the attribute when values change on text inputs', async () => {
       const Input = getTestInput();
       const stub = ReactDOM.render(<Input type="text" />, container);
       const node = ReactDOM.findDOMNode(stub);
@@ -2306,7 +2306,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('does not set the value attribute on number inputs if focused', () => {
+    it('does not set the value attribute on number inputs if focused', async () => {
       const Input = getTestInput();
       const stub = ReactDOM.render(
         <Input type="number" value="1" />,
@@ -2328,7 +2328,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('sets the value attribute on number inputs on blur', () => {
+    it('sets the value attribute on number inputs on blur', async () => {
       const Input = getTestInput();
       const stub = ReactDOM.render(
         <Input type="number" value="1" />,
@@ -2352,7 +2352,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('an uncontrolled number input will not update the value attribute on blur', () => {
+    it('an uncontrolled number input will not update the value attribute on blur', async () => {
       const node = ReactDOM.render(
         <input type="number" defaultValue="1" />,
         container,
@@ -2372,7 +2372,7 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('1');
     });
 
-    it('an uncontrolled text input will not update the value attribute on blur', () => {
+    it('an uncontrolled text input will not update the value attribute on blur', async () => {
       const node = ReactDOM.render(
         <input type="text" defaultValue="1" />,
         container,
@@ -2494,7 +2494,7 @@ describe('ReactDOMInput', () => {
   });
 
   describe('When given a Symbol value', function () {
-    it('treats initial Symbol value as an empty string', function () {
+    it('treats initial Symbol value as an empty string', async () => {
       expect(() =>
         ReactDOM.render(
           <input value={Symbol('foobar')} onChange={() => {}} />,
@@ -2511,7 +2511,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('treats updated Symbol value as an empty string', function () {
+    it('treats updated Symbol value as an empty string', async () => {
       ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
       expect(() =>
         ReactDOM.render(
@@ -2529,7 +2529,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('treats initial Symbol defaultValue as an empty string', function () {
+    it('treats initial Symbol defaultValue as an empty string', async () => {
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
       const node = container.firstChild;
 
@@ -2538,7 +2538,7 @@ describe('ReactDOMInput', () => {
       // TODO: we should warn here.
     });
 
-    it('treats updated Symbol defaultValue as an empty string', function () {
+    it('treats updated Symbol defaultValue as an empty string', async () => {
       ReactDOM.render(<input defaultValue="foo" />, container);
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
       const node = container.firstChild;
@@ -2554,7 +2554,7 @@ describe('ReactDOMInput', () => {
   });
 
   describe('When given a function value', function () {
-    it('treats initial function value as an empty string', function () {
+    it('treats initial function value as an empty string', async () => {
       expect(() =>
         ReactDOM.render(
           <input value={() => {}} onChange={() => {}} />,
@@ -2571,7 +2571,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('treats updated function value as an empty string', function () {
+    it('treats updated function value as an empty string', async () => {
       ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
       expect(() =>
         ReactDOM.render(
@@ -2589,7 +2589,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('treats initial function defaultValue as an empty string', function () {
+    it('treats initial function defaultValue as an empty string', async () => {
       ReactDOM.render(<input defaultValue={() => {}} />, container);
       const node = container.firstChild;
 
@@ -2598,7 +2598,7 @@ describe('ReactDOMInput', () => {
       // TODO: we should warn here.
     });
 
-    it('treats updated function defaultValue as an empty string', function () {
+    it('treats updated function defaultValue as an empty string', async () => {
       ReactDOM.render(<input defaultValue="foo" />, container);
       ReactDOM.render(<input defaultValue={() => {}} />, container);
       const node = container.firstChild;
@@ -2619,7 +2619,7 @@ describe('ReactDOMInput', () => {
     // Between 16 and 16.2, we assigned a node's value to it's current
     // value in order to "dettach" it from defaultValue. This had the unfortunate
     // side-effect of assigning value="on" to radio and checkboxes
-    it('does not add "on" in absence of value on a checkbox', function () {
+    it('does not add "on" in absence of value on a checkbox', async () => {
       ReactDOM.render(
         <input type="checkbox" defaultChecked={true} />,
         container,
@@ -2630,7 +2630,7 @@ describe('ReactDOMInput', () => {
       expect(node.hasAttribute('value')).toBe(false);
     });
 
-    it('does not add "on" in absence of value on a radio', function () {
+    it('does not add "on" in absence of value on a radio', async () => {
       ReactDOM.render(<input type="radio" defaultChecked={true} />, container);
       const node = container.firstChild;
 
@@ -2639,7 +2639,7 @@ describe('ReactDOMInput', () => {
     });
   });
 
-  it('should remove previous `defaultValue`', () => {
+  it('should remove previous `defaultValue`', async () => {
     const node = ReactDOM.render(
       <input type="text" defaultValue="0" />,
       container,
@@ -2652,7 +2652,7 @@ describe('ReactDOMInput', () => {
     expect(node.defaultValue).toBe('');
   });
 
-  it('should treat `defaultValue={null}` as missing', () => {
+  it('should treat `defaultValue={null}` as missing', async () => {
     const node = ReactDOM.render(
       <input type="text" defaultValue="0" />,
       container,
@@ -2665,7 +2665,7 @@ describe('ReactDOMInput', () => {
     expect(node.defaultValue).toBe('');
   });
 
-  it('should notice input changes when reverting back to original value', () => {
+  it('should notice input changes when reverting back to original value', async () => {
     const log = [];
     function onChange(e) {
       log.push(e.target.value);

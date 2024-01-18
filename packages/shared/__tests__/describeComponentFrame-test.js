@@ -19,7 +19,7 @@ describe('Component stack trace displaying', () => {
   });
 
   // @gate !enableComponentStackLocations || !__DEV__
-  it('should provide filenames in stack traces', () => {
+  it('should provide filenames in stack traces', async () => {
     class Component extends React.Component {
       render() {
         return [<span>a</span>, <span>b</span>];

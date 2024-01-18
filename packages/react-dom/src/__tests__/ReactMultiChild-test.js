@@ -20,7 +20,7 @@ describe('ReactMultiChild', () => {
   });
 
   describe('reconciliation', () => {
-    it('should update children when possible', () => {
+    it('should update children when possible', async () => {
       const container = document.createElement('div');
 
       const mockMount = jest.fn();
@@ -63,7 +63,7 @@ describe('ReactMultiChild', () => {
       expect(mockUnmount).toHaveBeenCalledTimes(0);
     });
 
-    it('should replace children with different constructors', () => {
+    it('should replace children with different constructors', async () => {
       const container = document.createElement('div');
 
       const mockMount = jest.fn();
@@ -101,7 +101,7 @@ describe('ReactMultiChild', () => {
       expect(mockUnmount).toHaveBeenCalledTimes(1);
     });
 
-    it('should NOT replace children with different owners', () => {
+    it('should NOT replace children with different owners', async () => {
       const container = document.createElement('div');
 
       const mockMount = jest.fn();
@@ -140,7 +140,7 @@ describe('ReactMultiChild', () => {
       expect(mockUnmount).toHaveBeenCalledTimes(0);
     });
 
-    it('should replace children with different keys', () => {
+    it('should replace children with different keys', async () => {
       const container = document.createElement('div');
 
       const mockMount = jest.fn();
@@ -178,7 +178,7 @@ describe('ReactMultiChild', () => {
       expect(mockUnmount).toHaveBeenCalledTimes(1);
     });
 
-    it('should warn for duplicated array keys with component stack info', () => {
+    it('should warn for duplicated array keys with component stack info', async () => {
       const container = document.createElement('div');
 
       class WrapperComponent extends React.Component {
@@ -217,7 +217,7 @@ describe('ReactMultiChild', () => {
       );
     });
 
-    it('should warn for duplicated iterable keys with component stack info', () => {
+    it('should warn for duplicated iterable keys with component stack info', async () => {
       const container = document.createElement('div');
 
       class WrapperComponent extends React.Component {
@@ -278,7 +278,7 @@ describe('ReactMultiChild', () => {
     });
   });
 
-  it('should warn for using maps as children with owner info', () => {
+  it('should warn for using maps as children with owner info', async () => {
     class Parent extends React.Component {
       render() {
         return (
@@ -302,7 +302,7 @@ describe('ReactMultiChild', () => {
     );
   });
 
-  it('should warn for using generators as children', () => {
+  it('should warn for using generators as children', async () => {
     function* Foo() {
       yield <h1 key="1">Hello</h1>;
       yield <h1 key="2">World</h1>;
@@ -323,7 +323,7 @@ describe('ReactMultiChild', () => {
     ReactDOM.render(<Foo />, div);
   });
 
-  it('should not warn for using generators in legacy iterables', () => {
+  it('should not warn for using generators in legacy iterables', async () => {
     const fooIterable = {
       '@@iterator': function* () {
         yield <h1 key="1">Hello</h1>;
@@ -343,7 +343,7 @@ describe('ReactMultiChild', () => {
     expect(div.textContent).toBe('HelloWorld');
   });
 
-  it('should not warn for using generators in modern iterables', () => {
+  it('should not warn for using generators in modern iterables', async () => {
     const fooIterable = {
       [Symbol.iterator]: function* () {
         yield <h1 key="1">Hello</h1>;
@@ -363,7 +363,7 @@ describe('ReactMultiChild', () => {
     expect(div.textContent).toBe('HelloWorld');
   });
 
-  it('should reorder bailed-out children', () => {
+  it('should reorder bailed-out children', async () => {
     class LetterInner extends React.Component {
       render() {
         return <div>{this.props.char}</div>;
@@ -401,7 +401,7 @@ describe('ReactMultiChild', () => {
     expect(container.textContent).toBe('EHCjpdTUuiybDvhRJwZt');
   });
 
-  it('prepares new children before unmounting old', () => {
+  it('prepares new children before unmounting old', async () => {
     const log = [];
 
     class Spy extends React.Component {

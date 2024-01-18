@@ -27,14 +27,14 @@ describe('ReactDOMFiber', () => {
     jest.restoreAllMocks();
   });
 
-  it('should render strings as children', () => {
+  it('should render strings as children', async () => {
     const Box = ({value}) => <div>{value}</div>;
 
     ReactDOM.render(<Box value="foo" />, container);
     expect(container.textContent).toEqual('foo');
   });
 
-  it('should render numbers as children', () => {
+  it('should render numbers as children', async () => {
     const Box = ({value}) => <div>{value}</div>;
 
     ReactDOM.render(<Box value={10} />, container);
@@ -42,7 +42,7 @@ describe('ReactDOMFiber', () => {
     expect(container.textContent).toEqual('10');
   });
 
-  it('should be called a callback argument', () => {
+  it('should be called a callback argument', async () => {
     // mounting phase
     let called = false;
     ReactDOM.render(<div>Foo</div>, container, () => (called = true));
@@ -54,7 +54,7 @@ describe('ReactDOMFiber', () => {
     expect(called).toEqual(true);
   });
 
-  it('should call a callback argument when the same element is re-rendered', () => {
+  it('should call a callback argument when the same element is re-rendered', async () => {
     class Foo extends React.Component {
       render() {
         return <div>Foo</div>;
@@ -75,14 +75,14 @@ describe('ReactDOMFiber', () => {
     expect(called).toEqual(true);
   });
 
-  it('should render a component returning strings directly from render', () => {
+  it('should render a component returning strings directly from render', async () => {
     const Text = ({value}) => value;
 
     ReactDOM.render(<Text value="foo" />, container);
     expect(container.textContent).toEqual('foo');
   });
 
-  it('should render a component returning numbers directly from render', () => {
+  it('should render a component returning numbers directly from render', async () => {
     const Text = ({value}) => value;
 
     ReactDOM.render(<Text value={10} />, container);
@@ -90,7 +90,7 @@ describe('ReactDOMFiber', () => {
     expect(container.textContent).toEqual('10');
   });
 
-  it('finds the DOM Text node of a string child', () => {
+  it('finds the DOM Text node of a string child', async () => {
     class Text extends React.Component {
       render() {
         return this.props.value;
@@ -109,7 +109,7 @@ describe('ReactDOMFiber', () => {
     expect(textNode.nodeValue).toBe('foo');
   });
 
-  it('finds the first child when a component returns a fragment', () => {
+  it('finds the first child when a component returns a fragment', async () => {
     class Fragment extends React.Component {
       render() {
         return [<div key="a" />, <span key="b" />];
@@ -126,7 +126,7 @@ describe('ReactDOMFiber', () => {
     expect(firstNode.tagName).toBe('DIV');
   });
 
-  it('finds the first child even when fragment is nested', () => {
+  it('finds the first child even when fragment is nested', async () => {
     class Wrapper extends React.Component {
       render() {
         return this.props.children;
@@ -154,7 +154,7 @@ describe('ReactDOMFiber', () => {
     expect(firstNode.tagName).toBe('DIV');
   });
 
-  it('finds the first child even when first child renders null', () => {
+  it('finds the first child even when first child renders null', async () => {
     class NullComponent extends React.Component {
       render() {
         return null;
@@ -177,7 +177,7 @@ describe('ReactDOMFiber', () => {
     expect(firstNode.tagName).toBe('DIV');
   });
 
-  it('renders an empty fragment', () => {
+  it('renders an empty fragment', async () => {
     const Div = () => <div />;
     const EmptyFragment = () => <></>;
     const NonEmptyFragment = () => (
@@ -232,7 +232,7 @@ describe('ReactDOMFiber', () => {
     expect(testContainer.innerHTML).toBe('');
   };
 
-  it('should render one portal', () => {
+  it('should render one portal', async () => {
     const portalContainer = document.createElement('div');
 
     ReactDOM.render(
@@ -247,7 +247,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('should render many portals', () => {
+  it('should render many portals', async () => {
     const portalContainer1 = document.createElement('div');
     const portalContainer2 = document.createElement('div');
 
@@ -347,7 +347,7 @@ describe('ReactDOMFiber', () => {
     ]);
   });
 
-  it('should render nested portals', () => {
+  it('should render nested portals', async () => {
     const portalContainer1 = document.createElement('div');
     const portalContainer2 = document.createElement('div');
     const portalContainer3 = document.createElement('div');
@@ -390,7 +390,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('should reconcile portal children', () => {
+  it('should reconcile portal children', async () => {
     const portalContainer = document.createElement('div');
 
     ReactDOM.render(
@@ -436,7 +436,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('<div></div>');
   });
 
-  it('should unmount empty portal component wherever it appears', () => {
+  it('should unmount empty portal component wherever it appears', async () => {
     const portalContainer = document.createElement('div');
 
     class Wrapper extends React.Component {
@@ -719,7 +719,7 @@ describe('ReactDOMFiber', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should pass portal context when rendering subtree elsewhere', () => {
+  it('should pass portal context when rendering subtree elsewhere', async () => {
     const portalContainer = document.createElement('div');
 
     class Component extends React.Component {
@@ -754,7 +754,7 @@ describe('ReactDOMFiber', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should update portal context if it changes due to setState', () => {
+  it('should update portal context if it changes due to setState', async () => {
     const portalContainer = document.createElement('div');
 
     class Component extends React.Component {
@@ -799,7 +799,7 @@ describe('ReactDOMFiber', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should update portal context if it changes due to re-render', () => {
+  it('should update portal context if it changes due to re-render', async () => {
     const portalContainer = document.createElement('div');
 
     class Component extends React.Component {
@@ -839,7 +839,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  it('findDOMNode should find dom element after expanding a fragment', () => {
+  it('findDOMNode should find dom element after expanding a fragment', async () => {
     class MyNode extends React.Component {
       render() {
         return !this.props.flag
@@ -859,7 +859,7 @@ describe('ReactDOMFiber', () => {
     expect(b.tagName).toBe('SPAN');
   });
 
-  it('should bubble events from the portal to the parent', () => {
+  it('should bubble events from the portal to the parent', async () => {
     const portalContainer = document.createElement('div');
     document.body.appendChild(portalContainer);
     try {
@@ -890,7 +890,7 @@ describe('ReactDOMFiber', () => {
     }
   });
 
-  it('should not onMouseLeave when staying in the portal', () => {
+  it('should not onMouseLeave when staying in the portal', async () => {
     const portalContainer = document.createElement('div');
     document.body.appendChild(portalContainer);
 
@@ -966,7 +966,7 @@ describe('ReactDOMFiber', () => {
   });
 
   // Regression test for https://github.com/facebook/react/issues/19562
-  it('does not fire mouseEnter twice when relatedTarget is the root node', () => {
+  it('does not fire mouseEnter twice when relatedTarget is the root node', async () => {
     let ops = [];
     let target = null;
 
@@ -1016,7 +1016,7 @@ describe('ReactDOMFiber', () => {
     expect(ops).toEqual([]);
   });
 
-  it('listens to events that do not exist in the Portal subtree', () => {
+  it('listens to events that do not exist in the Portal subtree', async () => {
     const onClick = jest.fn();
 
     const ref = React.createRef();
@@ -1043,7 +1043,7 @@ describe('ReactDOMFiber', () => {
     }).toThrow('Target container is not a DOM element.');
   });
 
-  it('should warn for non-functional event listeners', () => {
+  it('should warn for non-functional event listeners', async () => {
     class Example extends React.Component {
       render() {
         return <div onClick="woops" />;
@@ -1056,7 +1056,7 @@ describe('ReactDOMFiber', () => {
     );
   });
 
-  it('should warn with a special message for `false` event listeners', () => {
+  it('should warn with a special message for `false` event listeners', async () => {
     class Example extends React.Component {
       render() {
         return <div onClick={false} />;
@@ -1071,7 +1071,7 @@ describe('ReactDOMFiber', () => {
     );
   });
 
-  it('should not update event handlers until commit', () => {
+  it('should not update event handlers until commit', async () => {
     spyOnDev(console, 'error');
 
     let ops = [];
@@ -1168,7 +1168,7 @@ describe('ReactDOMFiber', () => {
     }
   });
 
-  it('should not crash encountering low-priority tree', () => {
+  it('should not crash encountering low-priority tree', async () => {
     ReactDOM.render(
       <div hidden={true}>
         <div />
@@ -1177,7 +1177,7 @@ describe('ReactDOMFiber', () => {
     );
   });
 
-  it('should not warn when rendering into an empty container', () => {
+  it('should not warn when rendering into an empty container', async () => {
     ReactDOM.render(<div>foo</div>, container);
     expect(container.innerHTML).toBe('<div>foo</div>');
     ReactDOM.render(null, container);
@@ -1186,7 +1186,7 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('<div>bar</div>');
   });
 
-  it('should warn when replacing a container which was manually updated outside of React', () => {
+  it('should warn when replacing a container which was manually updated outside of React', async () => {
     // when not messing with the DOM outside of React
     ReactDOM.render(<div key="1">foo</div>, container);
     ReactDOM.render(<div key="1">bar</div>, container);
@@ -1210,7 +1210,7 @@ describe('ReactDOMFiber', () => {
     }).toThrowError();
   });
 
-  it('should warn when doing an update to a container manually updated outside of React', () => {
+  it('should warn when doing an update to a container manually updated outside of React', async () => {
     // when not messing with the DOM outside of React
     ReactDOM.render(<div>foo</div>, container);
     ReactDOM.render(<div>bar</div>, container);
@@ -1227,7 +1227,7 @@ describe('ReactDOMFiber', () => {
     );
   });
 
-  it('should warn when doing an update to a container manually cleared outside of React', () => {
+  it('should warn when doing an update to a container manually cleared outside of React', async () => {
     // when not messing with the DOM outside of React
     ReactDOM.render(<div>foo</div>, container);
     ReactDOM.render(<div>bar</div>, container);
@@ -1244,7 +1244,7 @@ describe('ReactDOMFiber', () => {
     );
   });
 
-  it('should render a text component with a text DOM node on the same document as the container', () => {
+  it('should render a text component with a text DOM node on the same document as the container', async () => {
     // 1. Create a new document through the use of iframe
     // 2. Set up the spy to make asserts when a text component
     //    is rendered inside the iframe container
@@ -1274,7 +1274,7 @@ describe('ReactDOMFiber', () => {
     expect(iframeContainer.appendChild).toHaveBeenCalledTimes(1);
   });
 
-  it('should mount into a document fragment', () => {
+  it('should mount into a document fragment', async () => {
     const fragment = document.createDocumentFragment();
     ReactDOM.render(<div>foo</div>, fragment);
     expect(container.innerHTML).toBe('');
@@ -1283,7 +1283,7 @@ describe('ReactDOMFiber', () => {
   });
 
   // Regression test for https://github.com/facebook/react/issues/12643#issuecomment-413727104
-  it('should not diff memoized host components', () => {
+  it('should not diff memoized host components', async () => {
     const inputRef = React.createRef();
     let didCallOnChange = false;
 
@@ -1341,7 +1341,7 @@ describe('ReactDOMFiber', () => {
     expect(didCallOnChange).toBe(true);
   });
 
-  it('unmounted legacy roots should never clear newer root content from a container', () => {
+  it('unmounted legacy roots should never clear newer root content from a container', async () => {
     const ref = React.createRef();
 
     function OldApp() {

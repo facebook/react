@@ -29,7 +29,7 @@ describe('ReactDOMTextComponent', () => {
     ReactDOMServer = require('react-dom/server');
   });
 
-  it('updates a mounted text component in place', () => {
+  it('updates a mounted text component in place', async () => {
     const el = document.createElement('div');
     let inst = ReactDOM.render(
       <div>
@@ -63,7 +63,7 @@ describe('ReactDOMTextComponent', () => {
     expect(bar.data).toBe('qux');
   });
 
-  it('can be toggled in and out of the markup', () => {
+  it('can be toggled in and out of the markup', async () => {
     const el = document.createElement('div');
     let inst = ReactDOM.render(
       <div>
@@ -285,7 +285,7 @@ describe('ReactDOMTextComponent', () => {
     expect(el.innerHTML).toBe('<div></div>');
   });
 
-  it('throws for Temporal-like text nodes', () => {
+  it('throws for Temporal-like text nodes', async () => {
     const el = document.createElement('div');
     class TemporalLike {
       valueOf() {

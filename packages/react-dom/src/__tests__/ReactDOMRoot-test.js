@@ -321,7 +321,7 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('');
   });
 
-  it('warns when passing legacy container to createRoot()', () => {
+  it('warns when passing legacy container to createRoot()', async () => {
     ReactDOM.render(<div>Hi</div>, container);
     expect(() => {
       ReactDOMClient.createRoot(container);
@@ -483,7 +483,7 @@ describe('ReactDOMRoot', () => {
   });
 
   // @gate disableCommentsAsDOMContainers
-  it('errors if container is a comment node', () => {
+  it('errors if container is a comment node', async () => {
     // This is an old feature used by www. Disabled in the open source build.
     const div = document.createElement('div');
     div.innerHTML = '<!-- react-mount-point-unstable -->';

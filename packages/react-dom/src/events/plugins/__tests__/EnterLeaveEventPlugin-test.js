@@ -31,7 +31,7 @@ describe('EnterLeaveEventPlugin', () => {
     container = null;
   });
 
-  it('should set onMouseLeave relatedTarget properly in iframe', () => {
+  it('should set onMouseLeave relatedTarget properly in iframe', async () => {
     const iframe = document.createElement('iframe');
     container.appendChild(iframe);
     const iframeDocument = iframe.contentDocument;
@@ -64,7 +64,7 @@ describe('EnterLeaveEventPlugin', () => {
     expect(leaveEvents[0].relatedTarget).toBe(iframe.contentWindow);
   });
 
-  it('should set onMouseEnter relatedTarget properly in iframe', () => {
+  it('should set onMouseEnter relatedTarget properly in iframe', async () => {
     const iframe = document.createElement('iframe');
     container.appendChild(iframe);
     const iframeDocument = iframe.contentDocument;
@@ -98,7 +98,7 @@ describe('EnterLeaveEventPlugin', () => {
   });
 
   // Regression test for https://github.com/facebook/react/issues/10906.
-  it('should find the common parent after updates', () => {
+  it('should find the common parent after updates', async () => {
     let parentEnterCalls = 0;
     let childEnterCalls = 0;
     let parent = null;
@@ -136,7 +136,7 @@ describe('EnterLeaveEventPlugin', () => {
   });
 
   // Test for https://github.com/facebook/react/issues/16763.
-  it('should call mouseEnter once from sibling rendered inside a rendered component', done => {
+  it('should call mouseEnter once from sibling rendered inside a rendered component', async () => {
     const mockFn = jest.fn();
 
     class Parent extends React.Component {
@@ -186,7 +186,7 @@ describe('EnterLeaveEventPlugin', () => {
     ReactDOM.render(<Parent />, container);
   });
 
-  it('should call mouseEnter when pressing a non tracked React node', done => {
+  it('should call mouseEnter when pressing a non tracked React node', async () => {
     const mockFn = jest.fn();
 
     class Parent extends React.Component {
@@ -237,7 +237,7 @@ describe('EnterLeaveEventPlugin', () => {
     ReactDOM.render(<Parent />, container);
   });
 
-  it('should work with portals outside of the root that has onMouseLeave', () => {
+  it('should work with portals outside of the root that has onMouseLeave', async () => {
     const divRef = React.createRef();
     const onMouseLeave = jest.fn();
 
@@ -263,7 +263,7 @@ describe('EnterLeaveEventPlugin', () => {
     expect(onMouseLeave).toHaveBeenCalledTimes(1);
   });
 
-  it('should work with portals that have onMouseEnter outside of the root ', () => {
+  it('should work with portals that have onMouseEnter outside of the root ', async () => {
     const divRef = React.createRef();
     const otherDivRef = React.createRef();
     const onMouseEnter = jest.fn();

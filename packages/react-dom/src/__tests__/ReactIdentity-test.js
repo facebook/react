@@ -21,7 +21,7 @@ describe('ReactIdentity', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
-  it('should allow key property to express identity', () => {
+  it('should allow key property to express identity', async () => {
     let node;
     const Component = props => (
       <div ref={c => (node = c)}>
@@ -39,7 +39,7 @@ describe('ReactIdentity', () => {
     expect(origChildren[1]).toBe(newChildren[0]);
   });
 
-  it('should use composite identity', () => {
+  it('should use composite identity', async () => {
     class Wrapper extends React.Component {
       render() {
         return <a>{this.props.children}</a>;
@@ -209,7 +209,7 @@ describe('ReactIdentity', () => {
     }).not.toThrow();
   });
 
-  it('should retain key during updates in composite components', () => {
+  it('should retain key during updates in composite components', async () => {
     class TestComponent extends React.Component {
       render() {
         return <div>{this.props.children}</div>;
@@ -264,7 +264,7 @@ describe('ReactIdentity', () => {
     }).not.toThrow();
   });
 
-  it('should throw if key is a Temporal-like object', () => {
+  it('should throw if key is a Temporal-like object', async () => {
     class TemporalLike {
       valueOf() {
         // Throwing here is the behavior of ECMAScript "Temporal" date/time API.

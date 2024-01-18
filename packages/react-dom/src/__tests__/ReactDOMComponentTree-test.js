@@ -26,7 +26,7 @@ describe('ReactDOMComponentTree', () => {
     container = null;
   });
 
-  it('finds nodes for instances on events', () => {
+  it('finds nodes for instances on events', async () => {
     const mouseOverID = 'mouseOverID';
     const clickID = 'clickID';
     let currentTargetID = null;
@@ -63,7 +63,7 @@ describe('ReactDOMComponentTree', () => {
     expect(currentTargetID).toBe(clickID);
   });
 
-  it('finds closest instance for node when an event happens', () => {
+  it('finds closest instance for node when an event happens', async () => {
     const nonReactElemID = 'aID';
     const innerHTML = {__html: `<div id="${nonReactElemID}"></div>`};
     const closestInstanceID = 'closestInstance';
@@ -98,7 +98,7 @@ describe('ReactDOMComponentTree', () => {
     expect(currentTargetID).toBe(closestInstanceID);
   });
 
-  it('updates event handlers from fiber props', () => {
+  it('updates event handlers from fiber props', async () => {
     let action = '';
     let instance;
     const handlerA = () => (action = 'A');
@@ -140,7 +140,7 @@ describe('ReactDOMComponentTree', () => {
     expect(action).toEqual('B');
   });
 
-  it('finds a controlled instance from node and gets its current fiber props', () => {
+  it('finds a controlled instance from node and gets its current fiber props', async () => {
     const inputID = 'inputID';
     const startValue = undefined;
     const finishValue = 'finish';
@@ -187,7 +187,7 @@ describe('ReactDOMComponentTree', () => {
     );
   });
 
-  it('finds instance of node that is attempted to be unmounted', () => {
+  it('finds instance of node that is attempted to be unmounted', async () => {
     const component = <div />;
     const node = ReactDOM.render(<div>{component}</div>, container);
     expect(() => ReactDOM.unmountComponentAtNode(node)).toErrorDev(
@@ -199,7 +199,7 @@ describe('ReactDOMComponentTree', () => {
     );
   });
 
-  it('finds instance from node to stop rendering over other react rendered components', () => {
+  it('finds instance from node to stop rendering over other react rendered components', async () => {
     const component = (
       <div>
         <span>Hello</span>

@@ -27,14 +27,14 @@ describe('ReactFunctionComponent', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
-  it('should render stateless component', () => {
+  it('should render stateless component', async () => {
     const el = document.createElement('div');
     ReactDOM.render(<FunctionComponent name="A" />, el);
 
     expect(el.textContent).toBe('A');
   });
 
-  it('should update stateless component', () => {
+  it('should update stateless component', async () => {
     class Parent extends React.Component {
       render() {
         return <FunctionComponent {...this.props} />;
@@ -49,7 +49,7 @@ describe('ReactFunctionComponent', () => {
     expect(el.textContent).toBe('B');
   });
 
-  it('should unmount stateless component', () => {
+  it('should unmount stateless component', async () => {
     const container = document.createElement('div');
 
     ReactDOM.render(<FunctionComponent name="A" />, container);
@@ -60,7 +60,7 @@ describe('ReactFunctionComponent', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should pass context thru stateless component', () => {
+  it('should pass context thru stateless component', async () => {
     class Child extends React.Component {
       static contextTypes = {
         test: PropTypes.string.isRequired,
@@ -99,7 +99,7 @@ describe('ReactFunctionComponent', () => {
     expect(el.textContent).toBe('mest');
   });
 
-  it('should warn for getDerivedStateFromProps on a function component', () => {
+  it('should warn for getDerivedStateFromProps on a function component', async () => {
     function FunctionComponentWithChildContext() {
       return null;
     }
@@ -115,7 +115,7 @@ describe('ReactFunctionComponent', () => {
     );
   });
 
-  it('should warn for childContextTypes on a function component', () => {
+  it('should warn for childContextTypes on a function component', async () => {
     function FunctionComponentWithChildContext(props) {
       return <div>{props.name}</div>;
     }
@@ -378,7 +378,7 @@ describe('ReactFunctionComponent', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should receive context', () => {
+  it('should receive context', async () => {
     class Parent extends React.Component {
       static childContextTypes = {
         lang: PropTypes.string,

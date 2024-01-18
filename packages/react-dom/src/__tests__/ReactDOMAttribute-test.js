@@ -51,7 +51,7 @@ describe('ReactDOM unknown attribute', () => {
       testUnknownAttributeAssignment(false, null);
     });
 
-    it('removes unknown attributes that were rendered but are now missing', () => {
+    it('removes unknown attributes that were rendered but are now missing', async () => {
       const el = document.createElement('div');
       ReactDOM.render(<div unknown="something" />, el);
       expect(el.firstChild.getAttribute('unknown')).toBe('something');
@@ -131,7 +131,7 @@ describe('ReactDOM unknown attribute', () => {
       );
     });
 
-    it('allows camelCase unknown attributes and warns', () => {
+    it('allows camelCase unknown attributes and warns', async () => {
       const el = document.createElement('div');
 
       expect(() =>

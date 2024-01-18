@@ -24,7 +24,7 @@ describe('ReactComponent', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
-  it('should throw on invalid render targets', () => {
+  it('should throw on invalid render targets', async () => {
     const container = document.createElement('div');
     // jQuery objects are basically arrays; people often pass them in by mistake
     expect(function () {
@@ -300,7 +300,7 @@ describe('ReactComponent', () => {
     expect(mounted).toBe(true);
   });
 
-  it('should call refs at the correct time', () => {
+  it('should call refs at the correct time', async () => {
     const log = [];
 
     class Inner extends React.Component {
@@ -396,7 +396,7 @@ describe('ReactComponent', () => {
     /* eslint-enable indent */
   });
 
-  it('fires the callback after a component is rendered', () => {
+  it('fires the callback after a component is rendered', async () => {
     const callback = jest.fn();
     const container = document.createElement('div');
     ReactDOM.render(<div />, container, callback);
@@ -470,7 +470,7 @@ describe('ReactComponent', () => {
     );
   });
 
-  it('throws if a plain object is used as a child', () => {
+  it('throws if a plain object is used as a child', async () => {
     const children = {
       x: <span />,
       y: <span />,
@@ -486,7 +486,7 @@ describe('ReactComponent', () => {
     );
   });
 
-  it('throws if a plain object even if it is in an owner', () => {
+  it('throws if a plain object even if it is in an owner', async () => {
     class Foo extends React.Component {
       render() {
         const children = {
@@ -545,7 +545,7 @@ describe('ReactComponent', () => {
   });
 
   describe('with new features', () => {
-    it('warns on function as a return value from a function', () => {
+    it('warns on function as a return value from a function', async () => {
       function Foo() {
         return Foo;
       }
@@ -558,7 +558,7 @@ describe('ReactComponent', () => {
       );
     });
 
-    it('warns on function as a return value from a class', () => {
+    it('warns on function as a return value from a class', async () => {
       class Foo extends React.Component {
         render() {
           return Foo;
@@ -573,7 +573,7 @@ describe('ReactComponent', () => {
       );
     });
 
-    it('warns on function as a child to host component', () => {
+    it('warns on function as a child to host component', async () => {
       function Foo() {
         return (
           <div>
@@ -592,7 +592,7 @@ describe('ReactComponent', () => {
       );
     });
 
-    it('does not warn for function-as-a-child that gets resolved', () => {
+    it('does not warn for function-as-a-child that gets resolved', async () => {
       function Bar(props) {
         return props.children();
       }
@@ -604,7 +604,7 @@ describe('ReactComponent', () => {
       expect(container.innerHTML).toBe('Hello');
     });
 
-    it('deduplicates function type warnings based on component type', () => {
+    it('deduplicates function type warnings based on component type', async () => {
       class Foo extends React.PureComponent {
         constructor() {
           super();

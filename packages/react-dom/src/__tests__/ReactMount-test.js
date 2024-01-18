@@ -43,7 +43,7 @@ describe('ReactMount', () => {
       expect(d.textContent).toBe('hellooo');
     });
 
-    it('returns true on React containers', () => {
+    it('returns true on React containers', async () => {
       const d = document.createElement('div');
       ReactDOM.render(<b>hellooo</b>, d);
       expect(d.textContent).toBe('hellooo');
@@ -67,7 +67,7 @@ describe('ReactMount', () => {
     );
   });
 
-  it('should render different components in same root', () => {
+  it('should render different components in same root', async () => {
     const container = document.createElement('container');
     document.body.appendChild(container);
 
@@ -78,7 +78,7 @@ describe('ReactMount', () => {
     expect(container.firstChild.nodeName).toBe('SPAN');
   });
 
-  it('should unmount and remount if the key changes', () => {
+  it('should unmount and remount if the key changes', async () => {
     const container = document.createElement('container');
 
     const mockMount = jest.fn();
@@ -113,7 +113,7 @@ describe('ReactMount', () => {
     expect(mockUnmount).toHaveBeenCalledTimes(1);
   });
 
-  it('should reuse markup if rendering to the same target twice', () => {
+  it('should reuse markup if rendering to the same target twice', async () => {
     const container = document.createElement('container');
     const instance1 = ReactDOM.render(<div />, container);
     const instance2 = ReactDOM.render(<div />, container);
@@ -138,14 +138,14 @@ describe('ReactMount', () => {
     );
   });
 
-  it('should not warn if mounting into non-empty node', () => {
+  it('should not warn if mounting into non-empty node', async () => {
     const container = document.createElement('container');
     container.innerHTML = '<div></div>';
 
     ReactDOM.render(<div />, container);
   });
 
-  it('should warn when mounting into document.body', () => {
+  it('should warn when mounting into document.body', async () => {
     const iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
 
@@ -171,7 +171,7 @@ describe('ReactMount', () => {
     );
   });
 
-  it('should warn if render removes React-rendered children', () => {
+  it('should warn if render removes React-rendered children', async () => {
     const container = document.createElement('container');
 
     class Component extends React.Component {
@@ -198,7 +198,7 @@ describe('ReactMount', () => {
     );
   });
 
-  it('should warn if the unmounted node was rendered by another copy of React', () => {
+  it('should warn if the unmounted node was rendered by another copy of React', async () => {
     jest.resetModules();
     const ReactDOMOther = require('react-dom');
     const container = document.createElement('div');
@@ -227,7 +227,7 @@ describe('ReactMount', () => {
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('passes the correct callback context', () => {
+  it('passes the correct callback context', async () => {
     const container = document.createElement('div');
     let calls = 0;
 
@@ -267,7 +267,7 @@ describe('ReactMount', () => {
     expect(calls).toBe(5);
   });
 
-  it('initial mount of legacy root is sync inside batchedUpdates, as if it were wrapped in flushSync', () => {
+  it('initial mount of legacy root is sync inside batchedUpdates, as if it were wrapped in flushSync', async () => {
     const container1 = document.createElement('div');
     const container2 = document.createElement('div');
 
@@ -313,7 +313,7 @@ describe('ReactMount', () => {
       expect(mountPoint.nodeType).toBe(COMMENT_NODE);
     });
 
-    it('renders at a comment node', () => {
+    it('renders at a comment node', async () => {
       function Char(props) {
         return props.children;
       }

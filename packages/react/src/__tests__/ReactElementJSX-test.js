@@ -48,7 +48,7 @@ describe('ReactElement.jsx', () => {
     expect(element.constructor).toBe(object.constructor);
   });
 
-  it('should use default prop value when removing a prop', () => {
+  it('should use default prop value when removing a prop', async () => {
     class Component extends React.Component {
       render() {
         return JSXRuntime.jsx('span', {});
@@ -114,7 +114,7 @@ describe('ReactElement.jsx', () => {
     }
   });
 
-  it('throws when adding a prop (in dev) after element creation', () => {
+  it('throws when adding a prop (in dev) after element creation', async () => {
     const container = document.createElement('div');
     class Outer extends React.Component {
       render() {
@@ -155,7 +155,7 @@ describe('ReactElement.jsx', () => {
     expect(test.props.value).toBeNaN();
   });
 
-  it('should warn when `key` is being accessed on composite element', () => {
+  it('should warn when `key` is being accessed on composite element', async () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -183,7 +183,7 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('warns when a jsxs is passed something that is not an array', () => {
+  it('warns when a jsxs is passed something that is not an array', async () => {
     const container = document.createElement('div');
     expect(() =>
       ReactDOM.render(
@@ -209,7 +209,7 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('should warn when `ref` is being accessed', () => {
+  it('should warn when `ref` is being accessed', async () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -233,7 +233,7 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('should warn when unkeyed children are passed to jsx', () => {
+  it('should warn when unkeyed children are passed to jsx', async () => {
     const container = document.createElement('div');
 
     class Child extends React.Component {
@@ -262,7 +262,7 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('should warn when keys are passed as part of props', () => {
+  it('should warn when keys are passed as part of props', async () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -288,7 +288,7 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('should not warn when unkeyed children are passed to jsxs', () => {
+  it('should not warn when unkeyed children are passed to jsxs', async () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {

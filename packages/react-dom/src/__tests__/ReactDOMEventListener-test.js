@@ -22,7 +22,7 @@ describe('ReactDOMEventListener', () => {
   });
 
   describe('Propagation', () => {
-    it('should propagate events one level down', () => {
+    it('should propagate events one level down', async () => {
       const mouseOut = jest.fn();
       const onMouseOut = event => mouseOut(event.currentTarget);
 
@@ -53,7 +53,7 @@ describe('ReactDOMEventListener', () => {
       }
     });
 
-    it('should propagate events two levels down', () => {
+    it('should propagate events two levels down', async () => {
       const mouseOut = jest.fn();
       const onMouseOut = event => mouseOut(event.currentTarget);
 
@@ -93,7 +93,7 @@ describe('ReactDOMEventListener', () => {
     });
 
     // Regression test for https://github.com/facebook/react/issues/1105
-    it('should not get confused by disappearing elements', () => {
+    it('should not get confused by disappearing elements', async () => {
       const container = document.createElement('div');
       document.body.appendChild(container);
 
@@ -131,7 +131,7 @@ describe('ReactDOMEventListener', () => {
       }
     });
 
-    it('should batch between handlers from different roots', () => {
+    it('should batch between handlers from different roots', async () => {
       const mock = jest.fn();
 
       const childContainer = document.createElement('div');
@@ -188,7 +188,7 @@ describe('ReactDOMEventListener', () => {
     });
   });
 
-  it('should not fire duplicate events for a React DOM tree', () => {
+  it('should not fire duplicate events for a React DOM tree', async () => {
     const mouseOut = jest.fn();
     const onMouseOut = event => mouseOut(event.target);
 
@@ -229,7 +229,7 @@ describe('ReactDOMEventListener', () => {
   });
 
   // Regression test for https://github.com/facebook/react/pull/12877
-  it('should not fire form events twice', () => {
+  it('should not fire form events twice', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -284,7 +284,7 @@ describe('ReactDOMEventListener', () => {
   // This tests an implementation detail that submit/reset events are listened to
   // at the document level, which is necessary for event replaying to work.
   // They bubble in all modern browsers.
-  it('should not receive submit events if native, interim DOM handler prevents it', () => {
+  it('should not receive submit events if native, interim DOM handler prevents it', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -326,7 +326,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should dispatch loadstart only for media elements', () => {
+  it('should dispatch loadstart only for media elements', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -364,7 +364,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should not attempt to listen to unnecessary events on the top level', () => {
+  it('should not attempt to listen to unnecessary events on the top level', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -478,7 +478,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should dispatch load for embed elements', () => {
+  it('should dispatch load for embed elements', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -507,7 +507,7 @@ describe('ReactDOMEventListener', () => {
 
   // Unlike browsers, we delegate media events.
   // (This doesn't make a lot of sense but it would be a breaking change not to.)
-  it('should delegate media events even without a direct listener', () => {
+  it('should delegate media events even without a direct listener', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const handleVideoPlayDelegated = jest.fn();
@@ -533,7 +533,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should delegate dialog events even without a direct listener', () => {
+  it('should delegate dialog events even without a direct listener', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const onCancel = jest.fn();
@@ -566,7 +566,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should bubble non-native bubbling toggle events', () => {
+  it('should bubble non-native bubbling toggle events', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const onToggle = jest.fn();
@@ -589,7 +589,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should bubble non-native bubbling cancel/close events', () => {
+  it('should bubble non-native bubbling cancel/close events', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const onCancel = jest.fn();
@@ -619,7 +619,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should bubble non-native bubbling media events events', () => {
+  it('should bubble non-native bubbling media events events', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const onPlay = jest.fn();
@@ -642,7 +642,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should bubble non-native bubbling invalid events', () => {
+  it('should bubble non-native bubbling invalid events', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const onInvalid = jest.fn();
@@ -665,7 +665,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should handle non-bubbling capture events correctly', () => {
+  it('should handle non-bubbling capture events correctly', async () => {
     const container = document.createElement('div');
     const innerRef = React.createRef();
     const outerRef = React.createRef();
@@ -712,7 +712,7 @@ describe('ReactDOMEventListener', () => {
   // We're moving towards aligning more closely with the browser.
   // Currently we emulate bubbling for all non-bubbling events except scroll.
   // We may expand this list in the future, removing emulated bubbling altogether.
-  it('should not emulate bubbling of scroll events', () => {
+  it('should not emulate bubbling of scroll events', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const log = [];
@@ -783,7 +783,7 @@ describe('ReactDOMEventListener', () => {
   // We're moving towards aligning more closely with the browser.
   // Currently we emulate bubbling for all non-bubbling events except scroll.
   // We may expand this list in the future, removing emulated bubbling altogether.
-  it('should not emulate bubbling of scroll events (no own handler)', () => {
+  it('should not emulate bubbling of scroll events (no own handler)', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const log = [];
@@ -841,7 +841,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should subscribe to scroll during updates', () => {
+  it('should subscribe to scroll during updates', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const log = [];
@@ -992,7 +992,7 @@ describe('ReactDOMEventListener', () => {
   });
 
   // Regression test.
-  it('should subscribe to scroll during hydration', () => {
+  it('should subscribe to scroll during hydration', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const log = [];
@@ -1083,7 +1083,7 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should not subscribe to selectionchange twice', () => {
+  it('should not subscribe to selectionchange twice', async () => {
     const log = [];
 
     const originalDocAddEventListener = document.addEventListener;

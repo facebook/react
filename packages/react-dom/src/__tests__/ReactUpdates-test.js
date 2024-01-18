@@ -113,7 +113,7 @@ describe('ReactUpdates', () => {
     expect(updateCount).toBe(1);
   });
 
-  it('should batch state and props together', () => {
+  it('should batch state and props together', async () => {
     let updateCount = 0;
 
     class Component extends React.Component {
@@ -686,7 +686,7 @@ describe('ReactUpdates', () => {
     /* eslint-enable indent */
   });
 
-  it('should flush updates in the correct order across roots', () => {
+  it('should flush updates in the correct order across roots', async () => {
     const instances = [];
     const updates = [];
 
@@ -816,7 +816,7 @@ describe('ReactUpdates', () => {
     expect(ReactDOM.findDOMNode(a).textContent).toBe('A1');
   });
 
-  it('calls componentWillReceiveProps setState callback properly', () => {
+  it('calls componentWillReceiveProps setState callback properly', async () => {
     let callbackCount = 0;
 
     class A extends React.Component {
@@ -1017,7 +1017,7 @@ describe('ReactUpdates', () => {
     });
   });
 
-  it('does not update one component twice in a batch (#6371)', () => {
+  it('does not update one component twice in a batch (#6371)', async () => {
     let callbacks = [];
     function emitChange() {
       callbacks.forEach(c => c());
@@ -1074,7 +1074,7 @@ describe('ReactUpdates', () => {
     expect(result).toEqual(42);
   });
 
-  it('unmounts and remounts a root in the same batch', () => {
+  it('unmounts and remounts a root in the same batch', async () => {
     const container = document.createElement('div');
     ReactDOM.render(<span>a</span>, container);
     ReactDOM.unstable_batchedUpdates(function () {
@@ -1084,7 +1084,7 @@ describe('ReactUpdates', () => {
     expect(container.textContent).toBe('b');
   });
 
-  it('handles reentrant mounting in synchronous mode', () => {
+  it('handles reentrant mounting in synchronous mode', async () => {
     let mounts = 0;
     class Editor extends React.Component {
       render() {
@@ -1121,7 +1121,7 @@ describe('ReactUpdates', () => {
     expect(mounts).toBe(1);
   });
 
-  it('mounts and unmounts are sync even in a batch', () => {
+  it('mounts and unmounts are sync even in a batch', async () => {
     const ops = [];
     const container = document.createElement('div');
     ReactDOM.unstable_batchedUpdates(() => {
@@ -1136,7 +1136,7 @@ describe('ReactUpdates', () => {
   it(
     'in legacy mode, updates in componentWillUpdate and componentDidUpdate ' +
       'should both flush in the immediately subsequent commit',
-    () => {
+    async () => {
       const ops = [];
       class Foo extends React.Component {
         state = {a: false, b: false};
@@ -1179,7 +1179,7 @@ describe('ReactUpdates', () => {
   it(
     'in legacy mode, updates in componentWillUpdate and componentDidUpdate ' +
       '(on a sibling) should both flush in the immediately subsequent commit',
-    () => {
+    async () => {
       const ops = [];
       class Foo extends React.Component {
         state = {a: false};
@@ -1247,7 +1247,7 @@ describe('ReactUpdates', () => {
     },
   );
 
-  it('uses correct base state for setState inside render phase', () => {
+  it('uses correct base state for setState inside render phase', async () => {
     const ops = [];
 
     class Foo extends React.Component {
@@ -1270,7 +1270,7 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['base: 0, memoized: 0', 'base: 1, memoized: 1']);
   });
 
-  it('does not re-render if state update is null', () => {
+  it('does not re-render if state update is null', async () => {
     const container = document.createElement('div');
 
     let instance;
@@ -1290,7 +1290,7 @@ describe('ReactUpdates', () => {
   });
 
   // Will change once we switch to async by default
-  it('synchronously renders hidden subtrees', () => {
+  it('synchronously renders hidden subtrees', async () => {
     const container = document.createElement('div');
     let ops = [];
 
@@ -1383,7 +1383,7 @@ describe('ReactUpdates', () => {
     expect(hiddenDiv.innerHTML).toBe('<p>bar 1</p>');
   });
 
-  it('can render ridiculously large number of roots without triggering infinite update loop error', () => {
+  it('can render ridiculously large number of roots without triggering infinite update loop error', async () => {
     class Foo extends React.Component {
       componentDidMount() {
         const limit = 1200;
@@ -1407,7 +1407,7 @@ describe('ReactUpdates', () => {
     ReactDOM.render(<Foo />, container);
   });
 
-  it('resets the update counter for unrelated updates', () => {
+  it('resets the update counter for unrelated updates', async () => {
     const container = document.createElement('div');
     const ref = React.createRef();
 
@@ -1447,7 +1447,7 @@ describe('ReactUpdates', () => {
     expect(ref.current).toBe(null);
   });
 
-  it('does not fall into an infinite update loop', () => {
+  it('does not fall into an infinite update loop', async () => {
     class NonTerminating extends React.Component {
       state = {step: 0};
       componentDidMount() {
@@ -1472,7 +1472,7 @@ describe('ReactUpdates', () => {
     }).toThrow('Maximum');
   });
 
-  it('does not fall into an infinite update loop with useLayoutEffect', () => {
+  it('does not fall into an infinite update loop with useLayoutEffect', async () => {
     function NonTerminating() {
       const [step, setStep] = React.useState(0);
       React.useLayoutEffect(() => {
@@ -1487,7 +1487,7 @@ describe('ReactUpdates', () => {
     }).toThrow('Maximum');
   });
 
-  it('can recover after falling into an infinite update loop', () => {
+  it('can recover after falling into an infinite update loop', async () => {
     class NonTerminating extends React.Component {
       state = {step: 0};
       componentDidMount() {
@@ -1527,7 +1527,7 @@ describe('ReactUpdates', () => {
     expect(container.textContent).toBe('1');
   });
 
-  it('does not fall into mutually recursive infinite update loop with same container', () => {
+  it('does not fall into mutually recursive infinite update loop with same container', async () => {
     // Note: this test would fail if there were two or more different roots.
 
     class A extends React.Component {
@@ -1554,7 +1554,7 @@ describe('ReactUpdates', () => {
     }).toThrow('Maximum');
   });
 
-  it('does not fall into an infinite error loop', () => {
+  it('does not fall into an infinite error loop', async () => {
     function BadRender() {
       throw new Error('error');
     }
@@ -1587,7 +1587,7 @@ describe('ReactUpdates', () => {
     }).toThrow('Maximum');
   });
 
-  it('can schedule ridiculously many updates within the same batch without triggering a maximum update error', () => {
+  it('can schedule ridiculously many updates within the same batch without triggering a maximum update error', async () => {
     const subscribers = [];
 
     class Child extends React.Component {
