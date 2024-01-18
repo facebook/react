@@ -7860,6 +7860,11 @@ flow-bin@^0.226.0:
   resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.226.0.tgz#b245847b749ab20756ef74c91d96619f68d18430"
   integrity sha512-q8hXSRhZ+I14jS0KGDDsPYCvPufvBexk6nJXSOsSP6DgCuXbvCOByWhsXRAjPtmXKmO8v9RKSJm1kRaWaf0fZw==
 
+flow-enums-runtime@^0.0.6:
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/flow-enums-runtime/-/flow-enums-runtime-0.0.6.tgz#5bb0cd1b0a3e471330f4d109039b7eba5cb3e787"
+  integrity sha512-3PYnM29RFXwvAN6Pc/scUfkI7RwhQ/xqyLUyPNlXUp9S40zI8nup9tUSrTLSVnWGBN38FNiGWbwZOB6uR4OGdw==
+
 flow-remove-types@^2.226.0:
   version "2.226.0"
   resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.226.0.tgz#08ff7e195137ce43042e11bfa04303184971dac2"
@@ -8593,7 +8598,7 @@ has@^1.0.1, has@^1.0.3:
   dependencies:
     function-bind "^1.1.1"
 
-hermes-eslint@^0.18.2:
+hermes-eslint@0.18.2, hermes-eslint@^0.18.2:
   version "0.18.2"
   resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.18.2.tgz#af09ea1700eb32502caf135b181ffed6091ccb72"
   integrity sha512-FWKVoHyHaXRjOfjoTgoc4OTkC+KThYdhLFyggoXIYLMDHF9hkg5yHSih3cyK3hT73te6+aaGHePzwaOai69uoA==
@@ -8613,6 +8618,18 @@ hermes-parser@0.18.2, hermes-parser@^0.18.2:
   integrity sha512-1eQfvib+VPpgBZ2zYKQhpuOjw1tH+Emuib6QmjkJWJMhyjM8xnXMvA+76o9LhF0zOAJDZgPfQhg43cyXEyl5Ew==
   dependencies:
     hermes-estree "0.18.2"
+
+hermes-transform@^0.18.2:
+  version "0.18.2"
+  resolved "https://registry.yarnpkg.com/hermes-transform/-/hermes-transform-0.18.2.tgz#ab0dbf586b76980dadc2b396ee7936b206cc1904"
+  integrity sha512-cM5J6cnC/9d7mIjUeUzv2/3nmGjbevA3FemPjevgWG5udEIhlJB5z5zwcrkVdp16W/Q6bVJdaT1pc4LPmlzsCA==
+  dependencies:
+    "@babel/code-frame" "^7.16.0"
+    esquery "^1.4.0"
+    flow-enums-runtime "^0.0.6"
+    hermes-eslint "0.18.2"
+    hermes-estree "0.18.2"
+    hermes-parser "0.18.2"
 
 homedir-polyfill@^1.0.0, homedir-polyfill@^1.0.1:
   version "1.0.3"

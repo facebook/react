@@ -20,6 +20,7 @@ const esNextPaths = [
   'packages/react-interactions/**/*.js',
   'packages/shared/**/*.js',
   // Shims and Flow environment
+  'scripts/codemod/*.js',
   'scripts/flow/*.js',
   'scripts/rollup/shims/**/*.js',
 ];
