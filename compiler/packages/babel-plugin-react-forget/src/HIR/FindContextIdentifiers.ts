@@ -8,8 +8,19 @@
 import type { NodePath } from "@babel/traverse";
 import type * as t from "@babel/types";
 import { CompilerError } from "../CompilerError";
-import { Set_union } from "../Utils/utils";
+import { getOrInsertDefault } from "../Utils/utils";
 import { GeneratedSource } from "./HIR";
+
+type IdentifierInfo = {
+  reassigned: boolean;
+  reassignedByInnerFn: boolean;
+  referencedByInnerFn: boolean;
+};
+const DEFAULT_IDENTIFIER_INFO: IdentifierInfo = {
+  reassigned: false,
+  reassignedByInnerFn: false,
+  referencedByInnerFn: false,
+};
 
 type BabelFunction =
   | NodePath<t.FunctionDeclaration>
@@ -18,8 +29,7 @@ type BabelFunction =
   | NodePath<t.ObjectMethod>;
 type FindContextIdentifierState = {
   currentFn: Array<BabelFunction>;
-  reassigned: Set<t.Identifier>;
-  referenced: Set<t.Identifier>;
+  identifiers: Map<t.Identifier, IdentifierInfo>;
 };
 
 const withFunctionScope = {
@@ -39,8 +49,7 @@ export function findContextIdentifiers(
 ): Set<t.Identifier> {
   const state: FindContextIdentifierState = {
     currentFn: [],
-    reassigned: new Set(),
-    referenced: new Set(),
+    identifiers: new Map(),
   };
 
   func.traverse<FindContextIdentifierState>(
@@ -54,38 +63,59 @@ export function findContextIdentifiers(
         state: FindContextIdentifierState
       ): void {
         const left = path.get("left");
-        handleAssignment(state.reassigned, left);
+        const currentFn = state.currentFn.at(-1) ?? null;
+        handleAssignment(currentFn, state.identifiers, left);
       },
       Identifier(
         path: NodePath<t.Identifier>,
         state: FindContextIdentifierState
       ): void {
-        const currentFn = state.currentFn.at(-1);
-        if (currentFn !== undefined)
-          handleIdentifier(currentFn, state.referenced, path);
+        const currentFn = state.currentFn.at(-1) ?? null;
+        if (path.isReferencedIdentifier()) {
+          handleIdentifier(currentFn, state.identifiers, path);
+        }
       },
     },
     state
   );
-  return Set_union(state.reassigned, state.referenced);
+
+  const result = new Set<t.Identifier>();
+  for (const [id, info] of state.identifiers.entries()) {
+    if (info.reassignedByInnerFn) {
+      result.add(id);
+    } else if (info.reassigned && info.referencedByInnerFn) {
+      result.add(id);
+    }
+  }
+  return result;
 }
 
 function handleIdentifier(
-  currentFn: BabelFunction,
-  referenced: Set<t.Identifier>,
+  currentFn: BabelFunction | null,
+  identifiers: Map<t.Identifier, IdentifierInfo>,
   path: NodePath<t.Identifier>
 ): void {
   const name = path.node.name;
   const binding = path.scope.getBinding(name);
-  const bindingAboveLambdaScope = currentFn.scope.parent.getBinding(name);
+  if (binding == null) {
+    return;
+  }
+  const identifier = getOrInsertDefault(identifiers, binding.identifier, {
+    ...DEFAULT_IDENTIFIER_INFO,
+  });
 
-  if (binding != null && binding === bindingAboveLambdaScope) {
-    referenced.add(binding.identifier);
+  if (currentFn != null) {
+    const bindingAboveLambdaScope = currentFn.scope.parent.getBinding(name);
+
+    if (binding === bindingAboveLambdaScope) {
+      identifier.referencedByInnerFn = true;
+    }
   }
 }
 
 function handleAssignment(
-  reassigned: Set<t.Identifier>,
+  currentFn: BabelFunction | null,
+  identifiers: Map<t.Identifier, IdentifierInfo>,
   lvalPath: NodePath<t.LVal>
 ): void {
   /*
@@ -98,8 +128,20 @@ function handleAssignment(
       const path = lvalPath as NodePath<t.Identifier>;
       const name = path.node.name;
       const binding = path.scope.getBinding(name);
-      if (binding != null) {
-        reassigned.add(binding.identifier);
+      if (binding == null) {
+        break;
+      }
+      const state = getOrInsertDefault(identifiers, binding.identifier, {
+        ...DEFAULT_IDENTIFIER_INFO,
+      });
+      state.reassigned = true;
+
+      if (currentFn != null) {
+        const bindingAboveLambdaScope = currentFn.scope.parent.getBinding(name);
+
+        if (binding === bindingAboveLambdaScope) {
+          state.reassignedByInnerFn = true;
+        }
       }
       break;
     }
@@ -107,7 +149,7 @@ function handleAssignment(
       const path = lvalPath as NodePath<t.ArrayPattern>;
       for (const element of path.get("elements")) {
         if (nonNull(element)) {
-          handleAssignment(reassigned, element);
+          handleAssignment(currentFn, identifiers, element);
         }
       }
       break;
@@ -123,7 +165,7 @@ function handleAssignment(
             loc: valuePath.node.loc ?? GeneratedSource,
             suggestions: null,
           });
-          handleAssignment(reassigned, valuePath);
+          handleAssignment(currentFn, identifiers, valuePath);
         } else {
           CompilerError.invariant(property.isRestElement(), {
             reason: `[FindContextIdentifiers] Invalid assumptions for babel types.`,
@@ -131,7 +173,7 @@ function handleAssignment(
             loc: property.node.loc ?? GeneratedSource,
             suggestions: null,
           });
-          handleAssignment(reassigned, property);
+          handleAssignment(currentFn, identifiers, property);
         }
       }
       break;
@@ -139,12 +181,12 @@ function handleAssignment(
     case "AssignmentPattern": {
       const path = lvalPath as NodePath<t.AssignmentPattern>;
       const left = path.get("left");
-      handleAssignment(reassigned, left);
+      handleAssignment(currentFn, identifiers, left);
       break;
     }
     case "RestElement": {
       const path = lvalPath as NodePath<t.RestElement>;
-      handleAssignment(reassigned, path.get("argument"));
+      handleAssignment(currentFn, identifiers, path.get("argument"));
       break;
     }
     case "MemberExpression": {

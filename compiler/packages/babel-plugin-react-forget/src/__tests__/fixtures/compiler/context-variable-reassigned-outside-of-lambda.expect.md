@@ -2,40 +2,48 @@
 ## Input
 
 ```javascript
-// @debug
+import { Stringify } from "shared-runtime";
+
 function Component(props) {
   let x = null;
-  const onChange = (e) => {
+  const callback = () => {
     console.log(x);
   };
   x = {};
-  return <Foo onChange={onChange} />;
+  return <Stringify callback={callback} shouldInvokeFns={true} />;
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
 
 ```
 
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @debug
+import { unstable_useMemoCache as useMemoCache } from "react";
+import { Stringify } from "shared-runtime";
+
 function Component(props) {
   const $ = useMemoCache(2);
-  let onChange;
+  let callback;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     let x;
     x = null;
-    onChange = (e) => {
+    callback = () => {
       console.log(x);
     };
 
     x = {};
-    $[0] = onChange;
+    $[0] = callback;
   } else {
-    onChange = $[0];
+    callback = $[0];
   }
   let t0;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Foo onChange={onChange} />;
+    t0 = <Stringify callback={callback} shouldInvokeFns={true} />;
     $[1] = t0;
   } else {
     t0 = $[1];
@@ -43,5 +51,13 @@ function Component(props) {
   return t0;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
+
 ```
       
+### Eval output
+(kind: ok) <div>{"callback":{"kind":"Function"},"shouldInvokeFns":true}</div>
+logs: [{}]

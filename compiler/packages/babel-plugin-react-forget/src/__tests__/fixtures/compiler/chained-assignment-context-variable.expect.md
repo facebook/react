@@ -2,15 +2,22 @@
 ## Input
 
 ```javascript
+import { makeArray } from "shared-runtime";
+
 function Component() {
   let x,
     y = (x = {});
   const foo = () => {
-    x = getObject();
+    x = makeArray();
   };
   foo();
   return [y, x];
 }
+
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
 
 ```
 
@@ -18,6 +25,8 @@ function Component() {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { makeArray } from "shared-runtime";
+
 function Component() {
   const $ = useMemoCache(3);
   let x;
@@ -26,7 +35,7 @@ function Component() {
     y = x = {};
 
     const foo = () => {
-      x = getObject();
+      x = makeArray();
     };
 
     foo();
@@ -46,5 +55,12 @@ function Component() {
   return t0;
 }
 
+export const FIXTURE_ENTRYPOINT = {
+  fn: Component,
+  params: [{}],
+};
+
 ```
       
+### Eval output
+(kind: ok) [{},[]]

@@ -127,8 +127,8 @@ export function makeObject_Primitives(): StringKeyedObject {
   return { a: 0, b: "value1", c: true };
 }
 
-export function makeArray<T>(value: T): Array<T> {
-  return [value];
+export function makeArray<T>(...values: Array<T>): Array<T> {
+  return [...values];
 }
 
 export function addOne(value: number): number {
@@ -171,6 +171,18 @@ export function invoke<T extends Array<any>, ReturnType>(
   ...params: T
 ) {
   return fn(...params);
+}
+
+export function conditionalInvoke<T extends Array<any>, ReturnType>(
+  shouldInvoke: boolean,
+  fn: (...input: T) => ReturnType,
+  ...params: T
+) {
+  if (shouldInvoke) {
+    return fn(...params);
+  } else {
+    return null;
+  }
 }
 
 /**
