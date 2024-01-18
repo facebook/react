@@ -11,71 +11,44 @@ import { CompilerError } from "../CompilerError";
 import { Set_union } from "../Utils/utils";
 import { GeneratedSource } from "./HIR";
 
+type BabelFunction =
+  | NodePath<t.FunctionDeclaration>
+  | NodePath<t.FunctionExpression>
+  | NodePath<t.ArrowFunctionExpression>
+  | NodePath<t.ObjectMethod>;
 type FindContextIdentifierState = {
-  currentLambda: Array<
-    | NodePath<t.FunctionDeclaration>
-    | NodePath<t.FunctionExpression>
-    | NodePath<t.ArrowFunctionExpression>
-    | NodePath<t.ObjectMethod>
-  >;
+  currentFn: Array<BabelFunction>;
   reassigned: Set<t.Identifier>;
   referenced: Set<t.Identifier>;
+};
+
+const withFunctionScope = {
+  enter: function (
+    path: BabelFunction,
+    state: FindContextIdentifierState
+  ): void {
+    state.currentFn.push(path);
+  },
+  exit: function (_: BabelFunction, state: FindContextIdentifierState): void {
+    state.currentFn.pop();
+  },
 };
 
 export function findContextIdentifiers(
   func: NodePath<t.Function>
 ): Set<t.Identifier> {
   const state: FindContextIdentifierState = {
-    currentLambda: [],
+    currentFn: [],
     reassigned: new Set(),
     referenced: new Set(),
   };
 
   func.traverse<FindContextIdentifierState>(
     {
-      FunctionDeclaration: {
-        enter(
-          fn: NodePath<t.FunctionDeclaration>,
-          state: FindContextIdentifierState
-        ): void {
-          state.currentLambda.push(fn);
-        },
-        exit(
-          fn: NodePath<t.FunctionDeclaration>,
-          state: FindContextIdentifierState
-        ): void {
-          state.currentLambda.pop();
-        },
-      },
-      FunctionExpression: {
-        enter(
-          fn: NodePath<t.FunctionExpression>,
-          state: FindContextIdentifierState
-        ): void {
-          state.currentLambda.push(fn);
-        },
-        exit(
-          _fn: NodePath<t.FunctionExpression>,
-          state: FindContextIdentifierState
-        ): void {
-          state.currentLambda.pop();
-        },
-      },
-
-      ArrowFunctionExpression: {
-        enter(
-          fn: NodePath<t.ArrowFunctionExpression>,
-          state: FindContextIdentifierState
-        ): void {
-          state.currentLambda.push(fn);
-        },
-        exit(
-          _fn: NodePath<t.ArrowFunctionExpression>,
-          state: FindContextIdentifierState
-        ): void {
-          state.currentLambda.pop();
-        },
-      },
+      FunctionDeclaration: withFunctionScope,
+      FunctionExpression: withFunctionScope,
+      ArrowFunctionExpression: withFunctionScope,
+      ObjectMethod: withFunctionScope,
       AssignmentExpression(
         path: NodePath<t.AssignmentExpression>,
         state: FindContextIdentifierState
@@ -83,19 +56,13 @@ export function findContextIdentifiers(
         const left = path.get("left");
         handleAssignment(state.reassigned, left);
       },
-      ObjectMethod(
-        fn: NodePath<t.ObjectMethod>,
-        state: FindContextIdentifierState
-      ): void {
-        state.currentLambda.push(fn);
-      },
       Identifier(
         path: NodePath<t.Identifier>,
         state: FindContextIdentifierState
       ): void {
-        const currentLambda = state.currentLambda.at(-1);
-        if (currentLambda !== undefined)
-          handleIdentifier(currentLambda, state.referenced, path);
+        const currentFn = state.currentFn.at(-1);
+        if (currentFn !== undefined)
+          handleIdentifier(currentFn, state.referenced, path);
       },
     },
     state
@@ -104,17 +71,13 @@ export function findContextIdentifiers(
 }
 
 function handleIdentifier(
-  currentLambda:
-    | NodePath<t.FunctionDeclaration>
-    | NodePath<t.FunctionExpression>
-    | NodePath<t.ArrowFunctionExpression>
-    | NodePath<t.ObjectMethod>,
+  currentFn: BabelFunction,
   referenced: Set<t.Identifier>,
   path: NodePath<t.Identifier>
 ): void {
   const name = path.node.name;
   const binding = path.scope.getBinding(name);
-  const bindingAboveLambdaScope = currentLambda.scope.parent.getBinding(name);
+  const bindingAboveLambdaScope = currentFn.scope.parent.getBinding(name);
 
   if (binding != null && binding === bindingAboveLambdaScope) {
     referenced.add(binding.identifier);
@@ -126,7 +89,7 @@ function handleAssignment(
   lvalPath: NodePath<t.LVal>
 ): void {
   /*
-   * Find all reassignments to identifiers declared outside of currentLambda
+   * Find all reassignments to identifiers declared outside of currentFn
    * This closely follows destructuring assignment assumptions and logic in BuildHIR
    */
   const lvalNode = lvalPath.node;
