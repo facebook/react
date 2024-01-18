@@ -22,13 +22,12 @@ var Scheduler = require("scheduler"),
   React = require("react"),
   assign = Object.assign;
 function formatProdErrorMessage(code) {
-  for (
-    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
-      i = 1;
-    i < arguments.length;
-    i++
-  )
-    url += "&args[]=" + encodeURIComponent(arguments[i]);
+  var url = "https://react.dev/errors/" + code;
+  if (1 < arguments.length) {
+    url += "?args[]=" + encodeURIComponent(arguments[1]);
+    for (var i = 2; i < arguments.length; i++)
+      url += "&args[]=" + encodeURIComponent(arguments[i]);
+  }
   return (
     "Minified React error #" +
     code +
@@ -17365,7 +17364,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1884 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-3a859445",
+  version: "18.3.0-www-classic-227fb93d",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17409,7 +17408,7 @@ var devToolsConfig$jscomp$inline_1884 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-3a859445"
+  reconcilerVersion: "18.3.0-www-classic-227fb93d"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17733,7 +17732,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-3a859445";
+exports.version = "18.3.0-www-classic-227fb93d";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

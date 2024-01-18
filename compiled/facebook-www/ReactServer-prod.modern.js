@@ -23,13 +23,12 @@ var assign = Object.assign,
   },
   ReactServerSharedInternals = { ReactCurrentCache: ReactCurrentCache };
 function formatProdErrorMessage(code) {
-  for (
-    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
-      i = 1;
-    i < arguments.length;
-    i++
-  )
-    url += "&args[]=" + encodeURIComponent(arguments[i]);
+  var url = "https://react.dev/errors/" + code;
+  if (1 < arguments.length) {
+    url += "?args[]=" + encodeURIComponent(arguments[1]);
+    for (var i = 2; i < arguments.length; i++)
+      url += "&args[]=" + encodeURIComponent(arguments[i]);
+  }
   return (
     "Minified React error #" +
     code +
@@ -449,4 +448,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-40768a61";
+exports.version = "18.3.0-www-modern-ac3cce8e";

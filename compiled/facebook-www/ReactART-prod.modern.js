@@ -45,13 +45,12 @@ function _assertThisInitialized(self) {
 }
 var assign = Object.assign;
 function formatProdErrorMessage(code) {
-  for (
-    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
-      i = 1;
-    i < arguments.length;
-    i++
-  )
-    url += "&args[]=" + encodeURIComponent(arguments[i]);
+  var url = "https://react.dev/errors/" + code;
+  if (1 < arguments.length) {
+    url += "?args[]=" + encodeURIComponent(arguments[1]);
+    for (var i = 2; i < arguments.length; i++)
+      url += "&args[]=" + encodeURIComponent(arguments[i]);
+  }
   return (
     "Minified React error #" +
     code +
@@ -9958,7 +9957,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-31c1a5e7",
+    version: "18.3.0-www-modern-c36c8f6b",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1305 = {
@@ -9989,7 +9988,7 @@ var internals$jscomp$inline_1305 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-31c1a5e7"
+  reconcilerVersion: "18.3.0-www-modern-c36c8f6b"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1306 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

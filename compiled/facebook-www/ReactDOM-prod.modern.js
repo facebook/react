@@ -22,13 +22,12 @@ var React = require("react"),
     Dispatcher: { current: null }
   };
 function formatProdErrorMessage(code) {
-  for (
-    var url = "https://reactjs.org/docs/error-decoder.html?invariant=" + code,
-      i = 1;
-    i < arguments.length;
-    i++
-  )
-    url += "&args[]=" + encodeURIComponent(arguments[i]);
+  var url = "https://react.dev/errors/" + code;
+  if (1 < arguments.length) {
+    url += "?args[]=" + encodeURIComponent(arguments[1]);
+    for (var i = 2; i < arguments.length; i++)
+      url += "&args[]=" + encodeURIComponent(arguments[i]);
+  }
   return (
     "Minified React error #" +
     code +
@@ -16119,7 +16118,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1758 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-75306c51",
+  version: "18.3.0-www-modern-0d510968",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2109 = {
@@ -16150,7 +16149,7 @@ var internals$jscomp$inline_2109 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-75306c51"
+  reconcilerVersion: "18.3.0-www-modern-0d510968"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2110 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16415,4 +16414,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-75306c51";
+exports.version = "18.3.0-www-modern-0d510968";
