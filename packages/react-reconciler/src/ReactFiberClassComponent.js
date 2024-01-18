@@ -78,6 +78,8 @@ const fakeInternalInstance: {
 let didWarnAboutStateAssignmentForComponent;
 let didWarnAboutUninitializedState;
 let didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate;
+let didWarnAboutLegacyChildContextTypes;
+let didWarnAboutLegacyContextTypes;
 let didWarnAboutLegacyLifecyclesAndDerivedState;
 let didWarnAboutUndefinedDerivedState;
 let didWarnAboutDirectlyAssigningPropsToState;
@@ -89,6 +91,8 @@ if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = new Set<string>();
   didWarnAboutUninitializedState = new Set<string>();
   didWarnAboutGetSnapshotBeforeUpdateWithoutDidUpdate = new Set<string>();
+  didWarnAboutLegacyChildContextTypes = new Set<string>();
+  didWarnAboutLegacyContextTypes = new Set<string>();
   didWarnAboutLegacyLifecyclesAndDerivedState = new Set<string>();
   didWarnAboutDirectlyAssigningPropsToState = new Set<string>();
   didWarnAboutUndefinedDerivedState = new Set<string>();
@@ -429,6 +433,27 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         console.error(
           'contextTypes was defined as an instance property on %s. Use a static ' +
             'property to define contextTypes instead.',
+          name,
+        );
+      }
+
+      if (
+        ctor.childContextTypes &&
+        !didWarnAboutLegacyChildContextTypes.has(ctor)
+      ) {
+        didWarnAboutLegacyChildContextTypes.add(ctor);
+        console.warn(
+          '%s uses the legacy childContextTypes API which will be removed ' +
+            'in a future version. Use React.createContext() instead.',
+          name,
+        );
+      }
+      if (ctor.contextTypes && !didWarnAboutLegacyContextTypes.has(ctor)) {
+        didWarnAboutLegacyContextTypes.add(ctor);
+        console.warn(
+          '%s uses the legacy contextTypes API which will be removed in a ' +
+            'future version. Use React.createContext() with static ' +
+            'contextType instead.',
           name,
         );
       }
