@@ -97,10 +97,48 @@ export function inferReactivePlaces(fn: HIRFunction): void {
     includeThrowsAsExitNode: false,
   });
   const postDominatorFrontierCache = new Map<BlockId, Set<BlockId>>();
+
+  function isReactiveControlledBlock(id: BlockId): boolean {
+    let controlBlocks = postDominatorFrontierCache.get(id);
+    if (controlBlocks === undefined) {
+      controlBlocks = postDominatorFrontier(fn, postDominators, id);
+      postDominatorFrontierCache.set(id, controlBlocks);
+    }
+    for (const blockId of controlBlocks) {
+      const controlBlock = fn.body.blocks.get(blockId)!;
+      switch (controlBlock.terminal.kind) {
+        case "if":
+        case "branch": {
+          if (reactiveIdentifiers.isReactive(controlBlock.terminal.test)) {
+            return true;
+          }
+          break;
+        }
+        case "switch": {
+          if (reactiveIdentifiers.isReactive(controlBlock.terminal.test)) {
+            return true;
+          }
+          for (const case_ of controlBlock.terminal.cases) {
+            if (
+              case_.test !== null &&
+              reactiveIdentifiers.isReactive(case_.test)
+            ) {
+              return true;
+            }
+          }
+          break;
+        }
+      }
+    }
+    return false;
+  }
+
   const hasLoop = hasBackEdge(fn);
   do {
     const identifierMapping = new Map<Identifier, Identifier>();
     for (const [, block] of fn.body.blocks) {
+      let hasReactiveControl = isReactiveControlledBlock(block.id);
+
       for (const phi of block.phis) {
         if (reactiveIdentifiers.isReactiveIdentifier(phi.id)) {
           // Already marked reactive on a previous pass
@@ -116,48 +154,10 @@ export function inferReactivePlaces(fn: HIRFunction): void {
         if (isPhiReactive) {
           reactiveIdentifiers.markReactiveIdentifier(phi.id);
         } else {
-          // check to see if it has a reactive control dependency
-          for (const [pred, _operand] of phi.operands) {
-            let controlBlocks = postDominatorFrontierCache.get(pred);
-            if (controlBlocks === undefined) {
-              controlBlocks = postDominatorFrontier(fn, postDominators, pred);
-              postDominatorFrontierCache.set(pred, controlBlocks);
-            }
-            control: for (const blockId of controlBlocks) {
-              const controlBlock = fn.body.blocks.get(blockId)!;
-              switch (controlBlock.terminal.kind) {
-                case "if":
-                case "branch": {
-                  if (
-                    reactiveIdentifiers.isReactive(controlBlock.terminal.test)
-                  ) {
-                    // control dependency is reactive
-                    reactiveIdentifiers.markReactiveIdentifier(phi.id);
-                    break control;
-                  }
-                  break;
-                }
-                case "switch": {
-                  if (
-                    reactiveIdentifiers.isReactive(controlBlock.terminal.test)
-                  ) {
-                    // control dependency is reactive
-                    reactiveIdentifiers.markReactiveIdentifier(phi.id);
-                    break control;
-                  }
-                  for (const case_ of controlBlock.terminal.cases) {
-                    if (
-                      case_.test !== null &&
-                      reactiveIdentifiers.isReactive(case_.test)
-                    ) {
-                      // control dependency is reactive
-                      reactiveIdentifiers.markReactiveIdentifier(phi.id);
-                      break control;
-                    }
-                  }
-                  break;
-                }
-              }
+          for (const [pred] of phi.operands) {
+            if (isReactiveControlledBlock(pred)) {
+              reactiveIdentifiers.markReactiveIdentifier(phi.id);
+              break;
             }
           }
         }
@@ -197,7 +197,8 @@ export function inferReactivePlaces(fn: HIRFunction): void {
             }
             reactiveIdentifiers.markReactive(lvalue);
           }
-
+        }
+        if (hasReactiveInput || hasReactiveControl) {
           for (const operand of eachInstructionValueOperand(value)) {
             switch (operand.effect) {
               case Effect.Capture:
