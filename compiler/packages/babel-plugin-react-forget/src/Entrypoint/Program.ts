@@ -481,6 +481,28 @@ function isMemoCallback(path: NodePath<t.Expression>): boolean {
   );
 }
 
+function isValidComponentParams(
+  params: Array<NodePath<t.Identifier | t.Pattern | t.RestElement>>
+): boolean {
+  if (params.length === 0) {
+    return true;
+  } else if (params.length === 1) {
+    return !params[0].isRestElement();
+  } else if (params.length === 2) {
+    // check if second param might be a ref
+    if (params[1].isIdentifier()) {
+      const { name } = params[1].node;
+      return name.includes("ref") || name.includes("Ref");
+    }
+    /**
+     * Otherwise, avoid helper functions that take more than one argument.
+     * Helpers are _usually_ named with lowercase, but some code may
+     * violate this rule
+     */
+  }
+  return false;
+}
+
 /*
  * Adapted from the ESLint rule at
  * https://github.com/facebook/react/blob/main/packages/eslint-plugin-react-hooks/src/RulesOfHooks.js#L90-L103
@@ -495,13 +517,7 @@ function isComponentOrHookLike(
   if (functionName !== null && isComponentName(functionName)) {
     return (
       // As an added check we also look for hook invocations or JSX
-      callsHooksOrCreatesJsx(node) &&
-      /*
-       * and avoid helper functions that take more than one argument
-       * helpers are _usually_ named with lowercase, but some code may
-       * violate this rule
-       */
-      node.get("params").length <= 1
+      callsHooksOrCreatesJsx(node) && isValidComponentParams(node.get("params"))
     );
   } else if (functionName !== null && isHook(functionName)) {
     // Hooks have hook invocations or JSX, but can take any # of arguments
