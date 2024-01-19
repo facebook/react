@@ -17,7 +17,8 @@ if (global.window) {
 
 // The issue only reproduced when React was loaded before JSDOM.
 const React = require('react');
-const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
 
 // Initialize JSDOM separately.
 // We don't use our normal JSDOM setup because we want to load React first.
@@ -43,13 +44,6 @@ describe('ReactErrorLoggingRecovery', () => {
 
   beforeEach(() => {
     console.error = error => {
-      if (
-        typeof error === 'string' &&
-        error.includes('ReactDOM.render is no longer supported in React 18')
-      ) {
-        // Ignore legacy root deprecation warning
-        return;
-      }
       throw new Error('Buggy console.error');
     };
   });
@@ -58,23 +52,23 @@ describe('ReactErrorLoggingRecovery', () => {
     console.error = originalConsoleError;
   });
 
-  it('should recover from errors in console.error', function () {
+  it('should recover from errors in console.error', async function () {
     const div = document.createElement('div');
-    let didCatch = false;
-    try {
-      ReactDOM.render(<Bad />, div);
-      ReactDOM.render(<Bad />, div);
-    } catch (e) {
-      expect(e.message).toBe('no');
-      didCatch = true;
-    }
-    expect(didCatch).toBe(true);
-    ReactDOM.render(<span>Hello</span>, div);
-    expect(div.firstChild.textContent).toBe('Hello');
+    const root = ReactDOMClient.createRoot(div);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Bad />);
+      });
+      await act(() => {
+        root.render(<Bad />);
+      });
+    }).rejects.toThrow('no');
 
-    // Verify the console.error bug is surfaced
-    expect(() => {
-      jest.runAllTimers();
-    }).toThrow('Buggy console.error');
+    await expect(async () => {
+      await act(() => {
+        root.render(<span>Hello</span>);
+      });
+    }).rejects.toThrow('Buggy console.error');
+    expect(div.firstChild.textContent).toBe('Hello');
   });
 });
