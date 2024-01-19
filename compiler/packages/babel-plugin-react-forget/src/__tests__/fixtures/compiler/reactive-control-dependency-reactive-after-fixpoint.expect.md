@@ -18,7 +18,7 @@ function Component(props) {
       }
     }
 
-    value = props.value;
+    value = props.cond;
   }
 
   // The values assigned to `x` are non-reactive, but the value of `x`
@@ -31,7 +31,17 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: true }],
+  params: [],
+  sequentialRenders: [
+    { cond: true },
+    { cond: true },
+    { cond: false },
+    { cond: false },
+    { cond: true },
+    { cond: false },
+    { cond: true },
+    { cond: false },
+  ],
 };
 
 ```
@@ -57,7 +67,7 @@ function Component(props) {
       }
     }
 
-    value = props.value;
+    value = props.cond;
   }
   let t0;
   if ($[0] !== x) {
@@ -72,10 +82,27 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: true }],
+  params: [],
+  sequentialRenders: [
+    { cond: true },
+    { cond: true },
+    { cond: false },
+    { cond: false },
+    { cond: true },
+    { cond: false },
+    { cond: true },
+    { cond: false },
+  ],
 };
 
 ```
       
 ### Eval output
-(kind: ok) [0]
+(kind: ok) [1]
+[1]
+[2]
+[2]
+[1]
+[2]
+[1]
+[2]

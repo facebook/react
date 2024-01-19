@@ -23,8 +23,17 @@ function Component({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: GLOBAL }],
-  // TODO: test executing the sequence {value: GLOBAL}, {value: null}, {value: GLOBAL}
+  params: [],
+  sequentialRenders: [
+    { value: GLOBAL },
+    { value: GLOBAL },
+    { value: null },
+    { value: null },
+    { value: GLOBAL },
+    { value: null },
+    { value: GLOBAL },
+    { value: null },
+  ],
 };
 
 ```
@@ -61,11 +70,27 @@ function Component(t14) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: GLOBAL }],
-  // TODO: test executing the sequence {value: GLOBAL}, {value: null}, {value: GLOBAL}
+  params: [],
+  sequentialRenders: [
+    { value: GLOBAL },
+    { value: GLOBAL },
+    { value: null },
+    { value: null },
+    { value: GLOBAL },
+    { value: null },
+    { value: GLOBAL },
+    { value: null },
+  ],
 };
 
 ```
       
 ### Eval output
 (kind: ok) [1]
+[1]
+[2]
+[2]
+[1]
+[2]
+[1]
+[2]

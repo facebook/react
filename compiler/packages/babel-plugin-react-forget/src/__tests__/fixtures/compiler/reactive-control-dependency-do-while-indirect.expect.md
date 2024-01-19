@@ -16,8 +16,17 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ limit: 10 }],
-  // TODO: test executing the sequence {limit: 10}, {limit: 1}, {limit: 10}
+  params: [],
+  sequentialRenders: [
+    { limit: 10 },
+    { limit: 10 },
+    { limit: 1 },
+    { limit: 1 },
+    { limit: 10 },
+    { limit: 1 },
+    { limit: 10 },
+    { limit: 1 },
+  ],
 };
 
 ```
@@ -49,11 +58,27 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ limit: 10 }],
-  // TODO: test executing the sequence {limit: 10}, {limit: 1}, {limit: 10}
+  params: [],
+  sequentialRenders: [
+    { limit: 10 },
+    { limit: 10 },
+    { limit: 1 },
+    { limit: 1 },
+    { limit: 10 },
+    { limit: 1 },
+    { limit: 10 },
+    { limit: 1 },
+  ],
 };
 
 ```
       
 ### Eval output
 (kind: ok) [10]
+[10]
+[1]
+[1]
+[10]
+[1]
+[10]
+[1]

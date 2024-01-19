@@ -33,6 +33,15 @@ function Foo({ cond, setX, setY, setState }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  // TODO: run this function with {cond:true}, {cond: false}
-  params: [{ cond: true }],
+  params: [],
+  sequentialRenders: [
+    { cond: true },
+    { cond: true },
+    { cond: false },
+    { cond: false },
+    { cond: true },
+    { cond: false },
+    { cond: true },
+    { cond: false },
+  ],
 };

@@ -19,6 +19,15 @@ function Component({ value }) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ value: GLOBAL }],
-  // TODO: test executing the sequence {value: GLOBAL}, {value: null}, {value: GLOBAL}
+  params: [],
+  sequentialRenders: [
+    { value: GLOBAL },
+    { value: GLOBAL },
+    { value: null },
+    { value: null },
+    { value: GLOBAL },
+    { value: null },
+    { value: GLOBAL },
+    { value: null },
+  ],
 };

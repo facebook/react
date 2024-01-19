@@ -17,5 +17,15 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ init: 0 }],
+  params: [],
+  sequentialRenders: [
+    { init: 0 },
+    { init: 0 },
+    { init: 10 },
+    { init: 10 },
+    { init: 0 },
+    { init: 10 },
+    { init: 0 },
+    { init: 10 },
+  ],
 };

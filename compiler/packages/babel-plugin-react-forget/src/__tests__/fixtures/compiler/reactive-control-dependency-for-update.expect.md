@@ -20,7 +20,17 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ update: 2 }],
+  params: [],
+  sequentialRenders: [
+    { update: 2 },
+    { update: 2 },
+    { update: 1 },
+    { update: 1 },
+    { update: 2 },
+    { update: 1 },
+    { update: 2 },
+    { update: 1 },
+  ],
 };
 
 ```
@@ -52,10 +62,27 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ update: 2 }],
+  params: [],
+  sequentialRenders: [
+    { update: 2 },
+    { update: 2 },
+    { update: 1 },
+    { update: 1 },
+    { update: 2 },
+    { update: 1 },
+    { update: 2 },
+    { update: 1 },
+  ],
 };
 
 ```
       
 ### Eval output
 (kind: ok) [2]
+[2]
+[1]
+[1]
+[2]
+[1]
+[2]
+[1]

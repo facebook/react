@@ -14,7 +14,7 @@ function Component(props) {
       }
     }
 
-    value = props.value;
+    value = props.cond;
   }
 
   // The values assigned to `x` are non-reactive, but the value of `x`
@@ -27,5 +27,15 @@ function Component(props) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{ cond: true }],
+  params: [],
+  sequentialRenders: [
+    { cond: true },
+    { cond: true },
+    { cond: false },
+    { cond: false },
+    { cond: true },
+    { cond: false },
+    { cond: true },
+    { cond: false },
+  ],
 };
