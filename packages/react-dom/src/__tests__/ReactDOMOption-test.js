@@ -255,15 +255,15 @@ describe('ReactDOMOption', () => {
 
     await expect(async () => {
       await act(async () => {
-        ReactDOMClient.hydrateRoot(container, children);
+        ReactDOMClient.hydrateRoot(container, children, {
+          onRecoverableError: () => {},
+        });
       });
     }).toErrorDev(
       [
         'Warning: Text content did not match. Server: "FooBaz" Client: "Foo"',
         'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>',
         'Warning: validateDOMNesting(...): <div> cannot appear as a child of <option>',
-        'Error: Text content does not match server-rendered HTML.',
-        'Error: There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.',
       ],
       {withoutStack: 1},
     );
