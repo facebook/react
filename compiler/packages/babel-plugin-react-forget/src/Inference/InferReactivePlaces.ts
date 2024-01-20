@@ -24,7 +24,11 @@ import {
   eachTerminalOperand,
 } from "../HIR/visitors";
 import { hasBackEdge } from "../Optimization/DeadCodeElimination";
-import { isMutable } from "../ReactiveScopes/InferReactiveScopeVariables";
+import {
+  findDisjointMutableValues,
+  isMutable,
+} from "../ReactiveScopes/InferReactiveScopeVariables";
+import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
 
 /*
@@ -87,7 +91,7 @@ import { assertExhaustive } from "../Utils/utils";
  * there are no changes after a given pass over the CFG.
  */
 export function inferReactivePlaces(fn: HIRFunction): void {
-  const reactiveIdentifiers = new ReactivityMap();
+  const reactiveIdentifiers = new ReactivityMap(findDisjointMutableValues(fn));
   for (const param of fn.params) {
     const place = param.kind === "Identifier" ? param : param.place;
     reactiveIdentifiers.markReactive(place);
@@ -328,15 +332,33 @@ class ReactivityMap {
   hasChanges: boolean = false;
   reactive: Set<IdentifierId> = new Set();
 
+  /**
+   * Sets of mutably aliased identifiers — these are the same foundation for determining
+   * reactive scopes a few passes later. The actual InferReactiveScopeVariables pass runs
+   * after LeaveSSA, which artificially merges mutable ranges in cases such as declarations
+   * that are later reassigned. Here we use only the underlying sets of mutably aliased values.
+   *
+   * Any identifier that has a mapping in this disjoint set will be treated as a stand in for
+   * its canonical identifier in all cases, so that any reactivity flowing into one identifier of
+   * an alias group will effectively make the whole alias group (all its identifiers) reactive.
+   */
+  aliasedIdentifiers: DisjointSet<Identifier>;
+
+  constructor(aliasedIdentifiers: DisjointSet<Identifier>) {
+    this.aliasedIdentifiers = aliasedIdentifiers;
+  }
+
   isReactive(place: Place): boolean {
-    const reactive = this.reactive.has(place.identifier.id);
+    const reactive = this.isReactiveIdentifier(place.identifier);
     if (reactive) {
       place.reactive = true;
     }
     return reactive;
   }
 
-  isReactiveIdentifier(identifier: Identifier): boolean {
+  isReactiveIdentifier(inputIdentifier: Identifier): boolean {
+    const identifier =
+      this.aliasedIdentifiers.find(inputIdentifier) ?? inputIdentifier;
     return this.reactive.has(identifier.id);
   }
 
@@ -345,7 +367,9 @@ class ReactivityMap {
     this.markReactiveIdentifier(place.identifier);
   }
 
-  markReactiveIdentifier(identifier: Identifier): void {
+  markReactiveIdentifier(inputIdentifier: Identifier): void {
+    const identifier =
+      this.aliasedIdentifiers.find(inputIdentifier) ?? inputIdentifier;
     if (!this.reactive.has(identifier.id)) {
       this.hasChanges = true;
       this.reactive.add(identifier.id);

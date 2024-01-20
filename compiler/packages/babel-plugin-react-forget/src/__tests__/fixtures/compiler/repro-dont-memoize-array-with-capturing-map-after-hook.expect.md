@@ -42,7 +42,7 @@ import {
 import { mutate } from "shared-runtime";
 
 function Component(props) {
-  const $ = useMemoCache(5);
+  const $ = useMemoCache(6);
   const x = [{ ...props.value }];
   let t0;
   let t1;
@@ -66,21 +66,23 @@ function Component(props) {
     y = item;
     return <span key={item.id}>{item.text}</span>;
   });
-  let t3;
-  if ($[2] !== onClick || $[3] !== t2) {
-    t3 = (
+  const t3 = mutate(y);
+  let t4;
+  if ($[2] !== onClick || $[3] !== t2 || $[4] !== t3) {
+    t4 = (
       <div onClick={onClick}>
         {t2}
-        {mutate(y)}
+        {t3}
       </div>
     );
     $[2] = onClick;
     $[3] = t2;
     $[4] = t3;
+    $[5] = t4;
   } else {
-    t3 = $[4];
+    t4 = $[5];
   }
-  return t3;
+  return t4;
 }
 
 export const FIXTURE_ENTRYPOINT = {

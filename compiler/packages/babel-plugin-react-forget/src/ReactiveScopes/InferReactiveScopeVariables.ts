@@ -84,100 +84,7 @@ export function inferReactiveScopeVariables(fn: HIRFunction): void {
    * Represents the set of reactive scopes as disjoint sets of identifiers
    * that mutate together.
    */
-  const scopeIdentifiers = new DisjointSet<Identifier>();
-  for (const [_, block] of fn.body.blocks) {
-    /*
-     * If a phi is mutated after creation, then we need to alias all of its operands such that they
-     * are assigned to the same scope.
-     */
-    for (const phi of block.phis) {
-      if (
-        // The phi was reset because it was not mutated after creation
-        phi.id.mutableRange.start + 1 !== phi.id.mutableRange.end &&
-        phi.id.mutableRange.end >
-          (block.instructions.at(0)?.id ?? block.terminal.id)
-      ) {
-        for (const [, phiId] of phi.operands) {
-          scopeIdentifiers.union([phi.id, phiId]);
-        }
-      }
-    }
-    block.phis.clear();
-
-    for (const instr of block.instructions) {
-      const operands: Array<Identifier> = [];
-      const range = instr.lvalue.identifier.mutableRange;
-      if (range.end > range.start + 1 || mayAllocate(fn.env, instr)) {
-        operands.push(instr.lvalue!.identifier);
-      }
-      if (
-        instr.value.kind === "StoreLocal" ||
-        instr.value.kind === "StoreContext"
-      ) {
-        if (
-          instr.value.lvalue.place.identifier.mutableRange.end >
-          instr.value.lvalue.place.identifier.mutableRange.start + 1
-        ) {
-          operands.push(instr.value.lvalue.place.identifier);
-        }
-        if (
-          isMutable(instr, instr.value.value) &&
-          instr.value.value.identifier.mutableRange.start > 0
-        ) {
-          operands.push(instr.value.value.identifier);
-        }
-      } else if (instr.value.kind === "Destructure") {
-        for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
-          if (
-            place.identifier.mutableRange.end >
-            place.identifier.mutableRange.start + 1
-          ) {
-            operands.push(place.identifier);
-          }
-        }
-        if (
-          isMutable(instr, instr.value.value) &&
-          instr.value.value.identifier.mutableRange.start > 0
-        ) {
-          operands.push(instr.value.value.identifier);
-        }
-      } else if (instr.value.kind === "MethodCall") {
-        for (const operand of eachInstructionOperand(instr)) {
-          if (
-            isMutable(instr, operand) &&
-            /*
-             * exclude global variables from being added to scopes, we can't recreate them!
-             * TODO: improve handling of module-scoped variables and globals
-             */
-            operand.identifier.mutableRange.start > 0
-          ) {
-            operands.push(operand.identifier);
-          }
-        }
-        /*
-         * Ensure that the ComputedLoad to resolve the method is in the same scope as the
-         * call itself
-         */
-        operands.push(instr.value.property.identifier);
-      } else {
-        for (const operand of eachInstructionOperand(instr)) {
-          if (
-            isMutable(instr, operand) &&
-            /*
-             * exclude global variables from being added to scopes, we can't recreate them!
-             * TODO: improve handling of module-scoped variables and globals
-             */
-            operand.identifier.mutableRange.start > 0
-          ) {
-            operands.push(operand.identifier);
-          }
-        }
-      }
-      if (operands.length !== 0) {
-        scopeIdentifiers.union(operands);
-      }
-    }
-  }
+  const scopeIdentifiers = findDisjointMutableValues(fn);
 
   // Maps each scope (by its identifying member) to a ScopeId value
   const scopes: Map<Identifier, ReactiveScope> = new Map();
@@ -277,4 +184,103 @@ function mayAllocate(env: Environment, instruction: Instruction): boolean {
       assertExhaustive(value, `Unexpected value kind '${(value as any).kind}'`);
     }
   }
+}
+
+export function findDisjointMutableValues(
+  fn: HIRFunction
+): DisjointSet<Identifier> {
+  const scopeIdentifiers = new DisjointSet<Identifier>();
+  for (const [_, block] of fn.body.blocks) {
+    /*
+     * If a phi is mutated after creation, then we need to alias all of its operands such that they
+     * are assigned to the same scope.
+     */
+    for (const phi of block.phis) {
+      if (
+        // The phi was reset because it was not mutated after creation
+        phi.id.mutableRange.start + 1 !== phi.id.mutableRange.end &&
+        phi.id.mutableRange.end >
+          (block.instructions.at(0)?.id ?? block.terminal.id)
+      ) {
+        for (const [, phiId] of phi.operands) {
+          scopeIdentifiers.union([phi.id, phiId]);
+        }
+      }
+    }
+
+    for (const instr of block.instructions) {
+      const operands: Array<Identifier> = [];
+      const range = instr.lvalue.identifier.mutableRange;
+      if (range.end > range.start + 1 || mayAllocate(fn.env, instr)) {
+        operands.push(instr.lvalue!.identifier);
+      }
+      if (
+        instr.value.kind === "StoreLocal" ||
+        instr.value.kind === "StoreContext"
+      ) {
+        if (
+          instr.value.lvalue.place.identifier.mutableRange.end >
+          instr.value.lvalue.place.identifier.mutableRange.start + 1
+        ) {
+          operands.push(instr.value.lvalue.place.identifier);
+        }
+        if (
+          isMutable(instr, instr.value.value) &&
+          instr.value.value.identifier.mutableRange.start > 0
+        ) {
+          operands.push(instr.value.value.identifier);
+        }
+      } else if (instr.value.kind === "Destructure") {
+        for (const place of eachPatternOperand(instr.value.lvalue.pattern)) {
+          if (
+            place.identifier.mutableRange.end >
+            place.identifier.mutableRange.start + 1
+          ) {
+            operands.push(place.identifier);
+          }
+        }
+        if (
+          isMutable(instr, instr.value.value) &&
+          instr.value.value.identifier.mutableRange.start > 0
+        ) {
+          operands.push(instr.value.value.identifier);
+        }
+      } else if (instr.value.kind === "MethodCall") {
+        for (const operand of eachInstructionOperand(instr)) {
+          if (
+            isMutable(instr, operand) &&
+            /*
+             * exclude global variables from being added to scopes, we can't recreate them!
+             * TODO: improve handling of module-scoped variables and globals
+             */
+            operand.identifier.mutableRange.start > 0
+          ) {
+            operands.push(operand.identifier);
+          }
+        }
+        /*
+         * Ensure that the ComputedLoad to resolve the method is in the same scope as the
+         * call itself
+         */
+        operands.push(instr.value.property.identifier);
+      } else {
+        for (const operand of eachInstructionOperand(instr)) {
+          if (
+            isMutable(instr, operand) &&
+            /*
+             * exclude global variables from being added to scopes, we can't recreate them!
+             * TODO: improve handling of module-scoped variables and globals
+             */
+            operand.identifier.mutableRange.start > 0
+          ) {
+            operands.push(operand.identifier);
+          }
+        }
+      }
+      if (operands.length !== 0) {
+        scopeIdentifiers.union(operands);
+      }
+    }
+  }
+  return scopeIdentifiers;
 }
