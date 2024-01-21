@@ -30,6 +30,19 @@ declare module 'create-react-class' {
   declare var exports: React$CreateClass;
 }
 
+// Flow hides the props of React$Element, this overrides it to unhide
+// them for React internals.
+// prettier-ignore
+declare opaque type React$Element<
+  +ElementType: React$ElementType,
+  +P = React$ElementProps<ElementType>,
+>: {
+  +type: ElementType,
+  +props: P,
+  +key: React$Key | null,
+  +ref: any,
+};
+
 declare var trustedTypes: {
   isHTML: (value: any) => boolean,
   isScript: (value: any) => boolean,
@@ -268,13 +281,7 @@ declare module 'pg/lib/utils' {
   };
 }
 
-declare class AsyncLocalStorage<T> {
-  disable(): void;
-  getStore(): T | void;
-  run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
-  enterWith(store: T): void;
-}
-
+// Node
 declare module 'async_hooks' {
   declare class AsyncLocalStorage<T> {
     disable(): void;
@@ -282,7 +289,41 @@ declare module 'async_hooks' {
     run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
     enterWith(store: T): void;
   }
+  declare interface AsyncResource {}
+  declare function executionAsyncId(): number;
+  declare function executionAsyncResource(): AsyncResource;
+  declare function triggerAsyncId(): number;
+  declare type HookCallbacks = {
+    init?: (
+      asyncId: number,
+      type: string,
+      triggerAsyncId: number,
+      resource: AsyncResource,
+    ) => void,
+    before?: (asyncId: number) => void,
+    after?: (asyncId: number) => void,
+    promiseResolve?: (asyncId: number) => void,
+    destroy?: (asyncId: number) => void,
+  };
+  declare class AsyncHook {
+    enable(): this;
+    disable(): this;
+  }
+  declare function createHook(callbacks: HookCallbacks): AsyncHook;
 }
+
+// Edge
+declare class AsyncLocalStorage<T> {
+  disable(): void;
+  getStore(): T | void;
+  run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
+  enterWith(store: T): void;
+}
+
+declare var async_hooks: {
+  createHook(callbacks: any): any,
+  executionAsyncId(): number,
+};
 
 declare module 'node:worker_threads' {
   declare class MessageChannel {

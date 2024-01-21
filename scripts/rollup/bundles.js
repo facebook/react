@@ -96,9 +96,20 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react/src/ReactSharedSubset.js',
-    name: 'react.shared-subset',
+    entry: 'react/src/ReactServer.js',
+    name: 'react.react-server',
     global: 'React',
+    minifyWithProdErrorCodes: true,
+    wrapWithModuleBoundaries: false,
+    externals: [],
+  },
+
+  /******* Isomorphic Shared Subset for FB *******/
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
+    moduleType: ISOMORPHIC,
+    entry: 'react/src/ReactServerFB.js',
+    global: 'ReactServer',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
     externals: [],
@@ -169,8 +180,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/src/ReactDOMSharedSubset.js',
-    name: 'react-dom.shared-subset',
+    entry: 'react-dom/src/ReactDOMServer.js',
+    name: 'react-dom.react-server',
     global: 'ReactDOM',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
@@ -572,6 +583,28 @@ const bundles = [
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,
     externals: ['acorn'],
+  },
+
+  /******* React Server DOM FB Server *******/
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-fb/src/ReactFlightDOMServerFB.js',
+    global: 'ReactFlightDOMServer',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom'],
+  },
+
+  /******* React Server DOM FB Client *******/
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-server-dom-fb/src/ReactFlightDOMClientFB.js',
+    global: 'ReactFlightDOMClient',
+    minifyWithProdErrorCodes: false,
+    wrapWithModuleBoundaries: false,
+    externals: ['react', 'react-dom'],
   },
 
   /******* React Suspense Test Utils *******/

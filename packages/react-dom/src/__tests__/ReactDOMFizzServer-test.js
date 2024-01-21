@@ -734,7 +734,7 @@ describe('ReactDOMFizzServer', () => {
 
     const theError = new Error('Test');
     const loggedErrors = [];
-    function onError(x) {
+    function onError(x, errorInfo) {
       loggedErrors.push(x);
       return 'Hash of (' + x.message + ')';
     }
@@ -837,7 +837,7 @@ describe('ReactDOMFizzServer', () => {
 
     const theError = new Error('Test');
     const loggedErrors = [];
-    function onError(x) {
+    function onError(x, errorInfo) {
       loggedErrors.push(x);
       return 'hash of (' + x.message + ')';
     }
@@ -898,7 +898,7 @@ describe('ReactDOMFizzServer', () => {
         [
           theError.message,
           expectedDigest,
-          componentStack(['Suspense', 'div', 'App']),
+          componentStack(['Lazy', 'Suspense', 'div', 'App']),
         ],
       ],
       [
@@ -936,7 +936,9 @@ describe('ReactDOMFizzServer', () => {
       return (
         <div>
           <Suspense fallback={<span>loading...</span>}>
-            <Erroring isClient={isClient} />
+            <Indirection level={2}>
+              <Erroring isClient={isClient} />
+            </Indirection>
           </Suspense>
         </div>
       );
@@ -979,7 +981,15 @@ describe('ReactDOMFizzServer', () => {
         [
           theError.message,
           expectedDigest,
-          componentStack(['Erroring', 'Suspense', 'div', 'App']),
+          componentStack([
+            'Erroring',
+            'Indirection',
+            'Indirection',
+            'Indirection',
+            'Suspense',
+            'div',
+            'App',
+          ]),
         ],
       ],
       [
@@ -1330,6 +1340,11 @@ describe('ReactDOMFizzServer', () => {
               <AsyncText text="Hello" />
             </h1>
           </Suspense>
+          <main>
+            <Suspense fallback="loading...">
+              <AsyncText text="World" />
+            </Suspense>
+          </main>
         </div>
       );
     }
@@ -1359,7 +1374,11 @@ describe('ReactDOMFizzServer', () => {
     await waitForAll([]);
 
     // We're still loading because we're waiting for the server to stream more content.
-    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Loading...<main>loading...</main>
+      </div>,
+    );
 
     // We abort the server response.
     await act(() => {
@@ -1374,7 +1393,13 @@ describe('ReactDOMFizzServer', () => {
         [
           'The server did not finish this Suspense boundary: The render was aborted by the server without a reason.',
           expectedDigest,
+          // We get the stack of the task when it was aborted which is why we see `h1`
           componentStack(['h1', 'Suspense', 'div', 'App']),
+        ],
+        [
+          'The server did not finish this Suspense boundary: The render was aborted by the server without a reason.',
+          expectedDigest,
+          componentStack(['Suspense', 'main', 'div', 'App']),
         ],
       ],
       [
@@ -1382,18 +1407,30 @@ describe('ReactDOMFizzServer', () => {
           'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
           expectedDigest,
         ],
+        [
+          'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          expectedDigest,
+        ],
       ],
     );
-    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Loading...<main>loading...</main>
+      </div>,
+    );
 
     // We now resolve it on the client.
-    await clientAct(() => resolveText('Hello'));
+    await clientAct(() => {
+      resolveText('Hello');
+      resolveText('World');
+    });
     assertLog([]);
 
     // The client rendered HTML is now in place.
     expect(getVisibleChildren(container)).toEqual(
       <div>
         <h1>Hello</h1>
+        <main>World</main>
       </div>,
     );
   });
@@ -3648,6 +3685,221 @@ describe('ReactDOMFizzServer', () => {
         </body>
       </html>,
     );
+  });
+
+  // https://github.com/facebook/react/issues/27540
+  // This test is not actually asserting much because there is possibly a bug in the closeing logic for the
+  // Node implementation of Fizz. The close leads to an abort which sets the destination to null before the Float
+  // method has an opportunity to schedule a write. We should fix this probably and once we do this test will start
+  // to fail if the underyling issue of writing after stream completion isn't fixed
+  it('does not try to write to the stream after it has been closed', async () => {
+    async function preloadLate() {
+      await 1;
+      ReactDOM.preconnect('foo');
+    }
+
+    function Preload() {
+      preloadLate();
+      return null;
+    }
+
+    function App() {
+      return (
+        <html>
+          <body>
+            <main>hello</main>
+            <Preload />
+          </body>
+        </html>
+      );
+    }
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getVisibleChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          <main>hello</main>
+        </body>
+      </html>,
+    );
+  });
+
+  it('provides headers after initial work if onHeaders option used', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function Preloads() {
+      ReactDOM.preload('font2', {as: 'font'});
+      ReactDOM.preload('imagepre2', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preconnect('pre2', {crossOrigin: 'use-credentials'});
+      ReactDOM.prefetchDNS('dns2');
+    }
+
+    function Blocked() {
+      readText('blocked');
+      return (
+        <>
+          <Preloads />
+          <img src="image2" />
+        </>
+      );
+    }
+
+    function App() {
+      ReactDOM.preload('font', {as: 'font'});
+      ReactDOM.preload('imagepre', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preconnect('pre', {crossOrigin: 'use-credentials'});
+      ReactDOM.prefetchDNS('dns');
+      return (
+        <html>
+          <body>
+            <img src="image" />
+            <Blocked />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<pre>; rel=preconnect; crossorigin="use-credentials",
+ <dns>; rel=dns-prefetch,
+ <font>; rel=preload; as="font"; crossorigin="",
+ <imagepre>; rel=preload; as="image"; fetchpriority="high",
+ <image>; rel=preload; as="image"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
+  it('encodes img srcset and sizes into preload header params', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('presrc', {
+        as: 'image',
+        fetchPriority: 'high',
+        imageSrcSet: 'presrcset',
+        imageSizes: 'presizes',
+      });
+      return (
+        <html>
+          <body>
+            <img src="src" srcSet="srcset" sizes="sizes" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<presrc>; rel=preload; as="image"; fetchpriority="high"; imagesrcset="presrcset"; imagesizes="presizes",
+ <src>; rel=preload; as="image"; imagesrcset="srcset"; imagesizes="sizes"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
+  it('emits nothing for headers if you pipe before work begins', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('presrc', {
+        as: 'image',
+        fetchPriority: 'high',
+        imageSrcSet: 'presrcset',
+        imageSizes: 'presizes',
+      });
+      return (
+        <html>
+          <body>
+            <img src="src" srcSet="srcset" sizes="sizes" />
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders}).pipe(writable);
+    });
+
+    expect(headers).toEqual({});
+  });
+
+  it('stops accumulating new headers once the maxHeadersLength limit is satisifed', async () => {
+    let headers = null;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preconnect('foo');
+      ReactDOM.preconnect('bar');
+      ReactDOM.preconnect('baz');
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />, {onHeaders, maxHeadersLength: 44});
+    });
+
+    expect(headers).toEqual({
+      Link: `
+<foo>; rel=preconnect,
+ <bar>; rel=preconnect
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+  });
+
+  it('logs an error if onHeaders throws but continues the render', async () => {
+    const errors = [];
+    function onError(error) {
+      errors.push(error.message);
+    }
+
+    function onHeaders(x) {
+      throw new Error('bad onHeaders');
+    }
+
+    let pipe;
+    await act(() => {
+      ({pipe} = renderToPipeableStream(<div>hello</div>, {onHeaders, onError}));
+    });
+
+    expect(errors).toEqual(['bad onHeaders']);
+
+    await act(() => {
+      pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>hello</div>);
   });
 
   describe('error escaping', () => {
@@ -6924,6 +7176,141 @@ describe('ReactDOMFizzServer', () => {
             'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
           ],
     );
+  });
+
+  // @gate enablePostpone
+  it('can client render a boundary after having already postponed', async () => {
+    let prerendering = true;
+    let ssr = true;
+
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return 'Hello';
+    }
+
+    function ServerError() {
+      if (ssr) {
+        throw new Error('server error');
+      }
+      return 'World';
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading1">
+            <Postpone />
+            <ServerError />
+          </Suspense>
+          <Suspense fallback="Loading2">
+            <Postpone />
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerenderErrors = [];
+    const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(
+      <App />,
+      {
+        onError(x) {
+          prerenderErrors.push(x.message);
+        },
+      },
+    );
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    const ssrErrors = [];
+
+    const resumed = ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+      {
+        onError(x) {
+          ssrErrors.push(x.message);
+        },
+      },
+    );
+
+    const windowErrors = [];
+    function globalError(e) {
+      windowErrors.push(e.message);
+    }
+    window.addEventListener('error', globalError);
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    expect(windowErrors).toEqual([]);
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Loading1'}
+        {'Loading2'}
+      </div>,
+    );
+
+    await act(() => {
+      resumed.pipe(writable);
+    });
+
+    expect(prerenderErrors).toEqual(['server error']);
+
+    // Since this errored, we shouldn't have to replay it.
+    expect(ssrErrors).toEqual([]);
+
+    expect(windowErrors).toEqual([]);
+
+    // Still loading...
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Loading1'}
+        {'Hello'}
+      </div>,
+    );
+
+    const recoverableErrors = [];
+
+    ssr = false;
+
+    await clientAct(() => {
+      ReactDOMClient.hydrateRoot(container, <App />, {
+        onRecoverableError(x) {
+          recoverableErrors.push(x.message);
+        },
+      });
+    });
+
+    expect(recoverableErrors).toEqual(
+      __DEV__
+        ? ['server error']
+        : [
+            'The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering.',
+          ],
+    );
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        {'Hello'}
+        {'World'}
+        {'Hello'}
+      </div>,
+    );
+
+    expect(windowErrors).toEqual([]);
+
+    window.removeEventListener('error', globalError);
   });
 
   // @gate enablePostpone

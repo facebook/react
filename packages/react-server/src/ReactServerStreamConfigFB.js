@@ -18,10 +18,6 @@ export opaque type PrecomputedChunk = string;
 export opaque type Chunk = string;
 export opaque type BinaryChunk = string;
 
-export function scheduleWork(callback: () => void) {
-  // We don't schedule work in this model, and instead expect performWork to always be called repeatedly.
-}
-
 export function flushBuffered(destination: Destination) {}
 
 export const supportsRequestStorage = false;
@@ -84,4 +80,4 @@ export function closeWithError(destination: Destination, error: mixed): void {
   destination.error = error;
 }
 
-export {createFastHashJS as createFastHash} from 'react-server/src/createFastHashJS';
+export {createFastHashJS as createFastHash} from './createFastHashJS';

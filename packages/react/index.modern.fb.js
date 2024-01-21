@@ -31,7 +31,7 @@ export {
   unstable_Cache,
   unstable_DebugTracingMode,
   unstable_LegacyHidden,
-  unstable_Offscreen,
+  unstable_Activity,
   unstable_Scope,
   unstable_SuspenseList,
   unstable_getCacheSignal,
@@ -56,5 +56,5 @@ export {
   useSyncExternalStore,
   useTransition,
   version,
-} from './src/React';
+} from './src/ReactClient';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';

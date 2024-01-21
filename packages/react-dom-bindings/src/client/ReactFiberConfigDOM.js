@@ -92,7 +92,6 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableFloat,
-  enableHostSingletons,
   enableTrustedTypesIntegration,
   enableFormActions,
   enableAsyncActions,
@@ -583,8 +582,29 @@ export function getCurrentEventPriority(): EventPriority {
   return getEventPriority(currentEvent.type);
 }
 
+let currentPopstateTransitionEvent: Event | null = null;
 export function shouldAttemptEagerTransition(): boolean {
-  return window.event && window.event.type === 'popstate';
+  const event = window.event;
+  if (event && event.type === 'popstate') {
+    // This is a popstate event. Attempt to render any transition during this
+    // event synchronously. Unless we already attempted during this event.
+    if (event === currentPopstateTransitionEvent) {
+      // We already attempted to render this popstate transition synchronously.
+      // Any subsequent attempts must have happened as the result of a derived
+      // update, like startTransition inside useEffect, or useDV. Switch back to
+      // the default behavior for all remaining transitions during the current
+      // popstate event.
+      return false;
+    } else {
+      // Cache the current event in case a derived transition is scheduled.
+      // (Refer to previous branch.)
+      currentPopstateTransitionEvent = event;
+      return true;
+    }
+  }
+  // We're not inside a popstate event.
+  currentPopstateTransitionEvent = null;
+  return false;
 }
 
 export const isPrimaryRenderer = true;
@@ -918,32 +938,18 @@ export function unhideTextInstance(
 }
 
 export function clearContainer(container: Container): void {
-  if (enableHostSingletons) {
-    const nodeType = container.nodeType;
-    if (nodeType === DOCUMENT_NODE) {
-      clearContainerSparingly(container);
-    } else if (nodeType === ELEMENT_NODE) {
-      switch (container.nodeName) {
-        case 'HEAD':
-        case 'HTML':
-        case 'BODY':
-          clearContainerSparingly(container);
-          return;
-        default: {
-          container.textContent = '';
-        }
-      }
-    }
-  } else {
-    if (container.nodeType === ELEMENT_NODE) {
-      // We have refined the container to Element type
-      const element: Element = (container: any);
-      element.textContent = '';
-    } else if (container.nodeType === DOCUMENT_NODE) {
-      // We have refined the container to Document type
-      const doc: Document = (container: any);
-      if (doc.documentElement) {
-        doc.removeChild(doc.documentElement);
+  const nodeType = container.nodeType;
+  if (nodeType === DOCUMENT_NODE) {
+    clearContainerSparingly(container);
+  } else if (nodeType === ELEMENT_NODE) {
+    switch (container.nodeName) {
+      case 'HEAD':
+      case 'HTML':
+      case 'BODY':
+        clearContainerSparingly(container);
+        return;
+      default: {
+        container.textContent = '';
       }
     }
   }
@@ -1032,7 +1038,7 @@ export function canHydrateInstance(
     const element: Element = (instance: any);
     const anyProps = (props: any);
     if (element.nodeName.toLowerCase() !== type.toLowerCase()) {
-      if (!inRootOrSingleton || !enableHostSingletons) {
+      if (!inRootOrSingleton) {
         // Usually we error for mismatched tags.
         if (
           enableFormActions &&
@@ -1046,7 +1052,7 @@ export function canHydrateInstance(
         }
       }
       // In root or singleton parents we skip past mismatched instances.
-    } else if (!inRootOrSingleton || !enableHostSingletons) {
+    } else if (!inRootOrSingleton) {
       // Match
       if (
         enableFormActions &&
@@ -1191,7 +1197,7 @@ export function canHydrateTextInstance(
     ) {
       // If we have extra hidden inputs, we don't mismatch. This allows us to
       // embed extra form data in the original form.
-    } else if (!inRootOrSingleton || !enableHostSingletons) {
+    } else if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -1209,7 +1215,7 @@ export function canHydrateSuspenseInstance(
   inRootOrSingleton: boolean,
 ): null | SuspenseInstance {
   while (instance.nodeType !== COMMENT_NODE) {
-    if (!inRootOrSingleton || !enableHostSingletons) {
+    if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -1271,7 +1277,7 @@ export function canHydrateFormStateMarker(
   inRootOrSingleton: boolean,
 ): null | FormStateMarkerInstance {
   while (instance.nodeType !== COMMENT_NODE) {
-    if (!inRootOrSingleton || !enableHostSingletons) {
+    if (!inRootOrSingleton) {
       return null;
     }
     const nextInstance = getNextHydratableSibling(instance);
@@ -1480,9 +1486,7 @@ export function shouldDeleteUnhydratedTailInstances(
   parentType: string,
 ): boolean {
   return (
-    (enableHostSingletons ||
-      (parentType !== 'head' && parentType !== 'body')) &&
-    (!enableFormActions || (parentType !== 'form' && parentType !== 'button'))
+    !enableFormActions || (parentType !== 'form' && parentType !== 'button')
   );
 }
 
@@ -2316,7 +2320,7 @@ function preinitStyle(
       getStylesheetSelectorFromKey(key),
     );
     if (instance) {
-      state.loading = Loaded;
+      state.loading = Loaded | Inserted;
     } else {
       // Construct a new instance and insert it
       const stylesheetProps = Object.assign(
@@ -2748,6 +2752,7 @@ export function acquireResource(
           getStylesheetSelectorFromKey(key),
         );
         if (instance) {
+          resource.state.loading |= Inserted;
           resource.instance = instance;
           markNodeAsHoistable(instance);
           return instance;
@@ -3339,71 +3344,73 @@ export function suspendResource(
         return;
       }
     }
-    if (resource.instance === null) {
-      const qualifiedProps: StylesheetQualifyingProps = props;
-      const key = getStyleKey(qualifiedProps.href);
+    if ((resource.state.loading & Inserted) === NotLoaded) {
+      if (resource.instance === null) {
+        const qualifiedProps: StylesheetQualifyingProps = props;
+        const key = getStyleKey(qualifiedProps.href);
 
-      // Attempt to hydrate instance from DOM
-      let instance: null | Instance = hoistableRoot.querySelector(
-        getStylesheetSelectorFromKey(key),
-      );
-      if (instance) {
-        // If this instance has a loading state it came from the Fizz runtime.
-        // If there is not loading state it is assumed to have been server rendered
-        // as part of the preamble and therefore synchronously loaded. It could have
-        // errored however which we still do not yet have a means to detect. For now
-        // we assume it is loaded.
-        const maybeLoadingState: ?Promise<mixed> = (instance: any)._p;
-        if (
-          maybeLoadingState !== null &&
-          typeof maybeLoadingState === 'object' &&
-          // $FlowFixMe[method-unbinding]
-          typeof maybeLoadingState.then === 'function'
-        ) {
-          const loadingState = maybeLoadingState;
-          state.count++;
-          const ping = onUnsuspend.bind(state);
-          loadingState.then(ping, ping);
+        // Attempt to hydrate instance from DOM
+        let instance: null | Instance = hoistableRoot.querySelector(
+          getStylesheetSelectorFromKey(key),
+        );
+        if (instance) {
+          // If this instance has a loading state it came from the Fizz runtime.
+          // If there is not loading state it is assumed to have been server rendered
+          // as part of the preamble and therefore synchronously loaded. It could have
+          // errored however which we still do not yet have a means to detect. For now
+          // we assume it is loaded.
+          const maybeLoadingState: ?Promise<mixed> = (instance: any)._p;
+          if (
+            maybeLoadingState !== null &&
+            typeof maybeLoadingState === 'object' &&
+            // $FlowFixMe[method-unbinding]
+            typeof maybeLoadingState.then === 'function'
+          ) {
+            const loadingState = maybeLoadingState;
+            state.count++;
+            const ping = onUnsuspend.bind(state);
+            loadingState.then(ping, ping);
+          }
+          resource.state.loading |= Inserted;
+          resource.instance = instance;
+          markNodeAsHoistable(instance);
+          return;
         }
-        resource.state.loading |= Inserted;
-        resource.instance = instance;
+
+        const ownerDocument = getDocumentFromRoot(hoistableRoot);
+
+        const stylesheetProps = stylesheetPropsFromRawProps(props);
+        const preloadProps = preloadPropsMap.get(key);
+        if (preloadProps) {
+          adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
+        }
+
+        // Construct and insert a new instance
+        instance = ownerDocument.createElement('link');
         markNodeAsHoistable(instance);
-        return;
+        const linkInstance: HTMLLinkElement = (instance: any);
+        // This Promise is a loading state used by the Fizz runtime. We need this incase there is a race
+        // between this resource being rendered on the client and being rendered with a late completed boundary.
+        (linkInstance: any)._p = new Promise((resolve, reject) => {
+          linkInstance.onload = resolve;
+          linkInstance.onerror = reject;
+        });
+        setInitialProperties(instance, 'link', stylesheetProps);
+        resource.instance = instance;
       }
 
-      const ownerDocument = getDocumentFromRoot(hoistableRoot);
-
-      const stylesheetProps = stylesheetPropsFromRawProps(props);
-      const preloadProps = preloadPropsMap.get(key);
-      if (preloadProps) {
-        adoptPreloadPropsForStylesheet(stylesheetProps, preloadProps);
+      if (state.stylesheets === null) {
+        state.stylesheets = new Map();
       }
+      state.stylesheets.set(resource, hoistableRoot);
 
-      // Construct and insert a new instance
-      instance = ownerDocument.createElement('link');
-      markNodeAsHoistable(instance);
-      const linkInstance: HTMLLinkElement = (instance: any);
-      // This Promise is a loading state used by the Fizz runtime. We need this incase there is a race
-      // between this resource being rendered on the client and being rendered with a late completed boundary.
-      (linkInstance: any)._p = new Promise((resolve, reject) => {
-        linkInstance.onload = resolve;
-        linkInstance.onerror = reject;
-      });
-      setInitialProperties(instance, 'link', stylesheetProps);
-      resource.instance = instance;
-    }
-
-    if (state.stylesheets === null) {
-      state.stylesheets = new Map();
-    }
-    state.stylesheets.set(resource, hoistableRoot);
-
-    const preloadEl = resource.state.preload;
-    if (preloadEl && (resource.state.loading & Settled) === NotLoaded) {
-      state.count++;
-      const ping = onUnsuspend.bind(state);
-      preloadEl.addEventListener('load', ping);
-      preloadEl.addEventListener('error', ping);
+      const preloadEl = resource.state.preload;
+      if (preloadEl && (resource.state.loading & Settled) === NotLoaded) {
+        state.count++;
+        const ping = onUnsuspend.bind(state);
+        preloadEl.addEventListener('load', ping);
+        preloadEl.addEventListener('error', ping);
+      }
     }
   }
 }

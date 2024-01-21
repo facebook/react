@@ -43,7 +43,7 @@ let assertLog;
 describe('ReactFlight', () => {
   beforeEach(() => {
     jest.resetModules();
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     // This stores the state so we need to preserve it
@@ -374,12 +374,13 @@ describe('ReactFlight', () => {
   });
 
   it('can transport Map', async () => {
-    function ComponentClient({prop}) {
+    function ComponentClient({prop, selected}) {
       return `
         map: ${prop instanceof Map}
         size: ${prop.size}
         greet: ${prop.get('hi').greet}
         content: ${JSON.stringify(Array.from(prop))}
+        selected: ${prop.get(selected)}
       `;
     }
     const Component = clientReference(ComponentClient);
@@ -389,7 +390,7 @@ describe('ReactFlight', () => {
       ['hi', {greet: 'world'}],
       [objKey, 123],
     ]);
-    const model = <Component prop={map} />;
+    const model = <Component prop={map} selected={objKey} />;
 
     const transport = ReactNoopFlightServer.render(model);
 
@@ -402,23 +403,25 @@ describe('ReactFlight', () => {
         size: 2
         greet: world
         content: [["hi",{"greet":"world"}],[{"obj":"key"},123]]
+        selected: 123
       `);
   });
 
   it('can transport Set', async () => {
-    function ComponentClient({prop}) {
+    function ComponentClient({prop, selected}) {
       return `
         set: ${prop instanceof Set}
         size: ${prop.size}
         hi: ${prop.has('hi')}
         content: ${JSON.stringify(Array.from(prop))}
+        selected: ${prop.has(selected)}
       `;
     }
     const Component = clientReference(ComponentClient);
 
     const objKey = {obj: 'key'};
     const set = new Set(['hi', objKey]);
-    const model = <Component prop={set} />;
+    const model = <Component prop={set} selected={objKey} />;
 
     const transport = ReactNoopFlightServer.render(model);
 
@@ -431,7 +434,25 @@ describe('ReactFlight', () => {
         size: 2
         hi: true
         content: ["hi",{"obj":"key"}]
+        selected: true
       `);
+  });
+
+  it('can transport cyclic objects', async () => {
+    function ComponentClient({prop}) {
+      expect(prop.obj.obj.obj).toBe(prop.obj.obj);
+    }
+    const Component = clientReference(ComponentClient);
+
+    const cyclic = {obj: null};
+    cyclic.obj = cyclic;
+    const model = <Component prop={cyclic} />;
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
   });
 
   it('can render a lazy component as a shared component on the server', async () => {
@@ -988,6 +1009,22 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient.read(transport);
   });
 
+  it('should warn in DEV a child is missing keys', () => {
+    function ParentClient({children}) {
+      return children;
+    }
+    const Parent = clientReference(ParentClient);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <Parent>{Array(6).fill(<div>no key</div>)}</Parent>,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://reactjs.org/link/warning-keys for more information.',
+    );
+  });
+
   it('should error if a class instance is passed to a host component', () => {
     class Foo {
       method() {}
@@ -1428,7 +1465,7 @@ describe('ReactFlight', () => {
       // Reset all modules, except flight-modules which keeps the registry of Client Components
       const flightModules = require('react-noop-renderer/flight-modules');
       jest.resetModules();
-      jest.mock('react', () => require('react/react.shared-subset'));
+      jest.mock('react', () => require('react/react.react-server'));
       jest.mock('react-noop-renderer/flight-modules', () => flightModules);
 
       ReactServer = require('react');

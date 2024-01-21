@@ -32,7 +32,7 @@ export {
   startTransition,
   unstable_Cache,
   unstable_DebugTracingMode,
-  unstable_Offscreen,
+  unstable_Activity,
   unstable_postpone,
   unstable_getCacheSignal,
   unstable_getCacheForType,
@@ -57,9 +57,9 @@ export {
   useSyncExternalStore,
   useTransition,
   version,
-} from './src/React';
+} from './src/ReactClient';
 
-import {useOptimistic} from './src/React';
+import {useOptimistic} from './src/ReactClient';
 
 export function experimental_useOptimistic<S, A>(
   passthrough: S,

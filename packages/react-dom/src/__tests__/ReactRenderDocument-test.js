@@ -62,7 +62,6 @@ describe('rendering React components at document', () => {
       expect(body === testDocument.body).toBe(true);
     });
 
-    // @gate enableHostSingletons
     it('should be able to unmount component from document node, but leaves singleton nodes intact', () => {
       class Root extends React.Component {
         render() {
@@ -93,31 +92,6 @@ describe('rendering React components at document', () => {
       expect(testDocument.body).toBe(originalBody);
       expect(originalBody.firstChild).toEqual(null);
       expect(originalHead.firstChild).toEqual(null);
-    });
-
-    // @gate !enableHostSingletons
-    it('should be able to unmount component from document node', () => {
-      class Root extends React.Component {
-        render() {
-          return (
-            <html>
-              <head>
-                <title>Hello World</title>
-              </head>
-              <body>Hello world</body>
-            </html>
-          );
-        }
-      }
-
-      const markup = ReactDOMServer.renderToString(<Root />);
-      const testDocument = getTestDocument(markup);
-      ReactDOM.hydrate(<Root />, testDocument);
-      expect(testDocument.body.innerHTML).toBe('Hello world');
-
-      // When we unmount everything is removed except the persistent nodes of html, head, and body
-      ReactDOM.unmountComponentAtNode(testDocument);
-      expect(testDocument.firstChild).toBe(null);
     });
 
     it('should not be able to switch root constructors', () => {

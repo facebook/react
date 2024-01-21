@@ -30,7 +30,7 @@ import {
   createElement,
   cloneElement,
   jsxDEV,
-} from './ReactElement';
+} from './ReactElementProd';
 import {setExtraStackFrame} from './ReactDebugCurrentFrame';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import hasOwnProperty from 'shared/hasOwnProperty';
@@ -96,10 +96,7 @@ function getCurrentComponentErrorInfo(parentType) {
   let info = getDeclarationErrorAddendum();
 
   if (!info) {
-    const parentName =
-      typeof parentType === 'string'
-        ? parentType
-        : parentType.displayName || parentType.name;
+    const parentName = getComponentNameFromType(parentType);
     if (parentName) {
       info = `\n\nCheck the top-level render call using <${parentName}>.`;
     }

@@ -427,7 +427,7 @@ export function hydrate(
       parent[last] = undefined;
     } else {
       // Replace the string keys with Symbols so they're non-enumerable.
-      const replaced: {[key: symbol]: boolean | string, ...} = {};
+      const replaced: {[key: symbol]: boolean | string} = {};
       replaced[meta.inspectable] = !!value.inspectable;
       replaced[meta.inspected] = false;
       replaced[meta.name] = value.name;
