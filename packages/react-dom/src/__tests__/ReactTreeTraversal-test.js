@@ -87,11 +87,10 @@ describe('ReactTreeTraversal', () => {
     root = ReactDOMClient.createRoot(container);
     await act(() => {
       root.render(<ParentComponent eventHandler={mockFn} />);
-    })
+    });
   });
 
   afterEach(() => {
-    root.unmount();
     document.body.removeChild(container);
     document.body.removeChild(outerNode1);
     document.body.removeChild(outerNode2);
