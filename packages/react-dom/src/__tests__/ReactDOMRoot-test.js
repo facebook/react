@@ -133,6 +133,13 @@ describe('ReactDOMRoot', () => {
     expect(container.textContent).toEqual('');
   });
 
+  it('can be immediately unmounted', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.unmount();
+    });
+  });
+
   it('supports hydration', async () => {
     const markup = await new Promise(resolve =>
       resolve(
@@ -390,6 +397,18 @@ describe('ReactDOMRoot', () => {
         {withoutStack: true},
       );
     }
+  });
+
+  it('throws if unmounting a root that has had its contents removed', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div>Hi</div>);
+    });
+    container.innerHTML = '';
+
+    expect(() => {
+      root.unmount();
+    }).toThrow('The node to be removed is not a child of this node.');
   });
 
   it('opts-in to concurrent default updates', async () => {
