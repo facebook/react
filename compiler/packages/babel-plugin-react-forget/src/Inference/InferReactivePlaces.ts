@@ -23,7 +23,6 @@ import {
   eachInstructionValueOperand,
   eachTerminalOperand,
 } from "../HIR/visitors";
-import { hasBackEdge } from "../Optimization/DeadCodeElimination";
 import {
   findDisjointMutableValues,
   isMutable,
@@ -89,6 +88,25 @@ import { assertExhaustive } from "../Utils/utils";
  * The algorithm uses a fixpoint iteration in order to propagate reactivity "forward" through
  * the control-flow graph. We track whether each IdentifierId is reactive and terminate when
  * there are no changes after a given pass over the CFG.
+ *
+ * Note that in Forget it's possible to create a "readonly" reference to a value where
+ * the reference is created within that value's mutable range:
+ *
+ * ```javascript
+ * const x = [];
+ * const z = [x];
+ * x.push(props.input);
+ *
+ * return <div>{z}</div>;
+ * ```
+ *
+ * Here `z` is never used to mutate the value, but it is aliasing `x` which
+ * is mutated after the creation of the alias. The pass needs to account for
+ * values which become reactive via mutability, and propagate this reactivity
+ * to these readonly aliases. Using forward data flow is insufficient since
+ * this information needs to propagate "backwards" from the `x.push(props.input)`
+ * to the previous `z = [x]` line. We use a fixpoint iteration even if the
+ * program has no back edges to accomplish this.
  */
 export function inferReactivePlaces(fn: HIRFunction): void {
   const reactiveIdentifiers = new ReactivityMap(findDisjointMutableValues(fn));
@@ -137,7 +155,6 @@ export function inferReactivePlaces(fn: HIRFunction): void {
     return false;
   }
 
-  const hasLoop = hasBackEdge(fn);
   do {
     const identifierMapping = new Map<Identifier, Identifier>();
     for (const [, block] of fn.body.blocks) {
@@ -270,7 +287,7 @@ export function inferReactivePlaces(fn: HIRFunction): void {
         reactiveIdentifiers.isReactive(operand);
       }
     }
-  } while (reactiveIdentifiers.snapshot() && hasLoop);
+  } while (reactiveIdentifiers.snapshot());
 }
 
 /*
