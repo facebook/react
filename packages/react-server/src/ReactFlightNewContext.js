@@ -113,7 +113,7 @@ function popPreviousToCommonLevel(
 
   if (parentPrev === null) {
     throw new Error(
-      'The depth must equal at least at zero before reaching the root. This is a bug in React.',
+      'The depth must equal at least zero before reaching the root. This is a bug in React.',
     );
   }
 
@@ -134,7 +134,7 @@ function popNextToCommonLevel(
 
   if (parentNext === null) {
     throw new Error(
-      'The depth must equal at least at zero before reaching the root. This is a bug in React.',
+      'The depth must equal at least zero before reaching the root. This is a bug in React.',
     );
   }
 
