@@ -5,7 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { IdentifierId, ReactiveFunction, ReactiveScopeBlock } from "../HIR";
+import {
+  IdentifierId,
+  ReactiveFunction,
+  ReactiveInstruction,
+  ReactiveScopeBlock,
+  isSetStateType,
+} from "../HIR";
+import { eachPatternOperand } from "../HIR/visitors";
 import { collectReactiveIdentifiers } from "./CollectReactiveIdentifiers";
 import { ReactiveFunctionVisitor, visitReactiveFunction } from "./visitors";
 
@@ -23,26 +30,89 @@ export function pruneNonReactiveDependencies(fn: ReactiveFunction): void {
 type ReactiveIdentifiers = Set<IdentifierId>;
 
 class Visitor extends ReactiveFunctionVisitor<ReactiveIdentifiers> {
-  override visitScope(
-    scope: ReactiveScopeBlock,
+  override visitInstruction(
+    instruction: ReactiveInstruction,
     state: ReactiveIdentifiers
   ): void {
-    this.traverseScope(scope, state);
-    for (const dep of scope.scope.dependencies) {
-      const isReactive = state.has(dep.identifier.id);
-      if (!isReactive) {
-        scope.scope.dependencies.delete(dep);
+    this.traverseInstruction(instruction, state);
+
+    const { lvalue, value } = instruction;
+    switch (value.kind) {
+      case "LoadLocal": {
+        if (lvalue !== null && state.has(value.place.identifier.id)) {
+          state.add(lvalue.identifier.id);
+        }
+        break;
+      }
+      case "StoreLocal": {
+        if (state.has(value.value.identifier.id)) {
+          state.add(value.lvalue.place.identifier.id);
+          if (lvalue !== null) {
+            state.add(lvalue.identifier.id);
+          }
+        }
+        break;
+      }
+      case "Destructure": {
+        if (state.has(value.value.identifier.id)) {
+          for (const lvalue of eachPatternOperand(value.lvalue.pattern)) {
+            if (isSetStateType(lvalue.identifier)) {
+              continue;
+            }
+            state.add(lvalue.identifier.id);
+          }
+          if (lvalue !== null) {
+            state.add(lvalue.identifier.id);
+          }
+        }
+        break;
+      }
+      case "PropertyLoad": {
+        if (
+          lvalue !== null &&
+          state.has(value.object.identifier.id) &&
+          !isSetStateType(lvalue.identifier)
+        ) {
+          state.add(lvalue.identifier.id);
+        }
+        break;
+      }
+      case "ComputedLoad": {
+        if (
+          lvalue !== null &&
+          (state.has(value.object.identifier.id) ||
+            state.has(value.property.identifier.id))
+        ) {
+          state.add(lvalue.identifier.id);
+        }
+        break;
       }
     }
-    if (scope.scope.dependencies.size === 0) {
-      // If a scope has no dependencies, then its declarations are all non-reactive
-      for (const [, declaration] of scope.scope.declarations) {
-        state.delete(declaration.identifier.id);
+  }
+
+  override visitScope(
+    scopeBlock: ReactiveScopeBlock,
+    state: ReactiveIdentifiers
+  ): void {
+    this.traverseScope(scopeBlock, state);
+    for (const dep of scopeBlock.scope.dependencies) {
+      const isReactive = state.has(dep.identifier.id);
+      if (!isReactive) {
+        scopeBlock.scope.dependencies.delete(dep);
       }
-    } else {
-      // otherwise, all the scope's declarations are reactive
-      for (const [, declaration] of scope.scope.declarations) {
+    }
+    if (scopeBlock.scope.dependencies.size !== 0) {
+      /**
+       * If any of a scope's dependencies are reactive, then all of its
+       * outputs will re-evaluate whenever those dependencies change.
+       * Mark all of the outputs as reactive to reflect the fact that
+       * they may change in practice based on a reactive input.
+       */
+      for (const [, declaration] of scopeBlock.scope.declarations) {
         state.add(declaration.identifier.id);
+      }
+      for (const reassignment of scopeBlock.scope.reassignments) {
+        state.add(reassignment.id);
       }
     }
   }

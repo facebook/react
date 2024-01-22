@@ -35,7 +35,7 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(6);
+  const $ = useMemoCache(7);
   let a;
   if ($[0] !== props.b) {
     a = {};
@@ -57,12 +57,13 @@ function Component(props) {
   }
   const c = t0;
   let t1;
-  if ($[4] !== a) {
+  if ($[4] !== c || $[5] !== a) {
     t1 = [c, a];
-    $[4] = a;
-    $[5] = t1;
+    $[4] = c;
+    $[5] = a;
+    $[6] = t1;
   } else {
-    t1 = $[5];
+    t1 = $[6];
   }
   return t1;
 }
