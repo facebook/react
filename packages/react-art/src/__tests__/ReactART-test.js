@@ -24,6 +24,7 @@ import Wedge from 'react-art/Wedge';
 
 // Isolate DOM renderer.
 jest.resetModules();
+
 const ReactDOMClient = require('react-dom/client');
 const act = require('internal-test-utils').act;
 
