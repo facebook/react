@@ -12,12 +12,14 @@
 let React;
 let ReactDOMClient;
 let act;
+let ReactDOM;
 
 describe('ReactEventIndependence', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
   });
@@ -60,6 +62,31 @@ describe('ReactEventIndependence', () => {
       expect(clicks).toBe(1);
     } finally {
       document.body.removeChild(outer);
+    }
+  });
+
+  it('does not when event fired on unmounted tree', async () => {
+    let clicks = 0;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    try {
+      const root = ReactDOMClient.createRoot(container);
+
+      await act(() => {
+        root.render(<button onClick={() => clicks++}>click me</button>);
+      });
+
+      const button = container.firstChild;
+
+      // Now we unmount the component, as if caused by a non-React event handler
+      // for the same click we're about to simulate, like closing a layer:
+      root.unmount();
+      button.click();
+
+      // Since the tree is unmounted, we don't dispatch the click event.
+      expect(clicks).toBe(0);
+    } finally {
+      document.body.removeChild(container);
     }
   });
 });
