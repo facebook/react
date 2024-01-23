@@ -25,7 +25,8 @@ import Wedge from 'react-art/Wedge';
 // Isolate DOM renderer.
 jest.resetModules();
 const ReactDOM = require('react-dom');
-const ReactTestUtils = require('react-dom/test-utils');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
 
 // Isolate test renderer.
 jest.resetModules();
@@ -42,6 +43,7 @@ let Surface;
 let TestComponent;
 
 let waitFor;
+let groupRef;
 
 const Missing = {};
 
@@ -82,8 +84,9 @@ describe('ReactART', () => {
 
     ({waitFor} = require('internal-test-utils'));
 
+    groupRef = React.createRef();
     TestComponent = class extends React.Component {
-      group = React.createRef();
+      group = groupRef;
 
       render() {
         const a = (
@@ -132,17 +135,23 @@ describe('ReactART', () => {
     container = null;
   });
 
-  it('should have the correct lifecycle state', () => {
-    let instance = <TestComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    const group = instance.group.current;
+  it('should have the correct lifecycle state', async () => {
+    const instance = <TestComponent />;
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(instance);
+    });
+    const group = groupRef.current;
     // Duck type test for an ART group
     expect(typeof group.indicate).toBe('function');
   });
 
-  it('should render a reasonable SVG structure in SVG mode', () => {
-    let instance = <TestComponent />;
-    instance = ReactTestUtils.renderIntoDocument(instance);
+  it('should render a reasonable SVG structure in SVG mode', async () => {
+    const instance = <TestComponent />;
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(instance);
+    });
 
     const expectedStructure = {
       nodeName: 'svg',
@@ -165,7 +174,7 @@ describe('ReactART', () => {
       ],
     };
 
-    const realNode = ReactDOM.findDOMNode(instance);
+    const realNode = container.firstChild;
     testDOMNodeStructure(realNode, expectedStructure);
   });
 
@@ -243,7 +252,7 @@ describe('ReactART', () => {
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('renders composite with lifecycle inside group', () => {
+  it('renders composite with lifecycle inside group', async () => {
     let mounted = false;
 
     class CustomShape extends React.Component {
@@ -255,18 +264,20 @@ describe('ReactART', () => {
         mounted = true;
       }
     }
-
-    ReactTestUtils.renderIntoDocument(
-      <Surface>
-        <Group>
-          <CustomShape />
-        </Group>
-      </Surface>,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <Surface>
+          <Group>
+            <CustomShape />
+          </Group>
+        </Surface>,
+      );
+    });
     expect(mounted).toBe(true);
   });
 
-  it('resolves refs before componentDidMount', () => {
+  it('resolves refs before componentDidMount', async () => {
     class CustomShape extends React.Component {
       render() {
         return <Shape />;
@@ -293,7 +304,10 @@ describe('ReactART', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Outer />);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Outer />);
+    });
     expect(ref.constructor).toBe(CustomShape);
   });
 
