@@ -17,10 +17,14 @@ function Component(props) {
   const c = [a];
 
   let x;
-  if (c[0][0]) {
-    x = 1;
-  } else {
-    x = 2;
+  switch (c[0][0]) {
+    case true: {
+      x = 1;
+      break;
+    }
+    default: {
+      x = 2;
+    }
   }
   // The values assigned to `x` are non-reactive, but the value of `x`
   // depends on the "control" value `c[0]` which becomes reactive via
@@ -51,10 +55,14 @@ function Component(props) {
   const c = [a];
 
   let x;
-  if (c[0][0]) {
-    x = 1;
-  } else {
-    x = 2;
+  bb1: switch (c[0][0]) {
+    case true: {
+      x = 1;
+      break bb1;
+    }
+    default: {
+      x = 2;
+    }
   }
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {

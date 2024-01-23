@@ -10,18 +10,16 @@ function Component(props) {
   const a = [];
   const b = [];
   b.push(props.cond);
-  a.push(null);
+  a.push(false);
 
   // Downstream consumer of a, which initially seems non-reactive except
   // that a becomes reactive, per above
   const c = [a];
 
-  let x;
-  if (c[0][0]) {
-    x = 1;
-  } else {
-    x = 2;
-  }
+  let x = 0;
+  do {
+    x += 1;
+  } while (c[0][0]);
   // The values assigned to `x` are non-reactive, but the value of `x`
   // depends on the "control" value `c[0]` which becomes reactive via
   // being interleaved with `b`.
@@ -46,16 +44,14 @@ function Component(props) {
   const a = [];
   const b = [];
   b.push(props.cond);
-  a.push(null);
+  a.push(false);
 
   const c = [a];
 
-  let x;
-  if (c[0][0]) {
-    x = 1;
-  } else {
-    x = 2;
-  }
+  let x = 0;
+  do {
+    x = x + 1;
+  } while (c[0][0]);
   let t0;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
     t0 = [x];
@@ -74,4 +70,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: ok) [2]
+(kind: ok) [1]

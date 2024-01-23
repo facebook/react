@@ -13,7 +13,7 @@ function Component(props) {
   const c = [a];
 
   let x;
-  if (c[0]) {
+  if (c[0][0]) {
     x = 1;
   } else {
     x = 2;
