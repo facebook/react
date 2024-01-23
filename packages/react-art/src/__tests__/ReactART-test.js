@@ -136,7 +136,7 @@ describe('ReactART', () => {
   });
 
   it('should have the correct lifecycle state', async () => {
-    let instance = <TestComponent />;
+    const instance = <TestComponent />;
     const root = ReactDOMClient.createRoot(container);
     await act(() => {
       root.render(instance);
@@ -147,7 +147,7 @@ describe('ReactART', () => {
   });
 
   it('should render a reasonable SVG structure in SVG mode', async () => {
-    let instance = <TestComponent />;
+    const instance = <TestComponent />;
     const root = ReactDOMClient.createRoot(container);
     await act(() => {
       root.render(instance);
