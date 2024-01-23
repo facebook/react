@@ -42,9 +42,13 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           // eslint-disable-next-line no-unused-vars
           useSyncExternalStore: __,
           ...otherExports
-        } = jest.requireActual('react');
+        } = jest.requireActual('react-17/umd/react.development.js');
         return otherExports;
       });
+
+      jest.mock('react-dom', () =>
+        jest.requireActual('react-dom-17/umd/react-dom.development.js'),
+      );
     }
 
     React = require('react');
@@ -594,6 +598,8 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       );
     }).toErrorDev(
       'The result of getSnapshot should be cached to avoid an infinite loop',
+      // Stacks don't work when mixing the source and the npm package.
+      {withoutStack: gate(flags => flags.enableUseSyncExternalStoreShim)},
     );
   });
 
