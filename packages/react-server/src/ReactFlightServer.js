@@ -657,7 +657,57 @@ function createTask(
       key: string,
       value: ReactClientValue,
     ): ReactJSONValue {
-      return renderModel(request, task, this, key, value);
+      const parent = this;
+      // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
+      if (__DEV__) {
+        // $FlowFixMe[incompatible-use]
+        const originalValue = parent[key];
+        if (
+          typeof originalValue === 'object' &&
+          originalValue !== value &&
+          !(originalValue instanceof Date)
+        ) {
+          if (objectName(originalValue) !== 'Object') {
+            const jsxParentType = jsxChildrenParents.get(parent);
+            if (typeof jsxParentType === 'string') {
+              console.error(
+                '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
+                objectName(originalValue),
+                describeObjectForErrorMessage(parent, key),
+              );
+            } else {
+              console.error(
+                'Only plain objects can be passed to Client Components from Server Components. ' +
+                  '%s objects are not supported.%s',
+                objectName(originalValue),
+                describeObjectForErrorMessage(parent, key),
+              );
+            }
+          } else {
+            console.error(
+              'Only plain objects can be passed to Client Components from Server Components. ' +
+                'Objects with toJSON methods are not supported. Convert it manually ' +
+                'to a simple value before passing it to props.%s',
+              describeObjectForErrorMessage(parent, key),
+            );
+          }
+        }
+
+        if (
+          enableServerContext &&
+          parent[0] === REACT_ELEMENT_TYPE &&
+          parent[1] &&
+          (parent[1]: any).$$typeof === REACT_PROVIDER_TYPE &&
+          key === '3'
+        ) {
+          insideContextProps = value;
+        } else if (insideContextProps === parent && key === 'value') {
+          isInsideContextValue = true;
+        } else if (insideContextProps === parent && key === 'children') {
+          isInsideContextValue = false;
+        }
+      }
+      return renderModel(request, task, parent, key, value);
     },
     thenableState: null,
   };
@@ -916,6 +966,59 @@ let insideContextProps = null;
 let isInsideContextValue = false;
 let modelRoot: null | ReactClientValue = false;
 
+// A thrown value whether Suspense or Error needs to be serialized into a new chunk.
+// This creates a new chunk and returns the new ID which can be either a direct or
+// indirect reference.
+function serializeCaughtValue(
+  request: Request,
+  task: Task,
+  thrownValue: mixed,
+): number {
+  const x =
+    thrownValue === SuspenseException
+      ? // This is a special type of exception used for Suspense. For historical
+        // reasons, the rest of the Suspense implementation expects the thrown
+        // value to be a thenable, because before `use` existed that was the
+        // (unstable) API for suspending. This implementation detail can change
+        // later, once we deprecate the old API in favor of `use`.
+        getSuspendedThenable()
+      : thrownValue;
+  if (typeof x === 'object' && x !== null) {
+    // $FlowFixMe[method-unbinding]
+    if (typeof x.then === 'function') {
+      // Something suspended, we'll need to create a new task and resolve it later.
+      request.pendingChunks++;
+      const newTask = createTask(
+        request,
+        task.model,
+        getActiveContext(),
+        request.abortableTasks,
+      );
+      const ping = newTask.ping;
+      (x: any).then(ping, ping);
+      newTask.thenableState = getThenableStateAfterSuspending();
+      return newTask.id;
+    } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
+      // Something postponed. We'll still send everything we have up until this point.
+      // We'll replace this element with a lazy reference that postpones on the client.
+      const postponeInstance: Postpone = (x: any);
+      request.pendingChunks++;
+      const postponeId = request.nextChunkId++;
+      logPostpone(request, postponeInstance.message);
+      emitPostponeChunk(request, postponeId, postponeInstance);
+      return postponeId;
+    }
+  }
+  // Something errored. We'll still send everything we have up until this point.
+  // We'll replace this element with a lazy reference that throws on the client
+  // once it gets rendered.
+  request.pendingChunks++;
+  const errorId = request.nextChunkId++;
+  const digest = logRecoverableError(request, x);
+  emitErrorChunk(request, errorId, digest, x);
+  return errorId;
+}
+
 function renderModel(
   request: Request,
   task: Task,
@@ -925,167 +1028,31 @@ function renderModel(
   key: string,
   value: ReactClientValue,
 ): ReactJSONValue {
-  // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
-  if (__DEV__) {
-    // $FlowFixMe[incompatible-use]
-    const originalValue = parent[key];
-    if (
-      typeof originalValue === 'object' &&
-      originalValue !== value &&
-      !(originalValue instanceof Date)
-    ) {
-      if (objectName(originalValue) !== 'Object') {
-        const jsxParentType = jsxChildrenParents.get(parent);
-        if (typeof jsxParentType === 'string') {
-          console.error(
-            '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
-            objectName(originalValue),
-            describeObjectForErrorMessage(parent, key),
-          );
-        } else {
-          console.error(
-            'Only plain objects can be passed to Client Components from Server Components. ' +
-              '%s objects are not supported.%s',
-            objectName(originalValue),
-            describeObjectForErrorMessage(parent, key),
-          );
-        }
-      } else {
-        console.error(
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. Convert it manually ' +
-            'to a simple value before passing it to props.%s',
-          describeObjectForErrorMessage(parent, key),
-        );
-      }
-    }
-  }
+  // This function only exists for parity with Fizz, but it's not currently used.
+  // We could add a catch here which returns serializeByValueID(serializeCaughtValue()).
+  // If it's an error that doesn't really help but if something suspends we can still
+  // the surrounding tree early and still reconstruct it as a single tree on the client.
+  // However, the only things that really should suspend are Components or Lazy which
+  // already serialize as lazy references instead. In theory though a Proxy could also
+  // suspend or error when accessed and currently that suspends the parent row or Lazy.
+  return renderModelDestructive(request, task, parent, key, value);
+}
 
-  // Special Symbols
-  switch (value) {
-    case REACT_ELEMENT_TYPE:
-      return '$';
-  }
+function renderModelDestructive(
+  request: Request,
+  task: Task,
+  parent:
+    | {+[key: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
+  key: string,
+  value: ReactClientValue,
+): ReactJSONValue {
+  // Set the currently rendering model
+  task.model = value;
 
-  if (__DEV__) {
-    if (
-      enableServerContext &&
-      parent[0] === REACT_ELEMENT_TYPE &&
-      parent[1] &&
-      (parent[1]: any).$$typeof === REACT_PROVIDER_TYPE &&
-      key === '3'
-    ) {
-      insideContextProps = value;
-    } else if (insideContextProps === parent && key === 'value') {
-      isInsideContextValue = true;
-    } else if (insideContextProps === parent && key === 'children') {
-      isInsideContextValue = false;
-    }
-  }
-
-  // Resolve Server Components.
-  while (
-    typeof value === 'object' &&
-    value !== null &&
-    ((value: any).$$typeof === REACT_ELEMENT_TYPE ||
-      (value: any).$$typeof === REACT_LAZY_TYPE)
-  ) {
-    if (__DEV__) {
-      if (enableServerContext && isInsideContextValue) {
-        console.error('React elements are not allowed in ServerContext');
-      }
-    }
-
-    try {
-      switch ((value: any).$$typeof) {
-        case REACT_ELEMENT_TYPE: {
-          const writtenObjects = request.writtenObjects;
-          const existingId = writtenObjects.get(value);
-          if (existingId !== undefined) {
-            if (existingId === -1) {
-              // Seen but not yet outlined.
-              const newId = outlineModel(request, value);
-              return serializeByValueID(newId);
-            } else if (modelRoot === value) {
-              // This is the ID we're currently emitting so we need to write it
-              // once but if we discover it again, we refer to it by id.
-              modelRoot = null;
-            } else {
-              // We've already emitted this as an outlined object, so we can
-              // just refer to that by its existing ID.
-              return serializeByValueID(existingId);
-            }
-          } else {
-            // This is the first time we've seen this object. We may never see it again
-            // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
-            writtenObjects.set(value, -1);
-          }
-
-          // TODO: Concatenate keys of parents onto children.
-          const element: React$Element<any> = (value: any);
-          // Attempt to render the Server Component.
-          value = renderElement(
-            request,
-            element.type,
-            element.key,
-            element.ref,
-            element.props,
-            null,
-          );
-          break;
-        }
-        case REACT_LAZY_TYPE: {
-          const payload = (value: any)._payload;
-          const init = (value: any)._init;
-          value = init(payload);
-          break;
-        }
-      }
-    } catch (thrownValue) {
-      const x =
-        thrownValue === SuspenseException
-          ? // This is a special type of exception used for Suspense. For historical
-            // reasons, the rest of the Suspense implementation expects the thrown
-            // value to be a thenable, because before `use` existed that was the
-            // (unstable) API for suspending. This implementation detail can change
-            // later, once we deprecate the old API in favor of `use`.
-            getSuspendedThenable()
-          : thrownValue;
-      if (typeof x === 'object' && x !== null) {
-        // $FlowFixMe[method-unbinding]
-        if (typeof x.then === 'function') {
-          // Something suspended, we'll need to create a new task and resolve it later.
-          request.pendingChunks++;
-          const newTask = createTask(
-            request,
-            value,
-            getActiveContext(),
-            request.abortableTasks,
-          );
-          const ping = newTask.ping;
-          x.then(ping, ping);
-          newTask.thenableState = getThenableStateAfterSuspending();
-          return serializeLazyID(newTask.id);
-        } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
-          // Something postponed. We'll still send everything we have up until this point.
-          // We'll replace this element with a lazy reference that postpones on the client.
-          const postponeInstance: Postpone = (x: any);
-          request.pendingChunks++;
-          const postponeId = request.nextChunkId++;
-          logPostpone(request, postponeInstance.message);
-          emitPostponeChunk(request, postponeId, postponeInstance);
-          return serializeLazyID(postponeId);
-        }
-      }
-      // Something errored. We'll still send everything we have up until this point.
-      // We'll replace this element with a lazy reference that throws on the client
-      // once it gets rendered.
-      request.pendingChunks++;
-      const errorId = request.nextChunkId++;
-      const digest = logRecoverableError(request, x);
-      emitErrorChunk(request, errorId, digest, x);
-      return serializeLazyID(errorId);
-    }
+  // Special Symbol, that's very common.
+  if (value === REACT_ELEMENT_TYPE) {
+    return '$';
   }
 
   if (value === null) {
@@ -1093,14 +1060,79 @@ function renderModel(
   }
 
   if (typeof value === 'object') {
+    switch ((value: any).$$typeof) {
+      case REACT_ELEMENT_TYPE: {
+        if (__DEV__) {
+          if (enableServerContext && isInsideContextValue) {
+            console.error('React elements are not allowed in ServerContext');
+          }
+        }
+        const writtenObjects = request.writtenObjects;
+        const existingId = writtenObjects.get(value);
+        if (existingId !== undefined) {
+          if (existingId === -1) {
+            // Seen but not yet outlined.
+            const newId = outlineModel(request, value);
+            return serializeByValueID(newId);
+          } else if (modelRoot === value) {
+            // This is the ID we're currently emitting so we need to write it
+            // once but if we discover it again, we refer to it by id.
+            modelRoot = null;
+          } else {
+            // We've already emitted this as an outlined object, so we can
+            // just refer to that by its existing ID.
+            return serializeByValueID(existingId);
+          }
+        } else {
+          // This is the first time we've seen this object. We may never see it again
+          // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
+          writtenObjects.set(value, -1);
+        }
+
+        try {
+          // TODO: Concatenate keys of parents onto children.
+          const element: React$Element<any> = (value: any);
+          // Attempt to render the Server Component.
+          const result = renderElement(
+            request,
+            element.type,
+            element.key,
+            element.ref,
+            element.props,
+            null,
+          );
+          return renderModelDestructive(request, task, parent, key, result);
+        } catch (x) {
+          return serializeLazyID(serializeCaughtValue(request, task, x));
+        }
+      }
+      case REACT_LAZY_TYPE: {
+        try {
+          const payload = (value: any)._payload;
+          const init = (value: any)._init;
+          const resolvedModel = init(payload);
+          return renderModelDestructive(
+            request,
+            task,
+            parent,
+            key,
+            resolvedModel,
+          );
+        } catch (x) {
+          return serializeLazyID(serializeCaughtValue(request, task, x));
+        }
+      }
+    }
+
+    if (isClientReference(value)) {
+      return serializeClientReference(request, parent, key, (value: any));
+    }
+
     if (enableTaint) {
       const tainted = TaintRegistryObjects.get(value);
       if (tainted !== undefined) {
         throwTaintViolation(tainted);
       }
-    }
-    if (isClientReference(value)) {
-      return serializeClientReference(request, parent, key, (value: any));
     }
 
     const writtenObjects = request.writtenObjects;
@@ -1318,18 +1350,20 @@ function renderModel(
   }
 
   if (typeof value === 'function') {
-    if (enableTaint) {
-      const tainted = TaintRegistryObjects.get(value);
-      if (tainted !== undefined) {
-        throwTaintViolation(tainted);
-      }
-    }
     if (isClientReference(value)) {
       return serializeClientReference(request, parent, key, (value: any));
     }
     if (isServerReference(value)) {
       return serializeServerReference(request, parent, key, (value: any));
     }
+
+    if (enableTaint) {
+      const tainted = TaintRegistryObjects.get(value);
+      if (tainted !== undefined) {
+        throwTaintViolation(tainted);
+      }
+    }
+
     if (/^on[A-Z]/.test(key)) {
       throw new Error(
         'Event handlers cannot be passed to Client Component props.' +
