@@ -181,7 +181,6 @@ describe('ReactUpdates', () => {
   });
 
   it('should batch parent/child state updates together', async () => {
-    let parentRef;
     let childRef;
     let parentState;
     let childState;
@@ -198,10 +197,7 @@ describe('ReactUpdates', () => {
       });
 
       return (
-        <div
-          ref={ref => {
-            parentRef = ref;
-          }}>
+        <div>
           <Child prop={state} />
         </div>
       );
@@ -252,7 +248,6 @@ describe('ReactUpdates', () => {
   });
 
   it('should batch child/parent state updates together', async () => {
-    let parentRef;
     let childRef;
     let parentState;
     let childState;
@@ -269,10 +264,7 @@ describe('ReactUpdates', () => {
       });
 
       return (
-        <div
-          ref={ref => {
-            parentRef = ref;
-          }}>
+        <div>
           <Child prop={state} />
         </div>
       );

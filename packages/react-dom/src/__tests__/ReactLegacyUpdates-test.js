@@ -14,8 +14,6 @@ let ReactDOM;
 let ReactTestUtils;
 let act;
 let Scheduler;
-let waitForAll;
-let waitFor;
 let assertLog;
 
 // Copy of ReactUpdates using ReactDOM.render and ReactDOM.unstable_batchedUpdates.
@@ -30,8 +28,6 @@ describe('ReactLegacyUpdates', () => {
     Scheduler = require('scheduler');
 
     const InternalTestUtils = require('internal-test-utils');
-    waitForAll = InternalTestUtils.waitForAll;
-    waitFor = InternalTestUtils.waitFor;
     assertLog = InternalTestUtils.assertLog;
   });
 
