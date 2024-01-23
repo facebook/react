@@ -47,7 +47,7 @@ describe('ReactFreshIntegration', () => {
     }
   });
 
-  function executeCommon(source, compileDestructuring) {
+  function executeJavaScript(source, compileDestructuring) {
     const compiled = babel.transform(source, {
       babelrc: false,
       presets: ['@babel/react'],
@@ -57,6 +57,22 @@ describe('ReactFreshIntegration', () => {
         compileDestructuring && '@babel/plugin-transform-destructuring',
       ].filter(Boolean),
     }).code;
+    return executeCompiled(compiled);
+  }
+
+  function executeTypescript(source) {
+    const typescriptSource = babel.transform(source, {
+      babelrc: false,
+      configFile: false,
+      presets: ['@babel/react'],
+      plugins: [
+        [freshPlugin, {skipEnvCheck: true}],
+        ['@babel/plugin-syntax-typescript', {isTSX: true}],
+      ],
+    }).code;
+    const compiled = ts.transpileModule(typescriptSource, {
+      module: ts.ModuleKind.CommonJS,
+    }).outputText;
     return executeCompiled(compiled);
   }
 
@@ -86,33 +102,19 @@ describe('ReactFreshIntegration', () => {
     return ReactFreshRuntime.createSignatureFunctionForTransform();
   }
 
-  describe('with compiled destructuring', () => {
-    runTests(executeCommon, testCommon);
-  });
-
-  describe('without compiled destructuring', () => {
-    runTests(executeCommon, testCommon);
-  });
-
-  describe('with typescript syntax', () => {
-    runTests(function (source) {
-      const typescriptSource = babel.transform(source, {
-        babelrc: false,
-        configFile: false,
-        presets: ['@babel/react'],
-        plugins: [
-          [freshPlugin, {skipEnvCheck: true}],
-          ['@babel/plugin-syntax-typescript', {isTSX: true}],
-        ],
-      }).code;
-      const compiled = ts.transpileModule(typescriptSource, {
-        module: ts.ModuleKind.CommonJS,
-      }).outputText;
-      return executeCompiled(compiled);
-    }, testTypescript);
-  });
-
-  function runTests(execute, test) {
+  describe.each([
+    [
+      'JavaScript syntax with destructuring enabled',
+      source => executeJavaScript(source, true),
+      testJavaScript,
+    ],
+    [
+      'JavaScript syntax with destructuring disabled',
+      source => executeJavaScript(source, false),
+      testJavaScript,
+    ],
+    ['TypeScript syntax', executeTypescript, testTypeScript],
+  ])('%s', (language, execute, test) => {
     function render(source) {
       const Component = execute(source);
       act(() => {
@@ -159,9 +161,9 @@ describe('ReactFreshIntegration', () => {
     }
 
     test(render, patch);
-  }
+  });
 
-  function testCommon(render, patch) {
+  function testJavaScript(render, patch) {
     it('reloads function declarations', () => {
       if (__DEV__) {
         render(`
@@ -1975,7 +1977,7 @@ describe('ReactFreshIntegration', () => {
     });
   }
 
-  function testTypescript(render, patch) {
+  function testTypeScript(render, patch) {
     it('reloads component exported in typescript namespace', () => {
       if (__DEV__) {
         render(`
