@@ -86,7 +86,8 @@ const createMatcherFor = (consoleMethod, matcherName) =>
         // doesn't match the number of arguments.
         // We'll fail the test if it happens.
         let argIndex = 0;
-        format.replace(/%s/g, () => argIndex++);
+        // console.* could have been called with a non-string e.g. `console.error(new Error())`
+        String(format).replace(/%s/g, () => argIndex++);
         if (argIndex !== args.length) {
           lastWarningWithMismatchingFormat = {
             format,

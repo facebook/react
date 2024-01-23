@@ -169,7 +169,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       if (!message) {
         return message;
       }
-      const re = /error-decoder.html\?invariant=(\d+)([^\s]*)/;
+      const re = /react.dev\/errors\/(\d+)?\??([^\s]*)/;
       const matches = message.match(re);
       if (!matches || matches.length !== 3) {
         return message;

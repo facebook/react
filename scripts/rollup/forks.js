@@ -64,8 +64,8 @@ const forks = Object.freeze({
       return './packages/react/src/ReactSharedInternalsClient.js';
     }
     if (
-      entry === 'react/src/ReactSharedSubset.js' ||
-      entry === 'react/src/ReactSharedSubsetFB.js'
+      entry === 'react/src/ReactServer.js' ||
+      entry === 'react/src/ReactServerFB.js'
     ) {
       return './packages/react/src/ReactSharedInternalsServer.js';
     }
@@ -93,7 +93,7 @@ const forks = Object.freeze({
     if (
       entry === 'react-dom' ||
       entry === 'react-dom/server-rendering-stub' ||
-      entry === 'react-dom/src/ReactDOMSharedSubset.js'
+      entry === 'react-dom/src/ReactDOMServer.js'
     ) {
       return './packages/react-dom/src/ReactDOMSharedInternals.js';
     }
