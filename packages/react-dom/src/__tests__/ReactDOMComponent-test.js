@@ -13,15 +13,20 @@ describe('ReactDOMComponent', () => {
   let React;
   let ReactTestUtils;
   let ReactDOM;
+  let ReactDOMClient;
   let ReactDOMServer;
   const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+
+  let act;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
   });
 
   afterEach(() => {
@@ -29,21 +34,33 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('updateDOM', () => {
-    it('should handle className', () => {
+    it('should handle className', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div style={{}} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div style={{}} />);
+      });
 
-      ReactDOM.render(<div className={'foo'} />, container);
+      await act(() => {
+        root.render(<div className={'foo'} />);
+      });
       expect(container.firstChild.className).toEqual('foo');
-      ReactDOM.render(<div className={'bar'} />, container);
+      await act(() => {
+        root.render(<div className={'bar'} />);
+      });
       expect(container.firstChild.className).toEqual('bar');
-      ReactDOM.render(<div className={null} />, container);
+      await act(() => {
+        root.render(<div className={null} />);
+      });
       expect(container.firstChild.className).toEqual('');
     });
 
-    it('should gracefully handle various style value types', () => {
+    it('should gracefully handle various style value types', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div style={{}} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div style={{}} />);
+      });
       const stubStyle = container.firstChild.style;
 
       // set initial style
@@ -53,7 +70,9 @@ describe('ReactDOMComponent', () => {
         top: 2,
         fontFamily: 'Arial',
       };
-      ReactDOM.render(<div style={setup} />, container);
+      await act(() => {
+        root.render(<div style={setup} />);
+      });
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
       expect(stubStyle.top).toEqual('2px');
@@ -61,14 +80,16 @@ describe('ReactDOMComponent', () => {
 
       // reset the style to their default state
       const reset = {display: '', left: null, top: false, fontFamily: true};
-      ReactDOM.render(<div style={reset} />, container);
+      await act(() => {
+        root.render(<div style={reset} />);
+      });
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.left).toEqual('');
       expect(stubStyle.top).toEqual('');
       expect(stubStyle.fontFamily).toEqual('');
     });
 
-    it('should not update styles when mutating a proxy style object', () => {
+    it('should not update styles when mutating a proxy style object', async () => {
       const styleStore = {
         display: 'none',
         fontFamily: 'Arial',
@@ -97,7 +118,10 @@ describe('ReactDOMComponent', () => {
         },
       };
       const container = document.createElement('div');
-      ReactDOM.render(<div style={styles} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
 
       const stubStyle = container.firstChild.style;
       stubStyle.display = styles.display;
@@ -105,26 +129,34 @@ describe('ReactDOMComponent', () => {
 
       styles.display = 'block';
 
-      ReactDOM.render(<div style={styles} />, container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
       expect(stubStyle.display).toEqual('none');
       expect(stubStyle.fontFamily).toEqual('Arial');
       expect(stubStyle.lineHeight).toEqual('1.2');
 
       styles.fontFamily = 'Helvetica';
 
-      ReactDOM.render(<div style={styles} />, container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
       expect(stubStyle.display).toEqual('none');
       expect(stubStyle.fontFamily).toEqual('Arial');
       expect(stubStyle.lineHeight).toEqual('1.2');
 
       styles.lineHeight = 0.5;
 
-      ReactDOM.render(<div style={styles} />, container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
       expect(stubStyle.display).toEqual('none');
       expect(stubStyle.fontFamily).toEqual('Arial');
       expect(stubStyle.lineHeight).toEqual('1.2');
 
-      ReactDOM.render(<div style={undefined} />, container);
+      await act(() => {
+        root.render(<div style={undefined} />);
+      });
       expect(stubStyle.display).toBe('');
       expect(stubStyle.fontFamily).toBe('');
       expect(stubStyle.lineHeight).toBe('');
@@ -147,11 +179,14 @@ describe('ReactDOMComponent', () => {
       }
     });
 
-    it('should warn for unknown prop', () => {
+    it('should warn for unknown prop', async () => {
       const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<div foo={() => {}} />, container),
-      ).toErrorDev(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<div foo={() => {}} />);
+        });
+      }).toErrorDev(
         'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep ' +
           'it in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
@@ -159,11 +194,14 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should group multiple unknown prop warnings together', () => {
+    it('should group multiple unknown prop warnings together', async () => {
       const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<div foo={() => {}} baz={() => {}} />, container),
-      ).toErrorDev(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<div foo={() => {}} baz={() => {}} />);
+        });
+      }).toErrorDev(
         'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
           'them from the element, or pass a string or number value to keep ' +
           'them in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
@@ -171,68 +209,90 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should warn for onDblClick prop', () => {
+    it('should warn for onDblClick prop', async () => {
       const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<div onDblClick={() => {}} />, container),
-      ).toErrorDev(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<div onDblClick={() => {}} />);
+        });
+      }).toErrorDev(
         'Warning: Invalid event handler property `onDblClick`. Did you mean `onDoubleClick`?\n    in div (at **)',
       );
     });
 
-    it('should warn for unknown string event handlers', () => {
+    it('should warn for unknown string event handlers', async () => {
       const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<div onUnknown='alert("hack")' />, container),
-      ).toErrorDev(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<div onUnknown='alert("hack")' />);
+        });
+      }).toErrorDev(
         'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
       expect(container.firstChild.onUnknown).toBe(undefined);
-      expect(() =>
-        ReactDOM.render(<div onunknown='alert("hack")' />, container),
-      ).toErrorDev(
+      await expect(async () => {
+        await act(() => {
+          root.render(<div onunknown='alert("hack")' />);
+        });
+      }).toErrorDev(
         'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
       expect(container.firstChild.onunknown).toBe(undefined);
-      expect(() =>
-        ReactDOM.render(<div on-unknown='alert("hack")' />, container),
-      ).toErrorDev(
+      await expect(async () => {
+        await act(() => {
+          root.render(<div on-unknown='alert("hack")' />);
+        });
+      }).toErrorDev(
         'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
       expect(container.firstChild['on-unknown']).toBe(undefined);
     });
 
-    it('should warn for unknown function event handlers', () => {
+    it('should warn for unknown function event handlers', async () => {
       const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<div onUnknown={function () {}} />, container),
-      ).toErrorDev(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<div onUnknown={function () {}} />);
+        });
+      }).toErrorDev(
         'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
       expect(container.firstChild.onUnknown).toBe(undefined);
-      expect(() =>
-        ReactDOM.render(<div onunknown={function () {}} />, container),
-      ).toErrorDev(
+      await expect(async () => {
+        await act(() => {
+          root.render(<div onunknown={function () {}} />);
+        });
+      }).toErrorDev(
         'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
       expect(container.firstChild.onunknown).toBe(undefined);
-      expect(() =>
-        ReactDOM.render(<div on-unknown={function () {}} />, container),
-      ).toErrorDev(
+      await expect(async () => {
+        await act(() => {
+          root.render(<div on-unknown={function () {}} />);
+        });
+      }).toErrorDev(
         'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
       );
       expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
       expect(container.firstChild['on-unknown']).toBe(undefined);
     });
 
-    it('should warn for badly cased React attributes', () => {
+    it('should warn for badly cased React attributes', async () => {
       const container = document.createElement('div');
-      expect(() => ReactDOM.render(<div CHILDREN="5" />, container)).toErrorDev(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<div CHILDREN="5" />);
+        });
+      }).toErrorDev(
         'Warning: Invalid DOM property `CHILDREN`. Did you mean `children`?\n    in div (at **)',
       );
       expect(container.firstChild.getAttribute('CHILDREN')).toBe('5');
@@ -248,14 +308,21 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(<Component />);
     });
 
-    it('should warn nicely about NaN in style', () => {
+    it('should warn nicely about NaN in style', async () => {
       const style = {fontSize: NaN};
       const div = document.createElement('div');
-      expect(() => ReactDOM.render(<span style={style} />, div)).toErrorDev(
+      const root = ReactDOMClient.createRoot(div);
+      await expect(async () => {
+        await act(() => {
+          root.render(<span style={style} />);
+        });
+      }).toErrorDev(
         'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
           '\n    in span (at **)',
       );
-      ReactDOM.render(<span style={style} />, div);
+      await act(() => {
+        root.render(<span style={style} />);
+      });
     });
 
     it('throws with Temporal-like objects as style values', () => {
@@ -280,50 +347,68 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should update styles if initially null', () => {
+    it('should update styles if initially null', async () => {
       let styles = null;
       const container = document.createElement('div');
-      ReactDOM.render(<div style={styles} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
 
       const stubStyle = container.firstChild.style;
 
       styles = {display: 'block'};
 
-      ReactDOM.render(<div style={styles} />, container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
       expect(stubStyle.display).toEqual('block');
     });
 
-    it('should update styles if updated to null multiple times', () => {
+    it('should update styles if updated to null multiple times', async () => {
       let styles = null;
       const container = document.createElement('div');
-      ReactDOM.render(<div style={styles} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
 
       styles = {display: 'block'};
       const stubStyle = container.firstChild.style;
 
-      ReactDOM.render(<div style={styles} />, container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
       expect(stubStyle.display).toEqual('block');
 
-      ReactDOM.render(<div style={null} />, container);
+      await act(() => {
+        root.render(<div style={null} />);
+      });
       expect(stubStyle.display).toEqual('');
 
-      ReactDOM.render(<div style={styles} />, container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
       expect(stubStyle.display).toEqual('block');
 
-      ReactDOM.render(<div style={null} />, container);
+      await act(() => {
+        root.render(<div style={null} />);
+      });
       expect(stubStyle.display).toEqual('');
     });
 
-    it('should allow named slot projection on both web components and regular DOM elements', () => {
+    it('should allow named slot projection on both web components and regular DOM elements', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
-      ReactDOM.render(
-        <my-component>
-          <my-second-component slot="first" />
-          <button slot="second">Hello</button>
-        </my-component>,
-        container,
-      );
+      await act(() => {
+        root.render(
+          <my-component>
+            <my-second-component slot="first" />
+            <button slot="second">Hello</button>
+          </my-component>,
+        );
+      });
 
       const lightDOM = container.firstChild.childNodes;
 
@@ -331,17 +416,19 @@ describe('ReactDOMComponent', () => {
       expect(lightDOM[1].getAttribute('slot')).toBe('second');
     });
 
-    it('should skip reserved props on web components', () => {
+    it('should skip reserved props on web components', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
-      ReactDOM.render(
-        <my-component
-          children={['foo']}
-          suppressContentEditableWarning={true}
-          suppressHydrationWarning={true}
-        />,
-        container,
-      );
+      await act(() => {
+        root.render(
+          <my-component
+            children={['foo']}
+            suppressContentEditableWarning={true}
+            suppressHydrationWarning={true}
+          />,
+        );
+      });
       expect(container.firstChild.hasAttribute('children')).toBe(false);
       expect(
         container.firstChild.hasAttribute('suppressContentEditableWarning'),
@@ -350,14 +437,15 @@ describe('ReactDOMComponent', () => {
         container.firstChild.hasAttribute('suppressHydrationWarning'),
       ).toBe(false);
 
-      ReactDOM.render(
-        <my-component
-          children={['bar']}
-          suppressContentEditableWarning={false}
-          suppressHydrationWarning={false}
-        />,
-        container,
-      );
+      await act(() => {
+        root.render(
+          <my-component
+            children={['bar']}
+            suppressContentEditableWarning={false}
+            suppressHydrationWarning={false}
+          />,
+        );
+      });
       expect(container.firstChild.hasAttribute('children')).toBe(false);
       expect(
         container.firstChild.hasAttribute('suppressContentEditableWarning'),
@@ -367,110 +455,133 @@ describe('ReactDOMComponent', () => {
       ).toBe(false);
     });
 
-    it('should skip dangerouslySetInnerHTML on web components', () => {
+    it('should skip dangerouslySetInnerHTML on web components', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
-      ReactDOM.render(
-        <my-component dangerouslySetInnerHTML={{__html: 'hi'}} />,
-        container,
-      );
+      await act(() => {
+        root.render(<my-component dangerouslySetInnerHTML={{__html: 'hi'}} />);
+      });
       expect(container.firstChild.hasAttribute('dangerouslySetInnerHTML')).toBe(
         false,
       );
 
-      ReactDOM.render(
-        <my-component dangerouslySetInnerHTML={{__html: 'bye'}} />,
-        container,
-      );
+      await act(() => {
+        root.render(<my-component dangerouslySetInnerHTML={{__html: 'bye'}} />);
+      });
       expect(container.firstChild.hasAttribute('dangerouslySetInnerHTML')).toBe(
         false,
       );
     });
 
-    it('should render null and undefined as empty but print other falsy values', () => {
+    it('should render null and undefined as empty but print other falsy values', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
-      ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: 'textContent'}} />,
-        container,
-      );
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: 'textContent'}} />);
+      });
       expect(container.textContent).toEqual('textContent');
 
-      ReactDOM.render(<div dangerouslySetInnerHTML={{__html: 0}} />, container);
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: 0}} />);
+      });
       expect(container.textContent).toEqual('0');
 
-      ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: false}} />,
-        container,
-      );
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: false}} />);
+      });
       expect(container.textContent).toEqual('false');
 
-      ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: ''}} />,
-        container,
-      );
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: ''}} />);
+      });
       expect(container.textContent).toEqual('');
 
-      ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: null}} />,
-        container,
-      );
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: null}} />);
+      });
       expect(container.textContent).toEqual('');
 
-      ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: undefined}} />,
-        container,
-      );
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: undefined}} />);
+      });
       expect(container.textContent).toEqual('');
     });
 
-    it('should remove attributes', () => {
+    it('should remove attributes', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<img height="17" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<img height="17" />);
+      });
 
       expect(container.firstChild.hasAttribute('height')).toBe(true);
-      ReactDOM.render(<img />, container);
+      await act(() => {
+        root.render(<img />);
+      });
       expect(container.firstChild.hasAttribute('height')).toBe(false);
     });
 
-    it('should remove properties', () => {
+    it('should remove properties', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div className="monkey" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div className="monkey" />);
+      });
 
       expect(container.firstChild.className).toEqual('monkey');
-      ReactDOM.render(<div />, container);
+      await act(() => {
+        root.render(<div />);
+      });
       expect(container.firstChild.className).toEqual('');
     });
 
-    it('should not set null/undefined attributes', () => {
+    it('should not set null/undefined attributes', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
       // Initial render.
-      ReactDOM.render(<img src={null} data-foo={undefined} />, container);
+      await act(() => {
+        root.render(<img src={null} data-foo={undefined} />);
+      });
       const node = container.firstChild;
       expect(node.hasAttribute('src')).toBe(false);
       expect(node.hasAttribute('data-foo')).toBe(false);
       // Update in one direction.
-      ReactDOM.render(<img src={undefined} data-foo={null} />, container);
+      await act(() => {
+        root.render(<img src={undefined} data-foo={null} />);
+      });
       expect(node.hasAttribute('src')).toBe(false);
       expect(node.hasAttribute('data-foo')).toBe(false);
       // Update in another direction.
-      ReactDOM.render(<img src={null} data-foo={undefined} />, container);
+      await act(() => {
+        root.render(<img src={null} data-foo={undefined} />);
+      });
       expect(node.hasAttribute('src')).toBe(false);
       expect(node.hasAttribute('data-foo')).toBe(false);
       // Removal.
-      ReactDOM.render(<img />, container);
+      await act(() => {
+        root.render(<img />);
+      });
       expect(node.hasAttribute('src')).toBe(false);
       expect(node.hasAttribute('data-foo')).toBe(false);
       // Addition.
-      ReactDOM.render(<img src={undefined} data-foo={null} />, container);
+      await act(() => {
+        root.render(<img src={undefined} data-foo={null} />);
+      });
       expect(node.hasAttribute('src')).toBe(false);
       expect(node.hasAttribute('data-foo')).toBe(false);
     });
 
     if (ReactFeatureFlags.enableFilterEmptyStringAttributesDOM) {
-      it('should not add an empty src attribute', () => {
+      it('should not add an empty src attribute', async () => {
         const container = document.createElement('div');
-        expect(() => ReactDOM.render(<img src="" />, container)).toErrorDev(
+        const root = ReactDOMClient.createRoot(container);
+        await expect(async () => {
+          await act(() => {
+            root.render(<img src="" />);
+          });
+        }).toErrorDev(
           'An empty string ("") was passed to the src attribute. ' +
             'This may cause the browser to download the whole page again over the network. ' +
             'To fix this, either do not render the element at all ' +
@@ -479,10 +590,16 @@ describe('ReactDOMComponent', () => {
         const node = container.firstChild;
         expect(node.hasAttribute('src')).toBe(false);
 
-        ReactDOM.render(<img src="abc" />, container);
+        await act(() => {
+          root.render(<img src="abc" />);
+        });
         expect(node.hasAttribute('src')).toBe(true);
 
-        expect(() => ReactDOM.render(<img src="" />, container)).toErrorDev(
+        await expect(async () => {
+          await act(() => {
+            root.render(<img src="" />);
+          });
+        }).toErrorDev(
           'An empty string ("") was passed to the src attribute. ' +
             'This may cause the browser to download the whole page again over the network. ' +
             'To fix this, either do not render the element at all ' +
@@ -491,9 +608,14 @@ describe('ReactDOMComponent', () => {
         expect(node.hasAttribute('src')).toBe(false);
       });
 
-      it('should not add an empty href attribute', () => {
+      it('should not add an empty href attribute', async () => {
         const container = document.createElement('div');
-        expect(() => ReactDOM.render(<link href="" />, container)).toErrorDev(
+        const root = ReactDOMClient.createRoot(container);
+        await expect(async () => {
+          await act(() => {
+            root.render(<link href="" />);
+          });
+        }).toErrorDev(
           'An empty string ("") was passed to the href attribute. ' +
             'To fix this, either do not render the element at all ' +
             'or pass null to href instead of an empty string.',
@@ -501,10 +623,16 @@ describe('ReactDOMComponent', () => {
         const node = container.firstChild;
         expect(node.hasAttribute('href')).toBe(false);
 
-        ReactDOM.render(<link href="abc" />, container);
+        await act(() => {
+          root.render(<link href="abc" />);
+        });
         expect(node.hasAttribute('href')).toBe(true);
 
-        expect(() => ReactDOM.render(<link href="" />, container)).toErrorDev(
+        await expect(async () => {
+          await act(() => {
+            root.render(<link href="" />);
+          });
+        }).toErrorDev(
           'An empty string ("") was passed to the href attribute. ' +
             'To fix this, either do not render the element at all ' +
             'or pass null to href instead of an empty string.',
@@ -512,38 +640,49 @@ describe('ReactDOMComponent', () => {
         expect(node.hasAttribute('href')).toBe(false);
       });
 
-      it('should allow an empty action attribute', () => {
+      it('should allow an empty action attribute', async () => {
         const container = document.createElement('div');
-        ReactDOM.render(<form action="" />, container);
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(<form action="" />);
+        });
         const node = container.firstChild;
         expect(node.getAttribute('action')).toBe('');
 
-        ReactDOM.render(<form action="abc" />, container);
+        await act(() => {
+          root.render(<form action="abc" />);
+        });
         expect(node.hasAttribute('action')).toBe(true);
 
-        ReactDOM.render(<form action="" />, container);
+        await act(() => {
+          root.render(<form action="" />);
+        });
         expect(node.getAttribute('action')).toBe('');
       });
 
-      it('allows empty string of a formAction to override the default of a parent', () => {
+      it('allows empty string of a formAction to override the default of a parent', async () => {
         const container = document.createElement('div');
-        ReactDOM.render(
-          <form action="hello">
-            <button formAction="" />,
-          </form>,
-          container,
-        );
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <form action="hello">
+              <button formAction="" />,
+            </form>,
+          );
+        });
         const node = container.firstChild.firstChild;
         expect(node.hasAttribute('formaction')).toBe(true);
         expect(node.getAttribute('formaction')).toBe('');
       });
 
-      it('should not filter attributes for custom elements', () => {
+      it('should not filter attributes for custom elements', async () => {
         const container = document.createElement('div');
-        ReactDOM.render(
-          <some-custom-element action="" formAction="" href="" src="" />,
-          container,
-        );
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(
+            <some-custom-element action="" formAction="" href="" src="" />,
+          );
+        });
         const node = container.firstChild;
         expect(node.hasAttribute('action')).toBe(true);
         expect(node.hasAttribute('formAction')).toBe(true);
@@ -552,93 +691,138 @@ describe('ReactDOMComponent', () => {
       });
     }
 
-    it('should apply React-specific aliases to HTML elements', () => {
+    it('should apply React-specific aliases to HTML elements', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<form acceptCharset="foo" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<form acceptCharset="foo" />);
+      });
       const node = container.firstChild;
       // Test attribute initialization.
       expect(node.getAttribute('accept-charset')).toBe('foo');
       expect(node.hasAttribute('acceptCharset')).toBe(false);
       // Test attribute update.
-      ReactDOM.render(<form acceptCharset="boo" />, container);
+      await act(() => {
+        root.render(<form acceptCharset="boo" />);
+      });
       expect(node.getAttribute('accept-charset')).toBe('boo');
       expect(node.hasAttribute('acceptCharset')).toBe(false);
       // Test attribute removal by setting to null.
-      ReactDOM.render(<form acceptCharset={null} />, container);
+      await act(() => {
+        root.render(<form acceptCharset={null} />);
+      });
       expect(node.hasAttribute('accept-charset')).toBe(false);
       expect(node.hasAttribute('acceptCharset')).toBe(false);
       // Restore.
-      ReactDOM.render(<form acceptCharset="foo" />, container);
+      await act(() => {
+        root.render(<form acceptCharset="foo" />);
+      });
       expect(node.getAttribute('accept-charset')).toBe('foo');
       expect(node.hasAttribute('acceptCharset')).toBe(false);
       // Test attribute removal by setting to undefined.
-      ReactDOM.render(<form acceptCharset={undefined} />, container);
+      await act(() => {
+        root.render(<form acceptCharset={undefined} />);
+      });
       expect(node.hasAttribute('accept-charset')).toBe(false);
       expect(node.hasAttribute('acceptCharset')).toBe(false);
       // Restore.
-      ReactDOM.render(<form acceptCharset="foo" />, container);
+      await act(() => {
+        root.render(<form acceptCharset="foo" />);
+      });
       expect(node.getAttribute('accept-charset')).toBe('foo');
       expect(node.hasAttribute('acceptCharset')).toBe(false);
       // Test attribute removal.
-      ReactDOM.render(<form />, container);
+      await act(() => {
+        root.render(<form />);
+      });
       expect(node.hasAttribute('accept-charset')).toBe(false);
       expect(node.hasAttribute('acceptCharset')).toBe(false);
     });
 
-    it('should apply React-specific aliases to SVG elements', () => {
+    it('should apply React-specific aliases to SVG elements', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<svg arabicForm="foo" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<svg arabicForm="foo" />);
+      });
       const node = container.firstChild;
       // Test attribute initialization.
       expect(node.getAttribute('arabic-form')).toBe('foo');
       expect(node.hasAttribute('arabicForm')).toBe(false);
       // Test attribute update.
-      ReactDOM.render(<svg arabicForm="boo" />, container);
+      await act(() => {
+        root.render(<svg arabicForm="boo" />);
+      });
       expect(node.getAttribute('arabic-form')).toBe('boo');
       expect(node.hasAttribute('arabicForm')).toBe(false);
       // Test attribute removal by setting to null.
-      ReactDOM.render(<svg arabicForm={null} />, container);
+      await act(() => {
+        root.render(<svg arabicForm={null} />);
+      });
       expect(node.hasAttribute('arabic-form')).toBe(false);
       expect(node.hasAttribute('arabicForm')).toBe(false);
       // Restore.
-      ReactDOM.render(<svg arabicForm="foo" />, container);
+      await act(() => {
+        root.render(<svg arabicForm="foo" />);
+      });
       expect(node.getAttribute('arabic-form')).toBe('foo');
       expect(node.hasAttribute('arabicForm')).toBe(false);
       // Test attribute removal by setting to undefined.
-      ReactDOM.render(<svg arabicForm={undefined} />, container);
+      await act(() => {
+        root.render(<svg arabicForm={undefined} />);
+      });
       expect(node.hasAttribute('arabic-form')).toBe(false);
       expect(node.hasAttribute('arabicForm')).toBe(false);
       // Restore.
-      ReactDOM.render(<svg arabicForm="foo" />, container);
+      await act(() => {
+        root.render(<svg arabicForm="foo" />);
+      });
       expect(node.getAttribute('arabic-form')).toBe('foo');
       expect(node.hasAttribute('arabicForm')).toBe(false);
       // Test attribute removal.
-      ReactDOM.render(<svg />, container);
+      await act(() => {
+        root.render(<svg />);
+      });
       expect(node.hasAttribute('arabic-form')).toBe(false);
       expect(node.hasAttribute('arabicForm')).toBe(false);
     });
 
-    it('should properly update custom attributes on custom elements', () => {
+    it('should properly update custom attributes on custom elements', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<some-custom-element foo="bar" />, container);
-      ReactDOM.render(<some-custom-element bar="buzz" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<some-custom-element foo="bar" />);
+      });
+      expect(container.firstChild.getAttribute('foo')).toBe('bar');
+      await act(() => {
+        root.render(<some-custom-element bar="buzz" />);
+      });
+      expect(container.firstChild.hasAttribute('foo')).toBe(false);
+      expect(container.firstChild.getAttribute('bar')).toBe('buzz');
       const node = container.firstChild;
       expect(node.hasAttribute('foo')).toBe(false);
       expect(node.getAttribute('bar')).toBe('buzz');
     });
 
-    it('should not apply React-specific aliases to custom elements', () => {
+    it('should not apply React-specific aliases to custom elements', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<some-custom-element arabicForm="foo" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<some-custom-element arabicForm="foo" />);
+      });
       const node = container.firstChild;
       // Should not get transformed to arabic-form as SVG would be.
       expect(node.getAttribute('arabicForm')).toBe('foo');
       expect(node.hasAttribute('arabic-form')).toBe(false);
       // Test attribute update.
-      ReactDOM.render(<some-custom-element arabicForm="boo" />, container);
+      await act(() => {
+        root.render(<some-custom-element arabicForm="boo" />);
+      });
       expect(node.getAttribute('arabicForm')).toBe('boo');
       // Test attribute removal and addition.
-      ReactDOM.render(<some-custom-element acceptCharset="buzz" />, container);
+      await act(() => {
+        root.render(<some-custom-element acceptCharset="buzz" />);
+      });
       // Verify the previous attribute was removed.
       expect(node.hasAttribute('arabicForm')).toBe(false);
       // Should not get transformed to accept-charset as HTML would be.
@@ -646,15 +830,20 @@ describe('ReactDOMComponent', () => {
       expect(node.hasAttribute('accept-charset')).toBe(false);
     });
 
-    it('should clear a single style prop when changing `style`', () => {
+    it('should clear a single style prop when changing `style`', async () => {
       let styles = {display: 'none', color: 'red'};
       const container = document.createElement('div');
-      ReactDOM.render(<div style={styles} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
 
       const stubStyle = container.firstChild.style;
 
       styles = {color: 'green'};
-      ReactDOM.render(<div style={styles} />, container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.color).toEqual('green');
     });
@@ -829,144 +1018,189 @@ describe('ReactDOMComponent', () => {
       ]);
     });
 
-    it('should update arbitrary attributes for tags containing dashes', () => {
+    it('should update arbitrary attributes for tags containing dashes', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
       const beforeUpdate = React.createElement('x-foo-component', {}, null);
-      ReactDOM.render(beforeUpdate, container);
+      await act(() => {
+        root.render(beforeUpdate);
+      });
 
       const afterUpdate = <x-foo-component myattr="myval" />;
-      ReactDOM.render(afterUpdate, container);
+      await act(() => {
+        root.render(afterUpdate);
+      });
 
       expect(container.childNodes[0].getAttribute('myattr')).toBe('myval');
     });
 
-    it('should clear all the styles when removing `style`', () => {
+    it('should clear all the styles when removing `style`', async () => {
       const styles = {display: 'none', color: 'red'};
       const container = document.createElement('div');
-      ReactDOM.render(<div style={styles} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
 
       const stubStyle = container.firstChild.style;
 
-      ReactDOM.render(<div />, container);
+      await act(() => {
+        root.render(<div />);
+      });
       expect(stubStyle.display).toEqual('');
       expect(stubStyle.color).toEqual('');
     });
 
-    it('should update styles when `style` changes from null to object', () => {
+    it('should update styles when `style` changes from null to object', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
       const styles = {color: 'red'};
-      ReactDOM.render(<div style={styles} />, container);
-      ReactDOM.render(<div />, container);
-      ReactDOM.render(<div style={styles} />, container);
-
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
       const stubStyle = container.firstChild.style;
-      expect(stubStyle.color).toEqual('red');
+      expect(stubStyle.color).toBe('red');
+      await act(() => {
+        root.render(<div />);
+      });
+      expect(stubStyle.color).toBe('');
+      await act(() => {
+        root.render(<div style={styles} />);
+      });
+
+      expect(stubStyle.color).toBe('red');
     });
 
-    it('should not reset innerHTML for when children is null', () => {
+    it('should not reset innerHTML for when children is null', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div />);
+      });
       container.firstChild.innerHTML = 'bonjour';
       expect(container.firstChild.innerHTML).toEqual('bonjour');
 
-      ReactDOM.render(<div />, container);
+      await act(() => {
+        root.render(<div />);
+      });
       expect(container.firstChild.innerHTML).toEqual('bonjour');
     });
 
-    it('should reset innerHTML when switching from a direct text child to an empty child', () => {
+    it('should reset innerHTML when switching from a direct text child to an empty child', async () => {
       const transitionToValues = [null, undefined, false];
-      transitionToValues.forEach(transitionToValue => {
+      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+      for (const transitionToValue of transitionToValues) {
         const container = document.createElement('div');
-        ReactDOM.render(<div>bonjour</div>, container);
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(<div>bonjour</div>);
+        });
         expect(container.firstChild.innerHTML).toEqual('bonjour');
 
-        ReactDOM.render(<div>{transitionToValue}</div>, container);
+        await act(() => {
+          root.render(<div>{transitionToValue}</div>);
+        });
         expect(container.firstChild.innerHTML).toEqual('');
-      });
+      }
     });
 
-    it('should empty element when removing innerHTML', () => {
+    it('should empty element when removing innerHTML', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: ':)'}} />,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: ':)'}} />);
+      });
 
       expect(container.firstChild.innerHTML).toEqual(':)');
-      ReactDOM.render(<div />, container);
+      await act(() => {
+        root.render(<div />);
+      });
       expect(container.firstChild.innerHTML).toEqual('');
     });
 
-    it('should transition from string content to innerHTML', () => {
+    it('should transition from string content to innerHTML', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div>hello</div>, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div>hello</div>);
+      });
 
       expect(container.firstChild.innerHTML).toEqual('hello');
-      ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: 'goodbye'}} />,
-        container,
-      );
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: 'goodbye'}} />);
+      });
       expect(container.firstChild.innerHTML).toEqual('goodbye');
     });
 
-    it('should transition from innerHTML to string content', () => {
+    it('should transition from innerHTML to string content', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div dangerouslySetInnerHTML={{__html: 'bonjour'}} />);
+      });
 
       expect(container.firstChild.innerHTML).toEqual('bonjour');
-      ReactDOM.render(<div>adieu</div>, container);
+      await act(() => {
+        root.render(<div>adieu</div>);
+      });
       expect(container.firstChild.innerHTML).toEqual('adieu');
     });
 
-    it('should transition from innerHTML to children in nested el', () => {
+    it('should transition from innerHTML to children in nested el', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(
-        <div>
-          <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
-        </div>,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div>
+            <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+          </div>,
+        );
+      });
 
       expect(container.textContent).toEqual('bonjour');
-      ReactDOM.render(
-        <div>
+      await act(() => {
+        root.render(
           <div>
-            <span>adieu</span>
-          </div>
-        </div>,
-        container,
-      );
+            <div>
+              <span>adieu</span>
+            </div>
+          </div>,
+        );
+      });
       expect(container.textContent).toEqual('adieu');
     });
 
-    it('should transition from children to innerHTML in nested el', () => {
+    it('should transition from children to innerHTML in nested el', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(
-        <div>
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
           <div>
-            <span>adieu</span>
-          </div>
-        </div>,
-        container,
-      );
+            <div>
+              <span>adieu</span>
+            </div>
+          </div>,
+        );
+      });
 
       expect(container.textContent).toEqual('adieu');
-      ReactDOM.render(
-        <div>
-          <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
-        </div>,
-        container,
-      );
+      await act(() => {
+        root.render(
+          <div>
+            <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+          </div>,
+        );
+      });
       expect(container.textContent).toEqual('bonjour');
     });
 
-    it('should not incur unnecessary DOM mutations for attributes', () => {
+    it('should not incur unnecessary DOM mutations for attributes', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div id="" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div id="" />);
+      });
 
       const node = container.firstChild;
       const nodeSetAttribute = node.setAttribute;
@@ -977,34 +1211,49 @@ describe('ReactDOMComponent', () => {
       node.removeAttribute = jest.fn();
       node.removeAttribute.mockImplementation(nodeRemoveAttribute);
 
-      ReactDOM.render(<div id="" />, container);
+      await act(() => {
+        root.render(<div id="" />);
+      });
       expect(node.setAttribute).toHaveBeenCalledTimes(0);
       expect(node.removeAttribute).toHaveBeenCalledTimes(0);
 
-      ReactDOM.render(<div id="foo" />, container);
+      await act(() => {
+        root.render(<div id="foo" />);
+      });
       expect(node.setAttribute).toHaveBeenCalledTimes(1);
       expect(node.removeAttribute).toHaveBeenCalledTimes(0);
 
-      ReactDOM.render(<div id="foo" />, container);
+      await act(() => {
+        root.render(<div id="foo" />);
+      });
       expect(node.setAttribute).toHaveBeenCalledTimes(1);
       expect(node.removeAttribute).toHaveBeenCalledTimes(0);
 
-      ReactDOM.render(<div />, container);
+      await act(() => {
+        root.render(<div />);
+      });
       expect(node.setAttribute).toHaveBeenCalledTimes(1);
       expect(node.removeAttribute).toHaveBeenCalledTimes(1);
 
-      ReactDOM.render(<div id="" />, container);
+      await act(() => {
+        root.render(<div id="" />);
+      });
       expect(node.setAttribute).toHaveBeenCalledTimes(2);
       expect(node.removeAttribute).toHaveBeenCalledTimes(1);
 
-      ReactDOM.render(<div />, container);
+      await act(() => {
+        root.render(<div />);
+      });
       expect(node.setAttribute).toHaveBeenCalledTimes(2);
       expect(node.removeAttribute).toHaveBeenCalledTimes(2);
     });
 
-    it('should not incur unnecessary DOM mutations for string properties', () => {
+    it('should not incur unnecessary DOM mutations for string properties', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div value="" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div value="" />);
+      });
 
       const node = container.firstChild;
 
@@ -1016,29 +1265,44 @@ describe('ReactDOMComponent', () => {
         nodeValueSetter(key, value);
       };
 
-      ReactDOM.render(<div value="foo" />, container);
+      await act(() => {
+        root.render(<div value="foo" />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      ReactDOM.render(<div value="foo" />, container);
+      await act(() => {
+        root.render(<div value="foo" />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      ReactDOM.render(<div />, container);
+      await act(() => {
+        root.render(<div />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      ReactDOM.render(<div value={null} />, container);
+      await act(() => {
+        root.render(<div value={null} />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      ReactDOM.render(<div value="" />, container);
+      await act(() => {
+        root.render(<div value="" />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(2);
 
-      ReactDOM.render(<div />, container);
+      await act(() => {
+        root.render(<div />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(2);
     });
 
-    it('should not incur unnecessary DOM mutations for controlled string properties', () => {
+    it('should not incur unnecessary DOM mutations for controlled string properties', async () => {
       function onChange() {}
       const container = document.createElement('div');
-      ReactDOM.render(<input value="" onChange={onChange} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<input value="" onChange={onChange} />);
+      });
 
       const node = container.firstChild;
 
@@ -1053,17 +1317,22 @@ describe('ReactDOMComponent', () => {
         }),
       });
 
-      ReactDOM.render(<input value="foo" onChange={onChange} />, container);
+      await act(() => {
+        root.render(<input value="foo" onChange={onChange} />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      ReactDOM.render(
-        <input value="foo" data-unrelated={true} onChange={onChange} />,
-        container,
-      );
+      await act(() => {
+        root.render(
+          <input value="foo" data-unrelated={true} onChange={onChange} />,
+        );
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      expect(() => {
-        ReactDOM.render(<input onChange={onChange} />, container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<input onChange={onChange} />);
+        });
       }).toErrorDev(
         'A component is changing a controlled input to be uncontrolled. This is likely caused by ' +
           'the value changing from a defined to undefined, which should not happen. Decide between ' +
@@ -1071,16 +1340,20 @@ describe('ReactDOMComponent', () => {
       );
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      expect(() => {
-        ReactDOM.render(<input value={null} onChange={onChange} />, container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<input value={null} onChange={onChange} />);
+        });
       }).toErrorDev(
         'value` prop on `input` should not be null. Consider using an empty string to clear the ' +
           'component or `undefined` for uncontrolled components.',
       );
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
 
-      expect(() => {
-        ReactDOM.render(<input value="" onChange={onChange} />, container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<input value="" onChange={onChange} />);
+        });
       }).toErrorDev(
         ' A component is changing an uncontrolled input to be controlled. This is likely caused by ' +
           'the value changing from undefined to a defined value, which should not happen. Decide between ' +
@@ -1088,13 +1361,18 @@ describe('ReactDOMComponent', () => {
       );
       expect(nodeValueSetter).toHaveBeenCalledTimes(2);
 
-      ReactDOM.render(<input onChange={onChange} />, container);
+      await act(() => {
+        root.render(<input onChange={onChange} />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(2);
     });
 
-    it('should not incur unnecessary DOM mutations for boolean properties', () => {
+    it('should not incur unnecessary DOM mutations for boolean properties', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<audio muted={true} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<audio muted={true} />);
+      });
 
       const node = container.firstChild;
       let nodeValue = true;
@@ -1108,78 +1386,102 @@ describe('ReactDOMComponent', () => {
         }),
       });
 
-      ReactDOM.render(<audio muted={true} data-unrelated="yes" />, container);
+      await act(() => {
+        root.render(<audio muted={true} data-unrelated="yes" />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(0);
 
-      ReactDOM.render(<audio muted={false} data-unrelated="ok" />, container);
+      await act(() => {
+        root.render(<audio muted={false} data-unrelated="ok" />);
+      });
       expect(nodeValueSetter).toHaveBeenCalledTimes(1);
     });
 
-    it('should ignore attribute list for elements with the "is" attribute', () => {
+    it('should ignore attribute list for elements with the "is" attribute', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<button is="test" cowabunga="chevynova" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<button is="test" cowabunga="chevynova" />);
+      });
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
     });
 
-    it('should warn about non-string "is" attribute', () => {
+    it('should warn about non-string "is" attribute', async () => {
       const container = document.createElement('div');
-      expect(() =>
-        ReactDOM.render(<button is={function () {}} />, container),
-      ).toErrorDev(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<button is={function () {}} />);
+        });
+      }).toErrorDev(
         'Received a `function` for a string attribute `is`. If this is expected, cast ' +
           'the value to a string.',
       );
     });
 
-    it('should not update when switching between null/undefined', () => {
+    it('should not update when switching between null/undefined', async () => {
       const container = document.createElement('div');
-      const node = ReactDOM.render(<div />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div />);
+      });
 
       const setter = jest.fn();
-      node.setAttribute = setter;
+      container.firstChild.setAttribute = setter;
 
-      ReactDOM.render(<div dir={null} />, container);
-      ReactDOM.render(<div dir={undefined} />, container);
-      ReactDOM.render(<div />, container);
+      await act(() => {
+        root.render(<div dir={null} />);
+      });
+      await act(() => {
+        root.render(<div dir={undefined} />);
+      });
+      await act(() => {
+        root.render(<div />);
+      });
       expect(setter).toHaveBeenCalledTimes(0);
-      ReactDOM.render(<div dir="ltr" />, container);
+      await act(() => {
+        root.render(<div dir="ltr" />);
+      });
       expect(setter).toHaveBeenCalledTimes(1);
     });
 
-    it('handles multiple child updates without interference', () => {
+    it('handles multiple child updates without interference', async () => {
       // This test might look like it's just testing ReactMultiChild but the
       // last bug in this was actually in DOMChildrenOperations so this test
       // needs to be in some DOM-specific test file.
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
       // ABCD
-      ReactDOM.render(
-        <div>
-          <div key="one">
-            <div key="A">A</div>
-            <div key="B">B</div>
-          </div>
-          <div key="two">
-            <div key="C">C</div>
-            <div key="D">D</div>
-          </div>
-        </div>,
-        container,
-      );
+      await act(() => {
+        root.render(
+          <div>
+            <div key="one">
+              <div key="A">A</div>
+              <div key="B">B</div>
+            </div>
+            <div key="two">
+              <div key="C">C</div>
+              <div key="D">D</div>
+            </div>
+          </div>,
+        );
+      });
       // BADC
-      ReactDOM.render(
-        <div>
-          <div key="one">
-            <div key="B">B</div>
-            <div key="A">A</div>
-          </div>
-          <div key="two">
-            <div key="D">D</div>
-            <div key="C">C</div>
-          </div>
-        </div>,
-        container,
-      );
+      await act(() => {
+        root.render(
+          <div>
+            <div key="one">
+              <div key="B">B</div>
+              <div key="A">A</div>
+            </div>
+            <div key="two">
+              <div key="D">D</div>
+              <div key="C">C</div>
+            </div>
+          </div>,
+        );
+      });
 
       expect(container.textContent).toBe('BADC');
     });
@@ -1248,25 +1550,30 @@ describe('ReactDOMComponent', () => {
     let mountComponent;
 
     beforeEach(() => {
-      mountComponent = function (props) {
+      mountComponent = async props => {
         const container = document.createElement('div');
-        ReactDOM.render(<div {...props} />, container);
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(<div {...props} />);
+        });
       };
     });
 
-    it('should work error event on <source> element', () => {
+    it('should work error event on <source> element', async () => {
       spyOnDevAndProd(console, 'log');
       const container = document.createElement('div');
-      ReactDOM.render(
-        <video>
-          <source
-            src="http://example.org/video"
-            type="video/mp4"
-            onError={e => console.log('onError called')}
-          />
-        </video>,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <video>
+            <source
+              src="http://example.org/video"
+              type="video/mp4"
+              onError={e => console.log('onError called')}
+            />
+          </video>,
+        );
+      });
 
       const errorEvent = document.createEvent('Event');
       errorEvent.initEvent('error', false, false);
@@ -1358,32 +1665,36 @@ describe('ReactDOMComponent', () => {
       }
     });
 
-    it('should throw on children for void elements', () => {
+    it('should throw on children for void elements', async () => {
       const container = document.createElement('div');
-      expect(() => {
-        ReactDOM.render(<input>children</input>, container);
-      }).toThrowError(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<input>children</input>);
+        });
+      }).rejects.toThrowError(
         'input is a void element tag and must neither have `children` nor ' +
           'use `dangerouslySetInnerHTML`.',
       );
     });
 
-    it('should throw on dangerouslySetInnerHTML for void elements', () => {
+    it('should throw on dangerouslySetInnerHTML for void elements', async () => {
       const container = document.createElement('div');
-      expect(() => {
-        ReactDOM.render(
-          <input dangerouslySetInnerHTML={{__html: 'content'}} />,
-          container,
-        );
-      }).toThrowError(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<input dangerouslySetInnerHTML={{__html: 'content'}} />);
+        });
+      }).rejects.toThrowError(
         'input is a void element tag and must neither have `children` nor ' +
           'use `dangerouslySetInnerHTML`.',
       );
     });
 
-    it('should treat menuitem as a void element but still create the closing tag', () => {
+    it('should treat menuitem as a void element but still create the closing tag', async () => {
       // menuitem is not implemented in jsdom, so this triggers the unknown warning error
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
       const returnedValue = ReactDOMServer.renderToString(
         <menu>
@@ -1393,70 +1704,71 @@ describe('ReactDOMComponent', () => {
 
       expect(returnedValue).toContain('</menuitem>');
 
-      expect(function () {
-        expect(() => {
-          ReactDOM.render(
-            <menu>
-              <menuitem>children</menuitem>
-            </menu>,
-            container,
-          );
+      await expect(async () => {
+        await expect(async () => {
+          await act(() => {
+            root.render(
+              <menu>
+                <menuitem>children</menuitem>
+              </menu>,
+            );
+          });
         }).toErrorDev('The tag <menuitem> is unrecognized in this browser.');
-      }).toThrowError(
+      }).rejects.toThrowError(
         'menuitem is a void element tag and must neither have `children` nor use ' +
           '`dangerouslySetInnerHTML`.',
       );
     });
 
-    it('should validate against multiple children props', () => {
-      expect(function () {
-        mountComponent({children: '', dangerouslySetInnerHTML: ''});
-      }).toThrowError(
+    it('should validate against multiple children props', async () => {
+      await expect(async () => {
+        await mountComponent({children: '', dangerouslySetInnerHTML: ''});
+      }).rejects.toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
           'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 
-    it('should validate against use of innerHTML', () => {
-      expect(() =>
-        mountComponent({innerHTML: '<span>Hi Jim!</span>'}),
-      ).toErrorDev('Directly setting property `innerHTML` is not permitted. ');
+    it('should validate against use of innerHTML', async () => {
+      await expect(async () => {
+        await mountComponent({innerHTML: '<span>Hi Jim!</span>'});
+      }).toErrorDev('Directly setting property `innerHTML` is not permitted. ');
     });
 
-    it('should validate against use of innerHTML without case sensitivity', () => {
-      expect(() =>
-        mountComponent({innerhtml: '<span>Hi Jim!</span>'}),
-      ).toErrorDev('Directly setting property `innerHTML` is not permitted. ');
+    it('should validate against use of innerHTML without case sensitivity', async () => {
+      await expect(async () => {
+        await mountComponent({innerhtml: '<span>Hi Jim!</span>'});
+      }).toErrorDev('Directly setting property `innerHTML` is not permitted. ');
     });
 
-    it('should validate use of dangerouslySetInnerHTML', () => {
-      expect(function () {
-        mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
-      }).toThrowError(
+    it('should validate use of dangerouslySetInnerHTML', async () => {
+      await expect(async () => {
+        await mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
+      }).rejects.toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
           'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 
-    it('should validate use of dangerouslySetInnerHTML', () => {
-      expect(function () {
-        mountComponent({dangerouslySetInnerHTML: {foo: 'bar'}});
-      }).toThrowError(
+    it('should validate use of dangerouslySetInnerHTML', async () => {
+      await expect(async () => {
+        await mountComponent({dangerouslySetInnerHTML: {foo: 'bar'}});
+      }).rejects.toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
           'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 
-    it('should allow {__html: null}', () => {
-      expect(function () {
-        mountComponent({dangerouslySetInnerHTML: {__html: null}});
+    it('should allow {__html: null}', async () => {
+      await expect(async () => {
+        await mountComponent({dangerouslySetInnerHTML: {__html: null}});
       }).not.toThrow();
     });
 
-    it('should warn about contentEditable and children', () => {
-      expect(() =>
-        mountComponent({contentEditable: true, children: ''}),
-      ).toErrorDev(
+    it('should warn about contentEditable and children', async () => {
+      await expect(async () => {
+        await mountComponent({contentEditable: true, children: ''});
+      }).toErrorDev(
         'Warning: A component is `contentEditable` and contains `children` ' +
           'managed by React. It is now your responsibility to guarantee that ' +
           'none of those nodes are unexpectedly modified or duplicated. This ' +
@@ -1464,25 +1776,25 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should respect suppressContentEditableWarning', () => {
-      mountComponent({
+    it('should respect suppressContentEditableWarning', async () => {
+      await mountComponent({
         contentEditable: true,
         children: '',
         suppressContentEditableWarning: true,
       });
     });
 
-    it('should validate against invalid styles', () => {
-      expect(function () {
-        mountComponent({style: 'display: none'});
-      }).toThrowError(
+    it('should validate against invalid styles', async () => {
+      await expect(async () => {
+        await mountComponent({style: 'display: none'});
+      }).rejects.toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
           "not a string. For example, style={{marginRight: spacing + 'em'}} " +
           'when using JSX.',
       );
     });
 
-    it('should throw for children on void elements', () => {
+    it('should throw for children on void elements', async () => {
       class X extends React.Component {
         render() {
           return <input>moo</input>;
@@ -1490,36 +1802,44 @@ describe('ReactDOMComponent', () => {
       }
 
       const container = document.createElement('div');
-      expect(() => {
-        ReactDOM.render(<X />, container);
-      }).toThrowError(
+      const root = ReactDOMClient.createRoot(container);
+      await expect(async () => {
+        await act(() => {
+          root.render(<X />);
+        });
+      }).rejects.toThrowError(
         'input is a void element tag and must neither have `children` ' +
           'nor use `dangerouslySetInnerHTML`.',
       );
     });
 
-    it('should support custom elements which extend native elements', () => {
+    it('should support custom elements which extend native elements', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
       spyOnDevAndProd(document, 'createElement');
-      ReactDOM.render(<div is="custom-div" />, container);
+      await act(() => {
+        root.render(<div is="custom-div" />);
+      });
       expect(document.createElement).toHaveBeenCalledWith('div', {
         is: 'custom-div',
       });
     });
 
-    it('should work load and error events on <image> element in SVG', () => {
+    it('should work load and error events on <image> element in SVG', async () => {
       spyOnDevAndProd(console, 'log');
       const container = document.createElement('div');
-      ReactDOM.render(
-        <svg>
-          <image
-            xlinkHref="http://example.org/image"
-            onError={e => console.log('onError called')}
-            onLoad={e => console.log('onLoad called')}
-          />
-        </svg>,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <svg>
+            <image
+              xlinkHref="http://example.org/image"
+              onError={e => console.log('onError called')}
+              onLoad={e => console.log('onLoad called')}
+            />
+          </svg>,
+        );
+      });
 
       const loadEvent = document.createEvent('Event');
       const errorEvent = document.createEvent('Event');
@@ -1537,14 +1857,14 @@ describe('ReactDOMComponent', () => {
       }
     });
 
-    it('should receive a load event on <link> elements', () => {
+    it('should receive a load event on <link> elements', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
       const onLoad = jest.fn();
 
-      ReactDOM.render(
-        <link href="http://example.org/link" onLoad={onLoad} />,
-        container,
-      );
+      await act(() => {
+        root.render(<link href="http://example.org/link" onLoad={onLoad} />);
+      });
 
       const loadEvent = document.createEvent('Event');
       const link = container.getElementsByTagName('link')[0];
@@ -1555,14 +1875,14 @@ describe('ReactDOMComponent', () => {
       expect(onLoad).toHaveBeenCalledTimes(1);
     });
 
-    it('should receive an error event on <link> elements', () => {
+    it('should receive an error event on <link> elements', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
       const onError = jest.fn();
 
-      ReactDOM.render(
-        <link href="http://example.org/link" onError={onError} />,
-        container,
-      );
+      await act(() => {
+        root.render(<link href="http://example.org/link" onError={onError} />);
+      });
 
       const errorEvent = document.createEvent('Event');
       const link = container.getElementsByTagName('link')[0];
@@ -1576,82 +1896,99 @@ describe('ReactDOMComponent', () => {
 
   describe('updateComponent', () => {
     let container;
+    let root;
 
     beforeEach(() => {
       container = document.createElement('div');
+      root = ReactDOMClient.createRoot(container);
     });
 
-    it('should warn against children for void elements', () => {
-      ReactDOM.render(<input />, container);
+    it('should warn against children for void elements', async () => {
+      await act(() => {
+        root.render(<input />);
+      });
 
-      expect(function () {
-        ReactDOM.render(<input>children</input>, container);
-      }).toThrowError(
+      await expect(async () => {
+        await act(() => {
+          root.render(<input>children</input>);
+        });
+      }).rejects.toThrowError(
         'input is a void element tag and must neither have `children` nor use ' +
           '`dangerouslySetInnerHTML`.',
       );
     });
 
-    it('should warn against dangerouslySetInnerHTML for void elements', () => {
-      ReactDOM.render(<input />, container);
+    it('should warn against dangerouslySetInnerHTML for void elements', async () => {
+      await act(() => {
+        root.render(<input />);
+      });
 
-      expect(function () {
-        ReactDOM.render(
-          <input dangerouslySetInnerHTML={{__html: 'content'}} />,
-          container,
-        );
-      }).toThrowError(
+      await expect(async () => {
+        await act(() => {
+          root.render(<input dangerouslySetInnerHTML={{__html: 'content'}} />);
+        });
+      }).rejects.toThrowError(
         'input is a void element tag and must neither have `children` nor use ' +
           '`dangerouslySetInnerHTML`.',
       );
     });
 
-    it('should validate against multiple children props', () => {
-      ReactDOM.render(<div />, container);
+    it('should validate against multiple children props', async () => {
+      await act(() => {
+        root.render(<div />);
+      });
 
-      expect(function () {
-        ReactDOM.render(
-          <div children="" dangerouslySetInnerHTML={{__html: ''}} />,
-          container,
-        );
-      }).toThrowError(
+      await expect(async () => {
+        await act(() => {
+          root.render(
+            <div children="" dangerouslySetInnerHTML={{__html: ''}} />,
+          );
+        });
+      }).rejects.toThrowError(
         'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
       );
     });
 
-    it('should warn about contentEditable and children', () => {
-      expect(() => {
-        ReactDOM.render(
-          <div contentEditable={true}>
-            <div />
-          </div>,
-          container,
-        );
+    it('should warn about contentEditable and children', async () => {
+      await expect(async () => {
+        await act(() => {
+          root.render(
+            <div contentEditable={true}>
+              <div />
+            </div>,
+          );
+        });
       }).toErrorDev('contentEditable');
     });
 
-    it('should validate against invalid styles', () => {
-      ReactDOM.render(<div />, container);
+    it('should validate against invalid styles', async () => {
+      await act(() => {
+        root.render(<div />);
+      });
 
-      expect(function () {
-        ReactDOM.render(<div style={1} />, container);
-      }).toThrowError(
+      await expect(async () => {
+        await act(() => {
+          root.render(<div style={1} />);
+        });
+      }).rejects.toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
           "not a string. For example, style={{marginRight: spacing + 'em'}} " +
           'when using JSX.',
       );
     });
 
-    it('should report component containing invalid styles', () => {
+    it('should report component containing invalid styles', async () => {
       class Animal extends React.Component {
         render() {
           return <div style={1} />;
         }
       }
 
-      expect(() => {
-        ReactDOM.render(<Animal />, container);
-      }).toThrowError(
+      await expect(async () => {
+        await act(() => {
+          root.render(<Animal />);
+        });
+      }).rejects.toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
           "not a string. For example, style={{marginRight: spacing + 'em'}} " +
           'when using JSX.',
@@ -1681,7 +2018,7 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('unmountComponent', () => {
-    it('unmounts children before unsetting DOM node info', () => {
+    it('unmounts children before unsetting DOM node info', async () => {
       class Inner extends React.Component {
         render() {
           return <span />;
@@ -1693,14 +2030,17 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      const container = document.createElement('div');
-      ReactDOM.render(
-        <div>
-          <Inner />
-        </div>,
-        container,
-      );
-      ReactDOM.unmountComponentAtNode(container);
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
+      await act(() => {
+        root.render(
+          <div>
+            <Inner />
+          </div>,
+        );
+      });
+      await act(() => {
+        root.unmount();
+      });
     });
   });
 
@@ -1747,16 +2087,18 @@ describe('ReactDOMComponent', () => {
       ]);
     });
 
-    it('warns on invalid nesting at root', () => {
+    it('warns on invalid nesting at root', async () => {
       const p = document.createElement('p');
+      const root = ReactDOMClient.createRoot(p);
 
-      expect(() => {
-        ReactDOM.render(
-          <span>
-            <p />
-          </span>,
-          p,
-        );
+      await expect(async () => {
+        await act(() => {
+          root.render(
+            <span>
+              <p />
+            </span>,
+          );
+        });
       }).toErrorDev(
         'Warning: validateDOMNesting(...): <p> cannot appear as a descendant ' +
           'of <p>.' +
@@ -1805,8 +2147,8 @@ describe('ReactDOMComponent', () => {
       ]);
     });
 
-    it('warns nicely for updating table rows to use text', () => {
-      const container = document.createElement('div');
+    it('warns nicely for updating table rows to use text', async () => {
+      const root = ReactDOMClient.createRoot(document.createElement('div'));
 
       function Row({children}) {
         return <tr>{children}</tr>;
@@ -1817,9 +2159,15 @@ describe('ReactDOMComponent', () => {
       }
 
       // First is fine.
-      ReactDOM.render(<Foo />, container);
+      await act(() => {
+        root.render(<Foo />);
+      });
 
-      expect(() => ReactDOM.render(<Foo> </Foo>, container)).toErrorDev([
+      await expect(async () => {
+        await act(() => {
+          root.render(<Foo> </Foo>);
+        });
+      }).toErrorDev([
         'Warning: validateDOMNesting(...): Whitespace text nodes cannot ' +
           "appear as a child of <table>. Make sure you don't have any extra " +
           'whitespace between tags on each line of your source code.' +
@@ -1827,25 +2175,27 @@ describe('ReactDOMComponent', () => {
           '\n    in Foo (at **)',
       ]);
 
-      ReactDOM.render(
-        <Foo>
-          <tbody>
-            <Row />
-          </tbody>
-        </Foo>,
-        container,
-      );
-
-      expect(() =>
-        ReactDOM.render(
+      await act(() => {
+        root.render(
           <Foo>
             <tbody>
-              <Row>text</Row>
+              <Row />
             </tbody>
           </Foo>,
-          container,
-        ),
-      ).toErrorDev([
+        );
+      });
+
+      await expect(async () => {
+        await act(() => {
+          root.render(
+            <Foo>
+              <tbody>
+                <Row>text</Row>
+              </tbody>
+            </Foo>,
+          );
+        });
+      }).toErrorDev([
         'Warning: validateDOMNesting(...): Text nodes cannot appear as a ' +
           'child of <tr>.' +
           '\n    in tr (at **)' +
@@ -2369,24 +2719,33 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('whitespace', () => {
-    it('renders innerHTML and preserves whitespace', () => {
+    it('renders innerHTML and preserves whitespace', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+
       const html = '\n  \t  <span>  \n  testContent  \t  </span>  \n  \t';
       const elem = <div dangerouslySetInnerHTML={{__html: html}} />;
 
-      ReactDOM.render(elem, container);
+      await act(() => {
+        root.render(elem);
+      });
       expect(container.firstChild.innerHTML).toBe(html);
     });
 
-    it('render and then updates innerHTML and preserves whitespace', () => {
+    it('render and then updates innerHTML and preserves whitespace', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
       const html = '\n  \t  <span>  \n  testContent1  \t  </span>  \n  \t';
       const elem = <div dangerouslySetInnerHTML={{__html: html}} />;
-      ReactDOM.render(elem, container);
+      await act(() => {
+        root.render(elem);
+      });
 
       const html2 = '\n  \t  <div>  \n  testContent2  \t  </div>  \n  \t';
       const elem2 = <div dangerouslySetInnerHTML={{__html: html2}} />;
-      ReactDOM.render(elem2, container);
+      await act(() => {
+        root.render(elem2);
+      });
 
       expect(container.firstChild.innerHTML).toBe(html2);
     });
@@ -2447,29 +2806,39 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('class')).toBe('test');
     });
 
-    it('updates aliased attributes on custom elements', function () {
+    it('updates aliased attributes on custom elements', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div is="custom-element" class="foo" />, container);
-      ReactDOM.render(<div is="custom-element" class="bar" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div is="custom-element" class="foo" />);
+      });
+      await act(() => {
+        root.render(<div is="custom-element" class="bar" />);
+      });
 
       expect(container.firstChild.getAttribute('class')).toBe('bar');
     });
   });
 
   describe('Custom attributes', function () {
-    it('allows assignment of custom attributes with string values', function () {
+    it('allows assignment of custom attributes with string values', () => {
       const el = ReactTestUtils.renderIntoDocument(<div whatever="30" />);
 
       expect(el.getAttribute('whatever')).toBe('30');
     });
 
-    it('removes custom attributes', function () {
+    it('removes custom attributes', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div whatever="30" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div whatever="30" />);
+      });
 
       expect(container.firstChild.getAttribute('whatever')).toBe('30');
 
-      ReactDOM.render(<div whatever={null} />, container);
+      await act(() => {
+        root.render(<div whatever={null} />);
+      });
 
       expect(container.firstChild.hasAttribute('whatever')).toBe(false);
     });
@@ -2521,7 +2890,7 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('whatever')).toBe('[object Object]');
     });
 
-    it('allows Temporal-like objects as HTML (they are not coerced to strings first)', function () {
+    it('allows Temporal-like objects as HTML (they are not coerced to strings first)', async () => {
       class TemporalLike {
         valueOf() {
           // Throwing here is the behavior of ECMAScript "Temporal" date/time API.
@@ -2536,14 +2905,16 @@ describe('ReactDOMComponent', () => {
       // `dangerouslySetInnerHTML` is never coerced to a string, so won't throw
       // even with a Temporal-like object.
       const container = document.createElement('div');
-      ReactDOM.render(
-        <div dangerouslySetInnerHTML={{__html: new TemporalLike()}} />,
-        container,
-      );
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(
+          <div dangerouslySetInnerHTML={{__html: new TemporalLike()}} />,
+        );
+      });
       expect(container.firstChild.innerHTML).toEqual('2020-01-01');
     });
 
-    it('allows cased data attributes', function () {
+    it('allows cased data attributes', () => {
       let el;
       expect(() => {
         el = ReactTestUtils.renderIntoDocument(<div data-fooBar="true" />);
@@ -2558,7 +2929,7 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('data-foobar')).toBe('true');
     });
 
-    it('allows cased custom attributes', function () {
+    it('allows cased custom attributes', () => {
       let el;
       expect(() => {
         el = ReactTestUtils.renderIntoDocument(<div fooBar="true" />);
@@ -2573,7 +2944,7 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('foobar')).toBe('true');
     });
 
-    it('warns on NaN attributes', function () {
+    it('warns on NaN attributes', () => {
       let el;
       expect(() => {
         el = ReactTestUtils.renderIntoDocument(<div whatever={NaN} />);
@@ -2585,12 +2956,17 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('whatever')).toBe('NaN');
     });
 
-    it('removes a property when it becomes invalid', function () {
+    it('removes a property when it becomes invalid', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<div whatever={0} />, container);
-      expect(() =>
-        ReactDOM.render(<div whatever={() => {}} />, container),
-      ).toErrorDev('Warning: Invalid value for prop `whatever` on <div> tag.');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div whatever={0} />);
+      });
+      await expect(async () => {
+        await act(() => {
+          root.render(<div whatever={() => {}} />);
+        });
+      }).toErrorDev('Warning: Invalid value for prop `whatever` on <div> tag.');
       const el = container.firstChild;
       expect(el.hasAttribute('whatever')).toBe(false);
     });
@@ -2613,39 +2989,52 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('accept-charset')).toBe('[object Object]');
     });
 
-    it('should pass objects as attributes if they define toString', () => {
+    it('should pass objects as attributes if they define toString', async () => {
       const obj = {
         toString() {
           return 'hello';
         },
       };
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
-      ReactDOM.render(<img src={obj} />, container);
+      await act(() => {
+        root.render(<img src={obj} />);
+      });
       expect(container.firstChild.src).toBe('http://localhost/hello');
 
-      ReactDOM.render(<svg arabicForm={obj} />, container);
+      await act(() => {
+        root.render(<svg arabicForm={obj} />);
+      });
       expect(container.firstChild.getAttribute('arabic-form')).toBe('hello');
 
-      ReactDOM.render(<div unknown={obj} />, container);
+      await act(() => {
+        root.render(<div unknown={obj} />);
+      });
       expect(container.firstChild.getAttribute('unknown')).toBe('hello');
     });
 
-    it('passes objects on known SVG attributes if they do not define toString', () => {
+    it('passes objects on known SVG attributes if they do not define toString', async () => {
       const obj = {};
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
-      ReactDOM.render(<svg arabicForm={obj} />, container);
+      await act(() => {
+        root.render(<svg arabicForm={obj} />);
+      });
       expect(container.firstChild.getAttribute('arabic-form')).toBe(
         '[object Object]',
       );
     });
 
-    it('passes objects on custom attributes if they do not define toString', () => {
+    it('passes objects on custom attributes if they do not define toString', async () => {
       const obj = {};
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
-      ReactDOM.render(<div unknown={obj} />, container);
+      await act(() => {
+        root.render(<div unknown={obj} />);
+      });
       expect(container.firstChild.getAttribute('unknown')).toBe(
         '[object Object]',
       );
@@ -2772,38 +3161,56 @@ describe('ReactDOMComponent', () => {
   // These tests mostly verify the existing behavior.
   // It may not always makes sense but we can't change it in minors.
   describe('Custom elements', () => {
-    it('does not strip unknown boolean attributes', () => {
+    it('does not strip unknown boolean attributes', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<some-custom-element foo={true} />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<some-custom-element foo={true} />);
+      });
       const node = container.firstChild;
       expect(node.getAttribute('foo')).toBe(
         ReactFeatureFlags.enableCustomElementPropertySupport ? '' : 'true',
       );
-      ReactDOM.render(<some-custom-element foo={false} />, container);
+      await act(() => {
+        root.render(<some-custom-element foo={false} />);
+      });
       expect(node.getAttribute('foo')).toBe(
         ReactFeatureFlags.enableCustomElementPropertySupport ? null : 'false',
       );
-      ReactDOM.render(<some-custom-element />, container);
+      await act(() => {
+        root.render(<some-custom-element />);
+      });
       expect(node.hasAttribute('foo')).toBe(false);
-      ReactDOM.render(<some-custom-element foo={true} />, container);
+      await act(() => {
+        root.render(<some-custom-element foo={true} />);
+      });
       expect(node.hasAttribute('foo')).toBe(true);
     });
 
-    it('does not strip the on* attributes', () => {
+    it('does not strip the on* attributes', async () => {
       const container = document.createElement('div');
-      ReactDOM.render(<some-custom-element onx="bar" />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<some-custom-element onx="bar" />);
+      });
       const node = container.firstChild;
       expect(node.getAttribute('onx')).toBe('bar');
-      ReactDOM.render(<some-custom-element onx="buzz" />, container);
+      await act(() => {
+        root.render(<some-custom-element onx="buzz" />);
+      });
       expect(node.getAttribute('onx')).toBe('buzz');
-      ReactDOM.render(<some-custom-element />, container);
+      await act(() => {
+        root.render(<some-custom-element />);
+      });
       expect(node.hasAttribute('onx')).toBe(false);
-      ReactDOM.render(<some-custom-element onx="bar" />, container);
+      await act(() => {
+        root.render(<some-custom-element onx="bar" />);
+      });
       expect(node.getAttribute('onx')).toBe('bar');
     });
   });
 
-  it('receives events in specific order', () => {
+  it('receives events in specific order', async () => {
     const eventOrder = [];
     const track = tag => () => eventOrder.push(tag);
     const outerRef = React.createRef();
@@ -2830,11 +3237,17 @@ describe('ReactDOMComponent', () => {
     }
 
     const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
     document.body.appendChild(container);
 
     try {
-      ReactDOM.render(<OuterReactApp />, container);
-      ReactDOM.render(<InnerReactApp />, outerRef.current);
+      await act(() => {
+        root.render(<OuterReactApp />);
+      });
+      const innerRoot = ReactDOMClient.createRoot(outerRef.current);
+      await act(() => {
+        innerRoot.render(<InnerReactApp />);
+      });
 
       document.addEventListener('click', track('document bubble'));
       document.addEventListener('click', track('document capture'), true);
@@ -2868,20 +3281,24 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('iOS Tap Highlight', () => {
-    it('adds onclick handler to elements with onClick prop', () => {
+    it('adds onclick handler to elements with onClick prop', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
 
       const elementRef = React.createRef();
       function Component() {
         return <div ref={elementRef} onClick={() => {}} />;
       }
 
-      ReactDOM.render(<Component />, container);
+      await act(() => {
+        root.render(<Component />);
+      });
       expect(typeof elementRef.current.onclick).toBe('function');
     });
 
-    it('adds onclick handler to a portal root', () => {
+    it('adds onclick handler to a portal root', async () => {
       const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
       const portalContainer = document.createElement('div');
 
       function Component() {
@@ -2891,7 +3308,9 @@ describe('ReactDOMComponent', () => {
         );
       }
 
-      ReactDOM.render(<Component />, container);
+      await act(() => {
+        root.render(<Component />);
+      });
       expect(typeof portalContainer.onclick).toBe('function');
     });
 
