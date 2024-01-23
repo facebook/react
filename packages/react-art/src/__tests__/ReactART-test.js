@@ -24,7 +24,7 @@ import Wedge from 'react-art/Wedge';
 
 // Isolate DOM renderer.
 jest.resetModules();
-const ReactDOM = require('react-dom');
+
 const ReactDOMClient = require('react-dom/client');
 const act = require('internal-test-utils').act;
 
@@ -178,11 +178,11 @@ describe('ReactART', () => {
     testDOMNodeStructure(realNode, expectedStructure);
   });
 
-  it('should be able to reorder components', () => {
-    const instance = ReactDOM.render(
-      <TestComponent flipped={false} />,
-      container,
-    );
+  it('should be able to reorder components', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<TestComponent flipped={false} />);
+    });
 
     const expectedStructure = {
       nodeName: 'svg',
@@ -200,10 +200,12 @@ describe('ReactART', () => {
       ],
     };
 
-    const realNode = ReactDOM.findDOMNode(instance);
+    const realNode = container.firstChild;
     testDOMNodeStructure(realNode, expectedStructure);
 
-    ReactDOM.render(<TestComponent flipped={true} />, container);
+    await act(() => {
+      root.render(<TestComponent flipped={true} />);
+    });
 
     const expectedNewStructure = {
       nodeName: 'svg',
@@ -224,7 +226,7 @@ describe('ReactART', () => {
     testDOMNodeStructure(realNode, expectedNewStructure);
   });
 
-  it('should be able to reorder many components', () => {
+  it('should be able to reorder many components', async () => {
     class Component extends React.Component {
       render() {
         const chars = this.props.chars.split('');
@@ -242,14 +244,17 @@ describe('ReactART', () => {
     const before = 'abcdefghijklmnopqrst';
     const after = 'mxhpgwfralkeoivcstzy';
 
-    let instance = ReactDOM.render(<Component chars={before} />, container);
-    const realNode = ReactDOM.findDOMNode(instance);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Component chars={before} />);
+    });
+    const realNode = container.firstChild;
     expect(realNode.textContent).toBe(before);
 
-    instance = ReactDOM.render(<Component chars={after} />, container);
+    await act(() => {
+      root.render(<Component chars={after} />);
+    });
     expect(realNode.textContent).toBe(after);
-
-    ReactDOM.unmountComponentAtNode(container);
   });
 
   it('renders composite with lifecycle inside group', async () => {
@@ -311,7 +316,7 @@ describe('ReactART', () => {
     expect(ref.constructor).toBe(CustomShape);
   });
 
-  it('resolves refs before componentDidUpdate', () => {
+  it('resolves refs before componentDidUpdate', async () => {
     class CustomShape extends React.Component {
       render() {
         return <Shape />;
@@ -341,24 +346,34 @@ describe('ReactART', () => {
         );
       }
     }
-    ReactDOM.render(<Outer />, container);
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Outer />);
+    });
     expect(ref).toBe(null);
-    ReactDOM.render(<Outer mountCustomShape={true} />, container);
+
+    await act(() => {
+      root.render(<Outer mountCustomShape={true} />);
+    });
     expect(ref.constructor).toBe(CustomShape);
   });
 
-  it('adds and updates event handlers', () => {
-    function render(onClick) {
-      return ReactDOM.render(
-        <Surface>
-          <Shape onClick={onClick} />
-        </Surface>,
-        container,
-      );
+  it('adds and updates event handlers', async () => {
+    const root = ReactDOMClient.createRoot(container);
+
+    async function render(onClick) {
+      await act(() => {
+        root.render(
+          <Surface>
+            <Shape onClick={onClick} />
+          </Surface>,
+        );
+      });
     }
 
     function doClick(instance) {
-      const path = ReactDOM.findDOMNode(instance).querySelector('path');
+      const path = container.firstChild.querySelector('path');
 
       path.dispatchEvent(
         new MouseEvent('click', {
@@ -368,12 +383,12 @@ describe('ReactART', () => {
     }
 
     const onClick1 = jest.fn();
-    let instance = render(onClick1);
+    let instance = await render(onClick1);
     doClick(instance);
     expect(onClick1).toBeCalled();
 
     const onClick2 = jest.fn();
-    instance = render(onClick2);
+    instance = await render(onClick2);
     doClick(instance);
     expect(onClick2).toBeCalled();
   });
@@ -412,15 +427,17 @@ describe('ReactART', () => {
 
     await waitFor(['A']);
 
-    ReactDOM.render(
-      <Surface>
-        <LogCurrentRenderer />
-        <CurrentRendererContext.Provider value="ART">
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <Surface>
           <LogCurrentRenderer />
-        </CurrentRendererContext.Provider>
-      </Surface>,
-      container,
-    );
+          <CurrentRendererContext.Provider value="ART">
+            <LogCurrentRenderer />
+          </CurrentRendererContext.Provider>
+        </Surface>,
+      );
+    });
 
     expect(ops).toEqual([null, 'ART']);
 
