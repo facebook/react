@@ -336,7 +336,7 @@ describe('ReactDOMServerHydration', () => {
     const callback = jest.fn();
     const TestComponent = ({onRender}) => {
       onRender();
-      return <div>Enable JavaScript to run this app.</div>;
+      return <meta http-equiv="refresh" content="0; URL='https://www.youtube.com/watch?v=dQw4w9WgXcQ'"/>;
     };
     const markup = (
       <noscript>
@@ -348,7 +348,7 @@ describe('ReactDOMServerHydration', () => {
     element.innerHTML = ReactDOMServer.renderToString(markup);
     expect(callback).toHaveBeenCalledTimes(1);
     expect(element.textContent).toBe(
-      '<div>Enable JavaScript to run this app.</div>',
+      `<meta http-equiv="refresh" content="0; URL='https://www.youtube.com/watch?v=dQw4w9WgXcQ'"/>`,
     );
 
     // On the client we want to keep the existing markup, but not render the
@@ -357,7 +357,7 @@ describe('ReactDOMServerHydration', () => {
     ReactDOM.hydrate(markup, element);
     expect(callback).toHaveBeenCalledTimes(1);
     expect(element.textContent).toBe(
-      '<div>Enable JavaScript to run this app.</div>',
+      `<meta http-equiv="refresh" content="0; URL='https://www.youtube.com/watch?v=dQw4w9WgXcQ'"/>`,
     );
   });
 

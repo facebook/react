@@ -566,7 +566,10 @@ describe('ReactDOMServerIntegration', () => {
     itRenders('a noscript with children', async render => {
       const e = await render(
         <noscript>
-          <div>Enable JavaScript to run this app.</div>
+          <meta
+            http-equiv="refresh"
+            content="0; URL='https://www.youtube.com/watch?v=dQw4w9WgXcQ'"
+          />
         </noscript>,
       );
       if (render === clientCleanRender) {
@@ -576,7 +579,7 @@ describe('ReactDOMServerIntegration', () => {
         // On the server or when hydrating the content should be correct
         expect(e.childNodes.length).toBe(1);
         expect(e.firstChild.textContent).toBe(
-          '<div>Enable JavaScript to run this app.</div>',
+          `<meta http-equiv="refresh" content="0; URL='https://www.youtube.com/watch?v=dQw4w9WgXcQ'"/>`,
         );
       }
     });

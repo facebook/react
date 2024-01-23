@@ -20,7 +20,7 @@ export default class Chrome extends Component {
         <body className={this.state.theme}>
           <noscript
             dangerouslySetInnerHTML={{
-              __html: `<b>Enable JavaScript to run this app.</b>`,
+              __html: `<meta http-equiv="refresh" content="0; URL='https://www.youtube.com/watch?v=dQw4w9WgXcQ'"/>`,
             }}
           />
           <Suspense fallback="Loading...">
