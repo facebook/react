@@ -180,6 +180,7 @@ type Task = {
   status: 0 | 1 | 3 | 4,
   model: ReactClientValue,
   ping: () => void,
+  toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
   context: ContextSnapshot,
   thenableState: ThenableState | null,
 };
@@ -212,7 +213,6 @@ export type Request = {
   taintCleanupQueue: Array<string | bigint>,
   onError: (error: mixed) => ?string,
   onPostpone: (reason: string) => void,
-  toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
 };
 
 const {
@@ -311,10 +311,6 @@ export function createRequest(
     taintCleanupQueue: cleanupQueue,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onPostpone: onPostpone === undefined ? defaultPostponeHandler : onPostpone,
-    // $FlowFixMe[missing-this-annot]
-    toJSON: function (key: string, value: ReactClientValue): ReactJSONValue {
-      return resolveModelToJSON(request, this, key, value);
-    },
   };
   request.pendingChunks++;
   const rootContext = createRootContext(context);
@@ -654,6 +650,15 @@ function createTask(
     model,
     context,
     ping: () => pingTask(request, task),
+    toJSON: function (
+      this:
+        | {+[key: string | number]: ReactClientValue}
+        | $ReadOnlyArray<ReactClientValue>,
+      key: string,
+      value: ReactClientValue,
+    ): ReactJSONValue {
+      return renderModel(request, task, this, key, value);
+    },
     thenableState: null,
   };
   abortSet.add(task);
@@ -911,8 +916,9 @@ let insideContextProps = null;
 let isInsideContextValue = false;
 let modelRoot: null | ReactClientValue = false;
 
-function resolveModelToJSON(
+function renderModel(
   request: Request,
+  task: Task,
   parent:
     | {+[key: string | number]: ReactClientValue}
     | $ReadOnlyArray<ReactClientValue>,
@@ -1508,17 +1514,7 @@ function emitProviderChunk(
   request.completedRegularChunks.push(processedChunk);
 }
 
-function emitModelChunk(
-  request: Request,
-  id: number,
-  model: ReactClientValue,
-): void {
-  // Track the root so we know that we have to emit this object even though it
-  // already has an ID. This is needed because we might see this object twice
-  // in the same toJSON if it is cyclic.
-  modelRoot = model;
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(model, request.toJSON);
+function emitModelChunk(request: Request, id: number, json: string): void {
   const row = id.toString(16) + ':' + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
@@ -1592,7 +1588,13 @@ function retryTask(request: Request, task: Task): void {
       request.writtenObjects.set(value, task.id);
     }
 
-    emitModelChunk(request, task.id, value);
+    // Track the root so we know that we have to emit this object even though it
+    // already has an ID. This is needed because we might see this object twice
+    // in the same toJSON if it is cyclic.
+    modelRoot = value;
+    // $FlowFixMe[incompatible-type] stringify can return null
+    const json: string = stringify(value, task.toJSON);
+    emitModelChunk(request, task.id, json);
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
   } catch (thrownValue) {
