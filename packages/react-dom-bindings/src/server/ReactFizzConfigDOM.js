@@ -147,9 +147,12 @@ export type RenderState = {
   // external runtime script chunks
   externalRuntimeScript: null | ExternalRuntimeScript,
   bootstrapChunks: Array<Chunk | PrecomputedChunk>,
+  importMapChunks: Array<Chunk | PrecomputedChunk>,
 
   // Hoistable chunks
-  importMapChunks: Array<Chunk | PrecomputedChunk>,
+  charsetChunks: Array<Chunk | PrecomputedChunk>,
+  viewportChunks: Array<Chunk | PrecomputedChunk>,
+  hoistableChunks: Array<Chunk | PrecomputedChunk>,
 
   // Headers queues for Resources that can flush early
   onHeaders: void | ((headers: HeadersDescriptor) => void),
@@ -466,6 +469,10 @@ export function createRenderState(
       style: {},
     },
 
+    charsetChunks: [],
+    viewportChunks: [],
+    hoistableChunks: [],
+
     // cleared on flush
     preconnects: new Set(),
     fontPreloads: new Set(),
@@ -485,6 +492,7 @@ export function createRenderState(
 
     nonce,
     // like a module global for currently rendering boundary
+    hoistableState: null,
     stylesToHoist: false,
   };
 
@@ -2213,7 +2221,8 @@ function pushStartTextArea(
 function pushMeta(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  hoistableState: HoistableState,
+  renderState: RenderState,
+  hoistableState: null | HoistableState,
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
@@ -2233,12 +2242,30 @@ function pushMeta(
       }
 
       if (typeof props.charSet === 'string') {
-        return pushSelfClosing(hoistableState.charset, props, 'meta');
+        return pushSelfClosing(
+          hoistableState
+            ? hoistableState.charsetChunks
+            : renderState.charsetChunks,
+          props,
+          'meta',
+        );
       } else if (props.name === 'viewport') {
         // "viewport" isn't related to preconnect but it has the right priority
-        return pushSelfClosing(hoistableState.viewport, props, 'meta');
+        return pushSelfClosing(
+          hoistableState
+            ? hoistableState.viewportChunks
+            : renderState.viewportChunks,
+          props,
+          'meta',
+        );
       } else {
-        return pushSelfClosing(hoistableState.chunks, props, 'meta');
+        return pushSelfClosing(
+          hoistableState
+            ? hoistableState.hoistableChunks
+            : renderState.hoistableChunks,
+          props,
+          'meta',
+        );
       }
     }
   } else {
@@ -2251,8 +2278,7 @@ function pushLink(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
-  boundaryResources: null | BoundaryResources,
-  hoistableState: HoistableState,
+  hoistableState: null | HoistableState,
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
@@ -2373,8 +2399,8 @@ function pushLink(
           // We add the newly created resource to our StyleQueue and if necessary
           // track the resource with the currently rendering boundary
           styleQueue.sheets.set(key, resource);
-          if (boundaryResources) {
-            boundaryResources.stylesheets.add(resource);
+          if (hoistableState) {
+            hoistableState.stylesheets.add(resource);
           }
         } else {
           // We need to track whether this boundary should wait on this resource or not.
@@ -2385,8 +2411,8 @@ function pushLink(
           if (styleQueue) {
             const resource = styleQueue.sheets.get(key);
             if (resource) {
-              if (boundaryResources) {
-                boundaryResources.stylesheets.add(resource);
+              if (hoistableState) {
+                hoistableState.stylesheets.add(resource);
               }
             }
           }
@@ -2411,7 +2437,10 @@ function pushLink(
         target.push(textSeparator);
       }
 
-      return pushLinkImpl(hoistableState.chunks, props);
+      const hoistableChunks = hoistableState
+        ? hoistableState.hoistableChunks
+        : renderState.hoistableChunks;
+      return pushLinkImpl(hoistableChunks, props);
     }
   } else {
     return pushLinkImpl(target, props);
@@ -2453,7 +2482,7 @@ function pushStyle(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
-  boundaryResources: null | BoundaryResources,
+  hoistableState: null | HoistableState,
   textEmbedded: boolean,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
@@ -2553,8 +2582,8 @@ function pushStyle(
       // it. However, it's possible when you resume that the style has already been emitted
       // and then it wouldn't be recreated in the RenderState and there's no need to track
       // it again since we should've hoisted it to the shell already.
-      if (boundaryResources) {
-        boundaryResources.styles.add(styleQueue);
+      if (hoistableState) {
+        hoistableState.styles.add(styleQueue);
       }
     }
 
@@ -2864,7 +2893,8 @@ function pushStartMenuItem(
 function pushTitle(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
-  hoistableState: HoistableState,
+  renderState: RenderState,
+  hoistableState: null | HoistableState,
   insertionMode: InsertionMode,
   noscriptTagInScope: boolean,
 ): ReactNodeList {
@@ -2922,7 +2952,10 @@ function pushTitle(
       !noscriptTagInScope &&
       props.itemProp == null
     ) {
-      pushTitleImpl(hoistableState.chunks, props);
+      const hoistableTarget = hoistableState
+        ? hoistableState.hoistableChunks
+        : renderState.hoistableChunks;
+      pushTitleImpl(hoistableTarget, props);
       return null;
     } else {
       return pushTitleImpl(target, props);
@@ -3454,8 +3487,7 @@ export function pushStartInstance(
   props: Object,
   resumableState: ResumableState,
   renderState: RenderState,
-  boundaryResources: null | BoundaryResources,
-  hoistableState: HoistableState,
+  hoistableState: null | HoistableState,
   formatContext: FormatContext,
   textEmbedded: boolean,
 ): ReactNodeList {
@@ -3523,6 +3555,7 @@ export function pushStartInstance(
         ? pushTitle(
             target,
             props,
+            renderState,
             hoistableState,
             formatContext.insertionMode,
             !!(formatContext.tagScope & NOSCRIPT_SCOPE),
@@ -3534,7 +3567,6 @@ export function pushStartInstance(
         props,
         resumableState,
         renderState,
-        boundaryResources,
         hoistableState,
         textEmbedded,
         formatContext.insertionMode,
@@ -3558,7 +3590,7 @@ export function pushStartInstance(
         props,
         resumableState,
         renderState,
-        boundaryResources,
+        hoistableState,
         textEmbedded,
         formatContext.insertionMode,
         !!(formatContext.tagScope & NOSCRIPT_SCOPE),
@@ -3567,6 +3599,7 @@ export function pushStartInstance(
       return pushMeta(
         target,
         props,
+        renderState,
         hoistableState,
         textEmbedded,
         formatContext.insertionMode,
@@ -4107,7 +4140,7 @@ export function writeCompletedBoundaryInstruction(
   resumableState: ResumableState,
   renderState: RenderState,
   id: number,
-  boundaryResources: BoundaryResources,
+  hoistableState: HoistableState,
 ): boolean {
   let requiresStyleInsertion;
   if (enableFloat) {
@@ -4183,11 +4216,11 @@ export function writeCompletedBoundaryInstruction(
     //    e.g. [&#34;A&#34;, &#34;B&#34;]
     if (scriptFormat) {
       writeChunk(destination, completeBoundaryScript3a);
-      // boundaryResources encodes an array literal
-      writeStyleResourceDependenciesInJS(destination, boundaryResources);
+      // hoistableState encodes an array literal
+      writeStyleResourceDependenciesInJS(destination, hoistableState);
     } else {
       writeChunk(destination, completeBoundaryData3a);
-      writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+      writeStyleResourceDependenciesInAttr(destination, hoistableState);
     }
   } else {
     if (scriptFormat) {
@@ -4436,9 +4469,9 @@ function hasStylesToHoist(stylesheet: StylesheetResource): boolean {
   return false;
 }
 
-export function writeResourcesForBoundary(
+export function writeHoistablesForPartialBoundary(
   destination: Destination,
-  boundaryResources: BoundaryResources,
+  hoistableState: HoistableState,
   renderState: RenderState,
 ): boolean {
   // Reset these on each invocation, they are only safe to read in this function
@@ -4446,10 +4479,66 @@ export function writeResourcesForBoundary(
   destinationHasCapacity = true;
 
   // Flush style tags for each precedence this boundary depends on
-  boundaryResources.styles.forEach(flushStyleTagsLateForBoundary, destination);
+  hoistableState.styles.forEach(flushStyleTagsLateForBoundary, destination);
 
   // Determine if this boundary has stylesheets that need to be awaited upon completion
-  boundaryResources.stylesheets.forEach(hasStylesToHoist);
+  hoistableState.stylesheets.forEach(hasStylesToHoist);
+
+  // We don't actually want to flush any hoistables until the boundary is complete so we omit
+  // any further writing here. This is becuase unlike Resources, Hoistable Elements act more like
+  // regular elements, each rendered element has a unique representation in the DOM. We don't want
+  // these elements to appear in the DOM early, before the boundary has actually completed
+
+  if (currentlyRenderingBoundaryHasStylesToHoist) {
+    renderState.stylesToHoist = true;
+  }
+  return destinationHasCapacity;
+}
+
+export function writeHoistablesForCompletedBoundary(
+  destination: Destination,
+  hoistableState: HoistableState,
+  renderState: RenderState,
+): boolean {
+  // Reset these on each invocation, they are only safe to read in this function
+  currentlyRenderingBoundaryHasStylesToHoist = false;
+  destinationHasCapacity = true;
+
+  // Flush style tags for each precedence this boundary depends on
+  hoistableState.styles.forEach(flushStyleTagsLateForBoundary, destination);
+
+  // Determine if this boundary has stylesheets that need to be awaited upon completion
+  hoistableState.stylesheets.forEach(hasStylesToHoist);
+
+  // Flush Hoistable Elements
+  let i;
+  const charsetChunks = hoistableState.charsetChunks;
+  for (i = 0; i < charsetChunks.length - 1; i++) {
+    writeChunk(destination, charsetChunks[i]);
+  }
+  if (i < charsetChunks.length) {
+    destinationHasCapacity = writeChunkAndReturn(destination, charsetChunks[i]);
+  }
+  const viewportChunks = hoistableState.viewportChunks;
+  for (i = 0; i < viewportChunks.length - 1; i++) {
+    writeChunk(destination, charsetChunks[i]);
+  }
+  if (i < viewportChunks.length) {
+    destinationHasCapacity = writeChunkAndReturn(
+      destination,
+      viewportChunks[i],
+    );
+  }
+  const hoistableChunks = hoistableState.hoistableChunks;
+  for (i = 0; i < hoistableChunks.length - 1; i++) {
+    writeChunk(destination, hoistableChunks[i]);
+  }
+  if (i < hoistableChunks.length) {
+    destinationHasCapacity = writeChunkAndReturn(
+      destination,
+      hoistableChunks[i],
+    );
+  }
 
   if (currentlyRenderingBoundaryHasStylesToHoist) {
     renderState.stylesToHoist = true;
@@ -4561,7 +4650,6 @@ export function writePreamble(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  hoistableState: HoistableState,
   willFlushAllSegments: boolean,
 ): void {
   // This function must be called exactly once on every request
@@ -4607,7 +4695,7 @@ export function writePreamble(
   }
 
   // Emit high priority Hoistables
-  const charsetChunks = hoistableState.charset;
+  const charsetChunks = renderState.charsetChunks;
   for (i = 0; i < charsetChunks.length; i++) {
     writeChunk(destination, charsetChunks[i]);
   }
@@ -4617,7 +4705,7 @@ export function writePreamble(
   renderState.preconnects.forEach(flushResource, destination);
   renderState.preconnects.clear();
 
-  const viewportChunks = hoistableState.viewport;
+  const viewportChunks = renderState.viewportChunks;
   for (i = 0; i < viewportChunks.length; i++) {
     writeChunk(destination, viewportChunks[i]);
   }
@@ -4646,8 +4734,8 @@ export function writePreamble(
   renderState.bulkPreloads.forEach(flushResource, destination);
   renderState.bulkPreloads.clear();
 
-  // Write hoistableState chunks
-  const hoistableChunks = hoistableState.chunks;
+  // Write embedding hoistableChunks
+  const hoistableChunks = renderState.hoistableChunks;
   for (i = 0; i < hoistableChunks.length; i++) {
     writeChunk(destination, hoistableChunks[i]);
   }
@@ -4664,23 +4752,15 @@ export function writePreamble(
   }
 }
 
-// We don't bother reporting backpressure at the moment because we expect to
-// flush the entire preamble in a single pass. This probably should be modified
-// in the future to be backpressure sensitive but that requires a larger refactor
-// of the flushing code in Fizz.
+// This is an opportunity to write hoistables however in the current implemention
+// the only hoistables that make sense to write here are Resources. Hoistable Elements
+// would have already been written as part of the preamble or will be written as part
+// of a boundary completion and thus don't need to be written here.
 export function writeHoistables(
   destination: Destination,
   resumableState: ResumableState,
   renderState: RenderState,
-  hoistableState: HoistableState,
 ): void {
-  let i = 0;
-
-  // Emit high priority Hoistables
-
-  // We omit charsetChunks because we have already sent the shell and if it wasn't
-  // already sent it is too late now.
-
   renderState.preconnects.forEach(flushResource, destination);
   renderState.preconnects.clear();
 
@@ -4707,13 +4787,6 @@ export function writeHoistables(
 
   renderState.bulkPreloads.forEach(flushResource, destination);
   renderState.bulkPreloads.clear();
-
-  // Write hoistableState chunks
-  const hoistableChunks = hoistableState.chunks;
-  for (i = 0; i < hoistableChunks.length; i++) {
-    writeChunk(destination, hoistableChunks[i]);
-  }
-  hoistableChunks.length = 0;
 }
 
 export function writePostamble(
@@ -4738,12 +4811,12 @@ const arrayCloseBracket = stringToPrecomputedChunk(']');
 //  [["JS_escaped_string1", "JS_escaped_string2"]]
 function writeStyleResourceDependenciesInJS(
   destination: Destination,
-  boundaryResources: BoundaryResources,
+  hoistableState: HoistableState,
 ): void {
   writeChunk(destination, arrayFirstOpenBracket);
 
   let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-  boundaryResources.stylesheets.forEach(resource => {
+  hoistableState.stylesheets.forEach(resource => {
     if (resource.state === PREAMBLE) {
       // We can elide this dependency because it was flushed in the shell and
       // should be ready before content is shown on the client
@@ -4931,12 +5004,12 @@ function writeStyleResourceAttributeInJS(
 //  [[&quot;JSON_escaped_string1&quot;, &quot;JSON_escaped_string2&quot;]]
 function writeStyleResourceDependenciesInAttr(
   destination: Destination,
-  boundaryResources: BoundaryResources,
+  hoistableState: HoistableState,
 ): void {
   writeChunk(destination, arrayFirstOpenBracket);
 
   let nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-  boundaryResources.stylesheets.forEach(resource => {
+  hoistableState.stylesheets.forEach(resource => {
     if (resource.state === PREAMBLE) {
       // We can elide this dependency because it was flushed in the shell and
       // should be ready before content is shown on the client
@@ -5184,23 +5257,12 @@ type StylesheetResource = {
 };
 
 export type HoistableState = {
-  charset: Array<Chunk | PrecomputedChunk>,
-  viewport: Array<Chunk | PrecomputedChunk>,
-  chunks: Array<Chunk | PrecomputedChunk>,
-};
-
-export function createHoistableState(): HoistableState {
-  return {
-    charset: [],
-    viewport: [],
-    chunks: [],
-  };
-}
-
-export type BoundaryResources = {
-  // style dependencies
   styles: Set<StyleQueue>,
   stylesheets: Set<StylesheetResource>,
+  // Hoistable chunks
+  charsetChunks: Array<Chunk | PrecomputedChunk>,
+  viewportChunks: Array<Chunk | PrecomputedChunk>,
+  hoistableChunks: Array<Chunk | PrecomputedChunk>,
 };
 
 export type StyleQueue = {
@@ -5210,10 +5272,13 @@ export type StyleQueue = {
   sheets: Map<string, StylesheetResource>,
 };
 
-export function createBoundaryResources(): BoundaryResources {
+export function createHoistableState(): HoistableState {
   return {
     styles: new Set(),
     stylesheets: new Set(),
+    charsetChunks: [],
+    viewportChunks: [],
+    hoistableChunks: [],
   };
 }
 
@@ -6063,35 +6128,58 @@ function escapeStringForLinkHeaderQuotedParamValueContextReplacer(
   }
 }
 
-export function hoistHoistables(
-  target: HoistableState,
-  source: HoistableState,
-) {
-  target.charset.push(...source.charset);
-  target.viewport.push(...source.viewport);
-  target.chunks.push(...source.chunks);
-}
-
 function hoistStyleQueueDependency(
-  this: BoundaryResources,
+  this: HoistableState,
   styleQueue: StyleQueue,
 ) {
   this.styles.add(styleQueue);
 }
 
 function hoistStylesheetDependency(
-  this: BoundaryResources,
+  this: HoistableState,
   stylesheet: StylesheetResource,
 ) {
   this.stylesheets.add(stylesheet);
 }
 
-export function hoistBoundaryResources(
-  target: BoundaryResources,
-  source: BoundaryResources,
+export function hoistToBoundary(
+  parentState: HoistableState,
+  childState: HoistableState,
 ): void {
-  source.styles.forEach(hoistStyleQueueDependency, target);
-  source.stylesheets.forEach(hoistStylesheetDependency, target);
+  childState.styles.forEach(hoistStyleQueueDependency, parentState);
+  childState.stylesheets.forEach(hoistStylesheetDependency, parentState);
+  let i;
+  const charsetChunks = childState.charsetChunks;
+  for (i = 0; i < charsetChunks.length; i++) {
+    parentState.charsetChunks.push(charsetChunks[i]);
+  }
+  const viewportChunks = childState.viewportChunks;
+  for (i = 0; i < charsetChunks.length; i++) {
+    parentState.viewportChunks.push(viewportChunks[i]);
+  }
+  const hoistableChunks = childState.hoistableChunks;
+  for (i = 0; i < hoistableChunks.length; i++) {
+    parentState.hoistableChunks.push(hoistableChunks[i]);
+  }
+}
+
+export function hoistToRoot(
+  renderState: RenderState,
+  hoistableState: HoistableState,
+): void {
+  let i;
+  const charsetChunks = hoistableState.charsetChunks;
+  for (i = 0; i < charsetChunks.length; i++) {
+    renderState.charsetChunks.push(charsetChunks[i]);
+  }
+  const viewportChunks = hoistableState.viewportChunks;
+  for (i = 0; i < charsetChunks.length; i++) {
+    renderState.viewportChunks.push(viewportChunks[i]);
+  }
+  const hoistableChunks = hoistableState.hoistableChunks;
+  for (i = 0; i < hoistableChunks.length; i++) {
+    renderState.hoistableChunks.push(hoistableChunks[i]);
+  }
 }
 
 // This function is called at various times depending on whether we are rendering

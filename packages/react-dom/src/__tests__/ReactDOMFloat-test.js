@@ -7925,57 +7925,6 @@ background-color: green;
     });
 
     // @gate enableFloat
-    it('emits hoistables before other content when streaming in late', async () => {
-      let content = '';
-      writable.on('data', chunk => (content += chunk));
-
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <body>
-              <meta name="early" />
-              <Suspense fallback={null}>
-                <BlockedOn value="foo">
-                  <div>foo</div>
-                  <meta name="late" />
-                </BlockedOn>
-              </Suspense>
-            </body>
-          </html>,
-        );
-        pipe(writable);
-      });
-
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <meta name="early" />
-          </head>
-          <body />
-        </html>,
-      );
-      content = '';
-
-      await act(() => {
-        resolveText('foo');
-      });
-
-      expect(content.slice(0, 30)).toEqual('<meta name="late"/><div hidden');
-
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <meta name="early" />
-          </head>
-          <body>
-            <div>foo</div>
-            <meta name="late" />
-          </body>
-        </html>,
-      );
-    });
-
-    // @gate enableFloat
     it('supports rendering hoistables outside of <html> scope', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(

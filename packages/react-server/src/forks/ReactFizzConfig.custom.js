@@ -31,7 +31,6 @@ export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type RenderState = mixed;
 export opaque type HoistableState = mixed;
 export opaque type ResumableState = mixed;
-export opaque type BoundaryResources = mixed;
 export opaque type FormatContext = mixed;
 export opaque type HeadersDescriptor = mixed;
 export type {TransitionStatus};
@@ -88,9 +87,11 @@ export const NotPendingTransition = $$$config.NotPendingTransition;
 export const writePreamble = $$$config.writePreamble;
 export const writeHoistables = $$$config.writeHoistables;
 export const writePostamble = $$$config.writePostamble;
-export const hoistBoundaryResources = $$$config.hoistBoundaryResources;
-export const hoistHoistables = $$$config.hoistHoistables;
+export const hoistToBoundary = $$$config.hoistToBoundary;
+export const hoistToRoot = $$$config.hoistToRoot;
 export const createHoistableState = $$$config.createHoistableState;
-export const createBoundaryResources = $$$config.createBoundaryResources;
-export const writeResourcesForBoundary = $$$config.writeResourcesForBoundary;
+export const writeHoistablesForPartialBoundary =
+  $$$config.writeHoistablesForPartialBoundary;
+export const writeHoistablesForCompletedBoundary =
+  $$$config.writeHoistablesForCompletedBoundary;
 export const emitEarlyPreloads = $$$config.emitEarlyPreloads;
