@@ -517,6 +517,9 @@ const skipFilter = new Set([
   "bug-invalid-code-when-bailout",
   "component-syntax-ref-gating.flow",
 
+  "block-scoping-switch-dead-code",
+  "block-scoping-switch-variable-scoping",
+
   // 'react-forget-runtime' not yet supported
   "flag-enable-emit-hook-guards",
 ]);
