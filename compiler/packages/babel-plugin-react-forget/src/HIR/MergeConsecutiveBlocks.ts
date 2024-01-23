@@ -14,7 +14,7 @@ import {
   Instruction,
 } from "./HIR";
 import { markPredecessors, removeUnreachableFallthroughs } from "./HIRBuilder";
-import { mapOptionalFallthroughs } from "./visitors";
+import { mapOptionalFallthroughs, terminalFallthrough } from "./visitors";
 
 /*
  * Merges sequences of blocks that will always execute consecutively —
@@ -30,7 +30,13 @@ import { mapOptionalFallthroughs } from "./visitors";
  */
 export function mergeConsecutiveBlocks(fn: HIRFunction): void {
   const merged = new MergedBlocks();
+  const fallthroughBlocks = new Set<BlockId>();
   for (const [, block] of fn.body.blocks) {
+    const fallthrough = terminalFallthrough(block.terminal);
+    if (fallthrough !== null) {
+      fallthroughBlocks.add(fallthrough);
+    }
+
     for (const instr of block.instructions) {
       if (
         instr.value.kind === "FunctionExpression" ||
@@ -40,11 +46,14 @@ export function mergeConsecutiveBlocks(fn: HIRFunction): void {
       }
     }
 
-    /*
-     * Can only merge blocks with a single predecessor, can't merge
-     * value blocks
-     */
-    if (block.kind !== "block" || block.preds.size !== 1) {
+    if (
+      // Can only merge blocks with a single predecessor
+      block.preds.size !== 1 ||
+      // Value blocks cannot merge
+      block.kind !== "block" ||
+      // Merging across fallthroughs could move the predecessor out of its block scope
+      fallthroughBlocks.has(block.id)
+    ) {
       continue;
     }
     const originalPredecessorId = Array.from(block.preds)[0]!;

@@ -28,11 +28,14 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 function useHook(a, b) {
-  switch (a) {
+  bb1: switch (a) {
     case 1: {
       if (b == null) {
         return;
       }
+
+      console.log(b);
+      break bb1;
     }
     case 2: {
       return;
@@ -41,8 +44,6 @@ function useHook(a, b) {
       return;
     }
   }
-
-  console.log(b);
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -52,3 +53,6 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```
       
+### Eval output
+(kind: ok) 
+logs: ['foo']

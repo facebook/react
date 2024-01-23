@@ -29,9 +29,9 @@ export const FIXTURE_ENTRYPOINT = {
 function Component(props) {
   let t16;
   bb10: {
-    bb5: {
+    bb2: {
       if (props.cond) {
-        break bb5;
+        break bb2;
       }
 
       t16 = props.a;

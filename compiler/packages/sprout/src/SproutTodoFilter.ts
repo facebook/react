@@ -7,6 +7,11 @@
 
 const skipFilter = new Set([
   /**
+   * Observable different in logging between Forget and non-Forget
+   */
+  "early-return-no-declarations-reassignments-dependencies",
+
+  /**
    * Category A:
    * Tests with 0 parameters and 0 refs to external values
    */
@@ -516,9 +521,6 @@ const skipFilter = new Set([
   "bug-jsx-memberexpr-tag-in-lambda",
   "bug-invalid-code-when-bailout",
   "component-syntax-ref-gating.flow",
-
-  "block-scoping-switch-dead-code",
-  "block-scoping-switch-variable-scoping",
 
   // 'react-forget-runtime' not yet supported
   "flag-enable-emit-hook-guards",

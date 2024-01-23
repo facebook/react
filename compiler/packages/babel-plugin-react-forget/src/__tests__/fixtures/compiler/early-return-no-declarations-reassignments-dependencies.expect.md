@@ -79,6 +79,8 @@ function Component(props) {
         x.push(42);
         t37 = x;
         break bb8;
+      } else {
+        console.log("fallthrough");
       }
     }
     $[0] = t37;
@@ -88,8 +90,6 @@ function Component(props) {
   if (t37 !== Symbol.for("react.early_return_sentinel")) {
     return t37;
   }
-
-  console.log("fallthrough");
   let t0;
   if ($[1] !== props.a) {
     t0 = makeArray(props.a);
