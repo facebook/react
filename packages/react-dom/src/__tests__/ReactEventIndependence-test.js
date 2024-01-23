@@ -12,14 +12,12 @@
 let React;
 let ReactDOMClient;
 let act;
-let ReactDOM;
 
 describe('ReactEventIndependence', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
   });
