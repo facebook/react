@@ -29,24 +29,14 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
     jest.resetModules();
 
     if (gate(flags => flags.enableUseSyncExternalStoreShim)) {
-      // Remove useSyncExternalStore from the React imports so that we use the
-      // shim instead. Also removing startTransition, since we use that to
-      // detect outdated 18 alphas that don't yet include useSyncExternalStore.
+      // Test the shim against React 17.
       jest.mock('react', () => {
-        const {
-          // eslint-disable-next-line no-unused-vars
-          startTransition: _,
-          // eslint-disable-next-line no-unused-vars
-          useSyncExternalStore: __,
-          ...otherExports
-        } = jest.requireActual(
+        return jest.requireActual(
           __DEV__
             ? 'react-17/umd/react.development.js'
             : 'react-17/umd/react.production.min.js',
         );
-        return otherExports;
       });
-
       jest.mock('react-dom', () =>
         jest.requireActual(
           __DEV__
@@ -109,6 +99,7 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       // createLegacyRoot directly.
       return ReactDOMClient.createRoot(container);
     } else {
+      // This ReactDOM.render is from the React 17 npm module.
       ReactDOM.render(null, container);
       return {
         render(children) {
