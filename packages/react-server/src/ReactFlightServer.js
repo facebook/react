@@ -614,7 +614,7 @@ function renderElement(
       }
       case REACT_PROVIDER_TYPE: {
         if (enableServerContext) {
-          pushProvider(type._context, props.value);
+          task.context = pushProvider(type._context, props.value);
           if (__DEV__) {
             const extraKeys = Object.keys(props).filter(value => {
               if (value === 'children' || value === 'value') {
@@ -1199,7 +1199,7 @@ function renderModelDestructive(
         }
         return serializeByValueID(providerId);
       } else if (value === POP) {
-        popProvider();
+        task.context = popProvider();
         if (__DEV__) {
           insideContextProps = null;
           isInsideContextValue = false;
