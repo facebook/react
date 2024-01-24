@@ -137,7 +137,7 @@ type ReactJSONValue =
   | boolean
   | number
   | null
-  | $ReadOnlyArray<ReactJSONValue>
+  | $ReadOnlyArray<ReactClientValue>
   | ReactClientObject;
 
 // Serializable values
@@ -502,12 +502,13 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
 
 function renderElement(
   request: Request,
+  task: Task,
   type: any,
   key: null | React$Key,
   ref: mixed,
   props: any,
   prevThenableState: ThenableState | null,
-): ReactClientValue {
+): ReactJSONValue {
   if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
@@ -529,7 +530,7 @@ function renderElement(
     }
     // This is a server-side component.
     prepareToUseHooksForComponent(prevThenableState);
-    const result = type(props);
+    let result = type(props);
     if (
       typeof result === 'object' &&
       result !== null &&
@@ -543,9 +544,9 @@ function renderElement(
       }
       // TODO: Once we accept Promises as children on the client, we can just return
       // the thenable here.
-      return createLazyWrapperAroundWakeable(result);
+      result = createLazyWrapperAroundWakeable(result);
     }
-    return result;
+    return renderModelDestructive(request, task, emptyRoot, '', result, null);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
     return [REACT_ELEMENT_TYPE, type, key, props];
@@ -555,7 +556,14 @@ function renderElement(
       // it as a wrapper.
       // TODO: If a key is specified, we should propagate its key to any children.
       // Same as if a Server Component has a key.
-      return props.children;
+      return renderModelDestructive(
+        request,
+        task,
+        emptyRoot,
+        '',
+        props.children,
+        null,
+      );
     }
     // This might be a built-in React component. We'll let the client decide.
     // Any built-in works as long as its props are serializable.
@@ -572,6 +580,7 @@ function renderElement(
         const wrappedType = init(payload);
         return renderElement(
           request,
+          task,
           wrappedType,
           key,
           ref,
@@ -582,11 +591,20 @@ function renderElement(
       case REACT_FORWARD_REF_TYPE: {
         const render = type.render;
         prepareToUseHooksForComponent(prevThenableState);
-        return render(props, undefined);
+        const result = render(props, undefined);
+        return renderModelDestructive(
+          request,
+          task,
+          emptyRoot,
+          '',
+          result,
+          null,
+        );
       }
       case REACT_MEMO_TYPE: {
         return renderElement(
           request,
+          task,
           type.type,
           key,
           ref,
@@ -1105,21 +1123,14 @@ function renderModelDestructive(
         // TODO: Concatenate keys of parents onto children.
         const element: React$Element<any> = (value: any);
         // Attempt to render the Server Component.
-        const result = renderElement(
+        return renderElement(
           request,
+          task,
           element.type,
           element.key,
           element.ref,
           element.props,
           prevThenableState,
-        );
-        return renderModelDestructive(
-          request,
-          task,
-          emptyRoot,
-          '',
-          result,
-          null,
         );
       }
       case REACT_LAZY_TYPE: {
