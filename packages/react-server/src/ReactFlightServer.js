@@ -644,6 +644,10 @@ function createTask(
   abortSet: Set<Task>,
 ): Task {
   const id = request.nextChunkId++;
+  if (typeof model === 'object' && model !== null) {
+    // Register this model as having the ID we're about to write.
+    request.writtenObjects.set(model, id);
+  }
   const task: Task = {
     id,
     status: PENDING,
@@ -654,14 +658,14 @@ function createTask(
       this:
         | {+[key: string | number]: ReactClientValue}
         | $ReadOnlyArray<ReactClientValue>,
-      key: string,
+      parentPropertyName: string,
       value: ReactClientValue,
     ): ReactJSONValue {
       const parent = this;
-      // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
+      // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
       if (__DEV__) {
         // $FlowFixMe[incompatible-use]
-        const originalValue = parent[key];
+        const originalValue = parent[parentPropertyName];
         if (
           typeof originalValue === 'object' &&
           originalValue !== value &&
@@ -673,14 +677,14 @@ function createTask(
               console.error(
                 '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
                 objectName(originalValue),
-                describeObjectForErrorMessage(parent, key),
+                describeObjectForErrorMessage(parent, parentPropertyName),
               );
             } else {
               console.error(
                 'Only plain objects can be passed to Client Components from Server Components. ' +
                   '%s objects are not supported.%s',
                 objectName(originalValue),
-                describeObjectForErrorMessage(parent, key),
+                describeObjectForErrorMessage(parent, parentPropertyName),
               );
             }
           } else {
@@ -688,7 +692,7 @@ function createTask(
               'Only plain objects can be passed to Client Components from Server Components. ' +
                 'Objects with toJSON methods are not supported. Convert it manually ' +
                 'to a simple value before passing it to props.%s',
-              describeObjectForErrorMessage(parent, key),
+              describeObjectForErrorMessage(parent, parentPropertyName),
             );
           }
         }
@@ -698,16 +702,22 @@ function createTask(
           parent[0] === REACT_ELEMENT_TYPE &&
           parent[1] &&
           (parent[1]: any).$$typeof === REACT_PROVIDER_TYPE &&
-          key === '3'
+          parentPropertyName === '3'
         ) {
           insideContextProps = value;
-        } else if (insideContextProps === parent && key === 'value') {
+        } else if (
+          insideContextProps === parent &&
+          parentPropertyName === 'value'
+        ) {
           isInsideContextValue = true;
-        } else if (insideContextProps === parent && key === 'children') {
+        } else if (
+          insideContextProps === parent &&
+          parentPropertyName === 'children'
+        ) {
           isInsideContextValue = false;
         }
       }
-      return renderModel(request, task, parent, key, value);
+      return renderModel(request, task, parent, parentPropertyName, value);
     },
     thenableState: null,
   };
@@ -788,9 +798,9 @@ function encodeReferenceChunk(
 function serializeClientReference(
   request: Request,
   parent:
-    | {+[key: string | number]: ReactClientValue}
+    | {+[propertyName: string | number]: ReactClientValue}
     | $ReadOnlyArray<ReactClientValue>,
-  key: string,
+  parentPropertyName: string,
   clientReference: ClientReference<any>,
 ): string {
   const clientReferenceKey: ClientReferenceKey =
@@ -798,7 +808,7 @@ function serializeClientReference(
   const writtenClientReferences = request.writtenClientReferences;
   const existingId = writtenClientReferences.get(clientReferenceKey);
   if (existingId !== undefined) {
-    if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
+    if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
       // If we're encoding the "type" of an element, we can refer
       // to that by a lazy reference instead of directly since React
       // knows how to deal with lazy values. This lets us suspend
@@ -815,7 +825,7 @@ function serializeClientReference(
     const importId = request.nextChunkId++;
     emitImportChunk(request, importId, clientReferenceMetadata);
     writtenClientReferences.set(clientReferenceKey, importId);
-    if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
+    if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
       // If we're encoding the "type" of an element, we can refer
       // to that by a lazy reference instead of directly since React
       // knows how to deal with lazy values. This lets us suspend
@@ -833,7 +843,7 @@ function serializeClientReference(
   }
 }
 
-function outlineModel(request: Request, value: any): number {
+function outlineModel(request: Request, value: ReactClientValue): number {
   request.pendingChunks++;
   const newTask = createTask(
     request,
@@ -847,10 +857,6 @@ function outlineModel(request: Request, value: any): number {
 
 function serializeServerReference(
   request: Request,
-  parent:
-    | {+[key: string | number]: ReactClientValue}
-    | $ReadOnlyArray<ReactClientValue>,
-  key: string,
   serverReference: ServerReference<any>,
 ): string {
   const writtenServerReferences = request.writtenServerReferences;
@@ -1035,17 +1041,18 @@ function renderModel(
   // However, the only things that really should suspend are Components or Lazy which
   // already serialize as lazy references instead. In theory though a Proxy could also
   // suspend or error when accessed and currently that suspends the parent row or Lazy.
-  return renderModelDestructive(request, task, parent, key, value);
+  return renderModelDestructive(request, task, parent, key, value, null);
 }
 
 function renderModelDestructive(
   request: Request,
   task: Task,
   parent:
-    | {+[key: string | number]: ReactClientValue}
+    | {+[propertyName: string | number]: ReactClientValue}
     | $ReadOnlyArray<ReactClientValue>,
-  key: string,
+  parentPropertyName: string,
   value: ReactClientValue,
+  prevThenableState: ThenableState | null,
 ): ReactJSONValue {
   // Set the currently rendering model
   task.model = value;
@@ -1099,9 +1106,16 @@ function renderModelDestructive(
             element.key,
             element.ref,
             element.props,
+            prevThenableState,
+          );
+          return renderModelDestructive(
+            request,
+            task,
+            emptyRoot,
+            '',
+            result,
             null,
           );
-          return renderModelDestructive(request, task, parent, key, result);
         } catch (x) {
           return serializeLazyID(serializeCaughtValue(request, task, x));
         }
@@ -1114,9 +1128,10 @@ function renderModelDestructive(
           return renderModelDestructive(
             request,
             task,
-            parent,
-            key,
+            emptyRoot,
+            '',
             resolvedModel,
+            null,
           );
         } catch (x) {
           return serializeLazyID(serializeCaughtValue(request, task, x));
@@ -1125,7 +1140,12 @@ function renderModelDestructive(
     }
 
     if (isClientReference(value)) {
-      return serializeClientReference(request, parent, key, (value: any));
+      return serializeClientReference(
+        request,
+        parent,
+        parentPropertyName,
+        (value: any),
+      );
     }
 
     if (enableTaint) {
@@ -1161,7 +1181,7 @@ function renderModelDestructive(
         const providerKey = ((value: any): ReactProviderType<any>)._context
           ._globalName;
         const writtenProviders = request.writtenProviders;
-        let providerId = writtenProviders.get(key);
+        let providerId = writtenProviders.get(providerKey);
         if (providerId === undefined) {
           request.pendingChunks++;
           providerId = request.nextChunkId++;
@@ -1287,13 +1307,13 @@ function renderModelDestructive(
           'Only plain objects can be passed to Client Components from Server Components. ' +
             '%s objects are not supported.%s',
           objectName(value),
-          describeObjectForErrorMessage(parent, key),
+          describeObjectForErrorMessage(parent, parentPropertyName),
         );
       } else if (!isSimpleObject(value)) {
         console.error(
           'Only plain objects can be passed to Client Components from Server Components. ' +
             'Classes or other objects with methods are not supported.%s',
-          describeObjectForErrorMessage(parent, key),
+          describeObjectForErrorMessage(parent, parentPropertyName),
         );
       } else if (Object.getOwnPropertySymbols) {
         const symbols = Object.getOwnPropertySymbols(value);
@@ -1302,7 +1322,7 @@ function renderModelDestructive(
             'Only plain objects can be passed to Client Components from Server Components. ' +
               'Objects with symbol properties like %s are not supported.%s',
             symbols[0].description,
-            describeObjectForErrorMessage(parent, key),
+            describeObjectForErrorMessage(parent, parentPropertyName),
           );
         }
       }
@@ -1323,7 +1343,7 @@ function renderModelDestructive(
     if (value[value.length - 1] === 'Z') {
       // Possibly a Date, whose toJSON automatically calls toISOString
       // $FlowFixMe[incompatible-use]
-      const originalValue = parent[key];
+      const originalValue = parent[parentPropertyName];
       if (originalValue instanceof Date) {
         return serializeDateFromDateJSON(value);
       }
@@ -1351,10 +1371,15 @@ function renderModelDestructive(
 
   if (typeof value === 'function') {
     if (isClientReference(value)) {
-      return serializeClientReference(request, parent, key, (value: any));
+      return serializeClientReference(
+        request,
+        parent,
+        parentPropertyName,
+        (value: any),
+      );
     }
     if (isServerReference(value)) {
-      return serializeServerReference(request, parent, key, (value: any));
+      return serializeServerReference(request, (value: any));
     }
 
     if (enableTaint) {
@@ -1364,17 +1389,17 @@ function renderModelDestructive(
       }
     }
 
-    if (/^on[A-Z]/.test(key)) {
+    if (/^on[A-Z]/.test(parentPropertyName)) {
       throw new Error(
         'Event handlers cannot be passed to Client Component props.' +
-          describeObjectForErrorMessage(parent, key) +
+          describeObjectForErrorMessage(parent, parentPropertyName) +
           '\nIf you need interactivity, consider converting part of this to a Client Component.',
       );
     } else {
       throw new Error(
         'Functions cannot be passed directly to Client Components ' +
           'unless you explicitly expose it by marking it with "use server".' +
-          describeObjectForErrorMessage(parent, key),
+          describeObjectForErrorMessage(parent, parentPropertyName),
       );
     }
   }
@@ -1395,7 +1420,7 @@ function renderModelDestructive(
             // $FlowFixMe[incompatible-type] `description` might be undefined
             value.description
           }) cannot be found among global symbols.` +
-          describeObjectForErrorMessage(parent, key),
+          describeObjectForErrorMessage(parent, parentPropertyName),
       );
     }
 
@@ -1418,7 +1443,7 @@ function renderModelDestructive(
 
   throw new Error(
     `Type ${typeof value} is not supported in Client Component props.` +
-      describeObjectForErrorMessage(parent, key),
+      describeObjectForErrorMessage(parent, parentPropertyName),
   );
 }
 
@@ -1554,6 +1579,8 @@ function emitModelChunk(request: Request, id: number, json: string): void {
   request.completedRegularChunks.push(processedChunk);
 }
 
+const emptyRoot = {};
+
 function retryTask(request: Request, task: Task): void {
   if (task.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -1562,73 +1589,42 @@ function retryTask(request: Request, task: Task): void {
 
   switchContext(task.context);
   try {
-    let value = task.model;
-    if (
-      typeof value === 'object' &&
-      value !== null &&
-      (value: any).$$typeof === REACT_ELEMENT_TYPE
-    ) {
-      request.writtenObjects.set(value, task.id);
-
-      // TODO: Concatenate keys of parents onto children.
-      const element: React$Element<any> = (value: any);
-
-      // When retrying a component, reuse the thenableState from the
-      // previous attempt.
-      const prevThenableState = task.thenableState;
-
-      // Attempt to render the Server Component.
-      // Doing this here lets us reuse this same task if the next component
-      // also suspends.
-      task.model = value;
-      value = renderElement(
-        request,
-        element.type,
-        element.key,
-        element.ref,
-        element.props,
-        prevThenableState,
-      );
-
-      // Successfully finished this component. We're going to keep rendering
-      // using the same task, but we reset its thenable state before continuing.
-      task.thenableState = null;
-
-      // Keep rendering and reuse the same task. This inner loop is separate
-      // from the render above because we don't need to reset the thenable state
-      // until the next time something suspends and retries.
-      while (
-        typeof value === 'object' &&
-        value !== null &&
-        (value: any).$$typeof === REACT_ELEMENT_TYPE
-      ) {
-        request.writtenObjects.set(value, task.id);
-        // TODO: Concatenate keys of parents onto children.
-        const nextElement: React$Element<any> = (value: any);
-        task.model = value;
-        value = renderElement(
-          request,
-          nextElement.type,
-          nextElement.key,
-          nextElement.ref,
-          nextElement.props,
-          null,
-        );
-      }
-    }
-
-    // Track that this object is outlined and has an id.
-    if (typeof value === 'object' && value !== null) {
-      request.writtenObjects.set(value, task.id);
-    }
+    // Reset the task's thenable state before continuing, so that if a later
+    // component suspends we can reuse the same task object. If the same
+    // component suspends again, the thenable state will be restored.
+    const prevThenableState = task.thenableState;
+    task.thenableState = null;
 
     // Track the root so we know that we have to emit this object even though it
     // already has an ID. This is needed because we might see this object twice
     // in the same toJSON if it is cyclic.
-    modelRoot = value;
+    modelRoot = task.model;
+
+    // We call the destructive form that mutates this task. That way if something
+    // suspends again, we can reuse the same task instead of spawning a new one.
+    const resolvedModel = renderModelDestructive(
+      request,
+      task,
+      emptyRoot,
+      '',
+      task.model,
+      prevThenableState,
+    );
+
+    // Track the root again for the resolved object.
+    modelRoot = resolvedModel;
+
+    // If the value is a string, it means it's a terminal value adn we already escaped it
+    // We don't need to escape it again so it's not passed the toJSON replacer.
+    // Object might contain unresolved values like additional elements.
+    // This is simulating what the JSON loop would do if this was part of it.
     // $FlowFixMe[incompatible-type] stringify can return null
-    const json: string = stringify(value, task.toJSON);
+    const json: string =
+      typeof resolvedModel === 'string'
+        ? stringify(resolvedModel)
+        : stringify(resolvedModel, task.toJSON);
     emitModelChunk(request, task.id, json);
+
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
   } catch (thrownValue) {
