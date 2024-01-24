@@ -175,27 +175,6 @@ describe('ReactDOMRoot', () => {
     );
   });
 
-  it('clears existing children with legacy API', async () => {
-    container.innerHTML = '<div>a</div><div>b</div>';
-    ReactDOM.render(
-      <div>
-        <span>c</span>
-        <span>d</span>
-      </div>,
-      container,
-    );
-    expect(container.textContent).toEqual('cd');
-    ReactDOM.render(
-      <div>
-        <span>d</span>
-        <span>c</span>
-      </div>,
-      container,
-    );
-    await waitForAll([]);
-    expect(container.textContent).toEqual('dc');
-  });
-
   it('clears existing children', async () => {
     container.innerHTML = '<div>a</div><div>b</div>';
     const root = ReactDOMClient.createRoot(container);
@@ -221,122 +200,6 @@ describe('ReactDOMRoot', () => {
     expect(() => {
       ReactDOMClient.createRoot(<div>Hi</div>);
     }).toThrow('createRoot(...): Target container is not a DOM element.');
-  });
-
-  it('warns when rendering with legacy API into createRoot() container', async () => {
-    const root = ReactDOMClient.createRoot(container);
-    root.render(<div>Hi</div>);
-    await waitForAll([]);
-    expect(container.textContent).toEqual('Hi');
-    expect(() => {
-      ReactDOM.render(<div>Bye</div>, container);
-    }).toErrorDev(
-      [
-        // We care about this warning:
-        'You are calling ReactDOM.render() on a container that was previously ' +
-          'passed to ReactDOMClient.createRoot(). This is not supported. ' +
-          'Did you mean to call root.render(element)?',
-        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
-        'Replacing React-rendered children with a new root component.',
-      ],
-      {withoutStack: true},
-    );
-    await waitForAll([]);
-    // This works now but we could disallow it:
-    expect(container.textContent).toEqual('Bye');
-  });
-
-  it('warns when hydrating with legacy API into createRoot() container', async () => {
-    const root = ReactDOMClient.createRoot(container);
-    root.render(<div>Hi</div>);
-    await waitForAll([]);
-    expect(container.textContent).toEqual('Hi');
-    expect(() => {
-      ReactDOM.hydrate(<div>Hi</div>, container);
-    }).toErrorDev(
-      [
-        // We care about this warning:
-        'You are calling ReactDOM.hydrate() on a container that was previously ' +
-          'passed to ReactDOMClient.createRoot(). This is not supported. ' +
-          'Did you mean to call hydrateRoot(container, element)?',
-        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
-        'Replacing React-rendered children with a new root component.',
-      ],
-      {withoutStack: true},
-    );
-  });
-
-  it('callback passed to legacy hydrate() API', () => {
-    container.innerHTML = '<div>Hi</div>';
-    ReactDOM.hydrate(<div>Hi</div>, container, () => {
-      Scheduler.log('callback');
-    });
-    expect(container.textContent).toEqual('Hi');
-    assertLog(['callback']);
-  });
-
-  it('warns when unmounting with legacy API (no previous content)', async () => {
-    const root = ReactDOMClient.createRoot(container);
-    root.render(<div>Hi</div>);
-    await waitForAll([]);
-    expect(container.textContent).toEqual('Hi');
-    let unmounted = false;
-    expect(() => {
-      unmounted = ReactDOM.unmountComponentAtNode(container);
-    }).toErrorDev(
-      [
-        // We care about this warning:
-        'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
-          'passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.unmount()?',
-        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
-        "The node you're attempting to unmount was rendered by React and is not a top-level container.",
-      ],
-      {withoutStack: true},
-    );
-    expect(unmounted).toBe(false);
-    await waitForAll([]);
-    expect(container.textContent).toEqual('Hi');
-    root.unmount();
-    await waitForAll([]);
-    expect(container.textContent).toEqual('');
-  });
-
-  it('warns when unmounting with legacy API (has previous content)', async () => {
-    // Currently createRoot().render() doesn't clear this.
-    container.appendChild(document.createElement('div'));
-    // The rest is the same as test above.
-    const root = ReactDOMClient.createRoot(container);
-    root.render(<div>Hi</div>);
-    await waitForAll([]);
-    expect(container.textContent).toEqual('Hi');
-    let unmounted = false;
-    expect(() => {
-      unmounted = ReactDOM.unmountComponentAtNode(container);
-    }).toErrorDev(
-      [
-        'Did you mean to call root.unmount()?',
-        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
-        "The node you're attempting to unmount was rendered by React and is not a top-level container.",
-      ],
-      {withoutStack: true},
-    );
-    expect(unmounted).toBe(false);
-    await waitForAll([]);
-    expect(container.textContent).toEqual('Hi');
-    root.unmount();
-    await waitForAll([]);
-    expect(container.textContent).toEqual('');
-  });
-
-  it('warns when passing legacy container to createRoot()', () => {
-    ReactDOM.render(<div>Hi</div>, container);
-    expect(() => {
-      ReactDOMClient.createRoot(container);
-    }).toErrorDev(
-      'You are calling ReactDOMClient.createRoot() on a container that was previously ' +
-        'passed to ReactDOM.render(). This is not supported.',
-      {withoutStack: true},
-    );
   });
 
   it('warns when creating two roots managing the same container', () => {
@@ -397,6 +260,80 @@ describe('ReactDOMRoot', () => {
         {withoutStack: true},
       );
     }
+  });
+
+  it('should render different components in same root', async () => {
+    document.body.appendChild(container);
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<div />);
+    });
+    expect(container.firstChild.nodeName).toBe('DIV');
+
+    await act(() => {
+      root.render(<span />);
+    });
+    expect(container.firstChild.nodeName).toBe('SPAN');
+  });
+
+  it('should not warn if mounting into non-empty node', async () => {
+    container.innerHTML = '<div></div>';
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div />);
+    });
+
+    expect(true).toBe(true);
+  });
+
+  it('should reuse markup if rendering to the same target twice', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div />);
+    });
+    const firstElm = container.firstChild;
+    await act(() => {
+      root.render(<div />);
+    });
+
+    expect(firstElm).toBe(container.firstChild);
+  });
+
+  it('should unmount and remount if the key changes', async () => {
+    function Component({text}) {
+      useEffect(() => {
+        Scheduler.log('Mount');
+
+        return () => {
+          Scheduler.log('Unmount');
+        };
+      }, []);
+
+      return <span>{text}</span>;
+    }
+
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<Component text="orange" key="A" />);
+    });
+    expect(container.firstChild.innerHTML).toBe('orange');
+    assertLog(['Mount']);
+
+    // If we change the key, the component is unmounted and remounted
+    await act(() => {
+      root.render(<Component text="green" key="B" />);
+    });
+    expect(container.firstChild.innerHTML).toBe('green');
+    assertLog(['Unmount', 'Mount']);
+
+    // But if we don't change the key, the component instance is reused
+    await act(() => {
+      root.render(<Component text="blue" key="B" />);
+    });
+    expect(container.firstChild.innerHTML).toBe('blue');
+    assertLog([]);
   });
 
   it('throws if unmounting a root that has had its contents removed', async () => {
@@ -514,9 +451,6 @@ describe('ReactDOMRoot', () => {
     expect(() => ReactDOMClient.hydrateRoot(commentNode)).toThrow(
       'hydrateRoot(...): Target container is not a DOM element.',
     );
-
-    // Still works in the legacy API
-    ReactDOM.render(<div />, commentNode);
   });
 
   it('warn if no children passed to hydrateRoot', async () => {
@@ -537,6 +471,25 @@ describe('ReactDOMRoot', () => {
       {
         withoutStack: true,
       },
+    );
+  });
+
+  it('warns when given a function', () => {
+    function Component() {
+      return <div />;
+    }
+
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+
+    expect(() => {
+      ReactDOM.flushSync(() => {
+        root.render(Component);
+      });
+    }).toErrorDev(
+      'Functions are not valid as a React child. ' +
+        'This may happen if you return a Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.',
+      {withoutStack: true},
     );
   });
 });
