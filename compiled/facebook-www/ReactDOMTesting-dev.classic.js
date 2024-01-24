@@ -35592,7 +35592,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-34ed23b6";
+    var ReactVersion = "18.3.0-www-classic-83debab5";
 
     function createPortal$1(
       children,
@@ -47411,7 +47411,7 @@ if (__DEV__) {
         }
       };
 
-    function createRoot$1(container, options) {
+    function createRoot$2(container, options) {
       if (!isValidContainer(container)) {
         throw new Error(
           "createRoot(...): Target container is not a DOM element."
@@ -47500,7 +47500,7 @@ if (__DEV__) {
 
     ReactDOMHydrationRoot.prototype.unstable_scheduleHydration =
       scheduleHydration;
-    function hydrateRoot$1(container, initialChildren, options) {
+    function hydrateRoot$2(container, initialChildren, options) {
       if (!isValidContainer(container)) {
         throw new Error(
           "hydrateRoot(...): Target container is not a DOM element."
@@ -48568,7 +48568,7 @@ if (__DEV__) {
       );
     }
 
-    function createRoot(container, options) {
+    function createRoot$1(container, options) {
       {
         if (!Internals.usingClientEntryPoint && !false) {
           error(
@@ -48578,10 +48578,10 @@ if (__DEV__) {
         }
       }
 
-      return createRoot$1(container, options);
+      return createRoot$2(container, options);
     }
 
-    function hydrateRoot(container, initialChildren, options) {
+    function hydrateRoot$1(container, initialChildren, options) {
       {
         if (!Internals.usingClientEntryPoint && !false) {
           error(
@@ -48591,7 +48591,7 @@ if (__DEV__) {
         }
       }
 
-      return hydrateRoot$1(container, initialChildren, options);
+      return hydrateRoot$2(container, initialChildren, options);
     } // Overload the definition to the two valid signatures.
     // Warning, this opts-out of checking the function body.
     // eslint-disable-next-line no-redeclare
@@ -48659,6 +48659,33 @@ if (__DEV__) {
         isEnabled: isEnabled
       }
     });
+
+    function createRoot(container, options) {
+      {
+        Internals.usingClientEntryPoint = true;
+      }
+
+      try {
+        return createRoot$1(container, options);
+      } finally {
+        {
+          Internals.usingClientEntryPoint = false;
+        }
+      }
+    }
+    function hydrateRoot(container, children, options) {
+      {
+        Internals.usingClientEntryPoint = true;
+      }
+
+      try {
+        return hydrateRoot$1(container, children, options);
+      } finally {
+        {
+          Internals.usingClientEntryPoint = false;
+        }
+      }
+    }
 
     exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
     exports.createComponentSelector = createComponentSelector;

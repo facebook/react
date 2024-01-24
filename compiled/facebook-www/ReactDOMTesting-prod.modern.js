@@ -13273,14 +13273,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$345;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1560 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1560) {
-      var element$jscomp$inline_1561 = document.createElement("div");
-      element$jscomp$inline_1561.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1560 =
-        "function" === typeof element$jscomp$inline_1561.oninput;
+    var isSupported$jscomp$inline_1558 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1558) {
+      var element$jscomp$inline_1559 = document.createElement("div");
+      element$jscomp$inline_1559.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1558 =
+        "function" === typeof element$jscomp$inline_1559.oninput;
     }
-    JSCompiler_inline_result$jscomp$345 = isSupported$jscomp$inline_1560;
+    JSCompiler_inline_result$jscomp$345 = isSupported$jscomp$inline_1558;
   } else JSCompiler_inline_result$jscomp$345 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$345 &&
@@ -13592,20 +13592,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1601 = 0;
-  i$jscomp$inline_1601 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1601++
+  var i$jscomp$inline_1599 = 0;
+  i$jscomp$inline_1599 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1599++
 ) {
-  var eventName$jscomp$inline_1602 =
-      simpleEventPluginEvents[i$jscomp$inline_1601],
-    domEventName$jscomp$inline_1603 =
-      eventName$jscomp$inline_1602.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1604 =
-      eventName$jscomp$inline_1602[0].toUpperCase() +
-      eventName$jscomp$inline_1602.slice(1);
+  var eventName$jscomp$inline_1600 =
+      simpleEventPluginEvents[i$jscomp$inline_1599],
+    domEventName$jscomp$inline_1601 =
+      eventName$jscomp$inline_1600.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1602 =
+      eventName$jscomp$inline_1600[0].toUpperCase() +
+      eventName$jscomp$inline_1600.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1603,
-    "on" + capitalizedEvent$jscomp$inline_1604
+    domEventName$jscomp$inline_1601,
+    "on" + capitalizedEvent$jscomp$inline_1602
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -16498,17 +16498,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1787 = {
+var devToolsConfig$jscomp$inline_1763 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-414df020",
+  version: "18.3.0-www-modern-0097fe57",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2143 = {
-  bundleType: devToolsConfig$jscomp$inline_1787.bundleType,
-  version: devToolsConfig$jscomp$inline_1787.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1787.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1787.rendererConfig,
+var internals$jscomp$inline_2120 = {
+  bundleType: devToolsConfig$jscomp$inline_1763.bundleType,
+  version: devToolsConfig$jscomp$inline_1763.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1763.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1763.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -16525,26 +16525,26 @@ var internals$jscomp$inline_2143 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1787.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1763.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-414df020"
+  reconcilerVersion: "18.3.0-www-modern-0097fe57"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2144 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2121 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2144.isDisabled &&
-    hook$jscomp$inline_2144.supportsFiber
+    !hook$jscomp$inline_2121.isDisabled &&
+    hook$jscomp$inline_2121.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2144.inject(
-        internals$jscomp$inline_2143
+      (rendererID = hook$jscomp$inline_2121.inject(
+        internals$jscomp$inline_2120
       )),
-        (injectedHook = hook$jscomp$inline_2144);
+        (injectedHook = hook$jscomp$inline_2121);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -16728,7 +16728,7 @@ exports.getFindAllNodesFailureDescription = function (hostRoot, selectors) {
   }
   return null;
 };
-exports.hydrateRoot = function (container, initialChildren, options) {
+exports.hydrateRoot = function (container, children, options) {
   if (!isValidContainer(container)) throw Error(formatProdErrorMessage(405));
   var isStrictMode = !1,
     concurrentUpdatesByDefaultOverride = !1,
@@ -16746,11 +16746,11 @@ exports.hydrateRoot = function (container, initialChildren, options) {
       (onRecoverableError = options.onRecoverableError),
     void 0 !== options.unstable_transitionCallbacks &&
       (transitionCallbacks = options.unstable_transitionCallbacks));
-  initialChildren = createFiberRoot(
+  children = createFiberRoot(
     container,
     1,
     !0,
-    initialChildren,
+    children,
     null != options ? options : null,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -16759,19 +16759,19 @@ exports.hydrateRoot = function (container, initialChildren, options) {
     transitionCallbacks,
     null
   );
-  initialChildren.context = emptyContextObject;
-  options = initialChildren.current;
+  children.context = emptyContextObject;
+  options = children.current;
   isStrictMode = requestUpdateLane(options);
   concurrentUpdatesByDefaultOverride = createUpdate(isStrictMode);
   concurrentUpdatesByDefaultOverride.callback = null;
   enqueueUpdate(options, concurrentUpdatesByDefaultOverride, isStrictMode);
-  initialChildren.current.lanes = isStrictMode;
-  markRootUpdated(initialChildren, isStrictMode);
-  ensureRootIsScheduled(initialChildren);
-  container[internalContainerInstanceKey] = initialChildren.current;
+  children.current.lanes = isStrictMode;
+  markRootUpdated(children, isStrictMode);
+  ensureRootIsScheduled(children);
+  container[internalContainerInstanceKey] = children.current;
   Dispatcher$1.current = ReactDOMClientDispatcher;
   listenToAllSupportedEvents(container);
-  return new ReactDOMHydrationRoot(initialChildren);
+  return new ReactDOMHydrationRoot(children);
 };
 exports.observeVisibleRects = function (
   hostRoot,
@@ -16941,11 +16941,10 @@ exports.unstable_createEventHandle = function (type, options) {
     "boolean" === typeof options && (isCapturePhaseListener = options));
   return eventHandle;
 };
-exports.unstable_runWithPriority = runWithPriority;
 exports.useFormState = function () {
   throw Error(formatProdErrorMessage(248));
 };
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-414df020";
+exports.version = "18.3.0-www-modern-0097fe57";
