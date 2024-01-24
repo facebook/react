@@ -140,6 +140,7 @@ describe('ReactDOMServerHydration', () => {
       /* eslint-enable no-irregular-whitespace */
     });
 
+    // @gate __DEV__
     it('warns when client and server render different html', () => {
       function Mismatch({isClient}) {
         return (
