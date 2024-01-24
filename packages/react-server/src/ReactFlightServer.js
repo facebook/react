@@ -972,59 +972,6 @@ let insideContextProps = null;
 let isInsideContextValue = false;
 let modelRoot: null | ReactClientValue = false;
 
-// A thrown value whether Suspense or Error needs to be serialized into a new chunk.
-// This creates a new chunk and returns the new ID which can be either a direct or
-// indirect reference.
-function serializeCaughtValue(
-  request: Request,
-  task: Task,
-  thrownValue: mixed,
-): number {
-  const x =
-    thrownValue === SuspenseException
-      ? // This is a special type of exception used for Suspense. For historical
-        // reasons, the rest of the Suspense implementation expects the thrown
-        // value to be a thenable, because before `use` existed that was the
-        // (unstable) API for suspending. This implementation detail can change
-        // later, once we deprecate the old API in favor of `use`.
-        getSuspendedThenable()
-      : thrownValue;
-  if (typeof x === 'object' && x !== null) {
-    // $FlowFixMe[method-unbinding]
-    if (typeof x.then === 'function') {
-      // Something suspended, we'll need to create a new task and resolve it later.
-      request.pendingChunks++;
-      const newTask = createTask(
-        request,
-        task.model,
-        getActiveContext(),
-        request.abortableTasks,
-      );
-      const ping = newTask.ping;
-      (x: any).then(ping, ping);
-      newTask.thenableState = getThenableStateAfterSuspending();
-      return newTask.id;
-    } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
-      // Something postponed. We'll still send everything we have up until this point.
-      // We'll replace this element with a lazy reference that postpones on the client.
-      const postponeInstance: Postpone = (x: any);
-      request.pendingChunks++;
-      const postponeId = request.nextChunkId++;
-      logPostpone(request, postponeInstance.message);
-      emitPostponeChunk(request, postponeId, postponeInstance);
-      return postponeId;
-    }
-  }
-  // Something errored. We'll still send everything we have up until this point.
-  // We'll replace this element with a lazy reference that throws on the client
-  // once it gets rendered.
-  request.pendingChunks++;
-  const errorId = request.nextChunkId++;
-  const digest = logRecoverableError(request, x);
-  emitErrorChunk(request, errorId, digest, x);
-  return errorId;
-}
-
 function renderModel(
   request: Request,
   task: Task,
@@ -1034,14 +981,73 @@ function renderModel(
   key: string,
   value: ReactClientValue,
 ): ReactJSONValue {
-  // This function only exists for parity with Fizz, but it's not currently used.
-  // We could add a catch here which returns serializeByValueID(serializeCaughtValue()).
-  // If it's an error that doesn't really help but if something suspends we can still
-  // the surrounding tree early and still reconstruct it as a single tree on the client.
-  // However, the only things that really should suspend are Components or Lazy which
-  // already serialize as lazy references instead. In theory though a Proxy could also
-  // suspend or error when accessed and currently that suspends the parent row or Lazy.
-  return renderModelDestructive(request, task, parent, key, value, null);
+  try {
+    return renderModelDestructive(request, task, parent, key, value, null);
+  } catch (thrownValue) {
+    const x =
+      thrownValue === SuspenseException
+        ? // This is a special type of exception used for Suspense. For historical
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
+        : thrownValue;
+    // If the suspended/errored value was an element or lazy it can be reduced
+    // to a lazy reference, so that it doesn't error the parent.
+    const model = task.model;
+    const wasReactNode =
+      typeof model === 'object' &&
+      model !== null &&
+      ((model: any).$$typeof === REACT_ELEMENT_TYPE ||
+        (model: any).$$typeof === REACT_LAZY_TYPE);
+    if (typeof x === 'object' && x !== null) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof x.then === 'function') {
+        // Something suspended, we'll need to create a new task and resolve it later.
+        request.pendingChunks++;
+        const newTask = createTask(
+          request,
+          task.model,
+          getActiveContext(),
+          request.abortableTasks,
+        );
+        const ping = newTask.ping;
+        (x: any).then(ping, ping);
+        newTask.thenableState = getThenableStateAfterSuspending();
+        if (wasReactNode) {
+          return serializeLazyID(newTask.id);
+        }
+        return serializeByValueID(newTask.id);
+      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
+        // Something postponed. We'll still send everything we have up until this point.
+        // We'll replace this element with a lazy reference that postpones on the client.
+        const postponeInstance: Postpone = (x: any);
+        request.pendingChunks++;
+        const postponeId = request.nextChunkId++;
+        logPostpone(request, postponeInstance.message);
+        emitPostponeChunk(request, postponeId, postponeInstance);
+        if (wasReactNode) {
+          return serializeLazyID(postponeId);
+        }
+        return serializeByValueID(postponeId);
+      }
+    }
+    if (wasReactNode) {
+      // Something errored. We'll still send everything we have up until this point.
+      // We'll replace this element with a lazy reference that throws on the client
+      // once it gets rendered.
+      request.pendingChunks++;
+      const errorId = request.nextChunkId++;
+      const digest = logRecoverableError(request, x);
+      emitErrorChunk(request, errorId, digest, x);
+      return serializeLazyID(errorId);
+    }
+    // Something errored but it was not in a React Node. There's no need to serialize
+    // it by value because it'll just error the whole parent row anyway so we can
+    // just stop any siblings and error the whole parent row.
+    throw x;
+  }
 }
 
 function renderModelDestructive(
@@ -1096,46 +1102,38 @@ function renderModelDestructive(
           writtenObjects.set(value, -1);
         }
 
-        try {
-          // TODO: Concatenate keys of parents onto children.
-          const element: React$Element<any> = (value: any);
-          // Attempt to render the Server Component.
-          const result = renderElement(
-            request,
-            element.type,
-            element.key,
-            element.ref,
-            element.props,
-            prevThenableState,
-          );
-          return renderModelDestructive(
-            request,
-            task,
-            emptyRoot,
-            '',
-            result,
-            null,
-          );
-        } catch (x) {
-          return serializeLazyID(serializeCaughtValue(request, task, x));
-        }
+        // TODO: Concatenate keys of parents onto children.
+        const element: React$Element<any> = (value: any);
+        // Attempt to render the Server Component.
+        const result = renderElement(
+          request,
+          element.type,
+          element.key,
+          element.ref,
+          element.props,
+          prevThenableState,
+        );
+        return renderModelDestructive(
+          request,
+          task,
+          emptyRoot,
+          '',
+          result,
+          null,
+        );
       }
       case REACT_LAZY_TYPE: {
-        try {
-          const payload = (value: any)._payload;
-          const init = (value: any)._init;
-          const resolvedModel = init(payload);
-          return renderModelDestructive(
-            request,
-            task,
-            emptyRoot,
-            '',
-            resolvedModel,
-            null,
-          );
-        } catch (x) {
-          return serializeLazyID(serializeCaughtValue(request, task, x));
-        }
+        const payload = (value: any)._payload;
+        const init = (value: any)._init;
+        const resolvedModel = init(payload);
+        return renderModelDestructive(
+          request,
+          task,
+          emptyRoot,
+          '',
+          resolvedModel,
+          null,
+        );
       }
     }
 
