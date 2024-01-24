@@ -603,8 +603,15 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       );
     }).toErrorDev(
       'The result of getSnapshot should be cached to avoid an infinite loop',
-      // Stacks don't work when mixing the source and the npm package.
-      {withoutStack: gate(flags => flags.enableUseSyncExternalStoreShim)},
+      {
+        withoutStack: gate(flags => {
+          if (flags.enableUseSyncExternalStoreShim) {
+            // Stacks don't work when mixing the source and the npm package.
+            return flags.source;
+          }
+          return false;
+        }),
+      },
     );
   });
 
