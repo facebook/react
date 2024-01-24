@@ -15,8 +15,8 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
-let Scheduler = require('scheduler');
-const ReactDOMClient = require('react-dom/client');
+let Scheduler;
+let ReactDOMClient;
 let assertLog;
 let waitForAll;
 
@@ -26,6 +26,7 @@ describe('ReactMount', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
     Scheduler = require('scheduler');
