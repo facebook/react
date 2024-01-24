@@ -57,6 +57,7 @@ import {
   writeClientRenderBoundaryInstruction,
   writeCompletedBoundaryInstruction,
   writeCompletedSegmentInstruction,
+  writeHoistablesForBoundary,
   pushTextInstance,
   pushStartInstance,
   pushEndInstance,
@@ -64,13 +65,10 @@ import {
   pushEndCompletedSuspenseBoundary,
   pushSegmentFinale,
   getChildFormatContext,
-  writeHoistablesForPartialBoundary,
-  writeHoistablesForCompletedBoundary,
   writeHoistables,
   writePreamble,
   writePostamble,
-  hoistToBoundary,
-  hoistToRoot,
+  hoistHoistables,
   createHoistableState,
   prepareHostDispatcher,
   supportsRequestStorage,
@@ -234,6 +232,7 @@ type RenderTask = {
   treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
+  isFallback: boolean, // whether this task is rendering inside a fallback tree
 };
 
 type ReplaySet = {
@@ -260,6 +259,7 @@ type ReplayTask = {
   treeContext: TreeContext, // the current tree context that this task is executing in
   componentStack: null | ComponentStackNode, // stack frame description of the currently rendering component
   thenableState: null | ThenableState,
+  isFallback: boolean, // whether this task is rendering inside a fallback tree
 };
 
 export type Task = RenderTask | ReplayTask;
@@ -433,6 +433,7 @@ export function createRequest(
     rootContextSnapshot,
     emptyTreeContext,
     null,
+    false,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -545,6 +546,7 @@ export function resumeRequest(
       rootContextSnapshot,
       emptyTreeContext,
       null,
+      false,
     );
     pingedTasks.push(rootTask);
     return request;
@@ -570,6 +572,7 @@ export function resumeRequest(
     rootContextSnapshot,
     emptyTreeContext,
     null,
+    false,
   );
   pingedTasks.push(rootTask);
   return request;
@@ -630,6 +633,7 @@ function createRenderTask(
   context: ContextSnapshot,
   treeContext: TreeContext,
   componentStack: null | ComponentStackNode,
+  isFallback: boolean,
 ): RenderTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -653,6 +657,7 @@ function createRenderTask(
     treeContext,
     componentStack,
     thenableState,
+    isFallback,
   };
   abortSet.add(task);
   return task;
@@ -673,6 +678,7 @@ function createReplayTask(
   context: ContextSnapshot,
   treeContext: TreeContext,
   componentStack: null | ComponentStackNode,
+  isFallback: boolean,
 ): ReplayTask {
   request.allPendingTasks++;
   if (blockedBoundary === null) {
@@ -697,6 +703,7 @@ function createReplayTask(
     treeContext,
     componentStack,
     thenableState,
+    isFallback,
   };
   abortSet.add(task);
   return task;
@@ -1056,6 +1063,7 @@ function renderSuspenseBoundary(
     // This stack should be the Suspense boundary stack because while the fallback is actually a child segment
     // of the parent boundary from a component standpoint the fallback is a child of the Suspense boundary itself
     suspenseComponentStack,
+    true,
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
@@ -1187,6 +1195,7 @@ function replaySuspenseBoundary(
     // This stack should be the Suspense boundary stack because while the fallback is actually a child segment
     // of the parent boundary from a component standpoint the fallback is a child of the Suspense boundary itself
     suspenseComponentStack,
+    true,
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
@@ -1256,6 +1265,7 @@ function renderHostElement(
       task.hoistableState,
       task.formatContext,
       segment.lastPushedText,
+      task.isFallback,
     );
     segment.lastPushedText = false;
     const prevContext = task.formatContext;
@@ -2748,6 +2758,7 @@ function spawnNewSuspendedReplayTask(
     // We pop one task off the stack because the node that suspended will be tried again,
     // which will add it back onto the stack.
     task.componentStack !== null ? task.componentStack.parent : null,
+    task.isFallback,
   );
 
   const ping = newTask.ping;
@@ -2793,6 +2804,7 @@ function spawnNewSuspendedRenderTask(
     // We pop one task off the stack because the node that suspended will be tried again,
     // which will add it back onto the stack.
     task.componentStack !== null ? task.componentStack.parent : null,
+    task.isFallback,
   );
 
   const ping = newTask.ping;
@@ -3680,51 +3692,11 @@ export function performWork(request: Request): void {
   }
 }
 
-function preparePreambleForSubtree(request: Request, segment: Segment): void {
-  if (segment.status === COMPLETED) {
-    const children = segment.children;
-    for (let i = 0; i < children.length; i++) {
-      const child = children[i];
-      prepareSegmentForPreamble(request, child);
-    }
-  }
-}
-
-function prepareSegmentForPreamble(request: Request, segment: Segment): void {
-  const boundary = segment.boundary;
-  if (boundary === null) {
-    // Not a suspense boundary.
-    preparePreambleForSubtree(request, segment);
-  } else {
-    if (boundary.status === COMPLETED) {
-      // we are going to flush this boundary's primary content rather than a fallback
-      hoistToRoot(request.renderState, boundary.contentState);
-      // Traverse down the primary content path.
-      const completedSegments = boundary.completedSegments;
-      const contentSegment = completedSegments[0];
-      if (contentSegment) {
-        // It is an invariant that a previously unvisited boundary have a single root
-        // segment however we know this will be caught in the normal flushing path
-        // so we simply guard the condition here and avoid throwing
-        preparePreambleForSubtree(request, segment);
-      }
-    } else {
-      // We are going to flush this boundary's fallback content and should include
-      // it's hoistables as well
-      hoistToRoot(request.renderState, boundary.fallbackState);
-      // Traverse the fallback path and see if there are any deeper boundaries with hoistables
-      // to collect
-      preparePreambleForSubtree(request, segment);
-    }
-  }
-}
-
 function flushPreamble(
   request: Request,
   destination: Destination,
   rootSegment: Segment,
 ) {
-  prepareSegmentForPreamble(request, rootSegment);
   const willFlushAllSegments =
     request.allPendingTasks === 0 && request.trackedPostpones === null;
   writePreamble(
@@ -3842,7 +3814,7 @@ function flushSegment(
     // state to the parent boundary
     if (enableFloat) {
       if (hoistableState) {
-        hoistToBoundary(hoistableState, boundary.fallbackState);
+        hoistHoistables(hoistableState, boundary.fallbackState);
       }
     }
     // Flush the fallback.
@@ -3879,7 +3851,7 @@ function flushSegment(
   } else {
     if (enableFloat) {
       if (hoistableState) {
-        hoistToBoundary(hoistableState, boundary.contentState);
+        hoistHoistables(hoistableState, boundary.contentState);
       }
     }
     // We can inline this boundary's content as a complete boundary.
@@ -3946,7 +3918,7 @@ function flushCompletedBoundary(
   completedSegments.length = 0;
 
   if (enableFloat) {
-    writeHoistablesForCompletedBoundary(
+    writeHoistablesForBoundary(
       destination,
       boundary.contentState,
       request.renderState,
@@ -3984,7 +3956,7 @@ function flushPartialBoundary(
   completedSegments.splice(0, i);
 
   if (enableFloat) {
-    return writeHoistablesForPartialBoundary(
+    return writeHoistablesForBoundary(
       destination,
       boundary.contentState,
       request.renderState,

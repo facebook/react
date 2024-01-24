@@ -265,14 +265,12 @@ const ReactNoopServer = ReactFizzServer({
 
   writePreamble() {},
   writeHoistables() {},
+  writeHoistablesForBoundary() {},
   writePostamble() {},
-  hoistToRoot(renderState: RenderState, hoistableState: HoistableState) {},
-  hoistToBoundary(parent: HoistableState, child: HoistableState) {},
+  hoistHoistables(parent: HoistableState, child: HoistableState) {},
   createHoistableState(): HoistableState {
     return null;
   },
-  writeHoistablesForPartialBoundary() {},
-  writeHoistablesForCompleteBoundary() {},
   emitEarlyPreloads() {},
 });
 

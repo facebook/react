@@ -4719,7 +4719,7 @@ body {
     );
   });
 
-  it('does not flush hoistables for fallbacks unless the fallback also flushes', async () => {
+  it('does not flush hoistables for fallbacks', async () => {
     function App() {
       return (
         <html>
@@ -4729,6 +4729,7 @@ body {
                 <>
                   <div>fallback1</div>
                   <meta name="fallback1" />
+                  <title>foo</title>
                 </>
               }>
               <>
@@ -4741,12 +4742,14 @@ body {
                 <>
                   <div>fallback2</div>
                   <meta name="fallback2" />
+                  <link rel="foo" href="bar" />
                 </>
               }>
               <>
                 <div>primary2</div>
-                <meta name="primary2" />
-                <BlockedOn value="first" />
+                <BlockedOn value="first">
+                  <meta name="primary2" />
+                </BlockedOn>
               </>
             </Suspense>
             <Suspense
@@ -4754,12 +4757,17 @@ body {
                 <>
                   <div>fallback3</div>
                   <meta name="fallback3" />
+                  <Suspense fallback="deep">
+                    <div>deep fallback ... primary content</div>
+                    <meta name="deep fallback" />
+                  </Suspense>
                 </>
               }>
               <>
                 <div>primary3</div>
-                <meta name="primary3" />
-                <BlockedOn value="second" />
+                <BlockedOn value="second">
+                  <meta name="primary3" />
+                </BlockedOn>
               </>
             </Suspense>
           </body>
@@ -4777,12 +4785,12 @@ body {
         <head>
           <meta name="primary1" />
           <meta name="primary2" />
-          <meta name="fallback3" />
         </head>
         <body>
           <div>primary1</div>
           <div>primary2</div>
           <div>fallback3</div>
+          <div>deep fallback ... primary content</div>
         </body>
       </html>,
     );
@@ -4796,7 +4804,6 @@ body {
         <head>
           <meta name="primary1" />
           <meta name="primary2" />
-          <meta name="fallback3" />
         </head>
         <body>
           <div>primary1</div>
@@ -4846,9 +4853,12 @@ body {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <meta name="nested primary1" />
+          {/* The primary content hoistables emit */}
+          <meta name="primary1" />
         </head>
         <body>
+          {/* The fallback content emits but the hoistables do not even if they
+              inside a nested suspense boundary that is resolved */}
           <div>nested primary1</div>
         </body>
       </html>,
@@ -4861,63 +4871,10 @@ body {
     expect(getMeaningfulChildren(document)).toEqual(
       <html>
         <head>
-          <meta name="nested primary1" />
+          <meta name="primary1" />
         </head>
         <body>
           <div>primary1</div>
-          <meta name="primary1" />
-        </body>
-      </html>,
-    );
-  });
-
-  it('avoid flushing hoistables of completed inner boundaries when inside an incomplete outer boundary', async () => {
-    function App() {
-      return (
-        <html>
-          <body>
-            <Suspense>
-              <BlockedOn value="release">
-                <div>blocked outer</div>
-                <meta name="blocked outer" />
-              </BlockedOn>
-              <div>outer</div>
-              <meta name="outer" />
-              <Suspense>
-                <div>inner</div>
-                <meta name="inner" />
-              </Suspense>
-            </Suspense>
-          </body>
-        </html>
-      );
-    }
-
-    await act(() => {
-      renderToPipeableStream(<App />).pipe(writable);
-    });
-
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head />
-        <body />
-      </html>,
-    );
-
-    await act(() => {
-      resolveText('release');
-    });
-
-    expect(getMeaningfulChildren(document)).toEqual(
-      <html>
-        <head />
-        <body>
-          <div>blocked outer</div>
-          <div>outer</div>
-          <div>inner</div>
-          <meta name="outer" />
-          <meta name="inner" />
-          <meta name="blocked outer" />
         </body>
       </html>,
     );
@@ -4988,6 +4945,120 @@ body {
         </html>,
       );
     });
+  });
+
+  it('does not wait for stylesheets of completed fallbacks', async () => {
+    function Unblock({value}) {
+      resolveText(value);
+      return null;
+    }
+    function App() {
+      return (
+        <html>
+          <body>
+            <Suspense fallback="loading...">
+              <div>hello world</div>
+              <BlockedOn value="unblock inner boundaries">
+                <Suspense
+                  fallback={
+                    <>
+                      <link
+                        rel="stylesheet"
+                        href="completed inner"
+                        precedence="default"
+                      />
+                      <div>inner fallback</div>
+                      <Unblock value="completed inner" />
+                    </>
+                  }>
+                  <BlockedOn value="completed inner" />
+                  <div>inner boundary</div>
+                </Suspense>
+                <Suspense
+                  fallback={
+                    <>
+                      <link
+                        rel="stylesheet"
+                        href="in fallback inner"
+                        precedence="default"
+                      />
+                      <div>inner blocked fallback</div>
+                    </>
+                  }>
+                  <BlockedOn value="in fallback inner" />
+                  <div>inner blocked boundary</div>
+                </Suspense>
+              </BlockedOn>
+              <BlockedOn value="complete root" />
+            </Suspense>
+          </body>
+        </html>
+      );
+    }
+
+    await act(() => {
+      renderToPipeableStream(<App />).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>loading...</body>
+      </html>,
+    );
+
+    await act(async () => {
+      resolveText('unblock inner boundaries');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          loading...
+          <link rel="preload" href="completed inner" as="style" />
+          <link rel="preload" href="in fallback inner" as="style" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('completed inner');
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head />
+        <body>
+          loading...
+          <link rel="preload" href="completed inner" as="style" />
+          <link rel="preload" href="in fallback inner" as="style" />
+        </body>
+      </html>,
+    );
+
+    await act(() => {
+      resolveText('complete root');
+    });
+    await act(() => {
+      loadStylesheets();
+    });
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link
+            rel="stylesheet"
+            href="in fallback inner"
+            data-precedence="default"
+          />
+        </head>
+        <body>
+          <div>hello world</div>
+          <div>inner boundary</div>
+          <div>inner blocked fallback</div>
+          <link rel="preload" href="completed inner" as="style" />
+          <link rel="preload" href="in fallback inner" as="style" />
+        </body>
+      </html>,
+    );
   });
 
   describe('ReactDOM.preconnect(href, { crossOrigin })', () => {
@@ -8025,6 +8096,10 @@ background-color: green;
             <link rel="rel2" href="linkhref" />
             <meta name="name1" content="metacontent" />
             <meta name="name2" content="metacontent" />
+            <link rel="rel3" href="linkhref" />
+            <link rel="rel4" href="linkhref" />
+            <meta name="name3" content="metacontent" />
+            <meta name="name4" content="metacontent" />
           </head>
           <body>loading...</body>
         </html>,
@@ -8039,6 +8114,10 @@ background-color: green;
             <link rel="rel2" href="linkhref" />
             <meta name="name1" content="metacontent" />
             <meta name="name2" content="metacontent" />
+            <link rel="rel3" href="linkhref" />
+            <link rel="rel4" href="linkhref" />
+            <meta name="name3" content="metacontent" />
+            <meta name="name4" content="metacontent" />
           </head>
           <body>loading...</body>
         </html>,
@@ -8065,15 +8144,15 @@ background-color: green;
             <link rel="rel2" href="linkhref" />
             <meta name="name1" content="metacontent" />
             <meta name="name2" content="metacontent" />
+            <link rel="rel3" href="linkhref" />
+            <link rel="rel4" href="linkhref" />
+            <meta name="name3" content="metacontent" />
+            <meta name="name4" content="metacontent" />
           </head>
           <body>
             <meta name="3rdparty" content="metacontent" />
             <link rel="3rdparty" href="linkhref" />
             <div>hello world</div>
-            <link rel="rel3" href="linkhref" />
-            <link rel="rel4" href="linkhref" />
-            <meta name="name3" content="metacontent" />
-            <meta name="name4" content="metacontent" />
             <link rel="rel5" href="linkhref" />
             <link rel="rel6" href="linkhref" />
             <meta name="name5" content="metacontent" />

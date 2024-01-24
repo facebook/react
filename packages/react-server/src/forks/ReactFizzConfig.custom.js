@@ -86,12 +86,8 @@ export const NotPendingTransition = $$$config.NotPendingTransition;
 // -------------------------
 export const writePreamble = $$$config.writePreamble;
 export const writeHoistables = $$$config.writeHoistables;
+export const writeHoistablesForBoundary = $$$config.writeHoistablesForBoundary;
 export const writePostamble = $$$config.writePostamble;
-export const hoistToBoundary = $$$config.hoistToBoundary;
-export const hoistToRoot = $$$config.hoistToRoot;
+export const hoistHoistables = $$$config.hoistHoistables;
 export const createHoistableState = $$$config.createHoistableState;
-export const writeHoistablesForPartialBoundary =
-  $$$config.writeHoistablesForPartialBoundary;
-export const writeHoistablesForCompletedBoundary =
-  $$$config.writeHoistablesForCompletedBoundary;
 export const emitEarlyPreloads = $$$config.emitEarlyPreloads;
