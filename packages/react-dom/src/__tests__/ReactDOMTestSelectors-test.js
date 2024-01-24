@@ -23,7 +23,6 @@ describe('ReactDOMTestSelectors', () => {
   let focusWithin;
   let getFindAllNodesFailureDescription;
   let observeVisibleRects;
-  let render;
 
   let container;
 
@@ -31,7 +30,7 @@ describe('ReactDOMTestSelectors', () => {
     jest.resetModules();
 
     React = require('react');
-    createRoot = require('react-dom/client').createRoot;
+
     act = require('internal-test-utils').act;
 
     if (__EXPERIMENTAL__ || global.__WWW__) {
@@ -47,6 +46,7 @@ describe('ReactDOMTestSelectors', () => {
       getFindAllNodesFailureDescription =
         ReactDOM.getFindAllNodesFailureDescription;
       observeVisibleRects = ReactDOM.observeVisibleRects;
+      createRoot = ReactDOM.createRoot;
     }
 
     container = document.createElement('div');
