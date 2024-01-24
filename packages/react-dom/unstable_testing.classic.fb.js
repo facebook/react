@@ -7,7 +7,31 @@
  * @flow
  */
 
-export * from './index.classic.fb.js';
+export {
+  createPortal,
+  findDOMNode,
+  flushSync,
+  hydrate,
+  render,
+  unmountComponentAtNode,
+  unstable_batchedUpdates,
+  unstable_createEventHandle,
+  unstable_renderSubtreeIntoContainer,
+  unstable_runWithPriority, // DO NOT USE: Temporarily exposed to migrate off of Scheduler.runWithPriority.
+  useFormStatus,
+  useFormState,
+  prefetchDNS,
+  preconnect,
+  preload,
+  preloadModule,
+  preinit,
+  preinitModule,
+  version,
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+} from './index.classic.fb.js';
+
+export {createRoot, hydrateRoot} from './client.js';
+
 export {
   createComponentSelector,
   createHasPseudoClassSelector,
