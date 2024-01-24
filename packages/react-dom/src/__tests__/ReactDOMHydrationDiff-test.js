@@ -127,16 +127,26 @@ describe('ReactDOMServerHydration', () => {
       }
 
       /* eslint-disable no-irregular-whitespace */
-      expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
-        [
-          "Warning: Text content did not match. Server: "This markup contains an nbsp entity:   server text" Client: "This markup contains an nbsp entity:   client text"
-            in div (at **)
-            in Mismatch (at **)",
-          "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
-          "Caught [Text content does not match server-rendered HTML.]",
-          "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
-        ]
-      `);
+      if (gate(flags => flags.enableClientRenderFallbackOnTextMismatch)) {
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+          [
+            "Warning: Text content did not match. Server: "This markup contains an nbsp entity:   server text" Client: "This markup contains an nbsp entity:   client text"
+              in div (at **)
+              in Mismatch (at **)",
+            "Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.",
+            "Caught [Text content does not match server-rendered HTML.]",
+            "Caught [There was an error while hydrating. Because the error happened outside of a Suspense boundary, the entire root will switch to client rendering.]",
+          ]
+        `);
+      } else {
+        expect(testMismatch(Mismatch)).toMatchInlineSnapshot(`
+          [
+            "Warning: Text content did not match. Server: "This markup contains an nbsp entity:   server text" Client: "This markup contains an nbsp entity:   client text"
+              in div (at **)
+              in Mismatch (at **)",
+          ]
+        `);
+      }
       /* eslint-enable no-irregular-whitespace */
     });
 
