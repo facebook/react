@@ -170,9 +170,14 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
         return message;
       }
       const re = /react.dev\/errors\/(\d+)?\??([^\s]*)/;
-      const matches = message.match(re);
+      let matches = message.match(re);
       if (!matches || matches.length !== 3) {
-        return message;
+        // Some tests use React 17, when the URL was different.
+        const re17 = /error-decoder.html\?invariant=(\d+)([^\s]*)/;
+        matches = message.match(re17);
+        if (!matches || matches.length !== 3) {
+          return message;
+        }
       }
       const code = parseInt(matches[1], 10);
       const args = matches[2]
