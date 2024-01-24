@@ -11,7 +11,7 @@
 
 describe('ReactDOMEventListener', () => {
   let React;
-  let ReactDOMX;
+  let ReactDOM;
   let ReactDOMClient;
   let ReactDOMServer;
   let act;
@@ -20,7 +20,7 @@ describe('ReactDOMEventListener', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOMX = require('react-dom');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
@@ -114,10 +114,10 @@ describe('ReactDOMEventListener', () => {
             this.setState({clicked: true});
           };
           componentDidMount() {
-            expect(ReactDOMX.findDOMNode(this)).toBe(container.firstChild);
+            expect(ReactDOM.findDOMNode(this)).toBe(container.firstChild);
           }
           componentDidUpdate() {
-            expect(ReactDOMX.findDOMNode(this)).toBe(container.firstChild);
+            expect(ReactDOM.findDOMNode(this)).toBe(container.firstChild);
           }
           render() {
             if (this.state.clicked) {
@@ -217,18 +217,13 @@ describe('ReactDOMEventListener', () => {
     const mouseOut = jest.fn();
     const onMouseOut = event => mouseOut(event.target);
 
+    const innerRef = React.createRef();
     class Wrapper extends React.Component {
-      innerRef = React.createRef();
-      getInner = () => {
-        return this.innerRef.current;
-      };
-
       render() {
-        const inner = <div ref={this.innerRef}>Inner</div>;
         return (
           <div>
             <div onMouseOut={onMouseOut} id="outer">
-              {inner}
+              <div ref={innerRef}>Inner</div>
             </div>
           </div>
         );
@@ -241,18 +236,16 @@ describe('ReactDOMEventListener', () => {
       root.render(<Wrapper />);
     });
 
-    const instance = container.firstChild.firstChild;
-
     document.body.appendChild(container);
 
     try {
       const nativeEvent = document.createEvent('Event');
       nativeEvent.initEvent('mouseout', true, true);
       await act(() => {
-        instance.dispatchEvent(nativeEvent);
+        innerRef.current.dispatchEvent(nativeEvent);
       });
 
-      expect(mouseOut).toBeCalledWith(instance);
+      expect(mouseOut).toBeCalledWith(innerRef.current);
     } finally {
       document.body.removeChild(container);
     }
