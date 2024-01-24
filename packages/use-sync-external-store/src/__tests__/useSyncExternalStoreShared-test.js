@@ -32,9 +32,6 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
       // Remove useSyncExternalStore from the React imports so that we use the
       // shim instead. Also removing startTransition, since we use that to
       // detect outdated 18 alphas that don't yet include useSyncExternalStore.
-      //
-      // Longer term, we'll probably test this branch using an actual build
-      // of React 17.
       jest.mock('react', () => {
         const {
           // eslint-disable-next-line no-unused-vars
@@ -42,12 +39,20 @@ describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
           // eslint-disable-next-line no-unused-vars
           useSyncExternalStore: __,
           ...otherExports
-        } = jest.requireActual('react-17/umd/react.development.js');
+        } = jest.requireActual(
+          __DEV__
+            ? 'react-17/umd/react.development.js'
+            : 'react-17/umd/react.production.min.js',
+        );
         return otherExports;
       });
 
       jest.mock('react-dom', () =>
-        jest.requireActual('react-dom-17/umd/react-dom.development.js'),
+        jest.requireActual(
+          __DEV__
+            ? 'react-dom-17/umd/react-dom.development.js'
+            : 'react-dom-17/umd/react-dom.production.min.js',
+        ),
       );
     }
 
