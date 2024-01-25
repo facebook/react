@@ -12,13 +12,11 @@
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactTestUtils;
 let TogglingComponent;
 let act;
 let Scheduler;
 let assertLog;
 
-let log;
 let container;
 
 describe('ReactEmptyComponent', () => {
@@ -28,7 +26,6 @@ describe('ReactEmptyComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactTestUtils = require('react-dom/test-utils');
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
     act = InternalTestUtils.act;
