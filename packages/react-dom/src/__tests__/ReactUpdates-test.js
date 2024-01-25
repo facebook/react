@@ -397,13 +397,12 @@ describe('ReactUpdates', () => {
     assertLog([]);
     expect(instance.state.x).toBe(0);
 
-    let callbacksRun = 0;
     await act(() => {
       instance.setState({x: 1}, function () {
-        callbacksRun++;
+        Scheduler.log('callback');
       });
       instance.forceUpdate(function () {
-        callbacksRun++;
+        Scheduler.log('forceUpdate');
       });
       assertLog([]);
       expect(instance.state.x).toBe(0);
@@ -412,15 +411,12 @@ describe('ReactUpdates', () => {
 
     // shouldComponentUpdate shouldn't be called since we're forcing
     expect(shouldUpdateCount).toBe(0);
-    assertLog(['Update']);
-    expect(callbacksRun).toBe(2);
+    assertLog(['Update', 'callback', 'forceUpdate']);
     expect(instance.state.x).toBe(1);
     expect(container.firstChild.textContent).toBe('1');
   });
 
   it('should update children even if parent blocks updates', async () => {
-    let parentRenderCount = 0;
-    let childRenderCount = 0;
     let instance;
     class Parent extends React.Component {
       childRef = React.createRef();
@@ -434,20 +430,17 @@ describe('ReactUpdates', () => {
       }
 
       render() {
-        parentRenderCount++;
+        Scheduler.log('Parent render');
         return <Child ref={this.childRef} />;
       }
     }
 
     class Child extends React.Component {
       render() {
-        childRenderCount++;
+        Scheduler.log('Child render');
         return <div />;
       }
     }
-
-    expect(parentRenderCount).toBe(0);
-    expect(childRenderCount).toBe(0);
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -455,28 +448,22 @@ describe('ReactUpdates', () => {
       root.render(<Parent />);
     });
 
-    expect(parentRenderCount).toBe(1);
-    expect(childRenderCount).toBe(1);
+    assertLog(['Parent render', 'Child render']);
 
     await act(() => {
       instance.setState({x: 1});
     });
 
-    expect(parentRenderCount).toBe(1);
-    expect(childRenderCount).toBe(1);
+    assertLog([]);
 
     await act(() => {
       instance.childRef.current.setState({x: 1});
     });
 
-    expect(parentRenderCount).toBe(1);
-    expect(childRenderCount).toBe(2);
+    assertLog(['Child render']);
   });
 
   it('should not reconcile children passed via props', async () => {
-    let numMiddleRenders = 0;
-    let numBottomRenders = 0;
-
     class Top extends React.Component {
       render() {
         return (
@@ -493,14 +480,14 @@ describe('ReactUpdates', () => {
       }
 
       render() {
-        numMiddleRenders++;
+        Scheduler.log('Middle');
         return React.Children.only(this.props.children);
       }
     }
 
     class Bottom extends React.Component {
       render() {
-        numBottomRenders++;
+        Scheduler.log('Bottom');
         return null;
       }
     }
@@ -511,8 +498,7 @@ describe('ReactUpdates', () => {
       root.render(<Top />);
     });
 
-    expect(numMiddleRenders).toBe(2);
-    expect(numBottomRenders).toBe(1);
+    assertLog(['Middle', 'Bottom', 'Middle']);
   });
 
   it('should flow updates correctly', async () => {
@@ -941,8 +927,6 @@ describe('ReactUpdates', () => {
   });
 
   it('calls componentWillReceiveProps setState callback properly', async () => {
-    let callbackCount = 0;
-
     class A extends React.Component {
       state = {x: this.props.x};
 
@@ -951,7 +935,7 @@ describe('ReactUpdates', () => {
         this.setState({x: newX}, function () {
           // State should have updated by the time this callback gets called
           expect(this.state.x).toBe(newX);
-          callbackCount++;
+          Scheduler.log('Callback');
         });
       }
 
@@ -965,17 +949,17 @@ describe('ReactUpdates', () => {
     await act(() => {
       root.render(<A x={1} />);
     });
+    assertLog([]);
 
     // Needs to be a separate act, or it will be batched.
     await act(() => {
       root.render(<A x={2} />);
     });
 
-    expect(callbackCount).toBe(1);
+    assertLog(['Callback']);
   });
 
   it('does not call render after a component as been deleted', async () => {
-    let renderCount = 0;
     let componentA = null;
     let componentB = null;
 
@@ -987,7 +971,7 @@ describe('ReactUpdates', () => {
       }
 
       render() {
-        renderCount++;
+        Scheduler.log('B');
         return <div />;
       }
     }
@@ -1008,6 +992,7 @@ describe('ReactUpdates', () => {
     await act(() => {
       root.render(<A />);
     });
+    assertLog(['B']);
 
     await act(() => {
       // B will have scheduled an update but the batching should ensure that its
@@ -1016,7 +1001,7 @@ describe('ReactUpdates', () => {
       componentA.setState({showB: false});
     });
 
-    expect(renderCount).toBe(1);
+    assertLog([]);
   });
 
   it('throws in setState if the update callback is not a function', () => {
@@ -1225,14 +1210,13 @@ describe('ReactUpdates', () => {
   });
 
   it('handles reentrant mounting in synchronous mode', async () => {
-    let mounts = 0;
     let onChangeCalled = false;
     class Editor extends React.Component {
       render() {
         return <div>{this.props.text}</div>;
       }
       componentDidMount() {
-        mounts++;
+        Scheduler.log('Mount');
         // This should be called only once but we guard just in case.
         if (!this.props.rendered) {
           this.props.onChange({rendered: true});
@@ -1259,12 +1243,14 @@ describe('ReactUpdates', () => {
     await act(() => {
       render();
     });
+    assertLog(['Mount']);
     props = {...props, text: 'goodbye'};
     await act(() => {
       render();
     });
+
+    assertLog([]);
     expect(container.textContent).toBe('goodbye');
-    expect(mounts).toBe(1);
     expect(onChangeCalled).toBeTruthy();
   });
 
