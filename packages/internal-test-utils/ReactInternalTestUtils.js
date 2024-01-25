@@ -264,3 +264,40 @@ ${diff(expectedLog, actualLog)}
   Error.captureStackTrace(error, assertLog);
   throw error;
 }
+
+// Simulates dispatching events, waiting for microtasks in between.
+// This matches the browser behavior, which will flush microtasks
+// between each event handler.
+export async function waitForEvents(
+  node: Node,
+  eventType: string,
+): Promise<void> {
+  assertYieldsWereCleared(waitForDiscrete);
+
+  // Bubbling phase
+  // Walk the path from the element to the document and dispatch
+  // the event on each node, flushing microtasks in between.
+  for (let current = node; current; current = current.parentNode) {
+    const customEvent = new Event(eventType, {
+      bubbles: false,
+      cancelable: true,
+    });
+
+    Object.defineProperty(customEvent, 'eventPhase', {
+      // Avoid going through the capture/bubbling phases,
+      // since we're doing it manually.
+      value: Event.AT_TARGET,
+    });
+
+    Object.defineProperty(customEvent, 'target', {
+      // Override the target to the node on which we dispatched the event.
+      value: node,
+    });
+
+    // Dispatch the event on the target
+    current.dispatchEvent(customEvent);
+
+    // Flush microtasks
+    await waitForMicrotasks();
+  }
+}
