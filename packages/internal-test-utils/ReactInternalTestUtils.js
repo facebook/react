@@ -268,7 +268,7 @@ ${diff(expectedLog, actualLog)}
 // Simulates dispatching events, waiting for microtasks in between.
 // This matches the browser behavior, which will flush microtasks
 // between each event handler.
-export async function waitForEvents(
+export async function dispatchAndWaitForDiscrete(
   node: Node,
   eventType: string,
 ): Promise<void> {

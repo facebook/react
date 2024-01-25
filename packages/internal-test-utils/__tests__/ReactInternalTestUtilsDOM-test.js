@@ -13,20 +13,21 @@ let React;
 let act;
 let Scheduler;
 let ReactDOMClient;
-let waitForEvents;
+let dispatchAndWaitForDiscrete;
 let assertLog;
 
 describe('ReactInternalTestUtilsDOM', () => {
   beforeEach(() => {
     jest.resetModules();
     act = require('internal-test-utils').act;
-    waitForEvents = require('internal-test-utils').waitForEvents;
+    dispatchAndWaitForDiscrete =
+      require('internal-test-utils').dispatchAndWaitForDiscrete;
     Scheduler = require('scheduler/unstable_mock');
     ReactDOMClient = require('react-dom/client');
     React = require('react');
     assertLog = require('internal-test-utils').assertLog;
   });
-  describe('waitForEvents', () => {
+  describe('dispatchAndWaitForDiscrete', () => {
     test('should fire capture events (discrete)', async () => {
       let childRef;
       function Component() {
@@ -59,7 +60,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       assertLog(['Render 0']);
 
       await act(async () => {
-        await waitForEvents(childRef, 'click');
+        await dispatchAndWaitForDiscrete(childRef, 'click');
       });
 
       // Capture runs on every event we dispatch,
@@ -110,7 +111,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       assertLog(['Render 0']);
 
       await act(async () => {
-        await waitForEvents(childRef, 'click');
+        await dispatchAndWaitForDiscrete(childRef, 'click');
       });
 
       assertLog(['onClick child', 'onClick parent', 'Render 1']);
@@ -148,7 +149,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       assertLog(['Render 0']);
 
       await act(async () => {
-        await waitForEvents(childRef, 'mouseout');
+        await dispatchAndWaitForDiscrete(childRef, 'mouseout');
       });
 
       // Capture runs on every event we dispatch,
@@ -198,7 +199,7 @@ describe('ReactInternalTestUtilsDOM', () => {
       assertLog(['Render 0']);
 
       await act(async () => {
-        await waitForEvents(childRef, 'mouseout');
+        await dispatchAndWaitForDiscrete(childRef, 'mouseout');
       });
 
       assertLog(['onMouseOut child', 'onMouseOut parent', 'Render 1']);

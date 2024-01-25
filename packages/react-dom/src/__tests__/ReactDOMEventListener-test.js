@@ -9,7 +9,7 @@
 
 'use strict';
 
-import {enableLegacyFBSupport} from 'shared/forks/ReactFeatureFlags.www-dynamic';
+import {dispatchAndWaitForDiscrete} from 'internal-test-utils';
 
 describe('ReactDOMEventListener', () => {
   let React;
@@ -17,7 +17,7 @@ describe('ReactDOMEventListener', () => {
   let ReactDOMClient;
   let ReactDOMServer;
   let act;
-  let waitForEvents;
+  let dispatchAndWaitForDiscrete;
 
   beforeEach(() => {
     jest.resetModules();
@@ -26,7 +26,8 @@ describe('ReactDOMEventListener', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
-    waitForEvents = require('internal-test-utils').waitForEvents;
+    dispatchAndWaitForDiscrete =
+      require('internal-test-utils').dispatchAndWaitForDiscrete;
   });
 
   describe('Propagation', () => {
@@ -190,7 +191,7 @@ describe('ReactDOMEventListener', () => {
 
       try {
         await act(async () => {
-          await waitForEvents(childNode, 'click');
+          await dispatchAndWaitForDiscrete(childNode, 'click');
         });
 
         // Child and parent should both call from event handlers.
@@ -270,7 +271,7 @@ describe('ReactDOMEventListener', () => {
 
       try {
         await act(async () => {
-          await waitForEvents(childNode, 'mouseout');
+          await dispatchAndWaitForDiscrete(childNode, 'mouseout');
         });
 
         // Child and parent should both call from event handlers.
