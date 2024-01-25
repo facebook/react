@@ -9255,6 +9255,551 @@ if (__DEV__) {
       }
     }
 
+    var ReactCurrentActQueue$3 = ReactSharedInternals.ReactCurrentActQueue; // A linked list of all the roots with pending work. In an idiomatic app,
+    // there's only a single root, but we do support multi root apps, hence this
+    // extra complexity. But this module is optimized for the single root case.
+
+    var firstScheduledRoot = null;
+    var lastScheduledRoot = null; // Used to prevent redundant mircotasks from being scheduled.
+
+    var didScheduleMicrotask = false; // `act` "microtasks" are scheduled on the `act` queue instead of an actual
+    // microtask, so we have to dedupe those separately. This wouldn't be an issue
+    // if we required all `act` calls to be awaited, which we might in the future.
+
+    var didScheduleMicrotask_act = false; // Used to quickly bail out of flushSync if there's no sync work to do.
+
+    var mightHavePendingSyncWork = false;
+    var isFlushingWork = false;
+    var currentEventTransitionLane = NoLane;
+    function ensureRootIsScheduled(root) {
+      // This function is called whenever a root receives an update. It does two
+      // things 1) it ensures the root is in the root schedule, and 2) it ensures
+      // there's a pending microtask to process the root schedule.
+      //
+      // Most of the actual scheduling logic does not happen until
+      // `scheduleTaskForRootDuringMicrotask` runs.
+      // Add the root to the schedule
+      if (root === lastScheduledRoot || root.next !== null);
+      else {
+        if (lastScheduledRoot === null) {
+          firstScheduledRoot = lastScheduledRoot = root;
+        } else {
+          lastScheduledRoot.next = root;
+          lastScheduledRoot = root;
+        }
+      } // Any time a root received an update, we set this to true until the next time
+      // we process the schedule. If it's false, then we can quickly exit flushSync
+      // without consulting the schedule.
+
+      mightHavePendingSyncWork = true; // At the end of the current event, go through each of the roots and ensure
+      // there's a task scheduled for each one at the correct priority.
+
+      if (ReactCurrentActQueue$3.current !== null) {
+        // We're inside an `act` scope.
+        if (!didScheduleMicrotask_act) {
+          didScheduleMicrotask_act = true;
+          scheduleImmediateTask(processRootScheduleInMicrotask);
+        }
+      } else {
+        if (!didScheduleMicrotask) {
+          didScheduleMicrotask = true;
+          scheduleImmediateTask(processRootScheduleInMicrotask);
+        }
+      }
+
+      if (!enableDeferRootSchedulingToMicrotask) {
+        // While this flag is disabled, we schedule the render task immediately
+        // instead of waiting a microtask.
+        // TODO: We need to land enableDeferRootSchedulingToMicrotask ASAP to
+        // unblock additional features we have planned.
+        scheduleTaskForRootDuringMicrotask(root, now$1());
+      }
+
+      if (ReactCurrentActQueue$3.isBatchingLegacy && root.tag === LegacyRoot) {
+        // Special `act` case: Record whenever a legacy update is scheduled.
+        ReactCurrentActQueue$3.didScheduleLegacyUpdate = true;
+      }
+    }
+    function flushSyncWorkOnAllRoots() {
+      // This is allowed to be called synchronously, but the caller should check
+      // the execution context first.
+      flushSyncWorkAcrossRoots_impl(false);
+    }
+    function flushSyncWorkOnLegacyRootsOnly() {
+      // This is allowed to be called synchronously, but the caller should check
+      // the execution context first.
+      flushSyncWorkAcrossRoots_impl(true);
+    }
+
+    function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
+      if (isFlushingWork) {
+        // Prevent reentrancy.
+        // TODO: Is this overly defensive? The callers must check the execution
+        // context first regardless.
+        return;
+      }
+
+      if (!mightHavePendingSyncWork) {
+        // Fast path. There's no sync work to do.
+        return;
+      } // There may or may not be synchronous work scheduled. Let's check.
+
+      var didPerformSomeWork;
+      var errors = null;
+      isFlushingWork = true;
+
+      do {
+        didPerformSomeWork = false;
+        var root = firstScheduledRoot;
+
+        while (root !== null) {
+          if (onlyLegacy && root.tag !== LegacyRoot);
+          else {
+            var workInProgressRoot = getWorkInProgressRoot();
+            var workInProgressRootRenderLanes =
+              getWorkInProgressRootRenderLanes();
+            var nextLanes = getNextLanes(
+              root,
+              root === workInProgressRoot
+                ? workInProgressRootRenderLanes
+                : NoLanes
+            );
+
+            if (includesSyncLane(nextLanes)) {
+              // This root has pending sync work. Flush it now.
+              try {
+                didPerformSomeWork = true;
+                performSyncWorkOnRoot(root, nextLanes);
+              } catch (error) {
+                // Collect errors so we can rethrow them at the end
+                if (errors === null) {
+                  errors = [error];
+                } else {
+                  errors.push(error);
+                }
+              }
+            }
+          }
+
+          root = root.next;
+        }
+      } while (didPerformSomeWork);
+
+      isFlushingWork = false; // If any errors were thrown, rethrow them right before exiting.
+      // TODO: Consider returning these to the caller, to allow them to decide
+      // how/when to rethrow.
+
+      if (errors !== null) {
+        if (errors.length > 1) {
+          if (typeof AggregateError === "function") {
+            // eslint-disable-next-line no-undef
+            throw new AggregateError(errors);
+          } else {
+            for (var i = 1; i < errors.length; i++) {
+              scheduleImmediateTask(throwError.bind(null, errors[i]));
+            }
+
+            var firstError = errors[0];
+            throw firstError;
+          }
+        } else {
+          var error = errors[0];
+          throw error;
+        }
+      }
+    }
+
+    function throwError(error) {
+      throw error;
+    }
+
+    function processRootScheduleInMicrotask() {
+      // This function is always called inside a microtask. It should never be
+      // called synchronously.
+      didScheduleMicrotask = false;
+
+      {
+        didScheduleMicrotask_act = false;
+      } // We'll recompute this as we iterate through all the roots and schedule them.
+
+      mightHavePendingSyncWork = false;
+      var currentTime = now$1();
+      var prev = null;
+      var root = firstScheduledRoot;
+
+      while (root !== null) {
+        var next = root.next;
+
+        if (
+          currentEventTransitionLane !== NoLane &&
+          shouldAttemptEagerTransition()
+        ) {
+          // A transition was scheduled during an event, but we're going to try to
+          // render it synchronously anyway. We do this during a popstate event to
+          // preserve the scroll position of the previous page.
+          upgradePendingLaneToSync(root, currentEventTransitionLane);
+        }
+
+        var nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
+
+        if (nextLanes === NoLane) {
+          // This root has no more pending work. Remove it from the schedule. To
+          // guard against subtle reentrancy bugs, this microtask is the only place
+          // we do this — you can add roots to the schedule whenever, but you can
+          // only remove them here.
+          // Null this out so we know it's been removed from the schedule.
+          root.next = null;
+
+          if (prev === null) {
+            // This is the new head of the list
+            firstScheduledRoot = next;
+          } else {
+            prev.next = next;
+          }
+
+          if (next === null) {
+            // This is the new tail of the list
+            lastScheduledRoot = prev;
+          }
+        } else {
+          // This root still has work. Keep it in the list.
+          prev = root;
+
+          if (includesSyncLane(nextLanes)) {
+            mightHavePendingSyncWork = true;
+          }
+        }
+
+        root = next;
+      }
+
+      currentEventTransitionLane = NoLane; // At the end of the microtask, flush any pending synchronous work. This has
+      // to come at the end, because it does actual rendering work that might throw.
+
+      flushSyncWorkOnAllRoots();
+    }
+
+    function scheduleTaskForRootDuringMicrotask(root, currentTime) {
+      // This function is always called inside a microtask, or at the very end of a
+      // rendering task right before we yield to the main thread. It should never be
+      // called synchronously.
+      //
+      // TODO: Unless enableDeferRootSchedulingToMicrotask is off. We need to land
+      // that ASAP to unblock additional features we have planned.
+      //
+      // This function also never performs React work synchronously; it should
+      // only schedule work to be performed later, in a separate task or microtask.
+      // Check if any lanes are being starved by other work. If so, mark them as
+      // expired so we know to work on those next.
+      markStarvedLanesAsExpired(root, currentTime); // Determine the next lanes to work on, and their priority.
+
+      var workInProgressRoot = getWorkInProgressRoot();
+      var workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
+      var nextLanes = getNextLanes(
+        root,
+        root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes
+      );
+      var existingCallbackNode = root.callbackNode;
+
+      if (
+        // Check if there's nothing to work on
+        nextLanes === NoLanes || // If this root is currently suspended and waiting for data to resolve, don't
+        // schedule a task to render it. We'll either wait for a ping, or wait to
+        // receive an update.
+        //
+        // Suspended render phase
+        (root === workInProgressRoot && isWorkLoopSuspendedOnData()) || // Suspended commit phase
+        root.cancelPendingCommit !== null
+      ) {
+        // Fast path: There's nothing to work on.
+        if (existingCallbackNode !== null) {
+          cancelCallback(existingCallbackNode);
+        }
+
+        root.callbackNode = null;
+        root.callbackPriority = NoLane;
+        return NoLane;
+      } // Schedule a new callback in the host environment.
+
+      if (includesSyncLane(nextLanes)) {
+        // Synchronous work is always flushed at the end of the microtask, so we
+        // don't need to schedule an additional task.
+        if (existingCallbackNode !== null) {
+          cancelCallback(existingCallbackNode);
+        }
+
+        root.callbackPriority = SyncLane;
+        root.callbackNode = null;
+        return SyncLane;
+      } else {
+        // We use the highest priority lane to represent the priority of the callback.
+        var existingCallbackPriority = root.callbackPriority;
+        var newCallbackPriority = getHighestPriorityLane(nextLanes);
+
+        if (
+          newCallbackPriority === existingCallbackPriority && // Special case related to `act`. If the currently scheduled task is a
+          // Scheduler task, rather than an `act` task, cancel it and re-schedule
+          // on the `act` queue.
+          !(
+            ReactCurrentActQueue$3.current !== null &&
+            existingCallbackNode !== fakeActCallbackNode$1
+          )
+        ) {
+          // The priority hasn't changed. We can reuse the existing task.
+          return newCallbackPriority;
+        } else {
+          // Cancel the existing callback. We'll schedule a new one below.
+          cancelCallback(existingCallbackNode);
+        }
+
+        var schedulerPriorityLevel;
+
+        switch (lanesToEventPriority(nextLanes)) {
+          case DiscreteEventPriority:
+            schedulerPriorityLevel = ImmediatePriority;
+            break;
+
+          case ContinuousEventPriority:
+            schedulerPriorityLevel = UserBlockingPriority;
+            break;
+
+          case DefaultEventPriority:
+            schedulerPriorityLevel = NormalPriority$1;
+            break;
+
+          case IdleEventPriority:
+            schedulerPriorityLevel = IdlePriority;
+            break;
+
+          default:
+            schedulerPriorityLevel = NormalPriority$1;
+            break;
+        }
+
+        var newCallbackNode = scheduleCallback$2(
+          schedulerPriorityLevel,
+          performConcurrentWorkOnRoot.bind(null, root)
+        );
+        root.callbackPriority = newCallbackPriority;
+        root.callbackNode = newCallbackNode;
+        return newCallbackPriority;
+      }
+    }
+
+    function getContinuationForRoot(root, originalCallbackNode) {
+      // This is called at the end of `performConcurrentWorkOnRoot` to determine
+      // if we need to schedule a continuation task.
+      //
+      // Usually `scheduleTaskForRootDuringMicrotask` only runs inside a microtask;
+      // however, since most of the logic for determining if we need a continuation
+      // versus a new task is the same, we cheat a bit and call it here. This is
+      // only safe to do because we know we're at the end of the browser task.
+      // So although it's not an actual microtask, it might as well be.
+      scheduleTaskForRootDuringMicrotask(root, now$1());
+
+      if (root.callbackNode === originalCallbackNode) {
+        // The task node scheduled for this root is the same one that's
+        // currently executed. Need to return a continuation.
+        return performConcurrentWorkOnRoot.bind(null, root);
+      }
+
+      return null;
+    }
+    var fakeActCallbackNode$1 = {};
+
+    function scheduleCallback$2(priorityLevel, callback) {
+      if (ReactCurrentActQueue$3.current !== null) {
+        // Special case: We're inside an `act` scope (a testing utility).
+        // Instead of scheduling work in the host environment, add it to a
+        // fake internal queue that's managed by the `act` implementation.
+        ReactCurrentActQueue$3.current.push(callback);
+        return fakeActCallbackNode$1;
+      } else {
+        return scheduleCallback$3(priorityLevel, callback);
+      }
+    }
+
+    function cancelCallback(callbackNode) {
+      if (callbackNode === fakeActCallbackNode$1);
+      else if (callbackNode !== null) {
+        cancelCallback$1(callbackNode);
+      }
+    }
+
+    function scheduleImmediateTask(cb) {
+      if (ReactCurrentActQueue$3.current !== null) {
+        // Special case: Inside an `act` scope, we push microtasks to the fake `act`
+        // callback queue. This is because we currently support calling `act`
+        // without awaiting the result. The plan is to deprecate that, and require
+        // that you always await the result so that the microtasks have a chance to
+        // run. But it hasn't happened yet.
+        ReactCurrentActQueue$3.current.push(function () {
+          cb();
+          return null;
+        });
+      } // TODO: Can we land supportsMicrotasks? Which environments don't support it?
+      // Alternatively, can we move this check to the host config?
+
+      {
+        scheduleMicrotask(function () {
+          // In Safari, appending an iframe forces microtasks to run.
+          // https://github.com/facebook/react/issues/22459
+          // We don't support running callbacks in the middle of render
+          // or commit so we need to check against that.
+          var executionContext = getExecutionContext();
+
+          if (
+            (executionContext & (RenderContext | CommitContext)) !==
+            NoContext
+          ) {
+            // Note that this would still prematurely flush the callbacks
+            // if this happens outside render or commit phase (e.g. in an event).
+            // Intentionally using a macrotask instead of a microtask here. This is
+            // wrong semantically but it prevents an infinite loop. The bug is
+            // Safari's, not ours, so we just do our best to not crash even though
+            // the behavior isn't completely correct.
+            scheduleCallback$3(ImmediatePriority, cb);
+            return;
+          }
+
+          cb();
+        });
+      }
+    }
+
+    function requestTransitionLane() {
+      // The algorithm for assigning an update to a lane should be stable for all
+      // updates at the same priority within the same event. To do this, the
+      // inputs to the algorithm must be the same.
+      //
+      // The trick we use is to cache the first of each of these inputs within an
+      // event. Then reset the cached values once we can be sure the event is
+      // over. Our heuristic for that is whenever we enter a concurrent work loop.
+      if (currentEventTransitionLane === NoLane) {
+        // All transitions within the same event are assigned the same lane.
+        currentEventTransitionLane = claimNextTransitionLane();
+      }
+
+      return currentEventTransitionLane;
+    }
+
+    // transition updates that occur while the async action is still in progress
+    // are treated as part of the action.
+    //
+    // The ideal behavior would be to treat each async function as an independent
+    // action. However, without a mechanism like AsyncContext, we can't tell which
+    // action an update corresponds to. So instead, we entangle them all into one.
+    // The listeners to notify once the entangled scope completes.
+
+    var currentEntangledListeners = null; // The number of pending async actions in the entangled scope.
+
+    var currentEntangledPendingCount = 0; // The transition lane shared by all updates in the entangled scope.
+
+    var currentEntangledLane = NoLane; // A thenable that resolves when the entangled scope completes. It does not
+    // resolve to a particular value because it's only used for suspending the UI
+    // until the async action scope has completed.
+
+    var currentEntangledActionThenable = null;
+    function entangleAsyncAction(thenable) {
+      // `thenable` is the return value of the async action scope function. Create
+      // a combined thenable that resolves once every entangled scope function
+      // has finished.
+      if (currentEntangledListeners === null) {
+        // There's no outer async action scope. Create a new one.
+        var entangledListeners = (currentEntangledListeners = []);
+        currentEntangledPendingCount = 0;
+        currentEntangledLane = requestTransitionLane();
+        var entangledThenable = {
+          status: "pending",
+          value: undefined,
+          then: function (resolve) {
+            entangledListeners.push(resolve);
+          }
+        };
+        currentEntangledActionThenable = entangledThenable;
+      }
+
+      currentEntangledPendingCount++;
+      thenable.then(pingEngtangledActionScope, pingEngtangledActionScope);
+      return thenable;
+    }
+
+    function pingEngtangledActionScope() {
+      if (
+        currentEntangledListeners !== null &&
+        --currentEntangledPendingCount === 0
+      ) {
+        // All the actions have finished. Close the entangled async action scope
+        // and notify all the listeners.
+        if (currentEntangledActionThenable !== null) {
+          var fulfilledThenable = currentEntangledActionThenable;
+          fulfilledThenable.status = "fulfilled";
+        }
+
+        var listeners = currentEntangledListeners;
+        currentEntangledListeners = null;
+        currentEntangledLane = NoLane;
+        currentEntangledActionThenable = null;
+
+        for (var i = 0; i < listeners.length; i++) {
+          var listener = listeners[i];
+          listener();
+        }
+      }
+    }
+
+    function chainThenableValue(thenable, result) {
+      // Equivalent to: Promise.resolve(thenable).then(() => result), except we can
+      // cheat a bit since we know that that this thenable is only ever consumed
+      // by React.
+      //
+      // We don't technically require promise support on the client yet, hence this
+      // extra code.
+      var listeners = [];
+      var thenableWithOverride = {
+        status: "pending",
+        value: null,
+        reason: null,
+        then: function (resolve) {
+          listeners.push(resolve);
+        }
+      };
+      thenable.then(
+        function (value) {
+          var fulfilledThenable = thenableWithOverride;
+          fulfilledThenable.status = "fulfilled";
+          fulfilledThenable.value = result;
+
+          for (var i = 0; i < listeners.length; i++) {
+            var listener = listeners[i];
+            listener(result);
+          }
+        },
+        function (error) {
+          var rejectedThenable = thenableWithOverride;
+          rejectedThenable.status = "rejected";
+          rejectedThenable.reason = error;
+
+          for (var i = 0; i < listeners.length; i++) {
+            var listener = listeners[i]; // This is a perf hack where we call the `onFulfill` ping function
+            // instead of `onReject`, because we know that React is the only
+            // consumer of these promises, and it passes the same listener to both.
+            // We also know that it will read the error directly off the
+            // `.reason` field.
+
+            listener(undefined);
+          }
+        }
+      );
+      return thenableWithOverride;
+    }
+    function peekEntangledActionLane() {
+      return currentEntangledLane;
+    }
+    function peekEntangledActionThenable() {
+      return currentEntangledActionThenable;
+    }
+
     var UpdateState = 0;
     var ReplaceState = 1;
     var ForceUpdate = 2;
@@ -9564,8 +10109,32 @@ if (__DEV__) {
       return prevState;
     }
 
+    var didReadFromEntangledAsyncAction = false; // Each call to processUpdateQueue should be accompanied by a call to this. It's
+    // only in a separate function because in updateHostRoot, it must happen after
+    // all the context stacks have been pushed to, to prevent a stack mismatch. A
+    // bit unfortunate.
+
+    function suspendIfUpdateReadFromEntangledAsyncAction() {
+      // Check if this update is part of a pending async action. If so, we'll
+      // need to suspend until the action has finished, so that it's batched
+      // together with future updates in the same action.
+      // TODO: Once we support hooks inside useMemo (or an equivalent
+      // memoization boundary like Forget), hoist this logic so that it only
+      // suspends if the memo boundary produces a new value.
+      if (didReadFromEntangledAsyncAction) {
+        var entangledActionThenable = peekEntangledActionThenable();
+
+        if (entangledActionThenable !== null) {
+          // TODO: Instead of the throwing the thenable directly, throw a
+          // special object like `use` does so we can detect if it's captured
+          // by userspace.
+          throw entangledActionThenable;
+        }
+      }
+    }
     function processUpdateQueue(workInProgress, props, instance, renderLanes) {
-      // This is always non-null on a ClassComponent or HostRoot
+      didReadFromEntangledAsyncAction = false; // This is always non-null on a ClassComponent or HostRoot
+
       var queue = workInProgress.updateQueue;
       hasForceUpdate = false;
 
@@ -9663,6 +10232,16 @@ if (__DEV__) {
             newLanes = mergeLanes(newLanes, updateLane);
           } else {
             // This update does have sufficient priority.
+            // Check if this update is part of a pending async action. If so,
+            // we'll need to suspend until the action has finished, so that it's
+            // batched together with future updates in the same action.
+            if (
+              updateLane !== NoLane &&
+              updateLane === peekEntangledActionLane()
+            ) {
+              didReadFromEntangledAsyncAction = true;
+            }
+
             if (newLastBaseUpdate !== null) {
               var _clone = {
                 // This update is going to be committed so we never want uncommit
@@ -10218,7 +10797,7 @@ if (__DEV__) {
       };
     }
 
-    var ReactCurrentActQueue$3 = ReactSharedInternals.ReactCurrentActQueue; // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
+    var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
     // detect this is caught by userspace, we'll log a warning in development.
 
     var SuspenseException = new Error(
@@ -10261,8 +10840,8 @@ if (__DEV__) {
     function noop$2() {}
 
     function trackUsedThenable(thenableState, thenable, index) {
-      if (ReactCurrentActQueue$3.current !== null) {
-        ReactCurrentActQueue$3.didUsePromise = true;
+      if (ReactCurrentActQueue$2.current !== null) {
+        ReactCurrentActQueue$2.didUsePromise = true;
       }
 
       var previous = thenableState[index];
@@ -12260,593 +12839,6 @@ if (__DEV__) {
       /*   */
       8;
 
-    var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // A linked list of all the roots with pending work. In an idiomatic app,
-    // there's only a single root, but we do support multi root apps, hence this
-    // extra complexity. But this module is optimized for the single root case.
-
-    var firstScheduledRoot = null;
-    var lastScheduledRoot = null; // Used to prevent redundant mircotasks from being scheduled.
-
-    var didScheduleMicrotask = false; // `act` "microtasks" are scheduled on the `act` queue instead of an actual
-    // microtask, so we have to dedupe those separately. This wouldn't be an issue
-    // if we required all `act` calls to be awaited, which we might in the future.
-
-    var didScheduleMicrotask_act = false; // Used to quickly bail out of flushSync if there's no sync work to do.
-
-    var mightHavePendingSyncWork = false;
-    var isFlushingWork = false;
-    var currentEventTransitionLane = NoLane;
-    function ensureRootIsScheduled(root) {
-      // This function is called whenever a root receives an update. It does two
-      // things 1) it ensures the root is in the root schedule, and 2) it ensures
-      // there's a pending microtask to process the root schedule.
-      //
-      // Most of the actual scheduling logic does not happen until
-      // `scheduleTaskForRootDuringMicrotask` runs.
-      // Add the root to the schedule
-      if (root === lastScheduledRoot || root.next !== null);
-      else {
-        if (lastScheduledRoot === null) {
-          firstScheduledRoot = lastScheduledRoot = root;
-        } else {
-          lastScheduledRoot.next = root;
-          lastScheduledRoot = root;
-        }
-      } // Any time a root received an update, we set this to true until the next time
-      // we process the schedule. If it's false, then we can quickly exit flushSync
-      // without consulting the schedule.
-
-      mightHavePendingSyncWork = true; // At the end of the current event, go through each of the roots and ensure
-      // there's a task scheduled for each one at the correct priority.
-
-      if (ReactCurrentActQueue$2.current !== null) {
-        // We're inside an `act` scope.
-        if (!didScheduleMicrotask_act) {
-          didScheduleMicrotask_act = true;
-          scheduleImmediateTask(processRootScheduleInMicrotask);
-        }
-      } else {
-        if (!didScheduleMicrotask) {
-          didScheduleMicrotask = true;
-          scheduleImmediateTask(processRootScheduleInMicrotask);
-        }
-      }
-
-      if (!enableDeferRootSchedulingToMicrotask) {
-        // While this flag is disabled, we schedule the render task immediately
-        // instead of waiting a microtask.
-        // TODO: We need to land enableDeferRootSchedulingToMicrotask ASAP to
-        // unblock additional features we have planned.
-        scheduleTaskForRootDuringMicrotask(root, now$1());
-      }
-
-      if (ReactCurrentActQueue$2.isBatchingLegacy && root.tag === LegacyRoot) {
-        // Special `act` case: Record whenever a legacy update is scheduled.
-        ReactCurrentActQueue$2.didScheduleLegacyUpdate = true;
-      }
-    }
-    function flushSyncWorkOnAllRoots() {
-      // This is allowed to be called synchronously, but the caller should check
-      // the execution context first.
-      flushSyncWorkAcrossRoots_impl(false);
-    }
-    function flushSyncWorkOnLegacyRootsOnly() {
-      // This is allowed to be called synchronously, but the caller should check
-      // the execution context first.
-      flushSyncWorkAcrossRoots_impl(true);
-    }
-
-    function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
-      if (isFlushingWork) {
-        // Prevent reentrancy.
-        // TODO: Is this overly defensive? The callers must check the execution
-        // context first regardless.
-        return;
-      }
-
-      if (!mightHavePendingSyncWork) {
-        // Fast path. There's no sync work to do.
-        return;
-      } // There may or may not be synchronous work scheduled. Let's check.
-
-      var didPerformSomeWork;
-      var errors = null;
-      isFlushingWork = true;
-
-      do {
-        didPerformSomeWork = false;
-        var root = firstScheduledRoot;
-
-        while (root !== null) {
-          if (onlyLegacy && root.tag !== LegacyRoot);
-          else {
-            var workInProgressRoot = getWorkInProgressRoot();
-            var workInProgressRootRenderLanes =
-              getWorkInProgressRootRenderLanes();
-            var nextLanes = getNextLanes(
-              root,
-              root === workInProgressRoot
-                ? workInProgressRootRenderLanes
-                : NoLanes
-            );
-
-            if (includesSyncLane(nextLanes)) {
-              // This root has pending sync work. Flush it now.
-              try {
-                didPerformSomeWork = true;
-                performSyncWorkOnRoot(root, nextLanes);
-              } catch (error) {
-                // Collect errors so we can rethrow them at the end
-                if (errors === null) {
-                  errors = [error];
-                } else {
-                  errors.push(error);
-                }
-              }
-            }
-          }
-
-          root = root.next;
-        }
-      } while (didPerformSomeWork);
-
-      isFlushingWork = false; // If any errors were thrown, rethrow them right before exiting.
-      // TODO: Consider returning these to the caller, to allow them to decide
-      // how/when to rethrow.
-
-      if (errors !== null) {
-        if (errors.length > 1) {
-          if (typeof AggregateError === "function") {
-            // eslint-disable-next-line no-undef
-            throw new AggregateError(errors);
-          } else {
-            for (var i = 1; i < errors.length; i++) {
-              scheduleImmediateTask(throwError.bind(null, errors[i]));
-            }
-
-            var firstError = errors[0];
-            throw firstError;
-          }
-        } else {
-          var error = errors[0];
-          throw error;
-        }
-      }
-    }
-
-    function throwError(error) {
-      throw error;
-    }
-
-    function processRootScheduleInMicrotask() {
-      // This function is always called inside a microtask. It should never be
-      // called synchronously.
-      didScheduleMicrotask = false;
-
-      {
-        didScheduleMicrotask_act = false;
-      } // We'll recompute this as we iterate through all the roots and schedule them.
-
-      mightHavePendingSyncWork = false;
-      var currentTime = now$1();
-      var prev = null;
-      var root = firstScheduledRoot;
-
-      while (root !== null) {
-        var next = root.next;
-
-        if (
-          currentEventTransitionLane !== NoLane &&
-          shouldAttemptEagerTransition()
-        ) {
-          // A transition was scheduled during an event, but we're going to try to
-          // render it synchronously anyway. We do this during a popstate event to
-          // preserve the scroll position of the previous page.
-          upgradePendingLaneToSync(root, currentEventTransitionLane);
-        }
-
-        var nextLanes = scheduleTaskForRootDuringMicrotask(root, currentTime);
-
-        if (nextLanes === NoLane) {
-          // This root has no more pending work. Remove it from the schedule. To
-          // guard against subtle reentrancy bugs, this microtask is the only place
-          // we do this — you can add roots to the schedule whenever, but you can
-          // only remove them here.
-          // Null this out so we know it's been removed from the schedule.
-          root.next = null;
-
-          if (prev === null) {
-            // This is the new head of the list
-            firstScheduledRoot = next;
-          } else {
-            prev.next = next;
-          }
-
-          if (next === null) {
-            // This is the new tail of the list
-            lastScheduledRoot = prev;
-          }
-        } else {
-          // This root still has work. Keep it in the list.
-          prev = root;
-
-          if (includesSyncLane(nextLanes)) {
-            mightHavePendingSyncWork = true;
-          }
-        }
-
-        root = next;
-      }
-
-      currentEventTransitionLane = NoLane; // At the end of the microtask, flush any pending synchronous work. This has
-      // to come at the end, because it does actual rendering work that might throw.
-
-      flushSyncWorkOnAllRoots();
-    }
-
-    function scheduleTaskForRootDuringMicrotask(root, currentTime) {
-      // This function is always called inside a microtask, or at the very end of a
-      // rendering task right before we yield to the main thread. It should never be
-      // called synchronously.
-      //
-      // TODO: Unless enableDeferRootSchedulingToMicrotask is off. We need to land
-      // that ASAP to unblock additional features we have planned.
-      //
-      // This function also never performs React work synchronously; it should
-      // only schedule work to be performed later, in a separate task or microtask.
-      // Check if any lanes are being starved by other work. If so, mark them as
-      // expired so we know to work on those next.
-      markStarvedLanesAsExpired(root, currentTime); // Determine the next lanes to work on, and their priority.
-
-      var workInProgressRoot = getWorkInProgressRoot();
-      var workInProgressRootRenderLanes = getWorkInProgressRootRenderLanes();
-      var nextLanes = getNextLanes(
-        root,
-        root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes
-      );
-      var existingCallbackNode = root.callbackNode;
-
-      if (
-        // Check if there's nothing to work on
-        nextLanes === NoLanes || // If this root is currently suspended and waiting for data to resolve, don't
-        // schedule a task to render it. We'll either wait for a ping, or wait to
-        // receive an update.
-        //
-        // Suspended render phase
-        (root === workInProgressRoot && isWorkLoopSuspendedOnData()) || // Suspended commit phase
-        root.cancelPendingCommit !== null
-      ) {
-        // Fast path: There's nothing to work on.
-        if (existingCallbackNode !== null) {
-          cancelCallback(existingCallbackNode);
-        }
-
-        root.callbackNode = null;
-        root.callbackPriority = NoLane;
-        return NoLane;
-      } // Schedule a new callback in the host environment.
-
-      if (includesSyncLane(nextLanes)) {
-        // Synchronous work is always flushed at the end of the microtask, so we
-        // don't need to schedule an additional task.
-        if (existingCallbackNode !== null) {
-          cancelCallback(existingCallbackNode);
-        }
-
-        root.callbackPriority = SyncLane;
-        root.callbackNode = null;
-        return SyncLane;
-      } else {
-        // We use the highest priority lane to represent the priority of the callback.
-        var existingCallbackPriority = root.callbackPriority;
-        var newCallbackPriority = getHighestPriorityLane(nextLanes);
-
-        if (
-          newCallbackPriority === existingCallbackPriority && // Special case related to `act`. If the currently scheduled task is a
-          // Scheduler task, rather than an `act` task, cancel it and re-schedule
-          // on the `act` queue.
-          !(
-            ReactCurrentActQueue$2.current !== null &&
-            existingCallbackNode !== fakeActCallbackNode$1
-          )
-        ) {
-          // The priority hasn't changed. We can reuse the existing task.
-          return newCallbackPriority;
-        } else {
-          // Cancel the existing callback. We'll schedule a new one below.
-          cancelCallback(existingCallbackNode);
-        }
-
-        var schedulerPriorityLevel;
-
-        switch (lanesToEventPriority(nextLanes)) {
-          case DiscreteEventPriority:
-            schedulerPriorityLevel = ImmediatePriority;
-            break;
-
-          case ContinuousEventPriority:
-            schedulerPriorityLevel = UserBlockingPriority;
-            break;
-
-          case DefaultEventPriority:
-            schedulerPriorityLevel = NormalPriority$1;
-            break;
-
-          case IdleEventPriority:
-            schedulerPriorityLevel = IdlePriority;
-            break;
-
-          default:
-            schedulerPriorityLevel = NormalPriority$1;
-            break;
-        }
-
-        var newCallbackNode = scheduleCallback$2(
-          schedulerPriorityLevel,
-          performConcurrentWorkOnRoot.bind(null, root)
-        );
-        root.callbackPriority = newCallbackPriority;
-        root.callbackNode = newCallbackNode;
-        return newCallbackPriority;
-      }
-    }
-
-    function getContinuationForRoot(root, originalCallbackNode) {
-      // This is called at the end of `performConcurrentWorkOnRoot` to determine
-      // if we need to schedule a continuation task.
-      //
-      // Usually `scheduleTaskForRootDuringMicrotask` only runs inside a microtask;
-      // however, since most of the logic for determining if we need a continuation
-      // versus a new task is the same, we cheat a bit and call it here. This is
-      // only safe to do because we know we're at the end of the browser task.
-      // So although it's not an actual microtask, it might as well be.
-      scheduleTaskForRootDuringMicrotask(root, now$1());
-
-      if (root.callbackNode === originalCallbackNode) {
-        // The task node scheduled for this root is the same one that's
-        // currently executed. Need to return a continuation.
-        return performConcurrentWorkOnRoot.bind(null, root);
-      }
-
-      return null;
-    }
-    var fakeActCallbackNode$1 = {};
-
-    function scheduleCallback$2(priorityLevel, callback) {
-      if (ReactCurrentActQueue$2.current !== null) {
-        // Special case: We're inside an `act` scope (a testing utility).
-        // Instead of scheduling work in the host environment, add it to a
-        // fake internal queue that's managed by the `act` implementation.
-        ReactCurrentActQueue$2.current.push(callback);
-        return fakeActCallbackNode$1;
-      } else {
-        return scheduleCallback$3(priorityLevel, callback);
-      }
-    }
-
-    function cancelCallback(callbackNode) {
-      if (callbackNode === fakeActCallbackNode$1);
-      else if (callbackNode !== null) {
-        cancelCallback$1(callbackNode);
-      }
-    }
-
-    function scheduleImmediateTask(cb) {
-      if (ReactCurrentActQueue$2.current !== null) {
-        // Special case: Inside an `act` scope, we push microtasks to the fake `act`
-        // callback queue. This is because we currently support calling `act`
-        // without awaiting the result. The plan is to deprecate that, and require
-        // that you always await the result so that the microtasks have a chance to
-        // run. But it hasn't happened yet.
-        ReactCurrentActQueue$2.current.push(function () {
-          cb();
-          return null;
-        });
-      } // TODO: Can we land supportsMicrotasks? Which environments don't support it?
-      // Alternatively, can we move this check to the host config?
-
-      {
-        scheduleMicrotask(function () {
-          // In Safari, appending an iframe forces microtasks to run.
-          // https://github.com/facebook/react/issues/22459
-          // We don't support running callbacks in the middle of render
-          // or commit so we need to check against that.
-          var executionContext = getExecutionContext();
-
-          if (
-            (executionContext & (RenderContext | CommitContext)) !==
-            NoContext
-          ) {
-            // Note that this would still prematurely flush the callbacks
-            // if this happens outside render or commit phase (e.g. in an event).
-            // Intentionally using a macrotask instead of a microtask here. This is
-            // wrong semantically but it prevents an infinite loop. The bug is
-            // Safari's, not ours, so we just do our best to not crash even though
-            // the behavior isn't completely correct.
-            scheduleCallback$3(ImmediatePriority, cb);
-            return;
-          }
-
-          cb();
-        });
-      }
-    }
-
-    function requestTransitionLane() {
-      // The algorithm for assigning an update to a lane should be stable for all
-      // updates at the same priority within the same event. To do this, the
-      // inputs to the algorithm must be the same.
-      //
-      // The trick we use is to cache the first of each of these inputs within an
-      // event. Then reset the cached values once we can be sure the event is
-      // over. Our heuristic for that is whenever we enter a concurrent work loop.
-      if (currentEventTransitionLane === NoLane) {
-        // All transitions within the same event are assigned the same lane.
-        currentEventTransitionLane = claimNextTransitionLane();
-      }
-
-      return currentEventTransitionLane;
-    }
-
-    // transition updates that occur while the async action is still in progress
-    // are treated as part of the action.
-    //
-    // The ideal behavior would be to treat each async function as an independent
-    // action. However, without a mechanism like AsyncContext, we can't tell which
-    // action an update corresponds to. So instead, we entangle them all into one.
-    // The listeners to notify once the entangled scope completes.
-
-    var currentEntangledListeners = null; // The number of pending async actions in the entangled scope.
-
-    var currentEntangledPendingCount = 0; // The transition lane shared by all updates in the entangled scope.
-
-    var currentEntangledLane = NoLane;
-    function requestAsyncActionContext(
-      actionReturnValue, // If this is provided, this resulting thenable resolves to this value instead
-      // of the return value of the action. This is a perf trick to avoid composing
-      // an extra async function.
-      overrideReturnValue
-    ) {
-      // This is an async action.
-      //
-      // Return a thenable that resolves once the action scope (i.e. the async
-      // function passed to startTransition) has finished running.
-      var thenable = actionReturnValue;
-      var entangledListeners;
-
-      if (currentEntangledListeners === null) {
-        // There's no outer async action scope. Create a new one.
-        entangledListeners = currentEntangledListeners = [];
-        currentEntangledPendingCount = 0;
-        currentEntangledLane = requestTransitionLane();
-      } else {
-        entangledListeners = currentEntangledListeners;
-      }
-
-      currentEntangledPendingCount++; // Create a thenable that represents the result of this action, but doesn't
-      // resolve until the entire entangled scope has finished.
-      //
-      // Expressed using promises:
-      //   const [thisResult] = await Promise.all([thisAction, entangledAction]);
-      //   return thisResult;
-
-      var resultThenable = createResultThenable(entangledListeners);
-      var resultStatus = "pending";
-      var resultValue;
-      var rejectedReason;
-      thenable.then(
-        function (value) {
-          resultStatus = "fulfilled";
-          resultValue =
-            overrideReturnValue !== null ? overrideReturnValue : value;
-          pingEngtangledActionScope();
-        },
-        function (error) {
-          resultStatus = "rejected";
-          rejectedReason = error;
-          pingEngtangledActionScope();
-        }
-      ); // Attach a listener to fill in the result.
-
-      entangledListeners.push(function () {
-        switch (resultStatus) {
-          case "fulfilled": {
-            var fulfilledThenable = resultThenable;
-            fulfilledThenable.status = "fulfilled";
-            fulfilledThenable.value = resultValue;
-            break;
-          }
-
-          case "rejected": {
-            var rejectedThenable = resultThenable;
-            rejectedThenable.status = "rejected";
-            rejectedThenable.reason = rejectedReason;
-            break;
-          }
-
-          case "pending":
-          default: {
-            // The listener above should have been called first, so `resultStatus`
-            // should already be set to the correct value.
-            throw new Error(
-              "Thenable should have already resolved. This " +
-                "is a bug in React."
-            );
-          }
-        }
-      });
-      return resultThenable;
-    }
-    function requestSyncActionContext(
-      actionReturnValue, // If this is provided, this resulting thenable resolves to this value instead
-      // of the return value of the action. This is a perf trick to avoid composing
-      // an extra async function.
-      overrideReturnValue
-    ) {
-      var resultValue =
-        overrideReturnValue !== null ? overrideReturnValue : actionReturnValue; // This is not an async action, but it may be part of an outer async action.
-
-      if (currentEntangledListeners === null) {
-        return resultValue;
-      } else {
-        // Return a thenable that does not resolve until the entangled actions
-        // have finished.
-        var entangledListeners = currentEntangledListeners;
-        var resultThenable = createResultThenable(entangledListeners);
-        entangledListeners.push(function () {
-          var fulfilledThenable = resultThenable;
-          fulfilledThenable.status = "fulfilled";
-          fulfilledThenable.value = resultValue;
-        });
-        return resultThenable;
-      }
-    }
-
-    function pingEngtangledActionScope() {
-      if (
-        currentEntangledListeners !== null &&
-        --currentEntangledPendingCount === 0
-      ) {
-        // All the actions have finished. Close the entangled async action scope
-        // and notify all the listeners.
-        var listeners = currentEntangledListeners;
-        currentEntangledListeners = null;
-        currentEntangledLane = NoLane;
-
-        for (var i = 0; i < listeners.length; i++) {
-          var listener = listeners[i];
-          listener();
-        }
-      }
-    }
-
-    function createResultThenable(entangledListeners) {
-      // Waits for the entangled async action to complete, then resolves to the
-      // result of an individual action.
-      var resultThenable = {
-        status: "pending",
-        value: null,
-        reason: null,
-        then: function (resolve) {
-          // This is a bit of a cheat. `resolve` expects a value of type `S` to be
-          // passed, but because we're instrumenting the `status` field ourselves,
-          // and we know this thenable will only be used by React, we also know
-          // the value isn't actually needed. So we add the resolve function
-          // directly to the entangled listeners.
-          //
-          // This is also why we don't need to check if the thenable is still
-          // pending; the Suspense implementation already performs that check.
-          var ping = resolve;
-          entangledListeners.push(ping);
-        }
-      };
-      return resultThenable;
-    }
-
-    function peekEntangledActionLane() {
-      return currentEntangledLane;
-    }
-
     var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher,
       ReactCurrentBatchConfig$3 = ReactSharedInternals.ReactCurrentBatchConfig;
     var didWarnAboutMismatchedHooksForComponent;
@@ -13816,6 +13808,7 @@ if (__DEV__) {
         var newBaseQueueFirst = null;
         var newBaseQueueLast = null;
         var update = first;
+        var didReadFromEntangledAsyncAction = false;
 
         do {
           // An extra OffscreenLane bit is added to updates that were made to
@@ -13859,7 +13852,16 @@ if (__DEV__) {
             markSkippedUpdateLanes(updateLane);
           } else {
             // This update does have sufficient priority.
-            // Check if this is an optimistic update.
+            // Check if this update is part of a pending async action. If so,
+            // we'll need to suspend until the action has finished, so that it's
+            // batched together with future updates in the same action.
+            if (
+              updateLane !== NoLane &&
+              updateLane === peekEntangledActionLane()
+            ) {
+              didReadFromEntangledAsyncAction = true;
+            } // Check if this is an optimistic update.
+
             var revertLane = update.revertLane;
 
             if (!enableAsyncActions || revertLane === NoLane) {
@@ -13951,7 +13953,23 @@ if (__DEV__) {
         // different from the current state.
 
         if (!objectIs(newState, hook.memoizedState)) {
-          markWorkInProgressReceivedUpdate();
+          markWorkInProgressReceivedUpdate(); // Check if this update is part of a pending async action. If so, we'll
+          // need to suspend until the action has finished, so that it's batched
+          // together with future updates in the same action.
+          // TODO: Once we support hooks inside useMemo (or an equivalent
+          // memoization boundary like Forget), hoist this logic so that it only
+          // suspends if the memo boundary produces a new value.
+
+          if (didReadFromEntangledAsyncAction) {
+            var entangledActionThenable = peekEntangledActionThenable();
+
+            if (entangledActionThenable !== null) {
+              // TODO: Instead of the throwing the thenable directly, throw a
+              // special object like `use` does so we can detect if it's captured
+              // by userspace.
+              throw entangledActionThenable;
+            }
+          }
         }
 
         hook.memoizedState = newState;
@@ -14954,24 +14972,17 @@ if (__DEV__) {
             typeof returnValue === "object" &&
             typeof returnValue.then === "function"
           ) {
-            var thenable = returnValue; // This is a thenable that resolves to `finishedState` once the async
-            // action scope has finished.
+            var thenable = returnValue;
+            entangleAsyncAction(thenable); // Create a thenable that resolves to `finishedState` once the async
+            // action has completed.
 
-            var entangledResult = requestAsyncActionContext(
+            var thenableForFinishedState = chainThenableValue(
               thenable,
               finishedState
             );
-            dispatchSetState(fiber, queue, entangledResult);
+            dispatchSetState(fiber, queue, thenableForFinishedState);
           } else {
-            // This is either `finishedState` or a thenable that resolves to
-            // `finishedState`, depending on whether we're inside an async
-            // action scope.
-            var _entangledResult2 = requestSyncActionContext(
-              returnValue,
-              finishedState
-            );
-
-            dispatchSetState(fiber, queue, _entangledResult2);
+            dispatchSetState(fiber, queue, finishedState);
           }
         } else {
           // Async actions are not enabled.
@@ -17626,6 +17637,7 @@ if (__DEV__) {
         // process them now.
 
         processUpdateQueue(workInProgress, newProps, instance, renderLanes);
+        suspendIfUpdateReadFromEntangledAsyncAction();
         instance.state = workInProgress.memoizedState;
       }
 
@@ -17693,6 +17705,7 @@ if (__DEV__) {
       var oldState = workInProgress.memoizedState;
       var newState = (instance.state = oldState);
       processUpdateQueue(workInProgress, newProps, instance, renderLanes);
+      suspendIfUpdateReadFromEntangledAsyncAction();
       newState = workInProgress.memoizedState;
 
       if (
@@ -17845,6 +17858,7 @@ if (__DEV__) {
       var oldState = workInProgress.memoizedState;
       var newState = (instance.state = oldState);
       processUpdateQueue(workInProgress, newProps, instance, renderLanes);
+      suspendIfUpdateReadFromEntangledAsyncAction();
       newState = workInProgress.memoizedState;
 
       if (
@@ -18455,7 +18469,7 @@ if (__DEV__) {
                   }
                 }
 
-                return;
+                return false;
               }
 
               case OffscreenComponent: {
@@ -18490,7 +18504,7 @@ if (__DEV__) {
                     attachPingListener(root, wakeable, rootRenderLanes);
                   }
 
-                  return;
+                  return false;
                 }
               }
             }
@@ -18513,7 +18527,7 @@ if (__DEV__) {
               // and potentially log a warning. Revisit this for a future release.
               attachPingListener(root, wakeable, rootRenderLanes);
               renderDidSuspendDelayIfPossible();
-              return;
+              return false;
             } else {
               // In a legacy root, suspending without a boundary is always an error.
               var uncaughtSuspenseError = new Error(
@@ -18553,7 +18567,7 @@ if (__DEV__) {
           // still log it so it can be fixed.
 
           queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
-          return;
+          return false;
         }
       }
 
@@ -18561,6 +18575,12 @@ if (__DEV__) {
       renderDidError(value); // We didn't find a boundary that could handle this type of exception. Start
       // over and traverse parent path again, this time treating the exception
       // as an error.
+
+      if (returnFiber === null) {
+        // There's no return fiber, which means the root errored. This should never
+        // happen. Return `true` to trigger a fatal error (panic).
+        return true;
+      }
 
       var workInProgress = returnFiber;
 
@@ -18577,7 +18597,7 @@ if (__DEV__) {
               lane
             );
             enqueueCapturedUpdate(workInProgress, update);
-            return;
+            return false;
           }
 
           case ClassComponent:
@@ -18606,7 +18626,7 @@ if (__DEV__) {
               );
 
               enqueueCapturedUpdate(workInProgress, _update);
-              return;
+              return false;
             }
 
             break;
@@ -18614,6 +18634,8 @@ if (__DEV__) {
 
         workInProgress = workInProgress.return;
       } while (workInProgress !== null);
+
+      return false;
     }
 
     var TransitionRoot = 0;
@@ -19476,6 +19498,7 @@ if (__DEV__) {
         if (includesSomeLane(current.lanes, renderLanes)) {
           cloneUpdateQueue(current, workInProgress);
           processUpdateQueue(workInProgress, null, null, renderLanes);
+          suspendIfUpdateReadFromEntangledAsyncAction();
         }
 
         var prevState = current.memoizedState;
@@ -20008,7 +20031,11 @@ if (__DEV__) {
           // The root cache refreshed.
           propagateContextChange(workInProgress, CacheContext, renderLanes);
         }
-      } // Caution: React DevTools currently depends on this property
+      } // This would ideally go inside processUpdateQueue, but because it suspends,
+      // it needs to happen after the `pushCacheProvider` call above to avoid a
+      // context stack mismatch. A bit unfortunate.
+
+      suspendIfUpdateReadFromEntangledAsyncAction(); // Caution: React DevTools currently depends on this property
       // being called "element".
 
       var nextChildren = nextState.element;
@@ -32262,7 +32289,7 @@ if (__DEV__) {
                 // Unwind then continue with the normal work loop.
                 workInProgressSuspendedReason = NotSuspended;
                 workInProgressThrownValue = null;
-                throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+                throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
                 break;
               }
             }
@@ -32381,7 +32408,7 @@ if (__DEV__) {
                 // Unwind then continue with the normal work loop.
                 workInProgressSuspendedReason = NotSuspended;
                 workInProgressThrownValue = null;
-                throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+                throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
                 break;
               }
 
@@ -32446,7 +32473,7 @@ if (__DEV__) {
                   // Otherwise, unwind then continue with the normal work loop.
                   workInProgressSuspendedReason = NotSuspended;
                   workInProgressThrownValue = null;
-                  throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+                  throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
                 }
 
                 break;
@@ -32511,7 +32538,7 @@ if (__DEV__) {
 
                 workInProgressSuspendedReason = NotSuspended;
                 workInProgressThrownValue = null;
-                throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+                throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
                 break;
               }
 
@@ -32522,7 +32549,7 @@ if (__DEV__) {
                 // always unwind.
                 workInProgressSuspendedReason = NotSuspended;
                 workInProgressThrownValue = null;
-                throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+                throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
                 break;
               }
 
@@ -32757,7 +32784,7 @@ if (__DEV__) {
       ReactCurrentOwner$1.current = null;
     }
 
-    function throwAndUnwindWorkLoop(unitOfWork, thrownValue) {
+    function throwAndUnwindWorkLoop(root, unitOfWork, thrownValue) {
       // This is a fork of performUnitOfWork specifcally for unwinding a fiber
       // that threw an exception.
       //
@@ -32766,40 +32793,33 @@ if (__DEV__) {
       resetSuspendedWorkLoopOnUnwind(unitOfWork);
       var returnFiber = unitOfWork.return;
 
-      if (returnFiber === null || workInProgressRoot === null) {
-        // Expected to be working on a non-root fiber. This is a fatal error
-        // because there's no ancestor that can handle it; the root is
-        // supposed to capture all errors that weren't caught by an error
-        // boundary.
-        workInProgressRootExitStatus = RootFatalErrored;
-        workInProgressRootFatalError = thrownValue; // Set `workInProgress` to null. This represents advancing to the next
-        // sibling, or the parent if there are no siblings. But since the root
-        // has no siblings nor a parent, we set it to null. Usually this is
-        // handled by `completeUnitOfWork` or `unwindWork`, but since we're
-        // intentionally not calling those, we need set it here.
-        // TODO: Consider calling `unwindWork` to pop the contexts.
-
-        workInProgress = null;
-        return;
-      }
-
       try {
         // Find and mark the nearest Suspense or error boundary that can handle
         // this "exception".
-        throwException(
-          workInProgressRoot,
+        var didFatal = throwException(
+          root,
           returnFiber,
           unitOfWork,
           thrownValue,
           workInProgressRootRenderLanes
         );
+
+        if (didFatal) {
+          panicOnRootError(thrownValue);
+          return;
+        }
       } catch (error) {
         // We had trouble processing the error. An example of this happening is
         // when accessing the `componentDidCatch` property of an error boundary
         // throws an error. A weird edge case. There's a regression test for this.
         // To prevent an infinite loop, bubble the error up to the next parent.
-        workInProgress = returnFiber;
-        throw error;
+        if (returnFiber !== null) {
+          workInProgress = returnFiber;
+          throw error;
+        } else {
+          panicOnRootError(thrownValue);
+          return;
+        }
       }
 
       if (unitOfWork.flags & Incomplete) {
@@ -32817,6 +32837,22 @@ if (__DEV__) {
         // this particular path is how that would be implemented.
         completeUnitOfWork(unitOfWork);
       }
+    }
+
+    function panicOnRootError(error) {
+      // There's no ancestor that can handle this exception. This should never
+      // happen because the root is supposed to capture all errors that weren't
+      // caught by an error boundary. This is a fatal error, or panic condition,
+      // because we've run out of ways to recover.
+      workInProgressRootExitStatus = RootFatalErrored;
+      workInProgressRootFatalError = error; // Set `workInProgress` to null. This represents advancing to the next
+      // sibling, or the parent if there are no siblings. But since the root
+      // has no siblings nor a parent, we set it to null. Usually this is
+      // handled by `completeUnitOfWork` or `unwindWork`, but since we're
+      // intentionally not calling those, we need set it here.
+      // TODO: Consider calling `unwindWork` to pop the contexts.
+
+      workInProgress = null;
     }
 
     function completeUnitOfWork(unitOfWork) {
@@ -35592,7 +35628,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-83debab5";
+    var ReactVersion = "18.3.0-www-classic-05eed13e";
 
     function createPortal$1(
       children,
