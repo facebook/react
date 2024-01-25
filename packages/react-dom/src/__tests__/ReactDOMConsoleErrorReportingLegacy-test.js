@@ -10,7 +10,7 @@
 describe('ReactDOMConsoleErrorReporting', () => {
   let act;
   let React;
-  let ReactDOMClient;
+  let ReactDOM;
 
   let ErrorBoundary;
   let NoError;
@@ -22,7 +22,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
     jest.resetModules();
     act = require('internal-test-utils').act;
     React = require('react');
-    ReactDOMClient = require('react-dom/client');
+    ReactDOM = require('react-dom');
 
     const InternalTestUtils = require('internal-test-utils');
     waitForThrow = InternalTestUtils.waitForThrow;
@@ -54,7 +54,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
     jest.restoreAllMocks();
   });
 
-  describe('ReactDOMClient.createRoot', () => {
+  describe('ReactDOM.render', () => {
     it('logs errors during event handlers', async () => {
       spyOnDevAndProd(console, 'error');
 
@@ -69,9 +69,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
         );
       }
 
-      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        root.render(<Foo />);
+        ReactDOM.render(<Foo />, container);
       });
 
       await act(() => {
@@ -99,6 +98,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
         expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported because we're in a browser click event:
             expect.objectContaining({
@@ -145,12 +145,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
       windowOnError.mockReset();
       console.error.mockReset();
       await act(() => {
-        root.render(<NoError />);
+        ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
-        expect(console.error.mock.calls).toEqual([]);
+        expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
       }
     });
 
@@ -161,11 +163,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
         throw Error('Boom');
       }
 
-      const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
-        root.render(<Foo />);
-        await waitForThrow('Boom');
-      });
+      expect(() => {
+        ReactDOM.render(<Foo />, container);
+      }).toThrow('Boom');
 
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([
@@ -175,27 +175,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
               message: 'Boom',
             }),
           ],
-          [
-            // This is only duplicated with createRoot
-            // because it retries once with a sync render.
-            expect.objectContaining({
-              message: 'Boom',
-            }),
-          ],
         ]);
         expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported due to the guarded callback:
-            expect.objectContaining({
-              detail: expect.objectContaining({
-                message: 'Boom',
-              }),
-              type: 'unhandled exception',
-            }),
-          ],
-          [
-            // This is only duplicated with createRoot
-            // because it retries once with a sync render.
             expect.objectContaining({
               detail: expect.objectContaining({
                 message: 'Boom',
@@ -228,12 +212,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
       windowOnError.mockReset();
       console.error.mockReset();
       await act(() => {
-        root.render(<NoError />);
+        ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
-        expect(console.error.mock.calls).toEqual([]);
+        expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
       }
     });
 
@@ -244,12 +230,12 @@ describe('ReactDOMConsoleErrorReporting', () => {
         throw Error('Boom');
       }
 
-      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        root.render(
+        ReactDOM.render(
           <ErrorBoundary>
             <Foo />
           </ErrorBoundary>,
+          container,
         );
       });
 
@@ -261,27 +247,11 @@ describe('ReactDOMConsoleErrorReporting', () => {
               message: 'Boom',
             }),
           ],
-          [
-            // This is only duplicated with createRoot
-            // because it retries once with a sync render.
-            expect.objectContaining({
-              message: 'Boom',
-            }),
-          ],
         ]);
         expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported by jsdom due to the guarded callback:
-            expect.objectContaining({
-              detail: expect.objectContaining({
-                message: 'Boom',
-              }),
-              type: 'unhandled exception',
-            }),
-          ],
-          [
-            // This is only duplicated with createRoot
-            // because it retries once with a sync render.
             expect.objectContaining({
               detail: expect.objectContaining({
                 message: 'Boom',
@@ -314,12 +284,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
       windowOnError.mockReset();
       console.error.mockReset();
       await act(() => {
-        root.render(<NoError />);
+        ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
-        expect(console.error.mock.calls).toEqual([]);
+        expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
       }
     });
 
@@ -333,11 +305,9 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      const root = ReactDOMClient.createRoot(container);
-      await act(async () => {
-        root.render(<Foo />);
-        await waitForThrow('Boom');
-      });
+      expect(() => {
+        ReactDOM.render(<Foo />, container);
+      }).toThrow('Boom');
 
       if (__DEV__) {
         expect(windowOnError.mock.calls).toEqual([
@@ -349,6 +319,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
         expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported due to the guarded callback:
             expect.objectContaining({
@@ -383,12 +354,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
       windowOnError.mockReset();
       console.error.mockReset();
       await act(() => {
-        root.render(<NoError />);
+        ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
-        expect(console.error.mock.calls).toEqual([]);
+        expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
       }
     });
 
@@ -402,12 +375,12 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        root.render(
+        ReactDOM.render(
           <ErrorBoundary>
             <Foo />
           </ErrorBoundary>,
+          container,
         );
       });
 
@@ -421,6 +394,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
         expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported by jsdom due to the guarded callback:
             expect.objectContaining({
@@ -455,12 +429,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
       windowOnError.mockReset();
       console.error.mockReset();
       await act(() => {
-        root.render(<NoError />);
+        ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
-        expect(console.error.mock.calls).toEqual([]);
+        expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
       }
     });
 
@@ -474,9 +450,8 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      const root = ReactDOMClient.createRoot(container);
       await act(async () => {
-        root.render(<Foo />);
+        ReactDOM.render(<Foo />, container);
         await waitForThrow('Boom');
       });
 
@@ -490,6 +465,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
           ],
         ]);
         expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported due to the guarded callback:
             expect.objectContaining({
@@ -524,12 +500,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
       windowOnError.mockReset();
       console.error.mockReset();
       await act(() => {
-        root.render(<NoError />);
+        ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
-        expect(console.error.mock.calls).toEqual([]);
+        expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
       }
     });
 
@@ -543,25 +521,26 @@ describe('ReactDOMConsoleErrorReporting', () => {
         return null;
       }
 
-      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        root.render(
+        ReactDOM.render(
           <ErrorBoundary>
             <Foo />
           </ErrorBoundary>,
+          container,
         );
       });
 
       if (__DEV__) {
+        // Reported due to guarded callback:
         expect(windowOnError.mock.calls).toEqual([
           [
-            // Reported due to guarded callback:
             expect.objectContaining({
               message: 'Boom',
             }),
           ],
         ]);
         expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
           [
             // Reported by jsdom due to the guarded callback:
             expect.objectContaining({
@@ -596,12 +575,14 @@ describe('ReactDOMConsoleErrorReporting', () => {
       windowOnError.mockReset();
       console.error.mockReset();
       await act(() => {
-        root.render(<NoError />);
+        ReactDOM.render(<NoError />, container);
       });
       expect(container.textContent).toBe('OK');
       expect(windowOnError.mock.calls).toEqual([]);
       if (__DEV__) {
-        expect(console.error.mock.calls).toEqual([]);
+        expect(console.error.mock.calls).toEqual([
+          [expect.stringContaining('ReactDOM.render is no longer supported')],
+        ]);
       }
     });
   });
