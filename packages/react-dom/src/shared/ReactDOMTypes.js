@@ -21,6 +21,7 @@ export type PreloadOptions = {
   imageSrcSet?: string,
   imageSizes?: string,
   referrerPolicy?: string,
+  media?: string,
 };
 export type PreloadModuleOptions = {
   as?: string,
