@@ -7,12 +7,20 @@
  * @flow
  */
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {Thenable} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {StackCursor} from './ReactFiberStack';
 import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent';
-import type {Transition} from './ReactFiberTracingMarkerComponent';
+import type {
+  BatchConfigTransition,
+  Transition,
+} from './ReactFiberTracingMarkerComponent';
 
-import {enableCache, enableTransitionTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableCache,
+  enableTransitionTracing,
+  enableAsyncActions,
+} from 'shared/ReactFeatureFlags';
 import {isPrimaryRenderer} from './ReactFiberConfig';
 import {createCursor, push, pop} from './ReactFiberStack';
 import {
@@ -26,13 +34,44 @@ import {
 } from './ReactFiberCacheComponent';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {entangleAsyncAction} from './ReactFiberAsyncAction';
 
 const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 export const NoTransition = null;
 
-export function requestCurrentTransition(): Transition | null {
-  return ReactCurrentBatchConfig.transition;
+export function requestCurrentTransition(): BatchConfigTransition | null {
+  const transition = ReactCurrentBatchConfig.transition;
+  if (transition !== null) {
+    // Whenever a transition update is scheduled, register a callback on the
+    // transition object so we can get the return value of the scope function.
+    transition._callbacks.add(handleTransitionScopeResult);
+  }
+  return transition;
+}
+
+function handleTransitionScopeResult(
+  transition: BatchConfigTransition,
+  returnValue: mixed,
+): void {
+  if (
+    enableAsyncActions &&
+    returnValue !== null &&
+    typeof returnValue === 'object' &&
+    typeof returnValue.then === 'function'
+  ) {
+    // This is an async action.
+    const thenable: Thenable<mixed> = (returnValue: any);
+    entangleAsyncAction(transition, thenable);
+  }
+}
+
+export function notifyTransitionCallbacks(
+  transition: BatchConfigTransition,
+  returnValue: mixed,
+) {
+  const callbacks = transition._callbacks;
+  callbacks.forEach(callback => callback(transition, returnValue));
 }
 
 // When retrying a Suspense/Offscreen boundary, we restore the cache that was

@@ -13,6 +13,7 @@ import type {
   RejectedThenable,
 } from 'shared/ReactTypes';
 import type {Lane} from './ReactFiberLane';
+import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 import {NoLane} from './ReactFiberLane';
@@ -36,7 +37,10 @@ let currentEntangledLane: Lane = NoLane;
 // until the async action scope has completed.
 let currentEntangledActionThenable: Thenable<void> | null = null;
 
-export function entangleAsyncAction<S>(thenable: Thenable<S>): Thenable<S> {
+export function entangleAsyncAction<S>(
+  transition: BatchConfigTransition,
+  thenable: Thenable<S>,
+): Thenable<S> {
   // `thenable` is the return value of the async action scope function. Create
   // a combined thenable that resolves once every entangled scope function
   // has finished.
@@ -44,7 +48,7 @@ export function entangleAsyncAction<S>(thenable: Thenable<S>): Thenable<S> {
     // There's no outer async action scope. Create a new one.
     const entangledListeners = (currentEntangledListeners = []);
     currentEntangledPendingCount = 0;
-    currentEntangledLane = requestTransitionLane();
+    currentEntangledLane = requestTransitionLane(transition);
     const entangledThenable: Thenable<void> = {
       status: 'pending',
       value: undefined,

@@ -1641,4 +1641,89 @@ describe('ReactAsyncActions', () => {
       expect(root).toMatchRenderedOutput(<span>D</span>);
     },
   );
+
+  // @gate enableAsyncActions
+  test('React.startTransition supports async actions', async () => {
+    const startTransition = React.startTransition;
+
+    function App({text}) {
+      return <Text text={text} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App text="A" />);
+    });
+    assertLog(['A']);
+
+    await act(() => {
+      startTransition(async () => {
+        // Update to B
+        root.render(<App text="B" />);
+
+        // There's an async gap before C is updated
+        await getText('Wait before updating to C');
+        root.render(<App text="C" />);
+
+        Scheduler.log('Async action ended');
+      });
+    });
+    // The update to B is blocked because the async action hasn't completed yet.
+    assertLog([]);
+    expect(root).toMatchRenderedOutput('A');
+
+    // Finish the async action
+    await act(() => resolveText('Wait before updating to C'));
+
+    // Now both B and C can finish in a single batch.
+    assertLog(['Async action ended', 'C']);
+    expect(root).toMatchRenderedOutput('C');
+  });
+
+  // @gate enableAsyncActions
+  test('useOptimistic works with async actions passed to React.startTransition', async () => {
+    const startTransition = React.startTransition;
+
+    let setOptimisticText;
+    function App({text: canonicalText}) {
+      const [text, _setOptimisticText] = useOptimistic(
+        canonicalText,
+        (_, optimisticText) => `${optimisticText} (loading...)`,
+      );
+      setOptimisticText = _setOptimisticText;
+      return (
+        <span>
+          <Text text={text} />
+        </span>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(() => {
+      root.render(<App text="Initial" />);
+    });
+    assertLog(['Initial']);
+    expect(root).toMatchRenderedOutput(<span>Initial</span>);
+
+    // Start an async action using the non-hook form of startTransition. The
+    // action includes an optimistic update.
+    await act(() => {
+      startTransition(async () => {
+        Scheduler.log('Async action started');
+        setOptimisticText('Updated');
+        await getText('Yield before updating');
+        Scheduler.log('Async action ended');
+        startTransition(() => root.render(<App text="Updated" />));
+      });
+    });
+    // Because the action hasn't finished yet, the optimistic UI is shown.
+    assertLog(['Async action started', 'Updated (loading...)']);
+    expect(root).toMatchRenderedOutput(<span>Updated (loading...)</span>);
+
+    // Finish the async action. The optimistic state is reverted and replaced by
+    // the canonical state.
+    await act(() => resolveText('Yield before updating'));
+    assertLog(['Async action ended', 'Updated']);
+    expect(root).toMatchRenderedOutput(<span>Updated</span>);
+  });
 });
