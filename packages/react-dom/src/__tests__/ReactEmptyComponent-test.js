@@ -15,6 +15,8 @@ let ReactDOMClient;
 let ReactTestUtils;
 let TogglingComponent;
 let act;
+let Scheduler;
+let assertLog;
 
 let log;
 let container;
@@ -27,9 +29,10 @@ describe('ReactEmptyComponent', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
-    act = require('internal-test-utils').act;
-
-    log = jest.fn();
+    Scheduler = require('scheduler');
+    const InternalTestUtils = require('internal-test-utils');
+    act = InternalTestUtils.act;
+    assertLog = InternalTestUtils.assertLog;
 
     container = document.createElement('div');
 
@@ -37,12 +40,12 @@ describe('ReactEmptyComponent', () => {
       state = {component: this.props.firstComponent};
 
       componentDidMount() {
-        log(ReactDOM.findDOMNode(this));
+        Scheduler.log('mount ' + ReactDOM.findDOMNode(this)?.nodeName);
         this.setState({component: this.props.secondComponent});
       }
 
       componentDidUpdate() {
-        log(ReactDOM.findDOMNode(this));
+        Scheduler.log('update ' + ReactDOM.findDOMNode(this)?.nodeName);
       }
 
       render() {
@@ -116,17 +119,12 @@ describe('ReactEmptyComponent', () => {
         root2.render(instance2);
       });
 
-      expect(log).toHaveBeenCalledTimes(4);
-      expect(log).toHaveBeenNthCalledWith(1, null);
-      expect(log).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({tagName: 'DIV'}),
-      );
-      expect(log).toHaveBeenNthCalledWith(
-        3,
-        expect.objectContaining({tagName: 'DIV'}),
-      );
-      expect(log).toHaveBeenNthCalledWith(4, null);
+      assertLog([
+        'mount undefined',
+        'update DIV',
+        'mount DIV',
+        'update undefined',
+      ]);
     });
 
     it('should be able to switch in a list of children', async () => {
@@ -148,22 +146,14 @@ describe('ReactEmptyComponent', () => {
         );
       });
 
-      expect(log).toHaveBeenCalledTimes(6);
-      expect(log).toHaveBeenNthCalledWith(1, null);
-      expect(log).toHaveBeenNthCalledWith(2, null);
-      expect(log).toHaveBeenNthCalledWith(3, null);
-      expect(log).toHaveBeenNthCalledWith(
-        4,
-        expect.objectContaining({tagName: 'DIV'}),
-      );
-      expect(log).toHaveBeenNthCalledWith(
-        5,
-        expect.objectContaining({tagName: 'DIV'}),
-      );
-      expect(log).toHaveBeenNthCalledWith(
-        6,
-        expect.objectContaining({tagName: 'DIV'}),
-      );
+      assertLog([
+        'mount undefined',
+        'mount undefined',
+        'mount undefined',
+        'update DIV',
+        'update DIV',
+        'update DIV',
+      ]);
     });
 
     it('should distinguish between a script placeholder and an actual script tag', () => {
@@ -195,17 +185,12 @@ describe('ReactEmptyComponent', () => {
         });
       }).not.toThrow();
 
-      expect(log).toHaveBeenCalledTimes(4);
-      expect(log).toHaveBeenNthCalledWith(1, null);
-      expect(log).toHaveBeenNthCalledWith(
-        2,
-        expect.objectContaining({tagName: 'SCRIPT'}),
-      );
-      expect(log).toHaveBeenNthCalledWith(
-        3,
-        expect.objectContaining({tagName: 'SCRIPT'}),
-      );
-      expect(log).toHaveBeenNthCalledWith(4, null);
+      assertLog([
+        'mount undefined',
+        'update SCRIPT',
+        'mount SCRIPT',
+        'update undefined',
+      ]);
     });
 
     it(
@@ -242,17 +227,12 @@ describe('ReactEmptyComponent', () => {
           });
         }).not.toThrow();
 
-        expect(log).toHaveBeenCalledTimes(4);
-        expect(log).toHaveBeenNthCalledWith(
-          1,
-          expect.objectContaining({tagName: 'DIV'}),
-        );
-        expect(log).toHaveBeenNthCalledWith(2, null);
-        expect(log).toHaveBeenNthCalledWith(3, null);
-        expect(log).toHaveBeenNthCalledWith(
-          4,
-          expect.objectContaining({tagName: 'DIV'}),
-        );
+        assertLog([
+          'mount DIV',
+          'update undefined',
+          'mount undefined',
+          'update DIV',
+        ]);
       },
     );
 
