@@ -788,8 +788,17 @@ function createTask(
 ): Task {
   const id = request.nextChunkId++;
   if (typeof model === 'object' && model !== null) {
-    // Register this model as having the ID we're about to write.
-    request.writtenObjects.set(model, id);
+    // If we're about to write this into a new task we can assign it an ID early so that
+    // any other references can refer to the value we're about to write.
+    if (
+      enableServerComponentKeys &&
+      (keyPath !== null || implicitSlot || context !== rootContextSnapshot)
+    ) {
+      // If we're in some kind of context we can't necessarily reuse this object depending
+      // what parent components are used.
+    } else {
+      request.writtenObjects.set(model, id);
+    }
   }
   const task: Task = {
     id,
@@ -1251,18 +1260,31 @@ function renderModelDestructive(
         const writtenObjects = request.writtenObjects;
         const existingId = writtenObjects.get(value);
         if (existingId !== undefined) {
-          if (existingId === -1) {
-            // Seen but not yet outlined.
-            const newId = outlineModel(request, value);
-            return serializeByValueID(newId);
+          if (
+            enableServerComponentKeys &&
+            (task.keyPath !== null ||
+              task.implicitSlot ||
+              task.context !== rootContextSnapshot)
+          ) {
+            // If we're in some kind of context we can't reuse the result of this render or
+            // previous renders of this element. We only reuse elements if they're not wrapped
+            // by another Server Component.
           } else if (modelRoot === value) {
             // This is the ID we're currently emitting so we need to write it
             // once but if we discover it again, we refer to it by id.
             modelRoot = null;
+          } else if (existingId === -1) {
+            // Seen but not yet outlined.
+            // TODO: If we throw here we can treat this as suspending which causes an outline
+            // but that is able to reuse the same task if we're already in one but then that
+            // will be a lazy future value rather than guaranteed to exist but maybe that's good.
+            const newId = outlineModel(request, (value: any));
+            return serializeLazyID(newId);
           } else {
-            // We've already emitted this as an outlined object, so we can
-            // just refer to that by its existing ID.
-            return serializeByValueID(existingId);
+            // We've already emitted this as an outlined object, so we can refer to that by its
+            // existing ID. We use a lazy reference since, unlike plain objects, elements might
+            // suspend so it might not have emitted yet even if we have the ID for it.
+            return serializeLazyID(existingId);
           }
         } else {
           // This is the first time we've seen this object. We may never see it again
@@ -1317,7 +1339,18 @@ function renderModelDestructive(
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
       if (existingId !== undefined) {
-        if (modelRoot === value) {
+        if (
+          enableServerComponentKeys &&
+          (task.keyPath !== null ||
+            task.implicitSlot ||
+            task.context !== rootContextSnapshot)
+        ) {
+          // If we're in some kind of context we can't reuse the result of this render or
+          // previous renders of this element. We only reuse Promises if they're not wrapped
+          // by another Server Component.
+          const promiseId = serializeThenable(request, task, (value: any));
+          return serializePromiseID(promiseId);
+        } else if (modelRoot === value) {
           // This is the ID we're currently emitting so we need to write it
           // once but if we discover it again, we refer to it by id.
           modelRoot = null;
@@ -1357,14 +1390,14 @@ function renderModelDestructive(
     }
 
     if (existingId !== undefined) {
-      if (existingId === -1) {
-        // Seen but not yet outlined.
-        const newId = outlineModel(request, value);
-        return serializeByValueID(newId);
-      } else if (modelRoot === value) {
+      if (modelRoot === value) {
         // This is the ID we're currently emitting so we need to write it
         // once but if we discover it again, we refer to it by id.
         modelRoot = null;
+      } else if (existingId === -1) {
+        // Seen but not yet outlined.
+        const newId = outlineModel(request, (value: any));
+        return serializeByValueID(newId);
       } else {
         // We've already emitted this as an outlined object, so we can
         // just refer to that by its existing ID.
@@ -1768,15 +1801,18 @@ function retryTask(request: Request, task: Task): void {
     task.keyPath = null;
     task.implicitSlot = false;
 
-    // If the value is a string, it means it's a terminal value adn we already escaped it
-    // We don't need to escape it again so it's not passed the toJSON replacer.
-    // Object might contain unresolved values like additional elements.
-    // This is simulating what the JSON loop would do if this was part of it.
-    // $FlowFixMe[incompatible-type] stringify can return null
-    const json: string =
-      typeof resolvedModel === 'string'
-        ? stringify(resolvedModel)
-        : stringify(resolvedModel, task.toJSON);
+    let json: string;
+    if (typeof resolvedModel === 'object' && resolvedModel !== null) {
+      // Object might contain unresolved values like additional elements.
+      // This is simulating what the JSON loop would do if this was part of it.
+      // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+      json = stringify(resolvedModel, task.toJSON);
+    } else {
+      // If the value is a string, it means it's a terminal value and we already escaped it
+      // We don't need to escape it again so it's not passed the toJSON replacer.
+      // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+      json = stringify(resolvedModel);
+    }
     emitModelChunk(request, task.id, json);
 
     request.abortableTasks.delete(task);
