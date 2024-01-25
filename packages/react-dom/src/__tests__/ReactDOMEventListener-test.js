@@ -146,42 +146,29 @@ describe('ReactDOMEventListener', () => {
       }
     });
 
-    it('should batch between handlers from different roots', async () => {
+    it('should batch between handlers from different roots', () => {
       const mock = jest.fn();
 
       const childContainer = document.createElement('div');
+      const handleChildMouseOut = () => {
+        ReactDOM.render(<div>1</div>, childContainer);
+        mock(childNode.textContent);
+      };
+
       const parentContainer = document.createElement('div');
-      const childRoot = ReactDOMClient.createRoot(childContainer);
-      const parentRoot = ReactDOMClient.createRoot(parentContainer);
-      let childSetState;
+      const handleParentMouseOut = () => {
+        ReactDOM.render(<div>2</div>, childContainer);
+        mock(childNode.textContent);
+      };
 
-      function Parent() {
-        // eslint-disable-next-line no-unused-vars
-        const [state, _] = React.useState('Parent');
-        const handleMouseOut = () => {
-          childSetState(2);
-          mock(childContainer.firstChild.textContent);
-        };
-        return <div onMouseOut={handleMouseOut}>{state}</div>;
-      }
-
-      function Child() {
-        const [state, setState] = React.useState('Child');
-        childSetState = setState;
-        const handleMouseOut = () => {
-          setState(1);
-          mock(childContainer.firstChild.textContent);
-        };
-        return <div onMouseOut={handleMouseOut}>{state}</div>;
-      }
-
-      await act(() => {
-        childRoot.render(<Child />);
-        parentRoot.render(<Parent />);
-      });
-
-      const childNode = childContainer.firstChild;
-      const parentNode = parentContainer.firstChild;
+      const childNode = ReactDOM.render(
+        <div onMouseOut={handleChildMouseOut}>Child</div>,
+        childContainer,
+      );
+      const parentNode = ReactDOM.render(
+        <div onMouseOut={handleParentMouseOut}>Parent</div>,
+        parentContainer,
+      );
       parentNode.appendChild(childContainer);
       document.body.appendChild(parentContainer);
 
@@ -192,20 +179,23 @@ describe('ReactDOMEventListener', () => {
 
         // Child and parent should both call from event handlers.
         expect(mock).toHaveBeenCalledTimes(2);
+        // The first call schedules a render of '1' into the 'Child'.
+        // However, we're batching so it isn't flushed yet.
+        expect(mock.mock.calls[0][0]).toBe('Child');
+        // As we have two roots, it means we have two event listeners.
+        // This also means we enter the event batching phase twice,
+        // flushing the child to be 1.
 
-        // However, we're batching, so they aren't flushed yet.
-        expect(mock).toHaveBeenNthCalledWith(1, 'Child');
-        expect(mock).toHaveBeenNthCalledWith(2, 'Child');
-        expect(parentNode.textContent).toBe('ParentChild');
-        expect(childNode.textContent).toBe('Child');
-        mock.mockClear();
-
-        // Flush the batched updates.
-        await waitForPaint([]);
-
-        // The batched updates are applied.
-        expect(mock).not.toBeCalled();
-        expect(parentNode.textContent).toBe('Parent2');
+        // We don't have any good way of knowing if another event will
+        // occur because another event handler might invoke
+        // stopPropagation() along the way. After discussions internally
+        // with Sebastian, it seems that for now over-flushing should
+        // be fine, especially as the new event system is a breaking
+        // change anyway. We can maybe revisit this later as part of
+        // the work to refine this in the scheduler (maybe by leveraging
+        // isInputPending?).
+        expect(mock.mock.calls[1][0]).toBe('1');
+        // By the time we leave the handler, the second update is flushed.
         expect(childNode.textContent).toBe('2');
       } finally {
         document.body.removeChild(parentContainer);
