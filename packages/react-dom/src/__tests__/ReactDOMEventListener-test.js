@@ -9,6 +9,8 @@
 
 'use strict';
 
+import {enableLegacyFBSupport} from 'shared/forks/ReactFeatureFlags.www-dynamic';
+
 describe('ReactDOMEventListener', () => {
   let React;
   let ReactDOM;
@@ -210,7 +212,14 @@ describe('ReactDOMEventListener', () => {
         // isInputPending?).
         //
         // Since this is a discrete event, the previous update is already done.
-        expect(mock.mock.calls[1][0]).toBe('1');
+        if (gate(flags => flags.enableLegacyFBSupport)) {
+          // Legacy FB support mode attaches to the document, which is a single event
+          // dispatch for both roots, so this is batched.
+          expect(mock.mock.calls[1][0]).toBe('Child');
+        } else {
+          expect(mock.mock.calls[1][0]).toBe('1');
+        }
+
         // And by the time we leave the handler, the second update is flushed.
         expect(childNode.textContent).toBe('2');
       } finally {
