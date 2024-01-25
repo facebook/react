@@ -13,7 +13,7 @@ import {createEventTarget, setPointerEvent} from 'dom-event-testing-library';
 
 let React;
 let ReactFeatureFlags;
-let ReactDOM;
+let ReactDOMClient;
 let useFocus;
 let act;
 
@@ -23,7 +23,7 @@ function initializeModules(hasPointerEvents) {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableCreateEventHandleAPI = true;
   React = require('react');
-  ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   act = require('internal-test-utils').act;
   // TODO: This import throws outside of experimental mode. Figure out better
   // strategy for gated imports.
@@ -45,7 +45,6 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
   });
 
   afterEach(() => {
-    ReactDOM.render(null, container);
     document.body.removeChild(container);
     container = null;
   });
@@ -65,8 +64,9 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
         });
         return <div ref={ref} />;
       };
+      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        ReactDOM.render(<Component />, container);
+        root.render(<Component />);
       });
     };
 
@@ -93,8 +93,9 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
         });
         return <div ref={ref} />;
       };
+      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        ReactDOM.render(<Component />, container);
+        root.render(<Component />);
       });
     };
 
@@ -125,8 +126,9 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
           </div>
         );
       };
+      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        ReactDOM.render(<Component />, container);
+        root.render(<Component />);
       });
     };
 
@@ -164,8 +166,9 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
           </div>
         );
       };
+      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        ReactDOM.render(<Component />, container);
+        root.render(<Component />);
       });
     };
 
@@ -209,8 +212,9 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
           </div>
         );
       };
+      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        ReactDOM.render(<Component />, container);
+        root.render(<Component />);
       });
     };
 
@@ -305,8 +309,9 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
         );
       };
 
+      const root = ReactDOMClient.createRoot(container);
       await act(() => {
-        ReactDOM.render(<Outer />, container);
+        root.render(<Outer />);
       });
       const innerTarget = createEventTarget(innerRef.current);
       const outerTarget = createEventTarget(outerRef.current);
