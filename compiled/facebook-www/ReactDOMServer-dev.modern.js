@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-ac3cce8e";
+    var ReactVersion = "18.3.0-www-modern-6b2064ea";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -12109,9 +12109,13 @@ if (__DEV__) {
       // something suspends.
 
       task.node = node;
-      task.childIndex = childIndex; // Handle object types
+      task.childIndex = childIndex;
 
-      if (typeof node === "object" && node !== null) {
+      if (node === null) {
+        return;
+      } // Handle object types
+
+      if (typeof node === "object") {
         switch (node.$$typeof) {
           case REACT_ELEMENT_TYPE: {
             var element = node;

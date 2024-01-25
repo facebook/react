@@ -11988,9 +11988,13 @@ if (__DEV__) {
       // something suspends.
 
       task.node = node;
-      task.childIndex = childIndex; // Handle object types
+      task.childIndex = childIndex;
 
-      if (typeof node === "object" && node !== null) {
+      if (node === null) {
+        return;
+      } // Handle object types
+
+      if (typeof node === "object") {
         switch (node.$$typeof) {
           case REACT_ELEMENT_TYPE: {
             var element = node;

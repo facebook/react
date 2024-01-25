@@ -4181,10 +4181,12 @@ function renderNodeDestructive(
 ) {
   if (null !== task.replay && "number" === typeof task.replay.slots)
     resumeNode(request, task, task.replay.slots, node$jscomp$0, childIndex);
-  else {
-    task.node = node$jscomp$0;
-    task.childIndex = childIndex;
-    if ("object" === typeof node$jscomp$0 && null !== node$jscomp$0) {
+  else if (
+    ((task.node = node$jscomp$0),
+    (task.childIndex = childIndex),
+    null !== node$jscomp$0)
+  ) {
+    if ("object" === typeof node$jscomp$0) {
       switch (node$jscomp$0.$$typeof) {
         case REACT_ELEMENT_TYPE:
           var type = node$jscomp$0.type,
@@ -5679,4 +5681,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-d74fa614";
+exports.version = "18.3.0-www-classic-1bb2d37b";

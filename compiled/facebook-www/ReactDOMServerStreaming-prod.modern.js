@@ -3929,10 +3929,12 @@ function renderNodeDestructive(
 ) {
   if (null !== task.replay && "number" === typeof task.replay.slots)
     resumeNode(request, task, task.replay.slots, node$jscomp$0, childIndex);
-  else {
-    task.node = node$jscomp$0;
-    task.childIndex = childIndex;
-    if ("object" === typeof node$jscomp$0 && null !== node$jscomp$0) {
+  else if (
+    ((task.node = node$jscomp$0),
+    (task.childIndex = childIndex),
+    null !== node$jscomp$0)
+  ) {
+    if ("object" === typeof node$jscomp$0) {
       switch (node$jscomp$0.$$typeof) {
         case REACT_ELEMENT_TYPE:
           var type = node$jscomp$0.type,

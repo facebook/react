@@ -497,59 +497,6 @@ function defaultErrorHandler(error) {
   console.error(error);
 }
 function defaultPostponeHandler() {}
-function createRequest(
-  model,
-  bundlerConfig,
-  onError,
-  context,
-  identifierPrefix,
-  onPostpone
-) {
-  if (
-    null !== ReactCurrentCache.current &&
-    ReactCurrentCache.current !== DefaultCacheDispatcher
-  )
-    throw Error("Currently React only supports one RSC renderer at a time.");
-  ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
-  ReactCurrentCache.current = DefaultCacheDispatcher;
-  var abortSet = new Set();
-  context = [];
-  var hints = new Set(),
-    request = {
-      status: 0,
-      flushScheduled: !1,
-      fatalError: null,
-      destination: null,
-      bundlerConfig: bundlerConfig,
-      cache: new Map(),
-      nextChunkId: 0,
-      pendingChunks: 0,
-      hints: hints,
-      abortableTasks: abortSet,
-      pingedTasks: context,
-      completedImportChunks: [],
-      completedHintChunks: [],
-      completedRegularChunks: [],
-      completedErrorChunks: [],
-      writtenSymbols: new Map(),
-      writtenClientReferences: new Map(),
-      writtenServerReferences: new Map(),
-      writtenProviders: new Map(),
-      writtenObjects: new WeakMap(),
-      identifierPrefix: identifierPrefix || "",
-      identifierCount: 1,
-      taintCleanupQueue: [],
-      onError: void 0 === onError ? defaultErrorHandler : onError,
-      onPostpone: void 0 === onPostpone ? defaultPostponeHandler : onPostpone,
-      toJSON: function (key, value) {
-        return resolveModelToJSON(request, this, key, value);
-      }
-    };
-  request.pendingChunks++;
-  model = createTask(request, model, null, abortSet);
-  context.push(model);
-  return request;
-}
 var currentRequest = null;
 function serializeThenable(request, thenable) {
   request.pendingChunks++;
@@ -639,8 +586,9 @@ function createLazyWrapperAroundWakeable(wakeable) {
   }
   return { $$typeof: REACT_LAZY_TYPE, _payload: wakeable, _init: readThenable };
 }
-function attemptResolveElement(
+function renderElement(
   request,
+  task,
   type,
   key,
   ref,
@@ -656,18 +604,29 @@ function attemptResolveElement(
     thenableIndexCounter = 0;
     thenableState = prevThenableState;
     props = type(props);
-    return "object" === typeof props &&
+    if (
+      "object" === typeof props &&
       null !== props &&
       "function" === typeof props.then
-      ? "fulfilled" === props.status
-        ? props.value
-        : createLazyWrapperAroundWakeable(props)
-      : props;
+    ) {
+      prevThenableState = props;
+      if ("fulfilled" === prevThenableState.status)
+        return prevThenableState.value;
+      props = createLazyWrapperAroundWakeable(props);
+    }
+    return renderModelDestructive(request, task, emptyRoot, "", props, null);
   }
   if ("string" === typeof type) return [REACT_ELEMENT_TYPE, type, key, props];
   if ("symbol" === typeof type)
     return type === REACT_FRAGMENT_TYPE
-      ? props.children
+      ? renderModelDestructive(
+          request,
+          task,
+          emptyRoot,
+          "",
+          props.children,
+          null
+        )
       : [REACT_ELEMENT_TYPE, type, key, props];
   if (null != type && "object" === typeof type) {
     if (isClientReference(type)) return [REACT_ELEMENT_TYPE, type, key, props];
@@ -675,8 +634,9 @@ function attemptResolveElement(
       case REACT_LAZY_TYPE:
         var init = type._init;
         type = init(type._payload);
-        return attemptResolveElement(
+        return renderElement(
           request,
+          task,
           type,
           key,
           ref,
@@ -685,14 +645,16 @@ function attemptResolveElement(
         );
       case REACT_FORWARD_REF_TYPE:
         return (
-          (request = type.render),
+          (key = type.render),
           (thenableIndexCounter = 0),
           (thenableState = prevThenableState),
-          request(props, void 0)
+          (props = key(props, void 0)),
+          renderModelDestructive(request, task, emptyRoot, "", props, null)
         );
       case REACT_MEMO_TYPE:
-        return attemptResolveElement(
+        return renderElement(
           request,
+          task,
           type.type,
           key,
           ref,
@@ -713,13 +675,70 @@ function pingTask(request, task) {
     performWork(request));
 }
 function createTask(request, model, context, abortSet) {
+  var id = request.nextChunkId++;
+  "object" === typeof model &&
+    null !== model &&
+    request.writtenObjects.set(model, id);
   var task = {
-    id: request.nextChunkId++,
+    id: id,
     status: 0,
     model: model,
     context: context,
     ping: function () {
       return pingTask(request, task);
+    },
+    toJSON: function (parentPropertyName, value) {
+      try {
+        var JSCompiler_inline_result = renderModelDestructive(
+          request,
+          task,
+          this,
+          parentPropertyName,
+          value,
+          null
+        );
+      } catch (thrownValue) {
+        if (
+          ((parentPropertyName =
+            thrownValue === SuspenseException
+              ? getSuspendedThenable()
+              : thrownValue),
+          (value = task.model),
+          (value =
+            "object" === typeof value &&
+            null !== value &&
+            (value.$$typeof === REACT_ELEMENT_TYPE ||
+              value.$$typeof === REACT_LAZY_TYPE)),
+          "object" === typeof parentPropertyName &&
+            null !== parentPropertyName &&
+            "function" === typeof parentPropertyName.then)
+        ) {
+          request.pendingChunks++;
+          JSCompiler_inline_result = createTask(
+            request,
+            task.model,
+            currentActiveSnapshot,
+            request.abortableTasks
+          );
+          var ping = JSCompiler_inline_result.ping;
+          parentPropertyName.then(ping, ping);
+          JSCompiler_inline_result.thenableState =
+            getThenableStateAfterSuspending();
+          JSCompiler_inline_result = value
+            ? "$L" + JSCompiler_inline_result.id.toString(16)
+            : serializeByValueID(JSCompiler_inline_result.id);
+        } else if (value)
+          request.pendingChunks++,
+            (value = request.nextChunkId++),
+            (parentPropertyName = logRecoverableError(
+              request,
+              parentPropertyName
+            )),
+            emitErrorChunk(request, value, parentPropertyName),
+            (JSCompiler_inline_result = "$L" + value.toString(16));
+        else throw parentPropertyName;
+      }
+      return JSCompiler_inline_result;
     },
     thenableState: null
   };
@@ -729,14 +748,19 @@ function createTask(request, model, context, abortSet) {
 function serializeByValueID(id) {
   return "$" + id.toString(16);
 }
-function serializeClientReference(request, parent, key, clientReference) {
+function serializeClientReference(
+  request,
+  parent,
+  parentPropertyName,
+  clientReference
+) {
   var JSCompiler_inline_result = clientReference.getModuleId();
   requestedClientReferencesKeys.add(JSCompiler_inline_result);
   JSCompiler_inline_result = clientReference.getModuleId();
   var writtenClientReferences = request.writtenClientReferences,
     existingId = writtenClientReferences.get(JSCompiler_inline_result);
   if (void 0 !== existingId)
-    return parent[0] === REACT_ELEMENT_TYPE && "1" === key
+    return parent[0] === REACT_ELEMENT_TYPE && "1" === parentPropertyName
       ? "$L" + existingId.toString(16)
       : serializeByValueID(existingId);
   try {
@@ -750,15 +774,15 @@ function serializeClientReference(request, parent, key, clientReference) {
       processedChunk = importId.toString(16) + ":I" + json + "\n";
     request.completedImportChunks.push(processedChunk);
     writtenClientReferences.set(JSCompiler_inline_result, importId);
-    return parent[0] === REACT_ELEMENT_TYPE && "1" === key
+    return parent[0] === REACT_ELEMENT_TYPE && "1" === parentPropertyName
       ? "$L" + importId.toString(16)
       : serializeByValueID(importId);
   } catch (x) {
     return (
       request.pendingChunks++,
       (parent = request.nextChunkId++),
-      (key = logRecoverableError(request, x)),
-      emitErrorChunk(request, parent, key),
+      (parentPropertyName = logRecoverableError(request, x)),
+      emitErrorChunk(request, parent, parentPropertyName),
       serializeByValueID(parent)
     );
   }
@@ -775,116 +799,93 @@ function outlineModel(request, value) {
   return value.id;
 }
 var modelRoot = !1;
-function resolveModelToJSON(request, parent, key, value) {
-  switch (value) {
-    case REACT_ELEMENT_TYPE:
-      return "$";
-  }
-  for (
-    ;
-    "object" === typeof value &&
-    null !== value &&
-    (value.$$typeof === REACT_ELEMENT_TYPE ||
-      value.$$typeof === REACT_LAZY_TYPE);
-
-  )
-    try {
-      switch (value.$$typeof) {
-        case REACT_ELEMENT_TYPE:
-          var writtenObjects = request.writtenObjects,
-            existingId = writtenObjects.get(value);
-          if (void 0 !== existingId) {
-            if (-1 === existingId) {
-              var newId = outlineModel(request, value);
-              return serializeByValueID(newId);
-            }
-            if (modelRoot === value) modelRoot = null;
-            else return serializeByValueID(existingId);
-          } else writtenObjects.set(value, -1);
-          var element = value;
-          value = attemptResolveElement(
-            request,
-            element.type,
-            element.key,
-            element.ref,
-            element.props,
-            null
-          );
-          break;
-        case REACT_LAZY_TYPE:
-          var init = value._init;
-          value = init(value._payload);
-      }
-    } catch (thrownValue) {
-      parent =
-        thrownValue === SuspenseException
-          ? getSuspendedThenable()
-          : thrownValue;
-      if (
-        "object" === typeof parent &&
-        null !== parent &&
-        "function" === typeof parent.then
-      )
-        return (
-          request.pendingChunks++,
-          (request = createTask(
-            request,
-            value,
-            currentActiveSnapshot,
-            request.abortableTasks
-          )),
-          (value = request.ping),
-          parent.then(value, value),
-          (request.thenableState = getThenableStateAfterSuspending()),
-          "$L" + request.id.toString(16)
-        );
-      request.pendingChunks++;
-      value = request.nextChunkId++;
-      parent = logRecoverableError(request, parent);
-      emitErrorChunk(request, value, parent);
-      return "$L" + value.toString(16);
-    }
+function renderModelDestructive(
+  request,
+  task,
+  parent,
+  parentPropertyName,
+  value,
+  prevThenableState
+) {
+  task.model = value;
+  if (value === REACT_ELEMENT_TYPE) return "$";
   if (null === value) return null;
   if ("object" === typeof value) {
+    switch (value.$$typeof) {
+      case REACT_ELEMENT_TYPE:
+        parent = request.writtenObjects;
+        parentPropertyName = parent.get(value);
+        if (void 0 !== parentPropertyName) {
+          if (-1 === parentPropertyName)
+            return (
+              (request = outlineModel(request, value)),
+              serializeByValueID(request)
+            );
+          if (modelRoot === value) modelRoot = null;
+          else return serializeByValueID(parentPropertyName);
+        } else parent.set(value, -1);
+        return renderElement(
+          request,
+          task,
+          value.type,
+          value.key,
+          value.ref,
+          value.props,
+          prevThenableState
+        );
+      case REACT_LAZY_TYPE:
+        return (
+          (parent = value._init),
+          (value = parent(value._payload)),
+          renderModelDestructive(request, task, emptyRoot, "", value, null)
+        );
+    }
     if (isClientReference(value))
-      return serializeClientReference(request, parent, key, value);
-    parent = request.writtenObjects;
-    key = parent.get(value);
+      return serializeClientReference(
+        request,
+        parent,
+        parentPropertyName,
+        value
+      );
+    task = request.writtenObjects;
+    parent = task.get(value);
     if ("function" === typeof value.then) {
-      if (void 0 !== key)
+      if (void 0 !== parent)
         if (modelRoot === value) modelRoot = null;
-        else return "$@" + key.toString(16);
+        else return "$@" + parent.toString(16);
       request = serializeThenable(request, value);
-      parent.set(value, request);
+      task.set(value, request);
       return "$@" + request.toString(16);
     }
-    if (void 0 !== key) {
-      if (-1 === key)
+    if (void 0 !== parent) {
+      if (-1 === parent)
         return (
           (request = outlineModel(request, value)), serializeByValueID(request)
         );
       if (modelRoot === value) modelRoot = null;
-      else return serializeByValueID(key);
-    } else parent.set(value, -1);
+      else return serializeByValueID(parent);
+    } else task.set(value, -1);
     if (isArrayImpl(value)) return value;
     if (value instanceof Map) {
       value = Array.from(value);
-      for (parent = 0; parent < value.length; parent++)
-        (key = value[parent][0]),
-          "object" === typeof key &&
-            null !== key &&
-            ((writtenObjects = request.writtenObjects),
-            void 0 === writtenObjects.get(key) && writtenObjects.set(key, -1));
+      for (task = 0; task < value.length; task++)
+        (parent = value[task][0]),
+          "object" === typeof parent &&
+            null !== parent &&
+            ((parentPropertyName = request.writtenObjects),
+            void 0 === parentPropertyName.get(parent) &&
+              parentPropertyName.set(parent, -1));
       return "$Q" + outlineModel(request, value).toString(16);
     }
     if (value instanceof Set) {
       value = Array.from(value);
-      for (parent = 0; parent < value.length; parent++)
-        (key = value[parent]),
-          "object" === typeof key &&
-            null !== key &&
-            ((writtenObjects = request.writtenObjects),
-            void 0 === writtenObjects.get(key) && writtenObjects.set(key, -1));
+      for (task = 0; task < value.length; task++)
+        (parent = value[task]),
+          "object" === typeof parent &&
+            null !== parent &&
+            ((parentPropertyName = request.writtenObjects),
+            void 0 === parentPropertyName.get(parent) &&
+              parentPropertyName.set(parent, -1));
       return "$W" + outlineModel(request, value).toString(16);
     }
     null === value || "object" !== typeof value
@@ -905,60 +906,66 @@ function resolveModelToJSON(request, parent, key, value) {
     return value;
   }
   if ("string" === typeof value) {
-    if ("Z" === value[value.length - 1] && parent[key] instanceof Date)
+    if (
+      "Z" === value[value.length - 1] &&
+      parent[parentPropertyName] instanceof Date
+    )
       return "$D" + value;
     if (1024 <= value.length) {
       request.pendingChunks += 2;
-      parent = request.nextChunkId++;
+      task = request.nextChunkId++;
       if (null == byteLengthImpl)
         throw Error(
           "byteLengthOfChunk implementation is not configured. Please, provide the implementation via ReactFlightDOMServer.setConfig(...);"
         );
-      key = byteLengthImpl(value);
-      key = parent.toString(16) + ":T" + key.toString(16) + ",";
-      request.completedRegularChunks.push(key, value);
-      return serializeByValueID(parent);
+      parent = byteLengthImpl(value);
+      parent = task.toString(16) + ":T" + parent.toString(16) + ",";
+      request.completedRegularChunks.push(parent, value);
+      return serializeByValueID(task);
     }
     request = "$" === value[0] ? "$" + value : value;
     return request;
   }
   if ("boolean" === typeof value) return value;
   if ("number" === typeof value)
-    return (
-      (request = value),
-      Number.isFinite(request)
-        ? 0 === request && -Infinity === 1 / request
-          ? "$-0"
-          : request
-        : Infinity === request
-        ? "$Infinity"
-        : -Infinity === request
-        ? "$-Infinity"
-        : "$NaN"
-    );
+    return Number.isFinite(value)
+      ? 0 === value && -Infinity === 1 / value
+        ? "$-0"
+        : value
+      : Infinity === value
+      ? "$Infinity"
+      : -Infinity === value
+      ? "$-Infinity"
+      : "$NaN";
   if ("undefined" === typeof value) return "$undefined";
   if ("function" === typeof value) {
     if (isClientReference(value))
-      return serializeClientReference(request, parent, key, value);
+      return serializeClientReference(
+        request,
+        parent,
+        parentPropertyName,
+        value
+      );
     throw Error("isServerReference: Not Implemented.");
   }
   if ("symbol" === typeof value) {
-    writtenObjects = request.writtenSymbols;
-    existingId = writtenObjects.get(value);
-    if (void 0 !== existingId) return serializeByValueID(existingId);
-    existingId = value.description;
-    if (Symbol.for(existingId) !== value)
+    task = request.writtenSymbols;
+    prevThenableState = task.get(value);
+    if (void 0 !== prevThenableState)
+      return serializeByValueID(prevThenableState);
+    prevThenableState = value.description;
+    if (Symbol.for(prevThenableState) !== value)
       throw Error(
         "Only global symbols received from Symbol.for(...) can be passed to Client Components. The symbol Symbol.for(" +
           (value.description + ") cannot be found among global symbols.") +
-          describeObjectForErrorMessage(parent, key)
+          describeObjectForErrorMessage(parent, parentPropertyName)
       );
     request.pendingChunks++;
     parent = request.nextChunkId++;
-    key = stringify("$S" + existingId);
-    key = parent.toString(16) + ":" + key + "\n";
-    request.completedImportChunks.push(key);
-    writtenObjects.set(value, parent);
+    parentPropertyName = stringify("$S" + prevThenableState);
+    parentPropertyName = parent.toString(16) + ":" + parentPropertyName + "\n";
+    request.completedImportChunks.push(parentPropertyName);
+    task.set(value, parent);
     return serializeByValueID(parent);
   }
   if ("bigint" === typeof value) return "$n" + value.toString(10);
@@ -966,7 +973,7 @@ function resolveModelToJSON(request, parent, key, value) {
     "Type " +
       typeof value +
       " is not supported in Client Component props." +
-      describeObjectForErrorMessage(parent, key)
+      describeObjectForErrorMessage(parent, parentPropertyName)
   );
 }
 function logRecoverableError(request, error) {
@@ -993,6 +1000,7 @@ function emitErrorChunk(request, id, digest) {
   id = id.toString(16) + ":E" + stringify(digest) + "\n";
   request.completedErrorChunks.push(id);
 }
+var emptyRoot = {};
 function retryTask(request, task) {
   if (0 === task.status) {
     var prev = currentActiveSnapshot,
@@ -1009,66 +1017,41 @@ function retryTask(request, task) {
         : popNextToCommonLevel(prev, next),
       (currentActiveSnapshot = next));
     try {
-      var value = task.model;
-      if (
-        "object" === typeof value &&
-        null !== value &&
-        value.$$typeof === REACT_ELEMENT_TYPE
-      ) {
-        request.writtenObjects.set(value, task.id);
-        prev = value;
-        var prevThenableState = task.thenableState;
-        task.model = value;
-        value = attemptResolveElement(
-          request,
-          prev.type,
-          prev.key,
-          prev.ref,
-          prev.props,
-          prevThenableState
-        );
-        for (
-          task.thenableState = null;
-          "object" === typeof value &&
-          null !== value &&
-          value.$$typeof === REACT_ELEMENT_TYPE;
-
-        )
-          request.writtenObjects.set(value, task.id),
-            (prevThenableState = value),
-            (task.model = value),
-            (value = attemptResolveElement(
-              request,
-              prevThenableState.type,
-              prevThenableState.key,
-              prevThenableState.ref,
-              prevThenableState.props,
-              null
-            ));
-      }
-      "object" === typeof value &&
-        null !== value &&
-        request.writtenObjects.set(value, task.id);
-      var id = task.id;
-      modelRoot = value;
-      var json = stringify(value, request.toJSON),
-        processedChunk = id.toString(16) + ":" + json + "\n";
+      var prevThenableState = task.thenableState;
+      task.thenableState = null;
+      modelRoot = task.model;
+      var resolvedModel = renderModelDestructive(
+        request,
+        task,
+        emptyRoot,
+        "",
+        task.model,
+        prevThenableState
+      );
+      modelRoot = resolvedModel;
+      var json =
+          "string" === typeof resolvedModel
+            ? stringify(resolvedModel)
+            : stringify(resolvedModel, task.toJSON),
+        processedChunk = task.id.toString(16) + ":" + json + "\n";
       request.completedRegularChunks.push(processedChunk);
       request.abortableTasks.delete(task);
       task.status = 1;
     } catch (thrownValue) {
-      (id =
+      (prev =
         thrownValue === SuspenseException
           ? getSuspendedThenable()
           : thrownValue),
-        "object" === typeof id && null !== id && "function" === typeof id.then
+        "object" === typeof prev &&
+        null !== prev &&
+        "function" === typeof prev.then
           ? ((request = task.ping),
-            id.then(request, request),
+            prev.then(request, request),
             (task.thenableState = getThenableStateAfterSuspending()))
           : (request.abortableTasks.delete(task),
             (task.status = 4),
-            (id = logRecoverableError(request, id)),
-            emitErrorChunk(request, task.id, id));
+            (prev = logRecoverableError(request, prev)),
+            emitErrorChunk(request, task.id, prev));
     }
   }
 }
@@ -1138,19 +1121,59 @@ exports.renderToDestination = function (destination, model, options) {
     throw Error(
       "Please make sure to call `setConfig(...)` before calling `renderToDestination`."
     );
-  model = createRequest(model, null, options ? options.onError : void 0);
-  model.flushScheduled = null !== model.destination;
-  performWork(model);
-  if (1 === model.status)
-    (model.status = 2),
-      destination.onError(model.fatalError),
+  var onError = options ? options.onError : void 0;
+  if (
+    null !== ReactCurrentCache.current &&
+    ReactCurrentCache.current !== DefaultCacheDispatcher
+  )
+    throw Error("Currently React only supports one RSC renderer at a time.");
+  ReactDOMCurrentDispatcher.current = ReactDOMFlightServerDispatcher;
+  ReactCurrentCache.current = DefaultCacheDispatcher;
+  var abortSet = new Set();
+  options = [];
+  var hints = new Set();
+  onError = {
+    status: 0,
+    flushScheduled: !1,
+    fatalError: null,
+    destination: null,
+    bundlerConfig: null,
+    cache: new Map(),
+    nextChunkId: 0,
+    pendingChunks: 0,
+    hints: hints,
+    abortableTasks: abortSet,
+    pingedTasks: options,
+    completedImportChunks: [],
+    completedHintChunks: [],
+    completedRegularChunks: [],
+    completedErrorChunks: [],
+    writtenSymbols: new Map(),
+    writtenClientReferences: new Map(),
+    writtenServerReferences: new Map(),
+    writtenProviders: new Map(),
+    writtenObjects: new WeakMap(),
+    identifierPrefix: "",
+    identifierCount: 1,
+    taintCleanupQueue: [],
+    onError: void 0 === onError ? defaultErrorHandler : onError,
+    onPostpone: defaultPostponeHandler
+  };
+  onError.pendingChunks++;
+  model = createTask(onError, model, null, abortSet);
+  options.push(model);
+  onError.flushScheduled = null !== onError.destination;
+  performWork(onError);
+  if (1 === onError.status)
+    (onError.status = 2),
+      destination.onError(onError.fatalError),
       destination.close();
-  else if (2 !== model.status && null === model.destination) {
-    model.destination = destination;
+  else if (2 !== onError.status && null === onError.destination) {
+    onError.destination = destination;
     try {
-      flushCompletedChunks(model, destination);
+      flushCompletedChunks(onError, destination);
     } catch (error) {
-      logRecoverableError(model, error), fatalError(model, error);
+      logRecoverableError(onError, error), fatalError(onError, error);
     }
   }
 };
