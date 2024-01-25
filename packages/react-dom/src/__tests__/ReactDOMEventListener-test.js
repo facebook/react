@@ -15,7 +15,6 @@ describe('ReactDOMEventListener', () => {
   let ReactDOMClient;
   let ReactDOMServer;
   let act;
-  let waitForPaint;
 
   beforeEach(() => {
     jest.resetModules();
@@ -24,8 +23,6 @@ describe('ReactDOMEventListener', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
-    const InternalTestUtils = require('internal-test-utils');
-    waitForPaint = InternalTestUtils.waitForPaint;
   });
 
   describe('Propagation', () => {
