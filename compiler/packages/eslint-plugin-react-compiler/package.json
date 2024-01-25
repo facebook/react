@@ -2,13 +2,6 @@
   "name": "eslint-plugin-react-compiler",
   "version": "0.0.0",
   "description": "ESLint plugin to display errors found by the React compiler.",
-  "keywords": [
-    "eslint",
-    "eslintplugin",
-    "eslint-plugin"
-  ],
-  "main": "./lib/index.js",
-  "exports": "./lib/index.js",
   "scripts": {
     "build": "rimraf dist && rollup --config --bundleConfigAsCjs",
     "test": "tsc && jest"
@@ -30,12 +23,8 @@
     "@types/node": "^20.2.5",
     "babel-jest": "^29.0.3",
     "eslint": "8.27.0",
-    "eslint-doc-generator": "^1.0.0",
-    "eslint-plugin-eslint-plugin": "^5.0.0",
-    "eslint-plugin-node": "^11.1.0",
     "hermes-eslint": "^0.17.1",
     "jest": "^29.5.0",
-    "npm-run-all": "^4.1.5",
     "rollup": "^3.28.1",
     "rollup-plugin-license": "^3.2.0"
   },
