@@ -2201,8 +2201,12 @@ function renderNodeDestructive(
   task.node = node;
   task.childIndex = childIndex;
 
+  if (node === null) {
+    return;
+  }
+
   // Handle object types
-  if (typeof node === 'object' && node !== null) {
+  if (typeof node === 'object') {
     switch ((node: any).$$typeof) {
       case REACT_ELEMENT_TYPE: {
         const element: any = node;
