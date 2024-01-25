@@ -145,9 +145,10 @@ import {
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 import {
-  requestAsyncActionContext,
-  requestSyncActionContext,
+  entangleAsyncAction,
   peekEntangledActionLane,
+  peekEntangledActionThenable,
+  chainThenableValue,
 } from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
@@ -1274,6 +1275,7 @@ function updateReducerImpl<S, A>(
     let newBaseQueueFirst = null;
     let newBaseQueueLast: Update<S, A> | null = null;
     let update = first;
+    let didReadFromEntangledAsyncAction = false;
     do {
       // An extra OffscreenLane bit is added to updates that were made to
       // a hidden tree, so that we can distinguish them from updates that were
@@ -1316,6 +1318,13 @@ function updateReducerImpl<S, A>(
         markSkippedUpdateLanes(updateLane);
       } else {
         // This update does have sufficient priority.
+
+        // Check if this update is part of a pending async action. If so,
+        // we'll need to suspend until the action has finished, so that it's
+        // batched together with future updates in the same action.
+        if (updateLane !== NoLane && updateLane === peekEntangledActionLane()) {
+          didReadFromEntangledAsyncAction = true;
+        }
 
         // Check if this is an optimistic update.
         const revertLane = update.revertLane;
@@ -1407,6 +1416,22 @@ function updateReducerImpl<S, A>(
     // different from the current state.
     if (!is(newState, hook.memoizedState)) {
       markWorkInProgressReceivedUpdate();
+
+      // Check if this update is part of a pending async action. If so, we'll
+      // need to suspend until the action has finished, so that it's batched
+      // together with future updates in the same action.
+      // TODO: Once we support hooks inside useMemo (or an equivalent
+      // memoization boundary like Forget), hoist this logic so that it only
+      // suspends if the memo boundary produces a new value.
+      if (didReadFromEntangledAsyncAction) {
+        const entangledActionThenable = peekEntangledActionThenable();
+        if (entangledActionThenable !== null) {
+          // TODO: Instead of the throwing the thenable directly, throw a
+          // special object like `use` does so we can detect if it's captured
+          // by userspace.
+          throw entangledActionThenable;
+        }
+      }
     }
 
     hook.memoizedState = newState;
@@ -1964,13 +1989,10 @@ function runFormStateAction<S, P>(
         () => finishRunningFormStateAction(actionQueue, (setState: any)),
       );
 
-      const entangledResult = requestAsyncActionContext<S>(thenable, null);
-      setState((entangledResult: any));
+      entangleAsyncAction<Awaited<S>>(thenable);
+      setState((thenable: any));
     } else {
-      // This is either `returnValue` or a thenable that resolves to
-      // `returnValue`, depending on whether we're inside an async action scope.
-      const entangledResult = requestSyncActionContext<S>(returnValue, null);
-      setState((entangledResult: any));
+      setState((returnValue: any));
 
       const nextState = ((returnValue: any): Awaited<S>);
       actionQueue.state = nextState;
@@ -2832,22 +2854,16 @@ function startTransition<S>(
         typeof returnValue.then === 'function'
       ) {
         const thenable = ((returnValue: any): Thenable<mixed>);
-        // This is a thenable that resolves to `finishedState` once the async
-        // action scope has finished.
-        const entangledResult = requestAsyncActionContext(
+        entangleAsyncAction<mixed>(thenable);
+        // Create a thenable that resolves to `finishedState` once the async
+        // action has completed.
+        const thenableForFinishedState = chainThenableValue(
           thenable,
           finishedState,
         );
-        dispatchSetState(fiber, queue, entangledResult);
+        dispatchSetState(fiber, queue, (thenableForFinishedState: any));
       } else {
-        // This is either `finishedState` or a thenable that resolves to
-        // `finishedState`, depending on whether we're inside an async
-        // action scope.
-        const entangledResult = requestSyncActionContext(
-          returnValue,
-          finishedState,
-        );
-        dispatchSetState(fiber, queue, entangledResult);
+        dispatchSetState(fiber, queue, finishedState);
       }
     } else {
       // Async actions are not enabled.

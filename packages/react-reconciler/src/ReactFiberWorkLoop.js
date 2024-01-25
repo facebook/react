@@ -1994,7 +1994,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
             // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
         }
@@ -2114,7 +2114,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnData: {
@@ -2172,7 +2172,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
               // Otherwise, unwind then continue with the normal work loop.
               workInProgressSuspendedReason = NotSuspended;
               workInProgressThrownValue = null;
-              throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+              throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             }
             break;
           }
@@ -2229,7 +2229,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // Otherwise, unwind then continue with the normal work loop.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnDeprecatedThrowPromise: {
@@ -2239,7 +2239,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
             // always unwind.
             workInProgressSuspendedReason = NotSuspended;
             workInProgressThrownValue = null;
-            throwAndUnwindWorkLoop(unitOfWork, thrownValue);
+            throwAndUnwindWorkLoop(root, unitOfWork, thrownValue);
             break;
           }
           case SuspendedOnHydration: {
@@ -2464,7 +2464,11 @@ function replaySuspendedUnitOfWork(unitOfWork: Fiber): void {
   ReactCurrentOwner.current = null;
 }
 
-function throwAndUnwindWorkLoop(unitOfWork: Fiber, thrownValue: mixed) {
+function throwAndUnwindWorkLoop(
+  root: FiberRoot,
+  unitOfWork: Fiber,
+  thrownValue: mixed,
+) {
   // This is a fork of performUnitOfWork specifcally for unwinding a fiber
   // that threw an exception.
   //
@@ -2473,40 +2477,32 @@ function throwAndUnwindWorkLoop(unitOfWork: Fiber, thrownValue: mixed) {
   resetSuspendedWorkLoopOnUnwind(unitOfWork);
 
   const returnFiber = unitOfWork.return;
-  if (returnFiber === null || workInProgressRoot === null) {
-    // Expected to be working on a non-root fiber. This is a fatal error
-    // because there's no ancestor that can handle it; the root is
-    // supposed to capture all errors that weren't caught by an error
-    // boundary.
-    workInProgressRootExitStatus = RootFatalErrored;
-    workInProgressRootFatalError = thrownValue;
-    // Set `workInProgress` to null. This represents advancing to the next
-    // sibling, or the parent if there are no siblings. But since the root
-    // has no siblings nor a parent, we set it to null. Usually this is
-    // handled by `completeUnitOfWork` or `unwindWork`, but since we're
-    // intentionally not calling those, we need set it here.
-    // TODO: Consider calling `unwindWork` to pop the contexts.
-    workInProgress = null;
-    return;
-  }
-
   try {
     // Find and mark the nearest Suspense or error boundary that can handle
     // this "exception".
-    throwException(
-      workInProgressRoot,
+    const didFatal = throwException(
+      root,
       returnFiber,
       unitOfWork,
       thrownValue,
       workInProgressRootRenderLanes,
     );
+    if (didFatal) {
+      panicOnRootError(thrownValue);
+      return;
+    }
   } catch (error) {
     // We had trouble processing the error. An example of this happening is
     // when accessing the `componentDidCatch` property of an error boundary
     // throws an error. A weird edge case. There's a regression test for this.
     // To prevent an infinite loop, bubble the error up to the next parent.
-    workInProgress = returnFiber;
-    throw error;
+    if (returnFiber !== null) {
+      workInProgress = returnFiber;
+      throw error;
+    } else {
+      panicOnRootError(thrownValue);
+      return;
+    }
   }
 
   if (unitOfWork.flags & Incomplete) {
@@ -2524,6 +2520,22 @@ function throwAndUnwindWorkLoop(unitOfWork: Fiber, thrownValue: mixed) {
     // this particular path is how that would be implemented.
     completeUnitOfWork(unitOfWork);
   }
+}
+
+function panicOnRootError(error: mixed) {
+  // There's no ancestor that can handle this exception. This should never
+  // happen because the root is supposed to capture all errors that weren't
+  // caught by an error boundary. This is a fatal error, or panic condition,
+  // because we've run out of ways to recover.
+  workInProgressRootExitStatus = RootFatalErrored;
+  workInProgressRootFatalError = error;
+  // Set `workInProgress` to null. This represents advancing to the next
+  // sibling, or the parent if there are no siblings. But since the root
+  // has no siblings nor a parent, we set it to null. Usually this is
+  // handled by `completeUnitOfWork` or `unwindWork`, but since we're
+  // intentionally not calling those, we need set it here.
+  // TODO: Consider calling `unwindWork` to pop the contexts.
+  workInProgress = null;
 }
 
 function completeUnitOfWork(unitOfWork: Fiber): void {

@@ -9,7 +9,6 @@
 
 import type {
   Thenable,
-  PendingThenable,
   FulfilledThenable,
   RejectedThenable,
 } from 'shared/ReactTypes';
@@ -32,111 +31,32 @@ let currentEntangledListeners: Array<() => mixed> | null = null;
 let currentEntangledPendingCount: number = 0;
 // The transition lane shared by all updates in the entangled scope.
 let currentEntangledLane: Lane = NoLane;
+// A thenable that resolves when the entangled scope completes. It does not
+// resolve to a particular value because it's only used for suspending the UI
+// until the async action scope has completed.
+let currentEntangledActionThenable: Thenable<void> | null = null;
 
-export function requestAsyncActionContext<S>(
-  actionReturnValue: Thenable<any>,
-  // If this is provided, this resulting thenable resolves to this value instead
-  // of the return value of the action. This is a perf trick to avoid composing
-  // an extra async function.
-  overrideReturnValue: S | null,
-): Thenable<S> {
-  // This is an async action.
-  //
-  // Return a thenable that resolves once the action scope (i.e. the async
-  // function passed to startTransition) has finished running.
-
-  const thenable: Thenable<S> = (actionReturnValue: any);
-  let entangledListeners;
+export function entangleAsyncAction<S>(thenable: Thenable<S>): Thenable<S> {
+  // `thenable` is the return value of the async action scope function. Create
+  // a combined thenable that resolves once every entangled scope function
+  // has finished.
   if (currentEntangledListeners === null) {
     // There's no outer async action scope. Create a new one.
-    entangledListeners = currentEntangledListeners = [];
+    const entangledListeners = (currentEntangledListeners = []);
     currentEntangledPendingCount = 0;
     currentEntangledLane = requestTransitionLane();
-  } else {
-    entangledListeners = currentEntangledListeners;
+    const entangledThenable: Thenable<void> = {
+      status: 'pending',
+      value: undefined,
+      then(resolve: void => mixed) {
+        entangledListeners.push(resolve);
+      },
+    };
+    currentEntangledActionThenable = entangledThenable;
   }
-
   currentEntangledPendingCount++;
-
-  // Create a thenable that represents the result of this action, but doesn't
-  // resolve until the entire entangled scope has finished.
-  //
-  // Expressed using promises:
-  //   const [thisResult] = await Promise.all([thisAction, entangledAction]);
-  //   return thisResult;
-  const resultThenable = createResultThenable<S>(entangledListeners);
-
-  let resultStatus = 'pending';
-  let resultValue;
-  let rejectedReason;
-  thenable.then(
-    (value: S) => {
-      resultStatus = 'fulfilled';
-      resultValue = overrideReturnValue !== null ? overrideReturnValue : value;
-      pingEngtangledActionScope();
-    },
-    error => {
-      resultStatus = 'rejected';
-      rejectedReason = error;
-      pingEngtangledActionScope();
-    },
-  );
-
-  // Attach a listener to fill in the result.
-  entangledListeners.push(() => {
-    switch (resultStatus) {
-      case 'fulfilled': {
-        const fulfilledThenable: FulfilledThenable<S> = (resultThenable: any);
-        fulfilledThenable.status = 'fulfilled';
-        fulfilledThenable.value = resultValue;
-        break;
-      }
-      case 'rejected': {
-        const rejectedThenable: RejectedThenable<S> = (resultThenable: any);
-        rejectedThenable.status = 'rejected';
-        rejectedThenable.reason = rejectedReason;
-        break;
-      }
-      case 'pending':
-      default: {
-        // The listener above should have been called first, so `resultStatus`
-        // should already be set to the correct value.
-        throw new Error(
-          'Thenable should have already resolved. This ' + 'is a bug in React.',
-        );
-      }
-    }
-  });
-
-  return resultThenable;
-}
-
-export function requestSyncActionContext<S>(
-  actionReturnValue: any,
-  // If this is provided, this resulting thenable resolves to this value instead
-  // of the return value of the action. This is a perf trick to avoid composing
-  // an extra async function.
-  overrideReturnValue: S | null,
-): Thenable<S> | S {
-  const resultValue: S =
-    overrideReturnValue !== null
-      ? overrideReturnValue
-      : (actionReturnValue: any);
-  // This is not an async action, but it may be part of an outer async action.
-  if (currentEntangledListeners === null) {
-    return resultValue;
-  } else {
-    // Return a thenable that does not resolve until the entangled actions
-    // have finished.
-    const entangledListeners = currentEntangledListeners;
-    const resultThenable = createResultThenable<S>(entangledListeners);
-    entangledListeners.push(() => {
-      const fulfilledThenable: FulfilledThenable<S> = (resultThenable: any);
-      fulfilledThenable.status = 'fulfilled';
-      fulfilledThenable.value = resultValue;
-    });
-    return resultThenable;
-  }
+  thenable.then(pingEngtangledActionScope, pingEngtangledActionScope);
+  return thenable;
 }
 
 function pingEngtangledActionScope() {
@@ -146,9 +66,15 @@ function pingEngtangledActionScope() {
   ) {
     // All the actions have finished. Close the entangled async action scope
     // and notify all the listeners.
+    if (currentEntangledActionThenable !== null) {
+      const fulfilledThenable: FulfilledThenable<void> =
+        (currentEntangledActionThenable: any);
+      fulfilledThenable.status = 'fulfilled';
+    }
     const listeners = currentEntangledListeners;
     currentEntangledListeners = null;
     currentEntangledLane = NoLane;
+    currentEntangledActionThenable = null;
     for (let i = 0; i < listeners.length; i++) {
       const listener = listeners[i];
       listener();
@@ -156,31 +82,58 @@ function pingEngtangledActionScope() {
   }
 }
 
-function createResultThenable<S>(
-  entangledListeners: Array<() => mixed>,
-): Thenable<S> {
-  // Waits for the entangled async action to complete, then resolves to the
-  // result of an individual action.
-  const resultThenable: PendingThenable<S> = {
+export function chainThenableValue<T>(
+  thenable: Thenable<T>,
+  result: T,
+): Thenable<T> {
+  // Equivalent to: Promise.resolve(thenable).then(() => result), except we can
+  // cheat a bit since we know that that this thenable is only ever consumed
+  // by React.
+  //
+  // We don't technically require promise support on the client yet, hence this
+  // extra code.
+  const listeners = [];
+  const thenableWithOverride: Thenable<T> = {
     status: 'pending',
     value: null,
     reason: null,
-    then(resolve: S => mixed) {
-      // This is a bit of a cheat. `resolve` expects a value of type `S` to be
-      // passed, but because we're instrumenting the `status` field ourselves,
-      // and we know this thenable will only be used by React, we also know
-      // the value isn't actually needed. So we add the resolve function
-      // directly to the entangled listeners.
-      //
-      // This is also why we don't need to check if the thenable is still
-      // pending; the Suspense implementation already performs that check.
-      const ping: () => mixed = (resolve: any);
-      entangledListeners.push(ping);
+    then(resolve: T => mixed) {
+      listeners.push(resolve);
     },
   };
-  return resultThenable;
+  thenable.then(
+    (value: T) => {
+      const fulfilledThenable: FulfilledThenable<T> =
+        (thenableWithOverride: any);
+      fulfilledThenable.status = 'fulfilled';
+      fulfilledThenable.value = result;
+      for (let i = 0; i < listeners.length; i++) {
+        const listener = listeners[i];
+        listener(result);
+      }
+    },
+    error => {
+      const rejectedThenable: RejectedThenable<T> = (thenableWithOverride: any);
+      rejectedThenable.status = 'rejected';
+      rejectedThenable.reason = error;
+      for (let i = 0; i < listeners.length; i++) {
+        const listener = listeners[i];
+        // This is a perf hack where we call the `onFulfill` ping function
+        // instead of `onReject`, because we know that React is the only
+        // consumer of these promises, and it passes the same listener to both.
+        // We also know that it will read the error directly off the
+        // `.reason` field.
+        listener((undefined: any));
+      }
+    },
+  );
+  return thenableWithOverride;
 }
 
 export function peekEntangledActionLane(): Lane {
   return currentEntangledLane;
+}
+
+export function peekEntangledActionThenable(): Thenable<void> | null {
+  return currentEntangledActionThenable;
 }
