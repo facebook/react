@@ -7855,15 +7855,15 @@ flatted@^3.1.0:
   resolved "https://registry.yarnpkg.com/flatted/-/flatted-3.2.7.tgz#609f39207cb614b89d0765b477cb2d437fbf9787"
   integrity sha512-5nqDSxl8nn5BSNxyR3n4I6eDmbolI6WT+QqR547RwxQapgjQBmtktdP+HTBb/a/zLsbzERTONyUB5pefh5TtjQ==
 
-flow-bin@^0.226.0:
-  version "0.226.0"
-  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.226.0.tgz#b245847b749ab20756ef74c91d96619f68d18430"
-  integrity sha512-q8hXSRhZ+I14jS0KGDDsPYCvPufvBexk6nJXSOsSP6DgCuXbvCOByWhsXRAjPtmXKmO8v9RKSJm1kRaWaf0fZw==
+flow-bin@^0.227.0:
+  version "0.227.0"
+  resolved "https://registry.yarnpkg.com/flow-bin/-/flow-bin-0.227.0.tgz#64eba189d2b233d04171828983dd5e6b2abadc3b"
+  integrity sha512-UkIzYbyUDmfztEbvS39ksR+vSu9WwUJQ4D+UvIW0ILrDuhPRN3XjheB1+mv2b/4H011HCM5y9nENXrDEaiIKtg==
 
-flow-remove-types@^2.226.0:
-  version "2.226.0"
-  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.226.0.tgz#08ff7e195137ce43042e11bfa04303184971dac2"
-  integrity sha512-/FEjOCgjW/s1OYPWhlq6aV8Bp0VMU3iZMqZfJgWtFXSRRpI19IhQKFXz+rsx91/r5ZH+MtuZZ+PlmZ5uB/gmAA==
+flow-remove-types@^2.227.0:
+  version "2.227.0"
+  resolved "https://registry.yarnpkg.com/flow-remove-types/-/flow-remove-types-2.227.0.tgz#315c9a0422e7120d30fae49b5a9d2cc6b709ce5d"
+  integrity sha512-Z5zTUBx/6ay8UAcz3Qva8huMCLwIj0ESDl9Wjagix0uc4yEGqgSWWsm5WhRDcVg6qxSrdBQ8TxPCOYVaWZfMaw==
   dependencies:
     hermes-parser "0.18.2"
     pirates "^3.0.2"
