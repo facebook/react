@@ -147,7 +147,7 @@ if (__DEV__) {
     var createRootStrictEffectsByDefault = false;
     var enableClientRenderFallbackOnTextMismatch = false;
 
-    var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
+    var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
     var enableFormActions = false;
     var enableSuspenseCallback = true;
 
@@ -34860,7 +34860,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-5e8b8d45";
+    var ReactVersion = "18.3.0-www-modern-30f1d245";
 
     function createPortal$1(
       children,

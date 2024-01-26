@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-47c1e79a";
+    var ReactVersion = "18.3.0-www-classic-09d28a0e";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -193,7 +193,7 @@ if (__DEV__) {
       dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
     var createRootStrictEffectsByDefault = false;
 
-    var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler; // Note: we'll want to remove this when we to userland implementation.
+    var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
 
     var FunctionComponent = 0;
     var ClassComponent = 1;
