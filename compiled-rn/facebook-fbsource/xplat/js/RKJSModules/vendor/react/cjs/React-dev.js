@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-9bad8ed9a-20240125";
+    var ReactVersion = "18.3.0-canary-fbb21066a-20240126";
 
     // ATTENTION
     // When adding new symbols to this file,
