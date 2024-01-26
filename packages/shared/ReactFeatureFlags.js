@@ -141,12 +141,19 @@ export const transitionLaneExpirationMs = 5000;
 // -----------------------------------------------------------------------------
 
 // Not ready to break experimental yet.
-export const disableLegacyContext = __NEXT_MAJOR__;
+export const disableLegacyContext = false;
 
 // Not ready to break experimental yet.
 // Disable javascript: URL strings in href for XSS protection.
-export const disableJavaScriptURLs = __NEXT_MAJOR__;
+export const disableJavaScriptURLs = false;
 
+// Not ready to break experimental yet.
+// Modern <StrictMode /> behaviour aligns more with what components
+// components will encounter in production, especially when used With <Offscreen />.
+// TODO: clean up legacy <StrictMode /> once tests pass WWW.
+export const useModernStrictMode = false;
+
+// Not ready to break experimental yet.
 // Remove IE and MsApp specific workarounds for innerHTML
 export const disableIEWorkarounds = __NEXT_MAJOR__;
 
@@ -160,11 +167,6 @@ export const enableCustomElementPropertySupport = __NEXT_MAJOR__;
 // strings. This prevents e.g. <img src=""> from making an unnecessary HTTP
 // request for certain browsers.
 export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
-
-// Modern <StrictMode /> behaviour aligns more with what components
-// components will encounter in production, especially when used With <Offscreen />.
-// TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = __NEXT_MAJOR__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
