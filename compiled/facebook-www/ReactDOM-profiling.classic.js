@@ -4151,12 +4151,12 @@ function startTransition(
   try {
     if (enableAsyncActions) {
       var returnValue = callback();
-      notifyTransitionCallbacks(currentTransition, returnValue);
       if (
         null !== returnValue &&
         "object" === typeof returnValue &&
         "function" === typeof returnValue.then
       ) {
+        notifyTransitionCallbacks(currentTransition, returnValue);
         var thenableForFinishedState = chainThenableValue(
           returnValue,
           finishedState
@@ -6879,15 +6879,11 @@ function releaseCache(cache) {
 var ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig;
 function requestCurrentTransition() {
   var transition = ReactCurrentBatchConfig$2.transition;
-  null !== transition && transition._callbacks.add(handleTransitionScopeResult);
+  null !== transition && transition._callbacks.add(handleAsyncAction);
   return transition;
 }
-function handleTransitionScopeResult(transition, returnValue) {
-  enableAsyncActions &&
-    null !== returnValue &&
-    "object" === typeof returnValue &&
-    "function" === typeof returnValue.then &&
-    entangleAsyncAction(transition, returnValue);
+function handleAsyncAction(transition, thenable) {
+  enableAsyncActions && entangleAsyncAction(transition, thenable);
 }
 function notifyTransitionCallbacks(transition, returnValue) {
   transition._callbacks.forEach(function (callback) {
@@ -17410,7 +17406,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1886 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-f5d53ab6",
+  version: "18.3.0-www-classic-54ebd8ef",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17454,7 +17450,7 @@ var devToolsConfig$jscomp$inline_1886 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-f5d53ab6"
+  reconcilerVersion: "18.3.0-www-classic-54ebd8ef"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17778,7 +17774,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-f5d53ab6";
+exports.version = "18.3.0-www-classic-54ebd8ef";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

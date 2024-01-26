@@ -3260,12 +3260,12 @@ function startTransition(
   try {
     if (enableAsyncActions) {
       var returnValue = callback();
-      notifyTransitionCallbacks(currentTransition, returnValue);
       if (
         null !== returnValue &&
         "object" === typeof returnValue &&
         "function" === typeof returnValue.then
       ) {
+        notifyTransitionCallbacks(currentTransition, returnValue);
         var thenableForFinishedState = chainThenableValue(
           returnValue,
           finishedState
@@ -5736,15 +5736,11 @@ function releaseCache(cache) {
 var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
 function requestCurrentTransition() {
   var transition = ReactCurrentBatchConfig$1.transition;
-  null !== transition && transition._callbacks.add(handleTransitionScopeResult);
+  null !== transition && transition._callbacks.add(handleAsyncAction);
   return transition;
 }
-function handleTransitionScopeResult(transition, returnValue) {
-  enableAsyncActions &&
-    null !== returnValue &&
-    "object" === typeof returnValue &&
-    "function" === typeof returnValue.then &&
-    entangleAsyncAction(transition, returnValue);
+function handleAsyncAction(transition, thenable) {
+  enableAsyncActions && entangleAsyncAction(transition, thenable);
 }
 function notifyTransitionCallbacks(transition, returnValue) {
   transition._callbacks.forEach(function (callback) {
@@ -10330,7 +10326,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-b4063908",
+    version: "18.3.0-www-classic-28adafd1",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1310 = {
@@ -10361,7 +10357,7 @@ var internals$jscomp$inline_1310 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-b4063908"
+  reconcilerVersion: "18.3.0-www-classic-28adafd1"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1311 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

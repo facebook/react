@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-c761065d";
+    var ReactVersion = "18.3.0-www-modern-2c842b55";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -472,7 +472,8 @@ if (__DEV__) {
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableAsyncActions = dynamicFeatureFlags.enableAsyncActions;
     // On WWW, true is used for a new modern build.
 
     function getWrappedName(outerType, innerType, wrapperName) {
@@ -2949,31 +2950,71 @@ if (__DEV__) {
         }
       }
 
-      try {
-        var returnValue = scope();
-        callbacks.forEach(function (callback) {
-          return callback(currentTransition, returnValue);
-        });
-      } finally {
-        ReactCurrentBatchConfig.transition = prevTransition;
+      if (enableAsyncActions) {
+        try {
+          var returnValue = scope();
 
-        {
-          if (prevTransition === null && currentTransition._updatedFibers) {
-            var updatedFibersCount = currentTransition._updatedFibers.size;
+          if (
+            typeof returnValue === "object" &&
+            returnValue !== null &&
+            typeof returnValue.then === "function"
+          ) {
+            callbacks.forEach(function (callback) {
+              return callback(currentTransition, returnValue);
+            });
+            returnValue.then(noop, onError);
+          }
+        } catch (error) {
+          onError(error);
+        } finally {
+          warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+          ReactCurrentBatchConfig.transition = prevTransition;
+        }
+      } else {
+        // When async actions are not enabled, startTransition does not
+        // capture errors.
+        try {
+          scope();
+        } finally {
+          warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+          ReactCurrentBatchConfig.transition = prevTransition;
+        }
+      }
+    }
 
-            currentTransition._updatedFibers.clear();
+    function warnAboutTransitionSubscriptions(
+      prevTransition,
+      currentTransition
+    ) {
+      {
+        if (prevTransition === null && currentTransition._updatedFibers) {
+          var updatedFibersCount = currentTransition._updatedFibers.size;
 
-            if (updatedFibersCount > 10) {
-              warn(
-                "Detected a large number of updates inside startTransition. " +
-                  "If this is due to a subscription please re-write it to use React provided hooks. " +
-                  "Otherwise concurrent mode guarantees are off the table."
-              );
-            }
+          currentTransition._updatedFibers.clear();
+
+          if (updatedFibersCount > 10) {
+            warn(
+              "Detected a large number of updates inside startTransition. " +
+                "If this is due to a subscription please re-write it to use React provided hooks. " +
+                "Otherwise concurrent mode guarantees are off the table."
+            );
           }
         }
       }
     }
+
+    function noop() {} // Use reportError, if it exists. Otherwise console.error. This is the same as
+    // the default for onRecoverableError.
+
+    var onError =
+      typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
+        ? // emulating an uncaught JavaScript error.
+          reportError
+        : function (error) {
+            // In older browsers and test environments, fallback to console.error.
+            // eslint-disable-next-line react-internal/no-production-logging
+            console["error"](error);
+          };
 
     var didWarnAboutMessageChannel = false;
     var enqueueTaskImpl = null;

@@ -4011,12 +4011,12 @@ function startTransition(
   try {
     if (enableAsyncActions) {
       var returnValue = callback();
-      notifyTransitionCallbacks(currentTransition, returnValue);
       if (
         null !== returnValue &&
         "object" === typeof returnValue &&
         "function" === typeof returnValue.then
       ) {
+        notifyTransitionCallbacks(currentTransition, returnValue);
         var thenableForFinishedState = chainThenableValue(
           returnValue,
           finishedState
@@ -6635,15 +6635,11 @@ function releaseCache(cache) {
 var ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig;
 function requestCurrentTransition() {
   var transition = ReactCurrentBatchConfig$2.transition;
-  null !== transition && transition._callbacks.add(handleTransitionScopeResult);
+  null !== transition && transition._callbacks.add(handleAsyncAction);
   return transition;
 }
-function handleTransitionScopeResult(transition, returnValue) {
-  enableAsyncActions &&
-    null !== returnValue &&
-    "object" === typeof returnValue &&
-    "function" === typeof returnValue.then &&
-    entangleAsyncAction(transition, returnValue);
+function handleAsyncAction(transition, thenable) {
+  enableAsyncActions && entangleAsyncAction(transition, thenable);
 }
 function notifyTransitionCallbacks(transition, returnValue) {
   transition._callbacks.forEach(function (callback) {
@@ -16641,7 +16637,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1801 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-155e9f59",
+  version: "18.3.0-www-classic-092a346f",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2147 = {
@@ -16671,7 +16667,7 @@ var internals$jscomp$inline_2147 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-155e9f59"
+  reconcilerVersion: "18.3.0-www-classic-092a346f"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2148 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17008,4 +17004,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-155e9f59";
+exports.version = "18.3.0-www-classic-092a346f";

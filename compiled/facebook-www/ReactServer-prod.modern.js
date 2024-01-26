@@ -12,8 +12,9 @@
 
 "use strict";
 var assign = Object.assign,
-  enableTransitionTracing =
-    require("ReactFeatureFlags").enableTransitionTracing,
+  dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   ReactCurrentCache = { current: null },
   ReactCurrentDispatcher = { current: null },
   ReactCurrentOwner$1 = { current: null },
@@ -217,7 +218,14 @@ function createCacheRoot() {
 function createCacheNode() {
   return { s: 0, v: void 0, o: null, p: null };
 }
-var ReactCurrentBatchConfig = { transition: null },
+var ReactCurrentBatchConfig = { transition: null };
+function noop() {}
+var onError =
+    "function" === typeof reportError
+      ? reportError
+      : function (error) {
+          console.error(error);
+        },
   ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
 function jsx$1(type, config, maybeKey) {
@@ -428,14 +436,27 @@ exports.startTransition = function (scope, options) {
     void 0 !== options.name &&
     ((ReactCurrentBatchConfig.transition.name = options.name),
     (ReactCurrentBatchConfig.transition.startTime = -1));
-  try {
-    var returnValue = scope();
-    callbacks.forEach(function (callback) {
-      return callback(currentTransition, returnValue);
-    });
-  } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
-  }
+  if (enableAsyncActions)
+    try {
+      var returnValue = scope();
+      "object" === typeof returnValue &&
+        null !== returnValue &&
+        "function" === typeof returnValue.then &&
+        (callbacks.forEach(function (callback) {
+          return callback(currentTransition, returnValue);
+        }),
+        returnValue.then(noop, onError));
+    } catch (error) {
+      onError(error);
+    } finally {
+      ReactCurrentBatchConfig.transition = prevTransition;
+    }
+  else
+    try {
+      scope();
+    } finally {
+      ReactCurrentBatchConfig.transition = prevTransition;
+    }
 };
 exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
@@ -453,4 +474,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-a40cc260";
+exports.version = "18.3.0-www-modern-4a47c827";

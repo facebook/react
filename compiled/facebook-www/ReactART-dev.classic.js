@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-73d18ac0";
+    var ReactVersion = "18.3.0-www-classic-47c1e79a";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -10187,8 +10187,7 @@ if (__DEV__) {
 
       try {
         if (enableAsyncActions) {
-          var returnValue = callback();
-          notifyTransitionCallbacks(currentTransition, returnValue); // Check if we're inside an async action scope. If so, we'll entangle
+          var returnValue = callback(); // Check if we're inside an async action scope. If so, we'll entangle
           // this new action with the existing scope.
           //
           // If we're not already inside an async action scope, and this action is
@@ -10202,7 +10201,8 @@ if (__DEV__) {
             typeof returnValue === "object" &&
             typeof returnValue.then === "function"
           ) {
-            var thenable = returnValue; // Create a thenable that resolves to `finishedState` once the async
+            var thenable = returnValue;
+            notifyTransitionCallbacks(currentTransition, thenable); // Create a thenable that resolves to `finishedState` once the async
             // action has completed.
 
             var thenableForFinishedState = chainThenableValue(
@@ -18440,21 +18440,15 @@ if (__DEV__) {
       if (transition !== null) {
         // Whenever a transition update is scheduled, register a callback on the
         // transition object so we can get the return value of the scope function.
-        transition._callbacks.add(handleTransitionScopeResult);
+        transition._callbacks.add(handleAsyncAction);
       }
 
       return transition;
     }
 
-    function handleTransitionScopeResult(transition, returnValue) {
-      if (
-        enableAsyncActions &&
-        returnValue !== null &&
-        typeof returnValue === "object" &&
-        typeof returnValue.then === "function"
-      ) {
+    function handleAsyncAction(transition, thenable) {
+      if (enableAsyncActions) {
         // This is an async action.
-        var thenable = returnValue;
         entangleAsyncAction(transition, thenable);
       }
     }
