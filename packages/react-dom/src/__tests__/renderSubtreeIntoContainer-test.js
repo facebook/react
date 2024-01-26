@@ -366,8 +366,6 @@ describe('renderSubtreeIntoContainer', () => {
         return <div />;
       }
     }
-    // ReactDOM.render shouldn't be converted to `createRoot` because
-    // `reacteRoot` didn't exist in React 15.
     const c = ReactDOM.render(<C />, document.createElement('div'));
     // React 15 calls this:
     // https://github.com/facebook/react/blob/77b71fc3c4/src/renderers/dom/client/ReactMount.js#L478-L479
