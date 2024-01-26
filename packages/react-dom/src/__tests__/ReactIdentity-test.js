@@ -10,7 +10,6 @@
 'use strict';
 
 let React;
-let ReactDOM;
 let ReactDOMClient;
 let ReactTestUtils;
 let act;
@@ -19,7 +18,6 @@ describe('ReactIdentity', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
@@ -260,18 +258,15 @@ describe('ReactIdentity', () => {
         <TestContainer first={instance0} second={instance1} ref={wrappedRef} />,
       );
     });
-    const wrapped = wrappedRef.current;
-    // There isn't an alternative to findDOMNode for this:
-    // https://react.dev/reference/react-dom/findDOMNode#alternatives
-    const div = ReactDOM.findDOMNode(wrapped);
+    const div = container.firstChild;
 
-    const beforeA = div.childNodes[0];
-    const beforeB = div.childNodes[1];
+    const beforeA = div.firstChild;
+    const beforeB = div.lastChild;
     await act(async () => {
-      wrapped.swap();
+      wrappedRef.current.swap();
     });
-    const afterA = div.childNodes[1];
-    const afterB = div.childNodes[0];
+    const afterA = div.lastChild;
+    const afterB = div.firstChild;
 
     expect(beforeA).toBe(afterA);
     expect(beforeB).toBe(afterB);
