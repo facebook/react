@@ -145,7 +145,6 @@ import {
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 import {
-  entangleAsyncAction,
   peekEntangledActionLane,
   peekEntangledActionThenable,
   chainThenableValue,
@@ -153,6 +152,10 @@ import {
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
+import {
+  notifyTransitionCallbacks,
+  requestCurrentTransition,
+} from './ReactFiberTransition';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1319,13 +1322,6 @@ function updateReducerImpl<S, A>(
       } else {
         // This update does have sufficient priority.
 
-        // Check if this update is part of a pending async action. If so,
-        // we'll need to suspend until the action has finished, so that it's
-        // batched together with future updates in the same action.
-        if (updateLane !== NoLane && updateLane === peekEntangledActionLane()) {
-          didReadFromEntangledAsyncAction = true;
-        }
-
         // Check if this is an optimistic update.
         const revertLane = update.revertLane;
         if (!enableAsyncActions || revertLane === NoLane) {
@@ -1346,6 +1342,13 @@ function updateReducerImpl<S, A>(
             };
             newBaseQueueLast = newBaseQueueLast.next = clone;
           }
+
+          // Check if this update is part of a pending async action. If so,
+          // we'll need to suspend until the action has finished, so that it's
+          // batched together with future updates in the same action.
+          if (updateLane === peekEntangledActionLane()) {
+            didReadFromEntangledAsyncAction = true;
+          }
         } else {
           // This is an optimistic update. If the "revert" priority is
           // sufficient, don't apply the update. Otherwise, apply the update,
@@ -1356,6 +1359,13 @@ function updateReducerImpl<S, A>(
             // has finished. Pretend the update doesn't exist by skipping
             // over it.
             update = update.next;
+
+            // Check if this update is part of a pending async action. If so,
+            // we'll need to suspend until the action has finished, so that it's
+            // batched together with future updates in the same action.
+            if (revertLane === peekEntangledActionLane()) {
+              didReadFromEntangledAsyncAction = true;
+            }
             continue;
           } else {
             const clone: Update<S, A> = {
@@ -1964,13 +1974,17 @@ function runFormStateAction<S, P>(
 
   // This is a fork of startTransition
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
-  const currentTransition = ReactCurrentBatchConfig.transition;
+  const currentTransition: BatchConfigTransition = {
+    _callbacks: new Set<(BatchConfigTransition, mixed) => mixed>(),
+  };
+  ReactCurrentBatchConfig.transition = currentTransition;
   if (__DEV__) {
     ReactCurrentBatchConfig.transition._updatedFibers = new Set();
   }
   try {
     const returnValue = action(prevState, payload);
+    notifyTransitionCallbacks(currentTransition, returnValue);
+
     if (
       returnValue !== null &&
       typeof returnValue === 'object' &&
@@ -1989,7 +2003,6 @@ function runFormStateAction<S, P>(
         () => finishRunningFormStateAction(actionQueue, (setState: any)),
       );
 
-      entangleAsyncAction<Awaited<S>>(thenable);
       setState((thenable: any));
     } else {
       setState((returnValue: any));
@@ -2808,7 +2821,9 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactCurrentBatchConfig.transition;
-  const currentTransition: BatchConfigTransition = {};
+  const currentTransition: BatchConfigTransition = {
+    _callbacks: new Set<(BatchConfigTransition, mixed) => mixed>(),
+  };
 
   if (enableAsyncActions) {
     // We don't really need to use an optimistic update here, because we
@@ -2839,6 +2854,7 @@ function startTransition<S>(
   try {
     if (enableAsyncActions) {
       const returnValue = callback();
+      notifyTransitionCallbacks(currentTransition, returnValue);
 
       // Check if we're inside an async action scope. If so, we'll entangle
       // this new action with the existing scope.
@@ -2854,7 +2870,6 @@ function startTransition<S>(
         typeof returnValue.then === 'function'
       ) {
         const thenable = ((returnValue: any): Thenable<mixed>);
-        entangleAsyncAction<mixed>(thenable);
         // Create a thenable that resolves to `finishedState` once the async
         // action has completed.
         const thenableForFinishedState = chainThenableValue(
@@ -3281,8 +3296,10 @@ function dispatchOptimisticSetState<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ): void {
+  const transition = requestCurrentTransition();
+
   if (__DEV__) {
-    if (ReactCurrentBatchConfig.transition === null) {
+    if (transition === null) {
       // An optimistic update occurred, but startTransition is not on the stack.
       // There are two likely scenarios.
 
@@ -3323,7 +3340,7 @@ function dispatchOptimisticSetState<S, A>(
     lane: SyncLane,
     // After committing, the optimistic update is "reverted" using the same
     // lane as the transition it's associated with.
-    revertLane: requestTransitionLane(),
+    revertLane: requestTransitionLane(transition),
     action,
     hasEagerState: false,
     eagerState: null,

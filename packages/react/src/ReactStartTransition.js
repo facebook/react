@@ -17,7 +17,13 @@ export function startTransition(
   options?: StartTransitionOptions,
 ) {
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
+  // Each renderer registers a callback to receive the return value of
+  // the scope function. This is used to implement async actions.
+  const callbacks = new Set<(BatchConfigTransition, mixed) => mixed>();
+  const transition: BatchConfigTransition = {
+    _callbacks: callbacks,
+  };
+  ReactCurrentBatchConfig.transition = transition;
   const currentTransition = ReactCurrentBatchConfig.transition;
 
   if (__DEV__) {
@@ -34,7 +40,8 @@ export function startTransition(
   }
 
   try {
-    scope();
+    const returnValue = scope();
+    callbacks.forEach(callback => callback(currentTransition, returnValue));
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
 
