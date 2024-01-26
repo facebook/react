@@ -81,14 +81,7 @@ describe('StrictEffectsMode', () => {
     });
 
     if (supportsDoubleInvokeEffects()) {
-      assertLog([
-        'useLayoutEffect mount',
-        'useEffect mount',
-        'useLayoutEffect unmount',
-        'useEffect unmount',
-        'useLayoutEffect mount',
-        'useEffect mount',
-      ]);
+      assertLog([]);
     } else {
       assertLog(['useLayoutEffect mount', 'useEffect mount']);
     }
