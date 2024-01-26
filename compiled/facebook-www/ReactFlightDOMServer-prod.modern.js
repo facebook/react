@@ -586,47 +586,33 @@ function createLazyWrapperAroundWakeable(wakeable) {
   }
   return { $$typeof: REACT_LAZY_TYPE, _payload: wakeable, _init: readThenable };
 }
-function renderElement(
-  request,
-  task,
-  type,
-  key,
-  ref,
-  props,
-  prevThenableState
-) {
+function renderElement(request, task, type, key, ref, props) {
   if (null !== ref && void 0 !== ref)
     throw Error(
       "Refs cannot be used in Server Components, nor passed to Client Components."
     );
   if ("function" === typeof type) {
     if (isClientReference(type)) return [REACT_ELEMENT_TYPE, type, key, props];
+    key = task.thenableState;
+    task.thenableState = null;
     thenableIndexCounter = 0;
-    thenableState = prevThenableState;
+    thenableState = key;
     props = type(props);
     if (
       "object" === typeof props &&
       null !== props &&
       "function" === typeof props.then
     ) {
-      prevThenableState = props;
-      if ("fulfilled" === prevThenableState.status)
-        return prevThenableState.value;
+      type = props;
+      if ("fulfilled" === type.status) return type.value;
       props = createLazyWrapperAroundWakeable(props);
     }
-    return renderModelDestructive(request, task, emptyRoot, "", props, null);
+    return renderModelDestructive(request, task, emptyRoot, "", props);
   }
   if ("string" === typeof type) return [REACT_ELEMENT_TYPE, type, key, props];
   if ("symbol" === typeof type)
     return type === REACT_FRAGMENT_TYPE
-      ? renderModelDestructive(
-          request,
-          task,
-          emptyRoot,
-          "",
-          props.children,
-          null
-        )
+      ? renderModelDestructive(request, task, emptyRoot, "", props.children)
       : [REACT_ELEMENT_TYPE, type, key, props];
   if (null != type && "object" === typeof type) {
     if (isClientReference(type)) return [REACT_ELEMENT_TYPE, type, key, props];
@@ -634,33 +620,19 @@ function renderElement(
       case REACT_LAZY_TYPE:
         var init = type._init;
         type = init(type._payload);
-        return renderElement(
-          request,
-          task,
-          type,
-          key,
-          ref,
-          props,
-          prevThenableState
-        );
+        return renderElement(request, task, type, key, ref, props);
       case REACT_FORWARD_REF_TYPE:
         return (
-          (key = type.render),
+          (type = type.render),
+          (key = task.thenableState),
+          (task.thenableState = null),
           (thenableIndexCounter = 0),
-          (thenableState = prevThenableState),
-          (props = key(props, void 0)),
-          renderModelDestructive(request, task, emptyRoot, "", props, null)
+          (thenableState = key),
+          (props = type(props, void 0)),
+          renderModelDestructive(request, task, emptyRoot, "", props)
         );
       case REACT_MEMO_TYPE:
-        return renderElement(
-          request,
-          task,
-          type.type,
-          key,
-          ref,
-          props,
-          prevThenableState
-        );
+        return renderElement(request, task, type.type, key, ref, props);
     }
   }
   throw Error(
@@ -694,8 +666,7 @@ function createTask(request, model, context, abortSet) {
           task,
           this,
           parentPropertyName,
-          value,
-          null
+          value
         );
       } catch (thrownValue) {
         if (
@@ -804,8 +775,7 @@ function renderModelDestructive(
   task,
   parent,
   parentPropertyName,
-  value,
-  prevThenableState
+  value
 ) {
   task.model = value;
   if (value === REACT_ELEMENT_TYPE) return "$";
@@ -830,14 +800,13 @@ function renderModelDestructive(
           value.type,
           value.key,
           value.ref,
-          value.props,
-          prevThenableState
+          value.props
         );
       case REACT_LAZY_TYPE:
         return (
           (parent = value._init),
           (value = parent(value._payload)),
-          renderModelDestructive(request, task, emptyRoot, "", value, null)
+          renderModelDestructive(request, task, emptyRoot, "", value)
         );
     }
     if (isClientReference(value))
@@ -950,11 +919,10 @@ function renderModelDestructive(
   }
   if ("symbol" === typeof value) {
     task = request.writtenSymbols;
-    prevThenableState = task.get(value);
-    if (void 0 !== prevThenableState)
-      return serializeByValueID(prevThenableState);
-    prevThenableState = value.description;
-    if (Symbol.for(prevThenableState) !== value)
+    var existingId$9 = task.get(value);
+    if (void 0 !== existingId$9) return serializeByValueID(existingId$9);
+    existingId$9 = value.description;
+    if (Symbol.for(existingId$9) !== value)
       throw Error(
         "Only global symbols received from Symbol.for(...) can be passed to Client Components. The symbol Symbol.for(" +
           (value.description + ") cannot be found among global symbols.") +
@@ -962,7 +930,7 @@ function renderModelDestructive(
       );
     request.pendingChunks++;
     parent = request.nextChunkId++;
-    parentPropertyName = stringify("$S" + prevThenableState);
+    parentPropertyName = stringify("$S" + existingId$9);
     parentPropertyName = parent.toString(16) + ":" + parentPropertyName + "\n";
     request.completedImportChunks.push(parentPropertyName);
     task.set(value, parent);
@@ -1017,16 +985,13 @@ function retryTask(request, task) {
         : popNextToCommonLevel(prev, next),
       (currentActiveSnapshot = next));
     try {
-      var prevThenableState = task.thenableState;
-      task.thenableState = null;
       modelRoot = task.model;
       var resolvedModel = renderModelDestructive(
         request,
         task,
         emptyRoot,
         "",
-        task.model,
-        prevThenableState
+        task.model
       );
       modelRoot = resolvedModel;
       var json =

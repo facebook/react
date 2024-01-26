@@ -1478,15 +1478,7 @@ if (__DEV__) {
       return lazyType;
     }
 
-    function renderElement(
-      request,
-      task,
-      type,
-      key,
-      ref,
-      props,
-      prevThenableState
-    ) {
+    function renderElement(request, task, type, key, ref, props) {
       if (ref !== null && ref !== undefined) {
         // When the ref moves to the regular props object this will implicitly
         // throw for functions. We could probably relax it to a DEV warning for other
@@ -1509,7 +1501,12 @@ if (__DEV__) {
           // This is a reference to a Client Component.
           return [REACT_ELEMENT_TYPE, type, key, props];
         } // This is a server-side component.
+        // Reset the task's thenable state before continuing, so that if a later
+        // component suspends we can reuse the same task object. If the same
+        // component suspends again, the thenable state will be restored.
 
+        var prevThenableState = task.thenableState;
+        task.thenableState = null;
         prepareToUseHooksForComponent(prevThenableState);
         var result = type(props);
 
@@ -1530,14 +1527,7 @@ if (__DEV__) {
           result = createLazyWrapperAroundWakeable(result);
         }
 
-        return renderModelDestructive(
-          request,
-          task,
-          emptyRoot,
-          "",
-          result,
-          null
-        );
+        return renderModelDestructive(request, task, emptyRoot, "", result);
       } else if (typeof type === "string") {
         // This is a host element. E.g. HTML.
         return [REACT_ELEMENT_TYPE, type, key, props];
@@ -1552,8 +1542,7 @@ if (__DEV__) {
             task,
             emptyRoot,
             "",
-            props.children,
-            null
+            props.children
           );
         } // This might be a built-in React component. We'll let the client decide.
         // Any built-in works as long as its props are serializable.
@@ -1570,20 +1559,17 @@ if (__DEV__) {
             var payload = type._payload;
             var init = type._init;
             var wrappedType = init(payload);
-            return renderElement(
-              request,
-              task,
-              wrappedType,
-              key,
-              ref,
-              props,
-              prevThenableState
-            );
+            return renderElement(request, task, wrappedType, key, ref, props);
           }
 
           case REACT_FORWARD_REF_TYPE: {
-            var render = type.render;
-            prepareToUseHooksForComponent(prevThenableState);
+            var render = type.render; // Reset the task's thenable state before continuing, so that if a later
+            // component suspends we can reuse the same task object. If the same
+            // component suspends again, the thenable state will be restored.
+
+            var _prevThenableState = task.thenableState;
+            task.thenableState = null;
+            prepareToUseHooksForComponent(_prevThenableState);
 
             var _result = render(props, undefined);
 
@@ -1592,21 +1578,12 @@ if (__DEV__) {
               task,
               emptyRoot,
               "",
-              _result,
-              null
+              _result
             );
           }
 
           case REACT_MEMO_TYPE: {
-            return renderElement(
-              request,
-              task,
-              type.type,
-              key,
-              ref,
-              props,
-              prevThenableState
-            );
+            return renderElement(request, task, type.type, key, ref, props);
           }
         }
       }
@@ -1903,7 +1880,7 @@ if (__DEV__) {
 
     function renderModel(request, task, parent, key, value) {
       try {
-        return renderModelDestructive(request, task, parent, key, value, null);
+        return renderModelDestructive(request, task, parent, key, value);
       } catch (thrownValue) {
         var x =
           thrownValue === SuspenseException // This is a special type of exception used for Suspense. For historical
@@ -1967,8 +1944,7 @@ if (__DEV__) {
       task,
       parent,
       parentPropertyName,
-      value,
-      prevThenableState
+      value
     ) {
       // Set the currently rendering model
       task.model = value; // Special Symbol, that's very common.
@@ -2016,8 +1992,7 @@ if (__DEV__) {
               element.type,
               element.key,
               element.ref,
-              element.props,
-              prevThenableState
+              element.props
             );
           }
 
@@ -2030,8 +2005,7 @@ if (__DEV__) {
               task,
               emptyRoot,
               "",
-              resolvedModel,
-              null
+              resolvedModel
             );
           }
         }
@@ -2349,14 +2323,9 @@ if (__DEV__) {
       switchContext(task.context);
 
       try {
-        // Reset the task's thenable state before continuing, so that if a later
-        // component suspends we can reuse the same task object. If the same
-        // component suspends again, the thenable state will be restored.
-        var prevThenableState = task.thenableState;
-        task.thenableState = null; // Track the root so we know that we have to emit this object even though it
+        // Track the root so we know that we have to emit this object even though it
         // already has an ID. This is needed because we might see this object twice
         // in the same toJSON if it is cyclic.
-
         modelRoot = task.model; // We call the destructive form that mutates this task. That way if something
         // suspends again, we can reuse the same task instead of spawning a new one.
 
@@ -2365,8 +2334,7 @@ if (__DEV__) {
           task,
           emptyRoot,
           "",
-          task.model,
-          prevThenableState
+          task.model
         ); // Track the root again for the resolved object.
 
         modelRoot = resolvedModel; // If the value is a string, it means it's a terminal value adn we already escaped it

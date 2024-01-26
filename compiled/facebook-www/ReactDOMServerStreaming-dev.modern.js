@@ -11104,11 +11104,15 @@ if (__DEV__) {
       request,
       task,
       keyPath,
-      prevThenableState,
       Component,
       props,
       secondArg
     ) {
+      // Reset the task's thenable state before continuing, so that if a later
+      // component suspends we can reuse the same task object. If the same
+      // component suspends again, the thenable state will be restored.
+      var prevThenableState = task.thenableState;
+      task.thenableState = null;
       var componentIdentity = {};
       prepareToUseHooks(
         request,
@@ -11147,7 +11151,7 @@ if (__DEV__) {
 
       var prevKeyPath = task.keyPath;
       task.keyPath = keyPath;
-      renderNodeDestructive(request, task, null, nextChildren, -1);
+      renderNodeDestructive(request, task, nextChildren, -1);
       task.keyPath = prevKeyPath;
     }
 
@@ -11176,7 +11180,6 @@ if (__DEV__) {
       request,
       task,
       keyPath,
-      prevThenableState,
       Component,
       props
     ) {
@@ -11209,7 +11212,6 @@ if (__DEV__) {
         request,
         task,
         keyPath,
-        prevThenableState,
         Component,
         props,
         legacyContext
@@ -11337,7 +11339,7 @@ if (__DEV__) {
         // We're now successfully past this task, and we haven't modified the
         // context stack. We don't have to pop back to the previous task every
         // again, so we can use the destructive recursive form.
-        renderNodeDestructive(request, task, null, children, -1);
+        renderNodeDestructive(request, task, children, -1);
       }
 
       task.keyPath = prevKeyPath;
@@ -11422,22 +11424,13 @@ if (__DEV__) {
       return baseProps;
     }
 
-    function renderForwardRef(
-      request,
-      task,
-      keyPath,
-      prevThenableState,
-      type,
-      props,
-      ref
-    ) {
+    function renderForwardRef(request, task, keyPath, type, props, ref) {
       var previousComponentStack = task.componentStack;
       task.componentStack = createFunctionComponentStack(task, type.render);
       var children = renderWithHooks(
         request,
         task,
         keyPath,
-        prevThenableState,
         type.render,
         props,
         ref
@@ -11457,26 +11450,10 @@ if (__DEV__) {
       task.componentStack = previousComponentStack;
     }
 
-    function renderMemo(
-      request,
-      task,
-      keyPath,
-      prevThenableState,
-      type,
-      props,
-      ref
-    ) {
+    function renderMemo(request, task, keyPath, type, props, ref) {
       var innerType = type.type;
       var resolvedProps = resolveDefaultProps(innerType, props);
-      renderElement(
-        request,
-        task,
-        keyPath,
-        prevThenableState,
-        innerType,
-        resolvedProps,
-        ref
-      );
+      renderElement(request, task, keyPath, innerType, resolvedProps, ref);
     }
 
     function renderContextConsumer(request, task, keyPath, context, props) {
@@ -11524,7 +11501,7 @@ if (__DEV__) {
       var newChildren = render(newValue);
       var prevKeyPath = task.keyPath;
       task.keyPath = keyPath;
-      renderNodeDestructive(request, task, null, newChildren, -1);
+      renderNodeDestructive(request, task, newChildren, -1);
       task.keyPath = prevKeyPath;
     }
 
@@ -11541,7 +11518,7 @@ if (__DEV__) {
       var prevKeyPath = task.keyPath;
       task.context = pushProvider(context, value);
       task.keyPath = keyPath;
-      renderNodeDestructive(request, task, null, children, -1);
+      renderNodeDestructive(request, task, children, -1);
       task.context = popProvider(context);
       task.keyPath = prevKeyPath;
 
@@ -11558,7 +11535,6 @@ if (__DEV__) {
       request,
       task,
       keyPath,
-      prevThenableState,
       lazyComponent,
       props,
       ref
@@ -11569,15 +11545,7 @@ if (__DEV__) {
       var init = lazyComponent._init;
       var Component = init(payload);
       var resolvedProps = resolveDefaultProps(Component, props);
-      renderElement(
-        request,
-        task,
-        keyPath,
-        prevThenableState,
-        Component,
-        resolvedProps,
-        ref
-      );
+      renderElement(request, task, keyPath, Component, resolvedProps, ref);
       task.componentStack = previousComponentStack;
     }
 
@@ -11590,33 +11558,18 @@ if (__DEV__) {
         // pure indirection.
         var prevKeyPath = task.keyPath;
         task.keyPath = keyPath;
-        renderNodeDestructive(request, task, null, props.children, -1);
+        renderNodeDestructive(request, task, props.children, -1);
         task.keyPath = prevKeyPath;
       }
     }
 
-    function renderElement(
-      request,
-      task,
-      keyPath,
-      prevThenableState,
-      type,
-      props,
-      ref
-    ) {
+    function renderElement(request, task, keyPath, type, props, ref) {
       if (typeof type === "function") {
         if (shouldConstruct(type)) {
           renderClassComponent(request, task, keyPath, type, props);
           return;
         } else {
-          renderIndeterminateComponent(
-            request,
-            task,
-            keyPath,
-            prevThenableState,
-            type,
-            props
-          );
+          renderIndeterminateComponent(request, task, keyPath, type, props);
           return;
         }
       }
@@ -11643,7 +11596,7 @@ if (__DEV__) {
         case REACT_FRAGMENT_TYPE: {
           var prevKeyPath = task.keyPath;
           task.keyPath = keyPath;
-          renderNodeDestructive(request, task, null, props.children, -1);
+          renderNodeDestructive(request, task, props.children, -1);
           task.keyPath = prevKeyPath;
           return;
         }
@@ -11662,7 +11615,7 @@ if (__DEV__) {
 
           var _prevKeyPath3 = task.keyPath;
           task.keyPath = keyPath;
-          renderNodeDestructive(request, task, null, props.children, -1);
+          renderNodeDestructive(request, task, props.children, -1);
           task.keyPath = _prevKeyPath3;
           task.componentStack = preiousComponentStack;
           return;
@@ -11672,7 +11625,7 @@ if (__DEV__) {
           {
             var _prevKeyPath4 = task.keyPath;
             task.keyPath = keyPath;
-            renderNodeDestructive(request, task, null, props.children, -1);
+            renderNodeDestructive(request, task, props.children, -1);
             task.keyPath = _prevKeyPath4;
             return;
           }
@@ -11690,28 +11643,12 @@ if (__DEV__) {
       if (typeof type === "object" && type !== null) {
         switch (type.$$typeof) {
           case REACT_FORWARD_REF_TYPE: {
-            renderForwardRef(
-              request,
-              task,
-              keyPath,
-              prevThenableState,
-              type,
-              props,
-              ref
-            );
+            renderForwardRef(request, task, keyPath, type, props, ref);
             return;
           }
 
           case REACT_MEMO_TYPE: {
-            renderMemo(
-              request,
-              task,
-              keyPath,
-              prevThenableState,
-              type,
-              props,
-              ref
-            );
+            renderMemo(request, task, keyPath, type, props, ref);
             return;
           }
 
@@ -11726,14 +11663,7 @@ if (__DEV__) {
           }
 
           case REACT_LAZY_TYPE: {
-            renderLazyComponent(
-              request,
-              task,
-              keyPath,
-              prevThenableState,
-              type,
-              props
-            );
+            renderLazyComponent(request, task, keyPath, type, props);
             return;
           }
         }
@@ -11804,7 +11734,6 @@ if (__DEV__) {
       request,
       task,
       keyPath,
-      prevThenableState,
       name,
       keyOrIndex,
       childIndex,
@@ -11848,15 +11777,7 @@ if (__DEV__) {
           };
 
           try {
-            renderElement(
-              request,
-              task,
-              keyPath,
-              prevThenableState,
-              type,
-              props,
-              ref
-            );
+            renderElement(request, task, keyPath, type, props, ref);
 
             if (
               task.replay.pendingTasks === 1 &&
@@ -11971,14 +11892,7 @@ if (__DEV__) {
     } // This function by it self renders a node and consumes the task by mutating it
     // to update the current execution state.
 
-    function renderNodeDestructive(
-      request,
-      task, // The thenable state reused from the previous attempt, if any. This is almost
-      // always null, except when called by retryTask.
-      prevThenableState,
-      node,
-      childIndex
-    ) {
+    function renderNodeDestructive(request, task, node, childIndex) {
       if (task.replay !== null && typeof task.replay.slots === "number") {
         // TODO: Figure out a cheaper place than this hot path to do this check.
         var resumeSegmentID = task.replay.slots;
@@ -12012,7 +11926,6 @@ if (__DEV__) {
                 request,
                 task,
                 keyPath,
-                prevThenableState,
                 name,
                 keyOrIndex,
                 childIndex,
@@ -12024,15 +11937,7 @@ if (__DEV__) {
               // prelude and skip it during the replay.
             } else {
               // We're doing a plain render.
-              renderElement(
-                request,
-                task,
-                keyPath,
-                prevThenableState,
-                type,
-                props,
-                ref
-              );
+              renderElement(request, task, keyPath, type, props, ref);
             }
 
             return;
@@ -12055,13 +11960,7 @@ if (__DEV__) {
 
             task.componentStack = previousComponentStack; // Now we render the resolved node
 
-            renderNodeDestructive(
-              request,
-              task,
-              null,
-              resolvedNode,
-              childIndex
-            );
+            renderNodeDestructive(request, task, resolvedNode, childIndex);
             return;
           }
         }
@@ -12115,11 +12014,12 @@ if (__DEV__) {
         var maybeUsable = node;
 
         if (typeof maybeUsable.then === "function") {
+          // Clear any previous thenable state that was created by the unwrapping.
+          task.thenableState = null;
           var thenable = maybeUsable;
           return renderNodeDestructive(
             request,
             task,
-            null,
             unwrapThenable(thenable),
             childIndex
           );
@@ -12133,7 +12033,6 @@ if (__DEV__) {
           return renderNodeDestructive(
             request,
             task,
-            null,
             readContext$1(context),
             childIndex
           );
@@ -12431,7 +12330,7 @@ if (__DEV__) {
       if (segment === null) {
         // Replay
         try {
-          return renderNodeDestructive(request, task, null, node, childIndex);
+          return renderNodeDestructive(request, task, node, childIndex);
         } catch (thrownValue) {
           resetHooksState();
           x =
@@ -12474,7 +12373,7 @@ if (__DEV__) {
         var chunkLength = segment.chunks.length;
 
         try {
-          return renderNodeDestructive(request, task, null, node, childIndex);
+          return renderNodeDestructive(request, task, node, childIndex);
         } catch (thrownValue) {
           resetHooksState(); // Reset the write pointers to where we started.
 
@@ -13008,18 +12907,7 @@ if (__DEV__) {
       try {
         // We call the destructive form that mutates this task. That way if something
         // suspends again, we can reuse the same task instead of spawning a new one.
-        // Reset the task's thenable state before continuing, so that if a later
-        // component suspends we can reuse the same task object. If the same
-        // component suspends again, the thenable state will be restored.
-        var prevThenableState = task.thenableState;
-        task.thenableState = null;
-        renderNodeDestructive(
-          request,
-          task,
-          prevThenableState,
-          task.node,
-          task.childIndex
-        );
+        renderNodeDestructive(request, task, task.node, task.childIndex);
         pushSegmentFinale(
           segment.chunks,
           request.renderState,
@@ -13092,18 +12980,7 @@ if (__DEV__) {
       try {
         // We call the destructive form that mutates this task. That way if something
         // suspends again, we can reuse the same task instead of spawning a new one.
-        // Reset the task's thenable state before continuing, so that if a later
-        // component suspends we can reuse the same task object. If the same
-        // component suspends again, the thenable state will be restored.
-        var prevThenableState = task.thenableState;
-        task.thenableState = null;
-        renderNodeDestructive(
-          request,
-          task,
-          prevThenableState,
-          task.node,
-          task.childIndex
-        );
+        renderNodeDestructive(request, task, task.node, task.childIndex);
 
         if (task.replay.pendingTasks === 1 && task.replay.nodes.length > 0) {
           throw new Error(
