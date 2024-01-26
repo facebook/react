@@ -507,7 +507,6 @@ function renderElement(
   key: null | React$Key,
   ref: mixed,
   props: any,
-  prevThenableState: ThenableState | null,
 ): ReactJSONValue {
   if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
@@ -529,6 +528,13 @@ function renderElement(
       return [REACT_ELEMENT_TYPE, type, key, props];
     }
     // This is a server-side component.
+
+    // Reset the task's thenable state before continuing, so that if a later
+    // component suspends we can reuse the same task object. If the same
+    // component suspends again, the thenable state will be restored.
+    const prevThenableState = task.thenableState;
+    task.thenableState = null;
+
     prepareToUseHooksForComponent(prevThenableState);
     let result = type(props);
     if (
@@ -546,7 +552,7 @@ function renderElement(
       // the thenable here.
       result = createLazyWrapperAroundWakeable(result);
     }
-    return renderModelDestructive(request, task, emptyRoot, '', result, null);
+    return renderModelDestructive(request, task, emptyRoot, '', result);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
     return [REACT_ELEMENT_TYPE, type, key, props];
@@ -562,7 +568,6 @@ function renderElement(
         emptyRoot,
         '',
         props.children,
-        null,
       );
     }
     // This might be a built-in React component. We'll let the client decide.
@@ -578,39 +583,23 @@ function renderElement(
         const payload = type._payload;
         const init = type._init;
         const wrappedType = init(payload);
-        return renderElement(
-          request,
-          task,
-          wrappedType,
-          key,
-          ref,
-          props,
-          prevThenableState,
-        );
+        return renderElement(request, task, wrappedType, key, ref, props);
       }
       case REACT_FORWARD_REF_TYPE: {
         const render = type.render;
+
+        // Reset the task's thenable state before continuing, so that if a later
+        // component suspends we can reuse the same task object. If the same
+        // component suspends again, the thenable state will be restored.
+        const prevThenableState = task.thenableState;
+        task.thenableState = null;
+
         prepareToUseHooksForComponent(prevThenableState);
         const result = render(props, undefined);
-        return renderModelDestructive(
-          request,
-          task,
-          emptyRoot,
-          '',
-          result,
-          null,
-        );
+        return renderModelDestructive(request, task, emptyRoot, '', result);
       }
       case REACT_MEMO_TYPE: {
-        return renderElement(
-          request,
-          task,
-          type.type,
-          key,
-          ref,
-          props,
-          prevThenableState,
-        );
+        return renderElement(request, task, type.type, key, ref, props);
       }
       case REACT_PROVIDER_TYPE: {
         if (enableServerContext) {
@@ -1000,7 +989,7 @@ function renderModel(
   value: ReactClientValue,
 ): ReactJSONValue {
   try {
-    return renderModelDestructive(request, task, parent, key, value, null);
+    return renderModelDestructive(request, task, parent, key, value);
   } catch (thrownValue) {
     const x =
       thrownValue === SuspenseException
@@ -1076,7 +1065,6 @@ function renderModelDestructive(
     | $ReadOnlyArray<ReactClientValue>,
   parentPropertyName: string,
   value: ReactClientValue,
-  prevThenableState: ThenableState | null,
 ): ReactJSONValue {
   // Set the currently rendering model
   task.model = value;
@@ -1130,7 +1118,6 @@ function renderModelDestructive(
           element.key,
           element.ref,
           element.props,
-          prevThenableState,
         );
       }
       case REACT_LAZY_TYPE: {
@@ -1143,7 +1130,6 @@ function renderModelDestructive(
           emptyRoot,
           '',
           resolvedModel,
-          null,
         );
       }
     }
@@ -1598,12 +1584,6 @@ function retryTask(request: Request, task: Task): void {
 
   switchContext(task.context);
   try {
-    // Reset the task's thenable state before continuing, so that if a later
-    // component suspends we can reuse the same task object. If the same
-    // component suspends again, the thenable state will be restored.
-    const prevThenableState = task.thenableState;
-    task.thenableState = null;
-
     // Track the root so we know that we have to emit this object even though it
     // already has an ID. This is needed because we might see this object twice
     // in the same toJSON if it is cyclic.
@@ -1617,7 +1597,6 @@ function retryTask(request: Request, task: Task): void {
       emptyRoot,
       '',
       task.model,
-      prevThenableState,
     );
 
     // Track the root again for the resolved object.
