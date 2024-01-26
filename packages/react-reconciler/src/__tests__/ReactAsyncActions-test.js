@@ -12,6 +12,10 @@ describe('ReactAsyncActions', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    global.reportError = error => {
+      Scheduler.log('reportError: ' + error.message);
+    };
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -1725,5 +1729,32 @@ describe('ReactAsyncActions', () => {
     await act(() => resolveText('Yield before updating'));
     assertLog(['Async action ended', 'Updated']);
     expect(root).toMatchRenderedOutput(<span>Updated</span>);
+  });
+
+  test('React.startTransition captures async errors and passes them to reportError', async () => {
+    // NOTE: This is gated here instead of using the pragma because the failure
+    // happens asynchronously and the `gate` runtime doesn't capture it.
+    if (gate(flags => flags.enableAsyncActions)) {
+      await act(() => {
+        React.startTransition(async () => {
+          throw new Error('Oops');
+        });
+      });
+      assertLog(['reportError: Oops']);
+    }
+  });
+
+  // @gate enableAsyncActions
+  test('React.startTransition captures sync errors and passes them to reportError', async () => {
+    await act(() => {
+      try {
+        React.startTransition(() => {
+          throw new Error('Oops');
+        });
+      } catch (e) {
+        throw new Error('Should not be reachable.');
+      }
+    });
+    assertLog(['reportError: Oops']);
   });
 });

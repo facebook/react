@@ -10,7 +10,10 @@ import type {BatchConfigTransition} from 'react-reconciler/src/ReactFiberTracing
 import type {StartTransitionOptions} from 'shared/ReactTypes';
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
-import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableAsyncActions,
+  enableTransitionTracing,
+} from 'shared/ReactFeatureFlags';
 
 export function startTransition(
   scope: () => void,
@@ -39,24 +42,65 @@ export function startTransition(
     }
   }
 
-  try {
-    const returnValue = scope();
-    callbacks.forEach(callback => callback(currentTransition, returnValue));
-  } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
+  if (enableAsyncActions) {
+    try {
+      const returnValue = scope();
+      if (
+        typeof returnValue === 'object' &&
+        returnValue !== null &&
+        typeof returnValue.then === 'function'
+      ) {
+        callbacks.forEach(callback => callback(currentTransition, returnValue));
+        returnValue.then(noop, onError);
+      }
+    } catch (error) {
+      onError(error);
+    } finally {
+      warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+      ReactCurrentBatchConfig.transition = prevTransition;
+    }
+  } else {
+    // When async actions are not enabled, startTransition does not
+    // capture errors.
+    try {
+      scope();
+    } finally {
+      warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+      ReactCurrentBatchConfig.transition = prevTransition;
+    }
+  }
+}
 
-    if (__DEV__) {
-      if (prevTransition === null && currentTransition._updatedFibers) {
-        const updatedFibersCount = currentTransition._updatedFibers.size;
-        currentTransition._updatedFibers.clear();
-        if (updatedFibersCount > 10) {
-          console.warn(
-            'Detected a large number of updates inside startTransition. ' +
-              'If this is due to a subscription please re-write it to use React provided hooks. ' +
-              'Otherwise concurrent mode guarantees are off the table.',
-          );
-        }
+function warnAboutTransitionSubscriptions(
+  prevTransition: BatchConfigTransition | null,
+  currentTransition: BatchConfigTransition,
+) {
+  if (__DEV__) {
+    if (prevTransition === null && currentTransition._updatedFibers) {
+      const updatedFibersCount = currentTransition._updatedFibers.size;
+      currentTransition._updatedFibers.clear();
+      if (updatedFibersCount > 10) {
+        console.warn(
+          'Detected a large number of updates inside startTransition. ' +
+            'If this is due to a subscription please re-write it to use React provided hooks. ' +
+            'Otherwise concurrent mode guarantees are off the table.',
+        );
       }
     }
   }
 }
+
+function noop() {}
+
+// Use reportError, if it exists. Otherwise console.error. This is the same as
+// the default for onRecoverableError.
+const onError =
+  typeof reportError === 'function'
+    ? // In modern browsers, reportError will dispatch an error event,
+      // emulating an uncaught JavaScript error.
+      reportError
+    : (error: mixed) => {
+        // In older browsers and test environments, fallback to console.error.
+        // eslint-disable-next-line react-internal/no-production-logging
+        console['error'](error);
+      };
