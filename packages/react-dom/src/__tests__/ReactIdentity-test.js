@@ -254,7 +254,7 @@ describe('ReactIdentity', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    let wrappedRef = React.createRef();
+    const wrappedRef = React.createRef();
     await act(async () => {
       root.render(
         <TestContainer first={instance0} second={instance1} ref={wrappedRef} />,
