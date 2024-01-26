@@ -437,15 +437,20 @@ exports.memo = function (type, compare) {
   };
 };
 exports.startTransition = function (scope, options) {
-  var prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
+  var prevTransition = ReactCurrentBatchConfig.transition,
+    callbacks = new Set();
+  ReactCurrentBatchConfig.transition = { _callbacks: callbacks };
+  var currentTransition = ReactCurrentBatchConfig.transition;
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
     ((ReactCurrentBatchConfig.transition.name = options.name),
     (ReactCurrentBatchConfig.transition.startTime = -1));
   try {
-    scope();
+    var returnValue = scope();
+    callbacks.forEach(function (callback) {
+      return callback(currentTransition, returnValue);
+    });
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
@@ -538,4 +543,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-14d3332b";
+exports.version = "18.3.0-www-modern-5a0946d0";

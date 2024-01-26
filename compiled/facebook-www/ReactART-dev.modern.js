@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-aab9ce44";
+    var ReactVersion = "18.3.0-www-modern-2a25f03a";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -4537,7 +4537,11 @@ if (__DEV__) {
       }
     }
 
-    function requestTransitionLane() {
+    function requestTransitionLane( // This argument isn't used, it's only here to encourage the caller to
+      // check that it's inside a transition before calling this function.
+      // TODO: Make this non-nullable. Requires a tweak to useOptimistic.
+      transition
+    ) {
       // The algorithm for assigning an update to a lane should be stable for all
       // updates at the same priority within the same event. To do this, the
       // inputs to the algorithm must be the same.
@@ -4570,7 +4574,7 @@ if (__DEV__) {
     // until the async action scope has completed.
 
     var currentEntangledActionThenable = null;
-    function entangleAsyncAction(thenable) {
+    function entangleAsyncAction(transition, thenable) {
       // `thenable` is the return value of the async action scope function. Create
       // a combined thenable that resolves once every entangled scope function
       // has finished.
@@ -8854,16 +8858,7 @@ if (__DEV__) {
             markSkippedUpdateLanes(updateLane);
           } else {
             // This update does have sufficient priority.
-            // Check if this update is part of a pending async action. If so,
-            // we'll need to suspend until the action has finished, so that it's
-            // batched together with future updates in the same action.
-            if (
-              updateLane !== NoLane &&
-              updateLane === peekEntangledActionLane()
-            ) {
-              didReadFromEntangledAsyncAction = true;
-            } // Check if this is an optimistic update.
-
+            // Check if this is an optimistic update.
             var revertLane = update.revertLane;
 
             if (!enableAsyncActions || revertLane === NoLane) {
@@ -8883,6 +8878,12 @@ if (__DEV__) {
                   next: null
                 };
                 newBaseQueueLast = newBaseQueueLast.next = _clone;
+              } // Check if this update is part of a pending async action. If so,
+              // we'll need to suspend until the action has finished, so that it's
+              // batched together with future updates in the same action.
+
+              if (updateLane === peekEntangledActionLane()) {
+                didReadFromEntangledAsyncAction = true;
               }
             } else {
               // This is an optimistic update. If the "revert" priority is
@@ -8893,7 +8894,14 @@ if (__DEV__) {
                 // The transition that this optimistic update is associated with
                 // has finished. Pretend the update doesn't exist by skipping
                 // over it.
-                update = update.next;
+                update = update.next; // Check if this update is part of a pending async action. If so,
+                // we'll need to suspend until the action has finished, so that it's
+                // batched together with future updates in the same action.
+
+                if (revertLane === peekEntangledActionLane()) {
+                  didReadFromEntangledAsyncAction = true;
+                }
+
                 continue;
               } else {
                 var _clone2 = {
@@ -9897,7 +9905,9 @@ if (__DEV__) {
         higherEventPriority(previousPriority, ContinuousEventPriority)
       );
       var prevTransition = ReactCurrentBatchConfig$2.transition;
-      var currentTransition = {};
+      var currentTransition = {
+        _callbacks: new Set()
+      };
 
       if (enableAsyncActions) {
         // We don't really need to use an optimistic update here, because we
@@ -9927,7 +9937,8 @@ if (__DEV__) {
 
       try {
         if (enableAsyncActions) {
-          var returnValue = callback(); // Check if we're inside an async action scope. If so, we'll entangle
+          var returnValue = callback();
+          notifyTransitionCallbacks(currentTransition, returnValue); // Check if we're inside an async action scope. If so, we'll entangle
           // this new action with the existing scope.
           //
           // If we're not already inside an async action scope, and this action is
@@ -9941,8 +9952,7 @@ if (__DEV__) {
             typeof returnValue === "object" &&
             typeof returnValue.then === "function"
           ) {
-            var thenable = returnValue;
-            entangleAsyncAction(thenable); // Create a thenable that resolves to `finishedState` once the async
+            var thenable = returnValue; // Create a thenable that resolves to `finishedState` once the async
             // action has completed.
 
             var thenableForFinishedState = chainThenableValue(
@@ -10251,8 +10261,10 @@ if (__DEV__) {
       queue,
       action
     ) {
+      var transition = requestCurrentTransition();
+
       {
-        if (ReactCurrentBatchConfig$2.transition === null) {
+        if (transition === null) {
           // An optimistic update occurred, but startTransition is not on the stack.
           // There are two likely scenarios.
           // One possibility is that the optimistic update is triggered by a regular
@@ -13488,6 +13500,8 @@ if (__DEV__) {
 
       return false;
     }
+
+    // TODO: Is there a way to not include the tag or name here?
 
     var TransitionRoot = 0;
     var TransitionTracingMarker = 1;
@@ -18093,9 +18107,36 @@ if (__DEV__) {
 
     var ReactCurrentBatchConfig$1 =
       ReactSharedInternals.ReactCurrentBatchConfig;
-    var NoTransition = null;
     function requestCurrentTransition() {
-      return ReactCurrentBatchConfig$1.transition;
+      var transition = ReactCurrentBatchConfig$1.transition;
+
+      if (transition !== null) {
+        // Whenever a transition update is scheduled, register a callback on the
+        // transition object so we can get the return value of the scope function.
+        transition._callbacks.add(handleTransitionScopeResult);
+      }
+
+      return transition;
+    }
+
+    function handleTransitionScopeResult(transition, returnValue) {
+      if (
+        enableAsyncActions &&
+        returnValue !== null &&
+        typeof returnValue === "object" &&
+        typeof returnValue.then === "function"
+      ) {
+        // This is an async action.
+        var thenable = returnValue;
+        entangleAsyncAction(transition, thenable);
+      }
+    }
+
+    function notifyTransitionCallbacks(transition, returnValue) {
+      var callbacks = transition._callbacks;
+      callbacks.forEach(function (callback) {
+        return callback(transition, returnValue);
+      });
     } // When retrying a Suspense/Offscreen boundary, we restore the cache that was
     // used during the previous render by placing it here, on the stack.
 
@@ -24415,17 +24456,17 @@ if (__DEV__) {
         return pickArbitraryLane(workInProgressRootRenderLanes);
       }
 
-      var isTransition = requestCurrentTransition() !== NoTransition;
+      var transition = requestCurrentTransition();
 
-      if (isTransition) {
-        if (ReactCurrentBatchConfig.transition !== null) {
-          var transition = ReactCurrentBatchConfig.transition;
+      if (transition !== null) {
+        {
+          var batchConfigTransition = ReactCurrentBatchConfig.transition;
 
-          if (!transition._updatedFibers) {
-            transition._updatedFibers = new Set();
+          if (!batchConfigTransition._updatedFibers) {
+            batchConfigTransition._updatedFibers = new Set();
           }
 
-          transition._updatedFibers.add(fiber);
+          batchConfigTransition._updatedFibers.add(fiber);
         }
 
         var actionScopeLane = peekEntangledActionLane();
@@ -24492,7 +24533,7 @@ if (__DEV__) {
           workInProgressDeferredLane = OffscreenLane;
         } else {
           // Everything else is spawned as a transition.
-          workInProgressDeferredLane = requestTransitionLane();
+          workInProgressDeferredLane = claimNextTransitionLane();
         }
       } // Mark the parent Suspense boundary so it knows to spawn the deferred lane.
 

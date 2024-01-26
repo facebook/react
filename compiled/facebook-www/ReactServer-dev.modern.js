@@ -2534,8 +2534,14 @@ if (__DEV__) {
     };
 
     function startTransition(scope, options) {
-      var prevTransition = ReactCurrentBatchConfig.transition;
-      ReactCurrentBatchConfig.transition = {};
+      var prevTransition = ReactCurrentBatchConfig.transition; // Each renderer registers a callback to receive the return value of
+      // the scope function. This is used to implement async actions.
+
+      var callbacks = new Set();
+      var transition = {
+        _callbacks: callbacks
+      };
+      ReactCurrentBatchConfig.transition = transition;
       var currentTransition = ReactCurrentBatchConfig.transition;
 
       {
@@ -2552,7 +2558,10 @@ if (__DEV__) {
       }
 
       try {
-        scope();
+        var returnValue = scope();
+        callbacks.forEach(function (callback) {
+          return callback(currentTransition, returnValue);
+        });
       } finally {
         ReactCurrentBatchConfig.transition = prevTransition;
 
@@ -2574,7 +2583,7 @@ if (__DEV__) {
       }
     }
 
-    var ReactVersion = "18.3.0-www-modern-63fd69d9";
+    var ReactVersion = "18.3.0-www-modern-0c925300";
 
     // Patch fetch
     var Children = {

@@ -418,6 +418,12 @@ function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
 function includesBlockingLane(root, lanes) {
   return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
 }
+function claimNextTransitionLane() {
+  var lane = nextTransitionLane;
+  nextTransitionLane <<= 1;
+  0 === (nextTransitionLane & 4194176) && (nextTransitionLane = 128);
+  return lane;
+}
 function claimNextRetryLane() {
   var lane = nextRetryLane;
   nextRetryLane <<= 1;
@@ -1167,19 +1173,15 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   return currentTime;
 }
 function requestTransitionLane() {
-  if (0 === currentEventTransitionLane) {
-    var lane = nextTransitionLane;
-    nextTransitionLane <<= 1;
-    0 === (nextTransitionLane & 4194176) && (nextTransitionLane = 128);
-    currentEventTransitionLane = lane;
-  }
+  0 === currentEventTransitionLane &&
+    (currentEventTransitionLane = claimNextTransitionLane());
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
   currentEntangledPendingCount = 0,
   currentEntangledLane = 0,
   currentEntangledActionThenable = null;
-function entangleAsyncAction(thenable) {
+function entangleAsyncAction(transition, thenable) {
   if (null === currentEntangledListeners) {
     var entangledListeners = (currentEntangledListeners = []);
     currentEntangledPendingCount = 0;
@@ -2677,30 +2679,28 @@ function updateReducerImpl(hook, current, reducer) {
           ? (workInProgressRootRenderLanes & updateLane) === updateLane
           : (renderLanes & updateLane) === updateLane
       ) {
-        0 !== updateLane &&
-          updateLane === currentEntangledLane &&
-          (didReadFromEntangledAsyncAction$31 = !0);
-        updateLane = update.revertLane;
-        if (enableAsyncActions && 0 !== updateLane)
-          if ((renderLanes & updateLane) === updateLane) {
+        var revertLane = update.revertLane;
+        if (enableAsyncActions && 0 !== revertLane)
+          if ((renderLanes & revertLane) === revertLane) {
             update = update.next;
+            revertLane === currentEntangledLane &&
+              (didReadFromEntangledAsyncAction$31 = !0);
             continue;
-          } else {
-            var clone$33 = {
+          } else
+            (updateLane = {
               lane: 0,
               revertLane: update.revertLane,
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
               next: null
-            };
-            null === newBaseQueueLast
-              ? ((newBaseQueueFirst = newBaseQueueLast = clone$33),
-                (baseFirst = pendingQueue))
-              : (newBaseQueueLast = newBaseQueueLast.next = clone$33);
-            currentlyRenderingFiber$1.lanes |= updateLane;
-            workInProgressRootSkippedLanes |= updateLane;
-          }
+            }),
+              null === newBaseQueueLast
+                ? ((newBaseQueueFirst = newBaseQueueLast = updateLane),
+                  (baseFirst = pendingQueue))
+                : (newBaseQueueLast = newBaseQueueLast.next = updateLane),
+              (currentlyRenderingFiber$1.lanes |= revertLane),
+              (workInProgressRootSkippedLanes |= revertLane);
         else
           null !== newBaseQueueLast &&
             (newBaseQueueLast = newBaseQueueLast.next =
@@ -2711,7 +2711,9 @@ function updateReducerImpl(hook, current, reducer) {
                 hasEagerState: update.hasEagerState,
                 eagerState: update.eagerState,
                 next: null
-              });
+              }),
+            updateLane === currentEntangledLane &&
+              (didReadFromEntangledAsyncAction$31 = !0);
         updateLane = update.action;
         shouldDoubleInvokeUserFnsInHooksDEV &&
           reducer(pendingQueue, updateLane);
@@ -2719,7 +2721,7 @@ function updateReducerImpl(hook, current, reducer) {
           ? update.eagerState
           : reducer(pendingQueue, updateLane);
       } else
-        (clone$33 = {
+        (revertLane = {
           lane: updateLane,
           revertLane: update.revertLane,
           action: update.action,
@@ -2728,9 +2730,9 @@ function updateReducerImpl(hook, current, reducer) {
           next: null
         }),
           null === newBaseQueueLast
-            ? ((newBaseQueueFirst = newBaseQueueLast = clone$33),
+            ? ((newBaseQueueFirst = newBaseQueueLast = revertLane),
               (baseFirst = pendingQueue))
-            : (newBaseQueueLast = newBaseQueueLast.next = clone$33),
+            : (newBaseQueueLast = newBaseQueueLast.next = revertLane),
           (currentlyRenderingFiber$1.lanes |= updateLane),
           (workInProgressRootSkippedLanes |= updateLane);
       update = update.next;
@@ -3050,7 +3052,7 @@ function startTransition(
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactCurrentBatchConfig$2.transition,
-    currentTransition = {};
+    currentTransition = { _callbacks: new Set() };
   enableAsyncActions
     ? ((ReactCurrentBatchConfig$2.transition = currentTransition),
       dispatchOptimisticSetState(fiber, !1, queue, pendingState))
@@ -3065,12 +3067,12 @@ function startTransition(
   try {
     if (enableAsyncActions) {
       var returnValue = callback();
+      notifyTransitionCallbacks(currentTransition, returnValue);
       if (
         null !== returnValue &&
         "object" === typeof returnValue &&
         "function" === typeof returnValue.then
       ) {
-        entangleAsyncAction(returnValue);
         var thenableForFinishedState = chainThenableValue(
           returnValue,
           finishedState
@@ -3174,6 +3176,7 @@ function dispatchSetState(fiber, queue, action) {
   }
 }
 function dispatchOptimisticSetState(fiber, throwIfDuringRender, queue, action) {
+  requestCurrentTransition();
   action = {
     lane: 2,
     revertLane: requestTransitionLane(),
@@ -5486,8 +5489,25 @@ function releaseCache(cache) {
       cache.controller.abort();
     });
 }
-var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig,
-  resumedCache = createCursor(null),
+var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
+function requestCurrentTransition() {
+  var transition = ReactCurrentBatchConfig$1.transition;
+  null !== transition && transition._callbacks.add(handleTransitionScopeResult);
+  return transition;
+}
+function handleTransitionScopeResult(transition, returnValue) {
+  enableAsyncActions &&
+    null !== returnValue &&
+    "object" === typeof returnValue &&
+    "function" === typeof returnValue.then &&
+    entangleAsyncAction(transition, returnValue);
+}
+function notifyTransitionCallbacks(transition, returnValue) {
+  transition._callbacks.forEach(function (callback) {
+    return callback(transition, returnValue);
+  });
+}
+var resumedCache = createCursor(null),
   transitionStack = createCursor(null);
 function peekCacheFromPool() {
   var cacheResumedFromPreviousRender = resumedCache.current;
@@ -8110,7 +8130,7 @@ function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== ReactCurrentBatchConfig$1.transition)
+  if (null !== requestCurrentTransition())
     return (
       (fiber = currentEntangledLane),
       0 !== fiber ? fiber : requestTransitionLane()
@@ -8123,7 +8143,7 @@ function requestDeferredLane() {
     (workInProgressDeferredLane =
       0 !== (workInProgressRootRenderLanes & 536870912)
         ? 536870912
-        : requestTransitionLane());
+        : claimNextTransitionLane());
   var suspenseHandler = suspenseHandlerStackCursor.current;
   null !== suspenseHandler && (suspenseHandler.flags |= 32);
   return workInProgressDeferredLane;
@@ -9971,19 +9991,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1126 = {
+  devToolsConfig$jscomp$inline_1124 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-e3c468a4",
+    version: "18.3.0-www-modern-991669f2",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1292 = {
-  bundleType: devToolsConfig$jscomp$inline_1126.bundleType,
-  version: devToolsConfig$jscomp$inline_1126.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1126.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1126.rendererConfig,
+var internals$jscomp$inline_1290 = {
+  bundleType: devToolsConfig$jscomp$inline_1124.bundleType,
+  version: devToolsConfig$jscomp$inline_1124.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1124.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1124.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10000,26 +10020,26 @@ var internals$jscomp$inline_1292 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1126.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1124.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-e3c468a4"
+  reconcilerVersion: "18.3.0-www-modern-991669f2"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1293 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1291 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1293.isDisabled &&
-    hook$jscomp$inline_1293.supportsFiber
+    !hook$jscomp$inline_1291.isDisabled &&
+    hook$jscomp$inline_1291.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1293.inject(
-        internals$jscomp$inline_1292
+      (rendererID = hook$jscomp$inline_1291.inject(
+        internals$jscomp$inline_1290
       )),
-        (injectedHook = hook$jscomp$inline_1293);
+        (injectedHook = hook$jscomp$inline_1291);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

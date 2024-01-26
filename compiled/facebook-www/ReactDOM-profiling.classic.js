@@ -685,6 +685,12 @@ function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
 function includesBlockingLane(root, lanes) {
   return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
 }
+function claimNextTransitionLane() {
+  var lane = nextTransitionLane;
+  nextTransitionLane <<= 1;
+  0 === (nextTransitionLane & 4194176) && (nextTransitionLane = 128);
+  return lane;
+}
 function claimNextRetryLane() {
   var lane = nextRetryLane;
   nextRetryLane <<= 1;
@@ -2246,19 +2252,15 @@ function scheduleImmediateTask(cb) {
   });
 }
 function requestTransitionLane() {
-  if (0 === currentEventTransitionLane) {
-    var lane = nextTransitionLane;
-    nextTransitionLane <<= 1;
-    0 === (nextTransitionLane & 4194176) && (nextTransitionLane = 128);
-    currentEventTransitionLane = lane;
-  }
+  0 === currentEventTransitionLane &&
+    (currentEventTransitionLane = claimNextTransitionLane());
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
   currentEntangledPendingCount = 0,
   currentEntangledLane = 0,
   currentEntangledActionThenable = null;
-function entangleAsyncAction(thenable) {
+function entangleAsyncAction(transition, thenable) {
   if (null === currentEntangledListeners) {
     var entangledListeners = (currentEntangledListeners = []);
     currentEntangledPendingCount = 0;
@@ -3750,30 +3752,28 @@ function updateReducerImpl(hook, current, reducer) {
           ? (workInProgressRootRenderLanes & updateLane) === updateLane
           : (renderLanes & updateLane) === updateLane
       ) {
-        0 !== updateLane &&
-          updateLane === currentEntangledLane &&
-          (didReadFromEntangledAsyncAction$55 = !0);
-        updateLane = update.revertLane;
-        if (enableAsyncActions && 0 !== updateLane)
-          if ((renderLanes & updateLane) === updateLane) {
+        var revertLane = update.revertLane;
+        if (enableAsyncActions && 0 !== revertLane)
+          if ((renderLanes & revertLane) === revertLane) {
             update = update.next;
+            revertLane === currentEntangledLane &&
+              (didReadFromEntangledAsyncAction$55 = !0);
             continue;
-          } else {
-            var clone$57 = {
+          } else
+            (updateLane = {
               lane: 0,
               revertLane: update.revertLane,
               action: update.action,
               hasEagerState: update.hasEagerState,
               eagerState: update.eagerState,
               next: null
-            };
-            null === newBaseQueueLast
-              ? ((newBaseQueueFirst = newBaseQueueLast = clone$57),
-                (baseFirst = pendingQueue))
-              : (newBaseQueueLast = newBaseQueueLast.next = clone$57);
-            currentlyRenderingFiber$1.lanes |= updateLane;
-            workInProgressRootSkippedLanes |= updateLane;
-          }
+            }),
+              null === newBaseQueueLast
+                ? ((newBaseQueueFirst = newBaseQueueLast = updateLane),
+                  (baseFirst = pendingQueue))
+                : (newBaseQueueLast = newBaseQueueLast.next = updateLane),
+              (currentlyRenderingFiber$1.lanes |= revertLane),
+              (workInProgressRootSkippedLanes |= revertLane);
         else
           null !== newBaseQueueLast &&
             (newBaseQueueLast = newBaseQueueLast.next =
@@ -3784,7 +3784,9 @@ function updateReducerImpl(hook, current, reducer) {
                 hasEagerState: update.hasEagerState,
                 eagerState: update.eagerState,
                 next: null
-              });
+              }),
+            updateLane === currentEntangledLane &&
+              (didReadFromEntangledAsyncAction$55 = !0);
         updateLane = update.action;
         shouldDoubleInvokeUserFnsInHooksDEV &&
           reducer(pendingQueue, updateLane);
@@ -3792,7 +3794,7 @@ function updateReducerImpl(hook, current, reducer) {
           ? update.eagerState
           : reducer(pendingQueue, updateLane);
       } else
-        (clone$57 = {
+        (revertLane = {
           lane: updateLane,
           revertLane: update.revertLane,
           action: update.action,
@@ -3801,9 +3803,9 @@ function updateReducerImpl(hook, current, reducer) {
           next: null
         }),
           null === newBaseQueueLast
-            ? ((newBaseQueueFirst = newBaseQueueLast = clone$57),
+            ? ((newBaseQueueFirst = newBaseQueueLast = revertLane),
               (baseFirst = pendingQueue))
-            : (newBaseQueueLast = newBaseQueueLast.next = clone$57),
+            : (newBaseQueueLast = newBaseQueueLast.next = revertLane),
           (currentlyRenderingFiber$1.lanes |= updateLane),
           (workInProgressRootSkippedLanes |= updateLane);
       update = update.next;
@@ -4134,7 +4136,7 @@ function startTransition(
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactCurrentBatchConfig$3.transition,
-    currentTransition = {};
+    currentTransition = { _callbacks: new Set() };
   enableAsyncActions
     ? ((ReactCurrentBatchConfig$3.transition = currentTransition),
       dispatchOptimisticSetState(fiber, !1, queue, pendingState))
@@ -4149,12 +4151,12 @@ function startTransition(
   try {
     if (enableAsyncActions) {
       var returnValue = callback();
+      notifyTransitionCallbacks(currentTransition, returnValue);
       if (
         null !== returnValue &&
         "object" === typeof returnValue &&
         "function" === typeof returnValue.then
       ) {
-        entangleAsyncAction(returnValue);
         var thenableForFinishedState = chainThenableValue(
           returnValue,
           finishedState
@@ -4260,6 +4262,7 @@ function dispatchSetState(fiber, queue, action) {
   enableSchedulingProfiler && markStateUpdateScheduled(fiber, lane);
 }
 function dispatchOptimisticSetState(fiber, throwIfDuringRender, queue, action) {
+  requestCurrentTransition();
   action = {
     lane: 2,
     revertLane: requestTransitionLane(),
@@ -6873,8 +6876,25 @@ function releaseCache(cache) {
       cache.controller.abort();
     });
 }
-var ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig,
-  resumedCache = createCursor(null),
+var ReactCurrentBatchConfig$2 = ReactSharedInternals.ReactCurrentBatchConfig;
+function requestCurrentTransition() {
+  var transition = ReactCurrentBatchConfig$2.transition;
+  null !== transition && transition._callbacks.add(handleTransitionScopeResult);
+  return transition;
+}
+function handleTransitionScopeResult(transition, returnValue) {
+  enableAsyncActions &&
+    null !== returnValue &&
+    "object" === typeof returnValue &&
+    "function" === typeof returnValue.then &&
+    entangleAsyncAction(transition, returnValue);
+}
+function notifyTransitionCallbacks(transition, returnValue) {
+  transition._callbacks.forEach(function (callback) {
+    return callback(transition, returnValue);
+  });
+}
+var resumedCache = createCursor(null),
   transitionStack = createCursor(null);
 function peekCacheFromPool() {
   var cacheResumedFromPreviousRender = resumedCache.current;
@@ -10566,7 +10586,7 @@ function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== ReactCurrentBatchConfig$2.transition)
+  if (null !== requestCurrentTransition())
     return (
       (fiber = currentEntangledLane),
       0 !== fiber ? fiber : requestTransitionLane()
@@ -10581,7 +10601,7 @@ function requestDeferredLane() {
   0 === workInProgressDeferredLane &&
     (workInProgressDeferredLane =
       0 === (workInProgressRootRenderLanes & 536870912) || isHydrating
-        ? requestTransitionLane()
+        ? claimNextTransitionLane()
         : 536870912);
   var suspenseHandler = suspenseHandlerStackCursor.current;
   null !== suspenseHandler && (suspenseHandler.flags |= 32);
@@ -13501,14 +13521,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$366;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1621 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1621) {
-      var element$jscomp$inline_1622 = document.createElement("div");
-      element$jscomp$inline_1622.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1621 =
-        "function" === typeof element$jscomp$inline_1622.oninput;
+    var isSupported$jscomp$inline_1619 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1619) {
+      var element$jscomp$inline_1620 = document.createElement("div");
+      element$jscomp$inline_1620.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1619 =
+        "function" === typeof element$jscomp$inline_1620.oninput;
     }
-    JSCompiler_inline_result$jscomp$366 = isSupported$jscomp$inline_1621;
+    JSCompiler_inline_result$jscomp$366 = isSupported$jscomp$inline_1619;
   } else JSCompiler_inline_result$jscomp$366 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$366 &&
@@ -13820,20 +13840,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1662 = 0;
-  i$jscomp$inline_1662 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1662++
+  var i$jscomp$inline_1660 = 0;
+  i$jscomp$inline_1660 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1660++
 ) {
-  var eventName$jscomp$inline_1663 =
-      simpleEventPluginEvents[i$jscomp$inline_1662],
-    domEventName$jscomp$inline_1664 =
-      eventName$jscomp$inline_1663.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1665 =
-      eventName$jscomp$inline_1663[0].toUpperCase() +
-      eventName$jscomp$inline_1663.slice(1);
+  var eventName$jscomp$inline_1661 =
+      simpleEventPluginEvents[i$jscomp$inline_1660],
+    domEventName$jscomp$inline_1662 =
+      eventName$jscomp$inline_1661.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1663 =
+      eventName$jscomp$inline_1661[0].toUpperCase() +
+      eventName$jscomp$inline_1661.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1664,
-    "on" + capitalizedEvent$jscomp$inline_1665
+    domEventName$jscomp$inline_1662,
+    "on" + capitalizedEvent$jscomp$inline_1663
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17387,10 +17407,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1888 = {
+var devToolsConfig$jscomp$inline_1886 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-a0c35bd7",
+  version: "18.3.0-www-classic-4b1d2c60",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17408,10 +17428,10 @@ var devToolsConfig$jscomp$inline_1888 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1888.bundleType,
-  version: devToolsConfig$jscomp$inline_1888.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1888.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1888.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1886.bundleType,
+  version: devToolsConfig$jscomp$inline_1886.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1886.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1886.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17427,14 +17447,14 @@ var devToolsConfig$jscomp$inline_1888 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1888.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1886.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-a0c35bd7"
+  reconcilerVersion: "18.3.0-www-classic-4b1d2c60"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17758,7 +17778,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-a0c35bd7";
+exports.version = "18.3.0-www-classic-4b1d2c60";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

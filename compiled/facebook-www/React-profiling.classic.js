@@ -448,15 +448,20 @@ exports.memo = function (type, compare) {
   };
 };
 exports.startTransition = function (scope, options) {
-  var prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
+  var prevTransition = ReactCurrentBatchConfig.transition,
+    callbacks = new Set();
+  ReactCurrentBatchConfig.transition = { _callbacks: callbacks };
+  var currentTransition = ReactCurrentBatchConfig.transition;
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
     ((ReactCurrentBatchConfig.transition.name = options.name),
     (ReactCurrentBatchConfig.transition.startTime = -1));
   try {
-    scope();
+    var returnValue = scope();
+    callbacks.forEach(function (callback) {
+      return callback(currentTransition, returnValue);
+    });
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
@@ -550,7 +555,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-de2439d8";
+exports.version = "18.3.0-www-classic-00275770";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
