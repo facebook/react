@@ -16056,7 +16056,7 @@ function insertStylesheetIntoRoot(root, resource) {
     node = nodes.getAttribute("data-precedence");
     i = precedences.get("p" + node) || last;
     i === last && precedences.set("last", nodes);
-    precedences.set(node, nodes);
+    precedences.set("p" + node, nodes);
     this.count++;
     last = onUnsuspend.bind(this);
     nodes.addEventListener("load", last);
@@ -16164,7 +16164,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1760 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-d5b75bf8",
+  version: "18.3.0-www-modern-ac114578",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2111 = {
@@ -16195,7 +16195,7 @@ var internals$jscomp$inline_2111 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-d5b75bf8"
+  reconcilerVersion: "18.3.0-www-modern-ac114578"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2112 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16460,4 +16460,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-d5b75bf8";
+exports.version = "18.3.0-www-modern-ac114578";

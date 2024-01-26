@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-2a25f03a";
+    var ReactVersion = "18.3.0-www-modern-606c88be";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
