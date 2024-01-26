@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b4a234f27344940e93dd5db513ab12fd>>
+ * @generated SignedSource<<7f49f2c94cf368ddffdd192ea0a2924f>>
  */
 
 "use strict";
@@ -19443,13 +19443,13 @@ to return true:wantsResponderID|                            |
       if (transition !== null) {
         // Whenever a transition update is scheduled, register a callback on the
         // transition object so we can get the return value of the scope function.
-        transition._callbacks.add(handleTransitionScopeResult);
+        transition._callbacks.add(handleAsyncAction);
       }
 
       return transition;
     }
 
-    function handleTransitionScopeResult(transition, returnValue) {}
+    function handleAsyncAction(transition, thenable) {}
 
     function notifyTransitionCallbacks(transition, returnValue) {
       var callbacks = transition._callbacks;
@@ -28281,7 +28281,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-de5a8f17";
+    var ReactVersion = "18.3.0-canary-7f90deaa";
 
     function createPortal$1(
       children,

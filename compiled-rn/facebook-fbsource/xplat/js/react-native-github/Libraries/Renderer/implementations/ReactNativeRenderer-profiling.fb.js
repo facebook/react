@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<631d630de570704b5491102de82dd546>>
+ * @generated SignedSource<<a8c7d7702122bf54be704127eaebae73>>
  */
 
 "use strict";
@@ -6272,7 +6272,7 @@ function readContextForConsumer(consumer, context) {
   return value;
 }
 var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
-function handleTransitionScopeResult() {}
+function handleAsyncAction() {}
 function scheduleRetryEffect(workInProgress, retryQueue) {
   null !== retryQueue
     ? (workInProgress.flags |= 4)
@@ -8449,7 +8449,7 @@ function requestUpdateLane(fiber) {
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
   fiber = ReactCurrentBatchConfig$1.transition;
-  null !== fiber && fiber._callbacks.add(handleTransitionScopeResult);
+  null !== fiber && fiber._callbacks.add(handleAsyncAction);
   if (null !== fiber)
     return (
       0 === currentEventTransitionLane &&
@@ -10493,7 +10493,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1194 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-b9b4d4b0",
+    version: "18.3.0-canary-8d8a2467",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10549,7 +10549,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-b9b4d4b0"
+  reconcilerVersion: "18.3.0-canary-8d8a2467"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

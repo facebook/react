@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3be9c2392f3e2ba0d334baa46208c093>>
+ * @generated SignedSource<<01a7046607ddd10a45604fb003900a70>>
  */
 
 "use strict";
@@ -278,6 +278,11 @@ function lazyInitializer(payload) {
   if (1 === payload._status) return payload._result.default;
   throw payload._result;
 }
+"function" === typeof reportError
+  ? reportError
+  : function (error) {
+      console.error(error);
+    };
 var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
   RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
 function jsx$1(type, config, maybeKey) {
@@ -443,14 +448,10 @@ exports.memo = function (type, compare) {
 };
 exports.startTransition = function (scope) {
   var prevTransition = ReactCurrentBatchConfig.transition,
-    callbacks = new Set();
-  ReactCurrentBatchConfig.transition = { _callbacks: callbacks };
-  var currentTransition = ReactCurrentBatchConfig.transition;
+    transition = { _callbacks: new Set() };
+  ReactCurrentBatchConfig.transition = transition;
   try {
-    var returnValue = scope();
-    callbacks.forEach(function (callback) {
-      return callback(currentTransition, returnValue);
-    });
+    scope();
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
@@ -544,4 +545,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-51c380d6e-20240126";
+exports.version = "18.3.0-canary-60f190a55-20240126";

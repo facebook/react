@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6a375816771645c6a6298e391b95480f>>
+ * @generated SignedSource<<c41561dadb43d7158811daa4e8000813>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-51c380d6e-20240126";
+    var ReactVersion = "18.3.0-canary-60f190a55-20240126";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -2650,31 +2650,48 @@ if (__DEV__) {
         ReactCurrentBatchConfig.transition._updatedFibers = new Set();
       }
 
-      try {
-        var returnValue = scope();
-        callbacks.forEach(function (callback) {
-          return callback(currentTransition, returnValue);
-        });
-      } finally {
-        ReactCurrentBatchConfig.transition = prevTransition;
+      {
+        // When async actions are not enabled, startTransition does not
+        // capture errors.
+        try {
+          scope();
+        } finally {
+          warnAboutTransitionSubscriptions(prevTransition, currentTransition);
+          ReactCurrentBatchConfig.transition = prevTransition;
+        }
+      }
+    }
 
-        {
-          if (prevTransition === null && currentTransition._updatedFibers) {
-            var updatedFibersCount = currentTransition._updatedFibers.size;
+    function warnAboutTransitionSubscriptions(
+      prevTransition,
+      currentTransition
+    ) {
+      {
+        if (prevTransition === null && currentTransition._updatedFibers) {
+          var updatedFibersCount = currentTransition._updatedFibers.size;
 
-            currentTransition._updatedFibers.clear();
+          currentTransition._updatedFibers.clear();
 
-            if (updatedFibersCount > 10) {
-              warn(
-                "Detected a large number of updates inside startTransition. " +
-                  "If this is due to a subscription please re-write it to use React provided hooks. " +
-                  "Otherwise concurrent mode guarantees are off the table."
-              );
-            }
+          if (updatedFibersCount > 10) {
+            warn(
+              "Detected a large number of updates inside startTransition. " +
+                "If this is due to a subscription please re-write it to use React provided hooks. " +
+                "Otherwise concurrent mode guarantees are off the table."
+            );
           }
         }
       }
     }
+    // the default for onRecoverableError.
+
+    typeof reportError === "function" // In modern browsers, reportError will dispatch an error event,
+      ? // emulating an uncaught JavaScript error.
+        reportError
+      : function (error) {
+          // In older browsers and test environments, fallback to console.error.
+          // eslint-disable-next-line react-internal/no-production-logging
+          console["error"](error);
+        };
 
     var didWarnAboutMessageChannel = false;
     var enqueueTaskImpl = null;

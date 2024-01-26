@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<44707665e2d49df89524e6821112ab6c>>
+ * @generated SignedSource<<202c1c7cbff4135eff9604c4cb02a215>>
  */
 
 "use strict";
@@ -8307,14 +8307,14 @@ if (__DEV__) {
 
       try {
         var returnValue = action(prevState, payload);
-        notifyTransitionCallbacks(currentTransition, returnValue);
 
         if (
           returnValue !== null &&
           typeof returnValue === "object" && // $FlowFixMe[method-unbinding]
           typeof returnValue.then === "function"
         ) {
-          var thenable = returnValue; // Attach a listener to read the return state of the action. As soon as
+          var thenable = returnValue;
+          notifyTransitionCallbacks(currentTransition, thenable); // Attach a listener to read the return state of the action. As soon as
           // this resolves, we can run the next action in the sequence.
 
           thenable.then(
@@ -8907,8 +8907,7 @@ if (__DEV__) {
 
       try {
         if (enableAsyncActions) {
-          var returnValue = callback();
-          notifyTransitionCallbacks(currentTransition, returnValue); // Check if we're inside an async action scope. If so, we'll entangle
+          var returnValue = callback(); // Check if we're inside an async action scope. If so, we'll entangle
           // this new action with the existing scope.
           //
           // If we're not already inside an async action scope, and this action is
@@ -8922,7 +8921,8 @@ if (__DEV__) {
             typeof returnValue === "object" &&
             typeof returnValue.then === "function"
           ) {
-            var thenable = returnValue; // Create a thenable that resolves to `finishedState` once the async
+            var thenable = returnValue;
+            notifyTransitionCallbacks(currentTransition, thenable); // Create a thenable that resolves to `finishedState` once the async
             // action has completed.
 
             var thenableForFinishedState = chainThenableValue(
@@ -16288,20 +16288,15 @@ if (__DEV__) {
       if (transition !== null) {
         // Whenever a transition update is scheduled, register a callback on the
         // transition object so we can get the return value of the scope function.
-        transition._callbacks.add(handleTransitionScopeResult);
+        transition._callbacks.add(handleAsyncAction);
       }
 
       return transition;
     }
 
-    function handleTransitionScopeResult(transition, returnValue) {
-      if (
-        returnValue !== null &&
-        typeof returnValue === "object" &&
-        typeof returnValue.then === "function"
-      ) {
+    function handleAsyncAction(transition, thenable) {
+      {
         // This is an async action.
-        var thenable = returnValue;
         entangleAsyncAction(transition, thenable);
       }
     }
@@ -25612,7 +25607,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-51c380d6e-20240126";
+    var ReactVersion = "18.3.0-canary-60f190a55-20240126";
 
     // Might add PROFILE later.
 

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1eb4050564e1744e070d195be2dae5ee>>
+ * @generated SignedSource<<876c7c325bf8c60091b5193da65519e1>>
  */
 
 "use strict";
@@ -2752,11 +2752,11 @@ function runFormStateAction(actionQueue, setState, payload) {
   ReactCurrentBatchConfig$2.transition = currentTransition;
   try {
     var returnValue = action(prevState, payload);
-    notifyTransitionCallbacks(currentTransition, returnValue);
     null !== returnValue &&
     "object" === typeof returnValue &&
     "function" === typeof returnValue.then
-      ? (returnValue.then(
+      ? (notifyTransitionCallbacks(currentTransition, returnValue),
+        returnValue.then(
           function (nextState) {
             actionQueue.state = nextState;
             finishRunningFormStateAction(actionQueue, setState);
@@ -2945,12 +2945,12 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
   dispatchOptimisticSetState(fiber, !1, queue, pendingState);
   try {
     var returnValue = callback();
-    notifyTransitionCallbacks(currentTransition, returnValue);
     if (
       null !== returnValue &&
       "object" === typeof returnValue &&
       "function" === typeof returnValue.then
     ) {
+      notifyTransitionCallbacks(currentTransition, returnValue);
       var thenableForFinishedState = chainThenableValue(
         returnValue,
         finishedState
@@ -5058,14 +5058,11 @@ function releaseCache(cache) {
 var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
 function requestCurrentTransition() {
   var transition = ReactCurrentBatchConfig$1.transition;
-  null !== transition && transition._callbacks.add(handleTransitionScopeResult);
+  null !== transition && transition._callbacks.add(handleAsyncAction);
   return transition;
 }
-function handleTransitionScopeResult(transition, returnValue) {
-  null !== returnValue &&
-    "object" === typeof returnValue &&
-    "function" === typeof returnValue.then &&
-    entangleAsyncAction(transition, returnValue);
+function handleAsyncAction(transition, thenable) {
+  entangleAsyncAction(transition, thenable);
 }
 function notifyTransitionCallbacks(transition, returnValue) {
   transition._callbacks.forEach(function (callback) {
@@ -9152,7 +9149,7 @@ var devToolsConfig$jscomp$inline_1029 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-51c380d6e-20240126",
+  version: "18.3.0-canary-60f190a55-20240126",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1205 = {
@@ -9183,7 +9180,7 @@ var internals$jscomp$inline_1205 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-51c380d6e-20240126"
+  reconcilerVersion: "18.3.0-canary-60f190a55-20240126"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1206 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

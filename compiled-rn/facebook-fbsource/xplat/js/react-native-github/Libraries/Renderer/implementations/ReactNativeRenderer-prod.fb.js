@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<350a4b50b6ea3e3a017cba94bc3a828e>>
+ * @generated SignedSource<<8000a8cf91749251a297ad9b675772f4>>
  */
 
 "use strict";
@@ -6047,7 +6047,7 @@ function readContextForConsumer(consumer, context) {
   return value;
 }
 var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
-function handleTransitionScopeResult() {}
+function handleAsyncAction() {}
 function scheduleRetryEffect(workInProgress, retryQueue) {
   null !== retryQueue
     ? (workInProgress.flags |= 4)
@@ -7925,7 +7925,7 @@ function requestUpdateLane(fiber) {
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
   fiber = ReactCurrentBatchConfig$1.transition;
-  null !== fiber && fiber._callbacks.add(handleTransitionScopeResult);
+  null !== fiber && fiber._callbacks.add(handleAsyncAction);
   if (null !== fiber)
     return (
       0 === currentEventTransitionLane &&
@@ -9791,7 +9791,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1116 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-1cfaa130",
+    version: "18.3.0-canary-02dbeb21",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9834,7 +9834,7 @@ var internals$jscomp$inline_1352 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-1cfaa130"
+  reconcilerVersion: "18.3.0-canary-02dbeb21"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1353 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

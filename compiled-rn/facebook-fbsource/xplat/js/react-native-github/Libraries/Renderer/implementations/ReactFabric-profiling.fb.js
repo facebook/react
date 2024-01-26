@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e665172ac92161b0dd89e51b883e72f1>>
+ * @generated SignedSource<<a56fd6b7c2bca3d0c084daef8439ed4d>>
  */
 
 "use strict";
@@ -6206,7 +6206,7 @@ function readContextForConsumer(consumer, context) {
   return value;
 }
 var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
-function handleTransitionScopeResult() {}
+function handleAsyncAction() {}
 function doesRequireClone(current, completedWork) {
   if (null !== current && current.child === completedWork.child) return !1;
   if (0 !== (completedWork.flags & 16)) return !0;
@@ -8221,7 +8221,7 @@ function requestUpdateLane(fiber) {
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
   fiber = ReactCurrentBatchConfig$1.transition;
-  null !== fiber && fiber._callbacks.add(handleTransitionScopeResult);
+  null !== fiber && fiber._callbacks.add(handleAsyncAction);
   if (null !== fiber)
     return (
       0 === currentEventTransitionLane &&
@@ -10271,7 +10271,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1131 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-b88a79f0",
+    version: "18.3.0-canary-1bb8a9cd",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10327,7 +10327,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-b88a79f0"
+  reconcilerVersion: "18.3.0-canary-1bb8a9cd"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

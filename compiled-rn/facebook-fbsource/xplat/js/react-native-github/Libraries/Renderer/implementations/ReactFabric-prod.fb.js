@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<6173c591daaa71c81bc553429b732878>>
+ * @generated SignedSource<<c4b4e23bb8a27912066f7ee14080f926>>
  */
 
 "use strict";
@@ -5980,7 +5980,7 @@ function readContextForConsumer(consumer, context) {
   return value;
 }
 var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
-function handleTransitionScopeResult() {}
+function handleAsyncAction() {}
 function doesRequireClone(current, completedWork) {
   if (null !== current && current.child === completedWork.child) return !1;
   if (0 !== (completedWork.flags & 16)) return !0;
@@ -7696,7 +7696,7 @@ function requestUpdateLane(fiber) {
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
   fiber = ReactCurrentBatchConfig$1.transition;
-  null !== fiber && fiber._callbacks.add(handleTransitionScopeResult);
+  null !== fiber && fiber._callbacks.add(handleAsyncAction);
   if (null !== fiber)
     return (
       0 === currentEventTransitionLane &&
@@ -9568,7 +9568,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1053 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-85a830b8",
+    version: "18.3.0-canary-ec7fc1ee",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9611,7 +9611,7 @@ var internals$jscomp$inline_1275 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-85a830b8"
+  reconcilerVersion: "18.3.0-canary-ec7fc1ee"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1276 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
