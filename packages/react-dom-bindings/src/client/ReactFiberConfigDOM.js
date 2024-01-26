@@ -3559,7 +3559,7 @@ function insertStylesheetIntoRoot(
   if (prior === last) {
     precedences.set('last', instance);
   }
-  precedences.set(precedence, instance);
+  precedences.set('p' + precedence, instance);
 
   this.count++;
   const onComplete = onUnsuspend.bind(this);
