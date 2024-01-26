@@ -49,7 +49,6 @@ export const enableProfilerNestedUpdateScheduledHook: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
 export const enableUpdaterTracking = __PROFILE__;
 
-export const createRootStrictEffectsByDefault = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
