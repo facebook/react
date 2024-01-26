@@ -11,6 +11,7 @@
 
 const React = require('react');
 const PropTypes = require('prop-types');
+const ReactDOM = require('react-dom');
 const ReactDOMClient = require('react-dom/client');
 const ReactTestUtils = require('react-dom/test-utils');
 const act = require('internal-test-utils').act;
@@ -359,26 +360,19 @@ describe('renderSubtreeIntoContainer', () => {
     expect(portal2.textContent).toBe('foo');
   });
 
-  it('fails gracefully when mixing React 15 and 16', async () => {
+  it('legacy test: fails gracefully when mixing React 15 and 16', () => {
     class C extends React.Component {
       render() {
         return <div />;
       }
     }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    const componentRef = React.createRef();
-    await act(async () => {
-      root.render(<C ref={componentRef} />);
-    });
+    // ReactDOM.render shouldn't be converted to `createRoot` because
+    // `reacteRoot` didn't exist in React 15.
+    const c = ReactDOM.render(<C />, document.createElement('div'));
     // React 15 calls this:
     // https://github.com/facebook/react/blob/77b71fc3c4/src/renderers/dom/client/ReactMount.js#L478-L479
-    const component = componentRef.current;
-    await expect(async () => {
-      act(async () => {
-        component._reactInternalInstance._processChildContext({});
-      });
+    expect(() => {
+      c._reactInternalInstance._processChildContext({});
     }).toThrow(
       __DEV__
         ? '_processChildContext is not available in React 16+. This likely ' +
