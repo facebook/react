@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c99939d6e36ef0328839a3f03a56e41f>>
+ * @generated SignedSource<<3be9c2392f3e2ba0d334baa46208c093>>
  */
 
 "use strict";
@@ -442,10 +442,15 @@ exports.memo = function (type, compare) {
   };
 };
 exports.startTransition = function (scope) {
-  var prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
+  var prevTransition = ReactCurrentBatchConfig.transition,
+    callbacks = new Set();
+  ReactCurrentBatchConfig.transition = { _callbacks: callbacks };
+  var currentTransition = ReactCurrentBatchConfig.transition;
   try {
-    scope();
+    var returnValue = scope();
+    callbacks.forEach(function (callback) {
+      return callback(currentTransition, returnValue);
+    });
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
@@ -539,4 +544,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-382190c59-20240125";
+exports.version = "18.3.0-canary-85b296e9b-20240125";

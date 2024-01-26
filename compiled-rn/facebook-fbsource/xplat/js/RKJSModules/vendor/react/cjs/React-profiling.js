@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f970a167227dc5d72ad0fc9ab65f8518>>
+ * @generated SignedSource<<0f65e9bd5218b0f39d0a3ee7ba21b1c0>>
  */
 
 "use strict";
@@ -439,10 +439,15 @@ exports.memo = function (type, compare) {
   };
 };
 exports.startTransition = function (scope) {
-  var prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = {};
+  var prevTransition = ReactCurrentBatchConfig.transition,
+    callbacks = new Set();
+  ReactCurrentBatchConfig.transition = { _callbacks: callbacks };
+  var currentTransition = ReactCurrentBatchConfig.transition;
   try {
-    scope();
+    var returnValue = scope();
+    callbacks.forEach(function (callback) {
+      return callback(currentTransition, returnValue);
+    });
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
@@ -535,7 +540,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-382190c59-20240125";
+exports.version = "18.3.0-canary-85b296e9b-20240125";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

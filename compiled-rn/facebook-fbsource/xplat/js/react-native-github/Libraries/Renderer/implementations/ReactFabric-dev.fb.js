@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<98889e37108bba6b8b4772891a2513c5>>
+ * @generated SignedSource<<0c4ce70d544b11f01045768907414d6b>>
  */
 
 "use strict";
@@ -7261,7 +7261,11 @@ to return true:wantsResponderID|                            |
       }
     }
 
-    function requestTransitionLane() {
+    function requestTransitionLane( // This argument isn't used, it's only here to encourage the caller to
+      // check that it's inside a transition before calling this function.
+      // TODO: Make this non-nullable. Requires a tweak to useOptimistic.
+      transition
+    ) {
       // The algorithm for assigning an update to a lane should be stable for all
       // updates at the same priority within the same event. To do this, the
       // inputs to the algorithm must be the same.
@@ -7277,70 +7281,11 @@ to return true:wantsResponderID|                            |
       return currentEventTransitionLane;
     }
 
-    // transition updates that occur while the async action is still in progress
-    // are treated as part of the action.
-    //
-    // The ideal behavior would be to treat each async function as an independent
-    // action. However, without a mechanism like AsyncContext, we can't tell which
-    // action an update corresponds to. So instead, we entangle them all into one.
-    // The listeners to notify once the entangled scope completes.
-
-    var currentEntangledListeners = null; // The number of pending async actions in the entangled scope.
-
-    var currentEntangledPendingCount = 0; // The transition lane shared by all updates in the entangled scope.
-
     var currentEntangledLane = NoLane; // A thenable that resolves when the entangled scope completes. It does not
     // resolve to a particular value because it's only used for suspending the UI
     // until the async action scope has completed.
 
     var currentEntangledActionThenable = null;
-    function entangleAsyncAction(thenable) {
-      // `thenable` is the return value of the async action scope function. Create
-      // a combined thenable that resolves once every entangled scope function
-      // has finished.
-      if (currentEntangledListeners === null) {
-        // There's no outer async action scope. Create a new one.
-        var entangledListeners = (currentEntangledListeners = []);
-        currentEntangledPendingCount = 0;
-        currentEntangledLane = requestTransitionLane();
-        var entangledThenable = {
-          status: "pending",
-          value: undefined,
-          then: function (resolve) {
-            entangledListeners.push(resolve);
-          }
-        };
-        currentEntangledActionThenable = entangledThenable;
-      }
-
-      currentEntangledPendingCount++;
-      thenable.then(pingEngtangledActionScope, pingEngtangledActionScope);
-      return thenable;
-    }
-
-    function pingEngtangledActionScope() {
-      if (
-        currentEntangledListeners !== null &&
-        --currentEntangledPendingCount === 0
-      ) {
-        // All the actions have finished. Close the entangled async action scope
-        // and notify all the listeners.
-        if (currentEntangledActionThenable !== null) {
-          var fulfilledThenable = currentEntangledActionThenable;
-          fulfilledThenable.status = "fulfilled";
-        }
-
-        var listeners = currentEntangledListeners;
-        currentEntangledListeners = null;
-        currentEntangledLane = NoLane;
-        currentEntangledActionThenable = null;
-
-        for (var i = 0; i < listeners.length; i++) {
-          var listener = listeners[i];
-          listener();
-        }
-      }
-    }
 
     function chainThenableValue(thenable, result) {
       // Equivalent to: Promise.resolve(thenable).then(() => result), except we can
@@ -11550,17 +11495,6 @@ to return true:wantsResponderID|                            |
             );
             markSkippedUpdateLanes(updateLane);
           } else {
-            // This update does have sufficient priority.
-            // Check if this update is part of a pending async action. If so,
-            // we'll need to suspend until the action has finished, so that it's
-            // batched together with future updates in the same action.
-            if (
-              updateLane !== NoLane &&
-              updateLane === peekEntangledActionLane()
-            ) {
-              didReadFromEntangledAsyncAction = true;
-            } // Check if this is an optimistic update.
-
             {
               // This is not an optimistic update, and we're going to apply it now.
               // But, if there were earlier updates that were skipped, we need to
@@ -11578,6 +11512,12 @@ to return true:wantsResponderID|                            |
                   next: null
                 };
                 newBaseQueueLast = newBaseQueueLast.next = _clone;
+              } // Check if this update is part of a pending async action. If so,
+              // we'll need to suspend until the action has finished, so that it's
+              // batched together with future updates in the same action.
+
+              if (updateLane === peekEntangledActionLane()) {
+                didReadFromEntangledAsyncAction = true;
               }
             } // Process this update.
 
@@ -12429,7 +12369,9 @@ to return true:wantsResponderID|                            |
         higherEventPriority(previousPriority, ContinuousEventPriority)
       );
       var prevTransition = ReactCurrentBatchConfig$2.transition;
-      var currentTransition = {};
+      var currentTransition = {
+        _callbacks: new Set()
+      };
 
       {
         ReactCurrentBatchConfig$2.transition = null;
@@ -19224,9 +19166,25 @@ to return true:wantsResponderID|                            |
 
     var ReactCurrentBatchConfig$1 =
       ReactSharedInternals.ReactCurrentBatchConfig;
-    var NoTransition = null;
     function requestCurrentTransition() {
-      return ReactCurrentBatchConfig$1.transition;
+      var transition = ReactCurrentBatchConfig$1.transition;
+
+      if (transition !== null) {
+        // Whenever a transition update is scheduled, register a callback on the
+        // transition object so we can get the return value of the scope function.
+        transition._callbacks.add(handleTransitionScopeResult);
+      }
+
+      return transition;
+    }
+
+    function handleTransitionScopeResult(transition, returnValue) {}
+
+    function notifyTransitionCallbacks(transition, returnValue) {
+      var callbacks = transition._callbacks;
+      callbacks.forEach(function (callback) {
+        return callback(transition, returnValue);
+      });
     } // When retrying a Suspense/Offscreen boundary, we restore the cache that was
     function getSuspendedCache() {
       {
@@ -23663,17 +23621,17 @@ to return true:wantsResponderID|                            |
         return pickArbitraryLane(workInProgressRootRenderLanes);
       }
 
-      var isTransition = requestCurrentTransition() !== NoTransition;
+      var transition = requestCurrentTransition();
 
-      if (isTransition) {
-        if (ReactCurrentBatchConfig.transition !== null) {
-          var transition = ReactCurrentBatchConfig.transition;
+      if (transition !== null) {
+        {
+          var batchConfigTransition = ReactCurrentBatchConfig.transition;
 
-          if (!transition._updatedFibers) {
-            transition._updatedFibers = new Set();
+          if (!batchConfigTransition._updatedFibers) {
+            batchConfigTransition._updatedFibers = new Set();
           }
 
-          transition._updatedFibers.add(fiber);
+          batchConfigTransition._updatedFibers.add(fiber);
         }
 
         var actionScopeLane = peekEntangledActionLane();
@@ -23740,7 +23698,7 @@ to return true:wantsResponderID|                            |
           workInProgressDeferredLane = OffscreenLane;
         } else {
           // Everything else is spawned as a transition.
-          workInProgressDeferredLane = requestTransitionLane();
+          workInProgressDeferredLane = claimNextTransitionLane();
         }
       } // Mark the parent Suspense boundary so it knows to spawn the deferred lane.
 
@@ -27882,7 +27840,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-2ee1c8bb";
+    var ReactVersion = "18.3.0-canary-d3d4405f";
 
     function createPortal$1(
       children,

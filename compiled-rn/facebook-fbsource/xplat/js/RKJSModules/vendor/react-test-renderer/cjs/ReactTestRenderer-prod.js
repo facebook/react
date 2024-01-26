@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9932d13e942d3ba6b8d1169bf8e60373>>
+ * @generated SignedSource<<1eb4050564e1744e070d195be2dae5ee>>
  */
 
 "use strict";
@@ -436,6 +436,12 @@ function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
 }
 function includesBlockingLane(root, lanes) {
   return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
+}
+function claimNextTransitionLane() {
+  var lane = nextTransitionLane;
+  nextTransitionLane <<= 1;
+  0 === (nextTransitionLane & 4194176) && (nextTransitionLane = 128);
+  return lane;
 }
 function claimNextRetryLane() {
   var lane = nextRetryLane;
@@ -988,19 +994,15 @@ function scheduleTaskForRootDuringMicrotask(root, currentTime) {
   return currentTime;
 }
 function requestTransitionLane() {
-  if (0 === currentEventTransitionLane) {
-    var lane = nextTransitionLane;
-    nextTransitionLane <<= 1;
-    0 === (nextTransitionLane & 4194176) && (nextTransitionLane = 128);
-    currentEventTransitionLane = lane;
-  }
+  0 === currentEventTransitionLane &&
+    (currentEventTransitionLane = claimNextTransitionLane());
   return currentEventTransitionLane;
 }
 var currentEntangledListeners = null,
   currentEntangledPendingCount = 0,
   currentEntangledLane = 0,
   currentEntangledActionThenable = null;
-function entangleAsyncAction(thenable) {
+function entangleAsyncAction(transition, thenable) {
   if (null === currentEntangledListeners) {
     var entangledListeners = (currentEntangledListeners = []);
     currentEntangledPendingCount = 0;
@@ -2539,11 +2541,8 @@ function updateReducerImpl(hook, current, reducer) {
           ? (workInProgressRootRenderLanes & updateLane) === updateLane
           : (renderLanes & updateLane) === updateLane
       ) {
-        0 !== updateLane &&
-          updateLane === currentEntangledLane &&
-          (didReadFromEntangledAsyncAction$26 = !0);
-        updateLane = update.revertLane;
-        if (0 === updateLane)
+        var revertLane = update.revertLane;
+        if (0 === revertLane)
           null !== newBaseQueueLast &&
             (newBaseQueueLast = newBaseQueueLast.next =
               {
@@ -2553,26 +2552,29 @@ function updateReducerImpl(hook, current, reducer) {
                 hasEagerState: update.hasEagerState,
                 eagerState: update.eagerState,
                 next: null
-              });
-        else if ((renderLanes & updateLane) === updateLane) {
+              }),
+            updateLane === currentEntangledLane &&
+              (didReadFromEntangledAsyncAction$26 = !0);
+        else if ((renderLanes & revertLane) === revertLane) {
           update = update.next;
+          revertLane === currentEntangledLane &&
+            (didReadFromEntangledAsyncAction$26 = !0);
           continue;
-        } else {
-          var clone$28 = {
+        } else
+          (updateLane = {
             lane: 0,
             revertLane: update.revertLane,
             action: update.action,
             hasEagerState: update.hasEagerState,
             eagerState: update.eagerState,
             next: null
-          };
-          null === newBaseQueueLast
-            ? ((newBaseQueueFirst = newBaseQueueLast = clone$28),
-              (baseFirst = pendingQueue))
-            : (newBaseQueueLast = newBaseQueueLast.next = clone$28);
-          currentlyRenderingFiber$1.lanes |= updateLane;
-          workInProgressRootSkippedLanes |= updateLane;
-        }
+          }),
+            null === newBaseQueueLast
+              ? ((newBaseQueueFirst = newBaseQueueLast = updateLane),
+                (baseFirst = pendingQueue))
+              : (newBaseQueueLast = newBaseQueueLast.next = updateLane),
+            (currentlyRenderingFiber$1.lanes |= revertLane),
+            (workInProgressRootSkippedLanes |= revertLane);
         updateLane = update.action;
         shouldDoubleInvokeUserFnsInHooksDEV &&
           reducer(pendingQueue, updateLane);
@@ -2580,7 +2582,7 @@ function updateReducerImpl(hook, current, reducer) {
           ? update.eagerState
           : reducer(pendingQueue, updateLane);
       } else
-        (clone$28 = {
+        (revertLane = {
           lane: updateLane,
           revertLane: update.revertLane,
           action: update.action,
@@ -2589,9 +2591,9 @@ function updateReducerImpl(hook, current, reducer) {
           next: null
         }),
           null === newBaseQueueLast
-            ? ((newBaseQueueFirst = newBaseQueueLast = clone$28),
+            ? ((newBaseQueueFirst = newBaseQueueLast = revertLane),
               (baseFirst = pendingQueue))
-            : (newBaseQueueLast = newBaseQueueLast.next = clone$28),
+            : (newBaseQueueLast = newBaseQueueLast.next = revertLane),
           (currentlyRenderingFiber$1.lanes |= updateLane),
           (workInProgressRootSkippedLanes |= updateLane);
       update = update.next;
@@ -2745,10 +2747,12 @@ function dispatchFormState(fiber, actionQueue, setState, payload) {
 function runFormStateAction(actionQueue, setState, payload) {
   var action = actionQueue.action,
     prevState = actionQueue.state,
-    prevTransition = ReactCurrentBatchConfig$2.transition;
-  ReactCurrentBatchConfig$2.transition = {};
+    prevTransition = ReactCurrentBatchConfig$2.transition,
+    currentTransition = { _callbacks: new Set() };
+  ReactCurrentBatchConfig$2.transition = currentTransition;
   try {
     var returnValue = action(prevState, payload);
+    notifyTransitionCallbacks(currentTransition, returnValue);
     null !== returnValue &&
     "object" === typeof returnValue &&
     "function" === typeof returnValue.then
@@ -2761,7 +2765,6 @@ function runFormStateAction(actionQueue, setState, payload) {
             return finishRunningFormStateAction(actionQueue, setState);
           }
         ),
-        entangleAsyncAction(returnValue),
         setState(returnValue))
       : (setState(returnValue),
         (actionQueue.state = returnValue),
@@ -2924,7 +2927,7 @@ function updateDeferredValueImpl(hook, prevValue, value) {
     (workInProgressDeferredLane =
       0 !== (workInProgressRootRenderLanes & 536870912)
         ? 536870912
-        : requestTransitionLane());
+        : claimNextTransitionLane());
   hook = suspenseHandlerStackCursor.current;
   null !== hook && (hook.flags |= 32);
   hook = workInProgressDeferredLane;
@@ -2936,17 +2939,18 @@ function startTransition(fiber, queue, pendingState, finishedState, callback) {
   var previousPriority = currentUpdatePriority;
   currentUpdatePriority =
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
-  var prevTransition = ReactCurrentBatchConfig$2.transition;
-  ReactCurrentBatchConfig$2.transition = {};
+  var prevTransition = ReactCurrentBatchConfig$2.transition,
+    currentTransition = { _callbacks: new Set() };
+  ReactCurrentBatchConfig$2.transition = currentTransition;
   dispatchOptimisticSetState(fiber, !1, queue, pendingState);
   try {
     var returnValue = callback();
+    notifyTransitionCallbacks(currentTransition, returnValue);
     if (
       null !== returnValue &&
       "object" === typeof returnValue &&
       "function" === typeof returnValue.then
     ) {
-      entangleAsyncAction(returnValue);
       var thenableForFinishedState = chainThenableValue(
         returnValue,
         finishedState
@@ -3047,6 +3051,7 @@ function dispatchSetState(fiber, queue, action) {
   }
 }
 function dispatchOptimisticSetState(fiber, throwIfDuringRender, queue, action) {
+  requestCurrentTransition();
   action = {
     lane: 2,
     revertLane: requestTransitionLane(),
@@ -5050,8 +5055,24 @@ function releaseCache(cache) {
       cache.controller.abort();
     });
 }
-var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig,
-  resumedCache = createCursor(null);
+var ReactCurrentBatchConfig$1 = ReactSharedInternals.ReactCurrentBatchConfig;
+function requestCurrentTransition() {
+  var transition = ReactCurrentBatchConfig$1.transition;
+  null !== transition && transition._callbacks.add(handleTransitionScopeResult);
+  return transition;
+}
+function handleTransitionScopeResult(transition, returnValue) {
+  null !== returnValue &&
+    "object" === typeof returnValue &&
+    "function" === typeof returnValue.then &&
+    entangleAsyncAction(transition, returnValue);
+}
+function notifyTransitionCallbacks(transition, returnValue) {
+  transition._callbacks.forEach(function (callback) {
+    return callback(transition, returnValue);
+  });
+}
+var resumedCache = createCursor(null);
 function peekCacheFromPool() {
   var cacheResumedFromPreviousRender = resumedCache.current;
   return null !== cacheResumedFromPreviousRender
@@ -7012,7 +7033,7 @@ function requestUpdateLane(fiber) {
   if (0 === (fiber.mode & 1)) return 2;
   if (0 !== (executionContext & 2) && 0 !== workInProgressRootRenderLanes)
     return workInProgressRootRenderLanes & -workInProgressRootRenderLanes;
-  if (null !== ReactCurrentBatchConfig$1.transition)
+  if (null !== requestCurrentTransition())
     return (
       (fiber = currentEntangledLane),
       0 !== fiber ? fiber : requestTransitionLane()
@@ -9126,19 +9147,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1031 = {
+var devToolsConfig$jscomp$inline_1029 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-382190c59-20240125",
+  version: "18.3.0-canary-85b296e9b-20240125",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1207 = {
-  bundleType: devToolsConfig$jscomp$inline_1031.bundleType,
-  version: devToolsConfig$jscomp$inline_1031.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1031.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1031.rendererConfig,
+var internals$jscomp$inline_1205 = {
+  bundleType: devToolsConfig$jscomp$inline_1029.bundleType,
+  version: devToolsConfig$jscomp$inline_1029.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1029.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1029.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9155,26 +9176,26 @@ var internals$jscomp$inline_1207 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1031.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1029.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-382190c59-20240125"
+  reconcilerVersion: "18.3.0-canary-85b296e9b-20240125"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1208 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1206 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1208.isDisabled &&
-    hook$jscomp$inline_1208.supportsFiber
+    !hook$jscomp$inline_1206.isDisabled &&
+    hook$jscomp$inline_1206.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1208.inject(
-        internals$jscomp$inline_1207
+      (rendererID = hook$jscomp$inline_1206.inject(
+        internals$jscomp$inline_1205
       )),
-        (injectedHook = hook$jscomp$inline_1208);
+        (injectedHook = hook$jscomp$inline_1206);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;

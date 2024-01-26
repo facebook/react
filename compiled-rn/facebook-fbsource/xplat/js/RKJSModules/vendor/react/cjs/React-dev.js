@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<807dd24b40aeb78f3b98550677a2f14f>>
+ * @generated SignedSource<<6a375816771645c6a6298e391b95480f>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-382190c59-20240125";
+    var ReactVersion = "18.3.0-canary-85b296e9b-20240125";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -2636,8 +2636,14 @@ if (__DEV__) {
     }
 
     function startTransition(scope, options) {
-      var prevTransition = ReactCurrentBatchConfig.transition;
-      ReactCurrentBatchConfig.transition = {};
+      var prevTransition = ReactCurrentBatchConfig.transition; // Each renderer registers a callback to receive the return value of
+      // the scope function. This is used to implement async actions.
+
+      var callbacks = new Set();
+      var transition = {
+        _callbacks: callbacks
+      };
+      ReactCurrentBatchConfig.transition = transition;
       var currentTransition = ReactCurrentBatchConfig.transition;
 
       {
@@ -2645,7 +2651,10 @@ if (__DEV__) {
       }
 
       try {
-        scope();
+        var returnValue = scope();
+        callbacks.forEach(function (callback) {
+          return callback(currentTransition, returnValue);
+        });
       } finally {
         ReactCurrentBatchConfig.transition = prevTransition;
 
