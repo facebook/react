@@ -181,6 +181,8 @@ type Task = {
   model: ReactClientValue,
   ping: () => void,
   toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
+  keyPath: null | string, // parent server component keys
+  implicitSlot: boolean, // true if the root server component of this sequence had a null key
   context: ContextSnapshot,
   thenableState: ThenableState | null,
 };
@@ -314,7 +316,14 @@ export function createRequest(
   };
   request.pendingChunks++;
   const rootContext = createRootContext(context);
-  const rootTask = createTask(request, model, rootContext, abortSet);
+  const rootTask = createTask(
+    request,
+    model,
+    null,
+    false,
+    rootContext,
+    abortSet,
+  );
   pingedTasks.push(rootTask);
   return request;
 }
@@ -338,12 +347,18 @@ function createRootContext(
 
 const POP = {};
 
-function serializeThenable(request: Request, thenable: Thenable<any>): number {
+function serializeThenable(
+  request: Request,
+  task: Task,
+  thenable: Thenable<any>,
+): number {
   request.pendingChunks++;
   const newTask = createTask(
     request,
     null,
-    getActiveContext(),
+    task.keyPath, // the server component sequence continues through Promise-as-a-child.
+    task.implicitSlot,
+    task.context,
     request.abortableTasks,
   );
 
@@ -647,6 +662,8 @@ function pingTask(request: Request, task: Task): void {
 function createTask(
   request: Request,
   model: ReactClientValue,
+  keyPath: null | string,
+  implicitSlot: boolean,
   context: ContextSnapshot,
   abortSet: Set<Task>,
 ): Task {
@@ -659,6 +676,8 @@ function createTask(
     id,
     status: PENDING,
     model,
+    keyPath,
+    implicitSlot,
     context,
     ping: () => pingTask(request, task),
     toJSON: function (
@@ -855,7 +874,9 @@ function outlineModel(request: Request, value: ReactClientValue): number {
   const newTask = createTask(
     request,
     value,
-    getActiveContext(),
+    null, // The way we use outlining is for reusing an object.
+    false, // It makes no sense for that use case to be contextual.
+    rootContextSnapshot, // Therefore we don't pass any contextual information along.
     request.abortableTasks,
   );
   retryTask(request, newTask);
@@ -1016,7 +1037,9 @@ function renderModel(
         const newTask = createTask(
           request,
           task.model,
-          getActiveContext(),
+          task.keyPath,
+          task.implicitSlot,
+          task.context,
           request.abortableTasks,
         );
         const ping = newTask.ping;
@@ -1166,7 +1189,7 @@ function renderModelDestructive(
       }
       // We assume that any object with a .then property is a "Thenable" type,
       // or a Promise type. Either of which can be represented by a Promise.
-      const promiseId = serializeThenable(request, (value: any));
+      const promiseId = serializeThenable(request, task, (value: any));
       writtenObjects.set(value, promiseId);
       return serializePromiseID(promiseId);
     }
@@ -1582,6 +1605,7 @@ function retryTask(request: Request, task: Task): void {
     return;
   }
 
+  const prevContext = getActiveContext();
   switchContext(task.context);
   try {
     // Track the root so we know that we have to emit this object even though it
@@ -1646,6 +1670,10 @@ function retryTask(request: Request, task: Task): void {
     task.status = ERRORED;
     const digest = logRecoverableError(request, x);
     emitErrorChunk(request, task.id, digest, x);
+  } finally {
+    if (enableServerContext) {
+      switchContext(prevContext);
+    }
   }
 }
 
