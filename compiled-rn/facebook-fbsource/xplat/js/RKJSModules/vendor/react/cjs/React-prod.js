@@ -545,4 +545,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-37bdff675-20240126";
+exports.version = "18.3.0-canary-766eac46b-20240126";
