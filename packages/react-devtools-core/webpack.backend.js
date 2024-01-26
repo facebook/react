@@ -70,7 +70,7 @@ module.exports = {
     }),
     new Webpack.DefinePlugin({
       __DEV__,
-      __EXPERIMENTAL__: true,
+      __EXPERIMENTAL__: 'readonly',
       __EXTENSION__: false,
       __PROFILE__: false,
       __TEST__: NODE_ENV === 'test',

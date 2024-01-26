@@ -521,6 +521,7 @@ module.exports = {
     spyOnProd: 'readonly',
     __DEV__: 'readonly',
     __EXPERIMENTAL__: 'readonly',
+    __NEXT_MAJOR__: 'readonly',
     __EXTENSION__: 'readonly',
     __PROFILE__: 'readonly',
     __TEST__: 'readonly',

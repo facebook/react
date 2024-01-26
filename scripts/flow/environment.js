@@ -12,6 +12,7 @@
 declare var __PROFILE__: boolean;
 declare var __UMD__: boolean;
 declare var __EXPERIMENTAL__: boolean;
+declare var __NEXT_MAJOR__: boolean;
 declare var __VARIANT__: boolean;
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
