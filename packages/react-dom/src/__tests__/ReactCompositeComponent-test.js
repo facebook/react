@@ -12,7 +12,7 @@
 let ChildUpdates;
 let MorphingComponent;
 let React;
-let ReactDOMX;
+let ReactDOM;
 let ReactDOMClient;
 let ReactCurrentOwner;
 let Scheduler;
@@ -65,7 +65,7 @@ describe('ReactCompositeComponent', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOMX = require('react-dom');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactCurrentOwner =
       require('react').__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
@@ -225,7 +225,7 @@ describe('ReactCompositeComponent', () => {
       const root = ReactDOMClient.createRoot(el);
       expect(() => {
         expect(() => {
-          ReactDOMX.flushSync(() => {
+          ReactDOM.flushSync(() => {
             root.render(<Child test="test" />);
           });
         }).toThrow(
@@ -254,7 +254,7 @@ describe('ReactCompositeComponent', () => {
       const el = document.createElement('div');
       const root = ReactDOMClient.createRoot(el);
       expect(() => {
-        ReactDOMX.flushSync(() => {
+        ReactDOM.flushSync(() => {
           root.render(<Child test="test" />);
         });
       }).toErrorDev(
@@ -336,7 +336,7 @@ describe('ReactCompositeComponent', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<MyComponent />);
       });
     }).toErrorDev(
@@ -370,7 +370,7 @@ describe('ReactCompositeComponent', () => {
     const root = ReactDOMClient.createRoot(container);
 
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<MyComponent />);
       });
     }).toErrorDev(
@@ -506,7 +506,7 @@ describe('ReactCompositeComponent', () => {
     const root = ReactDOMClient.createRoot(container);
     expect(() => {
       expect(() => {
-        ReactDOMX.flushSync(() => {
+        ReactDOM.flushSync(() => {
           root.render(<ClassWithRenderNotExtended />);
         });
       }).toThrow(TypeError);
@@ -518,7 +518,7 @@ describe('ReactCompositeComponent', () => {
 
     // Test deduplication
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<ClassWithRenderNotExtended />);
       });
     }).toThrow(TypeError);
@@ -542,7 +542,7 @@ describe('ReactCompositeComponent', () => {
     let instance;
     const root = ReactDOMClient.createRoot(container);
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<Component ref={ref => (instance = ref)} />);
       });
     }).toErrorDev(
@@ -575,7 +575,7 @@ describe('ReactCompositeComponent', () => {
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(instance);
       });
     }).toThrow();
@@ -635,7 +635,7 @@ describe('ReactCompositeComponent', () => {
     });
 
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         instance.setState({bogus: true});
       });
     }).toErrorDev(
@@ -655,7 +655,7 @@ describe('ReactCompositeComponent', () => {
 
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<Component />);
       });
     }).toErrorDev(
@@ -677,7 +677,7 @@ describe('ReactCompositeComponent', () => {
     const root = ReactDOMClient.createRoot(document.createElement('div'));
 
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<Component />);
       });
     }).toErrorDev(
@@ -703,7 +703,7 @@ describe('ReactCompositeComponent', () => {
     const root = ReactDOMClient.createRoot(document.createElement('div'));
 
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<Component />);
       });
     }).toErrorDev(
@@ -756,7 +756,7 @@ describe('ReactCompositeComponent', () => {
     }
 
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<Outer />);
       });
     }).toErrorDev(
@@ -853,7 +853,7 @@ describe('ReactCompositeComponent', () => {
 
     const root = ReactDOMClient.createRoot(container);
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<Foo idx="qwe" />);
       });
     }).toErrorDev(
@@ -898,10 +898,10 @@ describe('ReactCompositeComponent', () => {
 
     const root = ReactDOMClient.createRoot(container);
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<App ref={setRef} stage={1} />);
       });
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<App ref={setRef} stage={2} />);
       });
     }).toThrow();
@@ -1204,7 +1204,7 @@ describe('ReactCompositeComponent', () => {
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     expect(() => {
       expect(() => {
-        ReactDOMX.flushSync(() => {
+        ReactDOM.flushSync(() => {
           root.render(<RenderTextInvalidConstructor />);
         });
       }).toThrow();
@@ -1236,7 +1236,7 @@ describe('ReactCompositeComponent', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<Bad />);
       });
     }).toErrorDev(
@@ -1251,7 +1251,7 @@ describe('ReactCompositeComponent', () => {
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     expect(() => {
       expect(() => {
-        ReactDOMX.flushSync(() => {
+        ReactDOM.flushSync(() => {
           root.render(<RenderTestUndefinedRender />);
         });
       }).toThrow();
@@ -1420,7 +1420,7 @@ describe('ReactCompositeComponent', () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     expect(() => {
-      ReactDOMX.flushSync(() => {
+      ReactDOM.flushSync(() => {
         root.render(<Parent />);
       });
     }).toErrorDev(
@@ -1431,7 +1431,7 @@ describe('ReactCompositeComponent', () => {
     expect(ref.textContent).toBe('1');
 
     // Dedupe.
-    ReactDOMX.flushSync(() => {
+    ReactDOM.flushSync(() => {
       root.render(<Parent />);
     });
 
