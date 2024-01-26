@@ -11,8 +11,9 @@
 
 const React = require('react');
 const PropTypes = require('prop-types');
-const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
 const ReactTestUtils = require('react-dom/test-utils');
+const act = require('internal-test-utils').act;
 const renderSubtreeIntoContainer =
   require('react-dom').unstable_renderSubtreeIntoContainer;
 
@@ -101,7 +102,7 @@ describe('renderSubtreeIntoContainer', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should update context if it changes due to setState', () => {
+  it('should update context if it changes due to setState', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -154,15 +155,22 @@ describe('renderSubtreeIntoContainer', () => {
         );
       }
     }
+    const root = ReactDOMClient.createRoot(container);
+    const parentRef = React.createRef();
+    await act(async () => {
+      root.render(<Parent ref={parentRef} />);
+    });
+    const instance = parentRef.current;
 
-    const instance = ReactDOM.render(<Parent />, container);
     expect(portal.firstChild.innerHTML).toBe('initial-initial');
-    instance.setState({bar: 'changed'});
+    await act(async () => {
+      instance.setState({bar: 'changed'});
+    });
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
   // @gate !disableLegacyContext
-  it('should update context if it changes due to re-render', () => {
+  it('should update context if it changes due to re-render', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -212,13 +220,18 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactDOM.render(<Parent bar="initial" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Parent bar="initial" />);
+    });
     expect(portal.firstChild.innerHTML).toBe('initial-initial');
-    ReactDOM.render(<Parent bar="changed" />, container);
+    await act(async () => {
+      root.render(<Parent bar="changed" />);
+    });
     expect(portal.firstChild.innerHTML).toBe('changed-changed');
   });
 
-  it('should render portal with non-context-provider parent', () => {
+  it('should render portal with non-context-provider parent', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -237,12 +250,15 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactDOM.render(<Parent bar="initial" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Parent bar="initial" />);
+    });
     expect(portal.firstChild.innerHTML).toBe('hello');
   });
 
   // @gate !disableLegacyContext
-  it('should get context through non-context-provider parent', () => {
+  it('should get context through non-context-provider parent', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal = document.createElement('div');
@@ -281,12 +297,15 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactDOM.render(<Parent value="foo" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Parent value="foo" />);
+    });
     expect(portal.textContent).toBe('foo');
   });
 
   // @gate !disableLegacyContext
-  it('should get context through middle non-context-provider layer', () => {
+  it('should get context through middle non-context-provider layer', async () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
     const portal1 = document.createElement('div');
@@ -333,21 +352,33 @@ describe('renderSubtreeIntoContainer', () => {
       }
     }
 
-    ReactDOM.render(<Parent value="foo" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(async () => {
+      root.render(<Parent value="foo" />);
+    });
     expect(portal2.textContent).toBe('foo');
   });
 
-  it('fails gracefully when mixing React 15 and 16', () => {
+  it('fails gracefully when mixing React 15 and 16', async () => {
     class C extends React.Component {
       render() {
         return <div />;
       }
     }
-    const c = ReactDOM.render(<C />, document.createElement('div'));
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    const componentRef = React.createRef();
+    await act(async () => {
+      root.render(<C ref={componentRef} />);
+    });
     // React 15 calls this:
     // https://github.com/facebook/react/blob/77b71fc3c4/src/renderers/dom/client/ReactMount.js#L478-L479
-    expect(() => {
-      c._reactInternalInstance._processChildContext({});
+    const component = componentRef.current;
+    await expect(async () => {
+      act(async () => {
+        component._reactInternalInstance._processChildContext({});
+      });
     }).toThrow(
       __DEV__
         ? '_processChildContext is not available in React 16+. This likely ' +
