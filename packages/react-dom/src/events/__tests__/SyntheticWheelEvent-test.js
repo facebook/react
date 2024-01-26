@@ -122,6 +122,6 @@ describe('SyntheticWheelEvent', () => {
     );
 
     expect(events.length).toBe(2);
-    expect.assertions(5)
+    expect.assertions(5);
   });
 });
