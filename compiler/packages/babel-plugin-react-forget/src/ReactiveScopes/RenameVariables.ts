@@ -16,6 +16,7 @@ import {
   ReactiveInstruction,
   ReactiveScopeBlock,
 } from "../HIR/HIR";
+import { eachInstructionLValue } from "../HIR/visitors";
 import {
   ReactiveFunctionVisitor,
   eachReactiveValueOperand,
@@ -53,15 +54,12 @@ class Visitor extends ReactiveFunctionVisitor<Scopes> {
       this.traverseBlock(block, state);
     });
   }
-  override visitInstruction(
-    instruction: ReactiveInstruction,
-    state: Scopes
-  ): void {
-    for (const operand of eachReactiveValueOperand(instruction.value)) {
+  override visitInstruction(instr: ReactiveInstruction, state: Scopes): void {
+    for (const operand of eachReactiveValueOperand(instr.value)) {
       state.visit(operand.identifier);
     }
-    if (instruction.lvalue !== null) {
-      state.visit(instruction.lvalue.identifier);
+    for (const operand of eachInstructionLValue(instr)) {
+      this.visitPlace(instr.id, operand, state);
     }
   }
   override visitScope(scope: ReactiveScopeBlock, state: Scopes): void {
