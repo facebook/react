@@ -45,23 +45,17 @@ export function requestCurrentTransition(): BatchConfigTransition | null {
   if (transition !== null) {
     // Whenever a transition update is scheduled, register a callback on the
     // transition object so we can get the return value of the scope function.
-    transition._callbacks.add(handleTransitionScopeResult);
+    transition._callbacks.add(handleAsyncAction);
   }
   return transition;
 }
 
-function handleTransitionScopeResult(
+function handleAsyncAction(
   transition: BatchConfigTransition,
-  returnValue: mixed,
+  thenable: Thenable<mixed>,
 ): void {
-  if (
-    enableAsyncActions &&
-    returnValue !== null &&
-    typeof returnValue === 'object' &&
-    typeof returnValue.then === 'function'
-  ) {
+  if (enableAsyncActions) {
     // This is an async action.
-    const thenable: Thenable<mixed> = (returnValue: any);
     entangleAsyncAction(transition, thenable);
   }
 }

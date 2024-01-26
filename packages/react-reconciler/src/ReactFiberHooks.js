@@ -1983,8 +1983,6 @@ function runFormStateAction<S, P>(
   }
   try {
     const returnValue = action(prevState, payload);
-    notifyTransitionCallbacks(currentTransition, returnValue);
-
     if (
       returnValue !== null &&
       typeof returnValue === 'object' &&
@@ -1992,6 +1990,7 @@ function runFormStateAction<S, P>(
       typeof returnValue.then === 'function'
     ) {
       const thenable = ((returnValue: any): Thenable<Awaited<S>>);
+      notifyTransitionCallbacks(currentTransition, thenable);
 
       // Attach a listener to read the return state of the action. As soon as
       // this resolves, we can run the next action in the sequence.
@@ -2854,7 +2853,6 @@ function startTransition<S>(
   try {
     if (enableAsyncActions) {
       const returnValue = callback();
-      notifyTransitionCallbacks(currentTransition, returnValue);
 
       // Check if we're inside an async action scope. If so, we'll entangle
       // this new action with the existing scope.
@@ -2870,6 +2868,7 @@ function startTransition<S>(
         typeof returnValue.then === 'function'
       ) {
         const thenable = ((returnValue: any): Thenable<mixed>);
+        notifyTransitionCallbacks(currentTransition, thenable);
         // Create a thenable that resolves to `finishedState` once the async
         // action has completed.
         const thenableForFinishedState = chainThenableValue(
