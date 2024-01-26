@@ -10,6 +10,7 @@
 'use strict';
 
 let React;
+let ReactDOM;
 let ReactDOMClient;
 let ReactTestUtils;
 let act;
@@ -18,6 +19,7 @@ describe('ReactIdentity', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
@@ -252,19 +254,22 @@ describe('ReactIdentity', () => {
 
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    let divRef = React.createRef();
+    let wrappedRef = React.createRef();
     await act(async () => {
       root.render(
-        <TestContainer first={instance0} second={instance1} ref={divRef} />,
+        <TestContainer first={instance0} second={instance1} ref={wrappedRef} />,
       );
     });
-    // this doesn't work
-    // divRef.current doesn't have `childNodes` attribute
-    const div = divRef.current;
+    const wrapped = wrappedRef.current;
+    // There isn't an alternative to findDOMNode for this:
+    // https://react.dev/reference/react-dom/findDOMNode#alternatives
+    const div = ReactDOM.findDOMNode(wrapped);
 
     const beforeA = div.childNodes[0];
     const beforeB = div.childNodes[1];
-    div.swap();
+    await act(async () => {
+      wrapped.swap();
+    });
     const afterA = div.childNodes[1];
     const afterB = div.childNodes[0];
 
