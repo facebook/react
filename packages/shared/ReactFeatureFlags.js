@@ -34,11 +34,6 @@ export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableFormActions = true;
 export const enableAsyncActions = true;
 
-// Not sure if www still uses this. We don't have a replacement but whatever we
-// replace it with will likely be different than what's already there, so we
-// probably should just delete it as long as nothing in www relies on it.
-export const enableSchedulerDebugging = false;
-
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
 
