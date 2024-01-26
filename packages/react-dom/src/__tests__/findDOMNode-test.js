@@ -11,7 +11,9 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
 const ReactTestUtils = require('react-dom/test-utils');
+const act = require('internal-test-utils').act;
 const StrictMode = React.StrictMode;
 
 describe('findDOMNode', () => {
@@ -37,7 +39,7 @@ describe('findDOMNode', () => {
     expect(mySameDiv).toBe(myDiv);
   });
 
-  it('findDOMNode should find dom element after an update from null', () => {
+  it('findDOMNode should find dom element after an update from null', async () => {
     function Bar({flag}) {
       if (flag) {
         return <span>A</span>;
@@ -51,15 +53,23 @@ describe('findDOMNode', () => {
     }
 
     const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
 
-    const myNodeA = ReactDOM.render(<MyNode />, container);
-    const a = ReactDOM.findDOMNode(myNodeA);
+    const nodeRef = React.createRef();
+    await act(async () => {
+      root.render(<MyNode ref={nodeRef} />);
+    });
+    const nodeAfterInitialRender = nodeRef.current;
+    const a = ReactDOM.findDOMNode(nodeAfterInitialRender);
     expect(a).toBe(null);
 
-    const myNodeB = ReactDOM.render(<MyNode flag={true} />, container);
-    expect(myNodeA === myNodeB).toBe(true);
+    await act(async () => {
+      root.render(<MyNode flag={true} ref={nodeRef} />);
+    });
+    const nodeAfterUpdate = nodeRef.current;
+    expect(nodeAfterInitialRender === nodeAfterUpdate).toBe(true);
 
-    const b = ReactDOM.findDOMNode(myNodeB);
+    const b = ReactDOM.findDOMNode(nodeRef.current);
     expect(b.tagName).toBe('SPAN');
   });
 
@@ -69,7 +79,7 @@ describe('findDOMNode', () => {
     }).toThrowError('Argument appears to not be a ReactComponent. Keys: foo');
   });
 
-  it('findDOMNode should reject unmounted objects with render func', () => {
+  it('findDOMNode should reject unmounted objects with render func', async () => {
     class Foo extends React.Component {
       render() {
         return <div />;
@@ -77,8 +87,15 @@ describe('findDOMNode', () => {
     }
 
     const container = document.createElement('div');
-    const inst = ReactDOM.render(<Foo />, container);
-    ReactDOM.unmountComponentAtNode(container);
+    const root = ReactDOMClient.createRoot(container);
+    const fooRef = React.createRef();
+    await act(async () => {
+      root.render(<Foo ref={fooRef} />);
+    });
+    const inst = fooRef.current;
+    await act(async () => {
+      root.unmount();
+    });
 
     expect(() => ReactDOM.findDOMNode(inst)).toThrowError(
       'Unable to find node on an unmounted component.',
