@@ -11,6 +11,7 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
 
 function expectWarnings(tags, warnings = [], withoutStack = 0) {
   tags = [...tags];
@@ -28,8 +29,13 @@ function expectWarnings(tags, warnings = [], withoutStack = 0) {
     element = <Tag>{element}</Tag>;
   }
 
+  const root = ReactDOMClient.createRoot(container);
   if (warnings.length) {
-    expect(() => ReactDOM.render(element, container)).toErrorDev(warnings, {
+    expect(() => {
+      ReactDOM.flushSync(() => {
+        root.render(element);
+      });
+    }).toErrorDev(warnings, {
       withoutStack,
     });
   }
