@@ -204,6 +204,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     ReactFeatureFlags.disableJavaScriptURLs = true;
 
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
 
@@ -336,13 +337,13 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
   it('rejects a javascript protocol href if it is added during an update', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
-    await act(()=>{
+    await act(() => {
       root.render(<a href="http://thisisfine/">click me</a>);
-    })
+    });
     expect(container.firstChild.href).toBe('http://thisisfine/');
-    await act(()=>{
+    await act(() => {
       root.render(<a href="javascript:notfine">click me</a>);
-    })
+    });
     expect(container.firstChild.href).toBe(EXPECTED_SAFE_URL);
   });
 
