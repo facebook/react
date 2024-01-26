@@ -14,7 +14,6 @@ let ReactTestRenderer;
 let Scheduler;
 let act;
 let assertLog;
-let StrictMode;
 
 describe('StrictEffectsMode', () => {
   beforeEach(() => {
