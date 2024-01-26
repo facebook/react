@@ -208,6 +208,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
 
     // Make them available to the helpers.
     return {
