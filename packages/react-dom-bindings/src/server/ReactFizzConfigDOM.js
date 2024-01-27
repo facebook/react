@@ -1508,6 +1508,54 @@ function checkSelectProp(props: any, propName: string) {
   }
 }
 
+function pushStartAnchor(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+): ReactNodeList {
+  target.push(startChunkForTag('a'));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        case 'href':
+          if (propValue === '') {
+            // Empty `href` is special on anchors so we're short-circuiting here.
+            // On other tags it should trigger a warning
+            pushStringAttribute(target, 'href', '');
+          } else {
+            pushAttribute(target, propKey, propValue);
+          }
+          break;
+        default:
+          pushAttribute(target, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
+  if (typeof children === 'string') {
+    // Special case children as a string to avoid the unnecessary comment.
+    // TODO: Remove this special case after the general optimization is in place.
+    target.push(stringToChunk(encodeHTMLTextNode(children)));
+    return null;
+  }
+  return children;
+}
+
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -3513,12 +3561,17 @@ export function pushStartInstance(
     case 'span':
     case 'svg':
     case 'path':
-    case 'a':
     case 'g':
     case 'p':
     case 'li':
       // Fast track very common tags
       break;
+    case 'a':
+      if (enableFilterEmptyStringAttributesDOM) {
+        return pushStartAnchor(target, props);
+      } else {
+        break;
+      }
     // Special tags
     case 'select':
       return pushStartSelect(target, props);

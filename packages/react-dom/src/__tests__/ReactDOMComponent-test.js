@@ -640,6 +640,16 @@ describe('ReactDOMComponent', () => {
         expect(node.hasAttribute('href')).toBe(false);
       });
 
+      it('should allow an empty href attribute on anchors', async () => {
+        const container = document.createElement('div');
+        const root = ReactDOMClient.createRoot(container);
+        await act(() => {
+          root.render(<a href="" />);
+        });
+        const node = container.firstChild;
+        expect(node.getAttribute('href')).toBe('');
+      });
+
       it('should allow an empty action attribute', async () => {
         const container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
