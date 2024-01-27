@@ -516,6 +516,48 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
   return lazyType;
 }
 
+function renderFragment(
+  request: Request,
+  task: Task,
+  children: $ReadOnlyArray<ReactClientValue>,
+): ReactJSONValue {
+  if (!enableServerComponentKeys) {
+    return children;
+  }
+  if (task.keyPath !== null) {
+    // We have a Server Component that specifies a key but we're now splitting
+    // the tree using a fragment.
+    const fragment = [
+      REACT_ELEMENT_TYPE,
+      REACT_FRAGMENT_TYPE,
+      task.keyPath,
+      {children},
+    ];
+    if (!task.implicitSlot) {
+      // If this was keyed inside a set. I.e. the outer Server Component was keyed
+      // then we need to handle reorders of the whole set. To do this we need to wrap
+      // this array in a keyed Fragment.
+      return fragment;
+    }
+    // If the outer Server Component was implicit but then an inner one had a key
+    // we don't actually need to be able to move the whole set around. It'll always be
+    // in an implicit slot. The key only exists to be able to reset the state of the
+    // children. We could achieve the same effect by passing on the keyPath to the next
+    // set of components inside the fragment. This would also allow a keyless fragment
+    // reconcile against a single child.
+    // Unfortunately because of JSON.stringify, we can't call the recursive loop for
+    // each child within this context because we can't return a set with already resolved
+    // values. E.g. a string would get double encoded. Returning would pop the context.
+    // So instead, we wrap it with an unkeyed fragment and inner keyed fragment.
+    return [fragment];
+  }
+  // Since we're yielding here, that implicitly resets the keyPath context on the
+  // way up. Which is what we want since we've consumed it. If this changes to
+  // be recursive serialization, we need to reset the keyPath and implicitSlot,
+  // before recursing here.
+  return children;
+}
+
 function renderClientElement(
   task: Task,
   type: any,
@@ -638,6 +680,7 @@ function renderElement(
         props.children,
       );
       task.implicitSlot = prevImplicitSlot;
+      return json;
     }
     // This might be a built-in React component. We'll let the client decide.
     // Any built-in works as long as its props are serializable.
@@ -1334,8 +1377,7 @@ function renderModelDestructive(
     }
 
     if (isArray(value)) {
-      // $FlowFixMe[incompatible-return]
-      return value;
+      return renderFragment(request, task, value);
     }
 
     if (value instanceof Map) {
@@ -1401,7 +1443,7 @@ function renderModelDestructive(
 
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
-      return Array.from((value: any));
+      return renderFragment(request, task, Array.from((value: any)));
     }
 
     // Verify that this is a simple plain object.
