@@ -16,6 +16,7 @@ import {
   enablePostpone,
   enableTaint,
   enableServerContext,
+  enableServerComponentKeys,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -515,11 +516,44 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
   return lazyType;
 }
 
+function renderClientElement(
+  task: Task,
+  type: any,
+  key: null | string,
+  props: any,
+): ReactJSONValue {
+  if (!enableServerComponentKeys) {
+    return [REACT_ELEMENT_TYPE, type, key, props];
+  }
+  // We prepend the terminal client element that actually gets serialized with
+  // the keys of any Server Components which are not serialized.
+  const keyPath = task.keyPath;
+  if (key === null) {
+    key = keyPath;
+  } else if (keyPath !== null) {
+    key = keyPath + ',' + key;
+  }
+  const element = [REACT_ELEMENT_TYPE, type, key, props];
+  if (task.implicitSlot && key !== null) {
+    // The root Server Component had no key so it was in an implicit slot.
+    // If we had a key lower, it would end up in that slot with an explicit key.
+    // We wrap the element in a fragment to give it an implicit key slot with
+    // an inner explicit key.
+    return [element];
+  }
+  // Since we're yielding here, that implicitly resets the keyPath context on the
+  // way up. Which is what we want since we've consumed it. If this changes to
+  // be recursive serialization, we need to reset the keyPath and implicitSlot,
+  // before recursing here. We also need to reset it once we render into an array
+  // or anything else too which we also get implicitly.
+  return element;
+}
+
 function renderElement(
   request: Request,
   task: Task,
   type: any,
-  key: null | React$Key,
+  key: null | string,
   ref: mixed,
   props: any,
 ): ReactJSONValue {
@@ -540,7 +574,7 @@ function renderElement(
   if (typeof type === 'function') {
     if (isClientReference(type)) {
       // This is a reference to a Client Component.
-      return [REACT_ELEMENT_TYPE, type, key, props];
+      return renderClientElement(task, type, key, props);
     }
     // This is a server-side component.
 
@@ -567,31 +601,51 @@ function renderElement(
       // the thenable here.
       result = createLazyWrapperAroundWakeable(result);
     }
-    return renderModelDestructive(request, task, emptyRoot, '', result);
+    // Track this element's key on the Server Component on the keyPath context..
+    const prevKeyPath = task.keyPath;
+    const prevImplicitSlot = task.implicitSlot;
+    if (key !== null) {
+      // Append the key to the path. Technically a null key should really add the child
+      // index. We don't do that to hold the payload small and implementation simple.
+      task.keyPath = prevKeyPath === null ? key : prevKeyPath + ',' + key;
+    } else if (prevKeyPath === null) {
+      // This sequence of Server Components has no keys. This means that it was rendered
+      // in a slot that needs to assign an implicit key. Even if children below have
+      // explicit keys, they should not be used for the outer most key since it might
+      // collide with other slots in that set.
+      task.implicitSlot = true;
+    }
+    const json = renderModelDestructive(request, task, emptyRoot, '', result);
+    task.keyPath = prevKeyPath;
+    task.implicitSlot = prevImplicitSlot;
+    return json;
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
-    return [REACT_ELEMENT_TYPE, type, key, props];
+    return renderClientElement(task, type, key, props);
   } else if (typeof type === 'symbol') {
-    if (type === REACT_FRAGMENT_TYPE) {
+    if (type === REACT_FRAGMENT_TYPE && key === null) {
       // For key-less fragments, we add a small optimization to avoid serializing
       // it as a wrapper.
-      // TODO: If a key is specified, we should propagate its key to any children.
-      // Same as if a Server Component has a key.
-      return renderModelDestructive(
+      const prevImplicitSlot = task.implicitSlot;
+      if (task.keyPath === null) {
+        task.implicitSlot = true;
+      }
+      const json = renderModelDestructive(
         request,
         task,
         emptyRoot,
         '',
         props.children,
       );
+      task.implicitSlot = prevImplicitSlot;
     }
     // This might be a built-in React component. We'll let the client decide.
     // Any built-in works as long as its props are serializable.
-    return [REACT_ELEMENT_TYPE, type, key, props];
+    return renderClientElement(task, type, key, props);
   } else if (type != null && typeof type === 'object') {
     if (isClientReference(type)) {
       // This is a reference to a Client Component.
-      return [REACT_ELEMENT_TYPE, type, key, props];
+      return renderClientElement(task, type, key, props);
     }
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE: {
@@ -611,7 +665,29 @@ function renderElement(
 
         prepareToUseHooksForComponent(prevThenableState);
         const result = render(props, undefined);
-        return renderModelDestructive(request, task, emptyRoot, '', result);
+        const prevKeyPath = task.keyPath;
+        const prevImplicitSlot = task.implicitSlot;
+        if (key !== null) {
+          // Append the key to the path. Technically a null key should really add the child
+          // index. We don't do that to hold the payload small and implementation simple.
+          task.keyPath = prevKeyPath === null ? key : prevKeyPath + ',' + key;
+        } else if (prevKeyPath === null) {
+          // This sequence of Server Components has no keys. This means that it was rendered
+          // in a slot that needs to assign an implicit key. Even if children below have
+          // explicit keys, they should not be used for the outer most key since it might
+          // collide with other slots in that set.
+          task.implicitSlot = true;
+        }
+        const json = renderModelDestructive(
+          request,
+          task,
+          emptyRoot,
+          '',
+          result,
+        );
+        task.keyPath = prevKeyPath;
+        task.implicitSlot = prevImplicitSlot;
+        return json;
       }
       case REACT_MEMO_TYPE: {
         return renderElement(request, task, type.type, key, ref, props);
@@ -633,13 +709,13 @@ function renderElement(
               );
             }
           }
-          return [
-            REACT_ELEMENT_TYPE,
+          return renderClientElement(
+            task,
             type,
             key,
             // Rely on __popProvider being serialized last to pop the provider.
             {value: props.value, children: props.children, __pop: POP},
-          ];
+          );
         }
         // Fallthrough
       }
@@ -1009,6 +1085,8 @@ function renderModel(
   key: string,
   value: ReactClientValue,
 ): ReactJSONValue {
+  const prevKeyPath = task.keyPath;
+  const prevImplicitSlot = task.implicitSlot;
   try {
     return renderModelDestructive(request, task, parent, key, value);
   } catch (thrownValue) {
@@ -1045,6 +1123,12 @@ function renderModel(
         const ping = newTask.ping;
         (x: any).then(ping, ping);
         newTask.thenableState = getThenableStateAfterSuspending();
+
+        // Restore the context. We assume that this will be restored by the inner
+        // functions in case nothing throws so we don't use "finally" here.
+        task.keyPath = prevKeyPath;
+        task.implicitSlot = prevImplicitSlot;
+
         if (wasReactNode) {
           return serializeLazyID(newTask.id);
         }
@@ -1057,12 +1141,24 @@ function renderModel(
         const postponeId = request.nextChunkId++;
         logPostpone(request, postponeInstance.message);
         emitPostponeChunk(request, postponeId, postponeInstance);
+
+        // Restore the context. We assume that this will be restored by the inner
+        // functions in case nothing throws so we don't use "finally" here.
+        task.keyPath = prevKeyPath;
+        task.implicitSlot = prevImplicitSlot;
+
         if (wasReactNode) {
           return serializeLazyID(postponeId);
         }
         return serializeByValueID(postponeId);
       }
     }
+
+    // Restore the context. We assume that this will be restored by the inner
+    // functions in case nothing throws so we don't use "finally" here.
+    task.keyPath = prevKeyPath;
+    task.implicitSlot = prevImplicitSlot;
+
     if (wasReactNode) {
       // Something errored. We'll still send everything we have up until this point.
       // We'll replace this element with a lazy reference that throws on the client
@@ -1131,13 +1227,13 @@ function renderModelDestructive(
           writtenObjects.set(value, -1);
         }
 
-        // TODO: Concatenate keys of parents onto children.
         const element: React$Element<any> = (value: any);
         // Attempt to render the Server Component.
         return renderElement(
           request,
           task,
           element.type,
+          // $FlowFixMe[incompatible-call] the key of an element is null | string
           element.key,
           element.ref,
           element.props,
@@ -1625,6 +1721,10 @@ function retryTask(request: Request, task: Task): void {
 
     // Track the root again for the resolved object.
     modelRoot = resolvedModel;
+
+    // The keyPath resets at any terminal child node.
+    task.keyPath = null;
+    task.implicitSlot = false;
 
     // If the value is a string, it means it's a terminal value adn we already escaped it
     // We don't need to escape it again so it's not passed the toJSON replacer.
