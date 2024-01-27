@@ -15,6 +15,7 @@ const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactTestUtils;
 let ReactDOMServer;
 
@@ -23,12 +24,13 @@ function initModules() {
   jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
     ReactTestUtils,
   };
@@ -638,7 +640,12 @@ describe('ReactDOMServerIntegration', () => {
         // DOM nodes on the client side. We force it to fire early
         // so that it gets deduplicated later, and doesn't fail the test.
         expect(() => {
-          ReactDOM.render(<nonstandard />, document.createElement('div'));
+          ReactDOM.flushSync(() => {
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
+            root.render(<nonstandard />);
+          });
         }).toErrorDev('The tag <nonstandard> is unrecognized in this browser.');
 
         const e = await render(<nonstandard foo="bar" />);
