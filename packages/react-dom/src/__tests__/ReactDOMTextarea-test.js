@@ -115,11 +115,9 @@ describe('ReactDOMTextarea', () => {
     await act(() => {
       root.render(<textarea defaultValue="foo" />);
     });
-
     await act(() => {
       root.render(<textarea defaultValue="bar" />);
     });
-
     await act(() => {
       root.render(<textarea defaultValue="noise" />);
     });
