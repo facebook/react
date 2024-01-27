@@ -548,7 +548,10 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       );
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
-      resolve();
+      await act(() => {
+        suspend = false;
+        resolve();
+      });
     });
 
     // @gate www
@@ -612,7 +615,10 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       expect(onBeforeBlurWithin).toHaveBeenCalledTimes(1);
       expect(onAfterBlurWithin).toHaveBeenCalledTimes(1);
 
-      resolve();
+      await act(() => {
+        suspend = false;
+        resolve();
+      });
     });
   });
 });
