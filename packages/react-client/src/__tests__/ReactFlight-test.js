@@ -1941,10 +1941,15 @@ describe('ReactFlight', () => {
       ReactNoop.render(await ReactNoopFlightClient.read(transport2));
     });
 
+    // We're intentionally breaking from the semantics here for efficiency of the protocol.
+    // In the case a Server Component inside a fragment is itself implicitly keyed but its
+    // return value has a key, then we need a wrapper fragment. This means they can't
+    // reconcile. To solve this we would need to add a wrapper fragment to every Server
+    // Component just in case it returns a fragment later which is a lot.
     expect(ReactNoop).toMatchRenderedOutput(
       <>
         <div>
-          <span>A1</span>
+          <span>A2{/* This should be A1 ideally */}</span>
           <span>B3</span>
         </div>
         <div>
@@ -2050,13 +2055,18 @@ describe('ReactFlight', () => {
       ReactNoop.render(await ReactNoopFlightClient.read(transport2));
     });
 
+    // We're intentionally breaking from the semantics here for efficiency of the protocol.
+    // The issue with this test scenario is that when the Server Component is in a set,
+    // the next slot can't be conditionally a fragment or single. That would require wrapping
+    // in an additional fragment for every single child just in case it every expands to a
+    // fragment.
     expect(ReactNoop).toMatchRenderedOutput(
       <div>
-        <span>A1</span>
+        <span>A2{/* Should be A1 */}</span>
         <span>B3</span>
-        <span>C1</span>
+        <span>C2{/* Should be C1 */}</span>
         <span>D3</span>
-        <span>C1</span>
+        <span>C2{/* Should be C1 */}</span>
         <span>D3</span>
       </div>,
     );
