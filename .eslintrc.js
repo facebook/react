@@ -327,6 +327,7 @@ module.exports = {
         'packages/react-server-dom-esm/**/*.js',
         'packages/react-server-dom-webpack/**/*.js',
         'packages/react-server-dom-turbopack/**/*.js',
+        'packages/react-server-dom-parcel/**/*.js',
         'packages/react-server-dom-fb/**/*.js',
         'packages/react-test-renderer/**/*.js',
         'packages/react-debug-tools/**/*.js',
@@ -434,6 +435,13 @@ module.exports = {
       globals: {
         __turbopack_load__: 'readonly',
         __turbopack_require__: 'readonly',
+      },
+    },
+    {
+      files: ['packages/react-server-dom-parcel/**/*.js'],
+      globals: {
+        parcelRequire: 'readonly',
+        __parcel__import__: 'readonly',
       },
     },
     {

@@ -163,6 +163,41 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-node-parcel',
+    entryPoints: [
+      'react-server-dom-parcel/server.node',
+      'react-server-dom-parcel/client.node',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom/static',
+      'react-dom/static.node',
+      'react-dom/src/server/react-dom-server.node',
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/server.node
+      'react-dom/src/server/ReactDOMFizzStaticNode.js',
+      'react-server-dom-parcel',
+      'react-server-dom-parcel/client.node',
+      'react-server-dom-parcel/server',
+      'react-server-dom-parcel/server.node',
+      'react-server-dom-parcel/src/ReactFlightDOMServerNode.js', // react-server-dom-parcel/server.node
+      'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcel.js',
+      'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcelServer.js',
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNode.js',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-bun',
     entryPoints: ['react-dom', 'react-dom/src/server/react-dom-server.bun.js'],
     paths: [
@@ -271,6 +306,36 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'dom-browser-parcel',
+    entryPoints: [
+      'react-server-dom-parcel/client.browser',
+      'react-server-dom-parcel/server.browser',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/client',
+      'react-dom/server',
+      'react-dom/server.node',
+      'react-dom-bindings',
+      'react-server-dom-parcel',
+      'react-server-dom-parcel/client',
+      'react-server-dom-parcel/client.browser',
+      'react-server-dom-parcel/server.browser',
+      'react-server-dom-parcel/src/ReactFlightDOMClientBrowser.js', // react-server-dom-parcel/client.browser
+      'react-server-dom-parcel/src/ReactFlightDOMServerBrowser.js', // react-server-dom-parcel/server.browser
+      'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcel.js',
+      'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcelBrowser.js',
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'react-interactions',
+      'shared/ReactDOMSharedInternals',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'dom-edge-webpack',
     entryPoints: [
       'react-dom/src/server/react-dom-server.edge.js',
@@ -330,6 +395,40 @@ module.exports = [
       'react-server-dom-turbopack/src/ReactFlightDOMServerEdge.js', // react-server-dom-webpack/server.edge
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopack.js',
       'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopackServer.js',
+      'react-devtools',
+      'react-devtools-core',
+      'react-devtools-shell',
+      'react-devtools-shared',
+      'shared/ReactDOMSharedInternals',
+      'react-server/src/ReactFlightServerConfigDebugNode.js',
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-edge-parcel',
+    entryPoints: [
+      'react-server-dom-parcel/server.edge',
+      'react-server-dom-parcel/client.edge',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/src/ReactDOMServer.js',
+      'react-dom-bindings',
+      'react-dom/client',
+      'react-dom/server.edge',
+      'react-dom/static.edge',
+      'react-dom/unstable_testing',
+      'react-dom/src/server/react-dom-server.edge',
+      'react-dom/src/server/ReactDOMFizzServerEdge.js', // react-dom/server.edge
+      'react-dom/src/server/ReactDOMFizzStaticEdge.js',
+      'react-server-dom-parcel',
+      'react-server-dom-parcel/client.edge',
+      'react-server-dom-parcel/server.edge',
+      'react-server-dom-parcel/src/ReactFlightDOMClientEdge.js', // react-server-dom-parcel/client.edge
+      'react-server-dom-parcel/src/ReactFlightDOMServerEdge.js', // react-server-dom-parcel/server.edge
+      'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcel.js',
+      'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcelServer.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
