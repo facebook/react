@@ -552,6 +552,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         suspend = false;
         resolve();
       });
+      expect(container2.innerHTML).toBe('<div><input style=""></div>');
     });
 
     // @gate www
@@ -619,6 +620,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         suspend = false;
         resolve();
       });
+      expect(container2.innerHTML).toBe('<div><input style=""></div>');
     });
   });
 });
