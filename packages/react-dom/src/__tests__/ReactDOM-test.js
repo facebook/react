@@ -74,6 +74,15 @@ describe('ReactDOM', () => {
     expect(node.tagName).toBe('DIV');
   });
 
+  it('allows href to be set without protocol', () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    ReactDOM.flushSync(() => {
+      root.render(<a href="thisisfine">click me</a>);
+    });
+    expect(container.firstChild.href).toBe('http://thisisfine');
+  });
+
   it('should allow children to be passed as an argument', () => {
     const argNode = ReactTestUtils.renderIntoDocument(
       React.createElement('div', null, 'child'),
