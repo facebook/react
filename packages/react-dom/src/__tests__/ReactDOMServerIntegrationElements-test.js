@@ -841,17 +841,20 @@ describe('ReactDOMServerIntegration', () => {
         'an element with one text child with special characters',
         async render => {
           const e = await render(<div>{'foo\rbar\r\nbaz\nqux\u0000'}</div>);
-          if (render === serverRender || render === streamRender) {
+          if (
+            render === serverRender ||
+            render === streamRender ||
+            render === clientRenderOnServerString
+          ) {
             expect(e.childNodes.length).toBe(1);
-            // Everything becomes LF when parsed from server HTML.
+            // Everything becomes LF when parsed from server HTML or hydrated.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
           } else {
             expect(e.childNodes.length).toBe(1);
-            // Client rendering (or hydration) uses JS value with CR.
+            // Client rendering uses JS value with CR.
             // Null character stays.
 
-            //TODO: fixme - This is broken
             expectNode(
               e.childNodes[0],
               TEXT_NODE_TYPE,
@@ -870,21 +873,17 @@ describe('ReactDOMServerIntegration', () => {
               {'\r\nbaz\nqux\u0000'}
             </div>,
           );
-          if (render === serverRender || render === streamRender) {
+          if (
+            render === serverRender ||
+            render === streamRender ||
+            render === clientRenderOnServerString
+          ) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Everything becomes LF when parsed from server HTML.
+            // Everything becomes LF when parsed from server HTML or hydrated.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\nbaz\nqux');
-          } else if (render === clientRenderOnServerString) {
-            // We have three nodes because there is a comment between them.
-            expect(e.childNodes.length).toBe(3);
-            // Hydration uses JS value with CR and null character.
-
-            //TODO: fixme - This is broken
-            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
-            expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\r\nbaz\nqux\u0000');
           } else {
             expect(e.childNodes.length).toBe(2);
             // Client rendering uses JS value with CR and null character.
