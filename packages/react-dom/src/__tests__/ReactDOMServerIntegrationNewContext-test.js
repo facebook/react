@@ -33,7 +33,8 @@ function initModules() {
   };
 }
 
-const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders, clientRenderOnBadMarkup} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
@@ -365,9 +366,13 @@ describe('ReactDOMServerIntegration', () => {
             </div>
           );
         };
-        // TODO: fails due to render error retry
-        // We expect 1 error.
-        await render(<App />, 1);
+        await render(
+          <App />,
+          render === clientRenderOnBadMarkup
+            ? // On hydration mismatch we retry and therefore log the warning again.
+              2
+            : 1,
+        );
       },
     );
 
@@ -392,9 +397,14 @@ describe('ReactDOMServerIntegration', () => {
             </div>
           );
         };
-        // TODO: fails due to render error retry
-        // We expect 1 error.
-        await render(<App />, 1);
+
+        await render(
+          <App />,
+          render === clientRenderOnBadMarkup
+            ? // On hydration mismatch we retry and therefore log the warning again.
+              2
+            : 1,
+        );
       },
     );
 

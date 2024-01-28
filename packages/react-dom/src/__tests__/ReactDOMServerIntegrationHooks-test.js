@@ -73,8 +73,13 @@ function initModules() {
   };
 }
 
-const {resetModules, itRenders, itThrowsWhenRendering, serverRender} =
-  ReactDOMServerIntegrationUtils(initModules);
+const {
+  resetModules,
+  itRenders,
+  itThrowsWhenRendering,
+  clientRenderOnBadMarkup,
+  serverRender,
+} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerHooks', () => {
   beforeEach(() => {
@@ -422,8 +427,13 @@ describe('ReactDOMServerHooks', () => {
         });
         return 'hi';
       }
-      // TODO: fails due to render error retry
-      const domNode = await render(<App />, 1);
+      const domNode = await render(
+        <App />,
+        render === clientRenderOnBadMarkup
+          ? // On hydration mismatch we retry and therefore log the warning again.
+            2
+          : 1,
+      );
       expect(domNode.textContent).toEqual('hi');
     });
 
@@ -436,8 +446,13 @@ describe('ReactDOMServerHooks', () => {
         return value;
       }
 
-      // TODO: fails due to render error retry
-      const domNode = await render(<App />, 1);
+      const domNode = await render(
+        <App />,
+        render === clientRenderOnBadMarkup
+          ? // On hydration mismatch we retry and therefore log the warning again.
+            2
+          : 1,
+      );
       expect(domNode.textContent).toEqual('0');
     });
   });
@@ -860,11 +875,15 @@ describe('ReactDOMServerHooks', () => {
         return <Text text={count} />;
       }
 
-      // TODO: fails due to render error retry
-      const domNode1 = await render(<ReadInMemo />, 1);
+      const domNode1 = await render(
+        <ReadInMemo />,
+        render === clientRenderOnBadMarkup
+          ? // On hydration mismatch we retry and therefore log the warning again.
+            2
+          : 1,
+      );
       expect(domNode1.textContent).toEqual('42');
 
-      // TODO: fails due to render error retry
       const domNode2 = await render(<ReadInReducer />, 1);
       expect(domNode2.textContent).toEqual('42');
     });
