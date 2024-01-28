@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {preloadModuleForSSR, preinitStyleForSSR} from 'react-client/src/ReactFlightClientConfig';
+import {
+  preloadModuleForSSR,
+  preinitStyleForSSR,
+} from 'react-client/src/ReactFlightClientConfig';
 
 export type ModuleLoading = null | {
   prefix: string,
@@ -25,19 +28,16 @@ export function prepareDestinationWithChunks(
         preinitStyleForSSR(
           moduleLoading.prefix + chunks[i],
           null, // precedence??
-          {crossOrigin: moduleLoading.crossOrigin}
+          {crossOrigin: moduleLoading.crossOrigin},
         );
       } else {
         // Use preload rather than preinit so the script is not executed until its dependencies
         // are ready. This happens once the parcelRequire call to execute the entry module occurs
         // during bootstrapping.
-        preloadModuleForSSR(
-          moduleLoading.prefix + chunks[i],
-          {
-            nonce,
-            crossOrigin: moduleLoading.crossOrigin
-          },
-        );
+        preloadModuleForSSR(moduleLoading.prefix + chunks[i], {
+          nonce,
+          crossOrigin: moduleLoading.crossOrigin,
+        });
       }
     }
   }

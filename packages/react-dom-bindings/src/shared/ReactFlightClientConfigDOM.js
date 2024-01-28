@@ -11,7 +11,11 @@
 // It is the configuration of the FlightClient behavior which can run in either environment.
 
 import type {HintCode, HintModel} from '../server/ReactFlightServerConfigDOM';
-import type {PreinitStyleOptions, PreloadImplOptions, PreloadModuleImplOptions} from 'react-dom/src/shared/ReactDOMTypes';
+import type {
+  PreinitStyleOptions,
+  PreloadImplOptions,
+  PreloadModuleImplOptions,
+} from 'react-dom/src/shared/ReactDOMTypes';
 
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
@@ -145,7 +149,7 @@ export function preinitScriptForSSR(
 export function preloadForSSR(
   href: string,
   as: string,
-  options: ?PreloadImplOptions
+  options: ?PreloadImplOptions,
 ) {
   const dispatcher = ReactDOMCurrentDispatcher.current;
   if (dispatcher) {
@@ -155,7 +159,7 @@ export function preloadForSSR(
 
 export function preloadModuleForSSR(
   href: string,
-  options: ?PreloadModuleImplOptions
+  options: ?PreloadModuleImplOptions,
 ) {
   const dispatcher = ReactDOMCurrentDispatcher.current;
   if (dispatcher) {

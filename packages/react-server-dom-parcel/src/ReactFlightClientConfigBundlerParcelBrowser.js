@@ -10,6 +10,7 @@
 export function loadChunk(url: string): Promise<mixed> {
   if (url.endsWith('.css')) {
     // TODO: move this to a separate package
+    // $FlowFixMe
     const cssLoader = require('@parcel/runtime-js/src/helpers/browser/css-loader');
     return cssLoader(url);
   } else {
