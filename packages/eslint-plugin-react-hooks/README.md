@@ -59,7 +59,7 @@ This option accepts a regex to match the names of custom Hooks that have depende
     // ...
     "react-hooks/exhaustive-deps": ["warn", {
       "additionalHooks": "(useMyCustomHook|useMyOtherCustomHook)",
-      "ignoreUseEffect": true, // not recommended; defaults to false
+      "ignoreUseEffect": true // not recommended; defaults to false
     }]
   }
 }
