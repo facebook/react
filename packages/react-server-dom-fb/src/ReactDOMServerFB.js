@@ -53,6 +53,9 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
   const resumableState = createResumableState(
     options ? options.identifierPrefix : undefined,
     options ? options.unstable_externalRuntimeSrc : undefined,
+    options ? options.bootstrapScriptContent : undefined,
+    options ? options.bootstrapScripts : undefined,
+    options ? options.bootstrapModules : undefined,
   );
   const request = createRequest(
     children,
@@ -60,9 +63,6 @@ function renderToStream(children: ReactNodeList, options: Options): Stream {
     createRenderState(
       resumableState,
       undefined,
-      options ? options.bootstrapScriptContent : undefined,
-      options ? options.bootstrapScripts : undefined,
-      options ? options.bootstrapModules : undefined,
       options ? options.unstable_externalRuntimeSrc : undefined,
     ),
     createRootFormatContext(undefined),

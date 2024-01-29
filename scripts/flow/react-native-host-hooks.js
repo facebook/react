@@ -159,6 +159,9 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
   declare export function createPublicTextInstance(
     internalInstanceHandle: mixed,
   ): PublicTextInstance;
+  declare export function getInternalInstanceHandleFromPublicInstance(
+    publicInstance: PublicInstance,
+  ): ?Object;
 }
 
 declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore' {

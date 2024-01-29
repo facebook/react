@@ -15,6 +15,10 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+let Scheduler;
+let ReactDOMClient;
+let assertLog;
+let waitForAll;
 
 describe('ReactMount', () => {
   beforeEach(() => {
@@ -22,8 +26,14 @@ describe('ReactMount', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
+    Scheduler = require('scheduler');
+
+    const InternalTestUtils = require('internal-test-utils');
+    assertLog = InternalTestUtils.assertLog;
+    waitForAll = InternalTestUtils.waitForAll;
   });
 
   describe('unmountComponentAtNode', () => {
@@ -149,17 +159,8 @@ describe('ReactMount', () => {
     const iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
 
-    if (gate(flags => flags.enableHostSingletons)) {
-      // HostSingletons make the warning for document.body unecessary
-      ReactDOM.render(<div />, iFrame.contentDocument.body);
-    } else {
-      expect(() =>
-        ReactDOM.render(<div />, iFrame.contentDocument.body),
-      ).toErrorDev(
-        'Rendering components directly into document.body is discouraged',
-        {withoutStack: true},
-      );
-    }
+    // HostSingletons make the warning for document.body unecessary
+    ReactDOM.render(<div />, iFrame.contentDocument.body);
   });
 
   it('should account for escaping on a checksum mismatch', () => {
@@ -345,5 +346,128 @@ describe('ReactMount', () => {
         'A<!-- react-mount-point-unstable -->B',
       );
     });
+  });
+
+  it('clears existing children with legacy API', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = '<div>a</div><div>b</div>';
+    ReactDOM.render(
+      <div>
+        <span>c</span>
+        <span>d</span>
+      </div>,
+      container,
+    );
+    expect(container.textContent).toEqual('cd');
+    ReactDOM.render(
+      <div>
+        <span>d</span>
+        <span>c</span>
+      </div>,
+      container,
+    );
+    await waitForAll([]);
+    expect(container.textContent).toEqual('dc');
+  });
+
+  it('warns when rendering with legacy API into createRoot() container', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    root.render(<div>Hi</div>);
+    await waitForAll([]);
+    expect(container.textContent).toEqual('Hi');
+    expect(() => {
+      ReactDOM.render(<div>Bye</div>, container);
+    }).toErrorDev(
+      [
+        // We care about this warning:
+        'You are calling ReactDOM.render() on a container that was previously ' +
+          'passed to ReactDOMClient.createRoot(). This is not supported. ' +
+          'Did you mean to call root.render(element)?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        'Replacing React-rendered children with a new root component.',
+      ],
+      {withoutStack: true},
+    );
+    await waitForAll([]);
+    // This works now but we could disallow it:
+    expect(container.textContent).toEqual('Bye');
+  });
+
+  it('callback passed to legacy hydrate() API', () => {
+    const container = document.createElement('div');
+    container.innerHTML = '<div>Hi</div>';
+    ReactDOM.hydrate(<div>Hi</div>, container, () => {
+      Scheduler.log('callback');
+    });
+    expect(container.textContent).toEqual('Hi');
+    assertLog(['callback']);
+  });
+
+  it('warns when unmounting with legacy API (no previous content)', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    root.render(<div>Hi</div>);
+    await waitForAll([]);
+    expect(container.textContent).toEqual('Hi');
+    let unmounted = false;
+    expect(() => {
+      unmounted = ReactDOM.unmountComponentAtNode(container);
+    }).toErrorDev(
+      [
+        // We care about this warning:
+        'You are calling ReactDOM.unmountComponentAtNode() on a container that was previously ' +
+          'passed to ReactDOMClient.createRoot(). This is not supported. Did you mean to call root.unmount()?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        "The node you're attempting to unmount was rendered by React and is not a top-level container.",
+      ],
+      {withoutStack: true},
+    );
+    expect(unmounted).toBe(false);
+    await waitForAll([]);
+    expect(container.textContent).toEqual('Hi');
+    root.unmount();
+    await waitForAll([]);
+    expect(container.textContent).toEqual('');
+  });
+
+  it('warns when unmounting with legacy API (has previous content)', async () => {
+    const container = document.createElement('div');
+    // Currently createRoot().render() doesn't clear this.
+    container.appendChild(document.createElement('div'));
+    // The rest is the same as test above.
+    const root = ReactDOMClient.createRoot(container);
+    root.render(<div>Hi</div>);
+    await waitForAll([]);
+    expect(container.textContent).toEqual('Hi');
+    let unmounted = false;
+    expect(() => {
+      unmounted = ReactDOM.unmountComponentAtNode(container);
+    }).toErrorDev(
+      [
+        'Did you mean to call root.unmount()?',
+        // This is more of a symptom but restructuring the code to avoid it isn't worth it:
+        "The node you're attempting to unmount was rendered by React and is not a top-level container.",
+      ],
+      {withoutStack: true},
+    );
+    expect(unmounted).toBe(false);
+    await waitForAll([]);
+    expect(container.textContent).toEqual('Hi');
+    root.unmount();
+    await waitForAll([]);
+    expect(container.textContent).toEqual('');
+  });
+
+  it('warns when passing legacy container to createRoot()', () => {
+    const container = document.createElement('div');
+    ReactDOM.render(<div>Hi</div>, container);
+    expect(() => {
+      ReactDOMClient.createRoot(container);
+    }).toErrorDev(
+      'You are calling ReactDOMClient.createRoot() on a container that was previously ' +
+        'passed to ReactDOM.render(). This is not supported.',
+      {withoutStack: true},
+    );
   });
 });

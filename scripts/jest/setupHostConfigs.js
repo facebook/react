@@ -58,9 +58,9 @@ global.__unmockReact = mockReact;
 
 mockReact();
 
-jest.mock('react/react.shared-subset', () => {
+jest.mock('react/react.react-server', () => {
   const resolvedEntryPoint = resolveEntryFork(
-    require.resolve('react/src/ReactSharedSubset'),
+    require.resolve('react/src/ReactServer'),
     global.__WWW__
   );
   return jest.requireActual(resolvedEntryPoint);
