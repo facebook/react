@@ -53,7 +53,6 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableFloat,
-  enableHostSingletons,
   enableFormActions,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -637,7 +636,7 @@ export function dispatchEventForPluginEventSystem(
               parentTag === HostComponent ||
               parentTag === HostText ||
               (enableFloat ? parentTag === HostHoistable : false) ||
-              (enableHostSingletons ? parentTag === HostSingleton : false)
+              parentTag === HostSingleton
             ) {
               node = ancestorInst = parentNode;
               continue mainLoop;
@@ -695,7 +694,7 @@ export function accumulateSinglePhaseListeners(
     if (
       (tag === HostComponent ||
         (enableFloat ? tag === HostHoistable : false) ||
-        (enableHostSingletons ? tag === HostSingleton : false)) &&
+        tag === HostSingleton) &&
       stateNode !== null
     ) {
       lastHostComponent = stateNode;
@@ -809,7 +808,7 @@ export function accumulateTwoPhaseListeners(
     if (
       (tag === HostComponent ||
         (enableFloat ? tag === HostHoistable : false) ||
-        (enableHostSingletons ? tag === HostSingleton : false)) &&
+        tag === HostSingleton) &&
       stateNode !== null
     ) {
       const currentTarget = stateNode;
@@ -843,11 +842,7 @@ function getParent(inst: Fiber | null): Fiber | null {
     // events to their parent. We could also go through parentNode on the
     // host node but that wouldn't work for React Native and doesn't let us
     // do the portal feature.
-  } while (
-    inst &&
-    inst.tag !== HostComponent &&
-    (!enableHostSingletons ? true : inst.tag !== HostSingleton)
-  );
+  } while (inst && inst.tag !== HostComponent && inst.tag !== HostSingleton);
   if (inst) {
     return inst;
   }
@@ -916,7 +911,7 @@ function accumulateEnterLeaveListenersForEvent(
     if (
       (tag === HostComponent ||
         (enableFloat ? tag === HostHoistable : false) ||
-        (enableHostSingletons ? tag === HostSingleton : false)) &&
+        tag === HostSingleton) &&
       stateNode !== null
     ) {
       const currentTarget = stateNode;

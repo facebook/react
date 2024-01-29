@@ -36,7 +36,6 @@ type ConnectOptions = {
   isAppActive?: () => boolean,
   websocket?: ?WebSocket,
   devToolsSettingsManager: ?DevToolsSettingsManager,
-  ...
 };
 
 // Install a global variable to allow patching console early (during injection).

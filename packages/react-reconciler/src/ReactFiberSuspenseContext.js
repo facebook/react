@@ -10,7 +10,7 @@
 import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack';
 import type {SuspenseProps, SuspenseState} from './ReactFiberSuspenseComponent';
-import type {OffscreenState} from './ReactFiberOffscreenComponent';
+import type {OffscreenState} from './ReactFiberActivityComponent';
 
 import {enableSuspenseAvoidThisFallback} from 'shared/ReactFeatureFlags';
 import {createCursor, push, pop} from './ReactFiberStack';
