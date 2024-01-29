@@ -11,31 +11,37 @@
 
 describe('ReactDOMInvalidARIAHook', () => {
   let React;
-  let ReactTestUtils;
+  let ReactDOMClient;
   let mountComponent;
+  let act;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactTestUtils = require('react-dom/test-utils');
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
 
-    mountComponent = function (props) {
-      ReactTestUtils.renderIntoDocument(<div {...props} />);
+    mountComponent = async function (props) {
+      const container = document.createElement('div');
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<div {...props} />);
+      });
     };
   });
 
   describe('aria-* props', () => {
-    it('should allow valid aria-* props', () => {
-      mountComponent({'aria-label': 'Bumble bees'});
+    it('should allow valid aria-* props', async () => {
+      await mountComponent({'aria-label': 'Bumble bees'});
     });
-    it('should warn for one invalid aria-* prop', () => {
-      expect(() => mountComponent({'aria-badprop': 'maybe'})).toErrorDev(
+    it('should warn for one invalid aria-* prop', async () => {
+      await expect(() => mountComponent({'aria-badprop': 'maybe'})).toErrorDev(
         'Warning: Invalid aria prop `aria-badprop` on <div> tag. ' +
           'For details, see https://reactjs.org/link/invalid-aria-props',
       );
     });
-    it('should warn for many invalid aria-* props', () => {
-      expect(() =>
+    it('should warn for many invalid aria-* props', async () => {
+      await expect(() =>
         mountComponent({
           'aria-badprop': 'Very tall trees',
           'aria-malprop': 'Turbulent seas',
@@ -45,25 +51,27 @@ describe('ReactDOMInvalidARIAHook', () => {
           'tag. For details, see https://reactjs.org/link/invalid-aria-props',
       );
     });
-    it('should warn for an improperly cased aria-* prop', () => {
+    it('should warn for an improperly cased aria-* prop', async () => {
       // The valid attribute name is aria-haspopup.
-      expect(() => mountComponent({'aria-hasPopup': 'true'})).toErrorDev(
+      await expect(() => mountComponent({'aria-hasPopup': 'true'})).toErrorDev(
         'Warning: Unknown ARIA attribute `aria-hasPopup`. ' +
           'Did you mean `aria-haspopup`?',
       );
     });
 
-    it('should warn for use of recognized camel case aria attributes', () => {
+    it('should warn for use of recognized camel case aria attributes', async () => {
       // The valid attribute name is aria-haspopup.
-      expect(() => mountComponent({ariaHasPopup: 'true'})).toErrorDev(
+      await expect(() => mountComponent({ariaHasPopup: 'true'})).toErrorDev(
         'Warning: Invalid ARIA attribute `ariaHasPopup`. ' +
           'Did you mean `aria-haspopup`?',
       );
     });
 
-    it('should warn for use of unrecognized camel case aria attributes', () => {
+    it('should warn for use of unrecognized camel case aria attributes', async () => {
       // The valid attribute name is aria-haspopup.
-      expect(() => mountComponent({ariaSomethingInvalid: 'true'})).toErrorDev(
+      await expect(() =>
+        mountComponent({ariaSomethingInvalid: 'true'}),
+      ).toErrorDev(
         'Warning: Invalid ARIA attribute `ariaSomethingInvalid`. ARIA ' +
           'attributes follow the pattern aria-* and must be lowercase.',
       );

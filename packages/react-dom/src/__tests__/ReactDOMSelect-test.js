@@ -1289,5 +1289,122 @@ describe('ReactDOMSelect', () => {
           ' This value must be coerced to a string before using it here.',
       );
     });
+
+    it('should not warn about missing onChange if value is not set', () => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
+    });
+
+    it('should not throw an error about missing onChange if value is undefined', () => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select value={undefined}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
+    });
+
+    it('should not warn about missing onChange if onChange is set', () => {
+      const change = jest.fn();
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select value="monkey" onChange={change}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
+    });
+
+    it('should not warn about missing onChange if disabled is true', () => {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <select value="monkey" disabled={true}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        );
+      }).not.toThrow();
+    });
+
+    it('should warn about missing onChange if value is false', () => {
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(
+          <select value={false}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        ),
+      ).toErrorDev(
+        'Warning: You provided a `value` prop to a form ' +
+          'field without an `onChange` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set `onChange`.',
+      );
+    });
+
+    it('should warn about missing onChange if value is 0', () => {
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(
+          <select value={0}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        ),
+      ).toErrorDev(
+        'Warning: You provided a `value` prop to a form ' +
+          'field without an `onChange` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set `onChange`.',
+      );
+    });
+
+    it('should warn about missing onChange if value is "0"', () => {
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(
+          <select value="0">
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        ),
+      ).toErrorDev(
+        'Warning: You provided a `value` prop to a form ' +
+          'field without an `onChange` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set `onChange`.',
+      );
+    });
+
+    it('should warn about missing onChange if value is ""', () => {
+      expect(() =>
+        ReactTestUtils.renderIntoDocument(
+          <select value="">
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+        ),
+      ).toErrorDev(
+        'Warning: You provided a `value` prop to a form ' +
+          'field without an `onChange` handler. This will render a read-only ' +
+          'field. If the field should be mutable use `defaultValue`. ' +
+          'Otherwise, set `onChange`.',
+      );
+    });
   });
 });
