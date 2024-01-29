@@ -12,6 +12,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
+export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -31,7 +32,6 @@ export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
-export const enableSchedulerDebugging = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
@@ -50,6 +50,11 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
+export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
+
 export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 
@@ -67,7 +72,6 @@ export const enableServerContext = false;
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;
-export const enableHostSingletons = true;
 
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;

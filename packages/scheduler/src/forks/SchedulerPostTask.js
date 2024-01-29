@@ -129,15 +129,9 @@ function runTask<T>(
     if (typeof result === 'function') {
       // Assume this is a continuation
       const continuation: SchedulerCallback<T> = (result: any);
-      const continuationController = new TaskController({
-        priority: postTaskPriority,
-      });
       const continuationOptions = {
-        signal: continuationController.signal,
+        signal: node._controller.signal,
       };
-      // Update the original callback node's controller, since even though we're
-      // posting a new task, conceptually it's the same one.
-      node._controller = continuationController;
 
       const nextTask = runTask.bind(
         null,

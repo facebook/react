@@ -8,6 +8,7 @@
  */
 
 import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {Awaited} from 'shared/ReactTypes';
 
 import {enableAsyncActions, enableFormActions} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -76,10 +77,10 @@ export function useFormStatus(): FormStatus {
 }
 
 export function useFormState<S, P>(
-  action: (S, P) => Promise<S>,
-  initialState: S,
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
   permalink?: string,
-): [S, (P) => void] {
+): [Awaited<S>, (P) => void] {
   if (!(enableFormActions && enableAsyncActions)) {
     throw new Error('Not implemented.');
   } else {

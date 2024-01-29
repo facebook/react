@@ -1543,11 +1543,20 @@ describe('ReactNewContext', () => {
       }
 
       function Root(props) {
-        return contextKeys.reduceRight((children, key) => {
-          const Context = contexts.get(key);
-          const value = props.values[key];
-          return <Context.Provider value={value}>{children}</Context.Provider>;
-        }, <ConsumerTree rand={props.rand} depth={0} maxDepth={props.maxDepth} />);
+        return contextKeys.reduceRight(
+          (children, key) => {
+            const Context = contexts.get(key);
+            const value = props.values[key];
+            return (
+              <Context.Provider value={value}>{children}</Context.Provider>
+            );
+          },
+          <ConsumerTree
+            rand={props.rand}
+            depth={0}
+            maxDepth={props.maxDepth}
+          />,
+        );
       }
 
       const initialValues = contextKeys.reduce(

@@ -1452,6 +1452,15 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          useEffect(() => {
+            console.log('banana banana banana');
+          }, undefined);
+        }
+      `,
+    },
   ],
   invalid: [
     {
