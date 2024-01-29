@@ -91,6 +91,17 @@ export type PluginOptions = {
    * ```
    */
   enableUseMemoCachePolyfill: boolean;
+
+  /**
+   * By default React Compiler will skip compilation of code that suppresses the default
+   * React ESLint rules, since this is a strong indication that the code may be breaking React rules
+   * in some way.
+   *
+   * Use eslintSuppressionRules to pass a custom set of rule names: any code which suppresses the
+   * provided rules will skip compilation. To disable this feature (never bailout of compilation
+   * even if the default ESLint is suppressed), pass an empty array.
+   */
+  eslintSuppressionRules?: Array<string> | null | undefined;
 };
 
 const CompilationModeSchema = z.enum([
@@ -157,6 +168,7 @@ export const defaultOptions: PluginOptions = {
   gating: null,
   noEmit: false,
   enableUseMemoCachePolyfill: false,
+  eslintSuppressionRules: null,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

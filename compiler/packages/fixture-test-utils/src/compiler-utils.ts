@@ -84,6 +84,12 @@ export function transformFixtureInput(
     panicThreshold = "NONE";
   }
 
+  let eslintSuppressionRules: Array<string> | null = null;
+  const match = /@eslintSuppressionRules\(([^)]+)\)/.exec(firstLine);
+  if (match != null) {
+    eslintSuppressionRules = match[1].split("|");
+  }
+
   const config = parseConfigPragmaFn(firstLine);
   const result = pluginFn(
     input,
@@ -132,6 +138,7 @@ export function transformFixtureInput(
       panicThreshold,
       noEmit: false,
       enableUseMemoCachePolyfill,
+      eslintSuppressionRules,
     },
     includeAst
   );

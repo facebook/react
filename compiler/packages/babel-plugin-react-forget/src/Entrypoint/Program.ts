@@ -177,6 +177,11 @@ export function createNewFunctionNode(
  */
 const ALREADY_COMPILED: WeakSet<object> | Set<object> = new (WeakSet ?? Set)();
 
+const DEFAULT_ESLINT_SUPPRESSIONS = [
+  "react-hooks/exhaustive-deps",
+  "react-hooks/rules-of-hooks",
+];
+
 export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass
@@ -189,7 +194,10 @@ export function compileProgram(
    * we may still need to run Forget's analysis on every function (even if we
    * have already encountered errors) for reporting.
    */
-  const eslintSuppressions = findProgramEslintSuppressions(pass.comments);
+  const eslintSuppressions = findProgramEslintSuppressions(
+    pass.comments,
+    options.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS
+  );
   const lintError = suppressionsToCompilerError(eslintSuppressions);
   let hasCriticalError = lintError != null;
   const compiledFns: CompileResult[] = [];

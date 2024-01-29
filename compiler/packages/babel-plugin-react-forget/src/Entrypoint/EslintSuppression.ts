@@ -71,11 +71,20 @@ export function filterEslintSuppressionsThatAffectFunction(
 }
 
 export function findProgramEslintSuppressions(
-  programComments: Array<t.Comment>
+  programComments: Array<t.Comment>,
+  ruleNames: Array<string>
 ): Array<EslintSuppressionRange> {
   const suppressionRanges: Array<EslintSuppressionRange> = [];
   let disableComment: t.Comment | null = null;
   let enableComment: t.Comment | null = null;
+
+  const rulePattern = `(${ruleNames.join("|")})`;
+  const disableNextLinePattern = new RegExp(
+    `eslint-disable-next-line ${rulePattern}`
+  );
+  const disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
+  const enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
+
   for (const comment of programComments) {
     if (comment.start == null || comment.end == null) {
       continue;
@@ -87,27 +96,17 @@ export function findProgramEslintSuppressions(
        * CommentLine within the block.
        */
       disableComment == null &&
-      /eslint-disable-next-line react-hooks\/(exhaustive-deps|rules-of-hooks)/.test(
-        comment.value
-      )
+      disableNextLinePattern.test(comment.value)
     ) {
       disableComment = comment;
       enableComment = comment;
     }
 
-    if (
-      /eslint-disable react-hooks\/(exhaustive-deps|rules-of-hooks)/.test(
-        comment.value
-      )
-    ) {
+    if (disablePattern.test(comment.value)) {
       disableComment = comment;
     }
 
-    if (
-      /eslint-enable react-hooks\/(exhaustive-deps|rules-of-hooks)/.test(
-        comment.value
-      )
-    ) {
+    if (enablePattern.test(comment.value)) {
       enableComment = comment;
     }
 
