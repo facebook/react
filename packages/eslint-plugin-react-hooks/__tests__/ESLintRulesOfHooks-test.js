@@ -521,6 +521,39 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        export const notAComponent = () => {
+           return () => {
+            useState();
+          }
+        }
+      `,
+      // TODO: this should error but doesn't.
+      // errors: [functionError('use', 'notAComponent')],
+    },
+    {
+      code: normalizeIndent`
+        export default () => {
+          if (isVal) {
+            useState(0);
+          }
+        }
+      `,
+      // TODO: this should error but doesn't.
+      // errors: [genericError('useState')],
+    },
+    {
+      code: normalizeIndent`
+        function notAComponent() {
+          return new Promise.then(() => {
+            useState();
+          });
+        }
+      `,
+      // TODO: this should error but doesn't.
+      // errors: [genericError('useState')],
+    },
   ],
   invalid: [
     {
