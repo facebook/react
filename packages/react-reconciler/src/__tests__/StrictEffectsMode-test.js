@@ -76,7 +76,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -129,7 +129,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -182,7 +182,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -233,7 +233,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -286,7 +286,7 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+      ReactTestRenderer.create(<App />, {isConcurrent: true});
     });
 
     if (supportsDoubleInvokeEffects()) {
@@ -322,7 +322,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -367,7 +367,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -438,7 +438,7 @@ describe('StrictEffectsMode', () => {
 
     await act(() => {
       ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -502,7 +502,7 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+      ReactTestRenderer.create(<App />, {isConcurrent: true});
     });
 
     if (supportsDoubleInvokeEffects()) {
@@ -586,7 +586,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -667,7 +667,7 @@ describe('StrictEffectsMode', () => {
     let renderer;
     await act(() => {
       renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 

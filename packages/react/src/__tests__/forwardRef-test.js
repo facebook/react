@@ -86,12 +86,11 @@ describe('forwardRef', () => {
       );
     }
 
-    const RefForwardingComponent = React.forwardRef(function NamedFunction(
-      props,
-      ref,
-    ) {
-      return <FunctionComponent {...props} forwardedRef={ref} />;
-    });
+    const RefForwardingComponent = React.forwardRef(
+      function NamedFunction(props, ref) {
+        return <FunctionComponent {...props} forwardedRef={ref} />;
+      },
+    );
     RefForwardingComponent.propTypes = {
       optional: PropTypes.string,
       required: PropTypes.string.isRequired,
