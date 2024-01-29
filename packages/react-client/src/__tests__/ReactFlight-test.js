@@ -43,7 +43,7 @@ let assertLog;
 describe('ReactFlight', () => {
   beforeEach(() => {
     jest.resetModules();
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     // This stores the state so we need to preserve it
@@ -1009,6 +1009,22 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient.read(transport);
   });
 
+  it('should warn in DEV a child is missing keys', () => {
+    function ParentClient({children}) {
+      return children;
+    }
+    const Parent = clientReference(ParentClient);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <Parent>{Array(6).fill(<div>no key</div>)}</Parent>,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://reactjs.org/link/warning-keys for more information.',
+    );
+  });
+
   it('should error if a class instance is passed to a host component', () => {
     class Foo {
       method() {}
@@ -1449,7 +1465,7 @@ describe('ReactFlight', () => {
       // Reset all modules, except flight-modules which keeps the registry of Client Components
       const flightModules = require('react-noop-renderer/flight-modules');
       jest.resetModules();
-      jest.mock('react', () => require('react/react.shared-subset'));
+      jest.mock('react', () => require('react/react.react-server'));
       jest.mock('react-noop-renderer/flight-modules', () => flightModules);
 
       ReactServer = require('react');

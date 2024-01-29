@@ -13,6 +13,7 @@
 let JSDOM;
 let Stream;
 let React;
+let ReactDOM;
 let ReactDOMClient;
 let ReactDOMFizzStatic;
 let Suspense;
@@ -29,6 +30,7 @@ describe('ReactDOMFizzStatic', () => {
     jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static');
@@ -261,5 +263,76 @@ describe('ReactDOMFizzStatic', () => {
       <script type="importmap">{JSON.stringify(importMap)}</script>,
       'hello world',
     ]);
+  });
+
+  // @gate experimental
+  it('supports onHeaders', async () => {
+    let headers;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('image', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preload('font', {as: 'font'});
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      onHeaders,
+    });
+    expect(headers).toEqual({
+      Link: `
+<font>; rel=preload; as="font"; crossorigin="",
+ <image>; rel=preload; as="image"; fetchpriority="high"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual('hello');
+  });
+
+  // @gate experimental && enablePostpone
+  it('includes stylesheet preloads in onHeaders when postponing in the Shell', async () => {
+    let headers;
+    function onHeaders(x) {
+      headers = x;
+    }
+
+    function App() {
+      ReactDOM.preload('image', {as: 'image', fetchPriority: 'high'});
+      ReactDOM.preinit('style', {as: 'style'});
+      React.unstable_postpone();
+      return (
+        <html>
+          <body>hello</body>
+        </html>
+      );
+    }
+
+    const result = await ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+      onHeaders,
+    });
+    expect(headers).toEqual({
+      Link: `
+<image>; rel=preload; as="image"; fetchpriority="high",
+ <style>; rel=preload; as="style"
+`
+        .replaceAll('\n', '')
+        .trim(),
+    });
+
+    await act(async () => {
+      result.prelude.pipe(writable);
+    });
+    expect(getVisibleChildren(container)).toEqual(undefined);
   });
 });

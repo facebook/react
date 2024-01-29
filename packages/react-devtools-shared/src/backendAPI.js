@@ -8,7 +8,7 @@
  */
 
 import {hydrate, fillInPath} from 'react-devtools-shared/src/hydration';
-import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
+import {backendToFrontendSerializedElementMapper} from 'react-devtools-shared/src/utils';
 import Store from 'react-devtools-shared/src/devtools/store';
 import TimeoutError from 'react-devtools-shared/src/errors/TimeoutError';
 import ElementPollingCancellationError from 'react-devtools-shared/src/errors/ElementPollingCancellationError';
@@ -266,17 +266,7 @@ export function convertInspectedElementBackendToFrontend(
     owners:
       owners === null
         ? null
-        : owners.map(owner => {
-            const [displayName, hocDisplayNames] = separateDisplayNameAndHOCs(
-              owner.displayName,
-              owner.type,
-            );
-            return {
-              ...owner,
-              displayName,
-              hocDisplayNames,
-            };
-          }),
+        : owners.map(backendToFrontendSerializedElementMapper),
     context: hydrateHelper(context),
     hooks: hydrateHelper(hooks),
     props: hydrateHelper(props),
