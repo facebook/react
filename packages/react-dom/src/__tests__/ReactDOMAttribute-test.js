@@ -12,12 +12,14 @@
 describe('ReactDOM unknown attribute', () => {
   let React;
   let ReactDOMClient;
+  let ReactFeatureFlags;
   let act;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     act = require('internal-test-utils').act;
   });
 
@@ -86,6 +88,25 @@ describe('ReactDOM unknown attribute', () => {
       });
 
       expect(el.firstChild.hasAttribute('unknown')).toBe(false);
+    });
+
+    it('removes new boolean props', async () => {
+      const el = document.createElement('div');
+      const root = ReactDOMClient.createRoot(el);
+
+      await expect(async () => {
+        await act(() => {
+          root.render(<div inert={true} />);
+        });
+      }).toErrorDev(
+        ReactFeatureFlags.enableNewBooleanProps
+          ? []
+          : ['Warning: Received `true` for a non-boolean attribute `inert`.'],
+      );
+
+      expect(el.firstChild.getAttribute('inert')).toBe(
+        ReactFeatureFlags.enableNewBooleanProps ? '' : null,
+      );
     });
 
     it('passes through strings', async () => {
