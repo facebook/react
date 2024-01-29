@@ -409,7 +409,7 @@ describe('ReactDeferredValue', () => {
   // @gate enableUseDeferredValueInitialArg
   it(
     'if a suspended render spawns a deferred task, we can switch to the ' +
-      'deferred task without finishing the original one',
+      'deferred task without finishing the original one (no Suspense boundary)',
     async () => {
       function App() {
         const text = useDeferredValue('Final', 'Loading...');
@@ -425,6 +425,87 @@ describe('ReactDeferredValue', () => {
         'Suspend! [Final]',
       ]);
       expect(root).toMatchRenderedOutput(null);
+
+      // The final value loads, so we can skip the initial value entirely.
+      await act(() => resolveText('Final'));
+      assertLog(['Final']);
+      expect(root).toMatchRenderedOutput('Final');
+
+      // When the initial value finally loads, nothing happens because we no
+      // longer need it.
+      await act(() => resolveText('Loading...'));
+      assertLog([]);
+      expect(root).toMatchRenderedOutput('Final');
+    },
+  );
+
+  // @gate enableUseDeferredValueInitialArg
+  it(
+    'if a suspended render spawns a deferred task, we can switch to the ' +
+      'deferred task without finishing the original one (no Suspense boundary, ' +
+      'synchronous parent update)',
+    async () => {
+      function App() {
+        const text = useDeferredValue('Final', 'Loading...');
+        return <AsyncText text={text} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      // TODO: This made me realize that we don't warn if an update spawns a
+      // deferred task without being wrapped with `act`. Usually it would work
+      // anyway because the parent task has to wrapped with `act`... but not
+      // if it was flushed with `flushSync` instead.
+      await act(() => {
+        ReactNoop.flushSync(() => root.render(<App />));
+      });
+      assertLog([
+        'Suspend! [Loading...]',
+        // The initial value suspended, so we attempt the final value, which
+        // also suspends.
+        'Suspend! [Final]',
+      ]);
+      expect(root).toMatchRenderedOutput(null);
+
+      // The final value loads, so we can skip the initial value entirely.
+      await act(() => resolveText('Final'));
+      assertLog(['Final']);
+      expect(root).toMatchRenderedOutput('Final');
+
+      // When the initial value finally loads, nothing happens because we no
+      // longer need it.
+      await act(() => resolveText('Loading...'));
+      assertLog([]);
+      expect(root).toMatchRenderedOutput('Final');
+    },
+  );
+
+  // @gate enableUseDeferredValueInitialArg
+  it(
+    'if a suspended render spawns a deferred task, we can switch to the ' +
+      'deferred task without finishing the original one (Suspense boundary)',
+    async () => {
+      function App() {
+        const text = useDeferredValue('Final', 'Loading...');
+        return <AsyncText text={text} />;
+      }
+
+      const root = ReactNoop.createRoot();
+      await act(() =>
+        root.render(
+          <Suspense fallback={<Text text="Fallback" />}>
+            <App />
+          </Suspense>,
+        ),
+      );
+      assertLog([
+        'Suspend! [Loading...]',
+        'Fallback',
+
+        // The initial value suspended, so we attempt the final value, which
+        // also suspends.
+        'Suspend! [Final]',
+      ]);
+      expect(root).toMatchRenderedOutput('Fallback');
 
       // The final value loads, so we can skip the initial value entirely.
       await act(() => resolveText('Final'));
