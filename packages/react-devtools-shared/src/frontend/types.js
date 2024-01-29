@@ -151,6 +151,10 @@ export type Element = {
   // This element is not in a StrictMode compliant subtree.
   // Only true for React versions supporting StrictMode.
   isStrictModeNonCompliant: boolean,
+
+  // If component is compiled with Forget, the backend will send its name as Forget(...)
+  // Later, on the frontend side, we will strip HOC names and Forget prefix.
+  compiledWithForget: boolean,
 };
 
 export type SerializedElement = {
@@ -158,6 +162,7 @@ export type SerializedElement = {
   id: number,
   key: number | string | null,
   hocDisplayNames: Array<string> | null,
+  compiledWithForget: boolean,
   type: ElementType,
 };
 

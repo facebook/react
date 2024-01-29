@@ -43,7 +43,6 @@ import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
-import {enableHostSingletons} from '../../../shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -77,21 +76,6 @@ if (__DEV__) {
           'component. If you intended to update the children of this node, ' +
           'you should instead have the existing children update their state ' +
           'and render the new components instead of calling ReactDOM.render.',
-      );
-    }
-
-    if (
-      !enableHostSingletons &&
-      container.nodeType === ELEMENT_NODE &&
-      ((container: any): Element).tagName &&
-      ((container: any): Element).tagName.toUpperCase() === 'BODY'
-    ) {
-      console.error(
-        'render(): Rendering components directly into document.body is ' +
-          'discouraged, since its children are often manipulated by third-party ' +
-          'scripts and browser extensions. This may lead to subtle ' +
-          'reconciliation issues. Try rendering into a container element created ' +
-          'for your app.',
       );
     }
   };

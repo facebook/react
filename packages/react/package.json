@@ -16,12 +16,12 @@
     "umd/",
     "jsx-runtime.js",
     "jsx-dev-runtime.js",
-    "react.shared-subset.js"
+    "react.react-server.js"
   ],
   "main": "index.js",
   "exports": {
     ".": {
-      "react-server": "./react.shared-subset.js",
+      "react-server": "./react.react-server.js",
       "default": "./index.js"
     },
     "./package.json": "./package.json",
