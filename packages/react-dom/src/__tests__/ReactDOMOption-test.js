@@ -11,16 +11,18 @@
 
 describe('ReactDOMOption', () => {
   let React;
-  let ReactDOM;
+  let ReactDOMClient;
   let ReactDOMServer;
   let ReactTestUtils;
+  let act;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
   });
 
   it('should flatten children to a string', () => {
@@ -182,19 +184,28 @@ describe('ReactDOMOption', () => {
     expect(node.innerHTML).toBe('foobar');
   });
 
-  it('should set attribute for empty value', () => {
+  it('should set attribute for empty value', async () => {
     const container = document.createElement('div');
-    const option = ReactDOM.render(<option value="" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    let option;
+    await act(() => {
+      root.render(<option value="" />);
+    });
+    option = container.firstChild;
     expect(option.hasAttribute('value')).toBe(true);
     expect(option.getAttribute('value')).toBe('');
 
-    ReactDOM.render(<option value="lava" />, container);
+    await act(() => {
+      root.render(<option value="lava" />);
+    });
+    option = container.firstChild;
     expect(option.hasAttribute('value')).toBe(true);
     expect(option.getAttribute('value')).toBe('lava');
   });
 
-  it('should allow ignoring `value` on option', () => {
+  it('should allow ignoring `value` on option', async () => {
     const a = 'a';
+    let node;
     const stub = (
       <select value="giraffe" onChange={() => {}}>
         <option>monkey</option>
@@ -204,15 +215,22 @@ describe('ReactDOMOption', () => {
     );
     const options = stub.props.children;
     const container = document.createElement('div');
-    const node = ReactDOM.render(stub, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(stub);
+    });
+    node = container.firstChild;
 
     expect(node.selectedIndex).toBe(1);
 
-    ReactDOM.render(<select value="gorilla">{options}</select>, container);
+    await act(() => {
+      root.render(<select value="gorilla">{options}</select>);
+    });
+    node = container.firstChild;
     expect(node.selectedIndex).toEqual(2);
   });
 
-  it('generates a warning and hydration error when an invalid nested tag is used as a child', () => {
+  it('generates a warning and hydration error when an invalid nested tag is used as a child', async () => {
     const ref = React.createRef();
     const children = (
       <select readOnly={true} value="bar">
@@ -229,16 +247,27 @@ describe('ReactDOMOption', () => {
     expect(container.firstChild.getAttribute('value')).toBe(null);
     expect(container.firstChild.getAttribute('defaultValue')).toBe(null);
 
-    const option = container.firstChild.firstChild;
+    let option = container.firstChild.firstChild;
     expect(option.nodeName).toBe('OPTION');
 
     expect(option.textContent).toBe('BarFooBaz');
     expect(option.selected).toBe(true);
 
-    expect(() => ReactDOM.hydrate(children, container)).toErrorDev([
-      'Text content did not match. Server: "FooBaz" Client: "Foo"',
-      'validateDOMNesting(...): <div> cannot appear as a child of <option>.',
-    ]);
+    await expect(async () => {
+      await act(async () => {
+        ReactDOMClient.hydrateRoot(container, children, {
+          onRecoverableError: () => {},
+        });
+      });
+    }).toErrorDev(
+      [
+        'Warning: Text content did not match. Server: "FooBaz" Client: "Foo"',
+        'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>',
+        'Warning: validateDOMNesting(...): <div> cannot appear as a child of <option>',
+      ],
+      {withoutStack: 1},
+    );
+    option = container.firstChild.firstChild;
 
     expect(option.textContent).toBe('BarFooBaz');
     expect(option.selected).toBe(true);

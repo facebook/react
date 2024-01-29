@@ -83,7 +83,7 @@ describe('ChangeEventPlugin', () => {
   // keep track of the "current" value and only fire events when it changes.
   // See https://github.com/facebook/react/pull/5746.
 
-  it('should consider initial text value to be current', () => {
+  it('should consider initial text value to be current', async () => {
     let called = 0;
 
     function cb(e) {
@@ -91,10 +91,12 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const node = ReactDOM.render(
-      <input type="text" onChange={cb} defaultValue="foo" />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<input type="text" onChange={cb} defaultValue="foo" />);
+    });
+
+    const node = container.firstChild;
     node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
     node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
 
@@ -102,7 +104,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should consider initial text value to be current (capture)', () => {
+  it('should consider initial text value to be current (capture)', async () => {
     let called = 0;
 
     function cb(e) {
@@ -110,10 +112,14 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const node = ReactDOM.render(
-      <input type="text" onChangeCapture={cb} defaultValue="foo" />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <input type="text" onChangeCapture={cb} defaultValue="foo" />,
+      );
+    });
+
+    const node = container.firstChild;
     node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
     node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
 
@@ -121,7 +127,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should not invoke a change event for textarea same value', () => {
+  it('should not invoke a change event for textarea same value', async () => {
     let called = 0;
 
     function cb(e) {
@@ -129,17 +135,19 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const node = ReactDOM.render(
-      <textarea onChange={cb} defaultValue="initial" />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<textarea onChange={cb} defaultValue="initial" />);
+    });
+
+    const node = container.firstChild;
     node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
     node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
     // There should be no React change events because the value stayed the same.
     expect(called).toBe(0);
   });
 
-  it('should not invoke a change event for textarea same value (capture)', () => {
+  it('should not invoke a change event for textarea same value (capture)', async () => {
     let called = 0;
 
     function cb(e) {
@@ -147,17 +155,19 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const node = ReactDOM.render(
-      <textarea onChangeCapture={cb} defaultValue="initial" />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<textarea onChangeCapture={cb} defaultValue="initial" />);
+    });
+
+    const node = container.firstChild;
     node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
     node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
     // There should be no React change events because the value stayed the same.
     expect(called).toBe(0);
   });
 
-  it('should consider initial checkbox checked=true to be current', () => {
+  it('should consider initial checkbox checked=true to be current', async () => {
     let called = 0;
 
     function cb(e) {
@@ -165,10 +175,14 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const node = ReactDOM.render(
-      <input type="checkbox" onChange={cb} defaultChecked={true} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <input type="checkbox" onChange={cb} defaultChecked={true} />,
+      );
+    });
+
+    const node = container.firstChild;
 
     // Secretly, set `checked` to false, so that dispatching the `click` will
     // make it `true` again. Thus, at the time of the event, React should not
@@ -181,7 +195,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should consider initial checkbox checked=false to be current', () => {
+  it('should consider initial checkbox checked=false to be current', async () => {
     let called = 0;
 
     function cb(e) {
@@ -189,10 +203,14 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const node = ReactDOM.render(
-      <input type="checkbox" onChange={cb} defaultChecked={false} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <input type="checkbox" onChange={cb} defaultChecked={false} />,
+      );
+    });
+
+    const node = container.firstChild;
 
     // Secretly, set `checked` to true, so that dispatching the `click` will
     // make it `false` again. Thus, at the time of the event, React should not
@@ -205,7 +223,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(0);
   });
 
-  it('should fire change for checkbox input', () => {
+  it('should fire change for checkbox input', async () => {
     let called = 0;
 
     function cb(e) {
@@ -213,10 +231,12 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const node = ReactDOM.render(
-      <input type="checkbox" onChange={cb} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<input type="checkbox" onChange={cb} />);
+    });
+
+    const node = container.firstChild;
 
     expect(node.checked).toBe(false);
     node.dispatchEvent(
@@ -235,7 +255,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
-  it('should not fire change setting the value programmatically', () => {
+  it('should not fire change setting the value programmatically', async () => {
     let called = 0;
 
     function cb(e) {
@@ -243,10 +263,12 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const input = ReactDOM.render(
-      <input type="text" defaultValue="foo" onChange={cb} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<input type="text" defaultValue="foo" onChange={cb} />);
+    });
+
+    const input = container.firstChild;
 
     // Set it programmatically.
     input.value = 'bar';
@@ -271,7 +293,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
-  it('should not distinguish equal string and number values', () => {
+  it('should not distinguish equal string and number values', async () => {
     let called = 0;
 
     function cb(e) {
@@ -279,10 +301,12 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const input = ReactDOM.render(
-      <input type="text" defaultValue="42" onChange={cb} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<input type="text" defaultValue="42" onChange={cb} />);
+    });
+
+    const input = container.firstChild;
 
     // When we set `value` as a property, React updates the "current" value
     // that it tracks internally. The "current" value is later used to determine
@@ -296,7 +320,7 @@ describe('ChangeEventPlugin', () => {
   });
 
   // See a similar input test above for a detailed description of why.
-  it('should not fire change when setting checked programmatically', () => {
+  it('should not fire change when setting checked programmatically', async () => {
     let called = 0;
 
     function cb(e) {
@@ -304,10 +328,14 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const input = ReactDOM.render(
-      <input type="checkbox" onChange={cb} defaultChecked={false} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <input type="checkbox" onChange={cb} defaultChecked={false} />,
+      );
+    });
+
+    const input = container.firstChild;
 
     // Set the value, updating the "current" value that React tracks to true.
     input.checked = true;
@@ -326,13 +354,20 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
-  it('should unmount', () => {
-    const input = ReactDOM.render(<input />, container);
+  it('should unmount', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<input />);
+    });
 
-    ReactDOM.unmountComponentAtNode(container);
+    const input = container.firstChild;
+
+    await act(() => {
+      root.unmount();
+    });
   });
 
-  it('should only fire change for checked radio button once', () => {
+  it('should only fire change for checked radio button once', async () => {
     let called = 0;
 
     function cb(e) {
@@ -340,10 +375,12 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const input = ReactDOM.render(
-      <input type="radio" onChange={cb} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<input type="radio" onChange={cb} />);
+    });
+
+    const input = container.firstChild;
 
     setUntrackedChecked.call(input, true);
     input.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));
@@ -351,7 +388,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
-  it('should track radio button cousins in a group', () => {
+  it('should track radio button cousins in a group', async () => {
     let called1 = 0;
     let called2 = 0;
 
@@ -365,13 +402,17 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const div = ReactDOM.render(
-      <div>
-        <input type="radio" name="group" onChange={cb1} />
-        <input type="radio" name="group" onChange={cb2} />
-      </div>,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <input type="radio" name="group" onChange={cb1} />
+          <input type="radio" name="group" onChange={cb2} />
+        </div>,
+      );
+    });
+
+    const div = container.firstChild;
     const option1 = div.childNodes[0];
     const option2 = div.childNodes[1];
 
@@ -455,7 +496,7 @@ describe('ChangeEventPlugin', () => {
     });
   });
 
-  it('should listen for both change and input events when supported', () => {
+  it('should listen for both change and input events when supported', async () => {
     let called = 0;
 
     function cb(e) {
@@ -463,10 +504,12 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const input = ReactDOM.render(
-      <input type="range" onChange={cb} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<input type="range" onChange={cb} />);
+    });
+
+    const input = container.firstChild;
 
     setUntrackedValue.call(input, 10);
     input.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
@@ -477,7 +520,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
-  it('should only fire events when the value changes for range inputs', () => {
+  it('should only fire events when the value changes for range inputs', async () => {
     let called = 0;
 
     function cb(e) {
@@ -485,10 +528,12 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    const input = ReactDOM.render(
-      <input type="range" onChange={cb} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<input type="range" onChange={cb} />);
+    });
+
+    const input = container.firstChild;
     setUntrackedValue.call(input, '40');
     input.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
     input.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
@@ -500,7 +545,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
-  it('does not crash for nodes with custom value property', () => {
+  it('does not crash for nodes with custom value property', async () => {
     let originalCreateElement;
     // https://github.com/facebook/react/issues/10196
     try {
@@ -514,16 +559,25 @@ describe('ChangeEventPlugin', () => {
         return node;
       };
       const div = document.createElement('div');
+      const root = ReactDOMClient.createRoot(div);
       // Mount
-      const node = ReactDOM.render(<input type="text" />, div);
+      await act(() => {
+        root.render(<input type="text" />);
+      });
+      const node = div.firstChild;
       // Update
-      ReactDOM.render(<input type="text" />, div);
+      await act(() => {
+        root.render(<input type="text" />);
+      });
+
       // Change
       node.dispatchEvent(
         new Event('change', {bubbles: true, cancelable: true}),
       );
       // Unmount
-      ReactDOM.unmountComponentAtNode(div);
+      await act(() => {
+        root.unmount();
+      });
     } finally {
       document.createElement = originalCreateElement;
     }

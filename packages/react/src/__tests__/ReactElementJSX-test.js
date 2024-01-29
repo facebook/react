@@ -11,9 +11,11 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactTestUtils;
 let JSXRuntime;
 let JSXDEVRuntime;
+let act;
 
 // NOTE: We're explicitly not using JSX here. This is intended to test
 // a new React.jsx api which does not have a JSX transformer yet.
@@ -27,7 +29,9 @@ describe('ReactElement.jsx', () => {
     JSXRuntime = require('react/jsx-runtime');
     JSXDEVRuntime = require('react/jsx-dev-runtime');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
   });
 
   it('allows static methods to be called using the type property', () => {
@@ -48,23 +52,25 @@ describe('ReactElement.jsx', () => {
     expect(element.constructor).toBe(object.constructor);
   });
 
-  it('should use default prop value when removing a prop', () => {
+  it('should use default prop value when removing a prop', async () => {
     class Component extends React.Component {
       render() {
-        return JSXRuntime.jsx('span', {});
+        return JSXRuntime.jsx('span', {children: [this.props.fruit]});
       }
     }
     Component.defaultProps = {fruit: 'persimmon'};
 
     const container = document.createElement('div');
-    const instance = ReactDOM.render(
-      JSXRuntime.jsx(Component, {fruit: 'mango'}),
-      container,
-    );
-    expect(instance.props.fruit).toBe('mango');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(JSXRuntime.jsx(Component, {fruit: 'mango'}));
+    });
+    expect(container.firstChild.textContent).toBe('mango');
 
-    ReactDOM.render(JSXRuntime.jsx(Component, {}), container);
-    expect(instance.props.fruit).toBe('persimmon');
+    await act(() => {
+      root.render(JSXRuntime.jsx(Component, {}));
+    });
+    expect(container.firstChild.textContent).toBe('persimmon');
   });
 
   it('should normalize props with default values', () => {
@@ -114,7 +120,7 @@ describe('ReactElement.jsx', () => {
     }
   });
 
-  it('throws when adding a prop (in dev) after element creation', () => {
+  it('throws when adding a prop (in dev) after element creation', async () => {
     const container = document.createElement('div');
     class Outer extends React.Component {
       render() {
@@ -134,12 +140,15 @@ describe('ReactElement.jsx', () => {
       }
     }
     Outer.defaultProps = {sound: 'meow'};
-    const outer = ReactDOM.render(JSXRuntime.jsx(Outer, {}), container);
-    expect(ReactDOM.findDOMNode(outer).textContent).toBe('meow');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(JSXRuntime.jsx(Outer, {}));
+    });
+    expect(container.firstChild.textContent).toBe('meow');
     if (__DEV__) {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('');
+      expect(container.firstChild.className).toBe('');
     } else {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
+      expect(container.firstChild.className).toBe('quack');
     }
   });
 
@@ -155,7 +164,7 @@ describe('ReactElement.jsx', () => {
     expect(test.props.value).toBeNaN();
   });
 
-  it('should warn when `key` is being accessed on composite element', () => {
+  it('should warn when `key` is being accessed on composite element', async () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -173,9 +182,12 @@ describe('ReactElement.jsx', () => {
         });
       }
     }
-    expect(() =>
-      ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
-    ).toErrorDev(
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(JSXRuntime.jsx(Parent, {}));
+      });
+    }).toErrorDev(
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -183,14 +195,14 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('warns when a jsxs is passed something that is not an array', () => {
+  it('warns when a jsxs is passed something that is not an array', async () => {
     const container = document.createElement('div');
-    expect(() =>
-      ReactDOM.render(
-        JSXRuntime.jsxs('div', {children: 'foo'}, null),
-        container,
-      ),
-    ).toErrorDev(
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(JSXRuntime.jsxs('div', {children: 'foo'}, null));
+      });
+    }).toErrorDev(
       'React.jsx: Static children should always be an array. ' +
         'You are likely explicitly calling React.jsxs or React.jsxDEV. ' +
         'Use the Babel transform instead.',
@@ -209,7 +221,7 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('should warn when `ref` is being accessed', () => {
+  it('should warn when `ref` is being accessed', async () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -223,9 +235,12 @@ describe('ReactElement.jsx', () => {
         });
       }
     }
-    expect(() =>
-      ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
-    ).toErrorDev(
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(JSXRuntime.jsx(Parent, {}));
+      });
+    }).toErrorDev(
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -233,7 +248,7 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('should warn when unkeyed children are passed to jsx', () => {
+  it('should warn when unkeyed children are passed to jsx', async () => {
     const container = document.createElement('div');
 
     class Child extends React.Component {
@@ -252,9 +267,12 @@ describe('ReactElement.jsx', () => {
         });
       }
     }
-    expect(() =>
-      ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
-    ).toErrorDev(
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(JSXRuntime.jsx(Parent, {}));
+      });
+    }).toErrorDev(
       'Warning: Each child in a list should have a unique "key" prop.\n\n' +
         'Check the render method of `Parent`. See https://reactjs.org/link/warning-keys for more information.\n' +
         '    in Child (at **)\n' +
@@ -262,7 +280,7 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('should warn when keys are passed as part of props', () => {
+  it('should warn when keys are passed as part of props', async () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -276,9 +294,12 @@ describe('ReactElement.jsx', () => {
         });
       }
     }
-    expect(() =>
-      ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
-    ).toErrorDev(
+    await expect(async () => {
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(JSXRuntime.jsx(Parent, {}));
+      });
+    }).toErrorDev(
       'Warning: A props object containing a "key" prop is being spread into JSX:\n' +
         '  let props = {key: someKey, prop: ...};\n' +
         '  <Child {...props} />\n' +
@@ -288,7 +309,7 @@ describe('ReactElement.jsx', () => {
     );
   });
 
-  it('should not warn when unkeyed children are passed to jsxs', () => {
+  it('should not warn when unkeyed children are passed to jsxs', async () => {
     const container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -306,8 +327,14 @@ describe('ReactElement.jsx', () => {
         });
       }
     }
-    // TODO: an explicit expect for no warning?
-    ReactDOM.render(JSXRuntime.jsx(Parent, {}), container);
+
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(JSXRuntime.jsx(Parent, {}));
+    });
+
+    // Test shouldn't throw any errors.
+    expect(true).toBe(true);
   });
 
   it('does not call lazy initializers eagerly', () => {

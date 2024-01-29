@@ -12,6 +12,7 @@ const fs = require('fs');
 const path = require('path');
 const mkdirp = require('mkdirp');
 const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
+const flowVersion = require('../../package.json').devDependencies['flow-bin'];
 
 const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
@@ -112,7 +113,8 @@ function writeConfig(
       process.env.CI ? 'server.max_workers=4\n' : '',
     )
     .replace('%REACT_RENDERER_FLOW_OPTIONS%', moduleMappings.trim())
-    .replace('%REACT_RENDERER_FLOW_IGNORES%', ignoredPaths.join('\n'));
+    .replace('%REACT_RENDERER_FLOW_IGNORES%', ignoredPaths.join('\n'))
+    .replace('%FLOW_VERSION%', flowVersion);
 
   const disclaimer = `
 # ---------------------------------------------------------------#
