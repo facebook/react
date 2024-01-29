@@ -254,7 +254,7 @@ describe('React hooks DevTools integration', () => {
             <MyComponent />
           </React.Suspense>
         </div>,
-        {unstable_isConcurrent: true},
+        {isConcurrent: true},
       ),
     );
 

@@ -121,7 +121,7 @@ describe('ReactCache', () => {
     }
 
     ReactTestRenderer.create(<App />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['Suspend! [Hi]', 'Loading...']);
@@ -141,7 +141,7 @@ describe('ReactCache', () => {
     }
 
     const root = ReactTestRenderer.create(<App />, {
-      unstable_isConcurrent: true,
+      isConcurrent: true,
     });
 
     await waitForAll(['Suspend! [Hi]', 'Loading...']);
@@ -181,7 +181,7 @@ describe('ReactCache', () => {
         <App />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -210,7 +210,7 @@ describe('ReactCache', () => {
         <AsyncText ms={100} text={3} />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
     await waitForAll(['Suspend! [1]', 'Loading...']);
@@ -298,7 +298,7 @@ describe('ReactCache', () => {
         <App />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -356,7 +356,7 @@ describe('ReactCache', () => {
         <BadAsyncText text="Hi" />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 
@@ -372,7 +372,7 @@ describe('ReactCache', () => {
         <BadAsyncText text="Hi" />
       </Suspense>,
       {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       },
     );
 

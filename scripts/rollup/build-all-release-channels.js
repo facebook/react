@@ -8,7 +8,7 @@ const fse = require('fs-extra');
 const {spawnSync} = require('child_process');
 const path = require('path');
 const tmp = require('tmp');
-
+const shell = require('shelljs');
 const {
   ReactVersion,
   stablePackages,
@@ -115,11 +115,7 @@ function processStable(buildDir) {
   if (fs.existsSync(buildDir + '/node_modules')) {
     // Identical to `oss-stable` but with real, semver versions. This is what
     // will get published to @latest.
-    spawnSync('cp', [
-      '-r',
-      buildDir + '/node_modules',
-      buildDir + '/oss-stable-semver',
-    ]);
+    shell.cp('-r', buildDir + '/node_modules', buildDir + '/oss-stable-semver');
 
     const defaultVersionIfNotFound = '0.0.0' + '-' + sha + '-' + dateString;
     const versionsMap = new Map();

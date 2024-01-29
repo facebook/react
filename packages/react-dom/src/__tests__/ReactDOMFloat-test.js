@@ -2852,6 +2852,84 @@ body {
     ]);
   });
 
+  // https://github.com/facebook/react/issues/27585
+  it('does not reinsert already inserted stylesheets during a delayed commit', async () => {
+    await act(() => {
+      renderToPipeableStream(
+        <html>
+          <body>
+            <link rel="stylesheet" href="first" precedence="default" />
+            <link rel="stylesheet" href="second" precedence="default" />
+            server
+          </body>
+        </html>,
+      ).pipe(writable);
+    });
+
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="first" data-precedence="default" />
+          <link rel="stylesheet" href="second" data-precedence="default" />
+        </head>
+        <body>server</body>
+      </html>,
+    );
+
+    const root = ReactDOMClient.createRoot(document.body);
+    expect(getMeaningfulChildren(container)).toBe(undefined);
+    root.render(
+      <>
+        <link rel="stylesheet" href="first" precedence="default" />
+        <link rel="stylesheet" href="third" precedence="default" />
+        <div>client</div>
+      </>,
+    );
+    await waitForAll([]);
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="first" data-precedence="default" />
+          <link rel="stylesheet" href="second" data-precedence="default" />
+          <link rel="stylesheet" href="third" data-precedence="default" />
+          <link rel="preload" href="third" as="style" />
+        </head>
+        <body>
+          <div>client</div>
+        </body>
+      </html>,
+    );
+
+    // In a transition we add another reference to an already loaded resource
+    // https://github.com/facebook/react/issues/27585
+    React.startTransition(() => {
+      root.render(
+        <>
+          <link rel="stylesheet" href="first" precedence="default" />
+          <link rel="stylesheet" href="third" precedence="default" />
+          <div>client</div>
+          <link rel="stylesheet" href="first" precedence="default" />
+        </>,
+      );
+    });
+    await waitForAll([]);
+    // In https://github.com/facebook/react/issues/27585 the order updated
+    // to second, third, first
+    expect(getMeaningfulChildren(document)).toEqual(
+      <html>
+        <head>
+          <link rel="stylesheet" href="first" data-precedence="default" />
+          <link rel="stylesheet" href="second" data-precedence="default" />
+          <link rel="stylesheet" href="third" data-precedence="default" />
+          <link rel="preload" href="third" as="style" />
+        </head>
+        <body>
+          <div>client</div>
+        </body>
+      </html>,
+    );
+  });
+
   xit('can delay commit until css resources error', async () => {
     // TODO: This test fails and crashes jest. need to figure out why before unskipping.
     const root = ReactDOMClient.createRoot(container);
@@ -6124,7 +6202,7 @@ body {
       );
     });
 
-    // @gate enableFloat && enableHostSingletons && enableClientRenderFallbackOnTextMismatch
+    // @gate enableFloat && enableClientRenderFallbackOnTextMismatch
     it('retains styles even when a new html, head, and/body mount', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(
@@ -6176,58 +6254,7 @@ body {
       );
     });
 
-    // @gate enableFloat && !enableHostSingletons
-    it('retains styles even when a new html, head, and/body mount - without HostSingleton', async () => {
-      await act(() => {
-        const {pipe} = renderToPipeableStream(
-          <html>
-            <head />
-            <body>
-              <link rel="stylesheet" href="foo" precedence="foo" />
-              <link rel="stylesheet" href="bar" precedence="bar" />
-              server
-            </body>
-          </html>,
-        );
-        pipe(writable);
-      });
-      const errors = [];
-      ReactDOMClient.hydrateRoot(
-        document,
-        <html>
-          <head>
-            <link rel="stylesheet" href="qux" precedence="qux" />
-            <link rel="stylesheet" href="foo" precedence="foo" />
-          </head>
-          <body>client</body>
-        </html>,
-        {
-          onRecoverableError(error) {
-            errors.push(error.message);
-          },
-        },
-      );
-      await expect(async () => {
-        await waitForAll([]);
-      }).toErrorDev(
-        [
-          'Warning: Text content did not match. Server: "server" Client: "client"',
-          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <#document>.',
-        ],
-        {withoutStack: 1},
-      );
-      expect(getMeaningfulChildren(document)).toEqual(
-        <html>
-          <head>
-            <link rel="stylesheet" href="qux" data-precedence="qux" />
-            <link rel="stylesheet" href="foo" data-precedence="foo" />
-          </head>
-          <body>client</body>
-        </html>,
-      );
-    });
-
-    // @gate enableFloat && enableHostSingletons
+    // @gate enableFloat
     it('retains styles in head through head remounts', async () => {
       const root = ReactDOMClient.createRoot(document);
       root.render(
@@ -8036,7 +8063,7 @@ background-color: green;
       ]);
     });
 
-    // @gate enableFloat && enableHostSingletons && (enableClientRenderFallbackOnTextMismatch || !__DEV__)
+    // @gate enableFloat && (enableClientRenderFallbackOnTextMismatch || !__DEV__)
     it('can render a title before a singleton even if that singleton clears its contents', async () => {
       await act(() => {
         const {pipe} = renderToPipeableStream(

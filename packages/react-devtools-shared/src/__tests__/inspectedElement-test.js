@@ -75,7 +75,7 @@ describe('InspectedElement', () => {
     // Used by inspectElementAtIndex() helper function
     utils.act(() => {
       testRendererInstance = TestRenderer.create(null, {
-        unstable_isConcurrent: true,
+        isConcurrent: true,
       });
     });
 
@@ -307,7 +307,7 @@ describe('InspectedElement', () => {
         ['An update to %s inside a test was not wrapped in act'],
         () => {
           testRendererInstance = TestRenderer.create(null, {
-            unstable_isConcurrent: true,
+            isConcurrent: true,
           });
         },
       );
@@ -469,7 +469,7 @@ describe('InspectedElement', () => {
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
-          unstable_isConcurrent: true,
+          isConcurrent: true,
         });
       },
     );
@@ -2034,7 +2034,7 @@ describe('InspectedElement', () => {
       ['An update to %s inside a test was not wrapped in act'],
       () => {
         testRendererInstance = TestRenderer.create(null, {
-          unstable_isConcurrent: true,
+          isConcurrent: true,
         });
       },
     );
@@ -2317,7 +2317,7 @@ describe('InspectedElement', () => {
               <Suspender target={id} />
             </React.Suspense>
           </Contexts>,
-          {unstable_isConcurrent: true},
+          {isConcurrent: true},
         );
       }, false);
       await utils.actAsync(() => {
@@ -2765,6 +2765,7 @@ describe('InspectedElement', () => {
     expect(inspectedElement.owners).toMatchInlineSnapshot(`
       [
         {
+          "compiledWithForget": false,
           "displayName": "Child",
           "hocDisplayNames": null,
           "id": 3,
@@ -2772,6 +2773,7 @@ describe('InspectedElement', () => {
           "type": 5,
         },
         {
+          "compiledWithForget": false,
           "displayName": "App",
           "hocDisplayNames": null,
           "id": 2,
@@ -2815,7 +2817,7 @@ describe('InspectedElement', () => {
           ['An update to %s inside a test was not wrapped in act'],
           () => {
             testRendererInstance = TestRenderer.create(null, {
-              unstable_isConcurrent: true,
+              isConcurrent: true,
             });
           },
         );
