@@ -6,7 +6,12 @@
  */
 
 import * as t from "@babel/types";
-import { pruneUnusedLValues, pruneUnusedLabels, renameVariables } from ".";
+import {
+  pruneHoistedContexts,
+  pruneUnusedLValues,
+  pruneUnusedLabels,
+  renameVariables,
+} from ".";
 import { CompilerError, ErrorSeverity } from "../CompilerError";
 import { Environment, EnvironmentConfig, ExternalFunction } from "../HIR";
 import {
@@ -1514,6 +1519,7 @@ function codegenInstructionValue(
       pruneUnusedLabels(reactiveFunction);
       pruneUnusedLValues(reactiveFunction);
       renameVariables(reactiveFunction);
+      pruneHoistedContexts(reactiveFunction);
       const fn = codegenReactiveFunction(reactiveFunction, cx).unwrap();
       if (instrValue.expr.type === "ArrowFunctionExpression") {
         let body: t.BlockStatement | t.Expression = fn.body;
