@@ -206,7 +206,7 @@ function resetSuspendedComponent(sourceFiber: Fiber, rootRenderLanes: Lanes) {
 
 function markSuspenseBoundaryShouldCapture(
   suspenseBoundary: Fiber,
-  returnFiber: Fiber,
+  returnFiber: Fiber | null,
   sourceFiber: Fiber,
   root: FiberRoot,
   rootRenderLanes: Lanes,
@@ -319,11 +319,11 @@ function markSuspenseBoundaryShouldCapture(
 
 function throwException(
   root: FiberRoot,
-  returnFiber: Fiber,
+  returnFiber: Fiber | null,
   sourceFiber: Fiber,
   value: mixed,
   rootRenderLanes: Lanes,
-): void {
+): boolean {
   // The source fiber did not complete.
   sourceFiber.flags |= Incomplete;
 
@@ -446,7 +446,7 @@ function throwException(
                 attachPingListener(root, wakeable, rootRenderLanes);
               }
             }
-            return;
+            return false;
           }
           case OffscreenComponent: {
             if (suspenseBoundary.mode & ConcurrentMode) {
@@ -476,7 +476,7 @@ function throwException(
 
                 attachPingListener(root, wakeable, rootRenderLanes);
               }
-              return;
+              return false;
             }
           }
         }
@@ -497,7 +497,7 @@ function throwException(
           // and potentially log a warning. Revisit this for a future release.
           attachPingListener(root, wakeable, rootRenderLanes);
           renderDidSuspendDelayIfPossible();
-          return;
+          return false;
         } else {
           // In a legacy root, suspending without a boundary is always an error.
           const uncaughtSuspenseError = new Error(
@@ -537,7 +537,7 @@ function throwException(
       // Even though the user may not be affected by this error, we should
       // still log it so it can be fixed.
       queueHydrationError(createCapturedValueAtFiber(value, sourceFiber));
-      return;
+      return false;
     }
   } else {
     // Otherwise, fall through to the error path.
@@ -549,6 +549,13 @@ function throwException(
   // We didn't find a boundary that could handle this type of exception. Start
   // over and traverse parent path again, this time treating the exception
   // as an error.
+
+  if (returnFiber === null) {
+    // There's no return fiber, which means the root errored. This should never
+    // happen. Return `true` to trigger a fatal error (panic).
+    return true;
+  }
+
   let workInProgress: Fiber = returnFiber;
   do {
     switch (workInProgress.tag) {
@@ -559,7 +566,7 @@ function throwException(
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
         const update = createRootErrorUpdate(workInProgress, errorInfo, lane);
         enqueueCapturedUpdate(workInProgress, update);
-        return;
+        return false;
       }
       case ClassComponent:
         // Capture and retry
@@ -583,7 +590,7 @@ function throwException(
             lane,
           );
           enqueueCapturedUpdate(workInProgress, update);
-          return;
+          return false;
         }
         break;
       default:
@@ -592,6 +599,8 @@ function throwException(
     // $FlowFixMe[incompatible-type] we bail out when we get a null
     workInProgress = workInProgress.return;
   } while (workInProgress !== null);
+
+  return false;
 }
 
 export {throwException, createRootErrorUpdate, createClassErrorUpdate};

@@ -17,9 +17,10 @@
 
 let PropTypes;
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
 let ReactTestUtils;
+let act;
 
 describe('ReactContextValidator', () => {
   beforeEach(() => {
@@ -27,9 +28,10 @@ describe('ReactContextValidator', () => {
 
     PropTypes = require('prop-types');
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
   });
 
   // TODO: This behavior creates a runtime dependency on propTypes. We should
@@ -72,7 +74,7 @@ describe('ReactContextValidator', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should pass next context to lifecycles', () => {
+  it('should pass next context to lifecycles', async () => {
     let componentDidMountContext;
     let componentDidUpdateContext;
     let componentWillReceivePropsContext;
@@ -135,11 +137,18 @@ describe('ReactContextValidator', () => {
     };
 
     const container = document.createElement('div');
-    ReactDOM.render(<Parent foo="abc" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Parent foo="abc" />);
+    });
+
     expect(constructorContext).toEqual({foo: 'abc'});
     expect(renderContext).toEqual({foo: 'abc'});
     expect(componentDidMountContext).toEqual({foo: 'abc'});
-    ReactDOM.render(<Parent foo="def" />, container);
+    await act(() => {
+      root.render(<Parent foo="def" />);
+    });
+
     expect(componentWillReceivePropsContext).toEqual({foo: 'abc'});
     expect(componentWillReceivePropsNextContext).toEqual({foo: 'def'});
     expect(shouldComponentUpdateContext).toEqual({foo: 'abc'});
@@ -369,7 +378,7 @@ describe('ReactContextValidator', () => {
     expect(childContext.foo).toBe('FOO');
   });
 
-  it('should pass next context to lifecycles', () => {
+  it('should pass next context to lifecycles', async () => {
     let componentDidMountContext;
     let componentDidUpdateContext;
     let componentWillReceivePropsContext;
@@ -417,21 +426,26 @@ describe('ReactContextValidator', () => {
     const secondContext = {bar: 456};
 
     const container = document.createElement('div');
-    ReactDOM.render(
-      <Context.Provider value={firstContext}>
-        <Component />
-      </Context.Provider>,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <Context.Provider value={firstContext}>
+          <Component />
+        </Context.Provider>,
+      );
+    });
+
     expect(constructorContext).toBe(firstContext);
     expect(renderContext).toBe(firstContext);
     expect(componentDidMountContext).toBe(firstContext);
-    ReactDOM.render(
-      <Context.Provider value={secondContext}>
-        <Component />
-      </Context.Provider>,
-      container,
-    );
+    await act(() => {
+      root.render(
+        <Context.Provider value={secondContext}>
+          <Component />
+        </Context.Provider>,
+      );
+    });
+
     expect(componentWillReceivePropsContext).toBe(firstContext);
     expect(componentWillReceivePropsNextContext).toBe(secondContext);
     expect(componentWillUpdateContext).toBe(firstContext);
@@ -447,7 +461,7 @@ describe('ReactContextValidator', () => {
     }
   });
 
-  it('should re-render PureComponents when context Provider updates', () => {
+  it('should re-render PureComponents when context Provider updates', async () => {
     let renderedContext;
 
     const Context = React.createContext();
@@ -464,19 +478,24 @@ describe('ReactContextValidator', () => {
     const secondContext = {bar: 456};
 
     const container = document.createElement('div');
-    ReactDOM.render(
-      <Context.Provider value={firstContext}>
-        <Component />
-      </Context.Provider>,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <Context.Provider value={firstContext}>
+          <Component />
+        </Context.Provider>,
+      );
+    });
+
     expect(renderedContext).toBe(firstContext);
-    ReactDOM.render(
-      <Context.Provider value={secondContext}>
-        <Component />
-      </Context.Provider>,
-      container,
-    );
+    await act(() => {
+      root.render(
+        <Context.Provider value={secondContext}>
+          <Component />
+        </Context.Provider>,
+      );
+    });
+
     expect(renderedContext).toBe(secondContext);
   });
 
