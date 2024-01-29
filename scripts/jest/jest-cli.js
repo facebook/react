@@ -93,11 +93,6 @@ const argv = yargs
       type: 'boolean',
       default: false,
     },
-    deprecated: {
-      describe: 'Print deprecation message for command.',
-      requiresArg: true,
-      type: 'string',
-    },
     compactConsole: {
       alias: 'c',
       describe: 'Compact console output (hide file locations).',
@@ -349,11 +344,6 @@ function getEnvars() {
 }
 
 function main() {
-  if (argv.deprecated) {
-    console.log(chalk.red(`\nPlease run: \`${argv.deprecated}\` instead.\n`));
-    return;
-  }
-
   validateOptions();
 
   const args = getCommandArgs();
