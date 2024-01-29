@@ -50,7 +50,7 @@ If you want more fine-grained configuration, you can instead add a snippet like 
 
 ## Advanced Configuration
 
-`exhaustive-deps` can be configured to validate dependencies of custom Hooks with the `additionalHooks` option.
+`exhaustive-deps` can be configured to validate dependencies of custom Hooks with the `additionalHooks` or `ignoreUseEffect` options.
 This option accepts a regex to match the names of custom Hooks that have dependencies.
 
 ```js
@@ -58,7 +58,8 @@ This option accepts a regex to match the names of custom Hooks that have depende
   "rules": {
     // ...
     "react-hooks/exhaustive-deps": ["warn", {
-      "additionalHooks": "(useMyCustomHook|useMyOtherCustomHook)"
+      "additionalHooks": "(useMyCustomHook|useMyOtherCustomHook)",
+      "ignoreUseEffect": true, // not recommended; defaults to false
     }]
   }
 }

@@ -29,6 +29,9 @@ export default {
           additionalHooks: {
             type: 'string',
           },
+          ignoreUseEffect: {
+            type: 'boolean',
+          },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
@@ -45,6 +48,12 @@ export default {
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
 
+    const ignoreUseEffect =
+      (context.options &&
+        context.options[0] &&
+        context.options[0].ignoreUseEffect) ||
+      false;
+
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
       (context.options &&
         context.options[0] &&
@@ -53,6 +62,7 @@ export default {
 
     const options = {
       additionalHooks,
+      ignoreUseEffect,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
     };
 
@@ -1747,6 +1757,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
   switch (node.name) {
     case 'useEffect':
     case 'useLayoutEffect':
+      return options && options.ignoreUseEffect ? -1 : 0;
     case 'useCallback':
     case 'useMemo':
       // useEffect(fn)

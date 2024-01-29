@@ -1461,6 +1461,18 @@ const tests = {
         }
       `,
     },
+    {
+      // normally invalid, but the ignoreUseEffect option has been specified
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = someFunc();
+          useEffect(() => {
+            console.log(local);
+          }, []);
+        }
+      `,
+      options: [{ignoreUseEffect: true}],
+    },
   ],
   invalid: [
     {
@@ -2004,6 +2016,7 @@ const tests = {
           ],
         },
       ],
+      options: [{ignoreUseEffect: true}], // has no effect when testing useMemo
     },
     {
       code: normalizeIndent`
