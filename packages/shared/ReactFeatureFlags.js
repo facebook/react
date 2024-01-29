@@ -34,11 +34,6 @@ export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableFormActions = true;
 export const enableAsyncActions = true;
 
-// Not sure if www still uses this. We don't have a replacement but whatever we
-// replace it with will likely be different than what's already there, so we
-// probably should just delete it as long as nothing in www relies on it.
-export const enableSchedulerDebugging = false;
-
 // Need to remove didTimeout argument from Scheduler before landing
 export const disableSchedulerTimeoutInWorkLoop = false;
 
@@ -105,8 +100,6 @@ export const enableSuspenseAvoidThisFallbackFizz = false;
 
 export const enableCPUSuspense = __EXPERIMENTAL__;
 
-export const enableHostSingletons = true;
-
 export const enableFloat = true;
 
 // Enables unstable_useMemoCache hook, intended as a compilation target for
@@ -127,6 +120,14 @@ export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+
+/**
+ * Enables an expiration time for retry lanes to avoid starvation.
+ */
+export const enableRetryLaneExpiration = false;
+export const retryLaneExpirationMs = 5000;
+export const syncLaneExpirationMs = 250;
+export const transitionLaneExpirationMs = 5000;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
@@ -151,7 +152,7 @@ export const enableUseRefAccessWarning = false;
 // Enables time slicing for updates that aren't wrapped in startTransition.
 export const forceConcurrentByDefaultForTesting = false;
 
-export const enableUnifiedSyncLane = __EXPERIMENTAL__;
+export const enableUnifiedSyncLane = true;
 
 // Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
 export const allowConcurrentByDefault = false;
@@ -222,6 +223,8 @@ export const enableProfilerNestedUpdatePhase = __PROFILE__;
 // stuff. Intended to enable React core members to more easily debug scheduling
 // issues in DEV builds.
 export const enableDebugTracing = false;
+
+export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;

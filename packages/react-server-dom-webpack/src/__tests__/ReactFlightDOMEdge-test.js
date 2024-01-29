@@ -34,7 +34,7 @@ describe('ReactFlightDOMEdge', () => {
     jest.resetModules();
 
     // Simulate the condition resolution
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.edge'),
     );
@@ -240,6 +240,20 @@ describe('ReactFlightDOMEdge', () => {
     );
     // Should still match the result when parsed
     expect(result).toEqual(resolvedChildren);
+  });
+
+  it('should execute repeated server components in a compact form', async () => {
+    async function ServerComponent({recurse}) {
+      if (recurse > 0) {
+        return <ServerComponent recurse={recurse - 1} />;
+      }
+      return <div>Fin</div>;
+    }
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ServerComponent recurse={20} />,
+    );
+    const serializedContent = await readResult(stream);
+    expect(serializedContent.length).toBeLessThan(150);
   });
 
   // @gate enableBinaryFlight

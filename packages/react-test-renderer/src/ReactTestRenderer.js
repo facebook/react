@@ -60,6 +60,7 @@ const act = React.unstable_act;
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
+  isConcurrent: boolean,
   unstable_isConcurrent: boolean,
   unstable_strictMode: boolean,
   unstable_concurrentUpdatesByDefault: boolean,
@@ -479,7 +480,10 @@ function create(
       // $FlowFixMe[incompatible-type] found when upgrading Flow
       createNodeMock = options.createNodeMock;
     }
-    if (options.unstable_isConcurrent === true) {
+    if (
+      options.unstable_isConcurrent === true ||
+      options.isConcurrent === true
+    ) {
       isConcurrent = true;
     }
     if (options.unstable_strictMode === true) {
