@@ -17,7 +17,7 @@ import type {
   Update as ClassUpdate,
 } from './ReactFiberClassUpdateQueue';
 import type {Lane, Lanes} from './ReactFiberLane';
-import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
+import type {OffscreenInstance} from './ReactFiberActivityComponent';
 
 import {
   warnAboutUpdateOnNotYetMountedFiberInDEV,
@@ -27,7 +27,7 @@ import {
 import {NoLane, NoLanes, mergeLanes, markHiddenUpdate} from './ReactFiberLane';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {HostRoot, OffscreenComponent} from './ReactWorkTags';
-import {OffscreenVisible} from './ReactFiberOffscreenComponent';
+import {OffscreenVisible} from './ReactFiberActivityComponent';
 
 export type ConcurrentUpdate = {
   next: ConcurrentUpdate,

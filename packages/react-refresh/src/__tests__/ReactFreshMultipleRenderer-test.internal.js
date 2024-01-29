@@ -16,7 +16,8 @@ if (__DEV__) {
   ReactFreshRuntime = require('react-refresh/runtime');
   ReactFreshRuntime.injectIntoGlobalHook(global);
 }
-const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
 
 jest.resetModules();
 const ReactART = require('react-art');
@@ -41,7 +42,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('can update components managed by different renderers independently', () => {
+  it('can update components managed by different renderers independently', async () => {
     if (__DEV__) {
       const InnerV1 = function () {
         return <ReactART.Shape fill="blue" />;
@@ -59,7 +60,10 @@ describe('ReactFresh', () => {
       };
       ReactFreshRuntime.register(OuterV1, 'Outer');
 
-      ReactDOM.render(<OuterV1 />, container);
+      const root = ReactDOMClient.createRoot(container);
+      await act(() => {
+        root.render(<OuterV1 />);
+      });
       const el = container.firstChild;
       const pathEl = el.querySelector('path');
       expect(el.style.color).toBe('blue');

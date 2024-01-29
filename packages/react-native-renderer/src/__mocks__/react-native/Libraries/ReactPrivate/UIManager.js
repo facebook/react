@@ -173,24 +173,21 @@ const RCTUIManager = {
 
     callback(10, 10, 100, 100);
   }),
-  measureLayout: jest.fn(function measureLayout(
-    tag,
-    relativeTag,
-    fail,
-    success,
-  ) {
-    if (typeof tag !== 'number') {
-      throw new Error(`Expected tag to be a number, was passed ${tag}`);
-    }
+  measureLayout: jest.fn(
+    function measureLayout(tag, relativeTag, fail, success) {
+      if (typeof tag !== 'number') {
+        throw new Error(`Expected tag to be a number, was passed ${tag}`);
+      }
 
-    if (typeof relativeTag !== 'number') {
-      throw new Error(
-        `Expected relativeTag to be a number, was passed ${relativeTag}`,
-      );
-    }
+      if (typeof relativeTag !== 'number') {
+        throw new Error(
+          `Expected relativeTag to be a number, was passed ${relativeTag}`,
+        );
+      }
 
-    success(1, 1, 100, 100);
-  }),
+      success(1, 1, 100, 100);
+    },
+  ),
   __takeSnapshot: jest.fn(),
 };
 

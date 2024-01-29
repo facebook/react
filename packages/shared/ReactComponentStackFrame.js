@@ -60,6 +60,17 @@ if (__DEV__) {
   componentFrameCache = new PossiblyWeakMap<Function, string>();
 }
 
+/**
+ * Leverages native browser/VM stack frames to get proper details (e.g.
+ * filename, line + col number) for a single component in a component stack. We
+ * do this by:
+ *   (1) throwing and catching an error in the function - this will be our
+ *       control error.
+ *   (2) calling the component which will eventually throw an error that we'll
+ *       catch - this will be our sample error.
+ *   (3) diffing the control and sample error stacks to find the stack frame
+ *       which represents our component.
+ */
 export function describeNativeComponentFrame(
   fn: Function,
   construct: boolean,
@@ -76,13 +87,12 @@ export function describeNativeComponentFrame(
     }
   }
 
-  let control;
-
   reentry = true;
   const previousPrepareStackTrace = Error.prepareStackTrace;
   // $FlowFixMe[incompatible-type] It does accept undefined.
   Error.prepareStackTrace = undefined;
   let previousDispatcher;
+
   if (__DEV__) {
     previousDispatcher = ReactCurrentDispatcher.current;
     // Set the dispatcher in DEV because this might be call in the render function
@@ -90,75 +100,139 @@ export function describeNativeComponentFrame(
     ReactCurrentDispatcher.current = null;
     disableLogs();
   }
-  try {
-    // This should throw.
-    if (construct) {
-      // Something should be setting the props in the constructor.
-      const Fake = function () {
-        throw Error();
-      };
-      // $FlowFixMe[prop-missing]
-      Object.defineProperty(Fake.prototype, 'props', {
-        set: function () {
-          // We use a throwing setter instead of frozen or non-writable props
-          // because that won't throw in a non-strict mode function.
-          throw Error();
-        },
-      });
-      if (typeof Reflect === 'object' && Reflect.construct) {
-        // We construct a different control for this case to include any extra
-        // frames added by the construct call.
-        try {
-          Reflect.construct(Fake, []);
-        } catch (x) {
-          control = x;
-        }
-        Reflect.construct(fn, [], Fake);
-      } else {
-        try {
-          Fake.call();
-        } catch (x) {
-          control = x;
-        }
-        // $FlowFixMe[prop-missing] found when upgrading Flow
-        fn.call(Fake.prototype);
-      }
-    } else {
-      try {
-        throw Error();
-      } catch (x) {
-        control = x;
-      }
-      // TODO(luna): This will currently only throw if the function component
-      // tries to access React/ReactDOM/props. We should probably make this throw
-      // in simple components too
-      const maybePromise = fn();
 
-      // If the function component returns a promise, it's likely an async
-      // component, which we don't yet support. Attach a noop catch handler to
-      // silence the error.
-      // TODO: Implement component stacks for async client components?
-      if (maybePromise && typeof maybePromise.catch === 'function') {
-        maybePromise.catch(() => {});
+  /**
+   * Finding a common stack frame between sample and control errors can be
+   * tricky given the different types and levels of stack trace truncation from
+   * different JS VMs. So instead we'll attempt to control what that common
+   * frame should be through this object method:
+   * Having both the sample and control errors be in the function under the
+   * `DescribeNativeComponentFrameRoot` property, + setting the `name` and
+   * `displayName` properties of the function ensures that a stack
+   * frame exists that has the method name `DescribeNativeComponentFrameRoot` in
+   * it for both control and sample stacks.
+   */
+  const RunInRootFrame = {
+    DetermineComponentFrameRoot(): [?string, ?string] {
+      let control;
+      try {
+        // This should throw.
+        if (construct) {
+          // Something should be setting the props in the constructor.
+          const Fake = function () {
+            throw Error();
+          };
+          // $FlowFixMe[prop-missing]
+          Object.defineProperty(Fake.prototype, 'props', {
+            set: function () {
+              // We use a throwing setter instead of frozen or non-writable props
+              // because that won't throw in a non-strict mode function.
+              throw Error();
+            },
+          });
+          if (typeof Reflect === 'object' && Reflect.construct) {
+            // We construct a different control for this case to include any extra
+            // frames added by the construct call.
+            try {
+              Reflect.construct(Fake, []);
+            } catch (x) {
+              control = x;
+            }
+            Reflect.construct(fn, [], Fake);
+          } else {
+            try {
+              Fake.call();
+            } catch (x) {
+              control = x;
+            }
+            // $FlowFixMe[prop-missing] found when upgrading Flow
+            fn.call(Fake.prototype);
+          }
+        } else {
+          try {
+            throw Error();
+          } catch (x) {
+            control = x;
+          }
+          // TODO(luna): This will currently only throw if the function component
+          // tries to access React/ReactDOM/props. We should probably make this throw
+          // in simple components too
+          const maybePromise = fn();
+
+          // If the function component returns a promise, it's likely an async
+          // component, which we don't yet support. Attach a noop catch handler to
+          // silence the error.
+          // TODO: Implement component stacks for async client components?
+          if (maybePromise && typeof maybePromise.catch === 'function') {
+            maybePromise.catch(() => {});
+          }
+        }
+      } catch (sample) {
+        // This is inlined manually because closure doesn't do it for us.
+        if (sample && control && typeof sample.stack === 'string') {
+          return [sample.stack, control.stack];
+        }
       }
-    }
-  } catch (sample) {
-    // This is inlined manually because closure doesn't do it for us.
-    if (sample && control && typeof sample.stack === 'string') {
+      return [null, null];
+    },
+  };
+  // $FlowFixMe[prop-missing]
+  RunInRootFrame.DetermineComponentFrameRoot.displayName =
+    'DetermineComponentFrameRoot';
+  const namePropDescriptor = Object.getOwnPropertyDescriptor(
+    RunInRootFrame.DetermineComponentFrameRoot,
+    'name',
+  );
+  // Before ES6, the `name` property was not configurable.
+  if (namePropDescriptor && namePropDescriptor.configurable) {
+    // V8 utilizes a function's `name` property when generating a stack trace.
+    Object.defineProperty(
+      RunInRootFrame.DetermineComponentFrameRoot,
+      // Configurable properties can be updated even if its writable descriptor
+      // is set to `false`.
+      // $FlowFixMe[cannot-write]
+      'name',
+      {value: 'DetermineComponentFrameRoot'},
+    );
+  }
+
+  try {
+    const [sampleStack, controlStack] =
+      RunInRootFrame.DetermineComponentFrameRoot();
+    if (sampleStack && controlStack) {
       // This extracts the first frame from the sample that isn't also in the control.
       // Skipping one frame that we assume is the frame that calls the two.
-      const sampleLines = sample.stack.split('\n');
-      const controlLines = control.stack.split('\n');
-      let s = sampleLines.length - 1;
-      let c = controlLines.length - 1;
-      while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
-        // We expect at least one stack frame to be shared.
-        // Typically this will be the root most one. However, stack frames may be
-        // cut off due to maximum stack limits. In this case, one maybe cut off
-        // earlier than the other. We assume that the sample is longer or the same
-        // and there for cut off earlier. So we should find the root most frame in
-        // the sample somewhere in the control.
-        c--;
+      const sampleLines = sampleStack.split('\n');
+      const controlLines = controlStack.split('\n');
+      let s = 0;
+      let c = 0;
+      while (
+        s < sampleLines.length &&
+        !sampleLines[s].includes('DetermineComponentFrameRoot')
+      ) {
+        s++;
+      }
+      while (
+        c < controlLines.length &&
+        !controlLines[c].includes('DetermineComponentFrameRoot')
+      ) {
+        c++;
+      }
+      // We couldn't find our intentionally injected common root frame, attempt
+      // to find another common root frame by search from the bottom of the
+      // control stack...
+      if (s === sampleLines.length || c === controlLines.length) {
+        s = sampleLines.length - 1;
+        c = controlLines.length - 1;
+        while (s >= 1 && c >= 0 && sampleLines[s] !== controlLines[c]) {
+          // We expect at least one stack frame to be shared.
+          // Typically this will be the root most one. However, stack frames may be
+          // cut off due to maximum stack limits. In this case, one maybe cut off
+          // earlier than the other. We assume that the sample is longer or the same
+          // and there for cut off earlier. So we should find the root most frame in
+          // the sample somewhere in the control.
+          c--;
+        }
       }
       for (; s >= 1 && c >= 0; s--, c--) {
         // Next we find the first one that isn't the same which should be the
