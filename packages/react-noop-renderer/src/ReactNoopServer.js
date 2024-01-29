@@ -94,6 +94,9 @@ const ReactNoopServer = ReactFizzServer({
     return null;
   },
 
+  resetResumableState(): void {},
+  completeResumableState(): void {},
+
   pushTextInstance(
     target: Array<Uint8Array>,
     text: string,
@@ -269,6 +272,7 @@ const ReactNoopServer = ReactFizzServer({
   setCurrentlyRenderingBoundaryResourcesTarget(resources: BoundaryResources) {},
 
   prepareHostDispatcher() {},
+  emitEarlyPreloads() {},
 });
 
 type Options = {
