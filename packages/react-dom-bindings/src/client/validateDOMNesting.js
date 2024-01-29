@@ -244,7 +244,12 @@ function isTagValidWithParent(tag: string, parentTag: ?string): boolean {
   switch (parentTag) {
     // https://html.spec.whatwg.org/multipage/syntax.html#parsing-main-inselect
     case 'select':
-      return tag === 'option' || tag === 'optgroup' || tag === '#text';
+      return (
+        tag === 'hr' ||
+        tag === 'option' ||
+        tag === 'optgroup' ||
+        tag === '#text'
+      );
     case 'optgroup':
       return tag === 'option' || tag === '#text';
     // Strictly speaking, seeing an <option> doesn't mean we're in a <select>

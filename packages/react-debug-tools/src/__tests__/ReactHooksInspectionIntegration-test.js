@@ -633,27 +633,64 @@ describe('ReactHooksInspectionIntegration', () => {
     });
   });
 
-  // @gate enableUseMemoCacheHook
-  it('useMemoCache should not be inspectable', () => {
-    function Foo() {
-      const $ = useMemoCache(1);
-      let t0;
+  describe('useMemoCache', () => {
+    // @gate enableUseMemoCacheHook
+    it('should not be inspectable', () => {
+      function Foo() {
+        const $ = useMemoCache(1);
+        let t0;
 
-      if ($[0] === Symbol.for('react.memo_cache_sentinel')) {
-        t0 = <div>{1}</div>;
-        $[0] = t0;
-      } else {
-        t0 = $[0];
+        if ($[0] === Symbol.for('react.memo_cache_sentinel')) {
+          t0 = <div>{1}</div>;
+          $[0] = t0;
+        } else {
+          t0 = $[0];
+        }
+
+        return t0;
       }
 
-      return t0;
-    }
+      const renderer = ReactTestRenderer.create(<Foo />);
+      const childFiber = renderer.root.findByType(Foo)._currentFiber();
+      const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
 
-    const renderer = ReactTestRenderer.create(<Foo />);
-    const childFiber = renderer.root.findByType(Foo)._currentFiber();
-    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+      expect(tree.length).toEqual(0);
+    });
 
-    expect(tree.length).toEqual(0);
+    // @gate enableUseMemoCacheHook
+    it('should work in combination with other hooks', () => {
+      function useSomething() {
+        const [something] = React.useState(null);
+        const changeOtherSomething = React.useCallback(() => {}, [something]);
+
+        return [something, changeOtherSomething];
+      }
+
+      function Foo() {
+        const $ = useMemoCache(10);
+
+        useSomething();
+        React.useState(1);
+        React.useEffect(() => {});
+
+        let t0;
+
+        if ($[0] === Symbol.for('react.memo_cache_sentinel')) {
+          t0 = <div>{1}</div>;
+          $[0] = t0;
+        } else {
+          t0 = $[0];
+        }
+
+        return t0;
+      }
+
+      const renderer = ReactTestRenderer.create(<Foo />);
+      const childFiber = renderer.root.findByType(Foo)._currentFiber();
+      const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+
+      expect(tree.length).toEqual(3);
+    });
   });
 
   describe('useDebugValue', () => {

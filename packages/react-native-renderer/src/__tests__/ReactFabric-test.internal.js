@@ -528,14 +528,13 @@ describe('ReactFabric', () => {
     }));
 
     const snapshots = [];
-    nativeFabricUIManager.completeRoot.mockImplementation(function (
-      rootTag,
-      newChildSet,
-    ) {
-      snapshots.push(
-        nativeFabricUIManager.__dumpChildSetForJestTestsOnly(newChildSet),
-      );
-    });
+    nativeFabricUIManager.completeRoot.mockImplementation(
+      function (rootTag, newChildSet) {
+        snapshots.push(
+          nativeFabricUIManager.__dumpChildSetForJestTestsOnly(newChildSet),
+        );
+      },
+    );
 
     await act(() => {
       ReactFabric.render(
@@ -1113,6 +1112,16 @@ describe('ReactFabric', () => {
         internalInstanceHandle,
       );
     expect(publicInstance).toBe(viewRef);
+
+    await act(() => {
+      ReactFabric.render(null, 1);
+    });
+
+    const publicInstanceAfterUnmount =
+      ReactFabric.getPublicInstanceFromInternalInstanceHandle(
+        internalInstanceHandle,
+      );
+    expect(publicInstanceAfterUnmount).toBe(null);
   });
 
   it('getPublicInstanceFromInternalInstanceHandle should provide public instances for HostText', async () => {
@@ -1154,5 +1163,16 @@ describe('ReactFabric', () => {
       ReactNativePrivateInterface.createPublicTextInstance.mock.results[0]
         .value;
     expect(publicInstance).toBe(expectedPublicInstance);
+
+    await act(() => {
+      ReactFabric.render(null, 1);
+    });
+
+    const publicInstanceAfterUnmount =
+      ReactFabric.getPublicInstanceFromInternalInstanceHandle(
+        internalInstanceHandle,
+      );
+
+    expect(publicInstanceAfterUnmount).toBe(null);
   });
 });

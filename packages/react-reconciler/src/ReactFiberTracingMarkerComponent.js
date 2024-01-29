@@ -12,7 +12,7 @@ import type {
   Fiber,
   FiberRoot,
 } from './ReactInternalTypes';
-import type {OffscreenInstance} from './ReactFiberOffscreenComponent';
+import type {OffscreenInstance} from './ReactFiberActivityComponent';
 import type {StackCursor} from './ReactFiberStack';
 
 import {enableTransitionTracing} from 'shared/ReactFeatureFlags';
@@ -36,6 +36,7 @@ export type PendingTransitionCallbacks = {
   markerComplete: Map<string, Set<Transition>> | null,
 };
 
+// TODO: Unclear to me why these are separate types
 export type Transition = {
   name: string,
   startTime: number,
@@ -45,6 +46,7 @@ export type BatchConfigTransition = {
   name?: string,
   startTime?: number,
   _updatedFibers?: Set<Fiber>,
+  _callbacks: Set<(BatchConfigTransition, mixed) => mixed>,
 };
 
 // TODO: Is there a way to not include the tag or name here?

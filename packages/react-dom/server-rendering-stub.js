@@ -34,6 +34,7 @@ import {
   useFormStatus,
   useFormState,
 } from './src/server/ReactDOMServerRenderingStub';
+import type {Awaited} from 'shared/ReactTypes';
 
 export function experimental_useFormStatus(): FormStatus {
   if (__DEV__) {
@@ -46,10 +47,10 @@ export function experimental_useFormStatus(): FormStatus {
 }
 
 export function experimental_useFormState<S, P>(
-  action: (S, P) => Promise<S>,
-  initialState: S,
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
   permalink?: string,
-): [S, (P) => void] {
+): [Awaited<S>, (P) => void] {
   if (__DEV__) {
     console.error(
       'useFormState is now in canary. Remove the experimental_ prefix. ' +

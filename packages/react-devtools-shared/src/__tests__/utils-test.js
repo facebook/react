@@ -283,12 +283,12 @@ describe('utils', () => {
       expect(isPlainObject(new (class C {})())).toBe(false);
     });
 
-    it('should retun false for objects, which have not only Object in its prototype chain', () => {
+    it('should return false for objects, which have not only Object in its prototype chain', () => {
       expect(isPlainObject([])).toBe(false);
       expect(isPlainObject(Symbol())).toBe(false);
     });
 
-    it('should retun false for primitives', () => {
+    it('should return false for primitives', () => {
       expect(isPlainObject(5)).toBe(false);
       expect(isPlainObject(true)).toBe(false);
     });
