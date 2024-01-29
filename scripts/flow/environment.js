@@ -281,13 +281,7 @@ declare module 'pg/lib/utils' {
   };
 }
 
-declare class AsyncLocalStorage<T> {
-  disable(): void;
-  getStore(): T | void;
-  run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
-  enterWith(store: T): void;
-}
-
+// Node
 declare module 'async_hooks' {
   declare class AsyncLocalStorage<T> {
     disable(): void;
@@ -295,7 +289,41 @@ declare module 'async_hooks' {
     run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
     enterWith(store: T): void;
   }
+  declare interface AsyncResource {}
+  declare function executionAsyncId(): number;
+  declare function executionAsyncResource(): AsyncResource;
+  declare function triggerAsyncId(): number;
+  declare type HookCallbacks = {
+    init?: (
+      asyncId: number,
+      type: string,
+      triggerAsyncId: number,
+      resource: AsyncResource,
+    ) => void,
+    before?: (asyncId: number) => void,
+    after?: (asyncId: number) => void,
+    promiseResolve?: (asyncId: number) => void,
+    destroy?: (asyncId: number) => void,
+  };
+  declare class AsyncHook {
+    enable(): this;
+    disable(): this;
+  }
+  declare function createHook(callbacks: HookCallbacks): AsyncHook;
 }
+
+// Edge
+declare class AsyncLocalStorage<T> {
+  disable(): void;
+  getStore(): T | void;
+  run(store: T, callback: (...args: any[]) => void, ...args: any[]): void;
+  enterWith(store: T): void;
+}
+
+declare var async_hooks: {
+  createHook(callbacks: any): any,
+  executionAsyncId(): number,
+};
 
 declare module 'node:worker_threads' {
   declare class MessageChannel {
