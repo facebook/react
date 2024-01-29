@@ -413,29 +413,29 @@ function setProp(
           setTextContent(domElement, '' + value);
         }
       }
-      break;
+      return;
     }
     // These are very common props and therefore are in the beginning of the switch.
     // TODO: aria-label is a very common prop but allows booleans so is not like the others
     // but should ideally go in this list too.
     case 'className':
       setValueForKnownAttribute(domElement, 'class', value);
-      break;
+      return;
     case 'tabIndex':
       // This has to be case sensitive in SVG.
       setValueForKnownAttribute(domElement, 'tabindex', value);
-      break;
+      return;
     case 'dir':
     case 'role':
     case 'viewBox':
     case 'width':
     case 'height': {
       setValueForKnownAttribute(domElement, key, value);
-      break;
+      return;
     }
     case 'style': {
       setValueForStyles(domElement, value, prevValue);
-      break;
+      return;
     }
     // These attributes accept URLs. These must not allow javascript: URLS.
     case 'src':
@@ -467,7 +467,7 @@ function setProp(
             }
           }
           domElement.removeAttribute(key);
-          break;
+          return;
         }
       }
       if (
@@ -477,7 +477,7 @@ function setProp(
         typeof value === 'boolean'
       ) {
         domElement.removeAttribute(key);
-        break;
+        return;
       }
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
@@ -488,7 +488,7 @@ function setProp(
         enableTrustedTypesIntegration ? value : '' + (value: any),
       ): any);
       domElement.setAttribute(key, sanitizedValue);
-      break;
+      return;
     }
     case 'action':
     case 'formAction': {
@@ -513,7 +513,7 @@ function setProp(
               'event.preventDefault().' +
               "')",
           );
-          break;
+          return;
         } else if (typeof prevValue === 'function') {
           // When we're switching off a Server Action that was originally hydrated.
           // The server control these fields during SSR that are now trailing.
@@ -565,7 +565,7 @@ function setProp(
         typeof value === 'boolean'
       ) {
         domElement.removeAttribute(key);
-        break;
+        return;
       }
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
@@ -576,7 +576,7 @@ function setProp(
         enableTrustedTypesIntegration ? value : '' + (value: any),
       ): any);
       domElement.setAttribute(key, sanitizedValue);
-      break;
+      return;
     }
     case 'onClick': {
       // TODO: This cast may not be sound for SVG, MathML or custom elements.
@@ -586,7 +586,7 @@ function setProp(
         }
         trapClickOnNonInteractiveElement(((domElement: any): HTMLElement));
       }
-      break;
+      return;
     }
     case 'onScroll': {
       if (value != null) {
@@ -595,7 +595,7 @@ function setProp(
         }
         listenToNonDelegatedEvent('scroll', domElement);
       }
-      break;
+      return;
     }
     case 'onScrollEnd': {
       if (value != null) {
@@ -604,7 +604,7 @@ function setProp(
         }
         listenToNonDelegatedEvent('scrollend', domElement);
       }
-      break;
+      return;
     }
     case 'dangerouslySetInnerHTML': {
       if (value != null) {
@@ -629,19 +629,19 @@ function setProp(
           }
         }
       }
-      break;
+      return;
     }
     // Note: `option.selected` is not updated if `select.multiple` is
     // disabled with `removeAttribute`. We have special logic for handling this.
     case 'multiple': {
       (domElement: any).multiple =
         value && typeof value !== 'function' && typeof value !== 'symbol';
-      break;
+      return;
     }
     case 'muted': {
       (domElement: any).muted =
         value && typeof value !== 'function' && typeof value !== 'symbol';
-      break;
+      return;
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
@@ -651,14 +651,14 @@ function setProp(
     case 'ref': {
       // TODO: `ref` is pretty common, should we move it up?
       // Noop
-      break;
+      return;
     }
     case 'autoFocus': {
       // We polyfill it separately on the client during commit.
       // We could have excluded it in the property list instead of
       // adding a special case here, but then it wouldn't be emitted
       // on server rendering (but we *do* want to emit it in SSR).
-      break;
+      return;
     }
     case 'xlinkHref': {
       if (
@@ -668,7 +668,7 @@ function setProp(
         typeof value === 'symbol'
       ) {
         domElement.removeAttribute('xlink:href');
-        break;
+        return;
       }
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
@@ -679,7 +679,7 @@ function setProp(
         enableTrustedTypesIntegration ? value : '' + (value: any),
       ): any);
       domElement.setAttributeNS(xlinkNamespace, 'xlink:href', sanitizedValue);
-      break;
+      return;
     }
     case 'contentEditable':
     case 'spellCheck':
@@ -710,7 +710,7 @@ function setProp(
       } else {
         domElement.removeAttribute(key);
       }
-      break;
+      return;
     }
     // Boolean
     case 'allowFullScreen':
@@ -724,7 +724,6 @@ function setProp(
     case 'disableRemotePlayback':
     case 'formNoValidate':
     case 'hidden':
-    case enableNewBooleanProps ? 'inert' : 'formNoValidate':
     case 'loop':
     case 'noModule':
     case 'noValidate':
@@ -736,14 +735,30 @@ function setProp(
     case 'scoped':
     case 'seamless':
     case 'itemScope': {
-      if (value && typeof value !== 'function' && typeof value !== 'symbol') {
-        domElement.setAttribute(key, '');
-      } else {
-        domElement.removeAttribute(key);
+      if (!enableNewBooleanProps) {
+        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+          domElement.setAttribute(key, '');
+        } else {
+          domElement.removeAttribute(key);
+        }
+        return;
       }
-      break;
+    }
+    // fallthrough to have a single implementation for boolean props for all states of `enableNewBooleanProps`
+    case 'inert': {
+      if (enableNewBooleanProps) {
+        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+          domElement.setAttribute(key, '');
+        } else {
+          domElement.removeAttribute(key);
+        }
+        return;
+      } else {
+        break;
+      }
     }
     // Overloaded Boolean
+    // fallthrough impossible here because previous cases are exhaustive
     case 'capture':
     case 'download': {
       // An attribute that can be used as a flag as well as with a value.
@@ -765,7 +780,7 @@ function setProp(
       } else {
         domElement.removeAttribute(key);
       }
-      break;
+      return;
     }
     case 'cols':
     case 'rows':
@@ -786,7 +801,7 @@ function setProp(
       } else {
         domElement.removeAttribute(key);
       }
-      break;
+      return;
     }
     case 'rowSpan':
     case 'start': {
@@ -804,7 +819,7 @@ function setProp(
       } else {
         domElement.removeAttribute(key);
       }
-      break;
+      return;
     }
     case 'xlinkActuate':
       setValueForNamespacedAttribute(
@@ -813,7 +828,7 @@ function setProp(
         'xlink:actuate',
         value,
       );
-      break;
+      return;
     case 'xlinkArcrole':
       setValueForNamespacedAttribute(
         domElement,
@@ -821,7 +836,7 @@ function setProp(
         'xlink:arcrole',
         value,
       );
-      break;
+      return;
     case 'xlinkRole':
       setValueForNamespacedAttribute(
         domElement,
@@ -829,7 +844,7 @@ function setProp(
         'xlink:role',
         value,
       );
-      break;
+      return;
     case 'xlinkShow':
       setValueForNamespacedAttribute(
         domElement,
@@ -837,7 +852,7 @@ function setProp(
         'xlink:show',
         value,
       );
-      break;
+      return;
     case 'xlinkTitle':
       setValueForNamespacedAttribute(
         domElement,
@@ -845,7 +860,7 @@ function setProp(
         'xlink:title',
         value,
       );
-      break;
+      return;
     case 'xlinkType':
       setValueForNamespacedAttribute(
         domElement,
@@ -853,7 +868,7 @@ function setProp(
         'xlink:type',
         value,
       );
-      break;
+      return;
     case 'xmlBase':
       setValueForNamespacedAttribute(
         domElement,
@@ -861,7 +876,7 @@ function setProp(
         'xml:base',
         value,
       );
-      break;
+      return;
     case 'xmlLang':
       setValueForNamespacedAttribute(
         domElement,
@@ -869,7 +884,7 @@ function setProp(
         'xml:lang',
         value,
       );
-      break;
+      return;
     case 'xmlSpace':
       setValueForNamespacedAttribute(
         domElement,
@@ -877,7 +892,7 @@ function setProp(
         'xml:space',
         value,
       );
-      break;
+      return;
     // Properties that should not be allowed on custom elements.
     case 'is': {
       if (__DEV__) {
@@ -892,33 +907,30 @@ function setProp(
       // However, our tests currently query for it so it's plausible someone
       // else does too so it's break.
       setValueForAttribute(domElement, 'is', value);
-      break;
+      return;
     }
     case 'innerText':
     case 'textContent':
       if (enableCustomElementPropertySupport) {
-        break;
+        return;
       }
-    // Fall through
-    default: {
-      if (
-        key.length > 2 &&
-        (key[0] === 'o' || key[0] === 'O') &&
-        (key[1] === 'n' || key[1] === 'N')
-      ) {
-        if (
-          __DEV__ &&
-          registrationNameDependencies.hasOwnProperty(key) &&
-          value != null &&
-          typeof value !== 'function'
-        ) {
-          warnForInvalidEventListener(key, value);
-        }
-      } else {
-        const attributeName = getAttributeAlias(key);
-        setValueForAttribute(domElement, attributeName, value);
-      }
+  }
+  if (
+    key.length > 2 &&
+    (key[0] === 'o' || key[0] === 'O') &&
+    (key[1] === 'n' || key[1] === 'N')
+  ) {
+    if (
+      __DEV__ &&
+      registrationNameDependencies.hasOwnProperty(key) &&
+      value != null &&
+      typeof value !== 'function'
+    ) {
+      warnForInvalidEventListener(key, value);
     }
+  } else {
+    const attributeName = getAttributeAlias(key);
+    setValueForAttribute(domElement, attributeName, value);
   }
 }
 

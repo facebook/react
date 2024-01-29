@@ -225,7 +225,7 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'disableRemotePlayback':
           case 'formNoValidate':
           case 'hidden':
-          case enableNewBooleanProps ? 'inert' : 'formNoValidate':
+          case 'insert':
           case 'loop':
           case 'noModule':
           case 'noValidate':
@@ -239,45 +239,52 @@ function validateProperty(tagName, name, value, eventRegistry) {
           case 'itemScope':
           case 'capture':
           case 'download': {
-            // Boolean properties can accept boolean values
-            return true;
-          }
-          default: {
-            const prefix = name.toLowerCase().slice(0, 5);
-            if (prefix === 'data-' || prefix === 'aria-') {
+            if (!enableNewBooleanProps) {
+              // Boolean properties can accept boolean values
               return true;
             }
-            if (value) {
-              console.error(
-                'Received `%s` for a non-boolean attribute `%s`.\n\n' +
-                  'If you want to write it to the DOM, pass a string instead: ' +
-                  '%s="%s" or %s={value.toString()}.',
-                value,
-                name,
-                name,
-                value,
-                name,
-              );
-            } else {
-              console.error(
-                'Received `%s` for a non-boolean attribute `%s`.\n\n' +
-                  'If you want to write it to the DOM, pass a string instead: ' +
-                  '%s="%s" or %s={value.toString()}.\n\n' +
-                  'If you used to conditionally omit it with %s={condition && value}, ' +
-                  'pass %s={condition ? value : undefined} instead.',
-                value,
-                name,
-                name,
-                value,
-                name,
-                name,
-                name,
-              );
-            }
-            warnedProperties[name] = true;
-            return true;
           }
+          // fallthrough to have a single implementation for boolean props for all states of `enableNewBooleanProps`
+          case 'inert':
+            if (enableNewBooleanProps) {
+              return true;
+            } else {
+              break;
+            }
         }
+        const prefix = name.toLowerCase().slice(0, 5);
+        if (prefix === 'data-' || prefix === 'aria-') {
+          return true;
+        }
+        if (value) {
+          console.error(
+            'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+              'If you want to write it to the DOM, pass a string instead: ' +
+              '%s="%s" or %s={value.toString()}.',
+            value,
+            name,
+            name,
+            value,
+            name,
+          );
+        } else {
+          console.error(
+            'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+              'If you want to write it to the DOM, pass a string instead: ' +
+              '%s="%s" or %s={value.toString()}.\n\n' +
+              'If you used to conditionally omit it with %s={condition && value}, ' +
+              'pass %s={condition ? value : undefined} instead.',
+            value,
+            name,
+            name,
+            value,
+            name,
+            name,
+            name,
+          );
+        }
+        warnedProperties[name] = true;
+        return true;
       }
       case 'function':
       case 'symbol': // eslint-disable-line
