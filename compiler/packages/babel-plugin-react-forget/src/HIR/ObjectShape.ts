@@ -389,7 +389,9 @@ addObject(BUILTIN_SHAPES, BuiltInUseRefId, [
   ["current", { kind: "Object", shapeId: BuiltInRefValueId }],
 ]);
 
-addObject(BUILTIN_SHAPES, BuiltInRefValueId, []);
+addObject(BUILTIN_SHAPES, BuiltInRefValueId, [
+  ["*", { kind: "Object", shapeId: BuiltInRefValueId }],
+]);
 
 addObject(BUILTIN_SHAPES, BuiltInMixedReadonlyId, [
   [
