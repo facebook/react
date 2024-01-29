@@ -150,7 +150,7 @@ describe('ReactProfiler DevTools integration', () => {
       return text;
     }
 
-    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    const root = ReactTestRenderer.create(null, {isConcurrent: true});
 
     // Commit something
     root.update(<Text text="A" />);

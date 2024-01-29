@@ -40,12 +40,11 @@ describe('Profiler change descriptions', () => {
     }
 
     const MemoizedChild = React.memo(Child, areEqual);
-    const ForwardRefChild = React.forwardRef(function RefForwardingComponent(
-      props,
-      ref,
-    ) {
-      return <Child />;
-    });
+    const ForwardRefChild = React.forwardRef(
+      function RefForwardingComponent(props, ref) {
+        return <Child />;
+      },
+    );
 
     let forceUpdate = null;
 
