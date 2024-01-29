@@ -294,7 +294,7 @@
 | `action=(string 'on')`| (changed)| `"http://localhost:3000/on"` |
 | `action=(string 'off')`| (changed)| `"http://localhost:3000/off"` |
 | `action=(symbol)`| (initial, warning)| `"http://localhost:3000/"` |
-| `action=(function)`| (initial, warning)| `"http://localhost:3000/"` |
+| `action=(function)`| (changed, ssr error, ssr mismatch)| `"javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"` |
 | `action=(null)`| (initial)| `"http://localhost:3000/"` |
 | `action=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
@@ -647,6 +647,31 @@
 | `aria-=(function)`| (initial, warning)| `<null>` |
 | `aria-=(null)`| (initial, warning)| `<null>` |
 | `aria-=(undefined)`| (initial, warning)| `<null>` |
+
+## `aria-hidden` (on `<div>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `aria-hidden=(string)`| (changed)| `"a string"` |
+| `aria-hidden=(empty string)`| (changed)| `<empty string>` |
+| `aria-hidden=(array with string)`| (changed)| `"string"` |
+| `aria-hidden=(empty array)`| (changed)| `<empty string>` |
+| `aria-hidden=(object)`| (changed)| `"result of toString()"` |
+| `aria-hidden=(numeric string)`| (changed)| `"42"` |
+| `aria-hidden=(-1)`| (changed)| `"-1"` |
+| `aria-hidden=(0)`| (changed)| `"0"` |
+| `aria-hidden=(integer)`| (changed)| `"1"` |
+| `aria-hidden=(NaN)`| (changed)| `"NaN"` |
+| `aria-hidden=(float)`| (changed)| `"99.99"` |
+| `aria-hidden=(true)`| (changed)| `"true"` |
+| `aria-hidden=(false)`| (changed)| `"false"` |
+| `aria-hidden=(string 'true')`| (changed)| `"true"` |
+| `aria-hidden=(string 'false')`| (changed)| `"false"` |
+| `aria-hidden=(string 'on')`| (changed)| `"on"` |
+| `aria-hidden=(string 'off')`| (changed)| `"off"` |
+| `aria-hidden=(symbol)`| (initial)| `<null>` |
+| `aria-hidden=(function)`| (initial)| `<null>` |
+| `aria-hidden=(null)`| (initial)| `<null>` |
+| `aria-hidden=(undefined)`| (initial)| `<null>` |
 
 ## `aria-invalidattribute` (on `<div>` inside `<div>`)
 | Test Case | Flags | Result |
@@ -2568,8 +2593,8 @@
 | `defaultChecked=(string 'false')`| (changed)| `<boolean: true>` |
 | `defaultChecked=(string 'on')`| (changed)| `<boolean: true>` |
 | `defaultChecked=(string 'off')`| (changed)| `<boolean: true>` |
-| `defaultChecked=(symbol)`| (changed, ssr mismatch)| `<boolean: true>` |
-| `defaultChecked=(function)`| (changed, ssr mismatch)| `<boolean: true>` |
+| `defaultChecked=(symbol)`| (initial)| `<boolean: false>` |
+| `defaultChecked=(function)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(null)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -4176,25 +4201,25 @@
 ## `formAction` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `formAction=(string)`| (changed)| `"https://reactjs.com/"` |
-| `formAction=(empty string)`| (initial)| `"http://localhost:3000/"` |
-| `formAction=(array with string)`| (changed)| `"https://reactjs.com/"` |
-| `formAction=(empty array)`| (initial)| `"http://localhost:3000/"` |
-| `formAction=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
-| `formAction=(numeric string)`| (changed)| `"http://localhost:3000/42"` |
-| `formAction=(-1)`| (changed)| `"http://localhost:3000/-1"` |
-| `formAction=(0)`| (changed)| `"http://localhost:3000/0"` |
-| `formAction=(integer)`| (changed)| `"http://localhost:3000/1"` |
+| `formAction=(string)`| (changed, warning)| `"https://reactjs.com/"` |
+| `formAction=(empty string)`| (initial, warning)| `"http://localhost:3000/"` |
+| `formAction=(array with string)`| (changed, warning)| `"https://reactjs.com/"` |
+| `formAction=(empty array)`| (initial, warning)| `"http://localhost:3000/"` |
+| `formAction=(object)`| (changed, warning)| `"http://localhost:3000/result%20of%20toString()"` |
+| `formAction=(numeric string)`| (changed, warning)| `"http://localhost:3000/42"` |
+| `formAction=(-1)`| (changed, warning)| `"http://localhost:3000/-1"` |
+| `formAction=(0)`| (changed, warning)| `"http://localhost:3000/0"` |
+| `formAction=(integer)`| (changed, warning)| `"http://localhost:3000/1"` |
 | `formAction=(NaN)`| (changed, warning)| `"http://localhost:3000/NaN"` |
-| `formAction=(float)`| (changed)| `"http://localhost:3000/99.99"` |
+| `formAction=(float)`| (changed, warning)| `"http://localhost:3000/99.99"` |
 | `formAction=(true)`| (initial, warning)| `"http://localhost:3000/"` |
 | `formAction=(false)`| (initial, warning)| `"http://localhost:3000/"` |
-| `formAction=(string 'true')`| (changed)| `"http://localhost:3000/true"` |
-| `formAction=(string 'false')`| (changed)| `"http://localhost:3000/false"` |
-| `formAction=(string 'on')`| (changed)| `"http://localhost:3000/on"` |
-| `formAction=(string 'off')`| (changed)| `"http://localhost:3000/off"` |
+| `formAction=(string 'true')`| (changed, warning)| `"http://localhost:3000/true"` |
+| `formAction=(string 'false')`| (changed, warning)| `"http://localhost:3000/false"` |
+| `formAction=(string 'on')`| (changed, warning)| `"http://localhost:3000/on"` |
+| `formAction=(string 'off')`| (changed, warning)| `"http://localhost:3000/off"` |
 | `formAction=(symbol)`| (initial, warning)| `"http://localhost:3000/"` |
-| `formAction=(function)`| (initial, warning)| `"http://localhost:3000/"` |
+| `formAction=(function)`| (changed, warning, ssr error, ssr mismatch)| `"javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"` |
 | `formAction=(null)`| (initial)| `"http://localhost:3000/"` |
 | `formAction=(undefined)`| (initial)| `"http://localhost:3000/"` |
 
@@ -5052,7 +5077,7 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `href=(string)`| (changed)| `"https://reactjs.com/"` |
-| `href=(empty string)`| (changed)| `"http://localhost:3000/"` |
+| `href=(empty string)`| (initial, warning)| `<empty string>` |
 | `href=(array with string)`| (changed)| `"https://reactjs.com/"` |
 | `href=(empty array)`| (changed)| `"http://localhost:3000/"` |
 | `href=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
@@ -5398,6 +5423,31 @@
 | `in=(null)`| (initial)| `<null>` |
 | `in=(undefined)`| (initial)| `<null>` |
 
+## `inert` (on `<div>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `inert=(string)`| (changed)| `<boolean: true>` |
+| `inert=(empty string)`| (changed)| `<boolean: true>` |
+| `inert=(array with string)`| (changed)| `<boolean: true>` |
+| `inert=(empty array)`| (changed)| `<boolean: true>` |
+| `inert=(object)`| (changed)| `<boolean: true>` |
+| `inert=(numeric string)`| (changed)| `<boolean: true>` |
+| `inert=(-1)`| (changed)| `<boolean: true>` |
+| `inert=(0)`| (changed)| `<boolean: true>` |
+| `inert=(integer)`| (changed)| `<boolean: true>` |
+| `inert=(NaN)`| (changed, warning)| `<boolean: true>` |
+| `inert=(float)`| (changed)| `<boolean: true>` |
+| `inert=(true)`| (initial, warning)| `<boolean: false>` |
+| `inert=(false)`| (initial, warning)| `<boolean: false>` |
+| `inert=(string 'true')`| (changed)| `<boolean: true>` |
+| `inert=(string 'false')`| (changed)| `<boolean: true>` |
+| `inert=(string 'on')`| (changed)| `<boolean: true>` |
+| `inert=(string 'off')`| (changed)| `<boolean: true>` |
+| `inert=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `inert=(function)`| (initial, warning)| `<boolean: false>` |
+| `inert=(null)`| (initial)| `<boolean: false>` |
+| `inert=(undefined)`| (initial)| `<boolean: false>` |
+
 ## `in2` (on `<feBlend>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
@@ -5501,27 +5551,27 @@
 ## `inputMode` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `inputMode=(string)`| (changed)| `"a string"` |
-| `inputMode=(empty string)`| (changed)| `<empty string>` |
-| `inputMode=(array with string)`| (changed)| `"string"` |
-| `inputMode=(empty array)`| (changed)| `<empty string>` |
-| `inputMode=(object)`| (changed)| `"result of toString()"` |
-| `inputMode=(numeric string)`| (changed)| `"42"` |
-| `inputMode=(-1)`| (changed)| `"-1"` |
-| `inputMode=(0)`| (changed)| `"0"` |
-| `inputMode=(integer)`| (changed)| `"1"` |
-| `inputMode=(NaN)`| (changed, warning)| `"NaN"` |
-| `inputMode=(float)`| (changed)| `"99.99"` |
-| `inputMode=(true)`| (initial, warning)| `<null>` |
-| `inputMode=(false)`| (initial, warning)| `<null>` |
-| `inputMode=(string 'true')`| (changed)| `"true"` |
-| `inputMode=(string 'false')`| (changed)| `"false"` |
-| `inputMode=(string 'on')`| (changed)| `"on"` |
-| `inputMode=(string 'off')`| (changed)| `"off"` |
-| `inputMode=(symbol)`| (initial, warning)| `<null>` |
-| `inputMode=(function)`| (initial, warning)| `<null>` |
-| `inputMode=(null)`| (initial)| `<null>` |
-| `inputMode=(undefined)`| (initial)| `<null>` |
+| `inputMode=(string)`| (initial)| `<empty string>` |
+| `inputMode=(empty string)`| (initial)| `<empty string>` |
+| `inputMode=(array with string)`| (initial)| `<empty string>` |
+| `inputMode=(empty array)`| (initial)| `<empty string>` |
+| `inputMode=(object)`| (initial)| `<empty string>` |
+| `inputMode=(numeric string)`| (initial)| `<empty string>` |
+| `inputMode=(-1)`| (initial)| `<empty string>` |
+| `inputMode=(0)`| (initial)| `<empty string>` |
+| `inputMode=(integer)`| (initial)| `<empty string>` |
+| `inputMode=(NaN)`| (initial, warning)| `<empty string>` |
+| `inputMode=(float)`| (initial)| `<empty string>` |
+| `inputMode=(true)`| (initial, warning)| `<empty string>` |
+| `inputMode=(false)`| (initial, warning)| `<empty string>` |
+| `inputMode=(string 'true')`| (initial)| `<empty string>` |
+| `inputMode=(string 'false')`| (initial)| `<empty string>` |
+| `inputMode=(string 'on')`| (initial)| `<empty string>` |
+| `inputMode=(string 'off')`| (initial)| `<empty string>` |
+| `inputMode=(symbol)`| (initial, warning)| `<empty string>` |
+| `inputMode=(function)`| (initial, warning)| `<empty string>` |
+| `inputMode=(null)`| (initial)| `<empty string>` |
+| `inputMode=(undefined)`| (initial)| `<empty string>` |
 
 ## `integrity` (on `<script>` inside `<div>`)
 | Test Case | Flags | Result |
@@ -9877,7 +9927,7 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `src=(string)`| (changed)| `"https://reactjs.com/"` |
-| `src=(empty string)`| (changed)| `"http://localhost:3000/"` |
+| `src=(empty string)`| (initial, warning)| `<empty string>` |
 | `src=(array with string)`| (changed)| `"https://reactjs.com/"` |
 | `src=(empty array)`| (changed)| `"http://localhost:3000/"` |
 | `src=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |

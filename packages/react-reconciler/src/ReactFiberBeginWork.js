@@ -137,6 +137,7 @@ import {
   cloneUpdateQueue,
   initializeUpdateQueue,
   enqueueCapturedUpdate,
+  suspendIfUpdateReadFromEntangledAsyncAction,
 } from './ReactFiberClassUpdateQueue';
 import {
   NoLane,
@@ -945,6 +946,7 @@ function updateCacheComponent(
     if (includesSomeLane(current.lanes, renderLanes)) {
       cloneUpdateQueue(current, workInProgress);
       processUpdateQueue(workInProgress, null, null, renderLanes);
+      suspendIfUpdateReadFromEntangledAsyncAction();
     }
     const prevState: CacheComponentState = current.memoizedState;
     const nextState: CacheComponentState = workInProgress.memoizedState;
@@ -1474,6 +1476,11 @@ function updateHostRoot(
       propagateContextChange(workInProgress, CacheContext, renderLanes);
     }
   }
+
+  // This would ideally go inside processUpdateQueue, but because it suspends,
+  // it needs to happen after the `pushCacheProvider` call above to avoid a
+  // context stack mismatch. A bit unfortunate.
+  suspendIfUpdateReadFromEntangledAsyncAction();
 
   // Caution: React DevTools currently depends on this property
   // being called "element".

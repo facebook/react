@@ -96,8 +96,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react/src/ReactSharedSubset.js',
-    name: 'react.shared-subset',
+    entry: 'react/src/ReactServer.js',
+    name: 'react.react-server',
     global: 'React',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
@@ -108,8 +108,8 @@ const bundles = [
   {
     bundleTypes: __EXPERIMENTAL__ ? [FB_WWW_DEV, FB_WWW_PROD] : [],
     moduleType: ISOMORPHIC,
-    entry: 'react/src/ReactSharedSubsetFB.js',
-    global: 'ReactSharedSubset',
+    entry: 'react/src/ReactServerFB.js',
+    global: 'ReactServer',
     minifyWithProdErrorCodes: true,
     wrapWithModuleBoundaries: false,
     externals: [],
@@ -180,8 +180,8 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/src/ReactDOMSharedSubset.js',
-    name: 'react-dom.shared-subset',
+    entry: 'react-dom/src/ReactDOMServer.js',
+    name: 'react-dom.react-server',
     global: 'ReactDOM',
     minifyWithProdErrorCodes: false,
     wrapWithModuleBoundaries: false,

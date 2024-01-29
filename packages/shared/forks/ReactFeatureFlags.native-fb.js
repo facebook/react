@@ -44,7 +44,6 @@ export const enableFormActions = true; // Doesn't affect Native
 export const enableBinaryFlight = true;
 export const enableTaint = true;
 export const enablePostpone = false;
-export const enableSchedulerDebugging = false;
 export const debugRenderPhaseSideEffectsForStrictMode = true;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;

@@ -43,7 +43,7 @@ let assertLog;
 describe('ReactFlight', () => {
   beforeEach(() => {
     jest.resetModules();
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     // This stores the state so we need to preserve it
@@ -1465,7 +1465,7 @@ describe('ReactFlight', () => {
       // Reset all modules, except flight-modules which keeps the registry of Client Components
       const flightModules = require('react-noop-renderer/flight-modules');
       jest.resetModules();
-      jest.mock('react', () => require('react/react.shared-subset'));
+      jest.mock('react', () => require('react/react.react-server'));
       jest.mock('react-noop-renderer/flight-modules', () => flightModules);
 
       ReactServer = require('react');
