@@ -100,8 +100,9 @@ function decodeReply<T>(
     body = form;
   }
   const response = createResponse(webpackMap, '', body);
+  const root = getRoot<T>(response);
   close(response);
-  return getRoot(response);
+  return root;
 }
 
 export {renderToReadableStream, decodeReply, decodeAction, decodeFormState};

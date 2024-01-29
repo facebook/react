@@ -4,6 +4,21 @@
 
 ---
 
+### 5.0.0
+November 29, 2023
+
+### Breaking
+* refactor[devtools]: highlight an array of elements for native ([hoxyq](https://github.com/hoxyq) in [#27734](https://github.com/facebook/react/pull/27734))
+
+### Features
+* feat[devtools]: display Forget badge for the relevant components ([hoxyq](https://github.com/hoxyq) in [#27709](https://github.com/facebook/react/pull/27709))
+
+### Other
+* Added windows powershell syntax to build scripts ([PrathamLalwani](https://github.com/PrathamLalwani) in [#27692](https://github.com/facebook/react/pull/27692))
+* refactor[react-devtools-shared]: minor parsing improvements and modifications ([hoxyq](https://github.com/hoxyq) in [#27661](https://github.com/facebook/react/pull/27661))
+
+---
+
 ### 4.28.5
 October 18, 2023
 

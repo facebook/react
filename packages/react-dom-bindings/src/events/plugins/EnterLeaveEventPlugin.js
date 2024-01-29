@@ -24,7 +24,6 @@ import {
 } from '../../client/ReactDOMComponentTree';
 import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
 
-import {enableHostSingletons} from 'shared/ReactFeatureFlags';
 import {
   HostComponent,
   HostSingleton,
@@ -110,9 +109,7 @@ function extractEvents(
       const tag = to.tag;
       if (
         to !== nearestMounted ||
-        (tag !== HostComponent &&
-          (!enableHostSingletons ? true : tag !== HostSingleton) &&
-          tag !== HostText)
+        (tag !== HostComponent && tag !== HostSingleton && tag !== HostText)
       ) {
         to = null;
       }

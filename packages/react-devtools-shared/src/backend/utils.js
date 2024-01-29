@@ -283,3 +283,9 @@ export function gt(a: string = '', b: string = ''): boolean {
 export function gte(a: string = '', b: string = ''): boolean {
   return compareVersions(a, b) > -1;
 }
+
+export const isReactNativeEnvironment = (): boolean => {
+  // We've been relying on this for such a long time
+  // We should probably define the client for DevTools on the backend side and share it with the frontend
+  return window.document == null;
+};

@@ -63,7 +63,10 @@ const forks = Object.freeze({
     if (entry === 'react') {
       return './packages/react/src/ReactSharedInternalsClient.js';
     }
-    if (entry === 'react/src/ReactSharedSubset.js') {
+    if (
+      entry === 'react/src/ReactServer.js' ||
+      entry === 'react/src/ReactServerFB.js'
+    ) {
       return './packages/react/src/ReactSharedInternalsServer.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
@@ -90,7 +93,7 @@ const forks = Object.freeze({
     if (
       entry === 'react-dom' ||
       entry === 'react-dom/server-rendering-stub' ||
-      entry === 'react-dom/src/ReactDOMSharedSubset.js'
+      entry === 'react-dom/src/ReactDOMServer.js'
     ) {
       return './packages/react-dom/src/ReactDOMSharedInternals.js';
     }
@@ -217,12 +220,12 @@ const forks = Object.freeze({
     }
   },
 
-  './packages/react/src/ReactSharedInternals.js': (bundleType, entry) => {
+  './packages/react/src/ReactSharedInternalsClient.js': (bundleType, entry) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
       case UMD_PROFILING:
-        return './packages/react/src/forks/ReactSharedInternals.umd.js';
+        return './packages/react/src/forks/ReactSharedInternalsClient.umd.js';
       default:
         return null;
     }

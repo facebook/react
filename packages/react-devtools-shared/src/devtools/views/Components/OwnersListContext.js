@@ -14,7 +14,7 @@ import {createContext, useCallback, useContext, useEffect} from 'react';
 import {createResource} from '../../cache';
 import {BridgeContext, StoreContext} from '../context';
 import {TreeStateContext} from './TreeContext';
-import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
+import {backendToFrontendSerializedElementMapper} from 'react-devtools-shared/src/utils';
 
 import type {OwnersList} from 'react-devtools-shared/src/backend/types';
 import type {
@@ -100,16 +100,7 @@ function OwnersListContextController({children}: Props): React.Node {
           request.resolveFn(
             ownersList.owners === null
               ? null
-              : ownersList.owners.map(owner => {
-                  const [displayNameWithoutHOCs, hocDisplayNames] =
-                    separateDisplayNameAndHOCs(owner.displayName, owner.type);
-
-                  return {
-                    ...owner,
-                    displayName: displayNameWithoutHOCs,
-                    hocDisplayNames,
-                  };
-                }),
+              : ownersList.owners.map(backendToFrontendSerializedElementMapper),
           );
         }
       }
