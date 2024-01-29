@@ -10,6 +10,7 @@
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lane} from './ReactFiberLane';
 import type {PriorityLevel} from 'scheduler/src/SchedulerPriorities';
+import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 
 import {enableDeferRootSchedulingToMicrotask} from 'shared/ReactFeatureFlags';
 import {
@@ -492,7 +493,12 @@ function scheduleImmediateTask(cb: () => mixed) {
   }
 }
 
-export function requestTransitionLane(): Lane {
+export function requestTransitionLane(
+  // This argument isn't used, it's only here to encourage the caller to
+  // check that it's inside a transition before calling this function.
+  // TODO: Make this non-nullable. Requires a tweak to useOptimistic.
+  transition: BatchConfigTransition | null,
+): Lane {
   // The algorithm for assigning an update to a lane should be stable for all
   // updates at the same priority within the same event. To do this, the
   // inputs to the algorithm must be the same.

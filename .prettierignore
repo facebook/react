@@ -1,6 +1,9 @@
+build
+
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
 packages/react-devtools-extensions/firefox/build
+packages/react-devtools-extensions/edge/build
 packages/react-devtools-extensions/shared/build
 packages/react-devtools-extensions/src/ErrorTesterCompiled.js
 packages/react-devtools-inline/dist

@@ -117,6 +117,23 @@ export function checkPropStringCoercion(
   }
 }
 
+export function checkOptionStringCoercion(
+  value: mixed,
+  propName: string,
+): void | string {
+  if (__DEV__) {
+    if (willCoercionThrow(value)) {
+      console.error(
+        'The provided `%s` option is an unsupported type %s.' +
+          ' This value must be coerced to a string before using it here.',
+        propName,
+        typeName(value),
+      );
+      return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+    }
+  }
+}
+
 export function checkCSSPropertyStringCoercion(
   value: mixed,
   propName: string,
