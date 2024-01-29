@@ -34,8 +34,6 @@ const __EXPERIMENTAL__ =
     ? RELEASE_CHANNEL === 'experimental'
     : true;
 
-const __NEXT_MAJOR__ = __EXPERIMENTAL__;
-
 // Errors in promises should be fatal.
 let loggedErrors = new Set();
 process.on('unhandledRejection', err => {
@@ -470,7 +468,6 @@ function getPlugins(
             ? "'production'"
             : "'development'",
           __EXPERIMENTAL__,
-          __NEXT_MAJOR__,
         },
       }),
       // The CommonJS plugin *only* exists to pull "art" into "react-art".

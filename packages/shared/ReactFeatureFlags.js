@@ -137,8 +137,9 @@ export const transitionLaneExpirationMs = 5000;
 // -----------------------------------------------------------------------------
 // Ready for next major.
 //
-// __NEXT_MAJOR__ is an alias for __EXPERIMENTAL__.
+// Alias __NEXT_MAJOR__ to __EXPERIMENTAL__ for easier skimming.
 // -----------------------------------------------------------------------------
+const __NEXT_MAJOR__ = __EXPERIMENTAL__;
 
 // Not ready to break experimental yet.
 export const disableLegacyContext = false;

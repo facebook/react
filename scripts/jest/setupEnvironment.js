@@ -19,8 +19,6 @@ global.__EXPERIMENTAL__ =
     ? RELEASE_CHANNEL === 'experimental'
     : true;
 
-global.__NEXT_MAJOR__ = __EXPERIMENTAL__;
-
 global.__VARIANT__ = !!process.env.VARIANT;
 
 if (typeof window !== 'undefined') {
