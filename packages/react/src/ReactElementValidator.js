@@ -30,7 +30,7 @@ import {
   createElement,
   cloneElement,
   jsxDEV,
-} from './ReactElement';
+} from './ReactElementProd';
 import {setExtraStackFrame} from './ReactDebugCurrentFrame';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import hasOwnProperty from 'shared/hasOwnProperty';

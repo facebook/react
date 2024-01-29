@@ -145,13 +145,17 @@ import {
 import type {ThenableState} from './ReactFiberThenable';
 import type {BatchConfigTransition} from './ReactFiberTracingMarkerComponent';
 import {
-  requestAsyncActionContext,
-  requestSyncActionContext,
   peekEntangledActionLane,
+  peekEntangledActionThenable,
+  chainThenableValue,
 } from './ReactFiberAsyncAction';
 import {HostTransitionContext} from './ReactFiberHostContext';
 import {requestTransitionLane} from './ReactFiberRootScheduler';
 import {isCurrentTreeHidden} from './ReactFiberHiddenContext';
+import {
+  notifyTransitionCallbacks,
+  requestCurrentTransition,
+} from './ReactFiberTransition';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1256,15 +1260,25 @@ function updateReducerImpl<S, A>(
     queue.pending = null;
   }
 
-  if (baseQueue !== null) {
+  const baseState = hook.baseState;
+  if (baseQueue === null) {
+    // If there are no pending updates, then the memoized state should be the
+    // same as the base state. Currently these only diverge in the case of
+    // useOptimistic, because useOptimistic accepts a new baseState on
+    // every render.
+    hook.memoizedState = baseState;
+    // We don't need to call markWorkInProgressReceivedUpdate because
+    // baseState is derived from other reactive values.
+  } else {
     // We have a queue to process.
     const first = baseQueue.next;
-    let newState = hook.baseState;
+    let newState = baseState;
 
     let newBaseState = null;
     let newBaseQueueFirst = null;
     let newBaseQueueLast: Update<S, A> | null = null;
     let update = first;
+    let didReadFromEntangledAsyncAction = false;
     do {
       // An extra OffscreenLane bit is added to updates that were made to
       // a hidden tree, so that we can distinguish them from updates that were
@@ -1328,6 +1342,13 @@ function updateReducerImpl<S, A>(
             };
             newBaseQueueLast = newBaseQueueLast.next = clone;
           }
+
+          // Check if this update is part of a pending async action. If so,
+          // we'll need to suspend until the action has finished, so that it's
+          // batched together with future updates in the same action.
+          if (updateLane === peekEntangledActionLane()) {
+            didReadFromEntangledAsyncAction = true;
+          }
         } else {
           // This is an optimistic update. If the "revert" priority is
           // sufficient, don't apply the update. Otherwise, apply the update,
@@ -1338,6 +1359,13 @@ function updateReducerImpl<S, A>(
             // has finished. Pretend the update doesn't exist by skipping
             // over it.
             update = update.next;
+
+            // Check if this update is part of a pending async action. If so,
+            // we'll need to suspend until the action has finished, so that it's
+            // batched together with future updates in the same action.
+            if (revertLane === peekEntangledActionLane()) {
+              didReadFromEntangledAsyncAction = true;
+            }
             continue;
           } else {
             const clone: Update<S, A> = {
@@ -1398,6 +1426,22 @@ function updateReducerImpl<S, A>(
     // different from the current state.
     if (!is(newState, hook.memoizedState)) {
       markWorkInProgressReceivedUpdate();
+
+      // Check if this update is part of a pending async action. If so, we'll
+      // need to suspend until the action has finished, so that it's batched
+      // together with future updates in the same action.
+      // TODO: Once we support hooks inside useMemo (or an equivalent
+      // memoization boundary like Forget), hoist this logic so that it only
+      // suspends if the memo boundary produces a new value.
+      if (didReadFromEntangledAsyncAction) {
+        const entangledActionThenable = peekEntangledActionThenable();
+        if (entangledActionThenable !== null) {
+          // TODO: Instead of the throwing the thenable directly, throw a
+          // special object like `use` does so we can detect if it's captured
+          // by userspace.
+          throw entangledActionThenable;
+        }
+      }
     }
 
     hook.memoizedState = newState;
@@ -1930,8 +1974,10 @@ function runFormStateAction<S, P>(
 
   // This is a fork of startTransition
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = ({}: BatchConfigTransition);
-  const currentTransition = ReactCurrentBatchConfig.transition;
+  const currentTransition: BatchConfigTransition = {
+    _callbacks: new Set<(BatchConfigTransition, mixed) => mixed>(),
+  };
+  ReactCurrentBatchConfig.transition = currentTransition;
   if (__DEV__) {
     ReactCurrentBatchConfig.transition._updatedFibers = new Set();
   }
@@ -1944,6 +1990,7 @@ function runFormStateAction<S, P>(
       typeof returnValue.then === 'function'
     ) {
       const thenable = ((returnValue: any): Thenable<Awaited<S>>);
+      notifyTransitionCallbacks(currentTransition, thenable);
 
       // Attach a listener to read the return state of the action. As soon as
       // this resolves, we can run the next action in the sequence.
@@ -1955,13 +2002,9 @@ function runFormStateAction<S, P>(
         () => finishRunningFormStateAction(actionQueue, (setState: any)),
       );
 
-      const entangledResult = requestAsyncActionContext<S>(thenable, null);
-      setState((entangledResult: any));
+      setState((thenable: any));
     } else {
-      // This is either `returnValue` or a thenable that resolves to
-      // `returnValue`, depending on whether we're inside an async action scope.
-      const entangledResult = requestSyncActionContext<S>(returnValue, null);
-      setState((entangledResult: any));
+      setState((returnValue: any));
 
       const nextState = ((returnValue: any): Awaited<S>);
       actionQueue.state = nextState;
@@ -2777,7 +2820,9 @@ function startTransition<S>(
   );
 
   const prevTransition = ReactCurrentBatchConfig.transition;
-  const currentTransition: BatchConfigTransition = {};
+  const currentTransition: BatchConfigTransition = {
+    _callbacks: new Set<(BatchConfigTransition, mixed) => mixed>(),
+  };
 
   if (enableAsyncActions) {
     // We don't really need to use an optimistic update here, because we
@@ -2823,22 +2868,16 @@ function startTransition<S>(
         typeof returnValue.then === 'function'
       ) {
         const thenable = ((returnValue: any): Thenable<mixed>);
-        // This is a thenable that resolves to `finishedState` once the async
-        // action scope has finished.
-        const entangledResult = requestAsyncActionContext(
+        notifyTransitionCallbacks(currentTransition, thenable);
+        // Create a thenable that resolves to `finishedState` once the async
+        // action has completed.
+        const thenableForFinishedState = chainThenableValue(
           thenable,
           finishedState,
         );
-        dispatchSetState(fiber, queue, entangledResult);
+        dispatchSetState(fiber, queue, (thenableForFinishedState: any));
       } else {
-        // This is either `finishedState` or a thenable that resolves to
-        // `finishedState`, depending on whether we're inside an async
-        // action scope.
-        const entangledResult = requestSyncActionContext(
-          returnValue,
-          finishedState,
-        );
-        dispatchSetState(fiber, queue, entangledResult);
+        dispatchSetState(fiber, queue, finishedState);
       }
     } else {
       // Async actions are not enabled.
@@ -3256,8 +3295,10 @@ function dispatchOptimisticSetState<S, A>(
   queue: UpdateQueue<S, A>,
   action: A,
 ): void {
+  const transition = requestCurrentTransition();
+
   if (__DEV__) {
-    if (ReactCurrentBatchConfig.transition === null) {
+    if (transition === null) {
       // An optimistic update occurred, but startTransition is not on the stack.
       // There are two likely scenarios.
 
@@ -3298,7 +3339,7 @@ function dispatchOptimisticSetState<S, A>(
     lane: SyncLane,
     // After committing, the optimistic update is "reverted" using the same
     // lane as the transition it's associated with.
-    revertLane: requestTransitionLane(),
+    revertLane: requestTransitionLane(transition),
     action,
     hasEagerState: false,
     eagerState: null,

@@ -11,7 +11,7 @@ module.exports = [
     shortName: 'dom-node',
     entryPoints: [
       'react-dom',
-      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom/src/ReactDOMServer.js',
       'react-dom/unstable_testing',
       'react-dom/src/server/react-dom-server.node.js',
       'react-dom/static.node',
@@ -22,7 +22,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
-      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom/src/ReactDOMServer.js',
       'react-dom-bindings',
       'react-dom/client',
       'react-dom/server',
@@ -190,7 +190,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
-      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom/src/ReactDOMServer.js',
       'react-dom-bindings',
       'react-dom/client',
       'react-dom/server.browser',
@@ -221,7 +221,7 @@ module.exports = [
     entryPoints: ['react-server-dom-esm/client.browser'],
     paths: [
       'react-dom',
-      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom/src/ReactDOMServer.js',
       'react-dom/client',
       'react-dom/server',
       'react-dom/server.node',
@@ -280,7 +280,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
-      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom/src/ReactDOMServer.js',
       'react-dom-bindings',
       'react-dom/client',
       'react-dom/server.edge',
@@ -314,7 +314,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
-      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom/src/ReactDOMServer.js',
       'react-dom-bindings',
       'react-dom/client',
       'react-dom/server.edge',
@@ -348,7 +348,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
-      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom/src/ReactDOMServer.js',
       'react-dom-bindings',
       'react-dom/client',
       'react-dom/server',
@@ -383,7 +383,7 @@ module.exports = [
     ],
     paths: [
       'react-dom',
-      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom/src/ReactDOMServer.js',
       'react-dom-bindings',
       'react-server-dom-webpack',
       'react-dom/src/server/ReactDOMLegacyServerImpl.js', // not an entrypoint, but only usable in *Browser and *Node files
@@ -401,7 +401,7 @@ module.exports = [
     entryPoints: ['react-server-dom-fb/src/ReactDOMServerFB.js'],
     paths: [
       'react-dom',
-      'react-dom/src/ReactDOMSharedSubset.js',
+      'react-dom/src/ReactDOMServer.js',
       'react-dom-bindings',
       'react-server-dom-fb/src/ReactDOMServerFB.js',
       'shared/ReactDOMSharedInternals',

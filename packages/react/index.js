@@ -80,4 +80,4 @@ export {
   useState,
   useTransition,
   version,
-} from './src/React';
+} from './src/ReactClient';
