@@ -108,9 +108,8 @@ function murmurhash3_32_gc(key, seed) {
 var assign = Object.assign,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableCustomElementPropertySupport =
-    dynamicFeatureFlags.enableCustomElementPropertySupport,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+  enableFormActions = dynamicFeatureFlags.enableFormActions,
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   hasOwnProperty = Object.prototype.hasOwnProperty,
@@ -262,6 +261,12 @@ function sanitizeURL(url) {
 var isArrayImpl = Array.isArray,
   ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+  sharedNotPendingObject = {
+    pending: !1,
+    data: null,
+    method: null,
+    action: null
+  },
   ReactDOMCurrentDispatcher =
     ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
   ReactDOMServerDispatcher = {
@@ -405,7 +410,11 @@ function pushStringAttribute(target, name, value) {
     "boolean" !== typeof value &&
     target.push(" ", name, '="', escapeTextForBrowser(value), '"');
 }
-escapeTextForBrowser(
+function makeFormFieldPrefix(resumableState) {
+  var id = resumableState.nextFormID++;
+  return resumableState.idPrefix + id;
+}
+var actionJavaScriptURL = escapeTextForBrowser(
   "javascript:throw new Error('A React form was unexpectedly submitted.')"
 );
 function pushAdditionalFormField(value, key) {
@@ -425,12 +434,27 @@ function pushFormActionAttribute(
   formTarget,
   name
 ) {
+  var formData = null;
+  enableFormActions &&
+    "function" === typeof formAction &&
+    ("function" === typeof formAction.$$FORM_ACTION
+      ? ((formEncType = makeFormFieldPrefix(resumableState)),
+        (resumableState = formAction.$$FORM_ACTION(formEncType)),
+        (name = resumableState.name),
+        (formAction = resumableState.action || ""),
+        (formEncType = resumableState.encType),
+        (formMethod = resumableState.method),
+        (formTarget = resumableState.target),
+        (formData = resumableState.data))
+      : (target.push(" ", "formAction", '="', actionJavaScriptURL, '"'),
+        (formTarget = formMethod = formEncType = formAction = name = null),
+        injectFormReplayingRuntime(resumableState, renderState)));
   null != name && pushAttribute(target, "name", name);
   null != formAction && pushAttribute(target, "formAction", formAction);
   null != formEncType && pushAttribute(target, "formEncType", formEncType);
   null != formMethod && pushAttribute(target, "formMethod", formMethod);
   null != formTarget && pushAttribute(target, "formTarget", formTarget);
-  return null;
+  return formData;
 }
 function pushAttribute(target, name, value) {
   switch (name) {
@@ -590,8 +614,8 @@ function pushAttribute(target, name, value) {
             case "symbol":
               return;
             case "boolean":
-              var prefix$7 = name.toLowerCase().slice(0, 5);
-              if ("data-" !== prefix$7 && "aria-" !== prefix$7) return;
+              var prefix$8 = name.toLowerCase().slice(0, 5);
+              if ("data-" !== prefix$8 && "aria-" !== prefix$8) return;
           }
           target.push(" ", name, '="', escapeTextForBrowser(value), '"');
         }
@@ -612,6 +636,16 @@ function flattenOptionChildren(children) {
     null != child && (content += child);
   });
   return content;
+}
+function injectFormReplayingRuntime(resumableState, renderState) {
+  0 !== (resumableState.instructions & 16) ||
+    renderState.externalRuntimeScript ||
+    ((resumableState.instructions |= 16),
+    renderState.bootstrapChunks.unshift(
+      renderState.startInlineScript,
+      'addEventListener("submit",function(a){if(!a.defaultPrevented){var c=a.target,d=a.submitter,e=c.action,b=d;if(d){var f=d.getAttribute("formAction");null!=f&&(e=f,b=null)}"javascript:throw new Error(\'A React form was unexpectedly submitted.\')"===e&&(a.preventDefault(),b?(a=document.createElement("input"),a.name=b.name,a.value=b.value,b.parentNode.insertBefore(a,b),b=new FormData(c),a.parentNode.removeChild(a)):b=new FormData(c),a=c.getRootNode(),(a.$$reactFormReplay=a.$$reactFormReplay||[]).push(c,\nd,b))}});',
+      "\x3c/script>"
+    ));
 }
 function pushLinkImpl(target, props) {
   target.push(startChunkForTag("link"));
@@ -1072,6 +1106,26 @@ function pushStartInstance(
                 );
             }
         }
+      var formData$jscomp$1 = null,
+        formActionName = null;
+      if (enableFormActions && "function" === typeof formAction$jscomp$1)
+        if ("function" === typeof formAction$jscomp$1.$$FORM_ACTION) {
+          var prefix$9 = makeFormFieldPrefix(resumableState),
+            customFields = formAction$jscomp$1.$$FORM_ACTION(prefix$9);
+          formAction$jscomp$1 = customFields.action || "";
+          formEncType$jscomp$1 = customFields.encType;
+          formMethod$jscomp$1 = customFields.method;
+          formTarget$jscomp$1 = customFields.target;
+          formData$jscomp$1 = customFields.data;
+          formActionName = customFields.name;
+        } else
+          target$jscomp$0.push(" ", "action", '="', actionJavaScriptURL, '"'),
+            (formTarget$jscomp$1 =
+              formMethod$jscomp$1 =
+              formEncType$jscomp$1 =
+              formAction$jscomp$1 =
+                null),
+            injectFormReplayingRuntime(resumableState, renderState);
       null != formAction$jscomp$1 &&
         pushAttribute(target$jscomp$0, "action", formAction$jscomp$1);
       null != formEncType$jscomp$1 &&
@@ -1081,6 +1135,12 @@ function pushStartInstance(
       null != formTarget$jscomp$1 &&
         pushAttribute(target$jscomp$0, "target", formTarget$jscomp$1);
       target$jscomp$0.push(">");
+      null !== formActionName &&
+        (target$jscomp$0.push('<input type="hidden"'),
+        pushStringAttribute(target$jscomp$0, "name", formActionName),
+        target$jscomp$0.push("/>"),
+        null !== formData$jscomp$1 &&
+          formData$jscomp$1.forEach(pushAdditionalFormField, target$jscomp$0));
       pushInnerHTML(target$jscomp$0, innerHTML$jscomp$2, children$jscomp$3);
       if ("string" === typeof children$jscomp$3) {
         target$jscomp$0.push(escapeTextForBrowser(children$jscomp$3));
@@ -1181,10 +1241,10 @@ function pushStartInstance(
             styleQueue.sheets.set(href, resource);
             hoistableState && hoistableState.stylesheets.add(resource);
           } else if (styleQueue) {
-            var resource$8 = styleQueue.sheets.get(href);
-            resource$8 &&
+            var resource$10 = styleQueue.sheets.get(href);
+            resource$10 &&
               hoistableState &&
-              hoistableState.stylesheets.add(resource$8);
+              hoistableState.stylesheets.add(resource$10);
           }
           textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
           JSCompiler_inline_result$jscomp$2 = null;
@@ -1582,19 +1642,16 @@ function pushStartInstance(
                 case "suppressHydrationWarning":
                   break;
                 case "className":
-                  enableCustomElementPropertySupport &&
-                    (attributeName = "class");
+                  attributeName = "class";
                 default:
                   if (
                     isAttributeNameSafe(propKey$jscomp$9) &&
                     "function" !== typeof propValue$jscomp$9 &&
-                    "symbol" !== typeof propValue$jscomp$9
+                    "symbol" !== typeof propValue$jscomp$9 &&
+                    !1 !== propValue$jscomp$9
                   ) {
-                    if (enableCustomElementPropertySupport)
-                      if (!1 === propValue$jscomp$9) continue;
-                      else if (!0 === propValue$jscomp$9)
-                        propValue$jscomp$9 = "";
-                      else if ("object" === typeof propValue$jscomp$9) continue;
+                    if (!0 === propValue$jscomp$9) propValue$jscomp$9 = "";
+                    else if ("object" === typeof propValue$jscomp$9) continue;
                     target$jscomp$0.push(
                       " ",
                       attributeName,
@@ -2476,16 +2533,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     );
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1581 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1591 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1595 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1596 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1597 = new Set(),
-    JSCompiler_object_inline_styles_1598 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1599 = new Set(),
-    JSCompiler_object_inline_scripts_1600 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1601 = new Set(),
-    JSCompiler_object_inline_preloads_1602 = {
+  var JSCompiler_object_inline_preconnects_1605 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1606 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1607 = new Set(),
+    JSCompiler_object_inline_styles_1608 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1609 = new Set(),
+    JSCompiler_object_inline_scripts_1610 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1611 = new Set(),
+    JSCompiler_object_inline_preloads_1612 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2522,7 +2579,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1599.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1609.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src));
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
@@ -2563,7 +2620,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1599.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1609.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i)
@@ -2578,7 +2635,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push('" async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1581,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1591,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2598,14 +2655,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1595,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1596,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1597,
-    styles: JSCompiler_object_inline_styles_1598,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1599,
-    scripts: JSCompiler_object_inline_scripts_1600,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1601,
-    preloads: JSCompiler_object_inline_preloads_1602,
+    preconnects: JSCompiler_object_inline_preconnects_1605,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1606,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1607,
+    styles: JSCompiler_object_inline_styles_1608,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1609,
+    scripts: JSCompiler_object_inline_scripts_1610,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1611,
+    preloads: JSCompiler_object_inline_preloads_1612,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -2738,16 +2795,16 @@ function describeNativeComponentFrame(fn, construct) {
           } else {
             try {
               Fake.call();
-            } catch (x$17) {
-              control = x$17;
+            } catch (x$19) {
+              control = x$19;
             }
             fn.call(Fake.prototype);
           }
         } else {
           try {
             throw Error();
-          } catch (x$18) {
-            control = x$18;
+          } catch (x$20) {
+            control = x$20;
           }
           (Fake = fn()) &&
             "function" === typeof Fake.catch &&
@@ -3141,6 +3198,10 @@ function throwOnUseEffectEventCall() {
 function unsupportedStartTransition() {
   throw Error(formatProdErrorMessage(394));
 }
+function useHostTransitionStatus() {
+  resolveCurrentlyRenderingComponent();
+  return sharedNotPendingObject;
+}
 function unsupportedSetOptimisticState() {
   throw Error(formatProdErrorMessage(479));
 }
@@ -3201,11 +3262,11 @@ function useFormState(action, initialState, permalink) {
       });
     return [initialState, action];
   }
-  var boundAction$23 = action.bind(null, initialState);
+  var boundAction$25 = action.bind(null, initialState);
   return [
     initialState,
     function (payload) {
-      boundAction$23(payload);
+      boundAction$25(payload);
     }
   ];
 }
@@ -3307,6 +3368,9 @@ var HooksDispatcher = {
     return data;
   }
 };
+enableFormActions &&
+  enableAsyncActions &&
+  (HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus);
 enableAsyncActions &&
   ((HooksDispatcher.useOptimistic = useOptimistic),
   (HooksDispatcher.useFormState = useFormState));
@@ -4503,15 +4567,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$38) {
+    } catch (thrownValue$40) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$38 === SuspenseException
+          thrownValue$40 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$38),
+            : thrownValue$40),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -5354,11 +5418,11 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$42 = partialBoundaries[i];
+      var boundary$44 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
-        var completedSegments = boundary$42.completedSegments;
+        var completedSegments = boundary$44.completedSegments;
         for (
           resumableState$jscomp$0 = 0;
           resumableState$jscomp$0 < completedSegments.length;
@@ -5368,7 +5432,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$42,
+              boundary$44,
               completedSegments[resumableState$jscomp$0]
             )
           ) {
@@ -5380,7 +5444,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$0);
         JSCompiler_inline_result = writeHoistablesForBoundary(
           boundary,
-          boundary$42.contentState,
+          boundary$44.contentState,
           clientRenderedBoundaries.renderState
         );
       }
@@ -5454,8 +5518,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$44) {
-    logRecoverableError(request, error$44, {}), fatalError(request, error$44);
+  } catch (error$46) {
+    logRecoverableError(request, error$46, {}), fatalError(request, error$46);
   }
 }
 function onError() {}
@@ -5529,4 +5593,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-f5721a9d";
+exports.version = "18.3.0-www-modern-0cda04ef";

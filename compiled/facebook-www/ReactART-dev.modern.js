@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-4f70a13e";
+    var ReactVersion = "18.3.0-www-modern-4fcabd82";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -175,6 +175,7 @@ if (__DEV__) {
       enableDeferRootSchedulingToMicrotask =
         dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
       enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+      enableFormActions = dynamicFeatureFlags.enableFormActions,
       alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
       enableDO_NOT_USE_disableStrictPassiveEffect =
         dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -2998,6 +2999,7 @@ if (__DEV__) {
     function waitForCommitToBeReady() {
       return null;
     }
+    var NotPendingTransition = null;
 
     var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
@@ -3791,6 +3793,27 @@ if (__DEV__) {
     var contextStackCursor = createCursor(null);
     var contextFiberStackCursor = createCursor(null);
     var rootInstanceStackCursor = createCursor(null); // Represents the nearest host transition provider (in React DOM, a <form />)
+    // NOTE: Since forms cannot be nested, and this feature is only implemented by
+    // React DOM, we don't technically need this to be a stack. It could be a single
+    // module variable instead.
+
+    var hostTransitionProviderCursor = createCursor(null); // TODO: This should initialize to NotPendingTransition, a constant
+    // imported from the fiber config. However, because of a cycle in the module
+    // graph, that value isn't defined during this module's initialization. I can't
+    // think of a way to work around this without moving that value out of the
+    // fiber config. For now, the "no provider" case is handled when reading,
+    // inside useHostTransitionStatus.
+
+    var HostTransitionContext = {
+      $$typeof: REACT_CONTEXT_TYPE,
+      _currentValue: null,
+      _currentValue2: null,
+      _threadCount: 0,
+      Provider: null,
+      Consumer: null,
+      _defaultValue: null,
+      _globalName: null
+    };
 
     function requiredContext(c) {
       {
@@ -3808,6 +3831,10 @@ if (__DEV__) {
     function getRootHostContainer() {
       var rootInstance = requiredContext(rootInstanceStackCursor.current);
       return rootInstance;
+    }
+
+    function getHostTransitionProvider() {
+      return hostTransitionProviderCursor.current;
     }
 
     function pushHostContainer(fiber, nextRootInstance) {
@@ -3841,6 +3868,16 @@ if (__DEV__) {
     }
 
     function pushHostContext(fiber) {
+      if (enableFormActions && enableAsyncActions) {
+        var stateHook = fiber.memoizedState;
+
+        if (stateHook !== null) {
+          // Only provide context if this fiber has been upgraded by a host
+          // transition. We use the same optimization for regular host context below.
+          push(hostTransitionProviderCursor, fiber, fiber);
+        }
+      }
+
       var context = requiredContext(contextStackCursor.current);
       var nextContext = getChildHostContext(); // Don't push this Fiber's context unless it's unique.
 
@@ -3858,6 +3895,25 @@ if (__DEV__) {
         // pushHostContext() only pushes Fibers that provide unique contexts.
         pop(contextStackCursor, fiber);
         pop(contextFiberStackCursor, fiber);
+      }
+
+      if (enableFormActions && enableAsyncActions) {
+        if (hostTransitionProviderCursor.current === fiber) {
+          // Do not pop unless this Fiber provided the current context. This is mostly
+          // a performance optimization, but conveniently it also prevents a potential
+          // data race where a host provider is upgraded (i.e. memoizedState becomes
+          // non-null) during a concurrent event. This is a bit of a flaw in the way
+          // we upgrade host components, but because we're accounting for it here, it
+          // should be fine.
+          pop(hostTransitionProviderCursor, fiber); // When popping the transition provider, we reset the context value back
+          // to `null`. We can do this because you're not allowd to nest forms. If
+          // we allowed for multiple nested host transition providers, then we'd
+          // need to reset this to the parent provider's status.
+
+          {
+            HostTransitionContext._currentValue2 = null;
+          }
+        }
       }
     }
 
@@ -8440,6 +8496,43 @@ if (__DEV__) {
 
       return children;
     }
+
+    function renderTransitionAwareHostComponentWithHooks(
+      current,
+      workInProgress,
+      lanes
+    ) {
+      if (!(enableFormActions && enableAsyncActions)) {
+        throw new Error("Not implemented.");
+      }
+
+      return renderWithHooks(
+        current,
+        workInProgress,
+        TransitionAwareHostComponent,
+        null,
+        null,
+        lanes
+      );
+    }
+    function TransitionAwareHostComponent() {
+      if (!(enableFormActions && enableAsyncActions)) {
+        throw new Error("Not implemented.");
+      }
+
+      var dispatcher = ReactCurrentDispatcher$1.current;
+
+      var _dispatcher$useState = dispatcher.useState(),
+        maybeThenable = _dispatcher$useState[0];
+
+      if (typeof maybeThenable.then === "function") {
+        var thenable = maybeThenable;
+        return useThenable(thenable);
+      } else {
+        var status = maybeThenable;
+        return status;
+      }
+    }
     function bailoutHooks(current, workInProgress, lanes) {
       workInProgress.updateQueue = current.updateQueue; // TODO: Don't need to reset the flags here, because they're reset in the
       // complete phase (bubbleProperties).
@@ -9394,6 +9487,256 @@ if (__DEV__) {
       var dispatch = hook.queue.dispatch;
       return [passthrough, dispatch];
     } // useFormState actions run sequentially, because each action receives the
+    // previous state as an argument. We store pending actions on a queue.
+
+    function dispatchFormState(fiber, actionQueue, setState, payload) {
+      if (isRenderPhaseUpdate(fiber)) {
+        throw new Error("Cannot update form state while rendering.");
+      }
+
+      var last = actionQueue.pending;
+
+      if (last === null) {
+        // There are no pending actions; this is the first one. We can run
+        // it immediately.
+        var newLast = {
+          payload: payload,
+          next: null // circular
+        };
+        newLast.next = actionQueue.pending = newLast;
+        runFormStateAction(actionQueue, setState, payload);
+      } else {
+        // There's already an action running. Add to the queue.
+        var first = last.next;
+        var _newLast = {
+          payload: payload,
+          next: first
+        };
+        actionQueue.pending = last.next = _newLast;
+      }
+    }
+
+    function runFormStateAction(actionQueue, setState, payload) {
+      var action = actionQueue.action;
+      var prevState = actionQueue.state; // This is a fork of startTransition
+
+      var prevTransition = ReactCurrentBatchConfig$2.transition;
+      var currentTransition = {
+        _callbacks: new Set()
+      };
+      ReactCurrentBatchConfig$2.transition = currentTransition;
+
+      {
+        ReactCurrentBatchConfig$2.transition._updatedFibers = new Set();
+      }
+
+      try {
+        var returnValue = action(prevState, payload);
+
+        if (
+          returnValue !== null &&
+          typeof returnValue === "object" && // $FlowFixMe[method-unbinding]
+          typeof returnValue.then === "function"
+        ) {
+          var thenable = returnValue;
+          notifyTransitionCallbacks(currentTransition, thenable); // Attach a listener to read the return state of the action. As soon as
+          // this resolves, we can run the next action in the sequence.
+
+          thenable.then(
+            function (nextState) {
+              actionQueue.state = nextState;
+              finishRunningFormStateAction(actionQueue, setState);
+            },
+            function () {
+              return finishRunningFormStateAction(actionQueue, setState);
+            }
+          );
+          setState(thenable);
+        } else {
+          setState(returnValue);
+          var nextState = returnValue;
+          actionQueue.state = nextState;
+          finishRunningFormStateAction(actionQueue, setState);
+        }
+      } catch (error) {
+        // This is a trick to get the `useFormState` hook to rethrow the error.
+        // When it unwraps the thenable with the `use` algorithm, the error
+        // will be thrown.
+        var rejectedThenable = {
+          then: function () {},
+          status: "rejected",
+          reason: error // $FlowFixMe: Not sure why this doesn't work
+        };
+        setState(rejectedThenable);
+        finishRunningFormStateAction(actionQueue, setState);
+      } finally {
+        ReactCurrentBatchConfig$2.transition = prevTransition;
+
+        {
+          if (prevTransition === null && currentTransition._updatedFibers) {
+            var updatedFibersCount = currentTransition._updatedFibers.size;
+
+            currentTransition._updatedFibers.clear();
+
+            if (updatedFibersCount > 10) {
+              warn(
+                "Detected a large number of updates inside startTransition. " +
+                  "If this is due to a subscription please re-write it to use React provided hooks. " +
+                  "Otherwise concurrent mode guarantees are off the table."
+              );
+            }
+          }
+        }
+      }
+    }
+
+    function finishRunningFormStateAction(actionQueue, setState) {
+      // The action finished running. Pop it from the queue and run the next pending
+      // action, if there are any.
+      var last = actionQueue.pending;
+
+      if (last !== null) {
+        var first = last.next;
+
+        if (first === last) {
+          // This was the last action in the queue.
+          actionQueue.pending = null;
+        } else {
+          // Remove the first node from the circular queue.
+          var next = first.next;
+          last.next = next; // Run the next action.
+
+          runFormStateAction(actionQueue, setState, next.payload);
+        }
+      }
+    }
+
+    function formStateReducer(oldState, newState) {
+      return newState;
+    }
+
+    function mountFormState(action, initialStateProp, permalink) {
+      var initialState = initialStateProp;
+      // the `use` algorithm during render.
+
+      var stateHook = mountWorkInProgressHook();
+      stateHook.memoizedState = stateHook.baseState = initialState; // TODO: Typing this "correctly" results in recursion limit errors
+      // const stateQueue: UpdateQueue<S | Awaited<S>, S | Awaited<S>> = {
+
+      var stateQueue = {
+        pending: null,
+        lanes: NoLanes,
+        dispatch: null,
+        lastRenderedReducer: formStateReducer,
+        lastRenderedState: initialState
+      };
+      stateHook.queue = stateQueue;
+      var setState = dispatchSetState.bind(
+        null,
+        currentlyRenderingFiber$1,
+        stateQueue
+      );
+      stateQueue.dispatch = setState; // Action queue hook. This is used to queue pending actions. The queue is
+      // shared between all instances of the hook. Similar to a regular state queue,
+      // but different because the actions are run sequentially, and they run in
+      // an event instead of during render.
+
+      var actionQueueHook = mountWorkInProgressHook();
+      var actionQueue = {
+        state: initialState,
+        dispatch: null,
+        // circular
+        action: action,
+        pending: null
+      };
+      actionQueueHook.queue = actionQueue;
+      var dispatch = dispatchFormState.bind(
+        null,
+        currentlyRenderingFiber$1,
+        actionQueue,
+        setState
+      );
+      actionQueue.dispatch = dispatch; // Stash the action function on the memoized state of the hook. We'll use this
+      // to detect when the action function changes so we can update it in
+      // an effect.
+
+      actionQueueHook.memoizedState = action;
+      return [initialState, dispatch];
+    }
+
+    function updateFormState(action, initialState, permalink) {
+      var stateHook = updateWorkInProgressHook();
+      var currentStateHook = currentHook;
+      return updateFormStateImpl(stateHook, currentStateHook, action);
+    }
+
+    function updateFormStateImpl(
+      stateHook,
+      currentStateHook,
+      action,
+      initialState,
+      permalink
+    ) {
+      var _updateReducerImpl = updateReducerImpl(
+          stateHook,
+          currentStateHook,
+          formStateReducer
+        ),
+        actionResult = _updateReducerImpl[0]; // This will suspend until the action finishes.
+
+      var state =
+        typeof actionResult === "object" &&
+        actionResult !== null && // $FlowFixMe[method-unbinding]
+        typeof actionResult.then === "function"
+          ? useThenable(actionResult)
+          : actionResult;
+      var actionQueueHook = updateWorkInProgressHook();
+      var actionQueue = actionQueueHook.queue;
+      var dispatch = actionQueue.dispatch; // Check if a new action was passed. If so, update it in an effect.
+
+      var prevAction = actionQueueHook.memoizedState;
+
+      if (action !== prevAction) {
+        currentlyRenderingFiber$1.flags |= Passive$1;
+        pushEffect(
+          HasEffect | Passive,
+          formStateActionEffect.bind(null, actionQueue, action),
+          createEffectInstance(),
+          null
+        );
+      }
+
+      return [state, dispatch];
+    }
+
+    function formStateActionEffect(actionQueue, action) {
+      actionQueue.action = action;
+    }
+
+    function rerenderFormState(action, initialState, permalink) {
+      // Unlike useState, useFormState doesn't support render phase updates.
+      // Also unlike useState, we need to replay all pending updates again in case
+      // the passthrough value changed.
+      //
+      // So instead of a forked re-render implementation that knows how to handle
+      // render phase udpates, we can use the same implementation as during a
+      // regular mount or update.
+      var stateHook = updateWorkInProgressHook();
+      var currentStateHook = currentHook;
+
+      if (currentStateHook !== null) {
+        // This is an update. Process the update queue.
+        return updateFormStateImpl(stateHook, currentStateHook, action);
+      } // This is a mount. No updates to process.
+
+      var state = stateHook.memoizedState;
+      var actionQueueHook = updateWorkInProgressHook();
+      var actionQueue = actionQueueHook.queue;
+      var dispatch = actionQueue.dispatch; // This may have changed during the rerender.
+
+      actionQueueHook.memoizedState = action;
+      return [state, dispatch];
+    }
 
     function pushEffect(tag, create, inst, deps) {
       var effect = {
@@ -10063,6 +10406,15 @@ if (__DEV__) {
       return [isPending, start];
     }
 
+    function useHostTransitionStatus() {
+      if (!(enableFormActions && enableAsyncActions)) {
+        throw new Error("Not implemented.");
+      }
+
+      var status = readContext(HostTransitionContext);
+      return status !== null ? status : NotPendingTransition;
+    }
+
     function mountId() {
       var hook = mountWorkInProgressHook();
       var root = getWorkInProgressRoot(); // TODO: In Fizz, id generation is specific to each server config. Maybe we
@@ -10447,6 +10799,11 @@ if (__DEV__) {
       ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
     }
 
+    if (enableFormActions && enableAsyncActions) {
+      ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
+      ContextOnlyDispatcher.useFormState = throwInvalidHookError;
+    }
+
     if (enableAsyncActions) {
       ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
     }
@@ -10617,6 +10974,21 @@ if (__DEV__) {
         };
       }
 
+      if (enableFormActions && enableAsyncActions) {
+        HooksDispatcherOnMountInDEV.useHostTransitionStatus =
+          useHostTransitionStatus;
+
+        HooksDispatcherOnMountInDEV.useFormState = function useFormState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useFormState";
+          mountHookTypesDev();
+          return mountFormState(action, initialState);
+        };
+      }
+
       if (enableAsyncActions) {
         HooksDispatcherOnMountInDEV.useOptimistic = function useOptimistic(
           passthrough,
@@ -10757,6 +11129,18 @@ if (__DEV__) {
             currentHookNameInDev = "useEffectEvent";
             updateHookTypesDev();
             return mountEvent(callback);
+          };
+      }
+
+      if (enableFormActions && enableAsyncActions) {
+        HooksDispatcherOnMountWithHookTypesInDEV.useHostTransitionStatus =
+          useHostTransitionStatus;
+
+        HooksDispatcherOnMountWithHookTypesInDEV.useFormState =
+          function useFormState(action, initialState, permalink) {
+            currentHookNameInDev = "useFormState";
+            updateHookTypesDev();
+            return mountFormState(action, initialState);
           };
       }
 
@@ -10902,6 +11286,21 @@ if (__DEV__) {
         };
       }
 
+      if (enableFormActions && enableAsyncActions) {
+        HooksDispatcherOnUpdateInDEV.useHostTransitionStatus =
+          useHostTransitionStatus;
+
+        HooksDispatcherOnUpdateInDEV.useFormState = function useFormState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useFormState";
+          updateHookTypesDev();
+          return updateFormState(action);
+        };
+      }
+
       if (enableAsyncActions) {
         HooksDispatcherOnUpdateInDEV.useOptimistic = function useOptimistic(
           passthrough,
@@ -11043,6 +11442,21 @@ if (__DEV__) {
           currentHookNameInDev = "useEffectEvent";
           updateHookTypesDev();
           return updateEvent(callback);
+        };
+      }
+
+      if (enableFormActions && enableAsyncActions) {
+        HooksDispatcherOnRerenderInDEV.useHostTransitionStatus =
+          useHostTransitionStatus;
+
+        HooksDispatcherOnRerenderInDEV.useFormState = function useFormState(
+          action,
+          initialState,
+          permalink
+        ) {
+          currentHookNameInDev = "useFormState";
+          updateHookTypesDev();
+          return rerenderFormState(action);
         };
       }
 
@@ -11214,6 +11628,19 @@ if (__DEV__) {
           };
       }
 
+      if (enableFormActions && enableAsyncActions) {
+        InvalidNestedHooksDispatcherOnMountInDEV.useHostTransitionStatus =
+          useHostTransitionStatus;
+
+        InvalidNestedHooksDispatcherOnMountInDEV.useFormState =
+          function useFormState(action, initialState, permalink) {
+            currentHookNameInDev = "useFormState";
+            warnInvalidHookAccess();
+            mountHookTypesDev();
+            return mountFormState(action, initialState);
+          };
+      }
+
       if (enableAsyncActions) {
         InvalidNestedHooksDispatcherOnMountInDEV.useOptimistic =
           function useOptimistic(passthrough, reducer) {
@@ -11381,6 +11808,19 @@ if (__DEV__) {
           };
       }
 
+      if (enableFormActions && enableAsyncActions) {
+        InvalidNestedHooksDispatcherOnUpdateInDEV.useHostTransitionStatus =
+          useHostTransitionStatus;
+
+        InvalidNestedHooksDispatcherOnUpdateInDEV.useFormState =
+          function useFormState(action, initialState, permalink) {
+            currentHookNameInDev = "useFormState";
+            warnInvalidHookAccess();
+            updateHookTypesDev();
+            return updateFormState(action);
+          };
+      }
+
       if (enableAsyncActions) {
         InvalidNestedHooksDispatcherOnUpdateInDEV.useOptimistic =
           function useOptimistic(passthrough, reducer) {
@@ -11545,6 +11985,19 @@ if (__DEV__) {
             warnInvalidHookAccess();
             updateHookTypesDev();
             return updateEvent(callback);
+          };
+      }
+
+      if (enableFormActions && enableAsyncActions) {
+        InvalidNestedHooksDispatcherOnRerenderInDEV.useHostTransitionStatus =
+          useHostTransitionStatus;
+
+        InvalidNestedHooksDispatcherOnRerenderInDEV.useFormState =
+          function useFormState(action, initialState, permalink) {
+            currentHookNameInDev = "useFormState";
+            warnInvalidHookAccess();
+            updateHookTypesDev();
+            return rerenderFormState(action);
           };
       }
 
@@ -14910,6 +15363,58 @@ if (__DEV__) {
         workInProgress.flags |= ContentReset;
       }
 
+      if (enableFormActions && enableAsyncActions) {
+        var memoizedState = workInProgress.memoizedState;
+
+        if (memoizedState !== null) {
+          // This fiber has been upgraded to a stateful component. The only way
+          // happens currently is for form actions. We use hooks to track the
+          // pending and error state of the form.
+          //
+          // Once a fiber is upgraded to be stateful, it remains stateful for the
+          // rest of its lifetime.
+          var newState = renderTransitionAwareHostComponentWithHooks(
+            current,
+            workInProgress,
+            renderLanes
+          ); // If the transition state changed, propagate the change to all the
+          // descendents. We use Context as an implementation detail for this.
+          //
+          // This is intentionally set here instead of pushHostContext because
+          // pushHostContext gets called before we process the state hook, to avoid
+          // a state mismatch in the event that something suspends.
+          //
+          // NOTE: This assumes that there cannot be nested transition providers,
+          // because the only renderer that implements this feature is React DOM,
+          // and forms cannot be nested. If we did support nested providers, then
+          // we would need to push a context value even for host fibers that
+          // haven't been upgraded yet.
+
+          {
+            HostTransitionContext._currentValue2 = newState;
+          }
+
+          if (enableLazyContextPropagation);
+          else {
+            if (didReceiveUpdate) {
+              if (current !== null) {
+                var oldStateHook = current.memoizedState;
+                var oldState = oldStateHook.memoizedState; // This uses regular equality instead of Object.is because we assume
+                // that host transition state doesn't include NaN as a valid type.
+
+                if (oldState !== newState) {
+                  propagateContextChange(
+                    workInProgress,
+                    HostTransitionContext,
+                    renderLanes
+                  );
+                }
+              }
+            }
+          }
+        }
+      }
+
       markRef$1(current, workInProgress);
       reconcileChildren(current, workInProgress, nextChildren, renderLanes);
       return workInProgress.child;
@@ -17878,6 +18383,34 @@ if (__DEV__) {
               } else {
                 contexts = [context];
               }
+            }
+          }
+        } else if (
+          enableFormActions &&
+          enableAsyncActions &&
+          parent === getHostTransitionProvider()
+        ) {
+          // During a host transition, a host component can act like a context
+          // provider. E.g. in React DOM, this would be a <form />.
+          var _currentParent = parent.alternate;
+
+          if (_currentParent === null) {
+            throw new Error(
+              "Should have a current fiber. This is a bug in React."
+            );
+          }
+
+          var oldStateHook = _currentParent.memoizedState;
+          var oldState = oldStateHook.memoizedState;
+          var newStateHook = parent.memoizedState;
+          var newState = newStateHook.memoizedState; // This uses regular equality instead of Object.is because we assume that
+          // host transition state doesn't include NaN as a valid type.
+
+          if (oldState !== newState) {
+            if (contexts !== null) {
+              contexts.push(HostTransitionContext);
+            } else {
+              contexts = [HostTransitionContext];
             }
           }
         }
