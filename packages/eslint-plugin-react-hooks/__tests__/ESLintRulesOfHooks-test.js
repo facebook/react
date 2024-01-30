@@ -536,9 +536,9 @@ const tests = {
     {
       code: normalizeIndent`
         // Valid properties of type functions on objects can call hooks.
-        const Obj = { Test: {} };
+        const Obj = { Child1: {} };
 
-        Obj.Test.Test2 = () => {
+        Obj.Child1.Child2 = () => {
           useEffect(() => {});
         };
       `,
@@ -1174,6 +1174,31 @@ const tests = {
       `,
       errors: [asyncComponentHookError('use')],
     },
+    {
+      code: normalizeIndent`
+        // Invalid due to lower case child
+
+        // Case 1
+        function Parent() {
+          return <></>;
+        };
+        
+        Parent.lowerCaseChild = () => {
+          useHook();
+        };
+
+        // Case 2
+        const Obj = { Child: {} };
+
+        Obj.Child.lowerCaseChild = () => {
+          useEffect(() => {});
+        };
+      `,
+      errors: [
+        functionError('useHook', 'Parent.lowerCaseChild'),
+        functionError('useEffect', 'Obj.Child.lowerCaseChild'),
+      ],
+    }
   ],
 };
 
