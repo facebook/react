@@ -36378,7 +36378,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-82103139";
+    var ReactVersion = "18.3.0-www-classic-85d94c0f";
 
     function createPortal$1(
       children,
@@ -41232,7 +41232,10 @@ if (__DEV__) {
         case "src":
         case "href": {
           {
-            if (value === "") {
+            if (
+              value === "" && // <a href=""> is fine for "reload" links.
+              !(tag === "a" && key === "href")
+            ) {
               {
                 if (key === "src") {
                   error(
@@ -43456,7 +43459,10 @@ if (__DEV__) {
           case "src":
           case "href":
             {
-              if (value === "") {
+              if (
+                value === "" && // <a href=""> is fine for "reload" links.
+                !(tag === "a" && propKey === "href")
+              ) {
                 {
                   if (propKey === "src") {
                     error(

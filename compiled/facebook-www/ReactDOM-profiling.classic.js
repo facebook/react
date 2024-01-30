@@ -15100,7 +15100,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       break;
     case "src":
     case "href":
-      if ("" === value) {
+      if ("" === value && ("a" !== tag || "href" !== key)) {
         domElement.removeAttribute(key);
         break;
       }
@@ -17923,7 +17923,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1908 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-3ac173cd",
+  version: "18.3.0-www-classic-ec24bb93",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17967,7 +17967,7 @@ var devToolsConfig$jscomp$inline_1908 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-3ac173cd"
+  reconcilerVersion: "18.3.0-www-classic-ec24bb93"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18304,7 +18304,7 @@ exports.useFormStatus = function () {
     return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-3ac173cd";
+exports.version = "18.3.0-www-classic-ec24bb93";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

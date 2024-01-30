@@ -795,13 +795,9 @@ function pushStartInstance(
     case "span":
     case "svg":
     case "path":
-    case "a":
-    case "g":
-    case "p":
-    case "li":
       break;
-    case "select":
-      target$jscomp$0.push(startChunkForTag("select"));
+    case "a":
+      target$jscomp$0.push(startChunkForTag("a"));
       var children = null,
         innerHTML = null,
         propKey;
@@ -816,8 +812,10 @@ function pushStartInstance(
               case "dangerouslySetInnerHTML":
                 innerHTML = propValue;
                 break;
-              case "defaultValue":
-              case "value":
+              case "href":
+                "" === propValue
+                  ? pushStringAttribute(target$jscomp$0, "href", "")
+                  : pushAttribute(target$jscomp$0, propKey, propValue);
                 break;
               default:
                 pushAttribute(target$jscomp$0, propKey, propValue);
@@ -825,13 +823,18 @@ function pushStartInstance(
         }
       target$jscomp$0.push(">");
       pushInnerHTML(target$jscomp$0, innerHTML, children);
-      return children;
-    case "option":
-      var selectedValue = formatContext.selectedValue;
-      target$jscomp$0.push(startChunkForTag("option"));
+      if ("string" === typeof children) {
+        target$jscomp$0.push(escapeTextForBrowser(children));
+        var JSCompiler_inline_result = null;
+      } else JSCompiler_inline_result = children;
+      return JSCompiler_inline_result;
+    case "g":
+    case "p":
+    case "li":
+      break;
+    case "select":
+      target$jscomp$0.push(startChunkForTag("select"));
       var children$jscomp$0 = null,
-        value = null,
-        selected = null,
         innerHTML$jscomp$0 = null,
         propKey$jscomp$0;
       for (propKey$jscomp$0 in props)
@@ -842,14 +845,12 @@ function pushStartInstance(
               case "children":
                 children$jscomp$0 = propValue$jscomp$0;
                 break;
-              case "selected":
-                selected = propValue$jscomp$0;
-                break;
               case "dangerouslySetInnerHTML":
                 innerHTML$jscomp$0 = propValue$jscomp$0;
                 break;
+              case "defaultValue":
               case "value":
-                value = propValue$jscomp$0;
+                break;
               default:
                 pushAttribute(
                   target$jscomp$0,
@@ -858,11 +859,46 @@ function pushStartInstance(
                 );
             }
         }
+      target$jscomp$0.push(">");
+      pushInnerHTML(target$jscomp$0, innerHTML$jscomp$0, children$jscomp$0);
+      return children$jscomp$0;
+    case "option":
+      var selectedValue = formatContext.selectedValue;
+      target$jscomp$0.push(startChunkForTag("option"));
+      var children$jscomp$1 = null,
+        value = null,
+        selected = null,
+        innerHTML$jscomp$1 = null,
+        propKey$jscomp$1;
+      for (propKey$jscomp$1 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$1)) {
+          var propValue$jscomp$1 = props[propKey$jscomp$1];
+          if (null != propValue$jscomp$1)
+            switch (propKey$jscomp$1) {
+              case "children":
+                children$jscomp$1 = propValue$jscomp$1;
+                break;
+              case "selected":
+                selected = propValue$jscomp$1;
+                break;
+              case "dangerouslySetInnerHTML":
+                innerHTML$jscomp$1 = propValue$jscomp$1;
+                break;
+              case "value":
+                value = propValue$jscomp$1;
+              default:
+                pushAttribute(
+                  target$jscomp$0,
+                  propKey$jscomp$1,
+                  propValue$jscomp$1
+                );
+            }
+        }
       if (null != selectedValue) {
         var stringValue =
           null !== value
             ? "" + value
-            : flattenOptionChildren(children$jscomp$0);
+            : flattenOptionChildren(children$jscomp$1);
         if (isArrayImpl(selectedValue))
           for (var i = 0; i < selectedValue.length; i++) {
             if ("" + selectedValue[i] === stringValue) {
@@ -875,35 +911,35 @@ function pushStartInstance(
             target$jscomp$0.push(' selected=""');
       } else selected && target$jscomp$0.push(' selected=""');
       target$jscomp$0.push(">");
-      pushInnerHTML(target$jscomp$0, innerHTML$jscomp$0, children$jscomp$0);
-      return children$jscomp$0;
+      pushInnerHTML(target$jscomp$0, innerHTML$jscomp$1, children$jscomp$1);
+      return children$jscomp$1;
     case "textarea":
       target$jscomp$0.push(startChunkForTag("textarea"));
       var value$jscomp$0 = null,
         defaultValue = null,
-        children$jscomp$1 = null,
-        propKey$jscomp$1;
-      for (propKey$jscomp$1 in props)
-        if (hasOwnProperty.call(props, propKey$jscomp$1)) {
-          var propValue$jscomp$1 = props[propKey$jscomp$1];
-          if (null != propValue$jscomp$1)
-            switch (propKey$jscomp$1) {
+        children$jscomp$2 = null,
+        propKey$jscomp$2;
+      for (propKey$jscomp$2 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$2)) {
+          var propValue$jscomp$2 = props[propKey$jscomp$2];
+          if (null != propValue$jscomp$2)
+            switch (propKey$jscomp$2) {
               case "children":
-                children$jscomp$1 = propValue$jscomp$1;
+                children$jscomp$2 = propValue$jscomp$2;
                 break;
               case "value":
-                value$jscomp$0 = propValue$jscomp$1;
+                value$jscomp$0 = propValue$jscomp$2;
                 break;
               case "defaultValue":
-                defaultValue = propValue$jscomp$1;
+                defaultValue = propValue$jscomp$2;
                 break;
               case "dangerouslySetInnerHTML":
                 throw Error(formatProdErrorMessage(91));
               default:
                 pushAttribute(
                   target$jscomp$0,
-                  propKey$jscomp$1,
-                  propValue$jscomp$1
+                  propKey$jscomp$2,
+                  propValue$jscomp$2
                 );
             }
         }
@@ -911,14 +947,14 @@ function pushStartInstance(
         null !== defaultValue &&
         (value$jscomp$0 = defaultValue);
       target$jscomp$0.push(">");
-      if (null != children$jscomp$1) {
+      if (null != children$jscomp$2) {
         if (null != value$jscomp$0) throw Error(formatProdErrorMessage(92));
-        if (isArrayImpl(children$jscomp$1)) {
-          if (1 < children$jscomp$1.length)
+        if (isArrayImpl(children$jscomp$2)) {
+          if (1 < children$jscomp$2.length)
             throw Error(formatProdErrorMessage(93));
-          value$jscomp$0 = "" + children$jscomp$1[0];
+          value$jscomp$0 = "" + children$jscomp$2[0];
         }
-        value$jscomp$0 = "" + children$jscomp$1;
+        value$jscomp$0 = "" + children$jscomp$2;
       }
       "string" === typeof value$jscomp$0 &&
         "\n" === value$jscomp$0[0] &&
@@ -937,47 +973,47 @@ function pushStartInstance(
         defaultValue$jscomp$0 = null,
         checked = null,
         defaultChecked = null,
-        propKey$jscomp$2;
-      for (propKey$jscomp$2 in props)
-        if (hasOwnProperty.call(props, propKey$jscomp$2)) {
-          var propValue$jscomp$2 = props[propKey$jscomp$2];
-          if (null != propValue$jscomp$2)
-            switch (propKey$jscomp$2) {
+        propKey$jscomp$3;
+      for (propKey$jscomp$3 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$3)) {
+          var propValue$jscomp$3 = props[propKey$jscomp$3];
+          if (null != propValue$jscomp$3)
+            switch (propKey$jscomp$3) {
               case "children":
               case "dangerouslySetInnerHTML":
                 throw Error(formatProdErrorMessage(399, "input"));
               case "name":
-                name = propValue$jscomp$2;
+                name = propValue$jscomp$3;
                 break;
               case "formAction":
-                formAction = propValue$jscomp$2;
+                formAction = propValue$jscomp$3;
                 break;
               case "formEncType":
-                formEncType = propValue$jscomp$2;
+                formEncType = propValue$jscomp$3;
                 break;
               case "formMethod":
-                formMethod = propValue$jscomp$2;
+                formMethod = propValue$jscomp$3;
                 break;
               case "formTarget":
-                formTarget = propValue$jscomp$2;
+                formTarget = propValue$jscomp$3;
                 break;
               case "defaultChecked":
-                defaultChecked = propValue$jscomp$2;
+                defaultChecked = propValue$jscomp$3;
                 break;
               case "defaultValue":
-                defaultValue$jscomp$0 = propValue$jscomp$2;
+                defaultValue$jscomp$0 = propValue$jscomp$3;
                 break;
               case "checked":
-                checked = propValue$jscomp$2;
+                checked = propValue$jscomp$3;
                 break;
               case "value":
-                value$jscomp$1 = propValue$jscomp$2;
+                value$jscomp$1 = propValue$jscomp$3;
                 break;
               default:
                 pushAttribute(
                   target$jscomp$0,
-                  propKey$jscomp$2,
-                  propValue$jscomp$2
+                  propKey$jscomp$3,
+                  propValue$jscomp$3
                 );
             }
         }
@@ -1005,45 +1041,45 @@ function pushStartInstance(
       return null;
     case "button":
       target$jscomp$0.push(startChunkForTag("button"));
-      var children$jscomp$2 = null,
-        innerHTML$jscomp$1 = null,
+      var children$jscomp$3 = null,
+        innerHTML$jscomp$2 = null,
         name$jscomp$0 = null,
         formAction$jscomp$0 = null,
         formEncType$jscomp$0 = null,
         formMethod$jscomp$0 = null,
         formTarget$jscomp$0 = null,
-        propKey$jscomp$3;
-      for (propKey$jscomp$3 in props)
-        if (hasOwnProperty.call(props, propKey$jscomp$3)) {
-          var propValue$jscomp$3 = props[propKey$jscomp$3];
-          if (null != propValue$jscomp$3)
-            switch (propKey$jscomp$3) {
+        propKey$jscomp$4;
+      for (propKey$jscomp$4 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$4)) {
+          var propValue$jscomp$4 = props[propKey$jscomp$4];
+          if (null != propValue$jscomp$4)
+            switch (propKey$jscomp$4) {
               case "children":
-                children$jscomp$2 = propValue$jscomp$3;
+                children$jscomp$3 = propValue$jscomp$4;
                 break;
               case "dangerouslySetInnerHTML":
-                innerHTML$jscomp$1 = propValue$jscomp$3;
+                innerHTML$jscomp$2 = propValue$jscomp$4;
                 break;
               case "name":
-                name$jscomp$0 = propValue$jscomp$3;
+                name$jscomp$0 = propValue$jscomp$4;
                 break;
               case "formAction":
-                formAction$jscomp$0 = propValue$jscomp$3;
+                formAction$jscomp$0 = propValue$jscomp$4;
                 break;
               case "formEncType":
-                formEncType$jscomp$0 = propValue$jscomp$3;
+                formEncType$jscomp$0 = propValue$jscomp$4;
                 break;
               case "formMethod":
-                formMethod$jscomp$0 = propValue$jscomp$3;
+                formMethod$jscomp$0 = propValue$jscomp$4;
                 break;
               case "formTarget":
-                formTarget$jscomp$0 = propValue$jscomp$3;
+                formTarget$jscomp$0 = propValue$jscomp$4;
                 break;
               default:
                 pushAttribute(
                   target$jscomp$0,
-                  propKey$jscomp$3,
-                  propValue$jscomp$3
+                  propKey$jscomp$4,
+                  propValue$jscomp$4
                 );
             }
         }
@@ -1060,49 +1096,49 @@ function pushStartInstance(
       target$jscomp$0.push(">");
       null !== formData$jscomp$0 &&
         formData$jscomp$0.forEach(pushAdditionalFormField, target$jscomp$0);
-      pushInnerHTML(target$jscomp$0, innerHTML$jscomp$1, children$jscomp$2);
-      if ("string" === typeof children$jscomp$2) {
-        target$jscomp$0.push(escapeTextForBrowser(children$jscomp$2));
-        var JSCompiler_inline_result = null;
-      } else JSCompiler_inline_result = children$jscomp$2;
-      return JSCompiler_inline_result;
+      pushInnerHTML(target$jscomp$0, innerHTML$jscomp$2, children$jscomp$3);
+      if ("string" === typeof children$jscomp$3) {
+        target$jscomp$0.push(escapeTextForBrowser(children$jscomp$3));
+        var JSCompiler_inline_result$jscomp$0 = null;
+      } else JSCompiler_inline_result$jscomp$0 = children$jscomp$3;
+      return JSCompiler_inline_result$jscomp$0;
     case "form":
       target$jscomp$0.push(startChunkForTag("form"));
-      var children$jscomp$3 = null,
-        innerHTML$jscomp$2 = null,
+      var children$jscomp$4 = null,
+        innerHTML$jscomp$3 = null,
         formAction$jscomp$1 = null,
         formEncType$jscomp$1 = null,
         formMethod$jscomp$1 = null,
         formTarget$jscomp$1 = null,
-        propKey$jscomp$4;
-      for (propKey$jscomp$4 in props)
-        if (hasOwnProperty.call(props, propKey$jscomp$4)) {
-          var propValue$jscomp$4 = props[propKey$jscomp$4];
-          if (null != propValue$jscomp$4)
-            switch (propKey$jscomp$4) {
+        propKey$jscomp$5;
+      for (propKey$jscomp$5 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$5)) {
+          var propValue$jscomp$5 = props[propKey$jscomp$5];
+          if (null != propValue$jscomp$5)
+            switch (propKey$jscomp$5) {
               case "children":
-                children$jscomp$3 = propValue$jscomp$4;
+                children$jscomp$4 = propValue$jscomp$5;
                 break;
               case "dangerouslySetInnerHTML":
-                innerHTML$jscomp$2 = propValue$jscomp$4;
+                innerHTML$jscomp$3 = propValue$jscomp$5;
                 break;
               case "action":
-                formAction$jscomp$1 = propValue$jscomp$4;
+                formAction$jscomp$1 = propValue$jscomp$5;
                 break;
               case "encType":
-                formEncType$jscomp$1 = propValue$jscomp$4;
+                formEncType$jscomp$1 = propValue$jscomp$5;
                 break;
               case "method":
-                formMethod$jscomp$1 = propValue$jscomp$4;
+                formMethod$jscomp$1 = propValue$jscomp$5;
                 break;
               case "target":
-                formTarget$jscomp$1 = propValue$jscomp$4;
+                formTarget$jscomp$1 = propValue$jscomp$5;
                 break;
               default:
                 pushAttribute(
                   target$jscomp$0,
-                  propKey$jscomp$4,
-                  propValue$jscomp$4
+                  propKey$jscomp$5,
+                  propValue$jscomp$5
                 );
             }
         }
@@ -1141,27 +1177,27 @@ function pushStartInstance(
         target$jscomp$0.push("/>"),
         null !== formData$jscomp$1 &&
           formData$jscomp$1.forEach(pushAdditionalFormField, target$jscomp$0));
-      pushInnerHTML(target$jscomp$0, innerHTML$jscomp$2, children$jscomp$3);
-      if ("string" === typeof children$jscomp$3) {
-        target$jscomp$0.push(escapeTextForBrowser(children$jscomp$3));
-        var JSCompiler_inline_result$jscomp$0 = null;
-      } else JSCompiler_inline_result$jscomp$0 = children$jscomp$3;
-      return JSCompiler_inline_result$jscomp$0;
+      pushInnerHTML(target$jscomp$0, innerHTML$jscomp$3, children$jscomp$4);
+      if ("string" === typeof children$jscomp$4) {
+        target$jscomp$0.push(escapeTextForBrowser(children$jscomp$4));
+        var JSCompiler_inline_result$jscomp$1 = null;
+      } else JSCompiler_inline_result$jscomp$1 = children$jscomp$4;
+      return JSCompiler_inline_result$jscomp$1;
     case "menuitem":
       target$jscomp$0.push(startChunkForTag("menuitem"));
-      for (var propKey$jscomp$5 in props)
-        if (hasOwnProperty.call(props, propKey$jscomp$5)) {
-          var propValue$jscomp$5 = props[propKey$jscomp$5];
-          if (null != propValue$jscomp$5)
-            switch (propKey$jscomp$5) {
+      for (var propKey$jscomp$6 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$6)) {
+          var propValue$jscomp$6 = props[propKey$jscomp$6];
+          if (null != propValue$jscomp$6)
+            switch (propKey$jscomp$6) {
               case "children":
               case "dangerouslySetInnerHTML":
                 throw Error(formatProdErrorMessage(400));
               default:
                 pushAttribute(
                   target$jscomp$0,
-                  propKey$jscomp$5,
-                  propValue$jscomp$5
+                  propKey$jscomp$6,
+                  propValue$jscomp$6
                 );
             }
         }
@@ -1173,16 +1209,16 @@ function pushStartInstance(
         formatContext.tagScope & 1 ||
         null != props.itemProp
       )
-        var JSCompiler_inline_result$jscomp$1 = pushTitleImpl(
+        var JSCompiler_inline_result$jscomp$2 = pushTitleImpl(
           target$jscomp$0,
           props
         );
       else
         isFallback
-          ? (JSCompiler_inline_result$jscomp$1 = null)
+          ? (JSCompiler_inline_result$jscomp$2 = null)
           : (pushTitleImpl(renderState.hoistableChunks, props),
-            (JSCompiler_inline_result$jscomp$1 = void 0));
-      return JSCompiler_inline_result$jscomp$1;
+            (JSCompiler_inline_result$jscomp$2 = void 0));
+      return JSCompiler_inline_result$jscomp$2;
     case "link":
       var rel = props.rel,
         href = props.href,
@@ -1196,7 +1232,7 @@ function pushStartInstance(
         "" === href
       ) {
         pushLinkImpl(target$jscomp$0, props);
-        var JSCompiler_inline_result$jscomp$2 = null;
+        var JSCompiler_inline_result$jscomp$3 = null;
       } else if ("stylesheet" === props.rel)
         if (
           "string" !== typeof precedence ||
@@ -1204,7 +1240,7 @@ function pushStartInstance(
           props.onLoad ||
           props.onError
         )
-          JSCompiler_inline_result$jscomp$2 = pushLinkImpl(
+          JSCompiler_inline_result$jscomp$3 = pushLinkImpl(
             target$jscomp$0,
             props
           );
@@ -1247,19 +1283,19 @@ function pushStartInstance(
               hoistableState.stylesheets.add(resource$10);
           }
           textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
-          JSCompiler_inline_result$jscomp$2 = null;
+          JSCompiler_inline_result$jscomp$3 = null;
         }
       else
         props.onLoad || props.onError
-          ? (JSCompiler_inline_result$jscomp$2 = pushLinkImpl(
+          ? (JSCompiler_inline_result$jscomp$3 = pushLinkImpl(
               target$jscomp$0,
               props
             ))
           : (textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e"),
-            (JSCompiler_inline_result$jscomp$2 = isFallback
+            (JSCompiler_inline_result$jscomp$3 = isFallback
               ? null
               : pushLinkImpl(renderState.hoistableChunks, props)));
-      return JSCompiler_inline_result$jscomp$2;
+      return JSCompiler_inline_result$jscomp$3;
     case "script":
       var asyncProp = props.async;
       if (
@@ -1274,7 +1310,7 @@ function pushStartInstance(
         formatContext.tagScope & 1 ||
         null != props.itemProp
       )
-        var JSCompiler_inline_result$jscomp$3 = pushScriptImpl(
+        var JSCompiler_inline_result$jscomp$4 = pushScriptImpl(
           target$jscomp$0,
           props
         );
@@ -1304,9 +1340,9 @@ function pushStartInstance(
           pushScriptImpl(resource$jscomp$0, scriptProps);
         }
         textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
-        JSCompiler_inline_result$jscomp$3 = null;
+        JSCompiler_inline_result$jscomp$4 = null;
       }
-      return JSCompiler_inline_result$jscomp$3;
+      return JSCompiler_inline_result$jscomp$4;
     case "style":
       var precedence$jscomp$0 = props.precedence,
         href$jscomp$0 = props.href;
@@ -1319,42 +1355,42 @@ function pushStartInstance(
         "" === href$jscomp$0
       ) {
         target$jscomp$0.push(startChunkForTag("style"));
-        var children$jscomp$4 = null,
-          innerHTML$jscomp$3 = null,
-          propKey$jscomp$6;
-        for (propKey$jscomp$6 in props)
-          if (hasOwnProperty.call(props, propKey$jscomp$6)) {
-            var propValue$jscomp$6 = props[propKey$jscomp$6];
-            if (null != propValue$jscomp$6)
-              switch (propKey$jscomp$6) {
+        var children$jscomp$5 = null,
+          innerHTML$jscomp$4 = null,
+          propKey$jscomp$7;
+        for (propKey$jscomp$7 in props)
+          if (hasOwnProperty.call(props, propKey$jscomp$7)) {
+            var propValue$jscomp$7 = props[propKey$jscomp$7];
+            if (null != propValue$jscomp$7)
+              switch (propKey$jscomp$7) {
                 case "children":
-                  children$jscomp$4 = propValue$jscomp$6;
+                  children$jscomp$5 = propValue$jscomp$7;
                   break;
                 case "dangerouslySetInnerHTML":
-                  innerHTML$jscomp$3 = propValue$jscomp$6;
+                  innerHTML$jscomp$4 = propValue$jscomp$7;
                   break;
                 default:
                   pushAttribute(
                     target$jscomp$0,
-                    propKey$jscomp$6,
-                    propValue$jscomp$6
+                    propKey$jscomp$7,
+                    propValue$jscomp$7
                   );
               }
           }
         target$jscomp$0.push(">");
-        var child = Array.isArray(children$jscomp$4)
-          ? 2 > children$jscomp$4.length
-            ? children$jscomp$4[0]
+        var child = Array.isArray(children$jscomp$5)
+          ? 2 > children$jscomp$5.length
+            ? children$jscomp$5[0]
             : null
-          : children$jscomp$4;
+          : children$jscomp$5;
         "function" !== typeof child &&
           "symbol" !== typeof child &&
           null !== child &&
           void 0 !== child &&
           target$jscomp$0.push(escapeTextForBrowser("" + child));
-        pushInnerHTML(target$jscomp$0, innerHTML$jscomp$3, children$jscomp$4);
+        pushInnerHTML(target$jscomp$0, innerHTML$jscomp$4, children$jscomp$5);
         target$jscomp$0.push(endChunkForTag("style"));
-        var JSCompiler_inline_result$jscomp$4 = null;
+        var JSCompiler_inline_result$jscomp$5 = null;
       } else {
         var styleQueue$jscomp$0 = renderState.styles.get(precedence$jscomp$0);
         if (
@@ -1376,105 +1412,105 @@ function pushStartInstance(
               }),
               renderState.styles.set(precedence$jscomp$0, styleQueue$jscomp$0));
           var target = styleQueue$jscomp$0.rules,
-            children$jscomp$5 = null,
-            innerHTML$jscomp$4 = null,
-            propKey$jscomp$7;
-          for (propKey$jscomp$7 in props)
-            if (hasOwnProperty.call(props, propKey$jscomp$7)) {
-              var propValue$jscomp$7 = props[propKey$jscomp$7];
-              if (null != propValue$jscomp$7)
-                switch (propKey$jscomp$7) {
+            children$jscomp$6 = null,
+            innerHTML$jscomp$5 = null,
+            propKey$jscomp$8;
+          for (propKey$jscomp$8 in props)
+            if (hasOwnProperty.call(props, propKey$jscomp$8)) {
+              var propValue$jscomp$8 = props[propKey$jscomp$8];
+              if (null != propValue$jscomp$8)
+                switch (propKey$jscomp$8) {
                   case "children":
-                    children$jscomp$5 = propValue$jscomp$7;
+                    children$jscomp$6 = propValue$jscomp$8;
                     break;
                   case "dangerouslySetInnerHTML":
-                    innerHTML$jscomp$4 = propValue$jscomp$7;
+                    innerHTML$jscomp$5 = propValue$jscomp$8;
                 }
             }
-          var child$jscomp$0 = Array.isArray(children$jscomp$5)
-            ? 2 > children$jscomp$5.length
-              ? children$jscomp$5[0]
+          var child$jscomp$0 = Array.isArray(children$jscomp$6)
+            ? 2 > children$jscomp$6.length
+              ? children$jscomp$6[0]
               : null
-            : children$jscomp$5;
+            : children$jscomp$6;
           "function" !== typeof child$jscomp$0 &&
             "symbol" !== typeof child$jscomp$0 &&
             null !== child$jscomp$0 &&
             void 0 !== child$jscomp$0 &&
             target.push(escapeTextForBrowser("" + child$jscomp$0));
-          pushInnerHTML(target, innerHTML$jscomp$4, children$jscomp$5);
+          pushInnerHTML(target, innerHTML$jscomp$5, children$jscomp$6);
         }
         styleQueue$jscomp$0 &&
           hoistableState &&
           hoistableState.styles.add(styleQueue$jscomp$0);
         textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e");
-        JSCompiler_inline_result$jscomp$4 = void 0;
+        JSCompiler_inline_result$jscomp$5 = void 0;
       }
-      return JSCompiler_inline_result$jscomp$4;
+      return JSCompiler_inline_result$jscomp$5;
     case "meta":
       if (
         3 === formatContext.insertionMode ||
         formatContext.tagScope & 1 ||
         null != props.itemProp
       )
-        var JSCompiler_inline_result$jscomp$5 = pushSelfClosing(
+        var JSCompiler_inline_result$jscomp$6 = pushSelfClosing(
           target$jscomp$0,
           props,
           "meta"
         );
       else
         textEmbedded && target$jscomp$0.push("\x3c!-- --\x3e"),
-          (JSCompiler_inline_result$jscomp$5 = isFallback
+          (JSCompiler_inline_result$jscomp$6 = isFallback
             ? null
             : "string" === typeof props.charSet
             ? pushSelfClosing(renderState.charsetChunks, props, "meta")
             : "viewport" === props.name
             ? pushSelfClosing(renderState.viewportChunks, props, "meta")
             : pushSelfClosing(renderState.hoistableChunks, props, "meta"));
-      return JSCompiler_inline_result$jscomp$5;
+      return JSCompiler_inline_result$jscomp$6;
     case "listing":
     case "pre":
       target$jscomp$0.push(startChunkForTag(type));
-      var children$jscomp$6 = null,
-        innerHTML$jscomp$5 = null,
-        propKey$jscomp$8;
-      for (propKey$jscomp$8 in props)
-        if (hasOwnProperty.call(props, propKey$jscomp$8)) {
-          var propValue$jscomp$8 = props[propKey$jscomp$8];
-          if (null != propValue$jscomp$8)
-            switch (propKey$jscomp$8) {
+      var children$jscomp$7 = null,
+        innerHTML$jscomp$6 = null,
+        propKey$jscomp$9;
+      for (propKey$jscomp$9 in props)
+        if (hasOwnProperty.call(props, propKey$jscomp$9)) {
+          var propValue$jscomp$9 = props[propKey$jscomp$9];
+          if (null != propValue$jscomp$9)
+            switch (propKey$jscomp$9) {
               case "children":
-                children$jscomp$6 = propValue$jscomp$8;
+                children$jscomp$7 = propValue$jscomp$9;
                 break;
               case "dangerouslySetInnerHTML":
-                innerHTML$jscomp$5 = propValue$jscomp$8;
+                innerHTML$jscomp$6 = propValue$jscomp$9;
                 break;
               default:
                 pushAttribute(
                   target$jscomp$0,
-                  propKey$jscomp$8,
-                  propValue$jscomp$8
+                  propKey$jscomp$9,
+                  propValue$jscomp$9
                 );
             }
         }
       target$jscomp$0.push(">");
-      if (null != innerHTML$jscomp$5) {
-        if (null != children$jscomp$6) throw Error(formatProdErrorMessage(60));
+      if (null != innerHTML$jscomp$6) {
+        if (null != children$jscomp$7) throw Error(formatProdErrorMessage(60));
         if (
-          "object" !== typeof innerHTML$jscomp$5 ||
-          !("__html" in innerHTML$jscomp$5)
+          "object" !== typeof innerHTML$jscomp$6 ||
+          !("__html" in innerHTML$jscomp$6)
         )
           throw Error(formatProdErrorMessage(61));
-        var html = innerHTML$jscomp$5.__html;
+        var html = innerHTML$jscomp$6.__html;
         null !== html &&
           void 0 !== html &&
           ("string" === typeof html && 0 < html.length && "\n" === html[0]
             ? target$jscomp$0.push("\n", html)
             : target$jscomp$0.push("" + html));
       }
-      "string" === typeof children$jscomp$6 &&
-        "\n" === children$jscomp$6[0] &&
+      "string" === typeof children$jscomp$7 &&
+        "\n" === children$jscomp$7[0] &&
         target$jscomp$0.push("\n");
-      return children$jscomp$6;
+      return children$jscomp$7;
     case "img":
       var src = props.src,
         srcSet = props.srcSet;
@@ -1516,7 +1552,7 @@ function pushStartInstance(
         ) {
           resumableState.imageResources[key$jscomp$0] = PRELOAD_NO_CREDS;
           var input = props.crossOrigin;
-          var JSCompiler_inline_result$jscomp$6 =
+          var JSCompiler_inline_result$jscomp$7 =
             "string" === typeof input
               ? "use-credentials" === input
                 ? input
@@ -1531,7 +1567,7 @@ function pushStartInstance(
           ((header = getPreloadAsHeader(src, "image", {
             imageSrcSet: props.srcSet,
             imageSizes: props.sizes,
-            crossOrigin: JSCompiler_inline_result$jscomp$6,
+            crossOrigin: JSCompiler_inline_result$jscomp$7,
             integrity: props.integrity,
             nonce: props.nonce,
             type: props.type,
@@ -1549,7 +1585,7 @@ function pushStartInstance(
                 href: srcSet ? void 0 : src,
                 imageSrcSet: srcSet,
                 imageSizes: sizes,
-                crossOrigin: JSCompiler_inline_result$jscomp$6,
+                crossOrigin: JSCompiler_inline_result$jscomp$7,
                 integrity: props.integrity,
                 type: props.type,
                 fetchPriority: props.fetchPriority,
@@ -1587,56 +1623,56 @@ function pushStartInstance(
     case "head":
       if (2 > formatContext.insertionMode && null === renderState.headChunks) {
         renderState.headChunks = [];
-        var JSCompiler_inline_result$jscomp$7 = pushStartGenericElement(
+        var JSCompiler_inline_result$jscomp$8 = pushStartGenericElement(
           renderState.headChunks,
           props,
           "head"
         );
       } else
-        JSCompiler_inline_result$jscomp$7 = pushStartGenericElement(
+        JSCompiler_inline_result$jscomp$8 = pushStartGenericElement(
           target$jscomp$0,
           props,
           "head"
         );
-      return JSCompiler_inline_result$jscomp$7;
+      return JSCompiler_inline_result$jscomp$8;
     case "html":
       if (
         0 === formatContext.insertionMode &&
         null === renderState.htmlChunks
       ) {
         renderState.htmlChunks = [""];
-        var JSCompiler_inline_result$jscomp$8 = pushStartGenericElement(
+        var JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
           renderState.htmlChunks,
           props,
           "html"
         );
       } else
-        JSCompiler_inline_result$jscomp$8 = pushStartGenericElement(
+        JSCompiler_inline_result$jscomp$9 = pushStartGenericElement(
           target$jscomp$0,
           props,
           "html"
         );
-      return JSCompiler_inline_result$jscomp$8;
+      return JSCompiler_inline_result$jscomp$9;
     default:
       if (-1 !== type.indexOf("-")) {
         target$jscomp$0.push(startChunkForTag(type));
-        var children$jscomp$7 = null,
-          innerHTML$jscomp$6 = null,
-          propKey$jscomp$9;
-        for (propKey$jscomp$9 in props)
-          if (hasOwnProperty.call(props, propKey$jscomp$9)) {
-            var propValue$jscomp$9 = props[propKey$jscomp$9];
-            if (null != propValue$jscomp$9) {
-              var attributeName = propKey$jscomp$9;
-              switch (propKey$jscomp$9) {
+        var children$jscomp$8 = null,
+          innerHTML$jscomp$7 = null,
+          propKey$jscomp$10;
+        for (propKey$jscomp$10 in props)
+          if (hasOwnProperty.call(props, propKey$jscomp$10)) {
+            var propValue$jscomp$10 = props[propKey$jscomp$10];
+            if (null != propValue$jscomp$10) {
+              var attributeName = propKey$jscomp$10;
+              switch (propKey$jscomp$10) {
                 case "children":
-                  children$jscomp$7 = propValue$jscomp$9;
+                  children$jscomp$8 = propValue$jscomp$10;
                   break;
                 case "dangerouslySetInnerHTML":
-                  innerHTML$jscomp$6 = propValue$jscomp$9;
+                  innerHTML$jscomp$7 = propValue$jscomp$10;
                   break;
                 case "style":
-                  pushStyleAttribute(target$jscomp$0, propValue$jscomp$9);
+                  pushStyleAttribute(target$jscomp$0, propValue$jscomp$10);
                   break;
                 case "suppressContentEditableWarning":
                 case "suppressHydrationWarning":
@@ -1645,18 +1681,18 @@ function pushStartInstance(
                   attributeName = "class";
                 default:
                   if (
-                    isAttributeNameSafe(propKey$jscomp$9) &&
-                    "function" !== typeof propValue$jscomp$9 &&
-                    "symbol" !== typeof propValue$jscomp$9 &&
-                    !1 !== propValue$jscomp$9
+                    isAttributeNameSafe(propKey$jscomp$10) &&
+                    "function" !== typeof propValue$jscomp$10 &&
+                    "symbol" !== typeof propValue$jscomp$10 &&
+                    !1 !== propValue$jscomp$10
                   ) {
-                    if (!0 === propValue$jscomp$9) propValue$jscomp$9 = "";
-                    else if ("object" === typeof propValue$jscomp$9) continue;
+                    if (!0 === propValue$jscomp$10) propValue$jscomp$10 = "";
+                    else if ("object" === typeof propValue$jscomp$10) continue;
                     target$jscomp$0.push(
                       " ",
                       attributeName,
                       '="',
-                      escapeTextForBrowser(propValue$jscomp$9),
+                      escapeTextForBrowser(propValue$jscomp$10),
                       '"'
                     );
                   }
@@ -1664,8 +1700,8 @@ function pushStartInstance(
             }
           }
         target$jscomp$0.push(">");
-        pushInnerHTML(target$jscomp$0, innerHTML$jscomp$6, children$jscomp$7);
-        return children$jscomp$7;
+        pushInnerHTML(target$jscomp$0, innerHTML$jscomp$7, children$jscomp$8);
+        return children$jscomp$8;
       }
   }
   return pushStartGenericElement(target$jscomp$0, props, type);
@@ -2533,16 +2569,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     );
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1591 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1599 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1605 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1606 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1607 = new Set(),
-    JSCompiler_object_inline_styles_1608 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1609 = new Set(),
-    JSCompiler_object_inline_scripts_1610 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1611 = new Set(),
-    JSCompiler_object_inline_preloads_1612 = {
+  var JSCompiler_object_inline_preconnects_1613 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1614 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1615 = new Set(),
+    JSCompiler_object_inline_styles_1616 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1617 = new Set(),
+    JSCompiler_object_inline_scripts_1618 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1619 = new Set(),
+    JSCompiler_object_inline_preloads_1620 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2579,7 +2615,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1609.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1617.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src));
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
@@ -2620,7 +2656,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1609.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1617.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i)
@@ -2635,7 +2671,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push('" async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1591,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1599,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2655,14 +2691,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1605,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1606,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1607,
-    styles: JSCompiler_object_inline_styles_1608,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1609,
-    scripts: JSCompiler_object_inline_scripts_1610,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1611,
-    preloads: JSCompiler_object_inline_preloads_1612,
+    preconnects: JSCompiler_object_inline_preconnects_1613,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1614,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1615,
+    styles: JSCompiler_object_inline_styles_1616,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1617,
+    scripts: JSCompiler_object_inline_scripts_1618,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1619,
+    preloads: JSCompiler_object_inline_preloads_1620,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -5593,4 +5629,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-0cda04ef";
+exports.version = "18.3.0-www-modern-84f71ac9";

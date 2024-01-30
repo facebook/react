@@ -14959,7 +14959,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       break;
     case "src":
     case "href":
-      if ("" === value) {
+      if ("" === value && ("a" !== tag || "href" !== key)) {
         domElement.removeAttribute(key);
         break;
       }
@@ -17060,7 +17060,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1787 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-476d1194",
+  version: "18.3.0-www-modern-416ffb23",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2160 = {
@@ -17091,7 +17091,7 @@ var internals$jscomp$inline_2160 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-476d1194"
+  reconcilerVersion: "18.3.0-www-modern-416ffb23"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2161 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17519,4 +17519,4 @@ exports.useFormStatus = function () {
     return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-476d1194";
+exports.version = "18.3.0-www-modern-416ffb23";
