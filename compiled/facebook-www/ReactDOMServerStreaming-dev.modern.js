@@ -2218,6 +2218,7 @@ if (__DEV__) {
         headChunks: null,
         externalRuntimeScript: externalRuntimeScript,
         bootstrapChunks: bootstrapChunks,
+        importMapChunks: importMapChunks,
         onHeaders: onHeaders,
         headers: headers,
         resets: {
@@ -2232,9 +2233,7 @@ if (__DEV__) {
           style: {}
         },
         charsetChunks: [],
-        preconnectChunks: [],
-        importMapChunks: importMapChunks,
-        preloadChunks: [],
+        viewportChunks: [],
         hoistableChunks: [],
         // cleared on flush
         preconnects: new Set(),
@@ -2253,7 +2252,7 @@ if (__DEV__) {
         },
         nonce: nonce,
         // like a module global for currently rendering boundary
-        boundaryResources: null,
+        hoistableState: null,
         stylesToHoist: false
       };
 
@@ -3900,7 +3899,8 @@ if (__DEV__) {
       renderState,
       textEmbedded,
       insertionMode,
-      noscriptTagInScope
+      noscriptTagInScope,
+      isFallback
     ) {
       {
         if (
@@ -3916,11 +3916,24 @@ if (__DEV__) {
             target.push(textSeparator);
           }
 
-          if (typeof props.charSet === "string") {
+          if (isFallback) {
+            // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
+            // because they are likely superceded by primary content and we want to avoid needing to clean
+            // them up when the primary content is ready. They are never hydrated on the client anyway because
+            // boundaries in fallback are awaited or client render, in either case there is never hydration
+            return null;
+          } else if (typeof props.charSet === "string") {
+            // "charset" Should really be config and not picked up from tags however since this is
+            // the only way to embed the tag today we flush it on a special queue on the Request so it
+            // can go before everything else. Like viewport this means that the tag will escape it's
+            // parent container.
             return pushSelfClosing(renderState.charsetChunks, props, "meta");
           } else if (props.name === "viewport") {
-            // "viewport" isn't related to preconnect but it has the right priority
-            return pushSelfClosing(renderState.preconnectChunks, props, "meta");
+            // "viewport" is flushed on the Request so it can go earlier that Float resources that
+            // might be affected by it. This means it can escape the boundary it is rendered within.
+            // This is a pragmatic solution to viewport being incredibly sensitive to document order
+            // without requiring all hoistables to be flushed too early.
+            return pushSelfClosing(renderState.viewportChunks, props, "meta");
           } else {
             return pushSelfClosing(renderState.hoistableChunks, props, "meta");
           }
@@ -3933,9 +3946,11 @@ if (__DEV__) {
       props,
       resumableState,
       renderState,
+      hoistableState,
       textEmbedded,
       insertionMode,
-      noscriptTagInScope
+      noscriptTagInScope,
+      isFallback
     ) {
       {
         var rel = props.rel;
@@ -4055,8 +4070,8 @@ if (__DEV__) {
 
               styleQueue.sheets.set(key, resource);
 
-              if (renderState.boundaryResources) {
-                renderState.boundaryResources.stylesheets.add(resource);
+              if (hoistableState) {
+                hoistableState.stylesheets.add(resource);
               }
             } else {
               // We need to track whether this boundary should wait on this resource or not.
@@ -4068,8 +4083,8 @@ if (__DEV__) {
                 var _resource = styleQueue.sheets.get(key);
 
                 if (_resource) {
-                  if (renderState.boundaryResources) {
-                    renderState.boundaryResources.stylesheets.add(_resource);
+                  if (hoistableState) {
+                    hoistableState.stylesheets.add(_resource);
                   }
                 }
               }
@@ -4096,16 +4111,14 @@ if (__DEV__) {
             target.push(textSeparator);
           }
 
-          switch (props.rel) {
-            case "preconnect":
-            case "dns-prefetch":
-              return pushLinkImpl(renderState.preconnectChunks, props);
-
-            case "preload":
-              return pushLinkImpl(renderState.preloadChunks, props);
-
-            default:
-              return pushLinkImpl(renderState.hoistableChunks, props);
+          if (isFallback) {
+            // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
+            // because they are likely superceded by primary content and we want to avoid needing to clean
+            // them up when the primary content is ready. They are never hydrated on the client anyway because
+            // boundaries in fallback are awaited or client render, in either case there is never hydration
+            return null;
+          } else {
+            return pushLinkImpl(renderState.hoistableChunks, props);
           }
         }
       }
@@ -4147,6 +4160,7 @@ if (__DEV__) {
       props,
       resumableState,
       renderState,
+      hoistableState,
       textEmbedded,
       insertionMode,
       noscriptTagInScope
@@ -4250,8 +4264,8 @@ if (__DEV__) {
           // it. However, it's possible when you resume that the style has already been emitted
           // and then it wouldn't be recreated in the RenderState and there's no need to track
           // it again since we should've hoisted it to the shell already.
-          if (renderState.boundaryResources) {
-            renderState.boundaryResources.styles.add(styleQueue);
+          if (hoistableState) {
+            hoistableState.styles.add(styleQueue);
           }
         }
 
@@ -4563,7 +4577,8 @@ if (__DEV__) {
       props,
       renderState,
       insertionMode,
-      noscriptTagInScope
+      noscriptTagInScope,
+      isFallback
     ) {
       {
         if (hasOwnProperty.call(props, "children")) {
@@ -4619,8 +4634,15 @@ if (__DEV__) {
           !noscriptTagInScope &&
           props.itemProp == null
         ) {
-          pushTitleImpl(renderState.hoistableChunks, props);
-          return null;
+          if (isFallback) {
+            // Hoistable Elements for fallbacks are simply omitted. we don't want to emit them early
+            // because they are likely superceded by primary content and we want to avoid needing to clean
+            // them up when the primary content is ready. They are never hydrated on the client anyway because
+            // boundaries in fallback are awaited or client render, in either case there is never hydration
+            return null;
+          } else {
+            pushTitleImpl(renderState.hoistableChunks, props);
+          }
         } else {
           return pushTitleImpl(target, props);
         }
@@ -5082,8 +5104,10 @@ if (__DEV__) {
       props,
       resumableState,
       renderState,
+      hoistableState,
       formatContext,
-      textEmbedded
+      textEmbedded,
+      isFallback
     ) {
       {
         validateProperties$2(type, props);
@@ -5158,7 +5182,8 @@ if (__DEV__) {
             props,
             renderState,
             formatContext.insertionMode,
-            !!(formatContext.tagScope & NOSCRIPT_SCOPE)
+            !!(formatContext.tagScope & NOSCRIPT_SCOPE),
+            isFallback
           );
 
         case "link":
@@ -5167,9 +5192,11 @@ if (__DEV__) {
             props,
             resumableState,
             renderState,
+            hoistableState,
             textEmbedded,
             formatContext.insertionMode,
-            !!(formatContext.tagScope & NOSCRIPT_SCOPE)
+            !!(formatContext.tagScope & NOSCRIPT_SCOPE),
+            isFallback
           );
 
         case "script":
@@ -5189,6 +5216,7 @@ if (__DEV__) {
             props,
             resumableState,
             renderState,
+            hoistableState,
             textEmbedded,
             formatContext.insertionMode,
             !!(formatContext.tagScope & NOSCRIPT_SCOPE)
@@ -5201,7 +5229,8 @@ if (__DEV__) {
             renderState,
             textEmbedded,
             formatContext.insertionMode,
-            !!(formatContext.tagScope & NOSCRIPT_SCOPE)
+            !!(formatContext.tagScope & NOSCRIPT_SCOPE),
+            isFallback
           );
         // Newline eating tags
 
@@ -5707,7 +5736,7 @@ if (__DEV__) {
       resumableState,
       renderState,
       id,
-      boundaryResources
+      hoistableState
     ) {
       var requiresStyleInsertion;
 
@@ -5788,12 +5817,12 @@ if (__DEV__) {
         //  - data writer emits a string literal, which is escaped as html
         //    e.g. [&#34;A&#34;, &#34;B&#34;]
         if (scriptFormat) {
-          writeChunk(destination, completeBoundaryScript3a); // boundaryResources encodes an array literal
+          writeChunk(destination, completeBoundaryScript3a); // hoistableState encodes an array literal
 
-          writeStyleResourceDependenciesInJS(destination, boundaryResources);
+          writeStyleResourceDependenciesInJS(destination, hoistableState);
         } else {
           writeChunk(destination, completeBoundaryData3a);
-          writeStyleResourceDependenciesInAttr(destination, boundaryResources);
+          writeStyleResourceDependenciesInAttr(destination, hoistableState);
         }
       } else {
         if (scriptFormat) {
@@ -6063,21 +6092,21 @@ if (__DEV__) {
       return false;
     }
 
-    function writeResourcesForBoundary(
+    function writeHoistablesForBoundary(
       destination,
-      boundaryResources,
+      hoistableState,
       renderState
     ) {
       // Reset these on each invocation, they are only safe to read in this function
       currentlyRenderingBoundaryHasStylesToHoist = false;
       destinationHasCapacity = true; // Flush style tags for each precedence this boundary depends on
 
-      boundaryResources.styles.forEach(
-        flushStyleTagsLateForBoundary,
-        destination
-      ); // Determine if this boundary has stylesheets that need to be awaited upon completion
+      hoistableState.styles.forEach(flushStyleTagsLateForBoundary, destination); // Determine if this boundary has stylesheets that need to be awaited upon completion
 
-      boundaryResources.stylesheets.forEach(hasStylesToHoist);
+      hoistableState.stylesheets.forEach(hasStylesToHoist); // We don't actually want to flush any hoistables until the boundary is complete so we omit
+      // any further writing here. This is becuase unlike Resources, Hoistable Elements act more like
+      // regular elements, each rendered element has a unique representation in the DOM. We don't want
+      // these elements to appear in the DOM early, before the boundary has actually completed
 
       if (currentlyRenderingBoundaryHasStylesToHoist) {
         renderState.stylesToHoist = true;
@@ -6239,13 +6268,13 @@ if (__DEV__) {
 
       renderState.preconnects.forEach(flushResource, destination);
       renderState.preconnects.clear();
-      var preconnectChunks = renderState.preconnectChunks;
+      var viewportChunks = renderState.viewportChunks;
 
-      for (i = 0; i < preconnectChunks.length; i++) {
-        writeChunk(destination, preconnectChunks[i]);
+      for (i = 0; i < viewportChunks.length; i++) {
+        writeChunk(destination, viewportChunks[i]);
       }
 
-      preconnectChunks.length = 0;
+      viewportChunks.length = 0;
       renderState.fontPreloads.forEach(flushResource, destination);
       renderState.fontPreloads.clear();
       renderState.highImagePreloads.forEach(flushResource, destination);
@@ -6263,15 +6292,7 @@ if (__DEV__) {
       renderState.scripts.forEach(flushResource, destination);
       renderState.scripts.clear();
       renderState.bulkPreloads.forEach(flushResource, destination);
-      renderState.bulkPreloads.clear(); // Write embedding preloadChunks
-
-      var preloadChunks = renderState.preloadChunks;
-
-      for (i = 0; i < preloadChunks.length; i++) {
-        writeChunk(destination, preloadChunks[i]);
-      }
-
-      preloadChunks.length = 0; // Write embedding hoistableChunks
+      renderState.bulkPreloads.clear(); // Write embedding hoistableChunks
 
       var hoistableChunks = renderState.hoistableChunks;
 
@@ -6279,14 +6300,11 @@ if (__DEV__) {
         writeChunk(destination, hoistableChunks[i]);
       }
 
-      hoistableChunks.length = 0; // Flush closing head if necessary
+      hoistableChunks.length = 0;
 
       if (htmlChunks && headChunks === null) {
-        // We have an <html> rendered but no <head> rendered. We however inserted
-        // a <head> up above so we need to emit the </head> now. This is safe because
-        // if the main content contained the </head> it would also have provided a
-        // <head>. This means that all the content inside <html> is either <body> or
-        // invalid HTML
+        // we have an <html> but we inserted an implicit <head> tag. We need
+        // to close it since the main content won't have it
         writeChunk(destination, endChunkForTag("head"));
       }
     } // We don't bother reporting backpressure at the moment because we expect to
@@ -6299,15 +6317,15 @@ if (__DEV__) {
       // We omit charsetChunks because we have already sent the shell and if it wasn't
       // already sent it is too late now.
 
-      renderState.preconnects.forEach(flushResource, destination);
-      renderState.preconnects.clear();
-      var preconnectChunks = renderState.preconnectChunks;
+      var viewportChunks = renderState.viewportChunks;
 
-      for (i = 0; i < preconnectChunks.length; i++) {
-        writeChunk(destination, preconnectChunks[i]);
+      for (i = 0; i < viewportChunks.length; i++) {
+        writeChunk(destination, viewportChunks[i]);
       }
 
-      preconnectChunks.length = 0;
+      viewportChunks.length = 0;
+      renderState.preconnects.forEach(flushResource, destination);
+      renderState.preconnects.clear();
       renderState.fontPreloads.forEach(flushResource, destination);
       renderState.fontPreloads.clear();
       renderState.highImagePreloads.forEach(flushResource, destination);
@@ -6324,15 +6342,7 @@ if (__DEV__) {
       renderState.scripts.forEach(flushResource, destination);
       renderState.scripts.clear();
       renderState.bulkPreloads.forEach(flushResource, destination);
-      renderState.bulkPreloads.clear(); // Write embedding preloadChunks
-
-      var preloadChunks = renderState.preloadChunks;
-
-      for (i = 0; i < preloadChunks.length; i++) {
-        writeChunk(destination, preloadChunks[i]);
-      }
-
-      preloadChunks.length = 0; // Write embedding hoistableChunks
+      renderState.bulkPreloads.clear(); // Write embedding hoistableChunks
 
       var hoistableChunks = renderState.hoistableChunks;
 
@@ -6358,13 +6368,10 @@ if (__DEV__) {
     // E.g.
     //  [["JS_escaped_string1", "JS_escaped_string2"]]
 
-    function writeStyleResourceDependenciesInJS(
-      destination,
-      boundaryResources
-    ) {
+    function writeStyleResourceDependenciesInJS(destination, hoistableState) {
       writeChunk(destination, arrayFirstOpenBracket);
       var nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-      boundaryResources.stylesheets.forEach(function (resource) {
+      hoistableState.stylesheets.forEach(function (resource) {
         if (resource.state === PREAMBLE);
         else if (resource.state === LATE) {
           // We only need to emit the href because this resource flushed in an earlier
@@ -6561,13 +6568,10 @@ if (__DEV__) {
     // E.g.
     //  [[&quot;JSON_escaped_string1&quot;, &quot;JSON_escaped_string2&quot;]]
 
-    function writeStyleResourceDependenciesInAttr(
-      destination,
-      boundaryResources
-    ) {
+    function writeStyleResourceDependenciesInAttr(destination, hoistableState) {
       writeChunk(destination, arrayFirstOpenBracket);
       var nextArrayOpenBrackChunk = arrayFirstOpenBracket;
-      boundaryResources.stylesheets.forEach(function (resource) {
+      hoistableState.stylesheets.forEach(function (resource) {
         if (resource.state === PREAMBLE);
         else if (resource.state === LATE) {
           // We only need to emit the href because this resource flushed in an earlier
@@ -6772,17 +6776,11 @@ if (__DEV__) {
     var PRELOADED = 1;
     var PREAMBLE = 2;
     var LATE = 3;
-    function createBoundaryResources() {
+    function createHoistableState() {
       return {
         styles: new Set(),
         stylesheets: new Set()
       };
-    }
-    function setCurrentlyRenderingBoundaryResourcesTarget(
-      renderState,
-      boundaryResources
-    ) {
-      renderState.boundaryResources = boundaryResources;
     }
 
     function getResourceKey(href) {
@@ -7673,19 +7671,9 @@ if (__DEV__) {
       this.stylesheets.add(stylesheet);
     }
 
-    function hoistResources(renderState, source) {
-      var currentBoundaryResources = renderState.boundaryResources;
-
-      if (currentBoundaryResources) {
-        source.styles.forEach(
-          hoistStyleQueueDependency,
-          currentBoundaryResources
-        );
-        source.stylesheets.forEach(
-          hoistStylesheetDependency,
-          currentBoundaryResources
-        );
-      }
+    function hoistHoistables(parentState, childState) {
+      childState.styles.forEach(hoistStyleQueueDependency, parentState);
+      childState.stylesheets.forEach(hoistStylesheetDependency, parentState);
     } // This function is called at various times depending on whether we are rendering
     // or prerendering. In this implementation we only actually emit headers once and
     // subsequent calls are ignored. We track whether the request has a completed shell
@@ -10456,13 +10444,15 @@ if (__DEV__) {
         -1,
         null,
         rootSegment,
+        null,
         abortSet,
         null,
         rootFormatContext,
         emptyContextObject,
         rootContextSnapshot,
         emptyTreeContext,
-        null
+        null,
+        false
       );
       pingedTasks.push(rootTask);
       return request;
@@ -10493,7 +10483,8 @@ if (__DEV__) {
         byteSize: 0,
         fallbackAbortableTasks: fallbackAbortableTasks,
         errorDigest: null,
-        resources: createBoundaryResources(),
+        contentState: createHoistableState(),
+        fallbackState: createHoistableState(),
         trackedContentKeyPath: null,
         trackedFallbackNode: null
       };
@@ -10506,13 +10497,15 @@ if (__DEV__) {
       childIndex,
       blockedBoundary,
       blockedSegment,
+      hoistableState,
       abortSet,
       keyPath,
       formatContext,
       legacyContext,
       context,
       treeContext,
-      componentStack
+      componentStack,
+      isFallback
     ) {
       request.allPendingTasks++;
 
@@ -10531,6 +10524,7 @@ if (__DEV__) {
         },
         blockedBoundary: blockedBoundary,
         blockedSegment: blockedSegment,
+        hoistableState: hoistableState,
         abortSet: abortSet,
         keyPath: keyPath,
         formatContext: formatContext,
@@ -10538,7 +10532,8 @@ if (__DEV__) {
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
-        thenableState: thenableState
+        thenableState: thenableState,
+        isFallback: isFallback
       };
       abortSet.add(task);
       return task;
@@ -10551,13 +10546,15 @@ if (__DEV__) {
       node,
       childIndex,
       blockedBoundary,
+      hoistableState,
       abortSet,
       keyPath,
       formatContext,
       legacyContext,
       context,
       treeContext,
-      componentStack
+      componentStack,
+      isFallback
     ) {
       request.allPendingTasks++;
 
@@ -10577,6 +10574,7 @@ if (__DEV__) {
         },
         blockedBoundary: blockedBoundary,
         blockedSegment: null,
+        hoistableState: hoistableState,
         abortSet: abortSet,
         keyPath: keyPath,
         formatContext: formatContext,
@@ -10584,7 +10582,8 @@ if (__DEV__) {
         context: context,
         treeContext: treeContext,
         componentStack: componentStack,
-        thenableState: thenableState
+        thenableState: thenableState,
+        isFallback: isFallback
       };
       abortSet.add(task);
       return task;
@@ -10758,6 +10757,7 @@ if (__DEV__) {
         createBuiltInComponentStack(task, "Suspense"));
       var prevKeyPath = task.keyPath;
       var parentBoundary = task.blockedBoundary;
+      var parentHoistableState = task.hoistableState;
       var parentSegment = task.blockedSegment; // Each time we enter a suspense boundary, we split out into a new segment for
       // the fallback so that we can later replace that segment with the content.
       // This also lets us split out the main content even if it doesn't suspend,
@@ -10805,15 +10805,8 @@ if (__DEV__) {
       // we're writing to. If something suspends, it'll spawn new suspended task with that context.
 
       task.blockedBoundary = newBoundary;
+      task.hoistableState = newBoundary.contentState;
       task.blockedSegment = contentRootSegment;
-
-      {
-        setCurrentlyRenderingBoundaryResourcesTarget(
-          request.renderState,
-          newBoundary.resources
-        );
-      }
-
       task.keyPath = keyPath;
 
       try {
@@ -10852,14 +10845,8 @@ if (__DEV__) {
         // We don't need to schedule any task because we know the parent has written yet.
         // We do need to fallthrough to create the fallback though.
       } finally {
-        {
-          setCurrentlyRenderingBoundaryResourcesTarget(
-            request.renderState,
-            parentBoundary ? parentBoundary.resources : null
-          );
-        }
-
         task.blockedBoundary = parentBoundary;
+        task.hoistableState = parentHoistableState;
         task.blockedSegment = parentSegment;
         task.keyPath = prevKeyPath;
         task.componentStack = previousComponentStack;
@@ -10897,6 +10884,7 @@ if (__DEV__) {
         -1,
         parentBoundary,
         boundarySegment,
+        newBoundary.fallbackState,
         fallbackAbortSet,
         fallbackKeyPath,
         task.formatContext,
@@ -10904,7 +10892,8 @@ if (__DEV__) {
         task.context,
         task.treeContext, // This stack should be the Suspense boundary stack because while the fallback is actually a child segment
         // of the parent boundary from a component standpoint the fallback is a child of the Suspense boundary itself
-        suspenseComponentStack
+        suspenseComponentStack,
+        true
       ); // TODO: This should be queued at a separate lower priority queue so that we only work
       // on preparing fallbacks if we don't have any more main content to task on.
 
@@ -10930,6 +10919,7 @@ if (__DEV__) {
       var prevKeyPath = task.keyPath;
       var previousReplaySet = task.replay;
       var parentBoundary = task.blockedBoundary;
+      var parentHoistableState = task.hoistableState;
       var content = props.children;
       var fallback = props.fallback;
       var fallbackAbortSet = new Set();
@@ -10941,18 +10931,12 @@ if (__DEV__) {
       // we're writing to. If something suspends, it'll spawn new suspended task with that context.
 
       task.blockedBoundary = resumedBoundary;
+      task.hoistableState = resumedBoundary.contentState;
       task.replay = {
         nodes: childNodes,
         slots: childSlots,
         pendingTasks: 1
       };
-
-      {
-        setCurrentlyRenderingBoundaryResourcesTarget(
-          request.renderState,
-          resumedBoundary.resources
-        );
-      }
 
       try {
         // We use the safe form because we don't handle suspending here. Only error handling.
@@ -10997,14 +10981,8 @@ if (__DEV__) {
         // We don't need to schedule any task because we know the parent has written yet.
         // We do need to fallthrough to create the fallback though.
       } finally {
-        {
-          setCurrentlyRenderingBoundaryResourcesTarget(
-            request.renderState,
-            parentBoundary ? parentBoundary.resources : null
-          );
-        }
-
         task.blockedBoundary = parentBoundary;
+        task.hoistableState = parentHoistableState;
         task.replay = previousReplaySet;
         task.keyPath = prevKeyPath;
         task.componentStack = previousComponentStack;
@@ -11025,6 +11003,7 @@ if (__DEV__) {
         fallback,
         -1,
         parentBoundary,
+        resumedBoundary.fallbackState,
         fallbackAbortSet,
         fallbackKeyPath,
         task.formatContext,
@@ -11032,7 +11011,8 @@ if (__DEV__) {
         task.context,
         task.treeContext, // This stack should be the Suspense boundary stack because while the fallback is actually a child segment
         // of the parent boundary from a component standpoint the fallback is a child of the Suspense boundary itself
-        suspenseComponentStack
+        suspenseComponentStack,
+        true
       ); // TODO: This should be queued at a separate lower priority queue so that we only work
       // on preparing fallbacks if we don't have any more main content to task on.
 
@@ -11067,8 +11047,10 @@ if (__DEV__) {
           props,
           request.resumableState,
           request.renderState,
+          task.hoistableState,
           task.formatContext,
-          segment.lastPushedText
+          segment.lastPushedText,
+          task.isFallback
         );
 
         segment.lastPushedText = false;
@@ -12264,6 +12246,7 @@ if (__DEV__) {
         task.node,
         task.childIndex,
         task.blockedBoundary,
+        task.hoistableState,
         task.abortSet,
         task.keyPath,
         task.formatContext,
@@ -12271,7 +12254,8 @@ if (__DEV__) {
         task.context,
         task.treeContext, // We pop one task off the stack because the node that suspended will be tried again,
         // which will add it back onto the stack.
-        task.componentStack !== null ? task.componentStack.parent : null
+        task.componentStack !== null ? task.componentStack.parent : null,
+        task.isFallback
       );
       var ping = newTask.ping;
       x.then(ping, ping);
@@ -12299,6 +12283,7 @@ if (__DEV__) {
         task.childIndex,
         task.blockedBoundary,
         newSegment,
+        task.hoistableState,
         task.abortSet,
         task.keyPath,
         task.formatContext,
@@ -12306,7 +12291,8 @@ if (__DEV__) {
         task.context,
         task.treeContext, // We pop one task off the stack because the node that suspended will be tried again,
         // which will add it back onto the stack.
-        task.componentStack !== null ? task.componentStack.parent : null
+        task.componentStack !== null ? task.componentStack.parent : null,
+        task.isFallback
       );
       var ping = newTask.ping;
       x.then(ping, ping);
@@ -12861,14 +12847,6 @@ if (__DEV__) {
     }
 
     function retryTask(request, task) {
-      {
-        var blockedBoundary = task.blockedBoundary;
-        setCurrentlyRenderingBoundaryResourcesTarget(
-          request.renderState,
-          blockedBoundary ? blockedBoundary.resources : null
-        );
-      }
-
       var segment = task.blockedSegment;
 
       if (segment === null) {
@@ -12948,13 +12926,6 @@ if (__DEV__) {
         erroredTask(request, task.blockedBoundary, x, errorInfo);
         return;
       } finally {
-        {
-          setCurrentlyRenderingBoundaryResourcesTarget(
-            request.renderState,
-            null
-          );
-        }
-
         {
           currentTaskInDEV = prevTaskInDEV;
         }
@@ -13040,13 +13011,6 @@ if (__DEV__) {
         return;
       } finally {
         {
-          setCurrentlyRenderingBoundaryResourcesTarget(
-            request.renderState,
-            null
-          );
-        }
-
-        {
           currentTaskInDEV = prevTaskInDEV;
         }
       }
@@ -13124,7 +13088,18 @@ if (__DEV__) {
       }
     }
 
-    function flushSubtree(request, destination, segment) {
+    function flushPreamble(request, destination, rootSegment) {
+      var willFlushAllSegments =
+        request.allPendingTasks === 0 && request.trackedPostpones === null;
+      writePreamble(
+        destination,
+        request.resumableState,
+        request.renderState,
+        willFlushAllSegments
+      );
+    }
+
+    function flushSubtree(request, destination, segment, hoistableState) {
       segment.parentFlushed = true;
 
       switch (segment.status) {
@@ -13156,7 +13131,7 @@ if (__DEV__) {
               writeChunk(destination, chunks[chunkIdx]);
             }
 
-            r = flushSegment(request, destination, nextChild);
+            r = flushSegment(request, destination, nextChild, hoistableState);
           } // Finally just write all the remaining chunks
 
           for (; chunkIdx < chunks.length - 1; chunkIdx++) {
@@ -13178,12 +13153,12 @@ if (__DEV__) {
       }
     }
 
-    function flushSegment(request, destination, segment) {
+    function flushSegment(request, destination, segment, hoistableState) {
       var boundary = segment.boundary;
 
       if (boundary === null) {
         // Not a suspense boundary.
-        return flushSubtree(request, destination, segment);
+        return flushSubtree(request, destination, segment, hoistableState);
       }
 
       boundary.parentFlushed = true; // This segment is a Suspense boundary. We need to decide whether to
@@ -13200,7 +13175,7 @@ if (__DEV__) {
           boundary.errorComponentStack
         ); // Flush the fallback.
 
-        flushSubtree(request, destination, segment);
+        flushSubtree(request, destination, segment, hoistableState);
         return writeEndClientRenderedSuspenseBoundary(destination);
       } else if (boundary.status !== COMPLETED) {
         if (boundary.status === PENDING) {
@@ -13215,9 +13190,16 @@ if (__DEV__) {
         } // This boundary is still loading. Emit a pending suspense boundary wrapper.
 
         var id = boundary.rootSegmentID;
-        writeStartPendingSuspenseBoundary(destination, request.renderState, id); // Flush the fallback.
+        writeStartPendingSuspenseBoundary(destination, request.renderState, id); // We are going to flush the fallback so we need to hoist the fallback
+        // state to the parent boundary
 
-        flushSubtree(request, destination, segment);
+        {
+          if (hoistableState) {
+            hoistHoistables(hoistableState, boundary.fallbackState);
+          }
+        } // Flush the fallback.
+
+        flushSubtree(request, destination, segment, hoistableState);
         return writeEndPendingSuspenseBoundary(destination);
       } else if (boundary.byteSize > request.progressiveChunkSize) {
         // This boundary is large and will be emitted separately so that we can progressively show
@@ -13233,13 +13215,19 @@ if (__DEV__) {
           destination,
           request.renderState,
           boundary.rootSegmentID
-        ); // Flush the fallback.
+        ); // While we are going to flush the fallback we are going to follow it up with
+        // the completed boundary immediately so we make the choice to omit fallback
+        // boundary state from the parent since it will be replaced when the boundary
+        // flushes later in this pass or in a future flush
+        // Flush the fallback.
 
-        flushSubtree(request, destination, segment);
+        flushSubtree(request, destination, segment, hoistableState);
         return writeEndPendingSuspenseBoundary(destination);
       } else {
         {
-          hoistResources(request.renderState, boundary.resources);
+          if (hoistableState) {
+            hoistHoistables(hoistableState, boundary.contentState);
+          }
         } // We can inline this boundary's content as a complete boundary.
 
         writeStartCompletedSuspenseBoundary(destination);
@@ -13252,7 +13240,7 @@ if (__DEV__) {
         }
 
         var contentSegment = completedSegments[0];
-        flushSegment(request, destination, contentSegment);
+        flushSegment(request, destination, contentSegment, hoistableState);
         return writeEndCompletedSuspenseBoundary(destination);
       }
     }
@@ -13269,25 +13257,23 @@ if (__DEV__) {
       );
     }
 
-    function flushSegmentContainer(request, destination, segment) {
+    function flushSegmentContainer(
+      request,
+      destination,
+      segment,
+      hoistableState
+    ) {
       writeStartSegment(
         destination,
         request.renderState,
         segment.parentFormatContext,
         segment.id
       );
-      flushSegment(request, destination, segment);
+      flushSegment(request, destination, segment, hoistableState);
       return writeEndSegment(destination, segment.parentFormatContext);
     }
 
     function flushCompletedBoundary(request, destination, boundary) {
-      {
-        setCurrentlyRenderingBoundaryResourcesTarget(
-          request.renderState,
-          boundary.resources
-        );
-      }
-
       var completedSegments = boundary.completedSegments;
       var i = 0;
 
@@ -13299,9 +13285,9 @@ if (__DEV__) {
       completedSegments.length = 0;
 
       {
-        writeResourcesForBoundary(
+        writeHoistablesForBoundary(
           destination,
-          boundary.resources,
+          boundary.contentState,
           request.renderState
         );
       }
@@ -13311,18 +13297,11 @@ if (__DEV__) {
         request.resumableState,
         request.renderState,
         boundary.rootSegmentID,
-        boundary.resources
+        boundary.contentState
       );
     }
 
     function flushPartialBoundary(request, destination, boundary) {
-      {
-        setCurrentlyRenderingBoundaryResourcesTarget(
-          request.renderState,
-          boundary.resources
-        );
-      }
-
       var completedSegments = boundary.completedSegments;
       var i = 0;
 
@@ -13348,13 +13327,9 @@ if (__DEV__) {
       completedSegments.splice(0, i);
 
       {
-        // The way this is structured we only write resources for partial boundaries
-        // if there is no backpressure. Later before we complete the boundary we
-        // will write resources regardless of backpressure before we emit the
-        // completion instruction
-        return writeResourcesForBoundary(
+        return writeHoistablesForBoundary(
           destination,
-          boundary.resources,
+          boundary.contentState,
           request.renderState
         );
       }
@@ -13371,6 +13346,7 @@ if (__DEV__) {
         return true;
       }
 
+      var hoistableState = boundary.contentState;
       var segmentID = segment.id;
 
       if (segmentID === -1) {
@@ -13384,13 +13360,23 @@ if (__DEV__) {
           );
         }
 
-        return flushSegmentContainer(request, destination, segment);
+        return flushSegmentContainer(
+          request,
+          destination,
+          segment,
+          hoistableState
+        );
       } else if (segmentID === boundary.rootSegmentID) {
         // When we emit postponed boundaries, we might have assigned the ID already
         // but it's still the root segment so we can't inject it into the parent yet.
-        return flushSegmentContainer(request, destination, segment);
+        return flushSegmentContainer(
+          request,
+          destination,
+          segment,
+          hoistableState
+        );
       } else {
-        flushSegmentContainer(request, destination, segment);
+        flushSegmentContainer(request, destination, segment, hoistableState);
         return writeCompletedSegmentInstruction(
           destination,
           request.resumableState,
@@ -13415,16 +13401,10 @@ if (__DEV__) {
             return;
           } else if (request.pendingRootTasks === 0) {
             if (enableFloat) {
-              writePreamble(
-                destination,
-                request.resumableState,
-                request.renderState,
-                request.allPendingTasks === 0 &&
-                  request.trackedPostpones === null
-              );
+              flushPreamble(request, destination, completedRootSegment);
             }
 
-            flushSegment(request, destination, completedRootSegment);
+            flushSegment(request, destination, completedRootSegment, null);
             request.completedRootSegment = null;
             writeCompletedRoot(destination, request.renderState);
           } else {
