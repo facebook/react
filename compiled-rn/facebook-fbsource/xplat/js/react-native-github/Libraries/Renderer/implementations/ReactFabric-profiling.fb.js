@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<a56fd6b7c2bca3d0c084daef8439ed4d>>
+ * @generated SignedSource<<0c4f48dfbbbaa951a60fefd8b5546970>>
  */
 
 "use strict";
@@ -10268,10 +10268,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1131 = {
+  devToolsConfig$jscomp$inline_1133 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-1bb8a9cd",
+    version: "18.3.0-canary-a841666d",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10301,10 +10301,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1131.bundleType,
-  version: devToolsConfig$jscomp$inline_1131.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1131.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1131.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1133.bundleType,
+  version: devToolsConfig$jscomp$inline_1133.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1133.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1133.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10320,14 +10320,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1131.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1133.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-1bb8a9cd"
+  reconcilerVersion: "18.3.0-canary-a841666d"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f7cecdfb84bbf5c0d89f24ea605b2887>>
+ * @generated SignedSource<<b9de33ad77303e612467451dba484b4f>>
  */
 
 "use strict";
@@ -8536,7 +8536,14 @@ to return true:wantsResponderID|                            |
       }
     }
 
-    var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue; // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
+    var ReactCurrentActQueue$2 = ReactSharedInternals.ReactCurrentActQueue;
+
+    function getThenablesFromState(state) {
+      {
+        var devState = state;
+        return devState.thenables;
+      }
+    } // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
     // detect this is caught by userspace, we'll log a warning in development.
 
     var SuspenseException = new Error(
@@ -8569,7 +8576,12 @@ to return true:wantsResponderID|                            |
     function createThenableState() {
       // The ThenableState is created the first time a component suspends. If it
       // suspends again, we'll reuse the same state.
-      return [];
+      {
+        return {
+          didWarnAboutUncachedPromise: false,
+          thenables: []
+        };
+      }
     }
     function isThenableResolved(thenable) {
       var status = thenable.status;
@@ -8583,16 +8595,45 @@ to return true:wantsResponderID|                            |
         ReactCurrentActQueue$2.didUsePromise = true;
       }
 
-      var previous = thenableState[index];
+      var trackedThenables = getThenablesFromState(thenableState);
+      var previous = trackedThenables[index];
 
       if (previous === undefined) {
-        thenableState.push(thenable);
+        trackedThenables.push(thenable);
       } else {
         if (previous !== thenable) {
           // Reuse the previous thenable, and drop the new one. We can assume
           // they represent the same value, because components are idempotent.
-          // Avoid an unhandled rejection errors for the Promises that we'll
+          {
+            var thenableStateDev = thenableState;
+
+            if (!thenableStateDev.didWarnAboutUncachedPromise) {
+              // We should only warn the first time an uncached thenable is
+              // discovered per component, because if there are multiple, the
+              // subsequent ones are likely derived from the first.
+              //
+              // We track this on the thenableState instead of deduping using the
+              // component name like we usually do, because in the case of a
+              // promise-as-React-node, the owner component is likely different from
+              // the parent that's currently being reconciled. We'd have to track
+              // the owner using state, which we're trying to move away from. Though
+              // since this is dev-only, maybe that'd be OK.
+              //
+              // However, another benefit of doing it this way is we might
+              // eventually have a thenableState per memo/Forget boundary instead
+              // of per component, so this would allow us to have more
+              // granular warnings.
+              thenableStateDev.didWarnAboutUncachedPromise = true; // TODO: This warning should link to a corresponding docs page.
+
+              error(
+                "A component was suspended by an uncached promise. Creating " +
+                  "promises inside a Client Component or hook is not yet " +
+                  "supported, except via a Suspense-compatible library or framework."
+              );
+            }
+          } // Avoid an unhandled rejection errors for the Promises that we'll
           // intentionally ignore.
+
           thenable.then(noop, noop);
           thenable = previous;
         }
@@ -10669,7 +10710,7 @@ to return true:wantsResponderID|                            |
       }
     }
 
-    function warnIfAsyncClientComponent(Component, componentDoesIncludeHooks) {
+    function warnIfAsyncClientComponent(Component) {
       {
         // This dev-only check only works for detecting native async functions,
         // not transpiled ones. There's also a prod check that we use to prevent
@@ -10681,43 +10722,20 @@ to return true:wantsResponderID|                            |
           "[object AsyncFunction]";
 
         if (isAsyncFunction) {
-          // Encountered an async Client Component. This is not yet supported,
-          // except in certain constrained cases, like during a route navigation.
+          // Encountered an async Client Component. This is not yet supported.
           var componentName = getComponentNameFromFiber(
             currentlyRenderingFiber$1
           );
 
           if (!didWarnAboutAsyncClientComponent.has(componentName)) {
-            didWarnAboutAsyncClientComponent.add(componentName); // Check if this is a sync update. We use the "root" render lanes here
-            // because the "subtree" render lanes may include additional entangled
-            // lanes related to revealing previously hidden content.
+            didWarnAboutAsyncClientComponent.add(componentName);
 
-            var root = getWorkInProgressRoot();
-            var rootRenderLanes = getWorkInProgressRootRenderLanes();
-
-            if (root !== null && includesBlockingLane(root, rootRenderLanes)) {
-              error(
-                "async/await is not yet supported in Client Components, only " +
-                  "Server Components. This error is often caused by accidentally " +
-                  "adding `'use client'` to a module that was originally written " +
-                  "for the server."
-              );
-            } else {
-              // This is a concurrent (Transition, Retry, etc) render. We don't
-              // warn in these cases.
-              //
-              // However, Async Components are forbidden to include hooks, even
-              // during a transition, so let's check for that here.
-              //
-              // TODO: Add a corresponding warning to Server Components runtime.
-              if (componentDoesIncludeHooks) {
-                error(
-                  "Hooks are not supported inside an async component. This " +
-                    "error is often caused by accidentally adding `'use client'` " +
-                    "to a module that was originally written for the server."
-                );
-              }
-            }
+            error(
+              "async/await is not yet supported in Client Components, only " +
+                "Server Components. This error is often caused by accidentally " +
+                "adding `'use client'` to a module that was originally written " +
+                "for the server."
+            );
           }
         }
       }
@@ -10800,6 +10818,7 @@ to return true:wantsResponderID|                            |
 
         ignorePreviousDependencies =
           current !== null && current.type !== workInProgress.type;
+        warnIfAsyncClientComponent(Component);
       }
 
       workInProgress.memoizedState = null;
@@ -10892,16 +10911,13 @@ to return true:wantsResponderID|                            |
         }
       }
 
-      finishRenderingHooks(current, workInProgress, Component);
+      finishRenderingHooks(current, workInProgress);
       return children;
     }
 
     function finishRenderingHooks(current, workInProgress, Component) {
       {
         workInProgress._debugHookTypes = hookTypesDev;
-        var componentDoesIncludeHooks =
-          workInProgressHook !== null || thenableIndexCounter !== 0;
-        warnIfAsyncClientComponent(Component, componentDoesIncludeHooks);
       } // We can assume the previous dispatcher is always this one, since we set it
       // at the beginning of the render phase and there's no re-entrance.
 
@@ -11003,7 +11019,7 @@ to return true:wantsResponderID|                            |
         props,
         secondArg
       );
-      finishRenderingHooks(current, workInProgress, Component);
+      finishRenderingHooks(current, workInProgress);
       return children;
     }
 
@@ -27840,7 +27856,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-937e3c4b";
+    var ReactVersion = "18.3.0-canary-a4243e8c";
 
     function createPortal$1(
       children,
