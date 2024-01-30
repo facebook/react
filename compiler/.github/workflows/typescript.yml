@@ -12,7 +12,7 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: set-matrix
         run: echo "matrix=$(find packages -mindepth 1 -maxdepth 1 -type d | sed 's!packages/!!g' | tr '\n' ',' | sed s/.$// | jq -Rsc '. / "," - [""]')" >> $GITHUB_OUTPUT
 
@@ -21,14 +21,14 @@ jobs:
     name: Lint babel-plugin-react-forget
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: "yarn"
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: "**/node_modules"
           key: ${{ runner.arch }}-${{ runner.os }}-modules-${{ hashFiles('**/yarn.lock') }}
@@ -41,14 +41,14 @@ jobs:
     name: Jest babel-plugin-react-forget
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: "yarn"
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: node_modules
         with:
           path: "**/node_modules"
@@ -65,14 +65,14 @@ jobs:
       matrix:
         workspace_name: ${{ fromJSON(needs.discover_yarn_workspaces.outputs.matrix) }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 18.x
           cache: "yarn"
           cache-dependency-path: yarn.lock
       - name: Restore cached node_modules
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: node_modules
         with:
           path: "**/node_modules"

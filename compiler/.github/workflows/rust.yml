@@ -34,7 +34,7 @@ jobs:
           #   os: windows-latest
     runs-on: ${{ matrix.target.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
       - name: cargo test
         run: cargo test --manifest-path=Cargo.toml --locked ${{ matrix.target.features && '--features' }} ${{ matrix.target.features }}
@@ -43,7 +43,7 @@ jobs:
     name: Rust Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - uses: actions-rs/toolchain@v1
         with:
           # NOTE: use `rustup run <toolchain> <command>` in commands below
@@ -62,7 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     # TODO: build on more platforms, deploy, etc
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
       - name: cargo build
         run: cargo build --release

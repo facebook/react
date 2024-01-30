@@ -19,7 +19,7 @@ jobs:
     name: Parser Benchmark
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: Swatinem/rust-cache@v2
       - run: yarn install --frozen-lockfile
         working-directory: crates/forget_napi
@@ -34,7 +34,7 @@ jobs:
         working-directory: bench/parser-benchmark
         # Download previous benchmark result from cache (if exists)
       - name: Download previous benchmark data
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: ./cache
           key: ${{ runner.os }}-benchmark
