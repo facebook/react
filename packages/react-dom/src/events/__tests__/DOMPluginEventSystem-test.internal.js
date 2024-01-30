@@ -420,7 +420,8 @@ describe('DOMPluginEventSystem', () => {
           expect(log[9]).toEqual(['bubble', buttonElement]);
         });
 
-        it('handle propagation of click events between disjointed legacy comment roots', () => {
+        // @gate !disableCommentsAsDOMContainers
+        it('handle propagation of click events between disjointed comment roots', async () => {
           const buttonRef = React.createRef();
           const divRef = React.createRef();
           const log = [];
@@ -454,19 +455,29 @@ describe('DOMPluginEventSystem', () => {
           const disjointedNode = document.createComment(
             ' react-mount-point-unstable ',
           );
-          ReactDOM.render(<Parent />, container);
+          const root = ReactDOMClient.createRoot(container);
+          await act(() => {
+            root.render(<Parent />);
+          });
           buttonRef.current.appendChild(disjointedNode);
-          ReactDOM.render(<Child />, disjointedNode);
+          const disjointedNodeRoot = ReactDOMClient.createRoot(disjointedNode);
+          await act(() => {
+            disjointedNodeRoot.render(<Child />);
+          });
 
           const buttonElement = buttonRef.current;
-          dispatchClickEvent(buttonElement);
+          await act(() => {
+            dispatchClickEvent(buttonElement);
+          });
           expect(onClick).toHaveBeenCalledTimes(1);
           expect(onClickCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
           const divElement = divRef.current;
-          dispatchClickEvent(divElement);
+          await act(() => {
+            dispatchClickEvent(divElement);
+          });
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
           expect(log[2]).toEqual(['capture', buttonElement]);
@@ -475,7 +486,8 @@ describe('DOMPluginEventSystem', () => {
           expect(log[5]).toEqual(['bubble', buttonElement]);
         });
 
-        it('handle propagation of click events between disjointed legacy comment roots #2', () => {
+        // @gate !disableCommentsAsDOMContainers
+        it('handle propagation of click events between disjointed comment roots #2', async () => {
           const buttonRef = React.createRef();
           const divRef = React.createRef();
           const spanRef = React.createRef();
@@ -511,19 +523,29 @@ describe('DOMPluginEventSystem', () => {
           const disjointedNode = document.createComment(
             ' react-mount-point-unstable ',
           );
-          ReactDOM.render(<Parent />, container);
+          const root = ReactDOMClient.createRoot(container);
+          await act(() => {
+            root.render(<Parent />);
+          });
           spanRef.current.appendChild(disjointedNode);
-          ReactDOM.render(<Child />, disjointedNode);
+          const disjointedNodeRoot = ReactDOMClient.createRoot(disjointedNode);
+          await act(() => {
+            disjointedNodeRoot.render(<Child />);
+          });
 
           const buttonElement = buttonRef.current;
-          dispatchClickEvent(buttonElement);
+          await act(() => {
+            dispatchClickEvent(buttonElement);
+          });
           expect(onClick).toHaveBeenCalledTimes(1);
           expect(onClickCapture).toHaveBeenCalledTimes(1);
           expect(log[0]).toEqual(['capture', buttonElement]);
           expect(log[1]).toEqual(['bubble', buttonElement]);
 
           const divElement = divRef.current;
-          dispatchClickEvent(divElement);
+          await act(() => {
+            dispatchClickEvent(divElement);
+          });
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
           expect(log[2]).toEqual(['capture', buttonElement]);
@@ -2854,8 +2876,8 @@ describe('DOMPluginEventSystem', () => {
             document.body.removeChild(container2);
           });
 
-          // @gate www
-          it('handle propagation of click events between disjointed legacy comment roots', async () => {
+          // @gate !disableCommentsAsDOMContainers
+          it('handle propagation of click events between disjointed comment roots', async () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();
             const log = [];
@@ -2902,12 +2924,15 @@ describe('DOMPluginEventSystem', () => {
             const disjointedNode = document.createComment(
               ' react-mount-point-unstable ',
             );
+            const root = ReactDOMClient.createRoot(container);
             await act(() => {
-              ReactDOM.render(<Parent />, container);
+              root.render(<Parent />);
             });
             buttonRef.current.appendChild(disjointedNode);
+            const disjointedNodeRoot =
+              ReactDOMClient.createRoot(disjointedNode);
             await act(() => {
-              ReactDOM.render(<Child />, disjointedNode);
+              disjointedNodeRoot.render(<Child />);
             });
 
             const buttonElement = buttonRef.current;
