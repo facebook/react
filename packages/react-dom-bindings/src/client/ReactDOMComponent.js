@@ -434,7 +434,11 @@ function setProp(
     case 'src':
     case 'href': {
       if (enableFilterEmptyStringAttributesDOM) {
-        if (value === '') {
+        if (
+          value === '' &&
+          // <a href=""> is fine for "reload" links.
+          !(tag === 'a' && key === 'href')
+        ) {
           if (__DEV__) {
             if (key === 'src') {
               console.error(
@@ -2350,7 +2354,11 @@ function diffHydratedGenericElement(
       case 'src':
       case 'href':
         if (enableFilterEmptyStringAttributesDOM) {
-          if (value === '') {
+          if (
+            value === '' &&
+            // <a href=""> is fine for "reload" links.
+            !(tag === 'a' && propKey === 'href')
+          ) {
             if (__DEV__) {
               if (propKey === 'src') {
                 console.error(
