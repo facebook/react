@@ -1,8 +1,14 @@
 {
   "private": true,
   "workspaces": {
-    "packages": ["packages/*", "apps/*"],
-    "nohoist": ["**/next", "**/next/**"]
+    "packages": [
+      "packages/*",
+      "apps/*"
+    ],
+    "nohoist": [
+      "**/next",
+      "**/next/**"
+    ]
   },
   "repository": {
     "type": "git",
