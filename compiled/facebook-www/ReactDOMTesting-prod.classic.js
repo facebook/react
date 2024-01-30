@@ -16130,7 +16130,7 @@ function insertSuspendedStylesheets(state, resources) {
 function insertStylesheetIntoRoot(root, resource) {
   if (!(resource.state.loading & 4)) {
     var precedences = precedencesByRoot.get(root);
-    if (precedences) var last = precedences.get("last");
+    if (precedences) var last = precedences.get(null);
     else {
       precedences = new Map();
       precedencesByRoot.set(root, precedences);
@@ -16147,15 +16147,15 @@ function insertStylesheetIntoRoot(root, resource) {
           "link" === node.nodeName ||
           "not all" !== node.getAttribute("media")
         )
-          precedences.set("p" + node.dataset.precedence, node), (last = node);
+          precedences.set(node.dataset.precedence, node), (last = node);
       }
-      last && precedences.set("last", last);
+      last && precedences.set(null, last);
     }
     nodes = resource.instance;
     node = nodes.getAttribute("data-precedence");
-    i = precedences.get("p" + node) || last;
-    i === last && precedences.set("last", nodes);
-    precedences.set("p" + node, nodes);
+    i = precedences.get(node) || last;
+    i === last && precedences.set(null, nodes);
+    precedences.set(node, nodes);
     this.count++;
     last = onUnsuspend.bind(this);
     nodes.addEventListener("load", last);
@@ -16966,7 +16966,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1806 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-482168c3",
+  version: "18.3.0-www-classic-2277e96d",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2159 = {
@@ -16996,7 +16996,7 @@ var internals$jscomp$inline_2159 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-482168c3"
+  reconcilerVersion: "18.3.0-www-classic-2277e96d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2160 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17484,4 +17484,4 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-482168c3";
+exports.version = "18.3.0-www-classic-2277e96d";

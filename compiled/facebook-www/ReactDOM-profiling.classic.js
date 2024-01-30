@@ -16570,7 +16570,7 @@ function insertSuspendedStylesheets(state, resources) {
 function insertStylesheetIntoRoot(root, resource) {
   if (!(resource.state.loading & 4)) {
     var precedences = precedencesByRoot.get(root);
-    if (precedences) var last = precedences.get("last");
+    if (precedences) var last = precedences.get(null);
     else {
       precedences = new Map();
       precedencesByRoot.set(root, precedences);
@@ -16587,15 +16587,15 @@ function insertStylesheetIntoRoot(root, resource) {
           "link" === node.nodeName ||
           "not all" !== node.getAttribute("media")
         )
-          precedences.set("p" + node.dataset.precedence, node), (last = node);
+          precedences.set(node.dataset.precedence, node), (last = node);
       }
-      last && precedences.set("last", last);
+      last && precedences.set(null, last);
     }
     nodes = resource.instance;
     node = nodes.getAttribute("data-precedence");
-    i = precedences.get("p" + node) || last;
-    i === last && precedences.set("last", nodes);
-    precedences.set("p" + node, nodes);
+    i = precedences.get(node) || last;
+    i === last && precedences.set(null, nodes);
+    precedences.set(node, nodes);
     this.count++;
     last = onUnsuspend.bind(this);
     nodes.addEventListener("load", last);
@@ -17406,7 +17406,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1886 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-54ebd8ef",
+  version: "18.3.0-www-classic-071ab715",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17450,7 +17450,7 @@ var devToolsConfig$jscomp$inline_1886 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-54ebd8ef"
+  reconcilerVersion: "18.3.0-www-classic-071ab715"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -17774,7 +17774,7 @@ exports.useFormState = function () {
 exports.useFormStatus = function () {
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-54ebd8ef";
+exports.version = "18.3.0-www-classic-071ab715";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
