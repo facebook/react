@@ -230,11 +230,17 @@ describe('ReactUse', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
-      startTransition(() => {
-        root.render(<App />);
+    await expect(async () => {
+      await act(() => {
+        startTransition(() => {
+          root.render(<App />);
+        });
       });
-    });
+    }).toErrorDev([
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+    ]);
     assertLog(['ABC']);
     expect(root).toMatchRenderedOutput('ABC');
   });
@@ -394,11 +400,20 @@ describe('ReactUse', () => {
     }
 
     const root = ReactNoop.createRoot();
-    await act(() => {
-      startTransition(() => {
-        root.render(<App />);
+    await expect(async () => {
+      await act(() => {
+        startTransition(() => {
+          root.render(<App />);
+        });
       });
-    });
+    }).toErrorDev([
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+    ]);
     assertLog([
       // First attempt. The uncached promise suspends.
       'Suspend! [Async]',
@@ -1759,6 +1774,9 @@ describe('ReactUse', () => {
           'Components. This error is often caused by accidentally adding ' +
           "`'use client'` to a module that was originally written for " +
           'the server.',
+        'A component was suspended by an uncached promise. Creating ' +
+          'promises inside a Client Component or hook is not yet ' +
+          'supported, except via a Suspense-compatible library or framework.',
       ]);
     },
   );
@@ -1788,6 +1806,12 @@ describe('ReactUse', () => {
         'Components. This error is often caused by accidentally adding ' +
         "`'use client'` to a module that was originally written for " +
         'the server.',
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
+      'A component was suspended by an uncached promise. Creating ' +
+        'promises inside a Client Component or hook is not yet ' +
+        'supported, except via a Suspense-compatible library or framework.',
     ]);
   });
 });
