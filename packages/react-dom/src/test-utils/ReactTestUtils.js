@@ -39,7 +39,9 @@ const getFiberCurrentPropsFromNode = EventInternals[2];
 const enqueueStateRestore = EventInternals[3];
 const restoreStateIfNeeded = EventInternals[4];
 
-const act = React.unstable_act;
+// TODO: Add a warning if this API is accessed with advice to switch to
+// importing directly from the React package instead.
+const act = React.act;
 
 function Event(suffix) {}
 
