@@ -3561,9 +3561,6 @@ export function pushStartInstance(
     case 'span':
     case 'svg':
     case 'path':
-    case 'g':
-    case 'p':
-    case 'li':
       // Fast track very common tags
       break;
     case 'a':
@@ -3572,6 +3569,11 @@ export function pushStartInstance(
       } else {
         break;
       }
+    case 'g':
+    case 'p':
+    case 'li':
+      // Fast track very common tags
+      break;
     // Special tags
     case 'select':
       return pushStartSelect(target, props);
