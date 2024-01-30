@@ -437,7 +437,7 @@ function setProp(
         if (
           value === '' &&
           // <a href=""> is fine for "reload" links.
-          tag !== 'a'
+          !(tag === 'a' && key === 'href')
         ) {
           if (__DEV__) {
             if (key === 'src') {
@@ -2357,7 +2357,7 @@ function diffHydratedGenericElement(
           if (
             value === '' &&
             // <a href=""> is fine for "reload" links.
-            (tag !== 'a' || propKey !== 'href')
+            !(tag === 'a' && propKey === 'href')
           ) {
             if (__DEV__) {
               if (propKey === 'src') {
