@@ -144,7 +144,7 @@ export const disableLegacyContext = false;
 export const disableJavaScriptURLs = false;
 
 // Not ready to break experimental yet.
-// Modern <StrictMode /> behaviour aligns more with what components
+// Modern <StrictMode /> behaviour aligns more with what
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
 export const useModernStrictMode = false;
