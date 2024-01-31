@@ -10,7 +10,7 @@ function Foo({ value }: { value: number }) {
   return factorial(value);
 }
 
-export const FIXTURE_ENTRYPONT = {
+export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
   params: [{ value: 3 }],
 };

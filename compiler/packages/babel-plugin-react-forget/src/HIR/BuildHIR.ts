@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import { Binding, NodePath, Scope } from "@babel/traverse";
+import { NodePath, Scope } from "@babel/traverse";
 import * as t from "@babel/types";
 import { Expression } from "@babel/types";
 import invariant from "invariant";
@@ -326,21 +326,11 @@ function lowerStatement(
     case "BlockStatement": {
       const stmt = stmtPath as NodePath<t.BlockStatement>;
       const statements = stmt.get("body");
-      const hoistableBindings: Set<Binding> = new Set();
-
-      const recordDeclaration = (lval: NodePath<t.LVal>): void => {
-        // TODO: support other kinds of declarations that might need to be hoisted
-        switch (lval.type) {
-          case "Identifier": {
-            const lv = lval as NodePath<t.Identifier>;
-            const binding = stmt.scope.getBinding(lv.node.name);
-            if (binding != null) {
-              hoistableBindings.delete(binding);
-            }
-            break;
-          }
-        }
-      };
+      /**
+       * Hoistable identifier bindings defined for this precise block
+       * scope (excluding bindings from parent or child block scopes).
+       */
+      const hoistableIdentifiers: Set<t.Identifier> = new Set();
 
       for (const [, binding] of Object.entries(stmt.scope.bindings)) {
         // TODO: support other kinds of bindings
@@ -349,50 +339,60 @@ function lowerStatement(
             binding.path.isVariableDeclarator() &&
             binding.path.get("id").isIdentifier()
           ) {
-            hoistableBindings.add(binding);
+            hoistableIdentifiers.add(binding.identifier);
           }
         }
       }
 
       for (const s of statements) {
-        const hoistableIdentifiers = new Set<NodePath<t.Identifier>>();
-        /*
-         * After visiting the declaration, hoisting is no longer required
-         * TODO: support other kinds of declarations
-         */
-        if (s.isVariableDeclaration()) {
-          for (const decl of s.get("declarations")) {
-            recordDeclaration(decl.get("id"));
-          }
-        }
-
+        const willHoist = new Set<NodePath<t.Identifier>>();
         /*
          * If we see a hoistable identifier before its declaration, it should be hoisted just
-         * before the statement that references it
+         * before the statement that references it.
+         * Identifier can only be hoisted if the reference occurs within an inner function
          */
+        let fnDepth = s.isFunctionDeclaration() ? 1 : 0;
+        const withFunctionContext = {
+          enter: (): void => {
+            fnDepth++;
+          },
+          exit: (): void => {
+            fnDepth--;
+          },
+        };
         s.traverse({
+          FunctionExpression: withFunctionContext,
+          FunctionDeclaration: withFunctionContext,
+          ArrowFunctionExpression: withFunctionContext,
+          ObjectMethod: withFunctionContext,
           Identifier(id: NodePath<t.Identifier>) {
-            if (!id.isReferencedIdentifier()) {
+            if (!id.isReferencedIdentifier() || fnDepth === 0) {
               return;
             }
-            const binding = id.scope.getBinding(id.node.name);
-            if (binding != null && hoistableBindings.has(binding)) {
-              if (
-                id.parentPath.isVariableDeclarator() ||
-                // don't hoist MemberExpr `property`s, only their `object`
-                (id.parentPath.isMemberExpression() &&
-                  id.parentPath.get("property") === id &&
-                  id.parentPath.node.computed === false)
-              ) {
-                return;
-              }
-              hoistableIdentifiers.add(id);
+            const bindingIdentifier = id.scope.getBindingIdentifier(
+              id.node.name
+            );
+            if (
+              bindingIdentifier != null &&
+              hoistableIdentifiers.has(bindingIdentifier)
+            ) {
+              willHoist.add(id);
+            }
+          },
+        });
+        /*
+         * After visiting the declaration, hoisting is no longer required
+         */
+        s.traverse({
+          Identifier(path: NodePath<t.Identifier>) {
+            if (hoistableIdentifiers.has(path.node)) {
+              hoistableIdentifiers.delete(path.node);
             }
           },
         });
 
         // Hoist declarations that need it to the earliest point where they are needed
-        for (const id of hoistableIdentifiers) {
+        for (const id of willHoist) {
           const binding = stmt.scope.getBinding(id.node.name);
           CompilerError.invariant(binding != null, {
             reason: "Expected to find binding for hoisted identifier",
@@ -409,6 +409,15 @@ function lowerStatement(
               severity: ErrorSeverity.Todo,
               reason: "Unsupported declaration type for hoisting",
               description: `${id.parentPath.type}`,
+              suggestions: null,
+              loc: id.parentPath.node.loc ?? GeneratedSource,
+            });
+            continue;
+          } else if (!binding.path.get("id").isIdentifier()) {
+            builder.errors.push({
+              severity: ErrorSeverity.Todo,
+              reason: "Unsupported variable declaration type for hoisting",
+              description: `${binding.path.get("id").type}`,
               suggestions: null,
               loc: id.parentPath.node.loc ?? GeneratedSource,
             });
