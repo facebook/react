@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', function () {
       const ln = links[i];
       const location = ln.href;
       ln.onclick = function () {
-        chrome.tabs.create({ active: true, url: location });
+        chrome.tabs.create({active: true, url: location});
         return false;
       };
     })();
@@ -34,8 +34,8 @@ document.addEventListener('DOMContentLoaded', function () {
   // Remove the notifiaction badge when the popup is opened
   chrome.storage.local.get(['notifications'], function (data) {
     if (data.notifications === undefined) {
-      chrome.action.setBadgeText({ text: "" });
-      chrome.storage.local.set({ 'notifications': false })
+      chrome.action.setBadgeText({text: ''});
+      chrome.storage.local.set({notifications: false});
     }
   });
 });

@@ -196,7 +196,7 @@ chrome.runtime.onMessage.addListener((message, sender) => {
   }
 });
 
-chrome.tabs.onActivated.addListener(({ tabId: activeTabId }) => {
+chrome.tabs.onActivated.addListener(({tabId: activeTabId}) => {
   for (const registeredTabId in ports) {
     if (
       ports[registeredTabId].proxy != null &&
@@ -208,7 +208,7 @@ chrome.tabs.onActivated.addListener(({ tabId: activeTabId }) => {
           ? 'resumeElementPolling'
           : 'pauseElementPolling';
 
-      ports[registeredTabId].extension.postMessage({ event });
+      ports[registeredTabId].extension.postMessage({event});
     }
   }
 });
@@ -226,8 +226,8 @@ chrome.runtime.onInstalled.addListener(() => {
   // only show the notification badge if the user hasn't clicked on the extension icon
   chrome.storage.local.get(['notifications'], function (data) {
     if (data.notifications === undefined || data.notifications === true) {
-      chrome.action.setBadgeBackgroundColor({ color: '#FF6F00' });
-      chrome.action.setBadgeText({ text: "1" });
+      chrome.action.setBadgeBackgroundColor({color: '#FF6F00'});
+      chrome.action.setBadgeText({text: '1'});
     }
   });
 });
