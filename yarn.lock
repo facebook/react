@@ -6856,13 +6856,6 @@ eslint-plugin-eslint-plugin@^3.5.3:
   dependencies:
     eslint-utils "^2.1.0"
 
-eslint-plugin-flowtype@^2.25.0:
-  version "2.50.3"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-flowtype/-/eslint-plugin-flowtype-2.50.3.tgz#61379d6dce1d010370acd6681740fd913d68175f"
-  integrity sha512-X+AoKVOr7Re0ko/yEXyM5SSZ0tazc6ffdIOocp2fFUlWoDt7DV0Bz99mngOkAFLOAWjqRA5jPwqUCbrx13XoxQ==
-  dependencies:
-    lodash "^4.17.10"
-
 eslint-plugin-ft-flow@^2.0.3:
   version "2.0.3"
   resolved "https://registry.yarnpkg.com/eslint-plugin-ft-flow/-/eslint-plugin-ft-flow-2.0.3.tgz#3b3c113c41902bcbacf0e22b536debcfc3c819e8"
@@ -10745,7 +10738,7 @@ lodash.union@^4.6.0:
   resolved "https://registry.yarnpkg.com/lodash.union/-/lodash.union-4.6.0.tgz#48bb5088409f16f1821666641c44dd1aaae3cd88"
   integrity sha1-SLtQiECfFvGCFmZkHETdGqrjzYg=
 
-lodash@^4.14.0, lodash@^4.15.0, lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.21, lodash@^4.8.0, lodash@~4.17.2:
+lodash@^4.14.0, lodash@^4.15.0, lodash@^4.17.11, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.21, lodash@^4.8.0, lodash@~4.17.2:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
