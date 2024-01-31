@@ -47,9 +47,10 @@ const argv = yargs
       alias: 's',
       describe: 'sort diff by one or more flags.',
       requiresArg: false,
-      type: 'array',
-      default: 'next',
+      type: 'string',
+      default: 'flag',
       choices: [
+        'flag',
         'www',
         'www-modern',
         'rn',
@@ -121,12 +122,14 @@ const ReactFeatureFlagsNativeFB = require('../../packages/shared/forks/ReactFeat
 const ReactFeatureFlagsNativeOSS = require('../../packages/shared/forks/ReactFeatureFlags.native-oss.js');
 const ReactFeatureFlagsMajor = getReactNativeFeatureFlagsMajor();
 
-const allFlagsUniqueFlags = new Set([
-  ...Object.keys(ReactFeatureFlags),
-  ...Object.keys(ReactFeatureFlagsWWW),
-  ...Object.keys(ReactFeatureFlagsNativeFB),
-  ...Object.keys(ReactFeatureFlagsNativeOSS),
-]);
+const allFlagsUniqueFlags = Array.from(
+  new Set([
+    ...Object.keys(ReactFeatureFlags),
+    ...Object.keys(ReactFeatureFlagsWWW),
+    ...Object.keys(ReactFeatureFlagsNativeFB),
+    ...Object.keys(ReactFeatureFlagsNativeOSS),
+  ])
+).sort();
 
 // These functions are the rules for what each value means in each channel.
 function getNextMajorFlagValue(flag) {
@@ -136,7 +139,7 @@ function getNextMajorFlagValue(flag) {
   } else if (value === false || value === 'experimental') {
     return '❌';
   } else if (value === 'profile') {
-    return '⏱️';
+    return '📊';
   } else if (value === 'dev') {
     return '💻';
   } else if (typeof value === 'number') {
@@ -153,7 +156,7 @@ function getOSSCanaryFlagValue(flag) {
   } else if (value === false || value === 'experimental' || value === 'next') {
     return '❌';
   } else if (value === 'profile') {
-    return '⏱️';
+    return '📊';
   } else if (value === 'dev') {
     return '💻';
   } else if (typeof value === 'number') {
@@ -170,7 +173,7 @@ function getOSSExperimentalFlagValue(flag) {
   } else if (value === false || value === 'next') {
     return '❌';
   } else if (value === 'profile') {
-    return '⏱️';
+    return '📊';
   } else if (value === 'dev') {
     return '💻';
   } else if (typeof value === 'number') {
@@ -189,7 +192,7 @@ function getWWWModernFlagValue(flag) {
   } else if (value === false || value === 'next') {
     return '❌';
   } else if (value === 'profile') {
-    return '⏱️';
+    return '📊';
   } else if (value === 'dev') {
     return '💻';
   } else if (value === 'gk') {
@@ -208,7 +211,7 @@ function getWWWClassicFlagValue(flag) {
   } else if (value === false || value === 'experimental' || value === 'next') {
     return '❌';
   } else if (value === 'profile') {
-    return '⏱️';
+    return '📊';
   } else if (value === 'dev') {
     return '💻';
   } else if (value === 'gk') {
@@ -227,7 +230,7 @@ function getRNOSSFlagValue(flag) {
   } else if (value === false || value === 'experimental' || value === 'next') {
     return '❌';
   } else if (value === 'profile') {
-    return '⏱️';
+    return '📊';
   } else if (value === 'dev') {
     return '💻';
   } else if (value === 'gk') {
@@ -246,7 +249,7 @@ function getRNFBFlagValue(flag) {
   } else if (value === false || value === 'experimental' || value === 'next') {
     return '❌';
   } else if (value === 'profile') {
-    return '⏱️';
+    return '📊';
   } else if (value === 'dev') {
     return '💻';
   } else if (value === 'gk') {
@@ -312,15 +315,15 @@ for (const flag of allFlagsUniqueFlags) {
 }
 
 // Sort the table
-const sortBy = isDiff ? argv.diff.map(argToHeader) : argv.sort.map(argToHeader);
-let sorted;
-sortBy.forEach(sort => {
+let sorted = table;
+if (isDiff || argv.sort) {
+  const sortChannel = argToHeader(isDiff ? argv.diff[0] : argv.sort);
   sorted = Object.fromEntries(
     Object.entries(table).sort(([, rowA], [, rowB]) =>
-      rowB[sort].toString().localeCompare(rowA[sort])
+      rowB[sortChannel].toString().localeCompare(rowA[sortChannel])
     )
   );
-});
+}
 
 if (argv.csv) {
   const csvHeader =
