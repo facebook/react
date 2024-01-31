@@ -10,16 +10,22 @@
 describe('Fast Refresh', () => {
   let React;
   let ReactFreshRuntime;
+  let ReactDOMClient;
   let act;
   let babel;
   let container;
+  let root;
   let exportsObj;
   let freshPlugin;
-  let legacyRender;
   let store;
   let withErrorsOrWarningsIgnored;
 
   afterEach(() => {
+    root.unmount();
+    document.body.removeChild(container);
+
+    expect(ReactFreshRuntime._getMountedRootCount()).toBe(0);
+
     jest.resetModules();
   });
 
@@ -33,13 +39,17 @@ describe('Fast Refresh', () => {
     store = global.store;
 
     React = require('react');
+    ReactDOMClient = require('react-dom/client');
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = ReactDOMClient.createRoot(container);
 
     ReactFreshRuntime = require('react-refresh/runtime');
     ReactFreshRuntime.injectIntoGlobalHook(global);
 
     const utils = require('./utils');
     act = utils.act;
-    legacyRender = utils.legacyRender;
     withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
   });
 
@@ -73,7 +83,7 @@ describe('Fast Refresh', () => {
   function render(source) {
     const Component = execute(source);
     act(() => {
-      legacyRender(<Component />, container);
+      root.render(<Component />);
     });
     // Module initialization shouldn't be counted as a hot update.
     expect(ReactFreshRuntime.performReactRefresh()).toBe(null);
@@ -98,7 +108,7 @@ describe('Fast Refresh', () => {
       // Here, we'll just force a re-render using the newer type to emulate this.
       const NextComponent = nextExports.default;
       act(() => {
-        legacyRender(<NextComponent />, container);
+        root.render(<NextComponent />);
       });
     }
     act(() => {
