@@ -196,7 +196,7 @@ chrome.runtime.onMessage.addListener((message, sender) => {
   }
 });
 
-chrome.tabs.onActivated.addListener(({tabId: activeTabId}) => {
+chrome.tabs.onActivated.addListener(({ tabId: activeTabId }) => {
   for (const registeredTabId in ports) {
     if (
       ports[registeredTabId].proxy != null &&
@@ -208,7 +208,26 @@ chrome.tabs.onActivated.addListener(({tabId: activeTabId}) => {
           ? 'resumeElementPolling'
           : 'pauseElementPolling';
 
-      ports[registeredTabId].extension.postMessage({event});
+      ports[registeredTabId].extension.postMessage({ event });
     }
   }
+});
+
+// Show a notification badge when the extension is installed if:
+// 1. it is before or during the conference (May 15th-16th, 2024)
+// 2. the user has clicked on the extension icon to open the popup
+chrome.runtime.onInstalled.addListener(() => {
+  // skip the notificaiton if the conference is in the past
+  const today = new Date();
+  const may16 = new Date(2024, 4, 16); // May is month 5 in JavaScript
+  if (today > may16) {
+    return;
+  }
+  // only show the notification badge if the user hasn't clicked on the extension icon
+  chrome.storage.local.get(['notifications'], function (data) {
+    if (data.notifications === undefined || data.notifications === true) {
+      chrome.action.setBadgeBackgroundColor({ color: '#FF6F00' });
+      chrome.action.setBadgeText({ text: "1" });
+    }
+  });
 });
