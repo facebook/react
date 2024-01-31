@@ -344,6 +344,19 @@ const EnvironmentConfigSchema = z.object({
    * non-ideal.
    */
   enableTreatFunctionDepsAsConditional: z.boolean().default(false),
+
+  /**
+   * If specified, this value is used as a pattern for determing which global values should be
+   * treated as hooks. The pattern should have a single capture group, which will be used as
+   * the hook name for the purposes of resolving hook definitions (for builtin hooks)_.
+   *
+   * For example, by default `React$useState` would not be treated as a hook. By specifying
+   * `hookPattern: 'React$(\w+)'`, the compiler will treat this value equivalently to `useState()`.
+   *
+   * This setting is intended for cases where Forget is compiling code that has been prebundled
+   * and identifiers have been changed.
+   */
+  hookPattern: z.string().nullable().default(null),
 });
 
 export type EnvironmentConfig = z.infer<typeof EnvironmentConfigSchema>;
@@ -447,7 +460,20 @@ export class Environment {
   }
 
   getGlobalDeclaration(name: string): Global | null {
-    let resolvedGlobal: Global | null = this.#globals.get(name) ?? null;
+    let resolvedName = name;
+
+    if (this.config.hookPattern != null) {
+      const match = new RegExp(this.config.hookPattern).exec(name);
+      if (
+        match != null &&
+        typeof match[1] === "string" &&
+        isHookName(match[1])
+      ) {
+        resolvedName = match[1];
+      }
+    }
+
+    let resolvedGlobal: Global | null = this.#globals.get(resolvedName) ?? null;
     if (resolvedGlobal === null) {
       // Hack, since we don't track module level declarations and imports
       if (isHookName(name)) {

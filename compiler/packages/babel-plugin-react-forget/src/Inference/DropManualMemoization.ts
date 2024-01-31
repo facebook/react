@@ -14,6 +14,7 @@ import {
   Instruction,
   Place,
   SpreadPattern,
+  getHookKindForType,
   makeInstructionId,
 } from "../HIR";
 import { createTemporaryPlace, markInstructionIds } from "../HIR/HIRBuilder";
@@ -43,11 +44,11 @@ export function dropManualMemoization(func: HIRFunction): void {
           break;
         }
         case "LoadGlobal": {
-          if (
-            instr.value.name === "useMemo" ||
-            instr.value.name === "useCallback"
-          ) {
-            hooks.set(instr.lvalue.identifier.id, instr.value.name);
+          const global = func.env.getGlobalDeclaration(instr.value.name);
+          const hookKind =
+            global !== null ? getHookKindForType(func.env, global) : null;
+          if (hookKind === "useMemo" || hookKind === "useCallback") {
+            hooks.set(instr.lvalue.identifier.id, hookKind);
           } else if (instr.value.name === "React") {
             react.add(instr.lvalue.identifier.id);
           }

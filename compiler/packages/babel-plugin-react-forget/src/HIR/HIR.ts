@@ -1233,9 +1233,15 @@ export function isUseInsertionEffectHookType(id: Identifier): boolean {
 }
 
 export function getHookKind(env: Environment, id: Identifier): HookKind | null {
-  const idType = id.type;
-  if (idType.kind === "Function") {
-    const signature = env.getFunctionSignature(idType);
+  return getHookKindForType(env, id.type);
+}
+
+export function getHookKindForType(
+  env: Environment,
+  type: Type
+): HookKind | null {
+  if (type.kind === "Function") {
+    const signature = env.getFunctionSignature(type);
     return signature?.hookKind ?? null;
   }
   return null;

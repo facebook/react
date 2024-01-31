@@ -376,11 +376,12 @@ function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
       return false;
     }
     case "infer": {
+      const hookPattern = pass.opts.environment?.hookPattern ?? null;
       return (
         // Component declarations are known components
         (fn.isFunctionDeclaration() && isComponentDeclaration(fn.node)) ||
         // Otherwise check if this is a component or hook-like function
-        isComponentOrHookLike(fn)
+        isComponentOrHookLike(fn, hookPattern)
       );
     }
     case "all": {
@@ -414,7 +415,10 @@ function hasUseMemoCacheCall(
   return hasUseMemoCache;
 }
 
-function isHookName(s: string): boolean {
+function isHookName(s: string, hookPattern: string | null): boolean {
+  if (hookPattern !== null) {
+    return new RegExp(hookPattern).test(s);
+  }
   return /^use[A-Z0-9]/.test(s);
 }
 
@@ -423,13 +427,16 @@ function isHookName(s: string): boolean {
  * containing a hook name.
  */
 
-function isHook(path: NodePath<t.Expression | t.PrivateName>): boolean {
+function isHook(
+  path: NodePath<t.Expression | t.PrivateName>,
+  hookPattern: string | null
+): boolean {
   if (path.isIdentifier()) {
-    return isHookName(path.node.name);
+    return isHookName(path.node.name, hookPattern);
   } else if (
     path.isMemberExpression() &&
     !path.node.computed &&
-    isHook(path.get("property"))
+    isHook(path.get("property"), hookPattern)
   ) {
     const obj = path.get("object").node;
     const isPascalCaseNameSpace = /^[A-Z].*/;
@@ -518,18 +525,20 @@ function isValidComponentParams(
 function isComponentOrHookLike(
   node: NodePath<
     t.FunctionDeclaration | t.ArrowFunctionExpression | t.FunctionExpression
-  >
+  >,
+  hookPattern: string | null
 ): boolean {
   const functionName = getFunctionName(node);
   // Check if the name is component or hook like:
   if (functionName !== null && isComponentName(functionName)) {
     return (
       // As an added check we also look for hook invocations or JSX
-      callsHooksOrCreatesJsx(node) && isValidComponentParams(node.get("params"))
+      callsHooksOrCreatesJsx(node, hookPattern) &&
+      isValidComponentParams(node.get("params"))
     );
-  } else if (functionName !== null && isHook(functionName)) {
+  } else if (functionName !== null && isHook(functionName, hookPattern)) {
     // Hooks have hook invocations or JSX, but can take any # of arguments
-    return callsHooksOrCreatesJsx(node);
+    return callsHooksOrCreatesJsx(node, hookPattern);
   }
 
   /*
@@ -539,7 +548,7 @@ function isComponentOrHookLike(
   if (node.isFunctionExpression() || node.isArrowFunctionExpression()) {
     if (isForwardRefCallback(node) || isMemoCallback(node)) {
       // As an added check we also look for hook invocations or JSX
-      return callsHooksOrCreatesJsx(node);
+      return callsHooksOrCreatesJsx(node, hookPattern);
     } else {
       return false;
     }
@@ -547,7 +556,10 @@ function isComponentOrHookLike(
   return false;
 }
 
-function callsHooksOrCreatesJsx(node: NodePath<t.Node>): boolean {
+function callsHooksOrCreatesJsx(
+  node: NodePath<t.Node>,
+  hookPattern: string | null
+): boolean {
   let invokesHooks = false;
   let createsJsx = false;
   node.traverse({
@@ -556,7 +568,7 @@ function callsHooksOrCreatesJsx(node: NodePath<t.Node>): boolean {
     },
     CallExpression(call) {
       const callee = call.get("callee");
-      if (callee.isExpression() && isHook(callee)) {
+      if (callee.isExpression() && isHook(callee, hookPattern)) {
         invokesHooks = true;
       }
     },

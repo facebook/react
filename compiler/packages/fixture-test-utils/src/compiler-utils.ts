@@ -37,6 +37,7 @@ export function transformFixtureInput(
   let compilationMode: CompilationMode = "all";
   let enableUseMemoCachePolyfill = false;
   let panicThreshold: PanicThresholdOptions = "ALL_ERRORS";
+  let hookPattern: string | null = null;
 
   if (firstLine.indexOf("@compilationMode(annotation)") !== -1) {
     assert(
@@ -85,9 +86,24 @@ export function transformFixtureInput(
   }
 
   let eslintSuppressionRules: Array<string> | null = null;
-  const match = /@eslintSuppressionRules\(([^)]+)\)/.exec(firstLine);
-  if (match != null) {
-    eslintSuppressionRules = match[1].split("|");
+  const eslintSuppressionMatch = /@eslintSuppressionRules\(([^)]+)\)/.exec(
+    firstLine
+  );
+  if (eslintSuppressionMatch != null) {
+    eslintSuppressionRules = eslintSuppressionMatch[1].split("|");
+  }
+
+  const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
+  if (
+    hookPatternMatch &&
+    hookPatternMatch.length > 1 &&
+    hookPatternMatch[1].trim().length > 0
+  ) {
+    hookPattern = hookPatternMatch[1].trim();
+  } else if (firstLine.includes("@hookPattern")) {
+    throw new Error(
+      'Invalid @hookPattern:"..." pragma, must contain the prefix between balanced double quotes eg @hookPattern:"pattern"'
+    );
   }
 
   const config = parseConfigPragmaFn(firstLine);
@@ -131,6 +147,7 @@ export function transformFixtureInput(
         enableEmitInstrumentForget,
         enableEmitHookGuards,
         assertValidMutableRanges: true,
+        hookPattern,
       },
       compilationMode,
       logger: null,
