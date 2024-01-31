@@ -38,6 +38,7 @@ export const enableSuspenseCallback = false;
 export const disableLegacyContext = false;
 export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
+export const disableLegacyReactDOMRenderAPIs = true;
 export const disableModulePatternComponents = false;
 export const enableSuspenseAvoidThisFallback = false;
 export const enableSuspenseAvoidThisFallbackFizz = false;

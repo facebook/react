@@ -485,5 +485,9 @@
   "497": "Only objects or functions can be passed to taintObjectReference.",
   "498": "Only plain objects, and a few built-ins, can be passed to Client Components from Server Components. Classes or null prototypes are not supported.",
   "499": "Only plain objects, and a few built-ins, can be passed to Server Actions. Classes or null prototypes are not supported.",
-  "500": "React expected a headers state to exist when emitEarlyPreloads was called but did not find it. This suggests emitEarlyPreloads was called more than once per request. This is a bug in React."
+  "500": "React expected a headers state to exist when emitEarlyPreloads was called but did not find it. This suggests emitEarlyPreloads was called more than once per request. This is a bug in React.",
+  "501": "ReactDOM.hydrate is no longer supported. Use hydrateRoot instead. Learn more: https://reactjs.org/link/switch-to-createroot",
+  "502": "ReactDOM.render is no longer supported. Use hydrateRoot instead. Learn more: https://reactjs.org/link/switch-to-createroot",
+  "503": "ReactDOM.unstable_renderSubtreeIntoContainer is no longer supported. Use a portal instead. Learn more: https://reactjs.org/link/switch-to-createroot",
+  "504": "ReactDOM.unmountComponentAtNode is no longer supported. Did you mean to call root.unmount()? Learn more: https://reactjs.org/link/switch-to-createroot"
 }
