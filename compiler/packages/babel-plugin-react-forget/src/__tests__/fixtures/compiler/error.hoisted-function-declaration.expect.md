@@ -17,7 +17,7 @@ function component(a) {
 ## Error
 
 ```
-[ReactForget] Todo: [hoisting] EnterSSA: Expected identifier to be defined before being used. Identifier x$5 is undefined (4:6)
+[ReactForget] Todo: Unsupported declaration type for hoisting. variable "x" declared with FunctionDeclaration (3:3)
 ```
           
       

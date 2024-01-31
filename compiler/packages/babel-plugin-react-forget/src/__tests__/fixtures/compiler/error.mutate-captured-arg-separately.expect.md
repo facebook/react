@@ -19,7 +19,7 @@ function component(a) {
 ## Error
 
 ```
-[ReactForget] Todo: [hoisting] EnterSSA: Expected identifier to be defined before being used. Identifier x$1 is undefined (7:7)
+[ReactForget] Todo: Handle non-const declarations for hoisting. variable "x" declared with let (4:4)
 ```
           
       

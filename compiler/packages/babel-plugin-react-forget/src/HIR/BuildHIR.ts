@@ -333,14 +333,9 @@ function lowerStatement(
       const hoistableIdentifiers: Set<t.Identifier> = new Set();
 
       for (const [, binding] of Object.entries(stmt.scope.bindings)) {
-        // TODO: support other kinds of bindings
-        if (binding.kind === "const") {
-          if (
-            binding.path.isVariableDeclarator() &&
-            binding.path.get("id").isIdentifier()
-          ) {
-            hoistableIdentifiers.add(binding.identifier);
-          }
+        // refs to params are always valid / never need to be hoisted
+        if (binding.kind !== "param") {
+          hoistableIdentifiers.add(binding.identifier);
         }
       }
 
@@ -349,7 +344,6 @@ function lowerStatement(
         /*
          * If we see a hoistable identifier before its declaration, it should be hoisted just
          * before the statement that references it.
-         * Identifier can only be hoisted if the reference occurs within an inner function
          */
         let fnDepth = s.isFunctionDeclaration() ? 1 : 0;
         const withFunctionContext = {
@@ -366,15 +360,20 @@ function lowerStatement(
           ArrowFunctionExpression: withFunctionContext,
           ObjectMethod: withFunctionContext,
           Identifier(id: NodePath<t.Identifier>) {
-            if (!id.isReferencedIdentifier() || fnDepth === 0) {
+            if (!id.isReferencedIdentifier()) {
               return;
             }
-            const bindingIdentifier = id.scope.getBindingIdentifier(
-              id.node.name
-            );
+            const binding = id.scope.getBinding(id.node.name);
+            /**
+             * We can only hoist an identifier decl if
+             * 1. the reference occurs within an inner function
+             * or
+             * 2. the declaration itself is hoistable
+             */
             if (
-              bindingIdentifier != null &&
-              hoistableIdentifiers.has(bindingIdentifier)
+              binding != null &&
+              hoistableIdentifiers.has(binding.identifier) &&
+              (fnDepth > 0 || binding.kind === "hoisted")
             ) {
               willHoist.add(id);
             }
@@ -408,7 +407,7 @@ function lowerStatement(
             builder.errors.push({
               severity: ErrorSeverity.Todo,
               reason: "Unsupported declaration type for hoisting",
-              description: `${id.parentPath.type}`,
+              description: `variable "${binding.identifier.name}" declared with ${binding.path.type}`,
               suggestions: null,
               loc: id.parentPath.node.loc ?? GeneratedSource,
             });
@@ -417,7 +416,19 @@ function lowerStatement(
             builder.errors.push({
               severity: ErrorSeverity.Todo,
               reason: "Unsupported variable declaration type for hoisting",
-              description: `${binding.path.get("id").type}`,
+              description: `variable "${
+                binding.identifier.name
+              }" declared with ${binding.path.get("id").type}`,
+              suggestions: null,
+              loc: id.parentPath.node.loc ?? GeneratedSource,
+            });
+            continue;
+          } else if (binding.kind !== "const" && binding.kind !== "var") {
+            // Avoid double errors on var declarations, which we do not plan to support anyways
+            builder.errors.push({
+              severity: ErrorSeverity.Todo,
+              reason: "Handle non-const declarations for hoisting",
+              description: `variable "${binding.identifier.name}" declared with ${binding.kind}`,
               suggestions: null,
               loc: id.parentPath.node.loc ?? GeneratedSource,
             });

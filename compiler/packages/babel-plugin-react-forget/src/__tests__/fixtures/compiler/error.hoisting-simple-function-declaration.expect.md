@@ -24,7 +24,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-[ReactForget] Invariant: [hoisting] Expected value for identifier to be initialized. baz$5 (5:5)
+[ReactForget] Todo: Unsupported declaration type for hoisting. variable "baz" declared with FunctionDeclaration (5:5)
 ```
           
       
