@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-4d7ad08b";
+    var ReactVersion = "18.3.0-www-modern-e061c5a2";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -13001,8 +13001,11 @@ if (__DEV__) {
           if (replay === null) {
             // We didn't complete the root so we have nothing to show. We can close
             // the request;
-            logRecoverableError(request, error, errorInfo);
-            fatalError(request, error);
+            {
+              logRecoverableError(request, error, errorInfo);
+              fatalError(request, error);
+            }
+
             return;
           } else {
             // If the shell aborts during a replay, that's not a fatal error. Instead
@@ -13011,7 +13014,12 @@ if (__DEV__) {
             replay.pendingTasks--;
 
             if (replay.pendingTasks === 0 && replay.nodes.length > 0) {
-              var errorDigest = logRecoverableError(request, error, errorInfo);
+              var errorDigest;
+
+              {
+                errorDigest = logRecoverableError(request, error, errorInfo);
+              }
+
               abortRemainingReplayNodes(
                 request,
                 null,
@@ -13039,7 +13047,11 @@ if (__DEV__) {
 
           var _errorInfo = getThrownInfo(request, task.componentStack);
 
-          var _errorDigest = logRecoverableError(request, error, _errorInfo);
+          var _errorDigest;
+
+          {
+            _errorDigest = logRecoverableError(request, error, _errorInfo);
+          }
 
           var errorMessage = error;
 
