@@ -32,7 +32,7 @@ beforeEach(() => {
   yields = [];
   React = require('react');
   ReactDOMClient = require('react-dom/client');
-  act = React.unstable_act;
+  act = React.act;
   container = document.createElement('div');
   document.body.appendChild(container);
 });

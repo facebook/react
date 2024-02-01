@@ -21,7 +21,9 @@ export function act(
   const {act: actTestRenderer} = require('react-test-renderer');
   // Use `require('react-dom/test-utils').act` as a fallback for React 17, which can be used in integration tests for React DevTools.
   const actDOM =
-    require('react').unstable_act || require('react-dom/test-utils').act;
+    require('react').act ||
+    require('react').unstable_act ||
+    require('react-dom/test-utils').act;
 
   actDOM(() => {
     actTestRenderer(() => {

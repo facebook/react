@@ -20,7 +20,7 @@ describe('ReactFiberHostContext', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    act = React.unstable_act;
+    act = React.act;
     ReactFiberReconciler = require('react-reconciler');
     ConcurrentRoot =
       require('react-reconciler/src/ReactRootTags').ConcurrentRoot;
