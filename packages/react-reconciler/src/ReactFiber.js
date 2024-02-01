@@ -28,7 +28,6 @@ import {
   isHostSingletonType,
 } from './ReactFiberConfig';
 import {
-  createRootStrictEffectsByDefault,
   enableCache,
   enableProfilerTimer,
   enableScopeAPI,
@@ -456,7 +455,7 @@ export function createHostRootFiber(
   let mode;
   if (tag === ConcurrentRoot) {
     mode = ConcurrentMode;
-    if (isStrictMode === true || createRootStrictEffectsByDefault) {
+    if (isStrictMode === true) {
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (

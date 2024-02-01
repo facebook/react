@@ -171,13 +171,6 @@ export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
 
-// This flag enables Strict Effects by default. We're not turning this on until
-// after 18 because it requires migration work. Recommendation is to use
-// <StrictMode /> to gradually upgrade components.
-// If TRUE, trees rendered with createRoot will be StrictEffectsMode.
-// If FALSE, these trees will be StrictLegacyMode.
-export const createRootStrictEffectsByDefault = false;
-
 export const disableModulePatternComponents = false;
 
 export const enableUseRefAccessWarning = false;
