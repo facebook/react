@@ -11,16 +11,18 @@
 
 let React;
 let ReactDOM;
-let ReactTestUtils;
+let ReactDOMClient;
 let PropTypes;
+let act;
 
 describe('ReactLegacyCompositeComponent', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
+    ReactDOMClient = require('react-dom/client');
     PropTypes = require('prop-types');
+    act = require('internal-test-utils').act;
   });
 
   it('should warn about `setState` in render in legacy mode', () => {
@@ -70,7 +72,7 @@ describe('ReactLegacyCompositeComponent', () => {
   });
 
   // @gate !disableLegacyContext
-  it('should pass context to children when not owner', () => {
+  it('should pass context to children when not owner', async () => {
     class Parent extends React.Component {
       render() {
         return (
@@ -106,13 +108,17 @@ describe('ReactLegacyCompositeComponent', () => {
         return <div>{this.context.foo}</div>;
       }
     }
-
-    const component = ReactTestUtils.renderIntoDocument(<Parent />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let component;
+    await act(() => {
+      root.render(<Parent ref={current => (component = current)} />);
+    });
     expect(ReactDOM.findDOMNode(component).innerHTML).toBe('bar');
   });
 
   // @gate !disableLegacyContext
-  it('should pass context when re-rendered for static child', () => {
+  it('should pass context when re-rendered for static child', async () => {
     let parentInstance = null;
     let childInstance = null;
 
@@ -156,24 +162,31 @@ describe('ReactLegacyCompositeComponent', () => {
       }
     }
 
-    parentInstance = ReactTestUtils.renderIntoDocument(
-      <Parent>
-        <Middle>
-          <Child />
-        </Middle>
-      </Parent>,
-    );
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(
+        <Parent ref={current => (parentInstance = current)}>
+          <Middle>
+            <Child />
+          </Middle>
+        </Parent>,
+      );
+    });
 
     expect(parentInstance.state.flag).toBe(false);
     expect(childInstance.context).toEqual({foo: 'bar', flag: false});
 
-    parentInstance.setState({flag: true});
+    await act(() => {
+      parentInstance.setState({flag: true});
+    });
     expect(parentInstance.state.flag).toBe(true);
     expect(childInstance.context).toEqual({foo: 'bar', flag: true});
   });
 
   // @gate !disableLegacyContext
-  it('should pass context when re-rendered for static child within a composite component', () => {
+  it('should pass context when re-rendered for static child within a composite component', async () => {
     class Parent extends React.Component {
       static childContextTypes = {
         flag: PropTypes.bool,
@@ -217,20 +230,27 @@ describe('ReactLegacyCompositeComponent', () => {
       }
     }
 
-    const wrapper = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let wrapper;
+    await act(() => {
+      root.render(<Wrapper ref={current => (wrapper = current)} />);
+    });
 
     expect(wrapper.parentRef.current.state.flag).toEqual(true);
     expect(wrapper.childRef.current.context).toEqual({flag: true});
 
     // We update <Parent /> while <Child /> is still a static prop relative to this update
-    wrapper.parentRef.current.setState({flag: false});
+    await act(() => {
+      wrapper.parentRef.current.setState({flag: false});
+    });
 
     expect(wrapper.parentRef.current.state.flag).toEqual(false);
     expect(wrapper.childRef.current.context).toEqual({flag: false});
   });
 
   // @gate !disableLegacyContext
-  it('should pass context transitively', () => {
+  it('should pass context transitively', async () => {
     let childInstance = null;
     let grandchildInstance = null;
 
@@ -286,13 +306,18 @@ describe('ReactLegacyCompositeComponent', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<Parent />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Parent />);
+    });
+
     expect(childInstance.context).toEqual({foo: 'bar', depth: 0});
     expect(grandchildInstance.context).toEqual({foo: 'bar', depth: 1});
   });
 
   // @gate !disableLegacyContext
-  it('should pass context when re-rendered', () => {
+  it('should pass context when re-rendered', async () => {
     let parentInstance = null;
     let childInstance = null;
 
@@ -334,11 +359,16 @@ describe('ReactLegacyCompositeComponent', () => {
       }
     }
 
-    parentInstance = ReactTestUtils.renderIntoDocument(<Parent />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<Parent ref={current => (parentInstance = current)} />);
+    });
+
     expect(childInstance).toBeNull();
 
     expect(parentInstance.state.flag).toBe(false);
-    ReactDOM.unstable_batchedUpdates(function () {
+    await act(() => {
       parentInstance.setState({flag: true});
     });
     expect(parentInstance.state.flag).toBe(true);
@@ -699,7 +729,7 @@ describe('ReactLegacyCompositeComponent', () => {
     );
   });
 
-  it('should replace state in legacy mode', () => {
+  it('should replace state in legacy mode', async () => {
     class Moo extends React.Component {
       state = {x: 1};
       render() {
@@ -707,15 +737,23 @@ describe('ReactLegacyCompositeComponent', () => {
       }
     }
 
-    const moo = ReactTestUtils.renderIntoDocument(<Moo />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let moo;
+    await act(() => {
+      root.render(<Moo ref={current => (moo = current)} />);
+    });
+
     // No longer a public API, but we can test that it works internally by
     // reaching into the updater.
-    moo.updater.enqueueReplaceState(moo, {y: 2});
+    await act(() => {
+      moo.updater.enqueueReplaceState(moo, {y: 2});
+    });
     expect('x' in moo.state).toBe(false);
     expect(moo.state.y).toBe(2);
   });
 
-  it('should support objects with prototypes as state in legacy mode', () => {
+  it('should support objects with prototypes as state in legacy mode', async () => {
     const NotActuallyImmutable = function (str) {
       this.str = str;
     };
@@ -732,24 +770,34 @@ describe('ReactLegacyCompositeComponent', () => {
       }
     }
 
-    const moo = ReactTestUtils.renderIntoDocument(<Moo />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    let moo;
+    await act(() => {
+      root.render(<Moo ref={current => (moo = current)} />);
+    });
+
     expect(moo.state.str).toBe('first');
     expect(moo.state.amIImmutable()).toBe(true);
 
     const secondState = new NotActuallyImmutable('second');
-    moo._replaceState(secondState);
+    await act(() => {
+      moo._replaceState(secondState);
+    });
     expect(moo.state.str).toBe('second');
     expect(moo.state.amIImmutable()).toBe(true);
     expect(moo.state).toBe(secondState);
 
-    moo.setState({str: 'third'});
+    await act(() => {
+      moo.setState({str: 'third'});
+    });
     expect(moo.state.str).toBe('third');
     // Here we lose the prototype.
     expect(moo.state.amIImmutable).toBe(undefined);
 
     // When more than one state update is enqueued, we have the same behavior
     const fifthState = new NotActuallyImmutable('fifth');
-    ReactDOM.unstable_batchedUpdates(function () {
+    await act(() => {
       moo.setState({str: 'fourth'});
       moo._replaceState(fifthState);
     });
@@ -757,7 +805,7 @@ describe('ReactLegacyCompositeComponent', () => {
 
     // When more than one state update is enqueued, we have the same behavior
     const sixthState = new NotActuallyImmutable('sixth');
-    ReactDOM.unstable_batchedUpdates(function () {
+    await act(() => {
       moo._replaceState(sixthState);
       moo.setState({str: 'seventh'});
     });
