@@ -140,7 +140,6 @@ if (__DEV__) {
     var enableProfilerNestedUpdatePhase = true;
     var syncLaneExpirationMs = 250;
     var transitionLaneExpirationMs = 5000;
-    var createRootStrictEffectsByDefault = false;
     var enableLazyContextPropagation = false;
     var enableLegacyHidden = false;
     var enableAsyncActions = true;
@@ -25641,7 +25640,7 @@ if (__DEV__) {
       if (tag === ConcurrentRoot) {
         mode = ConcurrentMode;
 
-        if (isStrictMode === true || createRootStrictEffectsByDefault) {
+        if (isStrictMode === true) {
           mode |= StrictLegacyMode | StrictEffectsMode;
         }
 
@@ -26078,7 +26077,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-c904e94a";
+    var ReactVersion = "18.3.0-www-modern-d8a95dd7";
 
     // Might add PROFILE later.
 

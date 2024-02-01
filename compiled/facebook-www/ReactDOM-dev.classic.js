@@ -157,7 +157,6 @@ if (__DEV__) {
     var enableProfilerNestedUpdatePhase = true;
     var enableProfilerNestedUpdateScheduledHook =
       dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
-    var createRootStrictEffectsByDefault = false;
     var enableClientRenderFallbackOnTextMismatch = false;
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
@@ -35172,7 +35171,7 @@ if (__DEV__) {
       if (tag === ConcurrentRoot) {
         mode = ConcurrentMode;
 
-        if (isStrictMode === true || createRootStrictEffectsByDefault) {
+        if (isStrictMode === true) {
           mode |= StrictLegacyMode | StrictEffectsMode;
         }
 
@@ -35754,7 +35753,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-3799de5b";
+    var ReactVersion = "18.3.0-www-classic-8c1ce378";
 
     function createPortal$1(
       children,

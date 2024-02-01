@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-c768d9b6";
+    var ReactVersion = "18.3.0-www-modern-f1f6b170";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -192,7 +192,6 @@ if (__DEV__) {
     var enableProfilerNestedUpdatePhase = true;
     var enableProfilerNestedUpdateScheduledHook =
       dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
-    var createRootStrictEffectsByDefault = false;
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
 
@@ -28916,7 +28915,7 @@ if (__DEV__) {
       if (tag === ConcurrentRoot) {
         mode = ConcurrentMode;
 
-        if (isStrictMode === true || createRootStrictEffectsByDefault) {
+        if (isStrictMode === true) {
           mode |= StrictLegacyMode | StrictEffectsMode;
         }
 
