@@ -1506,6 +1506,6 @@ function getWriteErrorReason(abstractValue: AbstractValue): string {
   } else if (abstractValue.reason.has(ValueReason.ReactiveFunctionArgument)) {
     return "Mutating props or hook arguments is not allowed. Consider using a local variable instead.";
   } else {
-    return "This mutates a global or a variable after it was passed to React, which means that React cannot observe changes to it.";
+    return "This mutates a variable that React considers immutable.";
   }
 }

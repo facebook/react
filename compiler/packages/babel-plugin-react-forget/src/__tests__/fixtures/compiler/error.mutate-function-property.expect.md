@@ -15,7 +15,7 @@ export function ViewModeSelector(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: This mutates a global or a variable after it was passed to React, which means that React cannot observe changes to it. (3:3)
+[ReactForget] InvalidReact: This mutates a variable that React considers immutable. (3:3)
 ```
           
       
