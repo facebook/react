@@ -7498,4 +7498,451 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
   });
+
+  // @gate enablePostpone
+  it('does not call onError when you abort with a postpone instance during prerender', async () => {
+    const promise = new Promise(r => {});
+
+    function Wait() {
+      return React.use(promise);
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <p>
+              <span>
+                <Suspense fallback="Loading again...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+            <p>
+              <span>
+                <Suspense fallback="Loading again too...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    let postponeInstance;
+    try {
+      React.unstable_postpone('manufactured');
+    } catch (p) {
+      postponeInstance = p;
+    }
+
+    const controller = new AbortController();
+    const signal = controller.signal;
+
+    const errors = [];
+    function onError(error) {
+      errors.push(error);
+    }
+    const postpones = [];
+    function onPostpone(reason) {
+      postpones.push(reason);
+    }
+    let pendingPrerender;
+    await act(() => {
+      pendingPrerender = ReactDOMFizzStatic.prerenderToNodeStream(<App />, {
+        signal,
+        onError,
+        onPostpone,
+      });
+    });
+    controller.abort(postponeInstance);
+
+    const prerendered = await pendingPrerender;
+
+    expect(prerendered.postponed).toBe(null);
+    expect(errors).toEqual([]);
+    expect(postpones).toEqual(['manufactured', 'manufactured']);
+
+    await act(() => {
+      prerendered.prelude.pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>
+          <span>Loading again...</span>
+        </p>
+        <p>
+          <span>Loading again too...</span>
+        </p>
+      </div>,
+    );
+  });
+
+  // @gate enablePostpone
+  it('does not call onError when you abort with a postpone instance during resume', async () => {
+    let prerendering = true;
+    const promise = new Promise(r => {});
+
+    function Wait() {
+      return React.use(promise);
+    }
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return (
+        <span>
+          <Suspense fallback="Loading again...">
+            <Wait />
+          </Suspense>
+        </span>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <p>
+              <Postpone />
+            </p>
+            <p>
+              <Postpone />
+            </p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    let postponeInstance;
+    try {
+      React.unstable_postpone('manufactured');
+    } catch (p) {
+      postponeInstance = p;
+    }
+
+    const errors = [];
+    function onError(error) {
+      errors.push(error);
+    }
+    const postpones = [];
+    function onPostpone(reason) {
+      postpones.push(reason);
+    }
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+      {
+        onError,
+        onPostpone,
+      },
+    );
+
+    await act(() => {
+      resumed.pipe(writable);
+    });
+    await act(() => {
+      resumed.abort(postponeInstance);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>
+          <span>Loading again...</span>
+        </p>
+        <p>
+          <span>Loading again...</span>
+        </p>
+      </div>,
+    );
+
+    expect(errors).toEqual([]);
+    expect(postpones).toEqual(['manufactured', 'manufactured']);
+  });
+
+  // @gate enablePostpone
+  it('does not call onError when you abort with a postpone instance during a render', async () => {
+    const promise = new Promise(r => {});
+
+    function Wait() {
+      return React.use(promise);
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <p>
+              <span>
+                <Suspense fallback="Loading again...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+            <p>
+              <span>
+                <Suspense fallback="Loading again...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    function onError(error) {
+      errors.push(error);
+    }
+    const postpones = [];
+    function onPostpone(reason) {
+      postpones.push(reason);
+    }
+    const result = await renderToPipeableStream(<App />, {onError, onPostpone});
+    await act(() => {
+      result.pipe(writable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>
+          <span>Loading again...</span>
+        </p>
+        <p>
+          <span>Loading again...</span>
+        </p>
+      </div>,
+    );
+
+    let postponeInstance;
+    try {
+      React.unstable_postpone('manufactured');
+    } catch (p) {
+      postponeInstance = p;
+    }
+    await act(() => {
+      result.abort(postponeInstance);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <p>
+          <span>Loading again...</span>
+        </p>
+        <p>
+          <span>Loading again...</span>
+        </p>
+      </div>,
+    );
+
+    expect(errors).toEqual([]);
+    expect(postpones).toEqual(['manufactured', 'manufactured']);
+  });
+
+  // @gate enablePostpone
+  it('fatally errors if you abort with a postpone in the shell during resume', async () => {
+    let prerendering = true;
+    const promise = new Promise(r => {});
+
+    function Wait() {
+      return React.use(promise);
+    }
+    function Postpone() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return (
+        <span>
+          <Suspense fallback="Loading again...">
+            <Wait />
+          </Suspense>
+        </span>
+      );
+    }
+
+    function PostponeInShell() {
+      if (prerendering) {
+        React.unstable_postpone();
+      }
+      return <span>in shell</span>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <PostponeInShell />
+          <Suspense fallback="Loading...">
+            <p>
+              <Postpone />
+            </p>
+            <p>
+              <Postpone />
+            </p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const prerendered = await ReactDOMFizzStatic.prerenderToNodeStream(<App />);
+    expect(prerendered.postponed).not.toBe(null);
+
+    prerendering = false;
+
+    // Create a separate stream so it doesn't close the writable. I.e. simple concat.
+    const preludeWritable = new Stream.PassThrough();
+    preludeWritable.setEncoding('utf8');
+    preludeWritable.on('data', chunk => {
+      writable.write(chunk);
+    });
+
+    await act(() => {
+      prerendered.prelude.pipe(preludeWritable);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(undefined);
+
+    let postponeInstance;
+    try {
+      React.unstable_postpone('manufactured');
+    } catch (p) {
+      postponeInstance = p;
+    }
+
+    const errors = [];
+    function onError(error) {
+      errors.push(error);
+    }
+    const shellErrors = [];
+    function onShellError(error) {
+      shellErrors.push(error);
+    }
+    const postpones = [];
+    function onPostpone(reason) {
+      postpones.push(reason);
+    }
+
+    prerendering = false;
+
+    const resumed = await ReactDOMFizzServer.resumeToPipeableStream(
+      <App />,
+      JSON.parse(JSON.stringify(prerendered.postponed)),
+      {
+        onError,
+        onShellError,
+        onPostpone,
+      },
+    );
+    await act(() => {
+      resumed.abort(postponeInstance);
+    });
+    expect(errors).toEqual([
+      new Error(
+        'The render was aborted with postpone when the shell is incomplete. Reason: manufactured',
+      ),
+    ]);
+    expect(shellErrors).toEqual([
+      new Error(
+        'The render was aborted with postpone when the shell is incomplete. Reason: manufactured',
+      ),
+    ]);
+    expect(postpones).toEqual([]);
+  });
+
+  // @gate enablePostpone
+  it('fatally errors if you abort with a postpone in the shell during render', async () => {
+    const promise = new Promise(r => {});
+
+    function Wait() {
+      return React.use(promise);
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <p>
+              <span>
+                <Suspense fallback="Loading again...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+            <p>
+              <span>
+                <Suspense fallback="Loading again...">
+                  <Wait />
+                </Suspense>
+              </span>
+            </p>
+          </Suspense>
+        </div>
+      );
+    }
+
+    const errors = [];
+    function onError(error) {
+      errors.push(error);
+    }
+    const shellErrors = [];
+    function onShellError(error) {
+      shellErrors.push(error);
+    }
+    const postpones = [];
+    function onPostpone(reason) {
+      postpones.push(reason);
+    }
+    const result = await renderToPipeableStream(<App />, {
+      onError,
+      onShellError,
+      onPostpone,
+    });
+
+    let postponeInstance;
+    try {
+      React.unstable_postpone('manufactured');
+    } catch (p) {
+      postponeInstance = p;
+    }
+    await act(() => {
+      result.abort(postponeInstance);
+    });
+
+    expect(getVisibleChildren(container)).toEqual(undefined);
+
+    expect(errors).toEqual([
+      new Error(
+        'The render was aborted with postpone when the shell is incomplete. Reason: manufactured',
+      ),
+    ]);
+    expect(shellErrors).toEqual([
+      new Error(
+        'The render was aborted with postpone when the shell is incomplete. Reason: manufactured',
+      ),
+    ]);
+    expect(postpones).toEqual([]);
+  });
 });

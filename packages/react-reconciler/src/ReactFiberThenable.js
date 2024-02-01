@@ -19,7 +19,24 @@ import {getWorkInProgressRoot} from './ReactFiberWorkLoop';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 const {ReactCurrentActQueue} = ReactSharedInternals;
 
-export opaque type ThenableState = Array<Thenable<any>>;
+opaque type ThenableStateDev = {
+  didWarnAboutUncachedPromise: boolean,
+  thenables: Array<Thenable<any>>,
+};
+
+opaque type ThenableStateProd = Array<Thenable<any>>;
+
+export opaque type ThenableState = ThenableStateDev | ThenableStateProd;
+
+function getThenablesFromState(state: ThenableState): Array<Thenable<any>> {
+  if (__DEV__) {
+    const devState: ThenableStateDev = (state: any);
+    return devState.thenables;
+  } else {
+    const prodState = (state: any);
+    return prodState;
+  }
+}
 
 // An error that is thrown (e.g. by `use`) to trigger Suspense. If we
 // detect this is caught by userspace, we'll log a warning in development.
@@ -56,7 +73,14 @@ export const noopSuspenseyCommitThenable = {
 export function createThenableState(): ThenableState {
   // The ThenableState is created the first time a component suspends. If it
   // suspends again, we'll reuse the same state.
-  return [];
+  if (__DEV__) {
+    return {
+      didWarnAboutUncachedPromise: false,
+      thenables: [],
+    };
+  } else {
+    return [];
+  }
 }
 
 export function isThenableResolved(thenable: Thenable<mixed>): boolean {
@@ -74,14 +98,43 @@ export function trackUsedThenable<T>(
   if (__DEV__ && ReactCurrentActQueue.current !== null) {
     ReactCurrentActQueue.didUsePromise = true;
   }
-
-  const previous = thenableState[index];
+  const trackedThenables = getThenablesFromState(thenableState);
+  const previous = trackedThenables[index];
   if (previous === undefined) {
-    thenableState.push(thenable);
+    trackedThenables.push(thenable);
   } else {
     if (previous !== thenable) {
       // Reuse the previous thenable, and drop the new one. We can assume
       // they represent the same value, because components are idempotent.
+
+      if (__DEV__) {
+        const thenableStateDev: ThenableStateDev = (thenableState: any);
+        if (!thenableStateDev.didWarnAboutUncachedPromise) {
+          // We should only warn the first time an uncached thenable is
+          // discovered per component, because if there are multiple, the
+          // subsequent ones are likely derived from the first.
+          //
+          // We track this on the thenableState instead of deduping using the
+          // component name like we usually do, because in the case of a
+          // promise-as-React-node, the owner component is likely different from
+          // the parent that's currently being reconciled. We'd have to track
+          // the owner using state, which we're trying to move away from. Though
+          // since this is dev-only, maybe that'd be OK.
+          //
+          // However, another benefit of doing it this way is we might
+          // eventually have a thenableState per memo/Forget boundary instead
+          // of per component, so this would allow us to have more
+          // granular warnings.
+          thenableStateDev.didWarnAboutUncachedPromise = true;
+
+          // TODO: This warning should link to a corresponding docs page.
+          console.error(
+            'A component was suspended by an uncached promise. Creating ' +
+              'promises inside a Client Component or hook is not yet ' +
+              'supported, except via a Suspense-compatible library or framework.',
+          );
+        }
+      }
 
       // Avoid an unhandled rejection errors for the Promises that we'll
       // intentionally ignore.

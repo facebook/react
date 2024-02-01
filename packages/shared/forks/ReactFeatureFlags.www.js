@@ -26,9 +26,9 @@ export const {
   enableUnifiedSyncLane,
   enableRetryLaneExpiration,
   enableTransitionTracing,
-  enableCustomElementPropertySupport,
   enableDeferRootSchedulingToMicrotask,
   enableAsyncActions,
+  enableFormActions,
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,
@@ -53,6 +53,7 @@ export const createRootStrictEffectsByDefault = false;
 export const enableSuspenseAvoidThisFallback = true;
 export const enableSuspenseAvoidThisFallbackFizz = false;
 
+export const enableCustomElementPropertySupport = true;
 export const enableCPUSuspense = true;
 export const enableFloat = true;
 export const enableUseMemoCacheHook = true;
@@ -64,10 +65,6 @@ export const enableFilterEmptyStringAttributesDOM = true;
 export const enableSchedulingProfiler: boolean =
   __PROFILE__ && dynamicFeatureFlags.enableSchedulingProfiler;
 
-// Note: we'll want to remove this when we to userland implementation.
-// For now, we'll turn it on for everyone because it's *already* on for everyone in practice.
-// At least this will let us stop shipping <Profiler> implementation to all users.
-export const enableSchedulerDebugging = true;
 export const disableLegacyContext = __EXPERIMENTAL__;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
@@ -75,8 +72,6 @@ export const enableCache = true;
 export const enableLegacyCache = true;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
-
-export const enableFormActions = false;
 
 export const enableBinaryFlight = false;
 export const enableTaint = false;

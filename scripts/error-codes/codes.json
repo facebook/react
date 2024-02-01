@@ -485,5 +485,6 @@
   "497": "Only objects or functions can be passed to taintObjectReference.",
   "498": "Only plain objects, and a few built-ins, can be passed to Client Components from Server Components. Classes or null prototypes are not supported.",
   "499": "Only plain objects, and a few built-ins, can be passed to Server Actions. Classes or null prototypes are not supported.",
-  "500": "React expected a headers state to exist when emitEarlyPreloads was called but did not find it. This suggests emitEarlyPreloads was called more than once per request. This is a bug in React."
+  "500": "React expected a headers state to exist when emitEarlyPreloads was called but did not find it. This suggests emitEarlyPreloads was called more than once per request. This is a bug in React.",
+  "501": "The render was aborted with postpone when the shell is incomplete. Reason: %s"
 }

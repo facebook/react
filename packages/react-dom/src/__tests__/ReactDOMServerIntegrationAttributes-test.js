@@ -54,6 +54,38 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('width')).toBe('30');
       });
 
+      itRenders('empty src on img', async render => {
+        const e = await render(
+          <img src="" />,
+          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? 1 : 0,
+        );
+        expect(e.getAttribute('src')).toBe(
+          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? null : '',
+        );
+      });
+
+      itRenders('empty href on anchor', async render => {
+        const e = await render(<a href="" />);
+        expect(e.getAttribute('href')).toBe('');
+      });
+
+      itRenders('empty href on other tags', async render => {
+        const e = await render(
+          // <link href="" /> would be more sensible.
+          // However, that results in a hydration warning as well.
+          // Our test helpers do not support different error counts for initial
+          // server render and hydration.
+          // The number of errors on the server need to be equal to the number of
+          // errors during hydration.
+          // So we use a <div> instead.
+          <div href="" />,
+          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? 1 : 0,
+        );
+        expect(e.getAttribute('href')).toBe(
+          ReactFeatureFlags.enableFilterEmptyStringAttributesDOM ? null : '',
+        );
+      });
+
       itRenders('no string prop with true value', async render => {
         const e = await render(<a href={true} />, 1);
         expect(e.hasAttribute('href')).toBe(false);
