@@ -1390,8 +1390,10 @@ var ExhaustiveDeps = {
 
       var declaredDependencies = [];
       var externalDependencies = new Set();
+      var isArrayExpression = declaredDependenciesNode.type === 'ArrayExpression';
+      var isTSAsArrayExpression = declaredDependenciesNode.type === 'TSAsExpression' && declaredDependenciesNode.expression.type === 'ArrayExpression';
 
-      if (declaredDependenciesNode.type !== 'ArrayExpression') {
+      if (!isArrayExpression && !isTSAsArrayExpression) {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
         // the user this in an error.
@@ -1400,7 +1402,8 @@ var ExhaustiveDeps = {
           message: "React Hook " + context.getSource(reactiveHook) + " was passed a " + 'dependency list that is not an array literal. This means we ' + "can't statically verify whether you've passed the correct " + 'dependencies.'
         });
       } else {
-        declaredDependenciesNode.elements.forEach(function (declaredDependencyNode) {
+        var arrayExpression = isTSAsArrayExpression ? declaredDependenciesNode.expression : declaredDependenciesNode;
+        arrayExpression.elements.forEach(function (declaredDependencyNode) {
           // Skip elided elements.
           if (declaredDependencyNode === null) {
             return;
