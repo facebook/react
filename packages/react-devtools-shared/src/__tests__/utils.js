@@ -7,6 +7,8 @@
  * @flow
  */
 
+import semver from 'semver';
+
 import typeof ReactTestRenderer from 'react-test-renderer';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -14,16 +16,38 @@ import type Store from 'react-devtools-shared/src/devtools/store';
 import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {ElementType} from 'react-devtools-shared/src/frontend/types';
 
+import {ReactVersion} from '../../../../ReactVersions';
+
+const requestedReactVersion = process.env.REACT_VERSION || ReactVersion;
+export function getActDOMImplementation(): () => void | Promise<void> {
+  // This is for React < 18, where act was distributed in react-dom/test-utils.
+  if (semver.lt(requestedReactVersion, '18.0.0')) {
+    const ReactDOMTestUtils = require('react-dom/test-utils');
+    return ReactDOMTestUtils.act;
+  }
+
+  const React = require('react');
+  // This is for React 18, where act was distributed in react as unstable.
+  if (React.unstable_act) {
+    return React.unstable_act;
+  }
+
+  // This is for React > 18, where act is marked as stable.
+  if (React.act) {
+    return React.act;
+  }
+
+  throw new Error("Couldn't find any available act implementation");
+}
+
 export function act(
   callback: Function,
   recursivelyFlush: boolean = true,
 ): void {
+  // act from react-test-renderer has some side effects on React DevTools
+  // it injects the renderer for DevTools, see ReactTestRenderer.js
   const {act: actTestRenderer} = require('react-test-renderer');
-  // Use `require('react-dom/test-utils').act` as a fallback for React 17, which can be used in integration tests for React DevTools.
-  const actDOM =
-    require('react').act ||
-    require('react').unstable_act ||
-    require('react-dom/test-utils').act;
+  const actDOM = getActDOMImplementation();
 
   actDOM(() => {
     actTestRenderer(() => {
@@ -47,10 +71,10 @@ export async function actAsync(
   cb: () => *,
   recursivelyFlush: boolean = true,
 ): Promise<void> {
+  // act from react-test-renderer has some side effects on React DevTools
+  // it injects the renderer for DevTools, see ReactTestRenderer.js
   const {act: actTestRenderer} = require('react-test-renderer');
-  // Use `require('react-dom/test-utils').act` as a fallback for React 17, which can be used in integration tests for React DevTools.
-  const actDOM =
-    require('react').unstable_act || require('react-dom/test-utils').act;
+  const actDOM = getActDOMImplementation();
 
   await actDOM(async () => {
     await actTestRenderer(async () => {
