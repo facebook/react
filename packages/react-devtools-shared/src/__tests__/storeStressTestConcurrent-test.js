@@ -11,7 +11,6 @@ describe('StoreStressConcurrent', () => {
   let React;
   let ReactDOMClient;
   let act;
-  let actAsync;
   let bridge;
   let store;
   let print;
@@ -23,10 +22,7 @@ describe('StoreStressConcurrent', () => {
 
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    act = require('./utils').act;
-    // TODO: Figure out recommendation for concurrent mode tests, then replace
-    // this helper with the real thing.
-    actAsync = require('./utils').actAsync;
+    act = require('./utils').actModern;
 
     print = require('./__serializers__/storeSerializer').print;
   });
@@ -40,7 +36,7 @@ describe('StoreStressConcurrent', () => {
   // This is a stress test for the tree mount/update/unmount traversal.
   // It renders different trees that should produce the same output.
   // @reactVersion >= 18.0
-  it('should handle a stress test with different tree operations (Concurrent Mode)', () => {
+  it('should handle a stress test with different tree operations (Concurrent Mode)', async () => {
     let setShowX;
     const A = () => 'a';
     const B = () => 'b';
@@ -68,7 +64,7 @@ describe('StoreStressConcurrent', () => {
     // 1. Render a normal version of [a, b, c, d, e].
     let container = document.createElement('div');
     let root = ReactDOMClient.createRoot(container);
-    act(() => root.render(<Parent>{[a, b, c, d, e]}</Parent>));
+    await act(() => root.render(<Parent>{[a, b, c, d, e]}</Parent>));
     expect(store).toMatchInlineSnapshot(
       `
       [root]
@@ -85,7 +81,7 @@ describe('StoreStressConcurrent', () => {
 
     // 2. Render a version where <C /> renders an <X /> child instead of 'c'.
     // This is how we'll test an update to a single component.
-    act(() => {
+    await act(() => {
       setShowX(true);
     });
     expect(store).toMatchInlineSnapshot(
@@ -104,14 +100,14 @@ describe('StoreStressConcurrent', () => {
     const snapshotForABXDE = print(store);
 
     // 3. Verify flipping it back produces the original result.
-    act(() => {
+    await act(() => {
       setShowX(false);
     });
     expect(container.textContent).toMatch('abcde');
     expect(print(store)).toBe(snapshotForABCDE);
 
     // 4. Clean up.
-    act(() => root.unmount());
+    await act(() => root.unmount());
     expect(print(store)).toBe('');
 
     // Now comes the interesting part.
@@ -139,7 +135,8 @@ describe('StoreStressConcurrent', () => {
       [<div key="2">{a}{b}</div>, c, <div key="3">{d}{e}</div>],
       [<span key="0">{a}</span>, b, c, d, [e]],
       [a, b, <span key="0"><span>{c}</span></span>, d, e],
-      [<div key="0">{a}</div>, [b], <span key="1">{c}</span>, [d], <div key="2">{e}</div>],
+      [<div key="0">{a}</div>, [b], <span key="1">{c}</span>, [d],
+        <div key="2">{e}</div>],
       [a, b, [c, <div key="0">{d}<span>{e}</span></div>], ''],
       [a, [[]], b, c, [d, [[]], e]],
       [[[a, b, c, d], e]],
@@ -153,26 +150,26 @@ describe('StoreStressConcurrent', () => {
       root = ReactDOMClient.createRoot(container);
 
       // Verify mounting 'abcde'.
-      act(() => root.render(<Parent>{cases[i]}</Parent>));
+      await act(() => root.render(<Parent>{cases[i]}</Parent>));
       expect(container.textContent).toMatch('abcde');
       expect(print(store)).toEqual(snapshotForABCDE);
 
       // Verify switching to 'abxde'.
-      act(() => {
+      await act(() => {
         setShowX(true);
       });
       expect(container.textContent).toMatch('abxde');
       expect(print(store)).toBe(snapshotForABXDE);
 
       // Verify switching back to 'abcde'.
-      act(() => {
+      await act(() => {
         setShowX(false);
       });
       expect(container.textContent).toMatch('abcde');
       expect(print(store)).toBe(snapshotForABCDE);
 
       // Clean up.
-      act(() => root.unmount());
+      await act(() => root.unmount());
       expect(print(store)).toBe('');
     }
 
@@ -182,31 +179,31 @@ describe('StoreStressConcurrent', () => {
     root = ReactDOMClient.createRoot(container);
     for (let i = 0; i < cases.length; i++) {
       // Verify mounting 'abcde'.
-      act(() => root.render(<Parent>{cases[i]}</Parent>));
+      await act(() => root.render(<Parent>{cases[i]}</Parent>));
       expect(container.textContent).toMatch('abcde');
       expect(print(store)).toEqual(snapshotForABCDE);
 
       // Verify switching to 'abxde'.
-      act(() => {
+      await act(() => {
         setShowX(true);
       });
       expect(container.textContent).toMatch('abxde');
       expect(print(store)).toBe(snapshotForABXDE);
 
       // Verify switching back to 'abcde'.
-      act(() => {
+      await act(() => {
         setShowX(false);
       });
       expect(container.textContent).toMatch('abcde');
       expect(print(store)).toBe(snapshotForABCDE);
       // Don't unmount. Reuse the container between iterations.
     }
-    act(() => root.unmount());
+    await act(() => root.unmount());
     expect(print(store)).toBe('');
   });
 
   // @reactVersion >= 18.0
-  it('should handle stress test with reordering (Concurrent Mode)', () => {
+  it('should handle stress test with reordering (Concurrent Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -247,10 +244,10 @@ describe('StoreStressConcurrent', () => {
     let container = document.createElement('div');
     for (let i = 0; i < steps.length; i++) {
       const root = ReactDOMClient.createRoot(container);
-      act(() => root.render(<Root>{steps[i]}</Root>));
+      await act(() => root.render(<Root>{steps[i]}</Root>));
       // We snapshot each step once so it doesn't regress.
       snapshots.push(print(store));
-      act(() => root.unmount());
+      await act(() => root.unmount());
       expect(print(store)).toBe('');
     }
 
@@ -318,13 +315,13 @@ describe('StoreStressConcurrent', () => {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() => root.render(<Root>{steps[i]}</Root>));
+        await act(() => root.render(<Root>{steps[i]}</Root>));
         expect(print(store)).toMatch(snapshots[i]);
-        act(() => root.render(<Root>{steps[j]}</Root>));
+        await act(() => root.render(<Root>{steps[j]}</Root>));
         expect(print(store)).toMatch(snapshots[j]);
-        act(() => root.render(<Root>{steps[i]}</Root>));
+        await act(() => root.render(<Root>{steps[i]}</Root>));
         expect(print(store)).toMatch(snapshots[i]);
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -334,7 +331,7 @@ describe('StoreStressConcurrent', () => {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <div>{steps[i]}</div>
@@ -342,7 +339,7 @@ describe('StoreStressConcurrent', () => {
           ),
         );
         expect(print(store)).toMatch(snapshots[i]);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <div>{steps[j]}</div>
@@ -350,7 +347,7 @@ describe('StoreStressConcurrent', () => {
           ),
         );
         expect(print(store)).toMatch(snapshots[j]);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <div>{steps[i]}</div>
@@ -358,7 +355,7 @@ describe('StoreStressConcurrent', () => {
           ),
         );
         expect(print(store)).toMatch(snapshots[i]);
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -407,7 +404,7 @@ describe('StoreStressConcurrent', () => {
     let container = document.createElement('div');
     for (let i = 0; i < steps.length; i++) {
       const root = ReactDOMClient.createRoot(container);
-      act(() =>
+      await act(() =>
         root.render(
           <Root>
             <X />
@@ -418,7 +415,7 @@ describe('StoreStressConcurrent', () => {
       );
       // We snapshot each step once so it doesn't regress.d
       snapshots.push(print(store));
-      act(() => root.unmount());
+      await act(() => root.unmount());
       expect(print(store)).toBe('');
     }
 
@@ -509,7 +506,7 @@ describe('StoreStressConcurrent', () => {
     // 2. Verify check Suspense can render same steps as initial fallback content.
     for (let i = 0; i < steps.length; i++) {
       const root = ReactDOMClient.createRoot(container);
-      act(() =>
+      await act(() =>
         root.render(
           <Root>
             <X />
@@ -523,7 +520,7 @@ describe('StoreStressConcurrent', () => {
         ),
       );
       expect(print(store)).toEqual(snapshots[i]);
-      act(() => root.unmount());
+      await act(() => root.unmount());
       expect(print(store)).toBe('');
     }
 
@@ -533,7 +530,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -544,7 +541,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -556,7 +553,7 @@ describe('StoreStressConcurrent', () => {
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
         // Check that we can transition back again.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -567,7 +564,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -578,7 +575,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -593,7 +590,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -609,7 +606,7 @@ describe('StoreStressConcurrent', () => {
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
         // Check that we can transition back again.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -624,7 +621,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -635,7 +632,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -646,7 +643,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -662,7 +659,7 @@ describe('StoreStressConcurrent', () => {
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
         // Check that we can transition back again.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -673,7 +670,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -684,7 +681,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -699,7 +696,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -711,7 +708,7 @@ describe('StoreStressConcurrent', () => {
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
         // Check that we can transition back again.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -726,7 +723,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -737,7 +734,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -754,7 +751,7 @@ describe('StoreStressConcurrent', () => {
 
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
-        await actAsync(async () => {
+        await act(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -764,7 +761,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[j]);
 
         // Stop forcing fallback.
-        await actAsync(async () => {
+        await act(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -774,7 +771,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[i]);
 
         // Trigger actual fallback.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -790,7 +787,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[j]);
 
         // Force fallback while we're in fallback mode.
-        act(() => {
+        await act(() => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -801,7 +798,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[j]);
 
         // Switch to primary mode.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -814,7 +811,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[j]);
 
         // Stop forcing fallback. This reverts to primary content.
-        await actAsync(async () => {
+        await act(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -825,7 +822,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[i]);
 
         // Clean up after every iteration.
-        await actAsync(async () => root.unmount());
+        await act(async () => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -892,7 +889,7 @@ describe('StoreStressConcurrent', () => {
     let container = document.createElement('div');
     for (let i = 0; i < steps.length; i++) {
       const root = ReactDOMClient.createRoot(container);
-      act(() =>
+      await act(() =>
         root.render(
           <Root>
             <X />
@@ -905,7 +902,7 @@ describe('StoreStressConcurrent', () => {
       );
       // We snapshot each step once so it doesn't regress.
       snapshots.push(print(store));
-      act(() => root.unmount());
+      await act(() => root.unmount());
       expect(print(store)).toBe('');
     }
 
@@ -915,7 +912,7 @@ describe('StoreStressConcurrent', () => {
     const fallbackSnapshots = [];
     for (let i = 0; i < steps.length; i++) {
       const root = ReactDOMClient.createRoot(container);
-      act(() =>
+      await act(() =>
         root.render(
           <Root>
             <X />
@@ -930,7 +927,7 @@ describe('StoreStressConcurrent', () => {
       );
       // We snapshot each step once so it doesn't regress.
       fallbackSnapshots.push(print(store));
-      act(() => root.unmount());
+      await act(() => root.unmount());
       expect(print(store)).toBe('');
     }
 
@@ -1048,7 +1045,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1061,7 +1058,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1075,7 +1072,7 @@ describe('StoreStressConcurrent', () => {
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
         // Check that we can transition back again.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1088,7 +1085,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -1099,7 +1096,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1117,7 +1114,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Re-render with steps[j].
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1136,7 +1133,7 @@ describe('StoreStressConcurrent', () => {
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(fallbackSnapshots[j]);
         // Check that we can transition back again.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1154,7 +1151,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -1165,7 +1162,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1178,7 +1175,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Re-render with steps[j].
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1192,7 +1189,7 @@ describe('StoreStressConcurrent', () => {
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(fallbackSnapshots[j]);
         // Check that we can transition back again.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1205,7 +1202,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(snapshots[i]);
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -1216,7 +1213,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1229,7 +1226,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Re-render with steps[j].
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1243,7 +1240,7 @@ describe('StoreStressConcurrent', () => {
         // Verify the successful transition to steps[j].
         expect(print(store)).toEqual(snapshots[j]);
         // Check that we can transition back again.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1256,7 +1253,7 @@ describe('StoreStressConcurrent', () => {
         );
         expect(print(store)).toEqual(fallbackSnapshots[i]);
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
@@ -1267,7 +1264,7 @@ describe('StoreStressConcurrent', () => {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
         const root = ReactDOMClient.createRoot(container);
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1286,7 +1283,7 @@ describe('StoreStressConcurrent', () => {
 
         // Force fallback.
         expect(print(store)).toEqual(snapshots[i]);
-        await actAsync(async () => {
+        await act(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -1296,7 +1293,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
         // Stop forcing fallback.
-        await actAsync(async () => {
+        await act(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -1306,7 +1303,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[i]);
 
         // Trigger actual fallback.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1320,7 +1317,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
         // Force fallback while we're in fallback mode.
-        act(() => {
+        await act(() => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -1331,7 +1328,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
         // Switch to primary mode.
-        act(() =>
+        await act(() =>
           root.render(
             <Root>
               <X />
@@ -1346,7 +1343,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(fallbackSnapshots[j]);
 
         // Stop forcing fallback. This reverts to primary content.
-        await actAsync(async () => {
+        await act(async () => {
           bridge.send('overrideSuspense', {
             id: suspenseID,
             rendererID: store.getRendererIDForElement(suspenseID),
@@ -1357,7 +1354,7 @@ describe('StoreStressConcurrent', () => {
         expect(print(store)).toEqual(snapshots[i]);
 
         // Clean up after every iteration.
-        act(() => root.unmount());
+        await act(() => root.unmount());
         expect(print(store)).toBe('');
       }
     }
