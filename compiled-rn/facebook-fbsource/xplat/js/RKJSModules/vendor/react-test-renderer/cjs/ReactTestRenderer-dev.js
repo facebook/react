@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<dcb3a30556188c6961c11e3ffe2a0c3a>>
+ * @generated SignedSource<<bd897fcea644b2a95f4293822e1f08be>>
  */
 
 "use strict";
@@ -25623,7 +25623,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-4384a7bcd-20240201";
+    var ReactVersion = "18.3.0-canary-53b12e46a-20240201";
 
     // Might add PROFILE later.
 
@@ -26059,7 +26059,7 @@ if (__DEV__) {
       });
     }
 
-    var act = React.unstable_act; // TODO: Remove from public bundle
+    var act = React.act; // TODO: Remove from public bundle
 
     var defaultTestOptions = {
       createNodeMock: function () {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<877b0f86c9972010f80642430d790525>>
+ * @generated SignedSource<<a643bb2dfd4641385c3d1cb800cc7fb7>>
  */
 
 "use strict";
@@ -321,6 +321,9 @@ exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
   ReactSharedInternals;
+exports.act = function () {
+  throw Error("act(...) is not supported in production builds of React.");
+};
 exports.cache = function (fn) {
   return function () {
     return fn.apply(null, arguments);
@@ -459,9 +462,6 @@ exports.unstable_DebugTracingMode = REACT_DEBUG_TRACING_MODE_TYPE;
 exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-exports.unstable_act = function () {
-  throw Error("act(...) is not supported in production builds of React.");
-};
 exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactCurrentCache.current;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
@@ -541,7 +541,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-4384a7bcd-20240201";
+exports.version = "18.3.0-canary-53b12e46a-20240201";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

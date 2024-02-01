@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c27ac45a247951b8b8199e9df960e4cf>>
+ * @generated SignedSource<<84e7b0d0b02f7624902f32d8515cf248>>
  */
 
 "use strict";
@@ -9273,7 +9273,7 @@ function updateContainer(element, container, parentComponent, callback) {
 function emptyFindFiberByHostInstance() {
   return null;
 }
-var act = React.unstable_act,
+var act = React.act,
   defaultTestOptions = {
     createNodeMock: function () {
       return null;
@@ -9577,7 +9577,7 @@ var devToolsConfig$jscomp$inline_1073 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-4384a7bcd-20240201",
+  version: "18.3.0-canary-53b12e46a-20240201",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1248 = {
@@ -9608,7 +9608,7 @@ var internals$jscomp$inline_1248 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-4384a7bcd-20240201"
+  reconcilerVersion: "18.3.0-canary-53b12e46a-20240201"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1249 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c41561dadb43d7158811daa4e8000813>>
+ * @generated SignedSource<<cae14277f9a1460c78070c0b4b0e4d28>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-4384a7bcd-20240201";
+    var ReactVersion = "18.3.0-canary-53b12e46a-20240201";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -3803,6 +3803,7 @@ if (__DEV__) {
     exports.Suspense = REACT_SUSPENSE_TYPE;
     exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
       ReactSharedInternals;
+    exports.act = act;
     exports.cache = cache;
     exports.cloneElement = cloneElement;
     exports.createContext = createContext;
@@ -3825,7 +3826,6 @@ if (__DEV__) {
     exports.unstable_Scope = REACT_SCOPE_TYPE;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
-    exports.unstable_act = act;
     exports.unstable_getCacheForType = getCacheForType;
     exports.unstable_getCacheSignal = getCacheSignal;
     exports.unstable_useCacheRefresh = useCacheRefresh;
