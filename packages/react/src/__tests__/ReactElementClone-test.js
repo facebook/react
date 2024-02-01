@@ -275,12 +275,7 @@ describe('ReactElementClone', () => {
   });
 
   it('should overwrite props', async () => {
-    let component;
     class Component extends React.Component {
-      componentDidMount() {
-        component = this;
-      }
-
       render() {
         expect(this.props.myprop).toBe('xyz');
         return <div />;
