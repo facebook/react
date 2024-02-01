@@ -3129,8 +3129,23 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       if (replay === null) {
         // We didn't complete the root so we have nothing to show. We can close
         // the request;
-        logRecoverableError(request, error, errorInfo);
-        fatalError(request, error);
+        if (
+          enablePostpone &&
+          typeof error === 'object' &&
+          error !== null &&
+          error.$$typeof === REACT_POSTPONE_TYPE
+        ) {
+          const postponeInstance: Postpone = (error: any);
+          const fatal = new Error(
+            'The render was aborted with postpone when the shell is incomplete. Reason: ' +
+              postponeInstance.message,
+          );
+          logRecoverableError(request, fatal, errorInfo);
+          fatalError(request, fatal);
+        } else {
+          logRecoverableError(request, error, errorInfo);
+          fatalError(request, error);
+        }
         return;
       } else {
         // If the shell aborts during a replay, that's not a fatal error. Instead
@@ -3138,7 +3153,20 @@ function abortTask(task: Task, request: Request, error: mixed): void {
         // the ReplaySet.
         replay.pendingTasks--;
         if (replay.pendingTasks === 0 && replay.nodes.length > 0) {
-          const errorDigest = logRecoverableError(request, error, errorInfo);
+          let errorDigest;
+          if (
+            enablePostpone &&
+            typeof error === 'object' &&
+            error !== null &&
+            error.$$typeof === REACT_POSTPONE_TYPE
+          ) {
+            const postponeInstance: Postpone = (error: any);
+            logPostpone(request, postponeInstance.message, errorInfo);
+            // TODO: Figure out a better signal than a magic digest value.
+            errorDigest = 'POSTPONE';
+          } else {
+            errorDigest = logRecoverableError(request, error, errorInfo);
+          }
           abortRemainingReplayNodes(
             request,
             null,
@@ -3162,7 +3190,20 @@ function abortTask(task: Task, request: Request, error: mixed): void {
       // We construct an errorInfo from the boundary's componentStack so the error in dev will indicate which
       // boundary the message is referring to
       const errorInfo = getThrownInfo(request, task.componentStack);
-      const errorDigest = logRecoverableError(request, error, errorInfo);
+      let errorDigest;
+      if (
+        enablePostpone &&
+        typeof error === 'object' &&
+        error !== null &&
+        error.$$typeof === REACT_POSTPONE_TYPE
+      ) {
+        const postponeInstance: Postpone = (error: any);
+        logPostpone(request, postponeInstance.message, errorInfo);
+        // TODO: Figure out a better signal than a magic digest value.
+        errorDigest = 'POSTPONE';
+      } else {
+        errorDigest = logRecoverableError(request, error, errorInfo);
+      }
       let errorMessage = error;
       if (__DEV__) {
         const errorPrefix =
