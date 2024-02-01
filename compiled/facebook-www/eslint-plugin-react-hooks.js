@@ -1892,6 +1892,11 @@ var ExhaustiveDeps = {
           return;
         // Handled
 
+        case 'TSAsExpression':
+          visitFunctionWithDependencies(callback.expression, declaredDependenciesNode, reactiveHook, reactiveHookName, isEffect);
+          return;
+        // Handled
+
         case 'Identifier':
           if (!declaredDependenciesNode) {
             // No deps, no problems.
