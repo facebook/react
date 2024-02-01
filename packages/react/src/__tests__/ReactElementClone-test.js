@@ -13,7 +13,6 @@ let act;
 let PropTypes;
 let React;
 let ReactDOMClient;
-let ReactTestUtils;
 
 describe('ReactElementClone', () => {
   let ComponentClass;
@@ -24,7 +23,6 @@ describe('ReactElementClone', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    ReactTestUtils = require('react-dom/test-utils');
 
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.
