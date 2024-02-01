@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b9de33ad77303e612467451dba484b4f>>
+ * @generated SignedSource<<23d1b7cce95eeba5b7251f184412d23c>>
  */
 
 "use strict";
@@ -3247,7 +3247,6 @@ to return true:wantsResponderID|                            |
     var enableProfilerNestedUpdatePhase = true;
     var syncLaneExpirationMs = 250;
     var transitionLaneExpirationMs = 5000;
-    var createRootStrictEffectsByDefault = false;
     var enableLazyContextPropagation = false;
     var enableAsyncActions = false;
 
@@ -27378,7 +27377,7 @@ to return true:wantsResponderID|                            |
       if (tag === ConcurrentRoot) {
         mode = ConcurrentMode;
 
-        if (isStrictMode === true || createRootStrictEffectsByDefault) {
+        if (isStrictMode === true) {
           mode |= StrictLegacyMode | StrictEffectsMode;
         }
 
@@ -27856,7 +27855,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-a4243e8c";
+    var ReactVersion = "18.3.0-canary-e1f5390e";
 
     function createPortal$1(
       children,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bd897fcea644b2a95f4293822e1f08be>>
+ * @generated SignedSource<<fdc597b6fd2e169218abbcc3fbb6bc8c>>
  */
 
 "use strict";
@@ -142,7 +142,6 @@ if (__DEV__) {
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
-    var createRootStrictEffectsByDefault = false;
     var syncLaneExpirationMs = 250;
     var transitionLaneExpirationMs = 5000;
     var enableLazyContextPropagation = false;
@@ -25204,7 +25203,7 @@ if (__DEV__) {
       if (tag === ConcurrentRoot) {
         mode = ConcurrentMode;
 
-        if (isStrictMode === true || createRootStrictEffectsByDefault) {
+        if (isStrictMode === true) {
           mode |= StrictLegacyMode | StrictEffectsMode;
         }
 
@@ -25623,7 +25622,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-4dd475c97-20240201";
+    var ReactVersion = "18.3.0-canary-3d1da1f9a-20240201";
 
     // Might add PROFILE later.
 
