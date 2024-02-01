@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-4671cea1";
+    var ReactVersion = "18.3.0-www-modern-517f857f";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -4126,6 +4126,7 @@ if (__DEV__) {
     exports.Suspense = REACT_SUSPENSE_TYPE;
     exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
       ReactSharedInternals;
+    exports.act = act;
     exports.cache = cache;
     exports.cloneElement = cloneElement;
     exports.createContext = createContext;
@@ -4146,7 +4147,6 @@ if (__DEV__) {
     exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
     exports.unstable_Scope = REACT_SCOPE_TYPE;
     exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-    exports.unstable_act = act;
     exports.unstable_getCacheForType = getCacheForType;
     exports.unstable_getCacheSignal = getCacheSignal;
     exports.unstable_useCacheRefresh = useCacheRefresh;

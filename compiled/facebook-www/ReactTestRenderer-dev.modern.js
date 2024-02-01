@@ -26078,7 +26078,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-e1d67c4c";
+    var ReactVersion = "18.3.0-www-modern-c904e94a";
 
     // Might add PROFILE later.
 
@@ -26514,7 +26514,7 @@ if (__DEV__) {
       });
     }
 
-    var act = React.unstable_act; // TODO: Remove from public bundle
+    var act = React.act; // TODO: Remove from public bundle
 
     var defaultTestOptions = {
       createNodeMock: function () {

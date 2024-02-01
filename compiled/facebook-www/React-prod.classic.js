@@ -355,6 +355,9 @@ exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED =
   ReactSharedInternals;
+exports.act = function () {
+  throw Error("act(...) is not supported in production builds of React.");
+};
 exports.cache = function (fn) {
   return function () {
     return fn.apply(null, arguments);
@@ -490,9 +493,6 @@ exports.unstable_LegacyHidden = REACT_LEGACY_HIDDEN_TYPE;
 exports.unstable_Scope = REACT_SCOPE_TYPE;
 exports.unstable_SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 exports.unstable_TracingMarker = REACT_TRACING_MARKER_TYPE;
-exports.unstable_act = function () {
-  throw Error("act(...) is not supported in production builds of React.");
-};
 exports.unstable_getCacheForType = function (resourceType) {
   var dispatcher = ReactCurrentCache.current;
   return dispatcher ? dispatcher.getCacheForType(resourceType) : resourceType();
@@ -572,4 +572,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-d6acec23";
+exports.version = "18.3.0-www-classic-8dbe57fc";
