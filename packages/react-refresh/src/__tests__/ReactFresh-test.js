@@ -1308,7 +1308,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('can patch both trees while suspense is displaying the fallback', async () => {
+  it('only patches the fallback tree while suspended', async () => {
     if (__DEV__) {
       const AppV1 = await render(
         () => {
