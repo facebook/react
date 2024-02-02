@@ -1106,4 +1106,42 @@ describe('ReactHooksInspectionIntegration', () => {
       },
     ]);
   });
+
+  // @gate enableAsyncActions
+  it('should support useOptimistic hook', () => {
+    const useOptimistic = React.useOptimistic;
+    function Foo() {
+      const [value] = useOptimistic('abc', currentState => currentState);
+      React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
+      return value;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        id: 0,
+        isStateEditable: false,
+        name: 'Optimistic',
+        value: 'abc',
+        subHooks: [],
+      },
+      {
+        id: 1,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'memo',
+        subHooks: [],
+      },
+      {
+        id: 2,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'not used',
+        subHooks: [],
+      },
+    ]);
+  });
 });

@@ -80,6 +80,11 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
         // This type check is for Flow only.
         Dispatcher.useMemoCache(0);
       }
+
+      if (typeof Dispatcher.useOptimistic === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useOptimistic(null, (s: mixed, a: mixed) => s);
+      }
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -348,6 +353,25 @@ function useMemoCache(size: number): Array<any> {
   return data;
 }
 
+function useOptimistic<S, A>(
+  passthrough: S,
+  reducer: ?(S, A) => S,
+): [S, (A) => void] {
+  const hook = nextHook();
+  let state;
+  if (hook !== null) {
+    state = hook.memoizedState;
+  } else {
+    state = passthrough;
+  }
+  hookLog.push({
+    primitive: 'Optimistic',
+    stackError: new Error(),
+    value: state,
+  });
+  return [state, (action: A) => {}];
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
@@ -361,6 +385,7 @@ const Dispatcher: DispatcherType = {
   useInsertionEffect,
   useMemo,
   useMemoCache,
+  useOptimistic,
   useReducer,
   useRef,
   useState,

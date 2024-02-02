@@ -17,6 +17,7 @@ import {
   useContext,
   useDebugValue,
   useEffect,
+  useOptimistic,
   useState,
 } from 'react';
 
@@ -73,6 +74,7 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
   const [count, updateCount] = useState(0);
   // eslint-disable-next-line no-unused-vars
   const contextValueA = useContext(ContextA);
+  useOptimistic<number, mixed>(1);
 
   // eslint-disable-next-line no-unused-vars
   const [_, __] = useState(object);
