@@ -25,7 +25,10 @@
       "default": "./index.js"
     },
     "./package.json": "./package.json",
-    "./jsx-runtime": "./jsx-runtime.js",
+    "./jsx-runtime": {
+      "react-server": "./jsx-runtime.react-server.js",
+      "default": "./jsx-runtime.js"
+    },
     "./jsx-dev-runtime": "./jsx-dev-runtime.js",
     "./src/*": "./src/*"
   },
