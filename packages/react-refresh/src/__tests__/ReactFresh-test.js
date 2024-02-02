@@ -1419,12 +1419,12 @@ describe('ReactFresh', () => {
         $RefreshReg$(Hello, 'Hello');
       });
 
-      // Colors inside both trees should change:
+      // Only update color in the visible child
       expect(container.childNodes.length).toBe(2);
       expect(container.childNodes[0]).toBe(primaryChild);
       expect(container.childNodes[1]).toBe(fallbackChild);
       expect(primaryChild.textContent).toBe('Content 1');
-      expect(primaryChild.style.color).toBe('red');
+      expect(primaryChild.style.color).toBe('green');
       expect(primaryChild.style.display).toBe('none');
       expect(fallbackChild.textContent).toBe('Fallback 1');
       expect(fallbackChild.style.color).toBe('red');
