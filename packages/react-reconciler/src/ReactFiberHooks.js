@@ -388,10 +388,7 @@ function warnOnHookMismatchInDev(currentHookName: HookType): void {
   }
 }
 
-function warnIfAsyncClientComponent(
-  Component: Function,
-  componentDoesIncludeHooks: boolean,
-) {
+function warnIfAsyncClientComponent(Component: Function) {
   if (__DEV__) {
     // This dev-only check only works for detecting native async functions,
     // not transpiled ones. There's also a prod check that we use to prevent
@@ -402,40 +399,16 @@ function warnIfAsyncClientComponent(
       // $FlowIgnore[method-unbinding]
       Object.prototype.toString.call(Component) === '[object AsyncFunction]';
     if (isAsyncFunction) {
-      // Encountered an async Client Component. This is not yet supported,
-      // except in certain constrained cases, like during a route navigation.
+      // Encountered an async Client Component. This is not yet supported.
       const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
       if (!didWarnAboutAsyncClientComponent.has(componentName)) {
         didWarnAboutAsyncClientComponent.add(componentName);
-
-        // Check if this is a sync update. We use the "root" render lanes here
-        // because the "subtree" render lanes may include additional entangled
-        // lanes related to revealing previously hidden content.
-        const root = getWorkInProgressRoot();
-        const rootRenderLanes = getWorkInProgressRootRenderLanes();
-        if (root !== null && includesBlockingLane(root, rootRenderLanes)) {
-          console.error(
-            'async/await is not yet supported in Client Components, only ' +
-              'Server Components. This error is often caused by accidentally ' +
-              "adding `'use client'` to a module that was originally written " +
-              'for the server.',
-          );
-        } else {
-          // This is a concurrent (Transition, Retry, etc) render. We don't
-          // warn in these cases.
-          //
-          // However, Async Components are forbidden to include hooks, even
-          // during a transition, so let's check for that here.
-          //
-          // TODO: Add a corresponding warning to Server Components runtime.
-          if (componentDoesIncludeHooks) {
-            console.error(
-              'Hooks are not supported inside an async component. This ' +
-                "error is often caused by accidentally adding `'use client'` " +
-                'to a module that was originally written for the server.',
-            );
-          }
-        }
+        console.error(
+          'async/await is not yet supported in Client Components, only ' +
+            'Server Components. This error is often caused by accidentally ' +
+            "adding `'use client'` to a module that was originally written " +
+            'for the server.',
+        );
       }
     }
   }
@@ -521,6 +494,8 @@ export function renderWithHooks<Props, SecondArg>(
     // Used for hot reloading:
     ignorePreviousDependencies =
       current !== null && current.type !== workInProgress.type;
+
+    warnIfAsyncClientComponent(Component);
   }
 
   workInProgress.memoizedState = null;
@@ -637,10 +612,6 @@ function finishRenderingHooks<Props, SecondArg>(
 ): void {
   if (__DEV__) {
     workInProgress._debugHookTypes = hookTypesDev;
-
-    const componentDoesIncludeHooks =
-      workInProgressHook !== null || thenableIndexCounter !== 0;
-    warnIfAsyncClientComponent(Component, componentDoesIncludeHooks);
   }
 
   // We can assume the previous dispatcher is always this one, since we set it

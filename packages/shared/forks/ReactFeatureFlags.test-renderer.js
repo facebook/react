@@ -32,7 +32,6 @@ export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
-export const enableSchedulerDebugging = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
@@ -48,7 +47,7 @@ export const enableUseEffectEventHook = false;
 export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
-export const enableFilterEmptyStringAttributesDOM = false;
+export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = false;
 
 export const enableRetryLaneExpiration = false;

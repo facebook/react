@@ -5077,7 +5077,7 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `href=(string)`| (changed)| `"https://reactjs.com/"` |
-| `href=(empty string)`| (initial, warning)| `<empty string>` |
+| `href=(empty string)`| (changed)| `"http://localhost:3000/"` |
 | `href=(array with string)`| (changed)| `"https://reactjs.com/"` |
 | `href=(empty array)`| (changed)| `"http://localhost:3000/"` |
 | `href=(object)`| (changed)| `"http://localhost:3000/result%20of%20toString()"` |
