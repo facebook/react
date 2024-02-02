@@ -28,7 +28,6 @@ describe('ReactFresh', () => {
   beforeEach(() => {
     if (__DEV__) {
       jest.resetModules();
-      global.IS_REACT_ACT_ENVIRONMENT = true;
       React = require('react');
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
