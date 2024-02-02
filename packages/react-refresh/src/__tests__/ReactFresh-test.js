@@ -71,11 +71,9 @@ describe('ReactFresh', () => {
     return Component;
   }
 
-  async function patch(version) {
+  function patch(version) {
     const Component = version();
-    await act(() => {
-      ReactFreshRuntime.performReactRefresh();
-    });
+    ReactFreshRuntime.performReactRefresh();
     return Component;
   }
 
@@ -126,7 +124,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      const HelloV2 = await patch(() => {
+      const HelloV2 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -219,7 +217,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      const OuterV2 = await patch(() => {
+      const OuterV2 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -350,7 +348,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Patch to change the color.
-      const ParentV2 = await patch(() => {
+      const ParentV2 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -437,7 +435,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function Hello({color}) {
           const [val, setVal] = React.useState(0);
           return (
@@ -491,7 +489,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update of just the rendering function.
-      await patch(() => {
+      patch(() => {
         function Hello({color}) {
           const [val, setVal] = React.useState(0);
           return (
@@ -545,7 +543,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      const OuterV2 = await patch(() => {
+      const OuterV2 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -634,7 +632,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      const OuterV2 = await patch(() => {
+      const OuterV2 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -721,7 +719,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update of just the rendering function.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -770,7 +768,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      const OuterV2 = await patch(() => {
+      const OuterV2 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -882,7 +880,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      const AppV2 = await patch(() => {
+      const AppV2 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1005,7 +1003,7 @@ describe('ReactFresh', () => {
       expect(container.textContent).toBe('Loading');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1035,7 +1033,7 @@ describe('ReactFresh', () => {
       expect(el.style.color).toBe('red');
 
       // Test another reload.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1089,7 +1087,7 @@ describe('ReactFresh', () => {
       expect(container.textContent).toBe('Loading');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function renderHello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1120,7 +1118,7 @@ describe('ReactFresh', () => {
       expect(el.style.color).toBe('red');
 
       // Test another reload.
-      await patch(() => {
+      patch(() => {
         function renderHello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1175,7 +1173,7 @@ describe('ReactFresh', () => {
       expect(container.textContent).toBe('Loading');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function renderHello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1206,7 +1204,7 @@ describe('ReactFresh', () => {
       expect(el.style.color).toBe('red');
 
       // Test another reload.
-      await patch(() => {
+      patch(() => {
         function renderHello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1261,7 +1259,7 @@ describe('ReactFresh', () => {
       expect(container.textContent).toBe('Loading');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function renderHello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1292,7 +1290,7 @@ describe('ReactFresh', () => {
       expect(el.style.color).toBe('red');
 
       // Test another reload.
-      await patch(() => {
+      patch(() => {
         function renderHello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1360,7 +1358,7 @@ describe('ReactFresh', () => {
       expect(primaryChild.style.display).toBe('');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function Hello({children}) {
           const [val, setVal] = React.useState(0);
           return (
@@ -1406,7 +1404,7 @@ describe('ReactFresh', () => {
       expect(fallbackChild.style.display).toBe('');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function Hello({children}) {
           const [val, setVal] = React.useState(0);
           return (
@@ -1438,7 +1436,7 @@ describe('ReactFresh', () => {
       expect(primaryChild.style.display).toBe('');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function Hello({children}) {
           const [val, setVal] = React.useState(0);
           return (
@@ -1494,7 +1492,7 @@ describe('ReactFresh', () => {
       expect(appRenders).toBe(1);
 
       // Perform a hot update for Hello only.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1554,7 +1552,7 @@ describe('ReactFresh', () => {
       expect(container.textContent).toBe('XXXXXXXXXX');
       helloRenders = 0;
 
-      await patch(() => {
+      patch(() => {
         function Hello({children}) {
           helloRenders++;
           return <div>O{children}O</div>;
@@ -1621,7 +1619,7 @@ describe('ReactFresh', () => {
       expect(el2.textContent).toBe('1');
 
       // Perform a hot update for both inner components.
-      await patch(() => {
+      patch(() => {
         function Hello1() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1683,7 +1681,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      const HelloV2 = await patch(() => {
+      const HelloV2 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1704,7 +1702,7 @@ describe('ReactFresh', () => {
       expect(el.style.color).toBe('red');
 
       // Perform a hot update.
-      const HelloV3 = await patch(() => {
+      const HelloV3 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1745,7 +1743,7 @@ describe('ReactFresh', () => {
       expect(newEl.style.color).toBe('yellow');
 
       // Verify we can patch again while preserving the signature.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1765,7 +1763,7 @@ describe('ReactFresh', () => {
       expect(newEl.style.color).toBe('purple');
 
       // Check removing the signature also causes a remount.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -1942,7 +1940,7 @@ describe('ReactFresh', () => {
   });
 
   async function runRemountingStressTest(tree) {
-    await patch(() => {
+    patch(() => {
       function Hello({children}) {
         return <section data-color="blue">{children}</section>;
       }
@@ -1963,7 +1961,7 @@ describe('ReactFresh', () => {
     });
 
     // Patch color without changing the signature.
-    await patch(() => {
+    patch(() => {
       function Hello({children}) {
         return <section data-color="red">{children}</section>;
       }
@@ -1982,7 +1980,7 @@ describe('ReactFresh', () => {
     });
 
     // Patch color *and* change the signature.
-    await patch(() => {
+    patch(() => {
       function Hello({children}) {
         return <section data-color="orange">{children}</section>;
       }
@@ -2001,7 +1999,7 @@ describe('ReactFresh', () => {
     });
 
     // Now patch color but *don't* change the signature.
-    await patch(() => {
+    patch(() => {
       function Hello({children}) {
         return <section data-color="black">{children}</section>;
       }
@@ -2231,7 +2229,7 @@ describe('ReactFresh', () => {
     expect(el.textContent).toBe('1');
 
     // Perform a hot update that doesn't remount.
-    await patch(() => {
+    patch(() => {
       function Hello() {
         const [val, setVal] = React.useState(0);
         return (
@@ -2252,7 +2250,7 @@ describe('ReactFresh', () => {
     expect(el.style.color).toBe('red');
 
     // Perform a hot update that remounts.
-    await patch(() => {
+    patch(() => {
       function Hello() {
         const [val, setVal] = React.useState(0);
         return (
@@ -2281,7 +2279,7 @@ describe('ReactFresh', () => {
     expect(newEl.style.color).toBe('yellow');
 
     // Verify we can patch again while preserving the signature.
-    await patch(() => {
+    patch(() => {
       function Hello() {
         const [val, setVal] = React.useState(0);
         return (
@@ -2301,7 +2299,7 @@ describe('ReactFresh', () => {
     expect(newEl.style.color).toBe('purple');
 
     // Check removing the signature also causes a remount.
-    await patch(() => {
+    patch(() => {
       function Hello() {
         const [val, setVal] = React.useState(0);
         return (
@@ -2358,7 +2356,7 @@ describe('ReactFresh', () => {
       expect(useEffectWithEmptyArrayCalls).toBe(1); // useEffect didn't re-run
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           const tranformed = React.useMemo(() => val * 10, [val]);
@@ -2415,7 +2413,7 @@ describe('ReactFresh', () => {
       expect(el.style.color).toBe('blue');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const source = React.useMemo(() => ({value: 20}), []);
           const [state, setState] = React.useState({value: null});
@@ -2470,8 +2468,8 @@ describe('ReactFresh', () => {
     expect(el.firstChild).toBe(null); // Offscreen content not flushed yet.
 
     // Perform a hot update.
-    {
-      const Hello = () => {
+    patch(() => {
+      function Hello() {
         React.useLayoutEffect(() => {
           Scheduler.log('Hello#layout');
         });
@@ -2481,10 +2479,9 @@ describe('ReactFresh', () => {
             {val}
           </p>
         );
-      };
+      }
       $RefreshReg$(Hello, 'Hello');
-      ReactFreshRuntime.performReactRefresh();
-    }
+    });
 
     // It's still offscreen so we don't see anything.
     expect(container.firstChild).toBe(el);
@@ -2510,8 +2507,8 @@ describe('ReactFresh', () => {
     expect(el.firstChild.style.color).toBe('red');
 
     // Hot reload while we're offscreen.
-    {
-      const Hello = () => {
+    patch(() => {
+      function Hello() {
         React.useLayoutEffect(() => {
           Scheduler.log('Hello#layout');
         });
@@ -2521,10 +2518,9 @@ describe('ReactFresh', () => {
             {val}
           </p>
         );
-      };
+      }
       $RefreshReg$(Hello, 'Hello');
-      ReactFreshRuntime.performReactRefresh();
-    }
+    });
 
     // It's still offscreen so we don't see the updates.
     expect(container.firstChild).toBe(el);
@@ -2579,7 +2575,7 @@ describe('ReactFresh', () => {
       const secondP = firstP.nextSibling.nextSibling;
 
       // Perform a hot update that fails.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           throw new Error('No');
         }
@@ -2591,7 +2587,7 @@ describe('ReactFresh', () => {
       expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
 
       // Perform a hot update that fixes the error.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Fixed!</h1>;
         }
@@ -2605,7 +2601,7 @@ describe('ReactFresh', () => {
 
       // Verify next hot reload doesn't remount anything.
       const helloNode = container.firstChild.nextSibling;
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Nice.</h1>;
         }
@@ -2657,7 +2653,7 @@ describe('ReactFresh', () => {
       const secondP = firstP.nextSibling.nextSibling;
 
       // Perform a hot update that fails.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           throw new Error('No');
         }
@@ -2669,7 +2665,7 @@ describe('ReactFresh', () => {
       expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
 
       // Perform a hot update that fixes the error.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Fixed!</h1>;
         }
@@ -2683,7 +2679,7 @@ describe('ReactFresh', () => {
 
       // Verify next hot reload doesn't remount anything.
       const helloNode = container.firstChild.nextSibling;
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Nice.</h1>;
         }
@@ -2739,7 +2735,7 @@ describe('ReactFresh', () => {
 
       // Perform a hot update that fails.
       let crash;
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [x, setX] = React.useState('');
           React.useEffect(() => {
@@ -2765,7 +2761,7 @@ describe('ReactFresh', () => {
       expect(container.firstChild.nextSibling.nextSibling).toBe(secondP);
 
       // Perform a hot update that fixes the error.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [x] = React.useState('');
           React.useEffect(() => {}, []); // Removes the bad effect code.
@@ -2782,7 +2778,7 @@ describe('ReactFresh', () => {
 
       // Verify next hot reload doesn't remount anything.
       const helloNode = container.firstChild.nextSibling;
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [x] = React.useState('');
           React.useEffect(() => {}, []);
@@ -2812,18 +2808,18 @@ describe('ReactFresh', () => {
       expect(container.innerHTML).toBe('');
 
       // A bad retry
-      await expect(
+      expect(() => {
         patch(() => {
           function Hello() {
             throw new Error('Not yet');
           }
           $RefreshReg$(Hello, 'Hello');
-        }),
-      ).rejects.toThrow('Not yet');
+        });
+      }).toThrow('Not yet');
       expect(container.innerHTML).toBe('');
 
       // Perform a hot update that fixes the error.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Fixed!</h1>;
         }
@@ -2833,25 +2829,25 @@ describe('ReactFresh', () => {
       expect(container.innerHTML).toBe('<h1>Fixed!</h1>');
 
       // Ensure we can keep failing and recovering later.
-      await expect(
+      expect(() => {
         patch(() => {
           function Hello() {
             throw new Error('No 2');
           }
           $RefreshReg$(Hello, 'Hello');
-        }),
-      ).rejects.toThrow('No 2');
+        });
+      }).toThrow('No 2');
       expect(container.innerHTML).toBe('');
-      await expect(
+      expect(() => {
         patch(() => {
           function Hello() {
             throw new Error('Not yet 2');
           }
           $RefreshReg$(Hello, 'Hello');
-        }),
-      ).rejects.toThrow('Not yet 2');
+        });
+      }).toThrow('Not yet 2');
       expect(container.innerHTML).toBe('');
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Fixed 2!</h1>;
         }
@@ -2863,14 +2859,14 @@ describe('ReactFresh', () => {
       await act(() => {
         root.unmount();
       });
-      await patch(() => {
+      patch(() => {
         function Hello() {
           throw new Error('Ignored');
         }
         $RefreshReg$(Hello, 'Hello');
       });
       expect(container.innerHTML).toBe('');
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Ignored</h1>;
         }
@@ -2900,7 +2896,7 @@ describe('ReactFresh', () => {
       });
 
       // Perform a hot update that fixes the error.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Fixed!</h1>;
         }
@@ -2925,29 +2921,29 @@ describe('ReactFresh', () => {
 
       // Perform a hot update that fails.
       // This removes the root.
-      await expect(
+      expect(() => {
         patch(() => {
           function Hello() {
             throw new Error('No');
           }
           $RefreshReg$(Hello, 'Hello');
-        }),
-      ).rejects.toThrow('No');
+        });
+      }).toThrow('No');
       expect(container.innerHTML).toBe('');
 
       // A bad retry
-      await expect(
+      expect(() => {
         patch(() => {
           function Hello() {
             throw new Error('Not yet');
           }
           $RefreshReg$(Hello, 'Hello');
-        }),
-      ).rejects.toThrow('Not yet');
+        });
+      }).toThrow('Not yet');
       expect(container.innerHTML).toBe('');
 
       // Perform a hot update that fixes the error.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Fixed!</h1>;
         }
@@ -2958,7 +2954,7 @@ describe('ReactFresh', () => {
 
       // Verify next hot reload doesn't remount anything.
       const helloNode = container.firstChild;
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Nice.</h1>;
         }
@@ -2968,18 +2964,18 @@ describe('ReactFresh', () => {
       expect(helloNode.textContent).toBe('Nice.');
 
       // Break again.
-      await expect(
+      expect(() => {
         patch(() => {
           function Hello() {
             throw new Error('Oops');
           }
           $RefreshReg$(Hello, 'Hello');
-        }),
-      ).rejects.toThrow('Oops');
+        });
+      }).toThrow('Oops');
       expect(container.innerHTML).toBe('');
 
       // Perform a hot update that fixes the error.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>At last.</h1>;
         }
@@ -2993,7 +2989,7 @@ describe('ReactFresh', () => {
         root.unmount();
       });
       expect(container.innerHTML).toBe('');
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Never mind me!</h1>;
         }
@@ -3014,14 +3010,14 @@ describe('ReactFresh', () => {
       expect(container.innerHTML).toBe('<h1>Hi</h1>');
 
       // Break again.
-      await expect(
+      expect(() => {
         patch(() => {
           function Hello() {
             throw new Error('Oops');
           }
           $RefreshReg$(Hello, 'Hello');
-        }),
-      ).rejects.toThrow('Oops');
+        });
+      }).toThrow('Oops');
       expect(container.innerHTML).toBe('');
 
       // Check we don't attempt to reverse an intentional unmount, even after an error.
@@ -3029,7 +3025,7 @@ describe('ReactFresh', () => {
         root.unmount();
       });
       expect(container.innerHTML).toBe('');
-      await patch(() => {
+      patch(() => {
         function Hello() {
           return <h1>Never mind me!</h1>;
         }
@@ -3143,7 +3139,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      const HelloV2 = await patch(() => {
+      const HelloV2 = patch(() => {
         class Hello extends React.Component {
           state = {count: 0};
           handleClick = () => {
@@ -3180,7 +3176,7 @@ describe('ReactFresh', () => {
       expect(newEl.style.color).toBe('red');
       expect(newEl.textContent).toBe('1');
 
-      const HelloV3 = await patch(() => {
+      const HelloV3 = patch(() => {
         class Hello extends React.Component {
           state = {count: 0};
           handleClick = () => {
@@ -3239,7 +3235,7 @@ describe('ReactFresh', () => {
       );
       expect(testRef.current.getColor()).toBe('green');
 
-      await patch(() => {
+      patch(() => {
         class Hello extends React.Component {
           getColor() {
             return 'orange';
@@ -3252,7 +3248,7 @@ describe('ReactFresh', () => {
       });
       expect(testRef.current.getColor()).toBe('orange');
 
-      await patch(() => {
+      patch(() => {
         const Hello = React.forwardRef((props, ref) => {
           React.useImperativeHandle(ref, () => ({
             getColor() {
@@ -3265,7 +3261,7 @@ describe('ReactFresh', () => {
       });
       expect(testRef.current.getColor()).toBe('pink');
 
-      await patch(() => {
+      patch(() => {
         const Hello = React.forwardRef((props, ref) => {
           React.useImperativeHandle(ref, () => ({
             getColor() {
@@ -3278,7 +3274,7 @@ describe('ReactFresh', () => {
       });
       expect(testRef.current.getColor()).toBe('yellow');
 
-      await patch(() => {
+      patch(() => {
         const Hello = React.forwardRef((props, ref) => {
           React.useImperativeHandle(ref, () => ({
             getColor() {
@@ -3318,7 +3314,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update that turns it into a class.
-      const HelloV2 = await patch(() => {
+      const HelloV2 = patch(() => {
         class Hello extends React.Component {
           state = {count: 0};
           handleClick = () => {
@@ -3356,7 +3352,7 @@ describe('ReactFresh', () => {
       expect(newEl.textContent).toBe('1');
 
       // Now convert it back to a function.
-      const HelloV3 = await patch(() => {
+      const HelloV3 = patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -3387,7 +3383,7 @@ describe('ReactFresh', () => {
       expect(finalEl.textContent).toBe('1');
 
       // Now that it's a function, verify edits keep state.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
@@ -3876,7 +3872,7 @@ describe('ReactFresh', () => {
       expect(el.textContent).toBe('1');
 
       // Perform a hot update.
-      await patch(() => {
+      patch(() => {
         function Hello() {
           const [val, setVal] = React.useState(0);
           return (
