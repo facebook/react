@@ -10,8 +10,9 @@
 'use strict';
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactTestUtils;
+let act;
 
 describe('ReactJSXElement', () => {
   let Component;
@@ -20,8 +21,10 @@ describe('ReactJSXElement', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
+
     Component = class extends React.Component {
       render() {
         return <div />;
@@ -172,14 +175,20 @@ describe('ReactJSXElement', () => {
     expect(element.constructor).toBe(object.constructor);
   });
 
-  it('should use default prop value when removing a prop', () => {
+  it('should use default prop value when removing a prop', async () => {
     Component.defaultProps = {fruit: 'persimmon'};
 
     const container = document.createElement('div');
-    const instance = ReactDOM.render(<Component fruit="mango" />, container);
+    const root = ReactDOMClient.createRoot(container);
+    let instance;
+    await act(() => {
+      root.render(<Component fruit="mango" ref={ref => (instance = ref)} />);
+    });
     expect(instance.props.fruit).toBe('mango');
 
-    ReactDOM.render(<Component />, container);
+    await act(() => {
+      root.render(<Component ref={ref => (instance = ref)} />);
+    });
     expect(instance.props.fruit).toBe('persimmon');
   });
 
