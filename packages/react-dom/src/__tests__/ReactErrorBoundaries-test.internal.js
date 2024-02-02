@@ -646,9 +646,7 @@ describe('ReactErrorBoundaries', () => {
       root.render(<BrokenComponentWillUnmount />);
     });
     await expect(async () => {
-      await act(async () => {
-        root.unmount();
-      });
+      root.unmount();
     }).rejects.toThrow('Hello');
   });
 
@@ -691,16 +689,9 @@ describe('ReactErrorBoundaries', () => {
     expect(container1.firstChild.textContent).toBe('After 1');
     expect(container2.firstChild.textContent).toBe('After 2');
     expect(container3.firstChild.textContent).toBe('After 3');
-
-    await act(async () => {
-      root1.unmount();
-    });
-    await act(async () => {
-      root2.unmount();
-    });
-    await act(async () => {
-      root3.unmount();
-    });
+    root1.unmount();
+    root2.unmount();
+    root3.unmount();
     expect(container1.firstChild).toBe(null);
     expect(container2.firstChild).toBe(null);
     expect(container3.firstChild).toBe(null);
@@ -736,6 +727,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -748,9 +742,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -776,6 +768,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -788,9 +783,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -814,6 +807,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -824,9 +820,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -851,6 +845,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -862,9 +859,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -965,6 +960,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorMessage constructor',
       'ErrorMessage componentWillMount',
       'ErrorMessage render',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -981,9 +979,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog([
       'ErrorBoundary componentWillUnmount',
       'ErrorMessage componentWillUnmount',
@@ -1024,6 +1020,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1045,9 +1044,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1072,6 +1069,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1083,9 +1083,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1120,6 +1118,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1138,9 +1139,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1174,6 +1173,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1189,9 +1191,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1225,6 +1225,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1238,9 +1241,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog([
       'ErrorBoundary componentWillUnmount',
       'Error message ref is set to null',
@@ -1273,6 +1274,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1288,9 +1292,7 @@ describe('ReactErrorBoundaries', () => {
       '[object HTMLDivElement]',
     );
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
     expect(errorMessageRef.current).toEqual(null);
   });
@@ -1313,9 +1315,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidMount',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1358,6 +1358,9 @@ describe('ReactErrorBoundaries', () => {
       // Render the error message
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1375,9 +1378,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1422,6 +1423,9 @@ describe('ReactErrorBoundaries', () => {
       // Render the error message
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1440,9 +1444,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1482,6 +1484,9 @@ describe('ReactErrorBoundaries', () => {
       // Render the error message
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1497,9 +1502,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1539,6 +1542,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1555,9 +1561,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1602,6 +1606,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1621,9 +1628,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1677,6 +1682,9 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1693,9 +1701,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog([
       'ErrorBoundary componentWillUnmount',
       'Error message ref is set to null',
@@ -1756,9 +1762,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1820,9 +1824,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -1888,9 +1890,7 @@ describe('ReactErrorBoundaries', () => {
       'InnerErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog([
       'OuterErrorBoundary componentWillUnmount',
       'InnerErrorBoundary componentWillUnmount',
@@ -1941,9 +1941,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog([
       'ErrorBoundary componentWillUnmount',
       'Normal componentWillUnmount',
@@ -1976,9 +1974,7 @@ describe('ReactErrorBoundaries', () => {
     });
     expect(container.textContent).toBe('Other screen');
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
   });
 
   it("doesn't get into inconsistent state during removals", async () => {
@@ -2000,9 +1996,7 @@ describe('ReactErrorBoundaries', () => {
     expect(container.textContent).toBe('Caught an error: Hello.');
 
     Scheduler.unstable_clearLog();
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -2024,9 +2018,7 @@ describe('ReactErrorBoundaries', () => {
     expect(container.textContent).toBe('Caught an error: Hello.');
 
     Scheduler.unstable_clearLog();
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -2081,9 +2073,7 @@ describe('ReactErrorBoundaries', () => {
     expect(container.textContent).toBe('Caught an error: Hello.');
 
     Scheduler.unstable_clearLog();
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -2117,10 +2107,7 @@ describe('ReactErrorBoundaries', () => {
       fail = true;
       statefulInst.forceUpdate();
     }).not.toThrow();
-
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -2180,9 +2167,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -2223,9 +2208,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -2242,6 +2225,9 @@ describe('ReactErrorBoundaries', () => {
 
     // verify flushed passive effects and handle the error
     assertLog([
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -2320,9 +2306,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog(['ErrorBoundary componentWillUnmount']);
   });
 
@@ -2421,9 +2405,7 @@ describe('ReactErrorBoundaries', () => {
       'InnerUpdateBoundary componentDidUpdate',
     ]);
 
-    await act(async () => {
-      root.unmount();
-    });
+    root.unmount();
     assertLog([
       'OuterErrorBoundary componentWillUnmount',
       'InnerUnmountBoundary componentWillUnmount',
@@ -2505,6 +2487,9 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
+      // Retry because the error may be caused by a dependency on concurrent
+      // state like a store. Retrying can recover from errors that will
+      // succeed in the next render such as tearing.
       'NoopErrorBoundary constructor',
       'NoopErrorBoundary componentWillMount',
       'NoopErrorBoundary render',
