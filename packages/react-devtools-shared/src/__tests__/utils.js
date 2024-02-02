@@ -182,6 +182,9 @@ export function getModernRenderImplementation(): RenderImplementation {
   });
 
   function render(elements) {
+    if (root == null) {
+      root = ReactDOMClient.createRoot(container);
+    }
     root.render(elements);
 
     return unmount;
@@ -195,7 +198,7 @@ export function getModernRenderImplementation(): RenderImplementation {
     container = document.createElement('div');
     document.body.appendChild(container);
 
-    root = ReactDOMClient.createRoot(container);
+    root = null;
 
     containersToRemove.push(container);
   }
