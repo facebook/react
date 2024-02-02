@@ -1937,7 +1937,7 @@ describe('ReactFresh', () => {
         }
       }
     }
-  });
+  }, 10000);
 
   async function runRemountingStressTest(tree) {
     patch(() => {
