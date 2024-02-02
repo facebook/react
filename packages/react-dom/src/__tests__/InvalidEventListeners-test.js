@@ -13,13 +13,15 @@ jest.mock('react-dom-bindings/src/events/isEventSupported');
 
 describe('InvalidEventListeners', () => {
   let React;
-  let ReactDOM;
+  let ReactDOMClient;
+  let act;
   let container;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -30,13 +32,16 @@ describe('InvalidEventListeners', () => {
     container = null;
   });
 
-  it('should prevent non-function listeners, at dispatch', () => {
-    let node;
-    expect(() => {
-      node = ReactDOM.render(<div onClick="not a function" />, container);
+  it('should prevent non-function listeners, at dispatch', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<div onClick="not a function" />);
+      });
     }).toErrorDev(
       'Expected `onClick` listener to be a function, instead got a value of `string` type.',
     );
+    const node = container.firstChild;
 
     spyOnProd(console, 'error');
 
@@ -46,11 +51,13 @@ describe('InvalidEventListeners', () => {
     }
     window.addEventListener('error', handleWindowError);
     try {
-      node.dispatchEvent(
-        new MouseEvent('click', {
-          bubbles: true,
-        }),
-      );
+      await act(() => {
+        node.dispatchEvent(
+          new MouseEvent('click', {
+            bubbles: true,
+          }),
+        );
+      });
     } finally {
       window.removeEventListener('error', handleWindowError);
     }
@@ -77,12 +84,19 @@ describe('InvalidEventListeners', () => {
     }
   });
 
-  it('should not prevent null listeners, at dispatch', () => {
-    const node = ReactDOM.render(<div onClick={null} />, container);
-    node.dispatchEvent(
-      new MouseEvent('click', {
-        bubbles: true,
-      }),
-    );
+  it('should not prevent null listeners, at dispatch', async () => {
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div onClick={null} />);
+    });
+
+    const node = container.firstChild;
+    await act(() => {
+      node.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
+      );
+    });
   });
 });
