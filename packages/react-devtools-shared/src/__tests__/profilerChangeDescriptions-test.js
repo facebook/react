@@ -7,9 +7,10 @@
  * @flow
  */
 
+import {getVersionedRenderImplementation} from './utils';
+
 describe('Profiler change descriptions', () => {
   let React;
-  let legacyRender;
   let store;
   let utils;
 
@@ -17,14 +18,14 @@ describe('Profiler change descriptions', () => {
     utils = require('./utils');
     utils.beforeEachProfiling();
 
-    legacyRender = utils.legacyRender;
-
     store = global.store;
     store.collapseNodesByDefault = false;
     store.recordChangeDescriptions = true;
 
     React = require('react');
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   // @reactVersion >=18.0
   it('should identify useContext as the cause for a re-render', () => {
@@ -62,10 +63,8 @@ describe('Profiler change descriptions', () => {
       );
     };
 
-    const container = document.createElement('div');
-
     utils.act(() => store.profilerStore.startProfiling());
-    utils.act(() => legacyRender(<App />, container));
+    utils.act(() => render(<App />));
     utils.act(() => forceUpdate());
     utils.act(() => store.profilerStore.stopProfiling());
 
