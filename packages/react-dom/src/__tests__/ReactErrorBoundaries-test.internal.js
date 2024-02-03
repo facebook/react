@@ -727,9 +727,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -768,9 +766,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -807,9 +803,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -845,9 +839,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -960,9 +952,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorMessage constructor',
       'ErrorMessage componentWillMount',
       'ErrorMessage render',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1020,9 +1010,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1069,9 +1057,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1118,9 +1104,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1173,9 +1157,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1225,9 +1207,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1274,9 +1254,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -1358,9 +1336,7 @@ describe('ReactErrorBoundaries', () => {
       // Render the error message
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1423,9 +1399,7 @@ describe('ReactErrorBoundaries', () => {
       // Render the error message
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1484,9 +1458,7 @@ describe('ReactErrorBoundaries', () => {
       // Render the error message
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1542,9 +1514,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1606,9 +1576,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -1682,9 +1650,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary static getDerivedStateFromError',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render error',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary componentWillReceiveProps',
       'ErrorBoundary componentWillUpdate',
       'ErrorBoundary render success',
@@ -2225,9 +2191,7 @@ describe('ReactErrorBoundaries', () => {
 
     // verify flushed passive effects and handle the error
     assertLog([
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'ErrorBoundary constructor',
       'ErrorBoundary componentWillMount',
       'ErrorBoundary render success',
@@ -2487,9 +2451,7 @@ describe('ReactErrorBoundaries', () => {
       'BrokenRender constructor',
       'BrokenRender componentWillMount',
       'BrokenRender render [!]',
-      // Retry because the error may be caused by a dependency on concurrent
-      // state like a store. Retrying can recover from errors that will
-      // succeed in the next render such as tearing.
+      // logs for error retry
       'NoopErrorBoundary constructor',
       'NoopErrorBoundary componentWillMount',
       'NoopErrorBoundary render',
