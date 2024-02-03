@@ -62,7 +62,6 @@ import {
   useOptimistic,
 } from './ReactHooks';
 
-import {createServerContext} from './ReactServerContext';
 import ReactSharedInternals from './ReactSharedInternalsClient';
 import {startTransition} from './ReactStartTransition';
 import {act} from './ReactAct';
@@ -81,7 +80,6 @@ export {
   Component,
   PureComponent,
   createContext,
-  createServerContext,
   forwardRef,
   lazy,
   memo,

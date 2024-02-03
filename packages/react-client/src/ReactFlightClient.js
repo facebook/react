@@ -48,8 +48,6 @@ import {
   REACT_POSTPONE_TYPE,
 } from 'shared/ReactSymbols';
 
-import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
-
 export type {CallServerCallback};
 
 type UninitializedModel = string;
@@ -633,10 +631,6 @@ function parseModelString(
       case 'S': {
         // Symbol
         return Symbol.for(value.slice(2));
-      }
-      case 'P': {
-        // Server Context Provider
-        return getOrCreateServerContext(value.slice(2)).Provider;
       }
       case 'F': {
         // Server Reference

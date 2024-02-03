@@ -44,11 +44,9 @@ import {createUpdate, ForceUpdate} from './ReactFiberClassUpdateQueue';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork';
 import {
   enableLazyContextPropagation,
-  enableServerContext,
   enableFormActions,
   enableAsyncActions,
 } from 'shared/ReactFeatureFlags';
-import {REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED} from 'shared/ReactSymbols';
 import {
   getHostTransitionProvider,
   HostTransitionContext,
@@ -153,28 +151,14 @@ export function popProvider(
   const currentValue = valueCursor.current;
 
   if (isPrimaryRenderer) {
-    if (
-      enableServerContext &&
-      currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-    ) {
-      context._currentValue = context._defaultValue;
-    } else {
-      context._currentValue = currentValue;
-    }
+    context._currentValue = currentValue;
     if (__DEV__) {
       const currentRenderer = rendererCursorDEV.current;
       pop(rendererCursorDEV, providerFiber);
       context._currentRenderer = currentRenderer;
     }
   } else {
-    if (
-      enableServerContext &&
-      currentValue === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-    ) {
-      context._currentValue2 = context._defaultValue;
-    } else {
-      context._currentValue2 = currentValue;
-    }
+    context._currentValue2 = currentValue;
     if (__DEV__) {
       const currentRenderer2 = renderer2CursorDEV.current;
       pop(renderer2CursorDEV, providerFiber);
