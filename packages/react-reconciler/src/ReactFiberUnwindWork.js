@@ -160,7 +160,7 @@ function unwindWork(
       popHostContainer(workInProgress);
       return null;
     case ContextProvider:
-      const context: ReactContext<any> = workInProgress.type._context;
+      const context: ReactContext<any> = workInProgress.type;
       popProvider(context, workInProgress);
       return null;
     case OffscreenComponent:
@@ -250,7 +250,7 @@ function unwindInterruptedWork(
       popSuspenseListContext(interruptedWork);
       break;
     case ContextProvider:
-      const context: ReactContext<any> = interruptedWork.type._context;
+      const context: ReactContext<any> = interruptedWork.type;
       popProvider(context, interruptedWork);
       break;
     case OffscreenComponent:

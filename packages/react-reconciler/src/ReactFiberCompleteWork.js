@@ -1505,7 +1505,7 @@ function completeWork(
       return null;
     case ContextProvider:
       // Pop provider fiber
-      const context: ReactContext<any> = workInProgress.type._context;
+      const context: ReactContext<any> = workInProgress.type;
       popProvider(context, workInProgress);
       bubbleProperties(workInProgress);
       return null;

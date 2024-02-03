@@ -18,7 +18,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_PORTAL_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
+  REACT_CONSUMER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
@@ -47,7 +47,7 @@ export function typeOf(object: any): mixed {
               case REACT_FORWARD_REF_TYPE:
               case REACT_LAZY_TYPE:
               case REACT_MEMO_TYPE:
-              case REACT_PROVIDER_TYPE:
+              case REACT_CONSUMER_TYPE:
                 return $$typeofType;
               default:
                 return $$typeof;
@@ -61,8 +61,8 @@ export function typeOf(object: any): mixed {
   return undefined;
 }
 
-export const ContextConsumer = REACT_CONTEXT_TYPE;
-export const ContextProvider = REACT_PROVIDER_TYPE;
+export const ContextConsumer = REACT_CONSUMER_TYPE;
+export const ContextProvider = REACT_CONTEXT_TYPE;
 export const Element = REACT_ELEMENT_TYPE;
 export const ForwardRef = REACT_FORWARD_REF_TYPE;
 export const Fragment = REACT_FRAGMENT_TYPE;
@@ -77,10 +77,10 @@ export const SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 export {isValidElementType};
 
 export function isContextConsumer(object: any): boolean {
-  return typeOf(object) === REACT_CONTEXT_TYPE;
+  return typeOf(object) === REACT_CONSUMER_TYPE;
 }
 export function isContextProvider(object: any): boolean {
-  return typeOf(object) === REACT_PROVIDER_TYPE;
+  return typeOf(object) === REACT_CONTEXT_TYPE;
 }
 export function isElement(object: any): boolean {
   return (

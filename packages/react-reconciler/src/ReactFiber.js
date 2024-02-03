@@ -94,8 +94,8 @@ import {
   REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_CONSUMER_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
@@ -578,10 +578,10 @@ export function createFiberFromTypeAndProps(
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
-            case REACT_PROVIDER_TYPE:
+            case REACT_CONTEXT_TYPE:
               fiberTag = ContextProvider;
               break getTag;
-            case REACT_CONTEXT_TYPE:
+            case REACT_CONSUMER_TYPE:
               // This is a consumer
               fiberTag = ContextConsumer;
               break getTag;

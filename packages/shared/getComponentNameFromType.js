@@ -8,16 +8,16 @@
  */
 
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {ReactContext, ReactConsumerType} from 'shared/ReactTypes';
 
 import {
   REACT_CONTEXT_TYPE,
+  REACT_CONSUMER_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
   REACT_MEMO_TYPE,
   REACT_PROFILER_TYPE,
-  REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
@@ -100,10 +100,10 @@ export default function getComponentNameFromType(type: mixed): string | null {
     switch (type.$$typeof) {
       case REACT_CONTEXT_TYPE:
         const context: ReactContext<any> = (type: any);
-        return getContextName(context) + '.Consumer';
-      case REACT_PROVIDER_TYPE:
-        const provider: ReactProviderType<any> = (type: any);
-        return getContextName(provider._context) + '.Provider';
+        return getContextName(context) + '.Provider';
+      case REACT_CONSUMER_TYPE:
+        const consumer: ReactConsumerType<any> = (type: any);
+        return getContextName(consumer._context) + '.Consumer';
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:

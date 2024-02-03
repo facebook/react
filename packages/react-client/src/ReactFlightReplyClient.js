@@ -18,7 +18,7 @@ import type {
 import {
   REACT_ELEMENT_TYPE,
   REACT_LAZY_TYPE,
-  REACT_PROVIDER_TYPE,
+  REACT_CONTEXT_TYPE,
   getIteratorFn,
 } from 'shared/ReactSymbols';
 
@@ -297,7 +297,7 @@ export function processReply(
             'React Lazy cannot be passed to Server Functions from the Client.%s',
             describeObjectForErrorMessage(parent, key),
           );
-        } else if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
+        } else if ((value: any).$$typeof === REACT_CONTEXT_TYPE) {
           console.error(
             'React Context Providers cannot be passed to Server Functions from the Client.%s',
             describeObjectForErrorMessage(parent, key),

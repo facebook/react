@@ -113,7 +113,7 @@ function collectNearestContextValues<T>(
   context: ReactContext<T>,
   childContextValues: Array<T>,
 ): void {
-  if (node.tag === ContextProvider && node.type._context === context) {
+  if (node.tag === ContextProvider && node.type === context) {
     const contextValue = node.memoizedProps.value;
     childContextValues.push(contextValue);
   } else {

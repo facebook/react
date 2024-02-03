@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/ReactTypes';
 import type {
   Fiber,
   ContextDependency,
@@ -561,8 +561,7 @@ function propagateParentContextChanges(
 
       const oldProps = currentParent.memoizedProps;
       if (oldProps !== null) {
-        const providerType: ReactProviderType<any> = parent.type;
-        const context: ReactContext<any> = providerType._context;
+        const context: ReactContext<any> = parent.type;
 
         const newProps = parent.pendingProps;
         const newValue = newProps.value;
