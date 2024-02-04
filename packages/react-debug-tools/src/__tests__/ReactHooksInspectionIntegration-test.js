@@ -11,6 +11,7 @@
 'use strict';
 
 let React;
+let ReactDOM;
 let ReactTestRenderer;
 let ReactDebugTools;
 let act;
@@ -21,6 +22,7 @@ describe('ReactHooksInspectionIntegration', () => {
     jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
+    ReactDOM = require('react-dom');
     act = require('internal-test-utils').act;
     ReactDebugTools = require('react-debug-tools');
     useMemoCache = React.unstable_useMemoCache;
@@ -1126,6 +1128,46 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Optimistic',
         value: 'abc',
+        subHooks: [],
+      },
+      {
+        id: 1,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'memo',
+        subHooks: [],
+      },
+      {
+        id: 2,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'not used',
+        subHooks: [],
+      },
+    ]);
+  });
+
+  // @gate enableFormActions && enableAsyncActions
+  it('should support useFormState hook', () => {
+    function Foo() {
+      const [value] = ReactDOM.useFormState(function increment(n) {
+        return n;
+      }, 0);
+      React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
+
+      return value;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        id: 0,
+        isStateEditable: false,
+        name: 'FormState',
+        value: 0,
         subHooks: [],
       },
       {
