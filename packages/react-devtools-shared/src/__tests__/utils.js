@@ -21,6 +21,12 @@ import {ReactVersion} from '../../../../ReactVersions';
 
 const requestedReactVersion = process.env.REACT_VERSION || ReactVersion;
 export function getActDOMImplementation(): () => void | Promise<void> {
+  // This is for React < 17, where act wasn't shipped yet.
+  if (semver.lt(requestedReactVersion, '17.0.0')) {
+    require('react-dom/test-utils');
+    return cb => cb();
+  }
+
   // This is for React < 18, where act was distributed in react-dom/test-utils.
   if (semver.lt(requestedReactVersion, '18.0.0')) {
     const ReactDOMTestUtils = require('react-dom/test-utils');
@@ -41,13 +47,30 @@ export function getActDOMImplementation(): () => void | Promise<void> {
   throw new Error("Couldn't find any available act implementation");
 }
 
+export function getActTestRendererImplementation(): () => void | Promise<void> {
+  // This is for React < 17, where act wasn't shipped yet.
+  if (semver.lt(requestedReactVersion, '17.0.0')) {
+    require('react-test-renderer');
+    return cb => cb();
+  }
+
+  const RTR = require('react-test-renderer');
+  if (RTR.act) {
+    return RTR.act;
+  }
+
+  throw new Error(
+    "Couldn't find any available act implementation in react-test-renderer",
+  );
+}
+
 export function act(
   callback: Function,
   recursivelyFlush: boolean = true,
 ): void {
   // act from react-test-renderer has some side effects on React DevTools
   // it injects the renderer for DevTools, see ReactTestRenderer.js
-  const {act: actTestRenderer} = require('react-test-renderer');
+  const actTestRenderer = getActTestRendererImplementation();
   const actDOM = getActDOMImplementation();
 
   actDOM(() => {
@@ -74,7 +97,7 @@ export async function actAsync(
 ): Promise<void> {
   // act from react-test-renderer has some side effects on React DevTools
   // it injects the renderer for DevTools, see ReactTestRenderer.js
-  const {act: actTestRenderer} = require('react-test-renderer');
+  const actTestRenderer = getActTestRendererImplementation();
   const actDOM = getActDOMImplementation();
 
   await actDOM(async () => {
