@@ -335,6 +335,7 @@ describe('ReactMultiChildReconcile', () => {
     let statusDisplays = parentInstance.getStatusDisplays();
     const startingInternalState = statusDisplays.jcw.getInternalState();
 
+    // Now remove the child.
     await act(() => {
       root.render(
         <FriendsStatusDisplay prepareChildren={prepareChildrenArray} />,
@@ -344,6 +345,7 @@ describe('ReactMultiChildReconcile', () => {
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
+    // Now reset the props that cause there to be a child
     await act(() => {
       root.render(
         <FriendsStatusDisplay
@@ -388,6 +390,7 @@ describe('ReactMultiChildReconcile', () => {
     let statusDisplays = parentInstance.getStatusDisplays();
     const startingInternalState = statusDisplays.jcw.getInternalState();
 
+    // Now remove the child.
     await act(() => {
       root.render(
         <FriendsStatusDisplay
@@ -399,6 +402,7 @@ describe('ReactMultiChildReconcile', () => {
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
+    // Now reset the props that cause there to be a child
     await act(() => {
       root.render(
         <FriendsStatusDisplay
@@ -443,6 +447,7 @@ describe('ReactMultiChildReconcile', () => {
     let statusDisplays = parentInstance.getStatusDisplays();
     const startingInternalState = statusDisplays.jcw.getInternalState();
 
+    // Now remove the child.
     await act(() => {
       root.render(
         <FriendsStatusDisplay
@@ -454,6 +459,7 @@ describe('ReactMultiChildReconcile', () => {
     statusDisplays = parentInstance.getStatusDisplays();
     expect(statusDisplays.jcw).toBeFalsy();
 
+    // Now reset the props that cause there to be a child
     await act(() => {
       root.render(
         <FriendsStatusDisplay
