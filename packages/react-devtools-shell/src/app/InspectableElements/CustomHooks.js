@@ -19,6 +19,7 @@ import {
   useEffect,
   useOptimistic,
   useState,
+  use,
 } from 'react';
 import {useFormState} from 'react-dom';
 
@@ -76,6 +77,7 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
   // eslint-disable-next-line no-unused-vars
   const contextValueA = useContext(ContextA);
   useOptimistic<number, mixed>(1);
+  use(ContextA);
 
   // eslint-disable-next-line no-unused-vars
   const [_, __] = useState(object);

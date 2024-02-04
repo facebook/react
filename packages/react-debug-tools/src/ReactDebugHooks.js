@@ -12,6 +12,7 @@ import type {
   ReactContext,
   ReactProviderType,
   StartTransitionOptions,
+  Usable,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -27,7 +28,10 @@ import {
   ContextProvider,
   ForwardRef,
 } from 'react-reconciler/src/ReactWorkTags';
-import {REACT_MEMO_CACHE_SENTINEL} from 'shared/ReactSymbols';
+import {
+  REACT_MEMO_CACHE_SENTINEL,
+  REACT_CONTEXT_TYPE,
+} from 'shared/ReactSymbols';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -118,11 +122,30 @@ function readContext<T>(context: ReactContext<T>): T {
   return context._currentValue;
 }
 
-function use<T>(): T {
-  // TODO: What should this do if it receives an unresolved promise?
-  throw new Error(
-    'Support for `use` not yet implemented in react-debug-tools.',
-  );
+function use<T>(usable: Usable<T>): T {
+  if (usable !== null && typeof usable === 'object') {
+    // $FlowFixMe[method-unbinding]
+    if (typeof usable.then === 'function') {
+      // TODO: What should this do if it receives an unresolved promise?
+      throw new Error(
+        'Support for `use(Promise)` not yet implemented in react-debug-tools.',
+      );
+    } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
+      const context: ReactContext<T> = (usable: any);
+      const value = readContext(context);
+
+      hookLog.push({
+        primitive: 'Use',
+        stackError: new Error(),
+        value,
+      });
+
+      return value;
+    }
+  }
+
+  // eslint-disable-next-line react-internal/safe-string-coercion
+  throw new Error('An unsupported type was passed to use(): ' + String(usable));
 }
 
 function useContext<T>(context: ReactContext<T>): T {
@@ -660,7 +683,9 @@ function buildTree(
     // For now, the "id" of stateful hooks is just the stateful hook index.
     // Custom hooks have no ids, nor do non-stateful native hooks (e.g. Context, DebugValue).
     const id =
-      primitive === 'Context' || primitive === 'DebugValue'
+      primitive === 'Context' ||
+      primitive === 'DebugValue' ||
+      primitive === 'Use'
         ? null
         : nativeHookID++;
 
