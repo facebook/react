@@ -208,14 +208,14 @@ describe('ReactStrictMode', () => {
 
     function App() {
       React.useState(() => {
-        log.push('Compute initial count state: 1');
+        log.push('Compute initial state count: 1');
         return 1;
       });
       React.useReducer(
         s => s,
         2,
         s => {
-          log.push('Compute initial reducer state: 2');
+          log.push('Compute initial reducer count: 2');
           return s;
         },
       );
@@ -235,10 +235,10 @@ describe('ReactStrictMode', () => {
     expect(container.textContent).toBe('3');
 
     expect(log).toEqual([
-      'Compute initial count state: 1',
-      'Compute initial count state: 1',
-      'Compute initial reducer state: 2',
-      'Compute initial reducer state: 2',
+      'Compute initial state count: 1',
+      'Compute initial state count: 1',
+      'Compute initial reducer count: 2',
+      'Compute initial reducer count: 2',
     ]);
   });
 
