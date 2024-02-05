@@ -23,15 +23,7 @@ import {
 } from 'shared/ReactSymbols';
 import {cloneElement, createElement, isValidElement} from './ReactElement';
 import {createRef} from './ReactCreateRef';
-import {createServerContext} from './ReactServerContext';
-import {
-  use,
-  useId,
-  useCallback,
-  useContext,
-  useDebugValue,
-  useMemo,
-} from './ReactHooks';
+import {use, useId, useCallback, useDebugValue, useMemo} from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
 import {lazy} from './ReactLazy';
 import {memo} from './ReactMemo';
@@ -56,7 +48,6 @@ export {
   cloneElement,
   createElement,
   createRef,
-  createServerContext,
   use,
   forwardRef,
   isValidElement,
@@ -66,7 +57,6 @@ export {
   startTransition,
   useId,
   useCallback,
-  useContext,
   useDebugValue,
   useMemo,
   version,

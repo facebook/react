@@ -8,7 +8,7 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/ReactTypes';
 import type {ClientManifest} from './ReactFlightServerConfigWebpackBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
@@ -40,7 +40,6 @@ export {
 type Options = {
   identifierPrefix?: string,
   signal?: AbortSignal,
-  context?: Array<[string, ServerContextJSONValue]>,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
 };
@@ -54,7 +53,6 @@ function renderToReadableStream(
     model,
     webpackMap,
     options ? options.onError : undefined,
-    options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
   );

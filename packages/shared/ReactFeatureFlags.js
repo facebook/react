@@ -240,8 +240,6 @@ export const enableAsyncDebugInfo = __EXPERIMENTAL__;
 // Track which Fiber(s) schedule render work.
 export const enableUpdaterTracking = __PROFILE__;
 
-export const enableServerContext = __EXPERIMENTAL__;
-
 // Internal only.
 export const enableGetInspectorDataForInstanceInProduction = false;
 
