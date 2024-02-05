@@ -1159,7 +1159,12 @@ function mountReducer<S, I, A>(
   if (init !== undefined) {
     initialState = init(initialArg);
     if (shouldDoubleInvokeUserFnsInHooksDEV) {
-      init(initialArg);
+      setIsStrictModeForDevtools(true);
+      try {
+        init(initialArg);
+      } finally {
+        setIsStrictModeForDevtools(false);
+      }
     }
   } else {
     initialState = ((initialArg: any): S);
@@ -1756,8 +1761,13 @@ function mountStateImpl<S>(initialState: (() => S) | S): Hook {
     // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
     initialState = initialStateInitializer();
     if (shouldDoubleInvokeUserFnsInHooksDEV) {
-      // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
-      initialStateInitializer();
+      setIsStrictModeForDevtools(true);
+      try {
+        // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+        initialStateInitializer();
+      } finally {
+        setIsStrictModeForDevtools(false);
+      }
     }
   }
   hook.memoizedState = hook.baseState = initialState;
