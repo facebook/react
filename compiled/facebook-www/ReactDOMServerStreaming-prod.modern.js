@@ -2580,7 +2580,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
-  REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
@@ -2592,9 +2591,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker"),
-  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
   REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
@@ -3208,11 +3204,7 @@ var HooksDispatcher = {
   use: function (usable) {
     if (null !== usable && "object" === typeof usable) {
       if ("function" === typeof usable.then) return unwrapThenable(usable);
-      if (
-        usable.$$typeof === REACT_CONTEXT_TYPE ||
-        usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
-        return usable._currentValue;
+      if (usable.$$typeof === REACT_CONTEXT_TYPE) return usable._currentValue;
     }
     throw Error("An unsupported type was passed to use(): " + String(usable));
   },
@@ -3963,11 +3955,7 @@ function renderElement(request, task, keyPath, type, props, ref) {
             throw Error(
               "Tried to pop a Context at the root of the app. This is a bug in React."
             );
-          keyPath = request.parentValue;
-          request.context._currentValue =
-            keyPath === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED
-              ? request.context._defaultValue
-              : keyPath;
+          request.context._currentValue = request.parentValue;
           request = currentActiveSnapshot = request.parent;
           task.context = request;
           task.keyPath = ref;
@@ -4255,10 +4243,7 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
             childIndex
           )
         );
-      if (
-        node$jscomp$0.$$typeof === REACT_CONTEXT_TYPE ||
-        node$jscomp$0.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
+      if (node$jscomp$0.$$typeof === REACT_CONTEXT_TYPE)
         return renderNodeDestructive(
           request,
           task,

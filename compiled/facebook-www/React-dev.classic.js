@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-classic-609987b0";
+    var ReactVersion = "18.3.0-www-classic-82bfc644";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -2411,10 +2411,7 @@ if (__DEV__) {
         _threadCount: 0,
         // These are circular
         Provider: null,
-        Consumer: null,
-        // Add these to use same hidden class in VM as ServerContext
-        _defaultValue: null,
-        _globalName: null
+        Consumer: null
       };
       context.Provider = {
         $$typeof: REACT_PROVIDER_TYPE,

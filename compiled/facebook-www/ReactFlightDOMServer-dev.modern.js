@@ -420,7 +420,7 @@ if (__DEV__) {
     // The Symbol used to tag the ReactElement-like types.
     var REACT_ELEMENT_TYPE = Symbol.for("react.element");
     var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
-    var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
+    var REACT_CONTEXT_TYPE = Symbol.for("react.context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
     var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
@@ -443,150 +443,6 @@ if (__DEV__) {
       }
 
       return null;
-    }
-
-    // Forming a reverse tree.
-    // The structure of a context snapshot is an implementation of this file.
-    // Currently, it's implemented as tracking the current active node.
-
-    var rootContextSnapshot = null; // We assume that this runtime owns the "current" field on all ReactContext instances.
-    // This global (actually thread local) state represents what state all those "current",
-    // fields are currently in.
-
-    var currentActiveSnapshot = null;
-
-    function popNode(prev) {
-      {
-        prev.context._currentValue = prev.parentValue;
-      }
-    }
-
-    function pushNode(next) {
-      {
-        next.context._currentValue = next.value;
-      }
-    }
-
-    function popToNearestCommonAncestor(prev, next) {
-      if (prev === next);
-      else {
-        popNode(prev);
-        var parentPrev = prev.parent;
-        var parentNext = next.parent;
-
-        if (parentPrev === null) {
-          if (parentNext !== null) {
-            throw new Error(
-              "The stacks must reach the root at the same time. This is a bug in React."
-            );
-          }
-        } else {
-          if (parentNext === null) {
-            throw new Error(
-              "The stacks must reach the root at the same time. This is a bug in React."
-            );
-          }
-
-          popToNearestCommonAncestor(parentPrev, parentNext); // On the way back, we push the new ones that weren't common.
-
-          pushNode(next);
-        }
-      }
-    }
-
-    function popAllPrevious(prev) {
-      popNode(prev);
-      var parentPrev = prev.parent;
-
-      if (parentPrev !== null) {
-        popAllPrevious(parentPrev);
-      }
-    }
-
-    function pushAllNext(next) {
-      var parentNext = next.parent;
-
-      if (parentNext !== null) {
-        pushAllNext(parentNext);
-      }
-
-      pushNode(next);
-    }
-
-    function popPreviousToCommonLevel(prev, next) {
-      popNode(prev);
-      var parentPrev = prev.parent;
-
-      if (parentPrev === null) {
-        throw new Error(
-          "The depth must equal at least at zero before reaching the root. This is a bug in React."
-        );
-      }
-
-      if (parentPrev.depth === next.depth) {
-        // We found the same level. Now we just need to find a shared ancestor.
-        popToNearestCommonAncestor(parentPrev, next);
-      } else {
-        // We must still be deeper.
-        popPreviousToCommonLevel(parentPrev, next);
-      }
-    }
-
-    function popNextToCommonLevel(prev, next) {
-      var parentNext = next.parent;
-
-      if (parentNext === null) {
-        throw new Error(
-          "The depth must equal at least at zero before reaching the root. This is a bug in React."
-        );
-      }
-
-      if (prev.depth === parentNext.depth) {
-        // We found the same level. Now we just need to find a shared ancestor.
-        popToNearestCommonAncestor(prev, parentNext);
-      } else {
-        // We must still be deeper.
-        popNextToCommonLevel(prev, parentNext);
-      }
-
-      pushNode(next);
-    } // Perform context switching to the new snapshot.
-    // To make it cheap to read many contexts, while not suspending, we make the switch eagerly by
-    // updating all the context's current values. That way reads, always just read the current value.
-    // At the cost of updating contexts even if they're never read by this subtree.
-
-    function switchContext(newSnapshot) {
-      // The basic algorithm we need to do is to pop back any contexts that are no longer on the stack.
-      // We also need to update any new contexts that are now on the stack with the deepest value.
-      // The easiest way to update new contexts is to just reapply them in reverse order from the
-      // perspective of the backpointers. To avoid allocating a lot when switching, we use the stack
-      // for that. Therefore this algorithm is recursive.
-      // 1) First we pop which ever snapshot tree was deepest. Popping old contexts as we go.
-      // 2) Then we find the nearest common ancestor from there. Popping old contexts as we go.
-      // 3) Then we reapply new contexts on the way back up the stack.
-      var prev = currentActiveSnapshot;
-      var next = newSnapshot;
-
-      if (prev !== next) {
-        if (prev === null) {
-          // $FlowFixMe[incompatible-call]: This has to be non-null since it's not equal to prev.
-          pushAllNext(next);
-        } else if (next === null) {
-          popAllPrevious(prev);
-        } else if (prev.depth === next.depth) {
-          popToNearestCommonAncestor(prev, next);
-        } else if (prev.depth > next.depth) {
-          popPreviousToCommonLevel(prev, next);
-        } else {
-          popNextToCommonLevel(prev, next);
-        }
-
-        currentActiveSnapshot = next;
-      }
-    }
-    function readContext$1(context) {
-      var value = context._currentValue;
-      return value;
     }
 
     // Corresponds to ReactFiberWakeable and ReactFizzWakeable modules. Generally,
@@ -729,32 +585,6 @@ if (__DEV__) {
       thenableState = null;
       return state;
     }
-
-    function readContext(context) {
-      {
-        if (context.$$typeof !== REACT_SERVER_CONTEXT_TYPE) {
-          if (isClientReference(context)) {
-            error("Cannot read a Client Context from a Server Component.");
-          } else {
-            error(
-              "Only createServerContext is supported in Server Components."
-            );
-          }
-        }
-
-        if (currentRequest$1 === null) {
-          error(
-            "Context can only be read while React is rendering. " +
-              "In classes, you can read it in the render method or getDerivedStateFromProps. " +
-              "In function components, you can read it directly in the function body, but not " +
-              "inside Hooks like useReducer() or useMemo()."
-          );
-        }
-      }
-
-      return readContext$1(context);
-    }
-
     var HooksDispatcher = {
       useMemo: function (nextCreate) {
         return nextCreate();
@@ -765,8 +595,8 @@ if (__DEV__) {
       useDebugValue: function () {},
       useDeferredValue: unsupportedHook,
       useTransition: unsupportedHook,
-      readContext: readContext,
-      useContext: readContext,
+      readContext: unsupportedContext,
+      useContext: unsupportedContext,
       useReducer: unsupportedHook,
       useRef: unsupportedHook,
       useState: unsupportedHook,
@@ -801,6 +631,10 @@ if (__DEV__) {
       );
     }
 
+    function unsupportedContext() {
+      throw new Error("Cannot read a Client Context from a Server Component.");
+    }
+
     function useId() {
       if (currentRequest$1 === null) {
         throw new Error("useId can only be used while React is rendering");
@@ -831,21 +665,28 @@ if (__DEV__) {
           }
 
           return trackUsedThenable(thenableState, thenable, index);
-        } else if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE) {
-          var context = usable;
-          return readContext(context);
+        } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
+          unsupportedContext();
         }
       }
 
-      {
-        if (isClientReference(usable)) {
-          error("Cannot use() an already resolved Client Reference.");
+      if (isClientReference(usable)) {
+        if (
+          usable.value != null &&
+          usable.value.$$typeof === REACT_CONTEXT_TYPE
+        ) {
+          // Show a more specific message since it's a common mistake.
+          throw new Error(
+            "Cannot read a Client Context from a Server Component."
+          );
+        } else {
+          throw new Error("Cannot use() an already resolved Client Reference.");
         }
-      } // eslint-disable-next-line react-internal/safe-string-coercion
-
-      throw new Error(
-        "An unsupported type was passed to use(): " + String(usable)
-      );
+      } else {
+        throw new Error( // eslint-disable-next-line react-internal/safe-string-coercion
+          "An unsupported type was passed to use(): " + String(usable)
+        );
+      }
     }
 
     function createSignal() {
@@ -1259,7 +1100,6 @@ if (__DEV__) {
       model,
       bundlerConfig,
       onError,
-      context,
       identifierPrefix,
       onPostpone
     ) {
@@ -1298,7 +1138,6 @@ if (__DEV__) {
         writtenSymbols: new Map(),
         writtenClientReferences: new Map(),
         writtenServerReferences: new Map(),
-        writtenProviders: new Map(),
         writtenObjects: new WeakMap(),
         identifierPrefix: identifierPrefix || "",
         identifierCount: 1,
@@ -1308,15 +1147,7 @@ if (__DEV__) {
           onPostpone === undefined ? defaultPostponeHandler : onPostpone
       };
       request.pendingChunks++;
-      var rootContext = createRootContext();
-      var rootTask = createTask(
-        request,
-        model,
-        null,
-        false,
-        rootContext,
-        abortSet
-      );
+      var rootTask = createTask(request, model, null, false, abortSet);
       pingedTasks.push(rootTask);
       return request;
     }
@@ -1327,10 +1158,6 @@ if (__DEV__) {
       return null;
     }
 
-    function createRootContext(reqContext) {
-      return importServerContexts();
-    }
-
     function serializeThenable(request, task, thenable) {
       request.pendingChunks++;
       var newTask = createTask(
@@ -1338,7 +1165,6 @@ if (__DEV__) {
         null,
         task.keyPath, // the server component sequence continues through Promise-as-a-child.
         task.implicitSlot,
-        task.context,
         request.abortableTasks
       );
 
@@ -1723,24 +1549,13 @@ if (__DEV__) {
       }
     }
 
-    function createTask(
-      request,
-      model,
-      keyPath,
-      implicitSlot,
-      context,
-      abortSet
-    ) {
+    function createTask(request, model, keyPath, implicitSlot, abortSet) {
       var id = request.nextChunkId++;
 
       if (typeof model === "object" && model !== null) {
         // If we're about to write this into a new task we can assign it an ID early so that
         // any other references can refer to the value we're about to write.
-        if (
-          keyPath !== null ||
-          implicitSlot ||
-          context !== rootContextSnapshot
-        );
+        if (keyPath !== null || implicitSlot);
         else {
           request.writtenObjects.set(model, id);
         }
@@ -1752,7 +1567,6 @@ if (__DEV__) {
         model: model,
         keyPath: keyPath,
         implicitSlot: implicitSlot,
-        context: context,
         ping: function () {
           return pingTask(request, task);
         },
@@ -1925,7 +1739,6 @@ if (__DEV__) {
         value,
         null, // The way we use outlining is for reusing an object.
         false, // It makes no sense for that use case to be contextual.
-        rootContextSnapshot, // Therefore we don't pass any contextual information along.
         request.abortableTasks
       );
       retryTask(request, newTask);
@@ -2012,6 +1825,7 @@ if (__DEV__) {
         return value;
       }
     }
+
     var modelRoot = false;
 
     function renderModel(request, task, parent, key, value) {
@@ -2048,7 +1862,6 @@ if (__DEV__) {
               task.model,
               task.keyPath,
               task.implicitSlot,
-              task.context,
               request.abortableTasks
             );
             var ping = newTask.ping;
@@ -2114,11 +1927,7 @@ if (__DEV__) {
             var _existingId = _writtenObjects.get(value);
 
             if (_existingId !== undefined) {
-              if (
-                task.keyPath !== null ||
-                task.implicitSlot ||
-                task.context !== rootContextSnapshot
-              );
+              if (task.keyPath !== null || task.implicitSlot);
               else if (modelRoot === value) {
                 // This is the ID we're currently emitting so we need to write it
                 // once but if we discover it again, we refer to it by id.
@@ -2182,11 +1991,7 @@ if (__DEV__) {
 
         if (typeof value.then === "function") {
           if (existingId !== undefined) {
-            if (
-              task.keyPath !== null ||
-              task.implicitSlot ||
-              task.context !== rootContextSnapshot
-            ) {
+            if (task.keyPath !== null || task.implicitSlot) {
               // If we're in some kind of context we can't reuse the result of this render or
               // previous renders of this element. We only reuse Promises if they're not wrapped
               // by another Server Component.
@@ -2487,7 +2292,6 @@ if (__DEV__) {
         // We completed this by other means before we had a chance to retry it.
         return;
       }
-      switchContext(task.context);
 
       try {
         // Track the root so we know that we have to emit this object even though it
@@ -2550,7 +2354,6 @@ if (__DEV__) {
         task.status = ERRORED;
         var digest = logRecoverableError(request, x);
         emitErrorChunk(request, task.id, digest, x);
-      } finally {
       }
     }
 
@@ -2721,10 +2524,6 @@ if (__DEV__) {
         logRecoverableError(request, error);
         fatalError(request, error);
       }
-    }
-
-    function importServerContexts(contexts) {
-      return rootContextSnapshot;
     }
 
     function renderToDestination(destination, model, options) {

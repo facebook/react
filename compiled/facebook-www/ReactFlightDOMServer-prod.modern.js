@@ -168,7 +168,7 @@ var ReactDOMCurrentDispatcher =
     ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Dispatcher,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
-  REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context"),
+  REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
@@ -176,62 +176,9 @@ var ReactDOMCurrentDispatcher =
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
   MAYBE_ITERATOR_SYMBOL = Symbol.iterator,
-  currentActiveSnapshot = null;
-function popToNearestCommonAncestor(prev, next) {
-  if (prev !== next) {
-    prev.context._currentValue = prev.parentValue;
-    prev = prev.parent;
-    var parentNext = next.parent;
-    if (null === prev) {
-      if (null !== parentNext)
-        throw Error(
-          "The stacks must reach the root at the same time. This is a bug in React."
-        );
-    } else {
-      if (null === parentNext)
-        throw Error(
-          "The stacks must reach the root at the same time. This is a bug in React."
-        );
-      popToNearestCommonAncestor(prev, parentNext);
-      next.context._currentValue = next.value;
-    }
-  }
-}
-function popAllPrevious(prev) {
-  prev.context._currentValue = prev.parentValue;
-  prev = prev.parent;
-  null !== prev && popAllPrevious(prev);
-}
-function pushAllNext(next) {
-  var parentNext = next.parent;
-  null !== parentNext && pushAllNext(parentNext);
-  next.context._currentValue = next.value;
-}
-function popPreviousToCommonLevel(prev, next) {
-  prev.context._currentValue = prev.parentValue;
-  prev = prev.parent;
-  if (null === prev)
-    throw Error(
-      "The depth must equal at least at zero before reaching the root. This is a bug in React."
-    );
-  prev.depth === next.depth
-    ? popToNearestCommonAncestor(prev, next)
-    : popPreviousToCommonLevel(prev, next);
-}
-function popNextToCommonLevel(prev, next) {
-  var parentNext = next.parent;
-  if (null === parentNext)
-    throw Error(
-      "The depth must equal at least at zero before reaching the root. This is a bug in React."
-    );
-  prev.depth === parentNext.depth
-    ? popToNearestCommonAncestor(prev, parentNext)
-    : popNextToCommonLevel(prev, parentNext);
-  next.context._currentValue = next.value;
-}
-var SuspenseException = Error(
-  "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`"
-);
+  SuspenseException = Error(
+    "Suspense Exception: This is not a real error! It's an implementation detail of `use` to interrupt the current render. You must either rethrow it immediately, or move the `use` call outside of the `try/catch` block. Capturing without rethrowing will lead to unexpected behavior.\n\nTo handle async errors, wrap your component in an error boundary, or call the promise's `.catch` method and pass the result to `use`"
+  );
 function noop() {}
 function trackUsedThenable(thenableState, thenable, index) {
   index = thenableState[index];
@@ -293,9 +240,6 @@ function getThenableStateAfterSuspending() {
   thenableState = null;
   return state;
 }
-function readContext(context) {
-  return context._currentValue;
-}
 var HooksDispatcher = {
   useMemo: function (nextCreate) {
     return nextCreate();
@@ -306,8 +250,8 @@ var HooksDispatcher = {
   useDebugValue: function () {},
   useDeferredValue: unsupportedHook,
   useTransition: unsupportedHook,
-  readContext: readContext,
-  useContext: readContext,
+  readContext: unsupportedContext,
+  useContext: unsupportedContext,
   useReducer: unsupportedHook,
   useRef: unsupportedHook,
   useState: unsupportedHook,
@@ -333,6 +277,9 @@ function unsupportedHook() {
 function unsupportedRefresh() {
   throw Error("Refreshing the cache is not supported in Server Components.");
 }
+function unsupportedContext() {
+  throw Error("Cannot read a Client Context from a Server Component.");
+}
 function useId() {
   if (null === currentRequest$1)
     throw Error("useId can only be used while React is rendering");
@@ -350,8 +297,12 @@ function use(usable) {
       null === thenableState && (thenableState = []);
       return trackUsedThenable(thenableState, usable, index);
     }
-    if (usable.$$typeof === REACT_SERVER_CONTEXT_TYPE)
-      return usable._currentValue;
+    usable.$$typeof === REACT_CONTEXT_TYPE && unsupportedContext();
+  }
+  if (isClientReference(usable)) {
+    if (null != usable.value && usable.value.$$typeof === REACT_CONTEXT_TYPE)
+      throw Error("Cannot read a Client Context from a Server Component.");
+    throw Error("Cannot use() an already resolved Client Reference.");
   }
   throw Error("An unsupported type was passed to use(): " + String(usable));
 }
@@ -505,7 +456,6 @@ function serializeThenable(request, task, thenable) {
     null,
     task.keyPath,
     task.implicitSlot,
-    task.context,
     request.abortableTasks
   );
   switch (thenable.status) {
@@ -698,13 +648,12 @@ function pingTask(request, task) {
     ((request.flushScheduled = null !== request.destination),
     performWork(request));
 }
-function createTask(request, model, keyPath, implicitSlot, context, abortSet) {
+function createTask(request, model, keyPath, implicitSlot, abortSet) {
   var id = request.nextChunkId++;
   "object" !== typeof model ||
     null === model ||
     null !== keyPath ||
     implicitSlot ||
-    null !== context ||
     request.writtenObjects.set(model, id);
   var task = {
     id: id,
@@ -712,7 +661,6 @@ function createTask(request, model, keyPath, implicitSlot, context, abortSet) {
     model: model,
     keyPath: keyPath,
     implicitSlot: implicitSlot,
-    context: context,
     ping: function () {
       return pingTask(request, task);
     },
@@ -749,7 +697,6 @@ function createTask(request, model, keyPath, implicitSlot, context, abortSet) {
             task.model,
             task.keyPath,
             task.implicitSlot,
-            task.context,
             request.abortableTasks
           );
           var ping = JSCompiler_inline_result.ping;
@@ -827,7 +774,7 @@ function serializeClientReference(
 }
 function outlineModel(request, value) {
   request.pendingChunks++;
-  value = createTask(request, value, null, !1, null, request.abortableTasks);
+  value = createTask(request, value, null, !1, request.abortableTasks);
   retryTask(request, value);
   return value.id;
 }
@@ -848,11 +795,7 @@ function renderModelDestructive(
         parent = request.writtenObjects;
         parentPropertyName = parent.get(value);
         if (void 0 !== parentPropertyName) {
-          if (
-            null === task.keyPath &&
-            !task.implicitSlot &&
-            null === task.context
-          )
+          if (null === task.keyPath && !task.implicitSlot)
             if (modelRoot === value) modelRoot = null;
             else
               return -1 === parentPropertyName
@@ -885,7 +828,7 @@ function renderModelDestructive(
     parentPropertyName = parent.get(value);
     if ("function" === typeof value.then) {
       if (void 0 !== parentPropertyName) {
-        if (null !== task.keyPath || task.implicitSlot || null !== task.context)
+        if (null !== task.keyPath || task.implicitSlot)
           return "$@" + serializeThenable(request, task, value).toString(16);
         if (modelRoot === value) modelRoot = null;
         else return "$@" + parentPropertyName.toString(16);
@@ -1038,20 +981,7 @@ function emitErrorChunk(request, id, digest) {
 }
 var emptyRoot = {};
 function retryTask(request, task) {
-  if (0 === task.status) {
-    var prev = currentActiveSnapshot,
-      next = task.context;
-    prev !== next &&
-      (null === prev
-        ? pushAllNext(next)
-        : null === next
-        ? popAllPrevious(prev)
-        : prev.depth === next.depth
-        ? popToNearestCommonAncestor(prev, next)
-        : prev.depth > next.depth
-        ? popPreviousToCommonLevel(prev, next)
-        : popNextToCommonLevel(prev, next),
-      (currentActiveSnapshot = next));
+  if (0 === task.status)
     try {
       modelRoot = task.model;
       var resolvedModel = renderModelDestructive(
@@ -1073,23 +1003,21 @@ function retryTask(request, task) {
       request.abortableTasks.delete(task);
       task.status = 1;
     } catch (thrownValue) {
-      var x =
+      (resolvedModel =
         thrownValue === SuspenseException
           ? getSuspendedThenable()
-          : thrownValue;
-      if ("object" === typeof x && null !== x && "function" === typeof x.then) {
-        var ping = task.ping;
-        x.then(ping, ping);
-        task.thenableState = getThenableStateAfterSuspending();
-      } else {
-        request.abortableTasks.delete(task);
-        task.status = 4;
-        var digest = logRecoverableError(request, x);
-        emitErrorChunk(request, task.id, digest);
-      }
-    } finally {
+          : thrownValue),
+        "object" === typeof resolvedModel &&
+        null !== resolvedModel &&
+        "function" === typeof resolvedModel.then
+          ? ((request = task.ping),
+            resolvedModel.then(request, request),
+            (task.thenableState = getThenableStateAfterSuspending()))
+          : (request.abortableTasks.delete(task),
+            (task.status = 4),
+            (resolvedModel = logRecoverableError(request, resolvedModel)),
+            emitErrorChunk(request, task.id, resolvedModel));
     }
-  }
 }
 function performWork(request) {
   var prevDispatcher = ReactCurrentDispatcher.current;
@@ -1187,7 +1115,6 @@ exports.renderToDestination = function (destination, model, options) {
     writtenSymbols: new Map(),
     writtenClientReferences: new Map(),
     writtenServerReferences: new Map(),
-    writtenProviders: new Map(),
     writtenObjects: new WeakMap(),
     identifierPrefix: "",
     identifierCount: 1,
@@ -1196,7 +1123,7 @@ exports.renderToDestination = function (destination, model, options) {
     onPostpone: defaultPostponeHandler
   };
   onError.pendingChunks++;
-  model = createTask(onError, model, null, !1, null, abortSet);
+  model = createTask(onError, model, null, !1, abortSet);
   options.push(model);
   onError.flushScheduled = null !== onError.destination;
   performWork(onError);

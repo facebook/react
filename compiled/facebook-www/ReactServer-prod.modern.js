@@ -402,9 +402,6 @@ exports.createElement = function (type, config, children) {
 exports.createRef = function () {
   return { current: null };
 };
-exports.createServerContext = function () {
-  throw Error(formatProdErrorMessage(248));
-};
 exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
@@ -464,9 +461,6 @@ exports.use = function (usable) {
 exports.useCallback = function (callback, deps) {
   return ReactCurrentDispatcher.current.useCallback(callback, deps);
 };
-exports.useContext = function (Context) {
-  return ReactCurrentDispatcher.current.useContext(Context);
-};
 exports.useDebugValue = function () {};
 exports.useId = function () {
   return ReactCurrentDispatcher.current.useId();
@@ -474,4 +468,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-f4094d5d";
+exports.version = "18.3.0-www-modern-4fd18aea";

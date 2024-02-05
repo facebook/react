@@ -378,9 +378,7 @@ exports.createContext = function (defaultValue) {
     _currentValue2: defaultValue,
     _threadCount: 0,
     Provider: null,
-    Consumer: null,
-    _defaultValue: null,
-    _globalName: null
+    Consumer: null
   };
   defaultValue.Provider = {
     $$typeof: REACT_PROVIDER_TYPE,
@@ -564,4 +562,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-b506e46f";
+exports.version = "18.3.0-www-modern-ec0970fd";

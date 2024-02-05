@@ -90,7 +90,6 @@ var ReactSharedInternals =
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
-  REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
@@ -869,9 +868,7 @@ var objectIs = "function" === typeof Object.is ? Object.is : is,
     _currentValue2: null,
     _threadCount: 0,
     Provider: null,
-    Consumer: null,
-    _defaultValue: null,
-    _globalName: null
+    Consumer: null
   };
 function pushHostContainer(fiber, nextRootInstance) {
   push(rootInstanceStackCursor, nextRootInstance);
@@ -1864,10 +1861,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         );
       if ("function" === typeof newChild.then)
         return createChild(returnFiber, unwrapThenable(newChild), lanes);
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE)
         return createChild(
           returnFiber,
           readContextDuringReconcilation(returnFiber, newChild, lanes),
@@ -1913,10 +1907,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           unwrapThenable(newChild),
           lanes
         );
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE)
         return updateSlot(
           returnFiber,
           oldFiber,
@@ -1983,10 +1974,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           unwrapThenable(newChild),
           lanes
         );
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE)
         return updateFromMap(
           existingChildren,
           returnFiber,
@@ -2315,10 +2303,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           unwrapThenable(newChild),
           lanes
         );
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE)
         return reconcileChildFibersImpl(
           returnFiber,
           currentFirstChild,
@@ -2629,11 +2614,7 @@ function useThenable(thenable) {
 function use(usable) {
   if (null !== usable && "object" === typeof usable) {
     if ("function" === typeof usable.then) return useThenable(usable);
-    if (
-      usable.$$typeof === REACT_CONTEXT_TYPE ||
-      usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-    )
-      return readContext(usable);
+    if (usable.$$typeof === REACT_CONTEXT_TYPE) return readContext(usable);
   }
   throw Error(formatProdErrorMessage(438, String(usable)));
 }
@@ -5669,9 +5650,7 @@ var AbortControllerLocal =
     Provider: null,
     _currentValue: null,
     _currentValue2: null,
-    _threadCount: 0,
-    _defaultValue: null,
-    _globalName: null
+    _threadCount: 0
   };
 function createCache() {
   return {
@@ -10214,7 +10193,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-83468ada",
+    version: "18.3.0-www-modern-145051c7",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1303 = {
@@ -10245,7 +10224,7 @@ var internals$jscomp$inline_1303 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-83468ada"
+  reconcilerVersion: "18.3.0-www-modern-145051c7"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1304 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

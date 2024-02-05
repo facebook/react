@@ -17,7 +17,6 @@ if (__DEV__) {
     "use strict";
 
     var ReactDOM = require("react-dom");
-    var React = require("react");
 
     // Re-export dynamic flags from the www version.
     require("ReactFeatureFlags");
@@ -208,122 +207,20 @@ if (__DEV__) {
     }
 
     // This refers to a WWW module.
-    var warningWWW = require("warning");
-    function error(format) {
-      {
-        {
-          for (
-            var _len2 = arguments.length,
-              args = new Array(_len2 > 1 ? _len2 - 1 : 0),
-              _key2 = 1;
-            _key2 < _len2;
-            _key2++
-          ) {
-            args[_key2 - 1] = arguments[_key2];
-          }
-
-          printWarning("error", format, args);
-        }
-      }
-    }
-
-    function printWarning(level, format, args) {
-      {
-        var React = require("react");
-
-        var ReactSharedInternals =
-          React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED; // Defensive in case this is fired before React is initialized.
-
-        if (ReactSharedInternals != null) {
-          var ReactDebugCurrentFrame =
-            ReactSharedInternals.ReactDebugCurrentFrame;
-          var stack = ReactDebugCurrentFrame.getStackAddendum();
-
-          if (stack !== "") {
-            format += "%s";
-            args.push(stack);
-          }
-        } // TODO: don't ignore level and pass it down somewhere too.
-
-        args.unshift(format);
-        args.unshift(false);
-        warningWWW.apply(null, args);
-      }
-    }
+    require("warning");
 
     // ATTENTION
     // When adding new symbols to this file,
     // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
     // The Symbol used to tag the ReactElement-like types.
     var REACT_ELEMENT_TYPE = Symbol.for("react.element");
-    var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
-    var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
     var REACT_LAZY_TYPE = Symbol.for("react.lazy");
-    var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-      "react.default_value"
-    );
 
     var knownServerReferences = new WeakMap(); // Serializable values
 
     function registerServerReference(proxy, reference) {
       knownServerReferences.set(proxy, reference);
     } // $FlowFixMe[method-unbinding]
-
-    var ReactSharedInternals =
-      React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
-    var ContextRegistry = ReactSharedInternals.ContextRegistry;
-    function getOrCreateServerContext(globalName) {
-      if (!ContextRegistry[globalName]) {
-        var context = {
-          $$typeof: REACT_SERVER_CONTEXT_TYPE,
-          // As a workaround to support multiple concurrent renderers, we categorize
-          // some renderers as primary and others as secondary. We only expect
-          // there to be two concurrent renderers at most: React Native (primary) and
-          // Fabric (secondary); React DOM (primary) and React ART (secondary).
-          // Secondary renderers store their context values on separate fields.
-          _currentValue: REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
-          _currentValue2: REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
-          _defaultValue: REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
-          // Used to track how many concurrent renderers this context currently
-          // supports within in a single renderer. Such as parallel server rendering.
-          _threadCount: 0,
-          // These are circular
-          Provider: null,
-          Consumer: null,
-          _globalName: globalName
-        };
-        context.Provider = {
-          $$typeof: REACT_PROVIDER_TYPE,
-          _context: context
-        };
-
-        {
-          var hasWarnedAboutUsingConsumer;
-          context._currentRenderer = null;
-          context._currentRenderer2 = null;
-          Object.defineProperties(context, {
-            Consumer: {
-              get: function () {
-                if (!hasWarnedAboutUsingConsumer) {
-                  error(
-                    "Consumer pattern is not supported by ReactServerContext"
-                  );
-
-                  hasWarnedAboutUsingConsumer = true;
-                }
-
-                return null;
-              }
-            }
-          });
-        }
-
-        ContextRegistry[globalName] = context;
-      }
-
-      return ContextRegistry[globalName];
-    }
 
     var ROW_ID = 0;
     var ROW_TAG = 1;
@@ -803,11 +700,6 @@ if (__DEV__) {
           case "S": {
             // Symbol
             return Symbol.for(value.slice(2));
-          }
-
-          case "P": {
-            // Server Context Provider
-            return getOrCreateServerContext(value.slice(2)).Provider;
           }
 
           case "F": {

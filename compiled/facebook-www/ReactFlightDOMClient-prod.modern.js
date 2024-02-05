@@ -11,8 +11,7 @@
  */
 
 "use strict";
-var ReactDOM = require("react-dom"),
-  React = require("react");
+var ReactDOM = require("react-dom");
 require("ReactFeatureFlags");
 var decoderOptions = { stream: !0 },
   ReactDOMCurrentDispatcher =
@@ -44,15 +43,8 @@ function preloadModule(clientReference) {
   return modulePromise;
 }
 var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
-  REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
-  REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
-  REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-    "react.default_value"
-  ),
-  knownServerReferences = new WeakMap(),
-  ContextRegistry =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ContextRegistry;
+  knownServerReferences = new WeakMap();
 function Chunk(status, value, reason, response) {
   this.status = status;
   this.value = value;
@@ -271,27 +263,6 @@ function parseModelString(response, parentObject, key, value) {
         );
       case "S":
         return Symbol.for(value.slice(2));
-      case "P":
-        return (
-          (response = value.slice(2)),
-          ContextRegistry[response] ||
-            ((parentObject = {
-              $$typeof: REACT_SERVER_CONTEXT_TYPE,
-              _currentValue: REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
-              _currentValue2: REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
-              _defaultValue: REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED,
-              _threadCount: 0,
-              Provider: null,
-              Consumer: null,
-              _globalName: response
-            }),
-            (parentObject.Provider = {
-              $$typeof: REACT_PROVIDER_TYPE,
-              _context: parentObject
-            }),
-            (ContextRegistry[response] = parentObject)),
-          ContextRegistry[response].Provider
-        );
       case "F":
         return (
           (parentObject = parseInt(value.slice(2), 16)),

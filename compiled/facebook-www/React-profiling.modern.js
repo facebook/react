@@ -382,9 +382,7 @@ exports.createContext = function (defaultValue) {
     _currentValue2: defaultValue,
     _threadCount: 0,
     Provider: null,
-    Consumer: null,
-    _defaultValue: null,
-    _globalName: null
+    Consumer: null
   };
   defaultValue.Provider = {
     $$typeof: REACT_PROVIDER_TYPE,
@@ -568,7 +566,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-41ffe01a";
+exports.version = "18.3.0-www-modern-aeab456d";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

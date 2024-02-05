@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-71ea3c5d";
+    var ReactVersion = "18.3.0-www-classic-ebc61cf0";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -8163,7 +8163,6 @@ if (__DEV__) {
     var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
     var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
     var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-    var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
     var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
@@ -8175,9 +8174,6 @@ if (__DEV__) {
     var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
     var REACT_CACHE_TYPE = Symbol.for("react.cache");
     var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
-    var REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED = Symbol.for(
-      "react.default_value"
-    );
     var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
     var FAUX_ITERATOR_SYMBOL = "@@iterator";
@@ -9149,13 +9145,7 @@ if (__DEV__) {
 
       {
         var _value = prevSnapshot.parentValue;
-
-        if (_value === REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED) {
-          prevSnapshot.context._currentValue2 =
-            prevSnapshot.context._defaultValue;
-        } else {
-          prevSnapshot.context._currentValue2 = _value;
-        }
+        prevSnapshot.context._currentValue2 = _value;
 
         {
           if (
@@ -10841,10 +10831,7 @@ if (__DEV__) {
           // This is a thenable.
           var thenable = usable;
           return unwrapThenable(thenable);
-        } else if (
-          usable.$$typeof === REACT_CONTEXT_TYPE ||
-          usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-        ) {
+        } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
           var context = usable;
           return readContext(context);
         }
@@ -12663,10 +12650,7 @@ if (__DEV__) {
           );
         }
 
-        if (
-          maybeUsable.$$typeof === REACT_CONTEXT_TYPE ||
-          maybeUsable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-        ) {
+        if (maybeUsable.$$typeof === REACT_CONTEXT_TYPE) {
           var context = maybeUsable;
           return renderNodeDestructive(
             request,

@@ -2085,12 +2085,6 @@ if (__DEV__) {
       return refObject;
     }
 
-    function createServerContext(globalName, defaultValue) {
-      {
-        throw new Error("Not implemented.");
-      }
-    }
-
     function resolveDispatcher() {
       var dispatcher = ReactCurrentDispatcher$1.current;
 
@@ -2110,31 +2104,6 @@ if (__DEV__) {
       // Also helps ensure this is inlined.
 
       return dispatcher;
-    }
-    function useContext(Context) {
-      var dispatcher = resolveDispatcher();
-
-      {
-        // TODO: add a more generic warning for invalid values.
-        if (Context._context !== undefined) {
-          var realContext = Context._context; // Don't deduplicate because this legitimately causes bugs
-          // and nobody should be using this in existing code.
-
-          if (realContext.Consumer === Context) {
-            error(
-              "Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be " +
-                "removed in a future major release. Did you mean to call useContext(Context) instead?"
-            );
-          } else if (realContext.Provider === Context) {
-            error(
-              "Calling useContext(Context.Provider) is not supported. " +
-                "Did you mean to call useContext(Context) instead?"
-            );
-          }
-        }
-      }
-
-      return dispatcher.useContext(Context);
     }
     function useCallback(callback, deps) {
       var dispatcher = resolveDispatcher();
@@ -2624,7 +2593,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-6d060166";
+    var ReactVersion = "18.3.0-www-modern-813d6bf7";
 
     // Patch fetch
     var Children = {
@@ -3390,7 +3359,6 @@ if (__DEV__) {
     exports.cloneElement = cloneElement;
     exports.createElement = createElement;
     exports.createRef = createRef;
-    exports.createServerContext = createServerContext;
     exports.forwardRef = forwardRef;
     exports.isValidElement = isValidElement$1;
     exports.jsx = jsx;
@@ -3401,7 +3369,6 @@ if (__DEV__) {
     exports.startTransition = startTransition;
     exports.use = use;
     exports.useCallback = useCallback;
-    exports.useContext = useContext;
     exports.useDebugValue = useDebugValue;
     exports.useId = useId;
     exports.useMemo = useMemo;

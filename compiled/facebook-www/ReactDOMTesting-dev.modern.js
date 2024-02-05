@@ -258,7 +258,6 @@ if (__DEV__) {
     var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
     var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
     var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-    var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
     var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
@@ -309,9 +308,7 @@ if (__DEV__) {
       _currentValue2: null,
       _threadCount: 0,
       Provider: null,
-      Consumer: null,
-      _defaultValue: null,
-      _globalName: null
+      Consumer: null
     };
 
     function requiredContext(c) {
@@ -11650,10 +11647,7 @@ if (__DEV__) {
             return createChild(returnFiber, unwrapThenable(thenable), lanes);
           }
 
-          if (
-            newChild.$$typeof === REACT_CONTEXT_TYPE ||
-            newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-          ) {
+          if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
             var context = newChild;
             return createChild(
               returnFiber,
@@ -11737,10 +11731,7 @@ if (__DEV__) {
             );
           }
 
-          if (
-            newChild.$$typeof === REACT_CONTEXT_TYPE ||
-            newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-          ) {
+          if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
             var context = newChild;
             return updateSlot(
               returnFiber,
@@ -11841,10 +11832,7 @@ if (__DEV__) {
             );
           }
 
-          if (
-            newChild.$$typeof === REACT_CONTEXT_TYPE ||
-            newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-          ) {
+          if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
             var context = newChild;
             return updateFromMap(
               existingChildren,
@@ -12581,10 +12569,7 @@ if (__DEV__) {
             );
           }
 
-          if (
-            newChild.$$typeof === REACT_CONTEXT_TYPE ||
-            newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-          ) {
+          if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
             var context = newChild;
             return reconcileChildFibersImpl(
               returnFiber,
@@ -13759,10 +13744,7 @@ if (__DEV__) {
           // This is a thenable.
           var thenable = usable;
           return useThenable(thenable);
-        } else if (
-          usable.$$typeof === REACT_CONTEXT_TYPE ||
-          usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-        ) {
+        } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
           var context = usable;
           return readContext(context);
         }
@@ -23437,9 +23419,7 @@ if (__DEV__) {
       var currentValue = valueCursor.current;
 
       {
-        {
-          context._currentValue = currentValue;
-        }
+        context._currentValue = currentValue;
 
         {
           var currentRenderer = rendererCursorDEV.current;
@@ -24086,9 +24066,7 @@ if (__DEV__) {
       // We'll initialize these at the root.
       _currentValue: null,
       _currentValue2: null,
-      _threadCount: 0,
-      _defaultValue: null,
-      _globalName: null
+      _threadCount: 0
     };
 
     {
@@ -36198,7 +36176,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-895ad972";
+    var ReactVersion = "18.3.0-www-modern-3d6a7676";
 
     function createPortal$1(
       children,
