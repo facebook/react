@@ -1756,6 +1756,7 @@ function mountStateImpl<S>(initialState: (() => S) | S): Hook {
     // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
     initialState = initialStateInitializer();
     if (shouldDoubleInvokeUserFnsInHooksDEV) {
+      // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
       initialStateInitializer();
     }
   }
