@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8b0b9fa9590cd86d9ab71f15de42def0>>
+ * @generated SignedSource<<bc0ab8dcace25065924d7dce57a1c0c2>>
  */
 
 "use strict";
@@ -1175,7 +1175,6 @@ var ReactSharedInternals =
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
-  REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
   REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"),
@@ -3189,10 +3188,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         );
       if ("function" === typeof newChild.then)
         return createChild(returnFiber, unwrapThenable(newChild), lanes);
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE)
         return createChild(
           returnFiber,
           readContextDuringReconcilation(returnFiber, newChild, lanes),
@@ -3238,10 +3234,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           unwrapThenable(newChild),
           lanes
         );
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE)
         return updateSlot(
           returnFiber,
           oldFiber,
@@ -3308,10 +3301,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           unwrapThenable(newChild),
           lanes
         );
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE)
         return updateFromMap(
           existingChildren,
           returnFiber,
@@ -3643,10 +3633,7 @@ function createChildReconciler(shouldTrackSideEffects) {
           unwrapThenable(newChild),
           lanes
         );
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      )
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE)
         return reconcileChildFibersImpl(
           returnFiber,
           currentFirstChild,
@@ -3946,11 +3933,7 @@ function useThenable(thenable) {
 function use(usable) {
   if (null !== usable && "object" === typeof usable) {
     if ("function" === typeof usable.then) return useThenable(usable);
-    if (
-      usable.$$typeof === REACT_CONTEXT_TYPE ||
-      usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-    )
-      return readContext(usable);
+    if (usable.$$typeof === REACT_CONTEXT_TYPE) return readContext(usable);
   }
   throw Error("An unsupported type was passed to use(): " + String(usable));
 }
@@ -10493,7 +10476,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1196 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-39e4ffcb",
+    version: "18.3.0-canary-57958654",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10549,7 +10532,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-39e4ffcb"
+  reconcilerVersion: "18.3.0-canary-57958654"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<901a1526ca77447e4134b09fdc38f5d6>>
+ * @generated SignedSource<<2c765d54304d1dfcbef9d3c7da4bacb5>>
  */
 
 "use strict";
@@ -2969,7 +2969,6 @@ to return true:wantsResponderID|                            |
     var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
     var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
     var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-    var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
     var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
@@ -9579,10 +9578,7 @@ to return true:wantsResponderID|                            |
             return createChild(returnFiber, unwrapThenable(thenable), lanes);
           }
 
-          if (
-            newChild.$$typeof === REACT_CONTEXT_TYPE ||
-            newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-          ) {
+          if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
             var context = newChild;
             return createChild(
               returnFiber,
@@ -9666,10 +9662,7 @@ to return true:wantsResponderID|                            |
             );
           }
 
-          if (
-            newChild.$$typeof === REACT_CONTEXT_TYPE ||
-            newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-          ) {
+          if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
             var context = newChild;
             return updateSlot(
               returnFiber,
@@ -9770,10 +9763,7 @@ to return true:wantsResponderID|                            |
             );
           }
 
-          if (
-            newChild.$$typeof === REACT_CONTEXT_TYPE ||
-            newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-          ) {
+          if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
             var context = newChild;
             return updateFromMap(
               existingChildren,
@@ -10480,10 +10470,7 @@ to return true:wantsResponderID|                            |
             );
           }
 
-          if (
-            newChild.$$typeof === REACT_CONTEXT_TYPE ||
-            newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-          ) {
+          if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
             var context = newChild;
             return reconcileChildFibersImpl(
               returnFiber,
@@ -11563,10 +11550,7 @@ to return true:wantsResponderID|                            |
           // This is a thenable.
           var thenable = usable;
           return useThenable(thenable);
-        } else if (
-          usable.$$typeof === REACT_CONTEXT_TYPE ||
-          usable.$$typeof === REACT_SERVER_CONTEXT_TYPE
-        ) {
+        } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
           var context = usable;
           return readContext(context);
         }
@@ -19167,9 +19151,7 @@ to return true:wantsResponderID|                            |
       var currentValue = valueCursor.current;
 
       {
-        {
-          context._currentValue = currentValue;
-        }
+        context._currentValue = currentValue;
 
         {
           var currentRenderer = rendererCursorDEV.current;
@@ -28296,7 +28278,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-4393a1cb";
+    var ReactVersion = "18.3.0-canary-f46a3bd0";
 
     function createPortal$1(
       children,

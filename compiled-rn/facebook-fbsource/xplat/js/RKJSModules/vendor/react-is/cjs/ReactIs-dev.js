@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<36f762822297bdf88d7c307324df43cc>>
+ * @generated SignedSource<<2841ecb119b8ac2f90b4a6b1a9610f4a>>
  */
 
 "use strict";
@@ -27,7 +27,6 @@ if (__DEV__) {
     var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
     var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
     var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-    var REACT_SERVER_CONTEXT_TYPE = Symbol.for("react.server_context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
     var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
@@ -104,7 +103,6 @@ if (__DEV__) {
                 var $$typeofType = type && type.$$typeof;
 
                 switch ($$typeofType) {
-                  case REACT_SERVER_CONTEXT_TYPE:
                   case REACT_CONTEXT_TYPE:
                   case REACT_FORWARD_REF_TYPE:
                   case REACT_LAZY_TYPE:

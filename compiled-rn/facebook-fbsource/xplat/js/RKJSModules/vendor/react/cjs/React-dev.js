@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cae14277f9a1460c78070c0b4b0e4d28>>
+ * @generated SignedSource<<b457d955ef3e9a1d11099969695e702a>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-95ec12839-20240205";
+    var ReactVersion = "18.3.0-canary-472854820-20240205";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -146,11 +146,6 @@ if (__DEV__) {
         return stack;
       };
     }
-
-    // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
-    var enableDebugTracing = false;
-    var enableScopeAPI = false;
-    var enableTransitionTracing = false;
 
     var ReactSharedInternals = {
       ReactCurrentDispatcher: ReactCurrentDispatcher,
@@ -569,6 +564,11 @@ if (__DEV__) {
         }
       }
     }
+
+    // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
+    var enableDebugTracing = false;
+    var enableScopeAPI = false;
+    var enableTransitionTracing = false;
 
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
@@ -2085,10 +2085,7 @@ if (__DEV__) {
         _threadCount: 0,
         // These are circular
         Provider: null,
-        Consumer: null,
-        // Add these to use same hidden class in VM as ServerContext
-        _defaultValue: null,
-        _globalName: null
+        Consumer: null
       };
       context.Provider = {
         $$typeof: REACT_PROVIDER_TYPE,
