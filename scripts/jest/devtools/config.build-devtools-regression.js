@@ -31,6 +31,8 @@ if (REACT_VERSION) {
       '^react-dom/client$'
     ] = `<rootDir>/build/${NODE_MODULES_DIR}/react-dom`;
   }
+
+  setupFiles.push(require.resolve('./setupTests.build-devtools-regression'));
 }
 
 module.exports = {
