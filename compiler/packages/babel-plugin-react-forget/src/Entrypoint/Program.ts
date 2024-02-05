@@ -36,22 +36,24 @@ export type CompilerPass = {
   comments: (t.CommentBlock | t.CommentLine)[];
 };
 
-function hasAnyUseForgetDirectives(directives: t.Directive[]): boolean {
+function findUseForgetDirective(directives: t.Directive[]): t.Directive | null {
   for (const directive of directives) {
     if (directive.value.value === "use forget") {
-      return true;
+      return directive;
     }
   }
-  return false;
+  return null;
 }
 
-function hasAnyUseNoForgetDirectives(directives: t.Directive[]): boolean {
+function findUseNoForgetDirective(
+  directives: t.Directive[]
+): t.Directive | null {
   for (const directive of directives) {
     if (directive.value.value === "use no forget") {
-      return true;
+      return directive;
     }
   }
-  return false;
+  return null;
 }
 
 function isCriticalError(err: unknown): boolean {
@@ -362,11 +364,22 @@ function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
   }
   if (fn.node.body.type === "BlockStatement") {
     // Opt-outs disable compilation regardless of mode
-    if (hasAnyUseNoForgetDirectives(fn.node.body.directives)) {
+    const useNoForget = findUseNoForgetDirective(fn.node.body.directives);
+    if (useNoForget != null) {
+      pass.opts.logger?.logEvent(pass.filename, {
+        kind: "CompileError",
+        fnLoc: fn.node.body.loc ?? null,
+        detail: {
+          severity: ErrorSeverity.Todo,
+          reason: 'Skipped due to "use no forget" directive.',
+          loc: useNoForget.loc ?? null,
+          suggestions: null,
+        },
+      });
       return false;
     }
     // Otherwise opt-ins enable compilation regardless of mode
-    if (hasAnyUseForgetDirectives(fn.node.body.directives)) {
+    if (findUseForgetDirective(fn.node.body.directives) != null) {
       return true;
     }
   }
