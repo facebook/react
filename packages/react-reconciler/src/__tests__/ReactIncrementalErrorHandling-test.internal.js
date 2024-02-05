@@ -1244,9 +1244,9 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
     await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: React.createElement: type is invalid -- expected a string',
+      'Warning: React.jsx: type is invalid -- expected a string',
       // React retries once on error
-      'Warning: React.createElement: type is invalid -- expected a string',
+      'Warning: React.jsx: type is invalid -- expected a string',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <span
@@ -1295,9 +1295,9 @@ describe('ReactIncrementalErrorHandling', () => {
       </ErrorBoundary>,
     );
     await expect(async () => await waitForAll([])).toErrorDev([
-      'Warning: React.createElement: type is invalid -- expected a string',
+      'Warning: React.jsx: type is invalid -- expected a string',
       // React retries once on error
-      'Warning: React.createElement: type is invalid -- expected a string',
+      'Warning: React.jsx: type is invalid -- expected a string',
     ]);
     expect(ReactNoop).toMatchRenderedOutput(
       <span
@@ -1317,7 +1317,7 @@ describe('ReactIncrementalErrorHandling', () => {
   it('recovers from uncaught reconciler errors', async () => {
     const InvalidType = undefined;
     expect(() => ReactNoop.render(<InvalidType />)).toErrorDev(
-      'Warning: React.createElement: type is invalid -- expected a string',
+      'Warning: React.jsx: type is invalid -- expected a string',
       {withoutStack: true},
     );
     await waitForThrow(

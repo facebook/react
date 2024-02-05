@@ -34,12 +34,6 @@ const babelOptions = {
     // For Node environment only. For builds, Rollup takes care of ESM.
     require.resolve('@babel/plugin-transform-modules-commonjs'),
 
-    // Keep stacks detailed in tests.
-    // Don't put this in .babelrc so that we don't embed filenames
-    // into ReactART builds that include JSX.
-    // TODO: I have not verified that this actually works.
-    require.resolve('@babel/plugin-transform-react-jsx-source'),
-
     pathToTransformInfiniteLoops,
     pathToTransformTestGatePragma,
 
@@ -86,6 +80,16 @@ module.exports = {
       if (isTestFile && isInDevToolsPackages) {
         plugins.push(pathToTransformReactVersionPragma);
       }
+
+      plugins.push([
+        process.env.NODE_ENV === 'development'
+          ? require.resolve('@babel/plugin-transform-react-jsx-development')
+          : require.resolve('@babel/plugin-transform-react-jsx'),
+        // The "automatic" runtime corresponds to react/jsx-runtime. "classic"
+        // would be React.createElement.
+        {runtime: 'automatic'},
+      ]);
+
       let sourceAst = hermesParser.parse(src, {babel: true});
       return {
         code: babel.transformFromAstSync(

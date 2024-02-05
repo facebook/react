@@ -95,7 +95,10 @@ describe('ReactDeprecationWarnings', () => {
     }
     class Component extends React.Component {
       render() {
-        return <RefComponent ref="refComponent" __self={this} />;
+        return React.createElement(RefComponent, {
+          ref: 'refComponent',
+          __self: this,
+        });
       }
     }
     expect(() => {
@@ -114,7 +117,10 @@ describe('ReactDeprecationWarnings', () => {
     }
     class Component extends React.Component {
       render() {
-        return <RefComponent ref="refComponent" __self={{}} />;
+        return React.createElement(RefComponent, {
+          ref: 'refComponent',
+          __self: {},
+        });
       }
     }
 

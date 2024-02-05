@@ -86,13 +86,22 @@ describe('ReactFreshIntegration', () => {
     // eslint-disable-next-line no-new-func
     new Function(
       'global',
+      'require',
       'React',
       'Scheduler',
       'exports',
       '$RefreshReg$',
       '$RefreshSig$',
       compiled,
-    )(global, React, Scheduler, exportsObj, $RefreshReg$, $RefreshSig$);
+    )(
+      global,
+      require,
+      React,
+      Scheduler,
+      exportsObj,
+      $RefreshReg$,
+      $RefreshSig$,
+    );
     // Module systems will register exports as a fallback.
     // This is useful for cases when e.g. a class is exported,
     // and we don't want to propagate the update beyond this module.
