@@ -15,6 +15,8 @@
 
 export const enableComponentStackLocations = true;
 
+export const enableServerComponentKeys = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Killswitch
 //
