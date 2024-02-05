@@ -8,6 +8,7 @@
  */
 
 import type {
+  Awaited,
   ReactContext,
   ReactProviderType,
   StartTransitionOptions,
@@ -80,10 +81,13 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
         // This type check is for Flow only.
         Dispatcher.useMemoCache(0);
       }
-
       if (typeof Dispatcher.useOptimistic === 'function') {
         // This type check is for Flow only.
         Dispatcher.useOptimistic(null, (s: mixed, a: mixed) => s);
+      }
+      if (typeof Dispatcher.useFormState === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useFormState((s: mixed, p: mixed) => s, null);
       }
     } finally {
       readHookLog = hookLog;
@@ -372,6 +376,27 @@ function useOptimistic<S, A>(
   return [state, (action: A) => {}];
 }
 
+function useFormState<S, P>(
+  action: (Awaited<S>, P) => S,
+  initialState: Awaited<S>,
+  permalink?: string,
+): [Awaited<S>, (P) => void] {
+  const hook = nextHook(); // FormState
+  nextHook(); // ActionQueue
+  let state;
+  if (hook !== null) {
+    state = hook.memoizedState;
+  } else {
+    state = initialState;
+  }
+  hookLog.push({
+    primitive: 'FormState',
+    stackError: new Error(),
+    value: state,
+  });
+  return [state, (payload: P) => {}];
+}
+
 const Dispatcher: DispatcherType = {
   use,
   readContext,
@@ -393,6 +418,7 @@ const Dispatcher: DispatcherType = {
   useSyncExternalStore,
   useDeferredValue,
   useId,
+  useFormState,
 };
 
 // create a proxy to throw a custom error
