@@ -498,12 +498,14 @@ function defaultErrorHandler(error) {
 }
 function defaultPostponeHandler() {}
 var currentRequest = null;
-function serializeThenable(request, thenable) {
+function serializeThenable(request, task, thenable) {
   request.pendingChunks++;
   var newTask = createTask(
     request,
     null,
-    currentActiveSnapshot,
+    task.keyPath,
+    task.implicitSlot,
+    task.context,
     request.abortableTasks
   );
   switch (thenable.status) {
@@ -512,9 +514,11 @@ function serializeThenable(request, thenable) {
         (newTask.model = thenable.value), pingTask(request, newTask), newTask.id
       );
     case "rejected":
-      var digest = logRecoverableError(request, thenable.reason);
-      emitErrorChunk(request, newTask.id, digest);
-      return newTask.id;
+      return (
+        (task = logRecoverableError(request, thenable.reason)),
+        emitErrorChunk(request, newTask.id, task),
+        newTask.id
+      );
     default:
       "string" !== typeof thenable.status &&
         ((thenable.status = "pending"),
@@ -586,17 +590,37 @@ function createLazyWrapperAroundWakeable(wakeable) {
   }
   return { $$typeof: REACT_LAZY_TYPE, _payload: wakeable, _init: readThenable };
 }
+function renderFragment(request, task, children) {
+  return null !== task.keyPath
+    ? ((request = [
+        REACT_ELEMENT_TYPE,
+        REACT_FRAGMENT_TYPE,
+        task.keyPath,
+        { children: children }
+      ]),
+      task.implicitSlot ? [request] : request)
+    : children;
+}
+function renderClientElement(task, type, key, props) {
+  var keyPath = task.keyPath;
+  null === key
+    ? (key = keyPath)
+    : null !== keyPath && (key = keyPath + "," + key);
+  type = [REACT_ELEMENT_TYPE, type, key, props];
+  return task.implicitSlot && null !== key ? [type] : type;
+}
 function renderElement(request, task, type, key, ref, props) {
   if (null !== ref && void 0 !== ref)
     throw Error(
       "Refs cannot be used in Server Components, nor passed to Client Components."
     );
   if ("function" === typeof type) {
-    if (isClientReference(type)) return [REACT_ELEMENT_TYPE, type, key, props];
-    key = task.thenableState;
+    if (isClientReference(type))
+      return renderClientElement(task, type, key, props);
+    ref = task.thenableState;
     task.thenableState = null;
     thenableIndexCounter = 0;
-    thenableState = key;
+    thenableState = ref;
     props = type(props);
     if (
       "object" === typeof props &&
@@ -607,15 +631,35 @@ function renderElement(request, task, type, key, ref, props) {
       if ("fulfilled" === type.status) return type.value;
       props = createLazyWrapperAroundWakeable(props);
     }
-    return renderModelDestructive(request, task, emptyRoot, "", props);
+    type = task.keyPath;
+    ref = task.implicitSlot;
+    null !== key
+      ? (task.keyPath = null === type ? key : type + "," + key)
+      : null === type && (task.implicitSlot = !0);
+    request = renderModelDestructive(request, task, emptyRoot, "", props);
+    task.keyPath = type;
+    task.implicitSlot = ref;
+    return request;
   }
-  if ("string" === typeof type) return [REACT_ELEMENT_TYPE, type, key, props];
+  if ("string" === typeof type)
+    return renderClientElement(task, type, key, props);
   if ("symbol" === typeof type)
-    return type === REACT_FRAGMENT_TYPE
-      ? renderModelDestructive(request, task, emptyRoot, "", props.children)
-      : [REACT_ELEMENT_TYPE, type, key, props];
+    return type === REACT_FRAGMENT_TYPE && null === key
+      ? ((key = task.implicitSlot),
+        null === task.keyPath && (task.implicitSlot = !0),
+        (request = renderModelDestructive(
+          request,
+          task,
+          emptyRoot,
+          "",
+          props.children
+        )),
+        (task.implicitSlot = key),
+        request)
+      : renderClientElement(task, type, key, props);
   if (null != type && "object" === typeof type) {
-    if (isClientReference(type)) return [REACT_ELEMENT_TYPE, type, key, props];
+    if (isClientReference(type))
+      return renderClientElement(task, type, key, props);
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE:
         var init = type._init;
@@ -624,12 +668,20 @@ function renderElement(request, task, type, key, ref, props) {
       case REACT_FORWARD_REF_TYPE:
         return (
           (type = type.render),
-          (key = task.thenableState),
+          (ref = task.thenableState),
           (task.thenableState = null),
           (thenableIndexCounter = 0),
-          (thenableState = key),
-          (props = type(props, void 0)),
-          renderModelDestructive(request, task, emptyRoot, "", props)
+          (thenableState = ref),
+          (ref = type(props, void 0)),
+          (props = task.keyPath),
+          (type = task.implicitSlot),
+          null !== key
+            ? (task.keyPath = null === props ? key : props + "," + key)
+            : null === props && (task.implicitSlot = !0),
+          (request = renderModelDestructive(request, task, emptyRoot, "", ref)),
+          (task.keyPath = props),
+          (task.implicitSlot = type),
+          request
         );
       case REACT_MEMO_TYPE:
         return renderElement(request, task, type.type, key, ref, props);
@@ -646,20 +698,27 @@ function pingTask(request, task) {
     ((request.flushScheduled = null !== request.destination),
     performWork(request));
 }
-function createTask(request, model, context, abortSet) {
+function createTask(request, model, keyPath, implicitSlot, context, abortSet) {
   var id = request.nextChunkId++;
-  "object" === typeof model &&
-    null !== model &&
+  "object" !== typeof model ||
+    null === model ||
+    null !== keyPath ||
+    implicitSlot ||
+    null !== context ||
     request.writtenObjects.set(model, id);
   var task = {
     id: id,
     status: 0,
     model: model,
+    keyPath: keyPath,
+    implicitSlot: implicitSlot,
     context: context,
     ping: function () {
       return pingTask(request, task);
     },
     toJSON: function (parentPropertyName, value) {
+      var prevKeyPath = task.keyPath,
+        prevImplicitSlot = task.implicitSlot;
       try {
         var JSCompiler_inline_result = renderModelDestructive(
           request,
@@ -688,25 +747,33 @@ function createTask(request, model, context, abortSet) {
           JSCompiler_inline_result = createTask(
             request,
             task.model,
-            currentActiveSnapshot,
+            task.keyPath,
+            task.implicitSlot,
+            task.context,
             request.abortableTasks
           );
           var ping = JSCompiler_inline_result.ping;
           parentPropertyName.then(ping, ping);
           JSCompiler_inline_result.thenableState =
             getThenableStateAfterSuspending();
+          task.keyPath = prevKeyPath;
+          task.implicitSlot = prevImplicitSlot;
           JSCompiler_inline_result = value
             ? "$L" + JSCompiler_inline_result.id.toString(16)
             : serializeByValueID(JSCompiler_inline_result.id);
-        } else if (value)
+        } else if (
+          ((task.keyPath = prevKeyPath),
+          (task.implicitSlot = prevImplicitSlot),
+          value)
+        )
           request.pendingChunks++,
-            (value = request.nextChunkId++),
-            (parentPropertyName = logRecoverableError(
+            (prevKeyPath = request.nextChunkId++),
+            (prevImplicitSlot = logRecoverableError(
               request,
               parentPropertyName
             )),
-            emitErrorChunk(request, value, parentPropertyName),
-            (JSCompiler_inline_result = "$L" + value.toString(16));
+            emitErrorChunk(request, prevKeyPath, prevImplicitSlot),
+            (JSCompiler_inline_result = "$L" + prevKeyPath.toString(16));
         else throw parentPropertyName;
       }
       return JSCompiler_inline_result;
@@ -760,12 +827,7 @@ function serializeClientReference(
 }
 function outlineModel(request, value) {
   request.pendingChunks++;
-  value = createTask(
-    request,
-    value,
-    currentActiveSnapshot,
-    request.abortableTasks
-  );
+  value = createTask(request, value, null, !1, null, request.abortableTasks);
   retryTask(request, value);
   return value.id;
 }
@@ -786,13 +848,16 @@ function renderModelDestructive(
         parent = request.writtenObjects;
         parentPropertyName = parent.get(value);
         if (void 0 !== parentPropertyName) {
-          if (-1 === parentPropertyName)
-            return (
-              (request = outlineModel(request, value)),
-              serializeByValueID(request)
-            );
-          if (modelRoot === value) modelRoot = null;
-          else return serializeByValueID(parentPropertyName);
+          if (
+            null === task.keyPath &&
+            !task.implicitSlot &&
+            null === task.context
+          )
+            if (modelRoot === value) modelRoot = null;
+            else
+              return -1 === parentPropertyName
+                ? "$L" + outlineModel(request, value).toString(16)
+                : "$L" + parentPropertyName.toString(16);
         } else parent.set(value, -1);
         return renderElement(
           request,
@@ -816,25 +881,28 @@ function renderModelDestructive(
         parentPropertyName,
         value
       );
-    task = request.writtenObjects;
-    parent = task.get(value);
+    parent = request.writtenObjects;
+    parentPropertyName = parent.get(value);
     if ("function" === typeof value.then) {
-      if (void 0 !== parent)
+      if (void 0 !== parentPropertyName) {
+        if (null !== task.keyPath || task.implicitSlot || null !== task.context)
+          return "$@" + serializeThenable(request, task, value).toString(16);
         if (modelRoot === value) modelRoot = null;
-        else return "$@" + parent.toString(16);
-      request = serializeThenable(request, value);
-      task.set(value, request);
+        else return "$@" + parentPropertyName.toString(16);
+      }
+      request = serializeThenable(request, task, value);
+      parent.set(value, request);
       return "$@" + request.toString(16);
     }
-    if (void 0 !== parent) {
-      if (-1 === parent)
-        return (
-          (request = outlineModel(request, value)), serializeByValueID(request)
-        );
+    if (void 0 !== parentPropertyName)
       if (modelRoot === value) modelRoot = null;
-      else return serializeByValueID(parent);
-    } else task.set(value, -1);
-    if (isArrayImpl(value)) return value;
+      else
+        return -1 === parentPropertyName
+          ? ((request = outlineModel(request, value)),
+            serializeByValueID(request))
+          : serializeByValueID(parentPropertyName);
+    else parent.set(value, -1);
+    if (isArrayImpl(value)) return renderFragment(request, task, value);
     if (value instanceof Map) {
       value = Array.from(value);
       for (task = 0; task < value.length; task++)
@@ -858,12 +926,12 @@ function renderModelDestructive(
       return "$W" + outlineModel(request, value).toString(16);
     }
     null === value || "object" !== typeof value
-      ? (request = null)
-      : ((request =
+      ? (parent = null)
+      : ((parent =
           (MAYBE_ITERATOR_SYMBOL && value[MAYBE_ITERATOR_SYMBOL]) ||
           value["@@iterator"]),
-        (request = "function" === typeof request ? request : null));
-    if (request) return Array.from(value);
+        (parent = "function" === typeof parent ? parent : null));
+    if (parent) return renderFragment(request, task, Array.from(value));
     request = getPrototypeOf(value);
     if (
       request !== ObjectPrototype &&
@@ -919,10 +987,10 @@ function renderModelDestructive(
   }
   if ("symbol" === typeof value) {
     task = request.writtenSymbols;
-    var existingId$9 = task.get(value);
-    if (void 0 !== existingId$9) return serializeByValueID(existingId$9);
-    existingId$9 = value.description;
-    if (Symbol.for(existingId$9) !== value)
+    var existingId$15 = task.get(value);
+    if (void 0 !== existingId$15) return serializeByValueID(existingId$15);
+    existingId$15 = value.description;
+    if (Symbol.for(existingId$15) !== value)
       throw Error(
         "Only global symbols received from Symbol.for(...) can be passed to Client Components. The symbol Symbol.for(" +
           (value.description + ") cannot be found among global symbols.") +
@@ -930,7 +998,7 @@ function renderModelDestructive(
       );
     request.pendingChunks++;
     parent = request.nextChunkId++;
-    parentPropertyName = stringify("$S" + existingId$9);
+    parentPropertyName = stringify("$S" + existingId$15);
     parentPropertyName = parent.toString(16) + ":" + parentPropertyName + "\n";
     request.completedImportChunks.push(parentPropertyName);
     task.set(value, parent);
@@ -994,29 +1062,32 @@ function retryTask(request, task) {
         task.model
       );
       modelRoot = resolvedModel;
+      task.keyPath = null;
+      task.implicitSlot = !1;
       var json =
-          "string" === typeof resolvedModel
-            ? stringify(resolvedModel)
-            : stringify(resolvedModel, task.toJSON),
+          "object" === typeof resolvedModel && null !== resolvedModel
+            ? stringify(resolvedModel, task.toJSON)
+            : stringify(resolvedModel),
         processedChunk = task.id.toString(16) + ":" + json + "\n";
       request.completedRegularChunks.push(processedChunk);
       request.abortableTasks.delete(task);
       task.status = 1;
     } catch (thrownValue) {
-      (prev =
+      var x =
         thrownValue === SuspenseException
           ? getSuspendedThenable()
-          : thrownValue),
-        "object" === typeof prev &&
-        null !== prev &&
-        "function" === typeof prev.then
-          ? ((request = task.ping),
-            prev.then(request, request),
-            (task.thenableState = getThenableStateAfterSuspending()))
-          : (request.abortableTasks.delete(task),
-            (task.status = 4),
-            (prev = logRecoverableError(request, prev)),
-            emitErrorChunk(request, task.id, prev));
+          : thrownValue;
+      if ("object" === typeof x && null !== x && "function" === typeof x.then) {
+        var ping = task.ping;
+        x.then(ping, ping);
+        task.thenableState = getThenableStateAfterSuspending();
+      } else {
+        request.abortableTasks.delete(task);
+        task.status = 4;
+        var digest = logRecoverableError(request, x);
+        emitErrorChunk(request, task.id, digest);
+      }
+    } finally {
     }
   }
 }
@@ -1125,7 +1196,7 @@ exports.renderToDestination = function (destination, model, options) {
     onPostpone: defaultPostponeHandler
   };
   onError.pendingChunks++;
-  model = createTask(onError, model, null, abortSet);
+  model = createTask(onError, model, null, !1, null, abortSet);
   options.push(model);
   onError.flushScheduled = null !== onError.destination;
   performWork(onError);

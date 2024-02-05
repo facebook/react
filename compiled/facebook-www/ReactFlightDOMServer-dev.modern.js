@@ -584,9 +584,6 @@ if (__DEV__) {
         currentActiveSnapshot = next;
       }
     }
-    function getActiveContext() {
-      return currentActiveSnapshot;
-    }
     function readContext$1(context) {
       var value = context._currentValue;
       return value;
@@ -1312,7 +1309,14 @@ if (__DEV__) {
       };
       request.pendingChunks++;
       var rootContext = createRootContext();
-      var rootTask = createTask(request, model, rootContext, abortSet);
+      var rootTask = createTask(
+        request,
+        model,
+        null,
+        false,
+        rootContext,
+        abortSet
+      );
       pingedTasks.push(rootTask);
       return request;
     }
@@ -1327,12 +1331,14 @@ if (__DEV__) {
       return importServerContexts();
     }
 
-    function serializeThenable(request, thenable) {
+    function serializeThenable(request, task, thenable) {
       request.pendingChunks++;
       var newTask = createTask(
         request,
         null,
-        getActiveContext(),
+        task.keyPath, // the server component sequence continues through Promise-as-a-child.
+        task.implicitSlot,
+        task.context,
         request.abortableTasks
       );
 
@@ -1478,6 +1484,72 @@ if (__DEV__) {
       return lazyType;
     }
 
+    function renderFragment(request, task, children) {
+      if (task.keyPath !== null) {
+        // We have a Server Component that specifies a key but we're now splitting
+        // the tree using a fragment.
+        var fragment = [
+          REACT_ELEMENT_TYPE,
+          REACT_FRAGMENT_TYPE,
+          task.keyPath,
+          {
+            children: children
+          }
+        ];
+
+        if (!task.implicitSlot) {
+          // If this was keyed inside a set. I.e. the outer Server Component was keyed
+          // then we need to handle reorders of the whole set. To do this we need to wrap
+          // this array in a keyed Fragment.
+          return fragment;
+        } // If the outer Server Component was implicit but then an inner one had a key
+        // we don't actually need to be able to move the whole set around. It'll always be
+        // in an implicit slot. The key only exists to be able to reset the state of the
+        // children. We could achieve the same effect by passing on the keyPath to the next
+        // set of components inside the fragment. This would also allow a keyless fragment
+        // reconcile against a single child.
+        // Unfortunately because of JSON.stringify, we can't call the recursive loop for
+        // each child within this context because we can't return a set with already resolved
+        // values. E.g. a string would get double encoded. Returning would pop the context.
+        // So instead, we wrap it with an unkeyed fragment and inner keyed fragment.
+
+        return [fragment];
+      } // Since we're yielding here, that implicitly resets the keyPath context on the
+      // way up. Which is what we want since we've consumed it. If this changes to
+      // be recursive serialization, we need to reset the keyPath and implicitSlot,
+      // before recursing here.
+
+      return children;
+    }
+
+    function renderClientElement(task, type, key, props) {
+      // the keys of any Server Components which are not serialized.
+
+      var keyPath = task.keyPath;
+
+      if (key === null) {
+        key = keyPath;
+      } else if (keyPath !== null) {
+        key = keyPath + "," + key;
+      }
+
+      var element = [REACT_ELEMENT_TYPE, type, key, props];
+
+      if (task.implicitSlot && key !== null) {
+        // The root Server Component had no key so it was in an implicit slot.
+        // If we had a key lower, it would end up in that slot with an explicit key.
+        // We wrap the element in a fragment to give it an implicit key slot with
+        // an inner explicit key.
+        return [element];
+      } // Since we're yielding here, that implicitly resets the keyPath context on the
+      // way up. Which is what we want since we've consumed it. If this changes to
+      // be recursive serialization, we need to reset the keyPath and implicitSlot,
+      // before recursing here. We also need to reset it once we render into an array
+      // or anything else too which we also get implicitly.
+
+      return element;
+    }
+
     function renderElement(request, task, type, key, ref, props) {
       if (ref !== null && ref !== undefined) {
         // When the ref moves to the regular props object this will implicitly
@@ -1499,7 +1571,7 @@ if (__DEV__) {
       if (typeof type === "function") {
         if (isClientReference(type)) {
           // This is a reference to a Client Component.
-          return [REACT_ELEMENT_TYPE, type, key, props];
+          return renderClientElement(task, type, key, props);
         } // This is a server-side component.
         // Reset the task's thenable state before continuing, so that if a later
         // component suspends we can reuse the same task object. If the same
@@ -1525,33 +1597,58 @@ if (__DEV__) {
           // the thenable here.
 
           result = createLazyWrapperAroundWakeable(result);
+        } // Track this element's key on the Server Component on the keyPath context..
+
+        var prevKeyPath = task.keyPath;
+        var prevImplicitSlot = task.implicitSlot;
+
+        if (key !== null) {
+          // Append the key to the path. Technically a null key should really add the child
+          // index. We don't do that to hold the payload small and implementation simple.
+          task.keyPath = prevKeyPath === null ? key : prevKeyPath + "," + key;
+        } else if (prevKeyPath === null) {
+          // This sequence of Server Components has no keys. This means that it was rendered
+          // in a slot that needs to assign an implicit key. Even if children below have
+          // explicit keys, they should not be used for the outer most key since it might
+          // collide with other slots in that set.
+          task.implicitSlot = true;
         }
 
-        return renderModelDestructive(request, task, emptyRoot, "", result);
+        var json = renderModelDestructive(request, task, emptyRoot, "", result);
+        task.keyPath = prevKeyPath;
+        task.implicitSlot = prevImplicitSlot;
+        return json;
       } else if (typeof type === "string") {
         // This is a host element. E.g. HTML.
-        return [REACT_ELEMENT_TYPE, type, key, props];
+        return renderClientElement(task, type, key, props);
       } else if (typeof type === "symbol") {
-        if (type === REACT_FRAGMENT_TYPE) {
+        if (type === REACT_FRAGMENT_TYPE && key === null) {
           // For key-less fragments, we add a small optimization to avoid serializing
           // it as a wrapper.
-          // TODO: If a key is specified, we should propagate its key to any children.
-          // Same as if a Server Component has a key.
-          return renderModelDestructive(
+          var _prevImplicitSlot = task.implicitSlot;
+
+          if (task.keyPath === null) {
+            task.implicitSlot = true;
+          }
+
+          var _json = renderModelDestructive(
             request,
             task,
             emptyRoot,
             "",
             props.children
           );
+
+          task.implicitSlot = _prevImplicitSlot;
+          return _json;
         } // This might be a built-in React component. We'll let the client decide.
         // Any built-in works as long as its props are serializable.
 
-        return [REACT_ELEMENT_TYPE, type, key, props];
+        return renderClientElement(task, type, key, props);
       } else if (type != null && typeof type === "object") {
         if (isClientReference(type)) {
           // This is a reference to a Client Component.
-          return [REACT_ELEMENT_TYPE, type, key, props];
+          return renderClientElement(task, type, key, props);
         }
 
         switch (type.$$typeof) {
@@ -1573,13 +1670,33 @@ if (__DEV__) {
 
             var _result = render(props, undefined);
 
-            return renderModelDestructive(
+            var _prevKeyPath = task.keyPath;
+            var _prevImplicitSlot2 = task.implicitSlot;
+
+            if (key !== null) {
+              // Append the key to the path. Technically a null key should really add the child
+              // index. We don't do that to hold the payload small and implementation simple.
+              task.keyPath =
+                _prevKeyPath === null ? key : _prevKeyPath + "," + key;
+            } else if (_prevKeyPath === null) {
+              // This sequence of Server Components has no keys. This means that it was rendered
+              // in a slot that needs to assign an implicit key. Even if children below have
+              // explicit keys, they should not be used for the outer most key since it might
+              // collide with other slots in that set.
+              task.implicitSlot = true;
+            }
+
+            var _json2 = renderModelDestructive(
               request,
               task,
               emptyRoot,
               "",
               _result
             );
+
+            task.keyPath = _prevKeyPath;
+            task.implicitSlot = _prevImplicitSlot2;
+            return _json2;
           }
 
           case REACT_MEMO_TYPE: {
@@ -1606,18 +1723,35 @@ if (__DEV__) {
       }
     }
 
-    function createTask(request, model, context, abortSet) {
+    function createTask(
+      request,
+      model,
+      keyPath,
+      implicitSlot,
+      context,
+      abortSet
+    ) {
       var id = request.nextChunkId++;
 
       if (typeof model === "object" && model !== null) {
-        // Register this model as having the ID we're about to write.
-        request.writtenObjects.set(model, id);
+        // If we're about to write this into a new task we can assign it an ID early so that
+        // any other references can refer to the value we're about to write.
+        if (
+          keyPath !== null ||
+          implicitSlot ||
+          context !== rootContextSnapshot
+        );
+        else {
+          request.writtenObjects.set(model, id);
+        }
       }
 
       var task = {
         id: id,
         status: PENDING,
         model: model,
+        keyPath: keyPath,
+        implicitSlot: implicitSlot,
         context: context,
         ping: function () {
           return pingTask(request, task);
@@ -1789,7 +1923,9 @@ if (__DEV__) {
       var newTask = createTask(
         request,
         value,
-        getActiveContext(),
+        null, // The way we use outlining is for reusing an object.
+        false, // It makes no sense for that use case to be contextual.
+        rootContextSnapshot, // Therefore we don't pass any contextual information along.
         request.abortableTasks
       );
       retryTask(request, newTask);
@@ -1879,6 +2015,9 @@ if (__DEV__) {
     var modelRoot = false;
 
     function renderModel(request, task, parent, key, value) {
+      var prevKeyPath = task.keyPath;
+      var prevImplicitSlot = task.implicitSlot;
+
       try {
         return renderModelDestructive(request, task, parent, key, value);
       } catch (thrownValue) {
@@ -1907,12 +2046,18 @@ if (__DEV__) {
             var newTask = createTask(
               request,
               task.model,
-              getActiveContext(),
+              task.keyPath,
+              task.implicitSlot,
+              task.context,
               request.abortableTasks
             );
             var ping = newTask.ping;
             x.then(ping, ping);
-            newTask.thenableState = getThenableStateAfterSuspending();
+            newTask.thenableState = getThenableStateAfterSuspending(); // Restore the context. We assume that this will be restored by the inner
+            // functions in case nothing throws so we don't use "finally" here.
+
+            task.keyPath = prevKeyPath;
+            task.implicitSlot = prevImplicitSlot;
 
             if (wasReactNode) {
               return serializeLazyID(newTask.id);
@@ -1920,7 +2065,11 @@ if (__DEV__) {
 
             return serializeByValueID(newTask.id);
           }
-        }
+        } // Restore the context. We assume that this will be restored by the inner
+        // functions in case nothing throws so we don't use "finally" here.
+
+        task.keyPath = prevKeyPath;
+        task.implicitSlot = prevImplicitSlot;
 
         if (wasReactNode) {
           // Something errored. We'll still send everything we have up until this point.
@@ -1965,31 +2114,40 @@ if (__DEV__) {
             var _existingId = _writtenObjects.get(value);
 
             if (_existingId !== undefined) {
-              if (_existingId === -1) {
-                // Seen but not yet outlined.
-                var newId = outlineModel(request, value);
-                return serializeByValueID(newId);
-              } else if (modelRoot === value) {
+              if (
+                task.keyPath !== null ||
+                task.implicitSlot ||
+                task.context !== rootContextSnapshot
+              );
+              else if (modelRoot === value) {
                 // This is the ID we're currently emitting so we need to write it
                 // once but if we discover it again, we refer to it by id.
                 modelRoot = null;
+              } else if (_existingId === -1) {
+                // Seen but not yet outlined.
+                // TODO: If we throw here we can treat this as suspending which causes an outline
+                // but that is able to reuse the same task if we're already in one but then that
+                // will be a lazy future value rather than guaranteed to exist but maybe that's good.
+                var newId = outlineModel(request, value);
+                return serializeLazyID(newId);
               } else {
-                // We've already emitted this as an outlined object, so we can
-                // just refer to that by its existing ID.
-                return serializeByValueID(_existingId);
+                // We've already emitted this as an outlined object, so we can refer to that by its
+                // existing ID. We use a lazy reference since, unlike plain objects, elements might
+                // suspend so it might not have emitted yet even if we have the ID for it.
+                return serializeLazyID(_existingId);
               }
             } else {
               // This is the first time we've seen this object. We may never see it again
               // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
               _writtenObjects.set(value, -1);
-            } // TODO: Concatenate keys of parents onto children.
+            }
 
             var element = value; // Attempt to render the Server Component.
 
             return renderElement(
               request,
               task,
-              element.type,
+              element.type, // $FlowFixMe[incompatible-call] the key of an element is null | string
               element.key,
               element.ref,
               element.props
@@ -2024,7 +2182,18 @@ if (__DEV__) {
 
         if (typeof value.then === "function") {
           if (existingId !== undefined) {
-            if (modelRoot === value) {
+            if (
+              task.keyPath !== null ||
+              task.implicitSlot ||
+              task.context !== rootContextSnapshot
+            ) {
+              // If we're in some kind of context we can't reuse the result of this render or
+              // previous renders of this element. We only reuse Promises if they're not wrapped
+              // by another Server Component.
+              var _promiseId = serializeThenable(request, task, value);
+
+              return serializePromiseID(_promiseId);
+            } else if (modelRoot === value) {
               // This is the ID we're currently emitting so we need to write it
               // once but if we discover it again, we refer to it by id.
               modelRoot = null;
@@ -2035,21 +2204,21 @@ if (__DEV__) {
           } // We assume that any object with a .then property is a "Thenable" type,
           // or a Promise type. Either of which can be represented by a Promise.
 
-          var promiseId = serializeThenable(request, value);
+          var promiseId = serializeThenable(request, task, value);
           writtenObjects.set(value, promiseId);
           return serializePromiseID(promiseId);
         }
 
         if (existingId !== undefined) {
-          if (existingId === -1) {
+          if (modelRoot === value) {
+            // This is the ID we're currently emitting so we need to write it
+            // once but if we discover it again, we refer to it by id.
+            modelRoot = null;
+          } else if (existingId === -1) {
             // Seen but not yet outlined.
             var _newId = outlineModel(request, value);
 
             return serializeByValueID(_newId);
-          } else if (modelRoot === value) {
-            // This is the ID we're currently emitting so we need to write it
-            // once but if we discover it again, we refer to it by id.
-            modelRoot = null;
           } else {
             // We've already emitted this as an outlined object, so we can
             // just refer to that by its existing ID.
@@ -2062,8 +2231,7 @@ if (__DEV__) {
         }
 
         if (isArray(value)) {
-          // $FlowFixMe[incompatible-return]
-          return value;
+          return renderFragment(request, task, value);
         }
 
         if (value instanceof Map) {
@@ -2077,7 +2245,7 @@ if (__DEV__) {
         var iteratorFn = getIteratorFn(value);
 
         if (iteratorFn) {
-          return Array.from(value);
+          return renderFragment(request, task, Array.from(value));
         } // Verify that this is a simple plain object.
 
         var proto = getPrototypeOf(value);
@@ -2319,7 +2487,6 @@ if (__DEV__) {
         // We completed this by other means before we had a chance to retry it.
         return;
       }
-
       switchContext(task.context);
 
       try {
@@ -2337,16 +2504,24 @@ if (__DEV__) {
           task.model
         ); // Track the root again for the resolved object.
 
-        modelRoot = resolvedModel; // If the value is a string, it means it's a terminal value adn we already escaped it
-        // We don't need to escape it again so it's not passed the toJSON replacer.
-        // Object might contain unresolved values like additional elements.
-        // This is simulating what the JSON loop would do if this was part of it.
-        // $FlowFixMe[incompatible-type] stringify can return null
+        modelRoot = resolvedModel; // The keyPath resets at any terminal child node.
 
-        var json =
-          typeof resolvedModel === "string"
-            ? stringify(resolvedModel)
-            : stringify(resolvedModel, task.toJSON);
+        task.keyPath = null;
+        task.implicitSlot = false;
+        var json;
+
+        if (typeof resolvedModel === "object" && resolvedModel !== null) {
+          // Object might contain unresolved values like additional elements.
+          // This is simulating what the JSON loop would do if this was part of it.
+          // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+          json = stringify(resolvedModel, task.toJSON);
+        } else {
+          // If the value is a string, it means it's a terminal value and we already escaped it
+          // We don't need to escape it again so it's not passed the toJSON replacer.
+          // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+          json = stringify(resolvedModel);
+        }
+
         emitModelChunk(request, task.id, json);
         request.abortableTasks.delete(task);
         task.status = COMPLETED;
@@ -2375,6 +2550,7 @@ if (__DEV__) {
         task.status = ERRORED;
         var digest = logRecoverableError(request, x);
         emitErrorChunk(request, task.id, digest, x);
+      } finally {
       }
     }
 
