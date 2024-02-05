@@ -202,6 +202,46 @@ describe('ReactStrictMode', () => {
     expect(instance.state.count).toBe(2);
   });
 
+  // @gate debugRenderPhaseSideEffectsForStrictMode
+  it('double invokes useState and useReducer initializers functions', async () => {
+    const log = [];
+
+    function App() {
+      React.useState(() => {
+        log.push('Compute initial count state: 1');
+        return 1;
+      });
+      React.useReducer(
+        s => s,
+        2,
+        s => {
+          log.push('Compute initial reducer state: 2');
+          return s;
+        },
+      );
+
+      return 3;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      );
+    });
+    expect(container.textContent).toBe('3');
+
+    expect(log).toEqual([
+      'Compute initial count state: 1',
+      'Compute initial count state: 1',
+      'Compute initial reducer state: 2',
+      'Compute initial reducer state: 2',
+    ]);
+  });
+
   it('should invoke only precommit lifecycle methods twice in DEV legacy roots', async () => {
     const {StrictMode} = React;
 
