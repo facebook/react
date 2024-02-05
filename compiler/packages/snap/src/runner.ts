@@ -51,7 +51,9 @@ process.on("SIGTERM", function () {
 type RunnerOptions = {
   sync: boolean;
   workerThreads: boolean;
-  mode: "watch" | "update" | "filter" | null;
+  watch: boolean;
+  filter: boolean;
+  update: boolean;
 };
 
 const opts: RunnerOptions = yargs
@@ -67,16 +69,18 @@ const opts: RunnerOptions = yargs
     "Run compiler in worker threads (instead of subprocesses). Defaults to true."
   )
   .default("worker-threads", true)
+  .boolean("watch")
+  .describe("watch", "Run compiler in watch mode, re-running after changes")
+  .default("watch", false)
+  .boolean("update")
+  .describe("update", "Update fixtures")
+  .default("update", false)
+  .boolean("filter")
   .describe(
-    "mode",
-    "Snap tester modes:\n" +
-      "  [default] - test all test fixtures\n" +
-      `  filter    - test filtered fixtures ("${FILTER_FILENAME}")\n` +
-      "  update    - update all test fixtures)\n" +
-      "  watch     - watch for changes"
+    "filter",
+    "Only run fixtures which match the contents of testfilter.txt"
   )
-  .choices("mode", ["watch", "update", "filter", null])
-  .default("mode", null)
+  .default("filter", false)
   .help("help")
   .strict()
   .parseSync(hideBin(process.argv));
@@ -253,7 +257,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
     worker.end();
   });
 
-  if (opts.mode === "watch") {
+  if (opts.watch) {
     // Monotonically increasing integer to describe the 'version' of the compiler.
     // This is passed to `compile()` (from compiler-worker) when compiling, so
     // that the worker knows when it has to reset its module cache and when its
@@ -261,7 +265,7 @@ export async function main(opts: RunnerOptions): Promise<void> {
     let compilerVersion = 0;
     let isCompilerValid = false;
     let lastUpdate = -1;
-    let filterMode: boolean = false;
+    let filterMode: boolean = opts.filter;
     let testFilter: TestFilter | null;
 
     function isRealUpdate(): boolean {
@@ -410,10 +414,9 @@ export async function main(opts: RunnerOptions): Promise<void> {
       async (compileSuccess: boolean) => {
         let isSuccess = compileSuccess;
         if (compileSuccess) {
-          const testFilter =
-            opts.mode === "filter" ? await readTestFilter() : null;
+          const testFilter = opts.filter ? await readTestFilter() : null;
           const results = await run(worker, opts, testFilter, 0);
-          if (opts.mode === "update") {
+          if (opts.update) {
             update(results);
           } else {
             const testSuccess = report(results);
