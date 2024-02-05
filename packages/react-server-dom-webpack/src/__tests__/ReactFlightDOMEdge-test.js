@@ -226,20 +226,55 @@ describe('ReactFlightDOMEdge', () => {
     const [stream1, stream2] = passThrough(stream).tee();
 
     const serializedContent = await readResult(stream1);
+
     expect(serializedContent.length).toBeLessThan(400);
     expect(timesRendered).toBeLessThan(5);
 
-    const result = await ReactServerDOMClient.createFromReadableStream(
-      stream2,
-      {
-        ssrManifest: {
-          moduleMap: null,
-          moduleLoading: null,
-        },
+    const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
       },
-    );
+    });
+
+    // Use the SSR render to resolve any lazy elements
+    const ssrStream = await ReactDOMServer.renderToReadableStream(model);
     // Should still match the result when parsed
-    expect(result).toEqual(resolvedChildren);
+    const result = await readResult(ssrStream);
+    expect(result).toEqual(resolvedChildren.join('<!-- -->'));
+  });
+
+  it('should execute repeated host components only once', async () => {
+    const div = <div>this is a long return value</div>;
+    let timesRendered = 0;
+    function ServerComponent() {
+      timesRendered++;
+      return div;
+    }
+    const element = <ServerComponent />;
+    const children = new Array(30).fill(element);
+    const resolvedChildren = new Array(30).fill(
+      '<div>this is a long return value</div>',
+    );
+    const stream = ReactServerDOMServer.renderToReadableStream(children);
+    const [stream1, stream2] = passThrough(stream).tee();
+
+    const serializedContent = await readResult(stream1);
+    expect(serializedContent.length).toBeLessThan(400);
+    expect(timesRendered).toBeLessThan(5);
+
+    const model = await ReactServerDOMClient.createFromReadableStream(stream2, {
+      ssrManifest: {
+        moduleMap: null,
+        moduleLoading: null,
+      },
+    });
+
+    // Use the SSR render to resolve any lazy elements
+    const ssrStream = await ReactDOMServer.renderToReadableStream(model);
+    // Should still match the result when parsed
+    const result = await readResult(ssrStream);
+    expect(result).toEqual(resolvedChildren.join(''));
   });
 
   it('should execute repeated server components in a compact form', async () => {

@@ -19,7 +19,9 @@ describe('Store component filters', () => {
   let utils;
 
   const act = async (callback: Function) => {
-    if (React.unstable_act != null) {
+    if (React.act != null) {
+      await React.act(callback);
+    } else if (React.unstable_act != null) {
       await React.unstable_act(callback);
     } else {
       callback();

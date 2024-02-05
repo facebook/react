@@ -113,9 +113,21 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const element = <StatefulComponent />;
-    const firstInstance = ReactDOM.render(element, container);
-    ReactDOM.unmountComponentAtNode(container);
-    const secondInstance = ReactDOM.render(element, container);
+    let root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(element);
+    });
+
+    const firstInstance = container.firstChild;
+    await act(() => {
+      root.unmount();
+    });
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(element);
+    });
+
+    const secondInstance = container.firstChild;
     expect(firstInstance).not.toBe(secondInstance);
   });
 
@@ -123,7 +135,7 @@ describe('ReactComponentLifeCycle', () => {
    * If a state update triggers rerendering that in turn fires an onDOMReady,
    * that second onDOMReady should not fail.
    */
-  it('it should fire onDOMReady when already in onDOMReady', () => {
+  it('it should fire onDOMReady when already in onDOMReady', async () => {
     const _testJournal = [];
 
     class Child extends React.Component {
@@ -161,7 +173,13 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    ReactTestUtils.renderIntoDocument(<SwitcherParent />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(<SwitcherParent />);
+    });
+
     expect(_testJournal).toEqual([
       'SwitcherParent:getInitialState',
       'SwitcherParent:onDOMReady',
@@ -205,7 +223,7 @@ describe('ReactComponentLifeCycle', () => {
     }).not.toThrow();
   });
 
-  it("warns if setting 'this.state = props'", () => {
+  it("warns if setting 'this.state = props'", async () => {
     class StatefulComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -216,8 +234,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<StatefulComponent />);
+      });
     }).toErrorDev(
       'StatefulComponent: It is not recommended to assign props directly to state ' +
         "because updates to props won't be reflected in state. " +
@@ -225,7 +247,7 @@ describe('ReactComponentLifeCycle', () => {
     );
   });
 
-  it('should not allow update state inside of getInitialState', () => {
+  it('should not allow update state inside of getInitialState', async () => {
     class StatefulComponent extends React.Component {
       constructor(props, context) {
         super(props, context);
@@ -239,8 +261,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<StatefulComponent />);
+      });
     }).toErrorDev(
       "Warning: Can't call setState on a component that is not yet mounted. " +
         'This is a no-op, but it might indicate a bug in your application. ' +
@@ -248,11 +274,14 @@ describe('ReactComponentLifeCycle', () => {
         'class property with the desired state in the StatefulComponent component.',
     );
 
-    // Check deduplication; (no extra warnings should be logged).
-    ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<StatefulComponent />);
+    });
   });
 
-  it('should correctly determine if a component is mounted', () => {
+  it('should correctly determine if a component is mounted', async () => {
     class Component extends React.Component {
       _isMounted() {
         // No longer a public API, but we can test that it works internally by
@@ -271,15 +300,20 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const element = <Component />;
+    let instance;
+    const element = <Component ref={current => (instance = current)} />;
 
-    expect(() => {
-      const instance = ReactTestUtils.renderIntoDocument(element);
-      expect(instance._isMounted()).toBeTruthy();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(element);
+      });
     }).toErrorDev('Component is accessing isMounted inside its render()');
+    expect(instance._isMounted()).toBeTruthy();
   });
 
-  it('should correctly determine if a null component is mounted', () => {
+  it('should correctly determine if a null component is mounted', async () => {
     class Component extends React.Component {
       _isMounted() {
         // No longer a public API, but we can test that it works internally by
@@ -298,12 +332,17 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const element = <Component />;
+    let instance;
+    const element = <Component ref={current => (instance = current)} />;
 
-    expect(() => {
-      const instance = ReactTestUtils.renderIntoDocument(element);
-      expect(instance._isMounted()).toBeTruthy();
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(element);
+      });
     }).toErrorDev('Component is accessing isMounted inside its render()');
+    expect(instance._isMounted()).toBeTruthy();
   });
 
   it('isMounted should return false when unmounted', async () => {
@@ -331,7 +370,7 @@ describe('ReactComponentLifeCycle', () => {
     expect(instance.updater.isMounted(instance)).toBe(false);
   });
 
-  it('warns if findDOMNode is used inside render', () => {
+  it('warns if legacy findDOMNode is used inside render', async () => {
     class Component extends React.Component {
       state = {isMounted: false};
       componentDidMount() {
@@ -345,8 +384,12 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(async () => {
+      await act(() => {
+        root.render(<Component />);
+      });
     }).toErrorDev('Component is accessing findDOMNode inside its render()');
   });
 

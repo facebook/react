@@ -7,21 +7,48 @@
  * @flow
  */
 
+import semver from 'semver';
+
 import typeof ReactTestRenderer from 'react-test-renderer';
 
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 import type {ProfilingDataFrontend} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {ElementType} from 'react-devtools-shared/src/frontend/types';
+import type {Node as ReactNode} from 'react';
+
+import {ReactVersion} from '../../../../ReactVersions';
+
+const requestedReactVersion = process.env.REACT_VERSION || ReactVersion;
+export function getActDOMImplementation(): () => void | Promise<void> {
+  // This is for React < 18, where act was distributed in react-dom/test-utils.
+  if (semver.lt(requestedReactVersion, '18.0.0')) {
+    const ReactDOMTestUtils = require('react-dom/test-utils');
+    return ReactDOMTestUtils.act;
+  }
+
+  const React = require('react');
+  // This is for React 18, where act was distributed in react as unstable.
+  if (React.unstable_act) {
+    return React.unstable_act;
+  }
+
+  // This is for React > 18, where act is marked as stable.
+  if (React.act) {
+    return React.act;
+  }
+
+  throw new Error("Couldn't find any available act implementation");
+}
 
 export function act(
   callback: Function,
   recursivelyFlush: boolean = true,
 ): void {
+  // act from react-test-renderer has some side effects on React DevTools
+  // it injects the renderer for DevTools, see ReactTestRenderer.js
   const {act: actTestRenderer} = require('react-test-renderer');
-  // Use `require('react-dom/test-utils').act` as a fallback for React 17, which can be used in integration tests for React DevTools.
-  const actDOM =
-    require('react').unstable_act || require('react-dom/test-utils').act;
+  const actDOM = getActDOMImplementation();
 
   actDOM(() => {
     actTestRenderer(() => {
@@ -45,10 +72,10 @@ export async function actAsync(
   cb: () => *,
   recursivelyFlush: boolean = true,
 ): Promise<void> {
+  // act from react-test-renderer has some side effects on React DevTools
+  // it injects the renderer for DevTools, see ReactTestRenderer.js
   const {act: actTestRenderer} = require('react-test-renderer');
-  // Use `require('react-dom/test-utils').act` as a fallback for React 17, which can be used in integration tests for React DevTools.
-  const actDOM =
-    require('react').unstable_act || require('react-dom/test-utils').act;
+  const actDOM = getActDOMImplementation();
 
   await actDOM(async () => {
     await actTestRenderer(async () => {
@@ -72,6 +99,123 @@ export async function actAsync(
     });
   }
 }
+
+type RenderImplementation = {
+  render: (elements: ?ReactNode) => () => void,
+  unmount: () => void,
+  createContainer: () => void,
+  getContainer: () => ?HTMLElement,
+};
+
+export function getLegacyRenderImplementation(): RenderImplementation {
+  let ReactDOM;
+  let container;
+  const containersToRemove = [];
+
+  beforeEach(() => {
+    ReactDOM = require('react-dom');
+
+    createContainer();
+  });
+
+  afterEach(() => {
+    containersToRemove.forEach(c => document.body.removeChild(c));
+    containersToRemove.splice(0, containersToRemove.length);
+
+    ReactDOM = null;
+    container = null;
+  });
+
+  function render(elements) {
+    withErrorsOrWarningsIgnored(
+      ['ReactDOM.render is no longer supported in React 18'],
+      () => {
+        ReactDOM.render(elements, container);
+      },
+    );
+
+    return unmount;
+  }
+
+  function unmount() {
+    ReactDOM.unmountComponentAtNode(container);
+  }
+
+  function createContainer() {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    containersToRemove.push(container);
+  }
+
+  function getContainer() {
+    return container;
+  }
+
+  return {
+    render,
+    unmount,
+    createContainer,
+    getContainer,
+  };
+}
+
+export function getModernRenderImplementation(): RenderImplementation {
+  let ReactDOMClient;
+  let container;
+  let root;
+  const containersToRemove = [];
+
+  beforeEach(() => {
+    ReactDOMClient = require('react-dom/client');
+
+    createContainer();
+  });
+
+  afterEach(() => {
+    containersToRemove.forEach(c => document.body.removeChild(c));
+    containersToRemove.splice(0, containersToRemove.length);
+
+    ReactDOMClient = null;
+    container = null;
+    root = null;
+  });
+
+  function render(elements) {
+    root.render(elements);
+
+    return unmount;
+  }
+
+  function unmount() {
+    root.unmount();
+  }
+
+  function createContainer() {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+
+    root = ReactDOMClient.createRoot(container);
+
+    containersToRemove.push(container);
+  }
+
+  function getContainer() {
+    return container;
+  }
+
+  return {
+    render,
+    unmount,
+    createContainer,
+    getContainer,
+  };
+}
+
+export const getVersionedRenderImplementation: () => RenderImplementation =
+  semver.lt(requestedReactVersion, '18.0.0')
+    ? getLegacyRenderImplementation
+    : getModernRenderImplementation;
 
 export function beforeEachProfiling(): void {
   // Mock React's timing information so that test runs are predictable.

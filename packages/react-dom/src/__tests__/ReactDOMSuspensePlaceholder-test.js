@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let Suspense;
 let Scheduler;
 let act;
@@ -23,6 +24,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
     Suspense = React.Suspense;
@@ -98,7 +100,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
     return text;
   }
 
-  it('hides and unhides timed out DOM elements', async () => {
+  it('hides and unhides timed out DOM elements in legacy roots', async () => {
     const divs = [
       React.createRef(null),
       React.createRef(null),
@@ -144,18 +146,22 @@ describe('ReactDOMSuspensePlaceholder', () => {
         </Suspense>
       );
     }
-    ReactDOM.render(<App />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+
     expect(container.textContent).toEqual('Loading...');
 
-    await act(async () => {
-      await resolveText('B');
+    await act(() => {
+      resolveText('B');
     });
 
     expect(container.textContent).toEqual('ABC');
   });
 
   it(
-    'outside concurrent mode, re-hides children if their display is updated ' +
+    'in legacy roots, re-hides children if their display is updated ' +
       'but the boundary is still showing the fallback',
     async () => {
       const {useState} = React;
@@ -207,7 +213,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
   );
 
   // Regression test for https://github.com/facebook/react/issues/14188
-  it('can call findDOMNode() in a suspended component commit phase', async () => {
+  it('can call findDOMNode() in a suspended component commit phase in legacy roots', async () => {
     const log = [];
     const Lazy = React.lazy(
       () =>
@@ -267,7 +273,7 @@ describe('ReactDOMSuspensePlaceholder', () => {
   });
 
   // Regression test for https://github.com/facebook/react/issues/14188
-  it('can call findDOMNode() in a suspended component commit phase (#2)', () => {
+  it('can call legacy findDOMNode() in a suspended component commit phase (#2)', async () => {
     let suspendOnce = Promise.resolve();
     function Suspend() {
       if (suspendOnce) {
@@ -304,9 +310,16 @@ describe('ReactDOMSuspensePlaceholder', () => {
       );
     }
 
-    ReactDOM.render(<App />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+
     expect(log).toEqual(['cDM']);
-    ReactDOM.render(<App />, container);
+    await act(() => {
+      root.render(<App />);
+    });
+
     expect(log).toEqual(['cDM', 'cDU']);
   });
 });

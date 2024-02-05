@@ -16,19 +16,23 @@ const TEXT_NODE_TYPE = 3;
 
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactDOMServer;
+let ReactFeatureFlags;
 let ReactTestUtils;
 
 function initModules() {
   jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
+  ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
+  ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
-    ReactDOM,
+    ReactDOMClient,
     ReactDOMServer,
     ReactTestUtils,
   };
@@ -136,7 +140,13 @@ describe('ReactDOMServerIntegration', () => {
         // DOM nodes on the client side. We force it to fire early
         // so that it gets deduplicated later, and doesn't fail the test.
         expect(() => {
-          ReactDOM.render(<nonstandard />, document.createElement('div'));
+          ReactDOM.flushSync(() => {
+            const root = ReactDOMClient.createRoot(
+              document.createElement('div'),
+            );
+
+            root.render(<nonstandard />);
+          });
         }).toErrorDev('The tag <nonstandard> is unrecognized in this browser.');
 
         const e = await render(<nonstandard>Text</nonstandard>);
@@ -833,15 +843,21 @@ describe('ReactDOMServerIntegration', () => {
         'an element with one text child with special characters',
         async render => {
           const e = await render(<div>{'foo\rbar\r\nbaz\nqux\u0000'}</div>);
-          if (render === serverRender || render === streamRender) {
+          if (
+            render === serverRender ||
+            render === streamRender ||
+            (render === clientRenderOnServerString &&
+              ReactFeatureFlags.enableClientRenderFallbackOnTextMismatch)
+          ) {
             expect(e.childNodes.length).toBe(1);
-            // Everything becomes LF when parsed from server HTML.
+            // Everything becomes LF when parsed from server HTML or hydrated if enableClientRenderFallbackOnTextMismatch is on.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
           } else {
             expect(e.childNodes.length).toBe(1);
-            // Client rendering (or hydration) uses JS value with CR.
+            // Client rendering (or hydration without enableClientRenderFallbackOnTextMismatch) uses JS value with CR.
             // Null character stays.
+
             expectNode(
               e.childNodes[0],
               TEXT_NODE_TYPE,
@@ -860,17 +876,23 @@ describe('ReactDOMServerIntegration', () => {
               {'\r\nbaz\nqux\u0000'}
             </div>,
           );
-          if (render === serverRender || render === streamRender) {
+          if (
+            render === serverRender ||
+            render === streamRender ||
+            (render === clientRenderOnServerString &&
+              ReactFeatureFlags.enableClientRenderFallbackOnTextMismatch)
+          ) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Everything becomes LF when parsed from server HTML.
+            // Everything becomes LF when parsed from server HTML or hydrated if enableClientRenderFallbackOnTextMismatch is on.
             // Null character is ignored.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\nbaz\nqux');
           } else if (render === clientRenderOnServerString) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
-            // Hydration uses JS value with CR and null character.
+            // Hydration without enableClientRenderFallbackOnTextMismatch uses JS value with CR and null character.
+
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\r\nbaz\nqux\u0000');
           } else {

@@ -15,6 +15,8 @@
 
 export const enableComponentStackLocations = true;
 
+export const enableServerComponentKeys = __EXPERIMENTAL__;
+
 // -----------------------------------------------------------------------------
 // Killswitch
 //
@@ -170,13 +172,6 @@ export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
 // Planned feature deprecations and breaking changes. Sorted roughly in order of
 // when we plan to enable them.
 // -----------------------------------------------------------------------------
-
-// This flag enables Strict Effects by default. We're not turning this on until
-// after 18 because it requires migration work. Recommendation is to use
-// <StrictMode /> to gradually upgrade components.
-// If TRUE, trees rendered with createRoot will be StrictEffectsMode.
-// If FALSE, these trees will be StrictLegacyMode.
-export const createRootStrictEffectsByDefault = false;
 
 export const disableModulePatternComponents = false;
 

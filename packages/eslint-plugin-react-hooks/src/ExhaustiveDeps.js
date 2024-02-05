@@ -618,7 +618,12 @@ export default {
 
       const declaredDependencies = [];
       const externalDependencies = new Set();
-      if (declaredDependenciesNode.type !== 'ArrayExpression') {
+      const isArrayExpression =
+        declaredDependenciesNode.type === 'ArrayExpression';
+      const isTSAsArrayExpression =
+        declaredDependenciesNode.type === 'TSAsExpression' &&
+        declaredDependenciesNode.expression.type === 'ArrayExpression';
+      if (!isArrayExpression && !isTSAsArrayExpression) {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
         // the user this in an error.
@@ -631,7 +636,11 @@ export default {
             'dependencies.',
         });
       } else {
-        declaredDependenciesNode.elements.forEach(declaredDependencyNode => {
+        const arrayExpression = isTSAsArrayExpression
+          ? declaredDependenciesNode.expression
+          : declaredDependenciesNode;
+
+        arrayExpression.elements.forEach(declaredDependencyNode => {
           // Skip elided elements.
           if (declaredDependencyNode === null) {
             return;
@@ -1208,6 +1217,15 @@ export default {
         case 'ArrowFunctionExpression':
           visitFunctionWithDependencies(
             callback,
+            declaredDependenciesNode,
+            reactiveHook,
+            reactiveHookName,
+            isEffect,
+          );
+          return; // Handled
+        case 'TSAsExpression':
+          visitFunctionWithDependencies(
+            callback.expression,
             declaredDependenciesNode,
             reactiveHook,
             reactiveHookName,

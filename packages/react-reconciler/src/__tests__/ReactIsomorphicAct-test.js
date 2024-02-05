@@ -28,7 +28,7 @@ describe('isomorphic act()', () => {
     ReactNoop = require('react-noop-renderer');
     DiscreteEventPriority =
       require('react-reconciler/constants').DiscreteEventPriority;
-    act = React.unstable_act;
+    act = React.act;
     use = React.use;
     Suspense = React.Suspense;
     startTransition = React.startTransition;

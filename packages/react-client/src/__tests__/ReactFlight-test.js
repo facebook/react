@@ -1700,4 +1700,429 @@ describe('ReactFlight', () => {
 
     expect(errors).toEqual([]);
   });
+
+  // @gate enableServerComponentKeys
+  it('preserves state when keying a server component', async () => {
+    function StatefulClient({name}) {
+      const [state] = React.useState(name.toLowerCase());
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({item}) {
+      return (
+        <div>
+          {item}
+          <Stateful name={item} />
+        </div>
+      );
+    }
+
+    function Items({items}) {
+      return items.map(item => {
+        return <Item key={item} item={item} />;
+      });
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      <Items items={['A', 'B', 'C']} />,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>Aa</div>
+        <div>Bb</div>
+        <div>Cc</div>
+      </>,
+    );
+
+    const transport2 = ReactNoopFlightServer.render(
+      <Items items={['B', 'A', 'D', 'C']} />,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>Bb</div>
+        <div>Aa</div>
+        <div>Dd</div>
+        <div>Cc</div>
+      </>,
+    );
+  });
+
+  // @gate enableServerComponentKeys
+  it('does not inherit keys of children inside a server component', async () => {
+    function StatefulClient({name, initial}) {
+      const [state] = React.useState(initial);
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({item, initial}) {
+      // This key is the key of the single item of this component.
+      // It's NOT part of the key of the list the parent component is
+      // in.
+      return (
+        <div key={item}>
+          {item}
+          <Stateful name={item} initial={initial} />
+        </div>
+      );
+    }
+
+    function IndirectItem({item, initial}) {
+      // Even though we render two items with the same child key this key
+      // should not conflict, because the key belongs to the parent slot.
+      return <Item key="parent" item={item} initial={initial} />;
+    }
+
+    // These items don't have their own keys because they're in a fixed set
+    const transport = ReactNoopFlightServer.render(
+      <>
+        <Item item="A" initial={1} />
+        <Item item="B" initial={2} />
+        <IndirectItem item="C" initial={5} />
+        <IndirectItem item="C" initial={6} />
+      </>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>A1</div>
+        <div>B2</div>
+        <div>C5</div>
+        <div>C6</div>
+      </>,
+    );
+
+    // This means that they shouldn't swap state when the properties update
+    const transport2 = ReactNoopFlightServer.render(
+      <>
+        <Item item="B" initial={3} />
+        <Item item="A" initial={4} />
+        <IndirectItem item="C" initial={7} />
+        <IndirectItem item="C" initial={8} />
+      </>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>B3</div>
+        <div>A4</div>
+        <div>C5</div>
+        <div>C6</div>
+      </>,
+    );
+  });
+
+  // @gate enableServerComponentKeys
+  it('shares state between single return and array return in a parent', async () => {
+    function StatefulClient({name, initial}) {
+      const [state] = React.useState(initial);
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({item, initial}) {
+      // This key is the key of the single item of this component.
+      // It's NOT part of the key of the list the parent component is
+      // in.
+      return (
+        <span key={item}>
+          {item}
+          <Stateful name={item} initial={initial} />
+        </span>
+      );
+    }
+
+    function Condition({condition}) {
+      if (condition) {
+        return <Item item="A" initial={1} />;
+      }
+      // The first item in the fragment is the same as the single item.
+      return (
+        <>
+          <Item item="A" initial={2} />
+          <Item item="B" initial={3} />
+        </>
+      );
+    }
+
+    function ConditionPlain({condition}) {
+      if (condition) {
+        return (
+          <span>
+            C
+            <Stateful name="C" initial={1} />
+          </span>
+        );
+      }
+      // The first item in the fragment is the same as the single item.
+      return (
+        <>
+          <span>
+            C
+            <Stateful name="C" initial={2} />
+          </span>
+          <span>
+            D
+            <Stateful name="D" initial={3} />
+          </span>
+        </>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      // This two item wrapper ensures we're already one step inside an array.
+      // A single item is not the same as a set when it's nested one level.
+      <>
+        <div>
+          <Condition condition={true} />
+        </div>
+        <div>
+          <ConditionPlain condition={true} />
+        </div>
+        <div key="keyed">
+          <ConditionPlain condition={true} />
+        </div>
+      </>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>
+          <span>A1</span>
+        </div>
+        <div>
+          <span>C1</span>
+        </div>
+        <div>
+          <span>C1</span>
+        </div>
+      </>,
+    );
+
+    const transport2 = ReactNoopFlightServer.render(
+      <>
+        <div>
+          <Condition condition={false} />
+        </div>
+        <div>
+          <ConditionPlain condition={false} />
+        </div>
+        {null}
+        <div key="keyed">
+          <ConditionPlain condition={false} />
+        </div>
+      </>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    // We're intentionally breaking from the semantics here for efficiency of the protocol.
+    // In the case a Server Component inside a fragment is itself implicitly keyed but its
+    // return value has a key, then we need a wrapper fragment. This means they can't
+    // reconcile. To solve this we would need to add a wrapper fragment to every Server
+    // Component just in case it returns a fragment later which is a lot.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>
+          <span>A2{/* This should be A1 ideally */}</span>
+          <span>B3</span>
+        </div>
+        <div>
+          <span>C1</span>
+          <span>D3</span>
+        </div>
+        <div>
+          <span>C1</span>
+          <span>D3</span>
+        </div>
+      </>,
+    );
+  });
+
+  it('shares state between single return and array return in a set', async () => {
+    function StatefulClient({name, initial}) {
+      const [state] = React.useState(initial);
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({item, initial}) {
+      // This key is the key of the single item of this component.
+      // It's NOT part of the key of the list the parent component is
+      // in.
+      return (
+        <span key={item}>
+          {item}
+          <Stateful name={item} initial={initial} />
+        </span>
+      );
+    }
+
+    function Condition({condition}) {
+      if (condition) {
+        return <Item item="A" initial={1} />;
+      }
+      // The first item in the fragment is the same as the single item.
+      return (
+        <>
+          <Item item="A" initial={2} />
+          <Item item="B" initial={3} />
+        </>
+      );
+    }
+
+    function ConditionPlain({condition}) {
+      if (condition) {
+        return (
+          <span>
+            C
+            <Stateful name="C" initial={1} />
+          </span>
+        );
+      }
+      // The first item in the fragment is the same as the single item.
+      return (
+        <>
+          <span>
+            C
+            <Stateful name="C" initial={2} />
+          </span>
+          <span>
+            D
+            <Stateful name="D" initial={3} />
+          </span>
+        </>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      // This two item wrapper ensures we're already one step inside an array.
+      // A single item is not the same as a set when it's nested one level.
+      <div>
+        <Condition condition={true} />
+        <ConditionPlain condition={true} />
+        <ConditionPlain key="keyed" condition={true} />
+      </div>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>A1</span>
+        <span>C1</span>
+        <span>C1</span>
+      </div>,
+    );
+
+    const transport2 = ReactNoopFlightServer.render(
+      <div>
+        <Condition condition={false} />
+        <ConditionPlain condition={false} />
+        {null}
+        <ConditionPlain key="keyed" condition={false} />
+      </div>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    // We're intentionally breaking from the semantics here for efficiency of the protocol.
+    // The issue with this test scenario is that when the Server Component is in a set,
+    // the next slot can't be conditionally a fragment or single. That would require wrapping
+    // in an additional fragment for every single child just in case it every expands to a
+    // fragment.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>A2{/* Should be A1 */}</span>
+        <span>B3</span>
+        <span>C2{/* Should be C1 */}</span>
+        <span>D3</span>
+        <span>C2{/* Should be C1 */}</span>
+        <span>D3</span>
+      </div>,
+    );
+  });
+
+  // @gate enableServerComponentKeys
+  it('preserves state with keys split across async work', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    function StatefulClient({name}) {
+      const [state] = React.useState(name.toLowerCase());
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({name}) {
+      if (name === 'A') {
+        return promise.then(() => (
+          <div>
+            {name}
+            <Stateful name={name} />
+          </div>
+        ));
+      }
+      return (
+        <div>
+          {name}
+          <Stateful name={name} />
+        </div>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render([
+      <Item key="a" name="A" />,
+      null,
+    ]);
+
+    // Create a gap in the stream
+    await resolve();
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>Aa</div>);
+
+    const transport2 = ReactNoopFlightServer.render([
+      null,
+      <Item key="a" name="B" />,
+    ]);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>Ba</div>);
+  });
 });

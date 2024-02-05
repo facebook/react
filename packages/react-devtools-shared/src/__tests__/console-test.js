@@ -7,13 +7,12 @@
  * @flow
  */
 
-import {normalizeCodeLocInfo} from './utils';
+import {getVersionedRenderImplementation, normalizeCodeLocInfo} from './utils';
 
 let React;
 let ReactDOMClient;
 let act;
 let fakeConsole;
-let legacyRender;
 let mockError;
 let mockInfo;
 let mockGroup;
@@ -67,8 +66,9 @@ describe('console', () => {
 
     const utils = require('./utils');
     act = utils.act;
-    legacyRender = utils.legacyRender;
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   // @reactVersion >=18.0
   it('should not patch console methods that are not explicitly overridden', () => {
@@ -185,7 +185,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Child />, document.createElement('div')));
+    act(() => render(<Child />));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
@@ -215,7 +215,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Parent />, document.createElement('div')));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -256,7 +256,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Parent />, document.createElement('div')));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -313,9 +313,8 @@ describe('console', () => {
       }
     }
 
-    const container = document.createElement('div');
-    act(() => legacyRender(<Parent />, container));
-    act(() => legacyRender(<Parent />, container));
+    act(() => render(<Parent />));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -367,7 +366,7 @@ describe('console', () => {
       }
     }
 
-    act(() => legacyRender(<Parent />, document.createElement('div')));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -396,7 +395,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Child />, document.createElement('div')));
+    act(() => render(<Child />));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
@@ -410,7 +409,7 @@ describe('console', () => {
       breakOnConsoleErrors: false,
       showInlineWarningsAndErrors: false,
     });
-    act(() => legacyRender(<Child />, document.createElement('div')));
+    act(() => render(<Child />));
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
@@ -457,7 +456,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Parent />, document.createElement('div')));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -483,7 +482,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Component />, document.createElement('div')));
+    act(() => render(<Component />));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0][0]).toBe('Symbol:');
@@ -824,7 +823,6 @@ describe('console error', () => {
 
     const utils = require('./utils');
     act = utils.act;
-    legacyRender = utils.legacyRender;
   });
 
   // @reactVersion >=18.0

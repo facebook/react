@@ -49,7 +49,6 @@ export const enableCPUSuspense = false;
 export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = false;
 export const enableClientRenderFallbackOnTextMismatch = true;
-export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 
 export const enableRetryLaneExpiration = false;
@@ -82,6 +81,8 @@ export const alwaysThrottleRetries = true;
 export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+
+export const enableServerComponentKeys = true;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);
