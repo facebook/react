@@ -286,7 +286,8 @@ describe('ReactFlightDOMEdge', () => {
       <ServerComponent recurse={20} />,
     );
     const serializedContent = await readResult(stream);
-    expect(serializedContent.length).toBeLessThan(150);
+    const expectedDebugInfoSize = __DEV__ ? 30 * 20 : 0;
+    expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
   // @gate enableBinaryFlight

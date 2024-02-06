@@ -170,6 +170,13 @@ function ReactElement(type, key, ref, self, source, owner, props) {
       writable: true,
       value: false,
     });
+    // debugInfo contains Server Component debug information.
+    Object.defineProperty(element, '_debugInfo', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: null,
+    });
     if (Object.freeze) {
       Object.freeze(element.props);
       Object.freeze(element);

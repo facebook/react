@@ -37,8 +37,11 @@ export function prepareToUseHooksForComponent(
   thenableState = prevThenableState;
 }
 
-export function getThenableStateAfterSuspending(): null | ThenableState {
-  const state = thenableState;
+export function getThenableStateAfterSuspending(): ThenableState {
+  // If you use() to Suspend this should always exist but if you throw a Promise instead,
+  // which is not really supported anymore, it will be empty. We use the empty set as a
+  // marker to know if this was a replay of the same component or first attempt.
+  const state = thenableState || createThenableState();
   thenableState = null;
   return state;
 }

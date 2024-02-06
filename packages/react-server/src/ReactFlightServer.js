@@ -491,6 +491,23 @@ function renderFunctionComponent<Props>(
   const prevThenableState = task.thenableState;
   task.thenableState = null;
 
+  if (__DEV__) {
+    if (debugID === null) {
+      // We don't have a chunk to assign debug info. We need to outline this
+      // component to assign it an ID.
+      return outlineTask(request, task);
+    } else if (prevThenableState !== null) {
+      // This is a replay and we've already emitted the debug info of this component
+      // in the first pass. We skip emitting a duplicate line.
+    } else {
+      // This is a new component in the same task so we can emit more debug info.
+      const componentName =
+        (Component: any).displayName || Component.name || '';
+      request.pendingChunks++;
+      emitDebugChunk(request, debugID, {name: componentName});
+    }
+  }
+
   prepareToUseHooksForComponent(prevThenableState);
   // The secondArg is always undefined in Server Components since refs error early.
   const secondArg = undefined;
@@ -605,6 +622,29 @@ function renderClientElement(
   return element;
 }
 
+// The chunk ID we're currently rendering that we can assign debug data to.
+let debugID: null | number = null;
+
+function outlineTask(request: Request, task: Task): ReactJSONValue {
+  const newTask = createTask(
+    request,
+    task.model, // the currently rendering element
+    task.keyPath, // unlike outlineModel this one carries along context
+    task.implicitSlot,
+    request.abortableTasks,
+  );
+
+  retryTask(request, newTask);
+  if (newTask.status === COMPLETED) {
+    // We completed synchronously so we can refer to this by reference. This
+    // makes it behaves the same as prod during deserialization.
+    return serializeByValueID(newTask.id);
+  }
+  // This didn't complete synchronously so it wouldn't have even if we didn't
+  // outline it, so this would reduce to a lazy reference even in prod.
+  return serializeLazyID(newTask.id);
+}
+
 function renderElement(
   request: Request,
   task: Task,
@@ -632,7 +672,7 @@ function renderElement(
       // This is a reference to a Client Component.
       return renderClientElement(task, type, key, props);
     }
-    // This is a server-side component.
+    // This is a Server Component.
     return renderFunctionComponent(request, task, key, type, props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
@@ -1306,7 +1346,7 @@ function renderModelDestructive(
       }
       if (value instanceof Float64Array) {
         // double
-        return serializeTypedArray(request, 'D', value);
+        return serializeTypedArray(request, 'd', value);
       }
       if (value instanceof BigInt64Array) {
         // number
@@ -1606,6 +1646,25 @@ function emitModelChunk(request: Request, id: number, json: string): void {
   request.completedRegularChunks.push(processedChunk);
 }
 
+function emitDebugChunk(
+  request: Request,
+  id: number,
+  debugInfo: {name: string},
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'emitDebugChunk should never be called in production mode. This is a bug in React.',
+    );
+  }
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(debugInfo);
+  const row = serializeRowHeader('D', id) + json + '\n';
+  const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+}
+
 const emptyRoot = {};
 
 function retryTask(request: Request, task: Task): void {
@@ -1614,11 +1673,18 @@ function retryTask(request: Request, task: Task): void {
     return;
   }
 
+  const prevDebugID = debugID;
+
   try {
     // Track the root so we know that we have to emit this object even though it
     // already has an ID. This is needed because we might see this object twice
     // in the same toJSON if it is cyclic.
     modelRoot = task.model;
+
+    if (__DEV__) {
+      // Track the ID of the current task so we can assign debug info to this id.
+      debugID = task.id;
+    }
 
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
@@ -1629,6 +1695,12 @@ function retryTask(request: Request, task: Task): void {
       '',
       task.model,
     );
+
+    if (__DEV__) {
+      // We're now past rendering this task and future renders will spawn new tasks for their
+      // debug info.
+      debugID = null;
+    }
 
     // Track the root again for the resolved object.
     modelRoot = resolvedModel;
@@ -1684,6 +1756,10 @@ function retryTask(request: Request, task: Task): void {
     task.status = ERRORED;
     const digest = logRecoverableError(request, x);
     emitErrorChunk(request, task.id, digest, x);
+  } finally {
+    if (__DEV__) {
+      debugID = prevDebugID;
+    }
   }
 }
 
