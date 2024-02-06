@@ -165,6 +165,9 @@ function flushSync<R>(fn: (() => R) | void): R | void {
   return flushSyncWithoutWarningIfAlreadyRendering(fn);
 }
 
+// Expose findDOMNode on internals
+Internals.findDOMNode = findDOMNode;
+
 export {
   createPortal,
   batchedUpdates as unstable_batchedUpdates,

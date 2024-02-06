@@ -103,7 +103,10 @@ describe('ReactDOMLegacyFiber', () => {
       container,
     );
 
-    const textNode = ReactDOM.findDOMNode(instance);
+    const textNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+        instance,
+      );
     expect(textNode).toBe(container.firstChild);
     expect(textNode.nodeType).toBe(3);
     expect(textNode.nodeValue).toBe('foo');
@@ -121,7 +124,10 @@ describe('ReactDOMLegacyFiber', () => {
 
     expect(container.childNodes.length).toBe(2);
 
-    const firstNode = ReactDOM.findDOMNode(instance);
+    const firstNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+        instance,
+      );
     expect(firstNode).toBe(container.firstChild);
     expect(firstNode.tagName).toBe('DIV');
   });
@@ -149,7 +155,10 @@ describe('ReactDOMLegacyFiber', () => {
 
     expect(container.childNodes.length).toBe(2);
 
-    const firstNode = ReactDOM.findDOMNode(instance);
+    const firstNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+        instance,
+      );
     expect(firstNode).toBe(container.firstChild);
     expect(firstNode.tagName).toBe('DIV');
   });
@@ -172,7 +181,10 @@ describe('ReactDOMLegacyFiber', () => {
 
     expect(container.childNodes.length).toBe(2);
 
-    const firstNode = ReactDOM.findDOMNode(instance);
+    const firstNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+        instance,
+      );
     expect(firstNode).toBe(container.firstChild);
     expect(firstNode.tagName).toBe('DIV');
   });
@@ -849,13 +861,19 @@ describe('ReactDOMLegacyFiber', () => {
     }
 
     const myNodeA = ReactDOM.render(<MyNode />, container);
-    const a = ReactDOM.findDOMNode(myNodeA);
+    const a =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+        myNodeA,
+      );
     expect(a.tagName).toBe('DIV');
 
     const myNodeB = ReactDOM.render(<MyNode flag={true} />, container);
     expect(myNodeA === myNodeB).toBe(true);
 
-    const b = ReactDOM.findDOMNode(myNodeB);
+    const b =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+        myNodeB,
+      );
     expect(b.tagName).toBe('SPAN');
   });
 

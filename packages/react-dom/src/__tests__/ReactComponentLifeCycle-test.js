@@ -16,6 +16,7 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactTestUtils;
 let PropTypes;
+let findDOMNode;
 
 const clone = function (o) {
   return JSON.parse(JSON.stringify(o));
@@ -94,6 +95,8 @@ describe('ReactComponentLifeCycle', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    findDOMNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
@@ -376,7 +379,7 @@ describe('ReactComponentLifeCycle', () => {
       }
       render() {
         if (this.state.isMounted) {
-          expect(ReactDOM.findDOMNode(this).tagName).toBe('DIV');
+          expect(findDOMNode(this).tagName).toBe('DIV');
         }
         return <div />;
       }

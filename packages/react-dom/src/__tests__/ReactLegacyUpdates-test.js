@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactTestUtils;
 let act;
 let Scheduler;
@@ -22,6 +23,8 @@ describe('ReactLegacyUpdates', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
+    findDOMNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
@@ -544,7 +547,7 @@ describe('ReactLegacyUpdates', () => {
       state = {x: 0};
 
       componentDidUpdate() {
-        expect(ReactDOM.findDOMNode(b).textContent).toBe('B1');
+        expect(findDOMNode(b).textContent).toBe('B1');
         aUpdated = true;
       }
 
@@ -678,7 +681,7 @@ describe('ReactLegacyUpdates', () => {
               depth={this.props.depth + 1}
               count={this.props.count}
             />,
-            ReactDOM.findDOMNode(this),
+            findDOMNode(this),
           );
         }
       }
@@ -745,10 +748,10 @@ describe('ReactLegacyUpdates', () => {
 
     const x = ReactTestUtils.renderIntoDocument(<X />);
     const y = ReactTestUtils.renderIntoDocument(<Y />);
-    expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
+    expect(findDOMNode(x).textContent).toBe('0');
 
     y.forceUpdate();
-    expect(ReactDOM.findDOMNode(x).textContent).toBe('1');
+    expect(findDOMNode(x).textContent).toBe('1');
   });
 
   it('should queue updates from during mount', () => {
@@ -787,7 +790,7 @@ describe('ReactLegacyUpdates', () => {
     });
 
     expect(a.state.x).toBe(1);
-    expect(ReactDOM.findDOMNode(a).textContent).toBe('A1');
+    expect(findDOMNode(a).textContent).toBe('A1');
   });
 
   it('calls componentWillReceiveProps setState callback properly', () => {

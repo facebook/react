@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMServer;
 
 function getTestDocument(markup) {
@@ -28,6 +29,8 @@ describe('rendering React components at document', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
+    findDOMNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     ReactDOMServer = require('react-dom/server');
   });
 
@@ -257,7 +260,7 @@ describe('rendering React components at document', () => {
       const testDocument = getTestDocument(markup);
       const component = ReactDOM.hydrate(tree, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      expect(ReactDOM.findDOMNode(component).tagName).toBe('HTML');
+      expect(findDOMNode(component).tagName).toBe('HTML');
     });
   });
 });
