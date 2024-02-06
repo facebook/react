@@ -13,13 +13,6 @@ import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
-const RESERVED_PROPS = {
-  key: true,
-  ref: true,
-  __self: true,
-  __source: true,
-};
-
 let specialPropKeyWarningShown,
   specialPropRefWarningShown,
   didWarnAboutStringRefs;
@@ -237,7 +230,12 @@ export function createElement(type, config, children) {
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        // Skip over reserved prop names
+        propName !== 'key' &&
+        // TODO: These will no longer be reserved in the next major
+        propName !== 'ref' &&
+        propName !== '__self' &&
+        propName !== '__source'
       ) {
         props[propName] = config[propName];
       }
@@ -375,7 +373,12 @@ export function cloneElement(element, config, children) {
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        // Skip over reserved prop names
+        propName !== 'key' &&
+        // TODO: These will no longer be reserved in the next major
+        propName !== 'ref' &&
+        propName !== '__self' &&
+        propName !== '__source'
       ) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props

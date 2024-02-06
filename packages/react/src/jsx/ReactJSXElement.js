@@ -13,13 +13,6 @@ import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
-const RESERVED_PROPS = {
-  key: true,
-  ref: true,
-  __self: true,
-  __source: true,
-};
-
 let specialPropKeyWarningShown;
 let specialPropRefWarningShown;
 let didWarnAboutStringRefs;
@@ -244,7 +237,12 @@ export function jsx(type, config, maybeKey) {
   for (propName in config) {
     if (
       hasOwnProperty.call(config, propName) &&
-      !RESERVED_PROPS.hasOwnProperty(propName)
+      // Skip over reserved prop names
+      propName !== 'key' &&
+      // TODO: These will no longer be reserved in the next major
+      propName !== 'ref' &&
+      propName !== '__self' &&
+      propName !== '__source'
     ) {
       props[propName] = config[propName];
     }
@@ -316,7 +314,12 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        // Skip over reserved prop names
+        propName !== 'key' &&
+        // TODO: These will no longer be reserved in the next major
+        propName !== 'ref' &&
+        propName !== '__self' &&
+        propName !== '__source'
       ) {
         props[propName] = config[propName];
       }
