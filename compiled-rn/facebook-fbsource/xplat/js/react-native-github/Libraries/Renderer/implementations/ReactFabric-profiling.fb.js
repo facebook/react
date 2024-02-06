@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ea05f6ff9354df63b851a9e6de2119eb>>
+ * @generated SignedSource<<b774b4f72e37b4cccbba7d6f16797461>>
  */
 
 "use strict";
@@ -4076,7 +4076,11 @@ function forceStoreRerender(fiber) {
 }
 function mountStateImpl(initialState) {
   var hook = mountWorkInProgressHook();
-  "function" === typeof initialState && (initialState = initialState());
+  if ("function" === typeof initialState) {
+    var initialStateInitializer = initialState;
+    initialState = initialStateInitializer();
+    shouldDoubleInvokeUserFnsInHooksDEV && initialStateInitializer();
+  }
   hook.memoizedState = hook.baseState = initialState;
   hook.queue = {
     pending: null,
@@ -4367,14 +4371,17 @@ var HooksDispatcherOnMount = {
   },
   useReducer: function (reducer, initialArg, init) {
     var hook = mountWorkInProgressHook();
-    initialArg = void 0 !== init ? init(initialArg) : initialArg;
-    hook.memoizedState = hook.baseState = initialArg;
+    if (void 0 !== init) {
+      var initialState = init(initialArg);
+      shouldDoubleInvokeUserFnsInHooksDEV && init(initialArg);
+    } else initialState = initialArg;
+    hook.memoizedState = hook.baseState = initialState;
     reducer = {
       pending: null,
       lanes: 0,
       dispatch: null,
       lastRenderedReducer: reducer,
-      lastRenderedState: initialArg
+      lastRenderedState: initialState
     };
     hook.queue = reducer;
     reducer = reducer.dispatch = dispatchReducerAction.bind(
@@ -10254,7 +10261,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1133 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-456a9bde",
+    version: "18.3.0-canary-56f3cd40",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10310,7 +10317,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-456a9bde"
+  reconcilerVersion: "18.3.0-canary-56f3cd40"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

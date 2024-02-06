@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7164b004d589e4941370bae28f48ff29>>
+ * @generated SignedSource<<d9868bd3e19bb2b04f9745539db89352>>
  */
 
 "use strict";
@@ -4152,7 +4152,11 @@ function forceStoreRerender(fiber) {
 }
 function mountStateImpl(initialState) {
   var hook = mountWorkInProgressHook();
-  "function" === typeof initialState && (initialState = initialState());
+  if ("function" === typeof initialState) {
+    var initialStateInitializer = initialState;
+    initialState = initialStateInitializer();
+    shouldDoubleInvokeUserFnsInHooksDEV && initialStateInitializer();
+  }
   hook.memoizedState = hook.baseState = initialState;
   hook.queue = {
     pending: null,
@@ -4443,14 +4447,17 @@ var HooksDispatcherOnMount = {
   },
   useReducer: function (reducer, initialArg, init) {
     var hook = mountWorkInProgressHook();
-    initialArg = void 0 !== init ? init(initialArg) : initialArg;
-    hook.memoizedState = hook.baseState = initialArg;
+    if (void 0 !== init) {
+      var initialState = init(initialArg);
+      shouldDoubleInvokeUserFnsInHooksDEV && init(initialArg);
+    } else initialState = initialArg;
+    hook.memoizedState = hook.baseState = initialState;
     reducer = {
       pending: null,
       lanes: 0,
       dispatch: null,
       lastRenderedReducer: reducer,
-      lastRenderedState: initialArg
+      lastRenderedState: initialState
     };
     hook.queue = reducer;
     reducer = reducer.dispatch = dispatchReducerAction.bind(
@@ -10476,7 +10483,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1196 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-19434d67",
+    version: "18.3.0-canary-502a4536",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10532,7 +10539,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-19434d67"
+  reconcilerVersion: "18.3.0-canary-502a4536"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

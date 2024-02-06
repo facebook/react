@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<be90fa0a6d50cf6e301ad3f0c518aed2>>
+ * @generated SignedSource<<04f36b30783fdb17261e99668fd7e5e1>>
  */
 
 "use strict";
@@ -4028,7 +4028,11 @@ function forceStoreRerender(fiber) {
 }
 function mountStateImpl(initialState) {
   var hook = mountWorkInProgressHook();
-  "function" === typeof initialState && (initialState = initialState());
+  if ("function" === typeof initialState) {
+    var initialStateInitializer = initialState;
+    initialState = initialStateInitializer();
+    shouldDoubleInvokeUserFnsInHooksDEV && initialStateInitializer();
+  }
   hook.memoizedState = hook.baseState = initialState;
   hook.queue = {
     pending: null,
@@ -4317,14 +4321,17 @@ var HooksDispatcherOnMount = {
   },
   useReducer: function (reducer, initialArg, init) {
     var hook = mountWorkInProgressHook();
-    initialArg = void 0 !== init ? init(initialArg) : initialArg;
-    hook.memoizedState = hook.baseState = initialArg;
+    if (void 0 !== init) {
+      var initialState = init(initialArg);
+      shouldDoubleInvokeUserFnsInHooksDEV && init(initialArg);
+    } else initialState = initialArg;
+    hook.memoizedState = hook.baseState = initialState;
     reducer = {
       pending: null,
       lanes: 0,
       dispatch: null,
       lastRenderedReducer: reducer,
-      lastRenderedState: initialArg
+      lastRenderedState: initialState
     };
     hook.queue = reducer;
     reducer = reducer.dispatch = dispatchReducerAction.bind(
@@ -9774,7 +9781,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1118 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-2cdd5095",
+    version: "18.3.0-canary-5b874b6d",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9817,7 +9824,7 @@ var internals$jscomp$inline_1354 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-2cdd5095"
+  reconcilerVersion: "18.3.0-canary-5b874b6d"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1355 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

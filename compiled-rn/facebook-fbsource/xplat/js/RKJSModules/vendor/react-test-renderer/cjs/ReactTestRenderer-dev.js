@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<37663b716b538adcc88b05fc968e0638>>
+ * @generated SignedSource<<9f26c06d9827c84f3688ced85cc3f175>>
  */
 
 "use strict";
@@ -7717,6 +7717,12 @@ if (__DEV__) {
 
       if (init !== undefined) {
         initialState = init(initialArg);
+
+        if (shouldDoubleInvokeUserFnsInHooksDEV) {
+          setIsStrictModeForDevtools(true);
+          init(initialArg);
+          setIsStrictModeForDevtools(false);
+        }
       } else {
         initialState = initialArg;
       }
@@ -8266,8 +8272,16 @@ if (__DEV__) {
       var hook = mountWorkInProgressHook();
 
       if (typeof initialState === "function") {
-        // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
-        initialState = initialState();
+        var initialStateInitializer = initialState; // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+
+        initialState = initialStateInitializer();
+
+        if (shouldDoubleInvokeUserFnsInHooksDEV) {
+          setIsStrictModeForDevtools(true); // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+
+          initialStateInitializer();
+          setIsStrictModeForDevtools(false);
+        }
       }
 
       hook.memoizedState = hook.baseState = initialState;
@@ -25711,7 +25725,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-08d6cef46-20240206";
+    var ReactVersion = "18.3.0-canary-97fd3e706-20240206";
 
     // Might add PROFILE later.
 

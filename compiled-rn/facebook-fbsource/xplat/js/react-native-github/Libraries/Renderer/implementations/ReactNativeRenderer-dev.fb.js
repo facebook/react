@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2f406cc4aeb43540731e1b7fc385303e>>
+ * @generated SignedSource<<17f792ae8f705c6dfeba77e32979393b>>
  */
 
 "use strict";
@@ -11639,6 +11639,12 @@ to return true:wantsResponderID|                            |
 
       if (init !== undefined) {
         initialState = init(initialArg);
+
+        if (shouldDoubleInvokeUserFnsInHooksDEV) {
+          setIsStrictModeForDevtools(true);
+          init(initialArg);
+          setIsStrictModeForDevtools(false);
+        }
       } else {
         initialState = initialArg;
       }
@@ -12134,8 +12140,16 @@ to return true:wantsResponderID|                            |
       var hook = mountWorkInProgressHook();
 
       if (typeof initialState === "function") {
-        // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
-        initialState = initialState();
+        var initialStateInitializer = initialState; // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+
+        initialState = initialStateInitializer();
+
+        if (shouldDoubleInvokeUserFnsInHooksDEV) {
+          setIsStrictModeForDevtools(true); // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+
+          initialStateInitializer();
+          setIsStrictModeForDevtools(false);
+        }
       }
 
       hook.memoizedState = hook.baseState = initialState;
@@ -28283,7 +28297,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-8114bd18";
+    var ReactVersion = "18.3.0-canary-9e385162";
 
     function createPortal$1(
       children,
