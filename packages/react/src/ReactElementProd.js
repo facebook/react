@@ -232,8 +232,14 @@ export function createElement(type, config, children) {
         hasOwnProperty.call(config, propName) &&
         // Skip over reserved prop names
         propName !== 'key' &&
-        // TODO: These will no longer be reserved in the next major
+        // TODO: `ref` will no longer be reserved in the next major
         propName !== 'ref' &&
+        // ...and maybe these, too, though we currently rely on them for
+        // warnings and debug information in dev. Need to decide if we're OK
+        // with dropping them. In the jsx() runtime it's not an issue because
+        // the data gets passed as separate arguments instead of props, but
+        // it would be nice to stop relying on them entirely so we can drop
+        // them from the internal Fiber field.
         propName !== '__self' &&
         propName !== '__source'
       ) {
@@ -375,8 +381,14 @@ export function cloneElement(element, config, children) {
         hasOwnProperty.call(config, propName) &&
         // Skip over reserved prop names
         propName !== 'key' &&
-        // TODO: These will no longer be reserved in the next major
+        // TODO: `ref` will no longer be reserved in the next major
         propName !== 'ref' &&
+        // ...and maybe these, too, though we currently rely on them for
+        // warnings and debug information in dev. Need to decide if we're OK
+        // with dropping them. In the jsx() runtime it's not an issue because
+        // the data gets passed as separate arguments instead of props, but
+        // it would be nice to stop relying on them entirely so we can drop
+        // them from the internal Fiber field.
         propName !== '__self' &&
         propName !== '__source'
       ) {
