@@ -11,7 +11,6 @@ import {
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveStatement,
-  makeType,
 } from "../HIR";
 import {
   ReactiveFunctionTransform,
@@ -60,7 +59,7 @@ class Visitor extends ReactiveFunctionTransform<HoistedIdentifiers> {
                 ...instruction.value.lvalue,
                 kind: InstructionKind.Const,
               },
-              type: makeType(),
+              type: null,
               kind: "StoreLocal",
             },
           },

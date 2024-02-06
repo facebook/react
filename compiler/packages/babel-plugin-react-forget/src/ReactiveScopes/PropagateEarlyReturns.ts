@@ -16,7 +16,6 @@ import {
   ReactiveStatement,
   ReactiveTerminalStatement,
   makeInstructionId,
-  makeType,
 } from "../HIR";
 import { createTemporaryPlace } from "../HIR/HIRBuilder";
 import { EARLY_RETURN_SENTINEL } from "./CodegenReactiveFunction";
@@ -221,7 +220,7 @@ class Transform extends ReactiveFunctionTransform<State> {
               value: {
                 kind: "StoreLocal",
                 loc,
-                type: makeType(),
+                type: null,
                 lvalue: {
                   kind: InstructionKind.Let,
                   place: {
@@ -295,7 +294,7 @@ class Transform extends ReactiveFunctionTransform<State> {
               value: {
                 kind: "StoreLocal",
                 loc,
-                type: makeType(),
+                type: null,
                 lvalue: {
                   kind: InstructionKind.Reassign,
                   place: {

@@ -678,7 +678,7 @@ export type InstructionValue =
       kind: "StoreLocal";
       lvalue: LValue;
       value: Place;
-      type: Type;
+      type: t.FlowType | t.TSType | null;
       loc: SourceLocation;
     }
   | {

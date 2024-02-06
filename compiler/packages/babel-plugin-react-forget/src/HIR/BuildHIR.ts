@@ -1615,7 +1615,7 @@ function lowerExpression(
             kind: "StoreLocal",
             lvalue: { kind: InstructionKind.Const, place: { ...place } },
             value: last,
-            type: makeType(),
+            type: null,
             loc: exprLoc,
           });
         }
@@ -1657,7 +1657,7 @@ function lowerExpression(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
           value: consequent,
-          type: makeType(),
+          type: null,
           loc: exprLoc,
         });
         return {
@@ -1676,7 +1676,7 @@ function lowerExpression(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
           value: alternate,
-          type: makeType(),
+          type: null,
           loc: exprLoc,
         });
         return {
@@ -1727,7 +1727,7 @@ function lowerExpression(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
           value: { ...leftPlace },
-          type: makeType(),
+          type: null,
           loc: leftPlace.loc,
         });
         return {
@@ -1744,7 +1744,7 @@ function lowerExpression(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...place } },
           value: { ...right },
-          type: makeType(),
+          type: null,
           loc: right.loc,
         });
         return {
@@ -1853,7 +1853,7 @@ function lowerExpression(
                 kind: InstructionKind.Reassign,
               },
               value: { ...binaryPlace },
-              type: makeType(),
+              type: null,
               loc: exprLoc,
             });
           } else {
@@ -2198,7 +2198,7 @@ function lowerExpression(
         kind: "TypeCastExpression",
         value: lowerExpressionToTemporary(builder, expr.get("expression")),
         typeAnnotation: typeAnnotation.node,
-        type: lowerType(builder, typeAnnotation),
+        type: lowerType(typeAnnotation.node),
         loc: exprLoc,
       };
     }
@@ -2209,7 +2209,7 @@ function lowerExpression(
         kind: "TypeCastExpression",
         value: lowerExpressionToTemporary(builder, expr.get("expression")),
         typeAnnotation: typeAnnotation.node,
-        type: lowerType(builder, typeAnnotation),
+        type: lowerType(typeAnnotation.node),
         loc: exprLoc,
       };
     }
@@ -2315,7 +2315,7 @@ function lowerOptionalMemberExpression(
             kind: "StoreLocal",
             lvalue: { kind: InstructionKind.Const, place: { ...place } },
             value: { ...temp },
-            type: makeType(),
+            type: null,
             loc,
           });
           return {
@@ -2370,7 +2370,7 @@ function lowerOptionalMemberExpression(
       kind: "StoreLocal",
       lvalue: { kind: InstructionKind.Const, place: { ...place } },
       value: { ...temp },
-      type: makeType(),
+      type: null,
       loc,
     });
     return {
@@ -2427,7 +2427,7 @@ function lowerOptionalCallExpression(
             kind: "StoreLocal",
             lvalue: { kind: InstructionKind.Const, place: { ...place } },
             value: { ...temp },
-            type: makeType(),
+            type: null,
             loc,
           });
           return {
@@ -2529,7 +2529,7 @@ function lowerOptionalCallExpression(
       kind: "StoreLocal",
       lvalue: { kind: InstructionKind.Const, place: { ...place } },
       value: { ...temp },
-      type: makeType(),
+      type: null,
       loc,
     });
     return {
@@ -3263,15 +3263,15 @@ function lowerAssignment(
         });
       } else {
         const typeAnnotation = lvalue.get("typeAnnotation");
-        let type: Type;
+        let type: t.FlowType | t.TSType | null;
         if (typeAnnotation.isTSTypeAnnotation()) {
           const typePath = typeAnnotation.get("typeAnnotation");
-          type = lowerType(builder, typePath);
+          type = typePath.node;
         } else if (typeAnnotation.isTypeAnnotation()) {
           const typePath = typeAnnotation.get("typeAnnotation");
-          type = lowerType(builder, typePath);
+          type = typePath.node;
         } else {
-          type = makeType();
+          type = null;
         }
         temporary = lowerValueToTemporary(builder, {
           kind: "StoreLocal",
@@ -3584,7 +3584,7 @@ function lowerAssignment(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...temp } },
           value: { ...defaultValue },
-          type: makeType(),
+          type: null,
           loc,
         });
         return {
@@ -3601,7 +3601,7 @@ function lowerAssignment(
           kind: "StoreLocal",
           lvalue: { kind: InstructionKind.Const, place: { ...temp } },
           value: { ...value },
-          type: makeType(),
+          type: null,
           loc,
         });
         return {
@@ -3857,23 +3857,17 @@ function notNull<T>(value: T | null): value is T {
   return value !== null;
 }
 
-function lowerType(
-  _builder: HIRBuilder,
-  path: NodePath<t.FlowType | t.TSType>
-): Type {
-  const node = path.node;
+export function lowerType(node: t.FlowType | t.TSType): Type {
   switch (node.type) {
     case "GenericTypeAnnotation": {
-      const typeAnnotation = path as NodePath<t.GenericTypeAnnotation>;
-      const id = typeAnnotation.get("id");
-      if (id.node.type === "Identifier" && id.node.name === "Array") {
+      const id = node.id;
+      if (id.type === "Identifier" && id.name === "Array") {
         return { kind: "Object", shapeId: BuiltInArrayId };
       }
       return makeType();
     }
     case "TSTypeReference": {
-      const typeReference = path as NodePath<t.TSTypeReference>;
-      const typeName = typeReference.get("typeName").node;
+      const typeName = node.typeName;
       if (typeName.type === "Identifier" && typeName.name === "Array") {
         return { kind: "Object", shapeId: BuiltInArrayId };
       }
