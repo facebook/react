@@ -450,7 +450,6 @@ function defaultErrorHandler(error) {
 function defaultPostponeHandler() {}
 var currentRequest = null;
 function serializeThenable(request, task, thenable) {
-  request.pendingChunks++;
   var newTask = createTask(
     request,
     null,
@@ -649,6 +648,7 @@ function pingTask(request, task) {
     performWork(request));
 }
 function createTask(request, model, keyPath, implicitSlot, abortSet) {
+  request.pendingChunks++;
   var id = request.nextChunkId++;
   "object" !== typeof model ||
     null === model ||
@@ -691,7 +691,6 @@ function createTask(request, model, keyPath, implicitSlot, abortSet) {
             null !== parentPropertyName &&
             "function" === typeof parentPropertyName.then)
         ) {
-          request.pendingChunks++;
           JSCompiler_inline_result = createTask(
             request,
             task.model,
@@ -773,7 +772,6 @@ function serializeClientReference(
   }
 }
 function outlineModel(request, value) {
-  request.pendingChunks++;
   value = createTask(request, value, null, !1, request.abortableTasks);
   retryTask(request, value);
   return value.id;
@@ -1122,7 +1120,6 @@ exports.renderToDestination = function (destination, model, options) {
     onError: void 0 === onError ? defaultErrorHandler : onError,
     onPostpone: defaultPostponeHandler
   };
-  onError.pendingChunks++;
   model = createTask(onError, model, null, !1, abortSet);
   options.push(model);
   onError.flushScheduled = null !== onError.destination;

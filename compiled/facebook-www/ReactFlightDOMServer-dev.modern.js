@@ -1146,7 +1146,6 @@ if (__DEV__) {
         onPostpone:
           onPostpone === undefined ? defaultPostponeHandler : onPostpone
       };
-      request.pendingChunks++;
       var rootTask = createTask(request, model, null, false, abortSet);
       pingedTasks.push(rootTask);
       return request;
@@ -1159,7 +1158,6 @@ if (__DEV__) {
     }
 
     function serializeThenable(request, task, thenable) {
-      request.pendingChunks++;
       var newTask = createTask(
         request,
         null,
@@ -1550,6 +1548,7 @@ if (__DEV__) {
     }
 
     function createTask(request, model, keyPath, implicitSlot, abortSet) {
+      request.pendingChunks++;
       var id = request.nextChunkId++;
 
       if (typeof model === "object" && model !== null) {
@@ -1733,7 +1732,6 @@ if (__DEV__) {
     }
 
     function outlineModel(request, value) {
-      request.pendingChunks++;
       var newTask = createTask(
         request,
         value,
@@ -1856,7 +1854,6 @@ if (__DEV__) {
           // $FlowFixMe[method-unbinding]
           if (typeof x.then === "function") {
             // Something suspended, we'll need to create a new task and resolve it later.
-            request.pendingChunks++;
             var newTask = createTask(
               request,
               task.model,
