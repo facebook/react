@@ -220,7 +220,7 @@ describe('ReactJSXElementValidator', () => {
     const True = true;
     const Div = 'div';
     expect(() => void (<Undefined />)).toErrorDev(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
+      'Warning: React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: undefined. You likely forgot to export your ' +
         "component from the file it's defined in, or you might have mixed up " +
@@ -229,14 +229,14 @@ describe('ReactJSXElementValidator', () => {
       {withoutStack: true},
     );
     expect(() => void (<Null />)).toErrorDev(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
+      'Warning: React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: null.' +
         '\n\nCheck your code at **.',
       {withoutStack: true},
     );
     expect(() => void (<True />)).toErrorDev(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
+      'Warning: React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: boolean.' +
         '\n\nCheck your code at **.',

@@ -12,15 +12,18 @@
 let React;
 let ReactDOMClient;
 let act;
+let jsxDEV;
 
 describe('Component stack trace displaying', () => {
   beforeEach(() => {
     React = require('react');
-    ReactDOMClient = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
+    jsxDEV = require('react/jsx-dev-runtime').jsxDEV;
   });
 
-  // @gate !enableComponentStackLocations || !__DEV__
+  // @gate !enableComponentStackLocations
+  // @gate __DEV__
   it('should provide filenames in stack traces', async () => {
     class Component extends React.Component {
       render() {
@@ -98,7 +101,18 @@ describe('Component stack trace displaying', () => {
       Component.displayName = 'Component ' + i;
 
       await act(() => {
-        root.render(<Component __source={{fileName, lineNumber: i}} />);
+        root.render(
+          // Intentionally inlining a manual jsxDEV() instead of relying on the
+          // compiler so that we can pass a custom source location.
+          jsxDEV(
+            Component,
+            {},
+            undefined,
+            false,
+            {fileName, lineNumber: i},
+            this,
+          ),
+        );
       });
 
       i++;

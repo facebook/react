@@ -3353,62 +3353,6 @@ describe('ReactDOMFizzServer', () => {
     ]);
   });
 
-  // @gate enableServerContext
-  it('supports ServerContext', async () => {
-    let ServerContext;
-    function inlineLazyServerContextInitialization() {
-      if (!ServerContext) {
-        expect(() => {
-          ServerContext = React.createServerContext('ServerContext', 'default');
-        }).toErrorDev(
-          'Server Context is deprecated and will soon be removed. ' +
-            'It was never documented and we have found it not to be useful ' +
-            'enough to warrant the downside it imposes on all apps.',
-        );
-      }
-      return ServerContext;
-    }
-
-    function Foo() {
-      React.useState(); // component stack generation shouldn't reinit
-      inlineLazyServerContextInitialization();
-      return (
-        <>
-          <ServerContext.Provider value="hi this is server outer">
-            <ServerContext.Provider value="hi this is server">
-              <Bar />
-            </ServerContext.Provider>
-            <ServerContext.Provider value="hi this is server2">
-              <Bar />
-            </ServerContext.Provider>
-            <Bar />
-          </ServerContext.Provider>
-          <ServerContext.Provider value="hi this is server outer2">
-            <Bar />
-          </ServerContext.Provider>
-          <Bar />
-        </>
-      );
-    }
-    function Bar() {
-      const context = React.useContext(inlineLazyServerContextInitialization());
-      return <span>{context}</span>;
-    }
-
-    await act(() => {
-      const {pipe} = renderToPipeableStream(<Foo />);
-      pipe(writable);
-    });
-
-    expect(getVisibleChildren(container)).toEqual([
-      <span>hi this is server</span>,
-      <span>hi this is server2</span>,
-      <span>hi this is server outer</span>,
-      <span>hi this is server outer2</span>,
-      <span>default</span>,
-    ]);
-  });
-
   it('Supports iterable', async () => {
     const Immutable = require('immutable');
 
@@ -5886,31 +5830,11 @@ describe('ReactDOMFizzServer', () => {
     expect(getVisibleChildren(container)).toEqual('ABC');
   });
 
-  // @gate enableServerContext
   it('basic use(context)', async () => {
     const ContextA = React.createContext('default');
     const ContextB = React.createContext('B');
-    let ServerContext;
-    expect(() => {
-      ServerContext = React.createServerContext('ServerContext', 'default');
-    }).toErrorDev(
-      'Server Context is deprecated and will soon be removed. ' +
-        'It was never documented and we have found it not to be useful ' +
-        'enough to warrant the downside it imposes on all apps.',
-      {withoutStack: true},
-    );
     function Client() {
       return use(ContextA) + use(ContextB);
-    }
-    function ServerComponent() {
-      return use(ServerContext);
-    }
-    function Server() {
-      return (
-        <ServerContext.Provider value="C">
-          <ServerComponent />
-        </ServerContext.Provider>
-      );
     }
     function App() {
       return (
@@ -5918,7 +5842,6 @@ describe('ReactDOMFizzServer', () => {
           <ContextA.Provider value="A">
             <Client />
           </ContextA.Provider>
-          <Server />
         </>
       );
     }
@@ -5927,16 +5850,15 @@ describe('ReactDOMFizzServer', () => {
       const {pipe} = renderToPipeableStream(<App />);
       pipe(writable);
     });
-    expect(getVisibleChildren(container)).toEqual(['AB', 'C']);
+    expect(getVisibleChildren(container)).toEqual('AB');
 
     // Hydration uses a different renderer runtime (Fiber instead of Fizz).
     // We reset _currentRenderer here to not trigger a warning about multiple
     // renderers concurrently using these contexts
     ContextA._currentRenderer = null;
-    ServerContext._currentRenderer = null;
     ReactDOMClient.hydrateRoot(container, <App />);
     await waitForAll([]);
-    expect(getVisibleChildren(container)).toEqual(['AB', 'C']);
+    expect(getVisibleChildren(container)).toEqual('AB');
   });
 
   it('use(promise) in multiple components', async () => {

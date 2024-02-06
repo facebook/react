@@ -27,7 +27,6 @@ import {
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
-  REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 import {ClassComponent, HostText, HostPortal, Fragment} from './ReactWorkTags';
 import isArray from 'shared/isArray';
@@ -577,10 +576,7 @@ function createChildReconciler(
         return createChild(returnFiber, unwrapThenable(thenable), lanes);
       }
 
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      ) {
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
         const context: ReactContext<mixed> = (newChild: any);
         return createChild(
           returnFiber,
@@ -667,10 +663,7 @@ function createChildReconciler(
         );
       }
 
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      ) {
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
         const context: ReactContext<mixed> = (newChild: any);
         return updateSlot(
           returnFiber,
@@ -756,10 +749,7 @@ function createChildReconciler(
         );
       }
 
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      ) {
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
         const context: ReactContext<mixed> = (newChild: any);
         return updateFromMap(
           existingChildren,
@@ -1442,10 +1432,7 @@ function createChildReconciler(
         );
       }
 
-      if (
-        newChild.$$typeof === REACT_CONTEXT_TYPE ||
-        newChild.$$typeof === REACT_SERVER_CONTEXT_TYPE
-      ) {
+      if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
         const context: ReactContext<mixed> = (newChild: any);
         return reconcileChildFibersImpl(
           returnFiber,

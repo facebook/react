@@ -24,12 +24,10 @@ import {
 } from 'shared/ReactSymbols';
 import {cloneElement, createElement, isValidElement} from './ReactElement';
 import {createRef} from './ReactCreateRef';
-import {createServerContext} from './ReactServerContext';
 import {
   use,
   useId,
   useCallback,
-  useContext,
   useDebugValue,
   useMemo,
   getCacheSignal,
@@ -66,7 +64,6 @@ export {
   cloneElement,
   createElement,
   createRef,
-  createServerContext,
   use,
   forwardRef,
   isValidElement,
@@ -81,7 +78,6 @@ export {
   postpone as unstable_postpone,
   useId,
   useCallback,
-  useContext,
   useDebugValue,
   useMemo,
   version,

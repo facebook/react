@@ -62,21 +62,7 @@ export type ReactContext<T> = {
   // This value may be added by application code
   // to improve DEV tooling display names
   displayName?: string,
-
-  // only used by ServerContext
-  _defaultValue: T,
-  _globalName: string,
 };
-
-export type ServerContextJSONValue =
-  | string
-  | boolean
-  | number
-  | null
-  | $ReadOnlyArray<ServerContextJSONValue>
-  | {+[key: string]: ServerContextJSONValue};
-
-export type ReactServerContext<T: any> = ReactContext<T>;
 
 export type ReactPortal = {
   $$typeof: symbol | number,

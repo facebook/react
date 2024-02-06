@@ -10,7 +10,10 @@
 'use strict';
 
 // NOTE: We're explicitly not using JSX in this file. This is intended to test
-// classic JS without JSX.
+// classic React.createElement without JSX.
+// TODO: ^ the above note is a bit stale because there are tests in this file
+// that do use JSX syntax. We should port them to React.createElement, and also
+// confirm there's a corresponding test that uses JSX syntax.
 
 let PropTypes;
 let React;
@@ -548,7 +551,7 @@ describe('ReactElementValidator', () => {
     expect(() => {
       void (<Foo>{[<div />]}</Foo>);
     }).toErrorDev(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
+      'Warning: React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: undefined. You likely forgot to export your ' +
         "component from the file it's defined in, or you might have mixed up " +

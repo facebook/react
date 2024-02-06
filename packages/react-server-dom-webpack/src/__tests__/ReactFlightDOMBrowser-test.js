@@ -641,54 +641,6 @@ describe('ReactFlightDOMBrowser', () => {
     expect(container.innerHTML).toBe('ABC');
   });
 
-  // @gate enableServerContext
-  it('basic use(context)', async () => {
-    let ContextA;
-    let ContextB;
-    expect(() => {
-      ContextA = React.createServerContext('ContextA', '');
-      ContextB = React.createServerContext('ContextB', 'B');
-    }).toErrorDev(
-      [
-        'Server Context is deprecated and will soon be removed. ' +
-          'It was never documented and we have found it not to be useful ' +
-          'enough to warrant the downside it imposes on all apps.',
-        'Server Context is deprecated and will soon be removed. ' +
-          'It was never documented and we have found it not to be useful ' +
-          'enough to warrant the downside it imposes on all apps.',
-      ],
-      {withoutStack: true},
-    );
-
-    function ServerComponent() {
-      return ReactServer.use(ContextA) + ReactServer.use(ContextB);
-    }
-    function Server() {
-      return (
-        <ContextA.Provider value="A">
-          <ServerComponent />
-        </ContextA.Provider>
-      );
-    }
-    const stream = ReactServerDOMServer.renderToReadableStream(<Server />);
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      // Client uses a different renderer.
-      // We reset _currentRenderer here to not trigger a warning about multiple
-      // renderers concurrently using this context
-      ContextA._currentRenderer = null;
-      root.render(<Client />);
-    });
-    expect(container.innerHTML).toBe('AB');
-  });
-
   it('use(promise) in multiple components', async () => {
     function Child({prefix}) {
       return (
