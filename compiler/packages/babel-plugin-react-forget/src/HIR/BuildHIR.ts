@@ -207,6 +207,7 @@ export function lower(
   return Ok({
     id,
     params,
+    returnType: null, // TODO: extract the actual return type node if present
     body: builder.build(),
     context,
     generator: func.node.generator === true,

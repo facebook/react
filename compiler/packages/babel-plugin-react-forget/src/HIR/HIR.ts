@@ -233,6 +233,7 @@ export type HIRFunction = {
   id: string | null;
   env: Environment;
   params: Array<Place | SpreadPattern>;
+  returnType: t.FlowType | t.TSType | null;
   context: Array<Place>;
   body: HIR;
   generator: boolean;
