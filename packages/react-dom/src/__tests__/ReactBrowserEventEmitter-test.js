@@ -10,7 +10,6 @@
 'use strict';
 
 let React;
-let ReactDOMX;
 let ReactDOMClient;
 let ReactTestUtils;
 let act;
@@ -49,7 +48,6 @@ describe('ReactBrowserEventEmitter', () => {
     LISTENER.mockClear();
 
     React = require('react');
-    ReactDOMX = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
