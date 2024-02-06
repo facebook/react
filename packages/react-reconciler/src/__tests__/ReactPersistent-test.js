@@ -16,8 +16,6 @@ let waitForAll;
 
 describe('ReactPersistent', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactNoopPersistent = require('react-noop-renderer/persistent');
     const InternalTestUtils = require('internal-test-utils');

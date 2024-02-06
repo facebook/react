@@ -24,7 +24,6 @@ let caches;
 // React 17.
 describe('act warnings', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     Scheduler = require('scheduler');
     ReactNoop = require('react-noop-renderer');

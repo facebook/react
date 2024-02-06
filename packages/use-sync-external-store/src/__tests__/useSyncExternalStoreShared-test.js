@@ -26,8 +26,6 @@ let assertLog;
 // of useSyncExternalStore.
 describe('Shared useSyncExternalStore behavior (shim and built-in)', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     if (gate(flags => flags.enableUseSyncExternalStoreShim)) {
       // Test the shim against React 17.
       jest.mock('react', () => {

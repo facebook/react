@@ -10,8 +10,6 @@ let textCache;
 
 describe('ReactAsyncActions', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     global.reportError = error => {
       Scheduler.log('reportError: ' + error.message);
     };

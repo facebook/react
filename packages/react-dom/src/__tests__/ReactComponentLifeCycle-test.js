@@ -90,8 +90,6 @@ function getLifeCycleState(instance): ComponentLifeCycle {
  */
 describe('ReactComponentLifeCycle', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     act = require('internal-test-utils').act;
 
     React = require('react');

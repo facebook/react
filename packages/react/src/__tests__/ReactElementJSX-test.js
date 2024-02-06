@@ -23,8 +23,6 @@ let act;
 // this api is meant to be backwards compatible.
 describe('ReactElement.jsx', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     JSXRuntime = require('react/jsx-runtime');
     JSXDEVRuntime = require('react/jsx-dev-runtime');

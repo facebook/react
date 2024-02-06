@@ -17,7 +17,6 @@ describe('ReactDOMOption', () => {
   let act;
 
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');

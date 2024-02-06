@@ -44,7 +44,6 @@ describe('SimpleEventPlugin', function () {
   }
 
   beforeEach(function () {
-    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
@@ -257,8 +256,6 @@ describe('SimpleEventPlugin', function () {
 
   describe('interactive events, in concurrent mode', () => {
     beforeEach(() => {
-      jest.resetModules();
-
       React = require('react');
       ReactDOMClient = require('react-dom/client');
       Scheduler = require('scheduler');

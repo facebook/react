@@ -22,8 +22,6 @@ describe('ReactDOMTextarea', () => {
   const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');

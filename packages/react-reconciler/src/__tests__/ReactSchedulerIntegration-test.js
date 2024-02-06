@@ -25,8 +25,6 @@ let waitFor;
 
 describe('ReactSchedulerIntegration', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -195,8 +193,6 @@ describe(
     let logDuringShouldYield = false;
 
     beforeEach(() => {
-      jest.resetModules();
-
       jest.mock('scheduler', () => {
         const actual = jest.requireActual('scheduler/unstable_mock');
         return {
@@ -326,8 +322,6 @@ describe('`act` bypasses Scheduler methods completely,', () => {
   let infiniteLoopGuard;
 
   beforeEach(() => {
-    jest.resetModules();
-
     infiniteLoopGuard = 0;
 
     jest.mock('scheduler', () => {

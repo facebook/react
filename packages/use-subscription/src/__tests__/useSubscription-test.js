@@ -22,7 +22,6 @@ let waitFor;
 
 describe('useSubscription', () => {
   beforeEach(() => {
-    jest.resetModules();
     jest.mock('scheduler', () => require('scheduler/unstable_mock'));
 
     useSubscription = require('use-subscription').useSubscription;

@@ -27,10 +27,7 @@ describe('ReactDOMTestSelectors', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
-
     act = require('internal-test-utils').act;
 
     if (__EXPERIMENTAL__ || global.__WWW__) {

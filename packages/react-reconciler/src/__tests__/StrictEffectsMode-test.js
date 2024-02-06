@@ -17,7 +17,6 @@ let assertLog;
 
 describe('StrictEffectsMode', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');

@@ -19,7 +19,6 @@ let useMemoCache;
 
 describe('ReactHooksInspectionIntegration', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     ReactDOM = require('react-dom');

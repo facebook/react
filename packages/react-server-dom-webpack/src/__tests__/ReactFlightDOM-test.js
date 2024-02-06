@@ -42,8 +42,6 @@ describe('ReactFlightDOM', () => {
     // For this first reset we are going to load the dom-node version of react-server-dom-webpack/server
     // This can be thought of as essentially being the React Server Components scope with react-server
     // condition
-    jest.resetModules();
-
     JSDOM = require('jsdom').JSDOM;
 
     // Simulate the condition resolution

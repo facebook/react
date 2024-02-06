@@ -23,7 +23,6 @@ const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('ReactStrictMode', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -529,8 +528,6 @@ describe('ReactStrictMode', () => {
 
 describe('Concurrent Mode', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
@@ -793,7 +790,6 @@ Please update the following components: Parent`,
 
 describe('symbol checks', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
@@ -921,7 +917,6 @@ describe('symbol checks', () => {
 
 describe('string refs', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -1007,7 +1002,6 @@ describe('string refs', () => {
 
 describe('context legacy', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;
@@ -1098,7 +1092,6 @@ describe('context legacy', () => {
 
   describe('console logs logging', () => {
     beforeEach(() => {
-      jest.resetModules();
       React = require('react');
       ReactDOMClient = require('react-dom/client');
       act = require('internal-test-utils').act;

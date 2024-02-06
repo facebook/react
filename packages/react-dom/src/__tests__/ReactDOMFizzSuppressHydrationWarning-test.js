@@ -26,7 +26,6 @@ let waitForAll;
 
 describe('ReactDOMFizzServerHydrationWarning', () => {
   beforeEach(() => {
-    jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     Scheduler = require('scheduler');
     React = require('react');
