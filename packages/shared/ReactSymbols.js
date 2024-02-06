@@ -19,9 +19,6 @@ export const REACT_STRICT_MODE_TYPE: symbol = Symbol.for('react.strict_mode');
 export const REACT_PROFILER_TYPE: symbol = Symbol.for('react.profiler');
 export const REACT_PROVIDER_TYPE: symbol = Symbol.for('react.provider');
 export const REACT_CONTEXT_TYPE: symbol = Symbol.for('react.context');
-export const REACT_SERVER_CONTEXT_TYPE: symbol = Symbol.for(
-  'react.server_context',
-);
 export const REACT_FORWARD_REF_TYPE: symbol = Symbol.for('react.forward_ref');
 export const REACT_SUSPENSE_TYPE: symbol = Symbol.for('react.suspense');
 export const REACT_SUSPENSE_LIST_TYPE: symbol = Symbol.for(
@@ -40,9 +37,6 @@ export const REACT_LEGACY_HIDDEN_TYPE: symbol = Symbol.for(
 export const REACT_CACHE_TYPE: symbol = Symbol.for('react.cache');
 export const REACT_TRACING_MARKER_TYPE: symbol = Symbol.for(
   'react.tracing_marker',
-);
-export const REACT_SERVER_CONTEXT_DEFAULT_VALUE_NOT_LOADED: symbol = Symbol.for(
-  'react.default_value',
 );
 
 export const REACT_MEMO_CACHE_SENTINEL: symbol = Symbol.for(

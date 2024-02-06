@@ -469,7 +469,7 @@ describe('ReactComponent', () => {
           root.render(<X />);
         });
       }).toErrorDev(
-        'React.createElement: type is invalid -- expected a string (for built-in components) ' +
+        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
           'or a class/function (for composite components) but got: undefined.',
       ),
     ).rejects.toThrowError(
@@ -490,7 +490,7 @@ describe('ReactComponent', () => {
           root.render(<Y />);
         });
       }).toErrorDev(
-        'React.createElement: type is invalid -- expected a string (for built-in components) ' +
+        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
           'or a class/function (for composite components) but got: null.',
       ),
     ).rejects.toThrowError(
@@ -526,7 +526,7 @@ describe('ReactComponent', () => {
           root.render(<Foo />);
         });
       }).toErrorDev(
-        'React.createElement: type is invalid -- expected a string (for built-in components) ' +
+        'React.jsx: type is invalid -- expected a string (for built-in components) ' +
           'or a class/function (for composite components) but got: undefined.',
       ),
     ).rejects.toThrowError(

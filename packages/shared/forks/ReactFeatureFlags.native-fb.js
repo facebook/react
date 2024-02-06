@@ -80,7 +80,6 @@ export const allowConcurrentByDefault = true;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = false;
 
 export const enableTransitionTracing = false;
 
@@ -92,6 +91,7 @@ export const enableFizzExternalRuntime = false;
 
 export const enableAsyncActions = false;
 export const enableUseDeferredValueInitialArg = true;
+export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
 

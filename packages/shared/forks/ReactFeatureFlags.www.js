@@ -100,7 +100,6 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
-export const enableServerContext = false;
 
 export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
@@ -111,6 +110,7 @@ export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableAsyncDebugInfo = false;
+export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
 

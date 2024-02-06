@@ -24,14 +24,9 @@ import {
   REACT_LAZY_TYPE,
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
-  REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
-import {
-  enableServerContext,
-  enableTransitionTracing,
-  enableCache,
-} from './ReactFeatureFlags';
+import {enableTransitionTracing, enableCache} from './ReactFeatureFlags';
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
 function getWrappedName(
@@ -127,11 +122,6 @@ export default function getComponentNameFromType(type: mixed): string | null {
           return null;
         }
       }
-      case REACT_SERVER_CONTEXT_TYPE:
-        if (enableServerContext) {
-          const context2 = ((type: any): ReactContext<any>);
-          return (context2.displayName || context2._globalName) + '.Provider';
-        }
     }
   }
   return null;

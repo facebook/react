@@ -11,7 +11,6 @@
 
 import {
   REACT_CONTEXT_TYPE,
-  REACT_SERVER_CONTEXT_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -44,7 +43,6 @@ export function typeOf(object: any): mixed {
             const $$typeofType = type && type.$$typeof;
 
             switch ($$typeofType) {
-              case REACT_SERVER_CONTEXT_TYPE:
               case REACT_CONTEXT_TYPE:
               case REACT_FORWARD_REF_TYPE:
               case REACT_LAZY_TYPE:

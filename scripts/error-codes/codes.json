@@ -486,5 +486,7 @@
   "498": "Only plain objects, and a few built-ins, can be passed to Client Components from Server Components. Classes or null prototypes are not supported.",
   "499": "Only plain objects, and a few built-ins, can be passed to Server Actions. Classes or null prototypes are not supported.",
   "500": "React expected a headers state to exist when emitEarlyPreloads was called but did not find it. This suggests emitEarlyPreloads was called more than once per request. This is a bug in React.",
-  "501": "The render was aborted with postpone when the shell is incomplete. Reason: %s"
+  "501": "The render was aborted with postpone when the shell is incomplete. Reason: %s",
+  "502": "Cannot read a Client Context from a Server Component.",
+  "503": "Cannot use() an already resolved Client Reference."
 }

@@ -64,7 +64,6 @@ export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
-export const enableServerContext = false;
 
 export const enableTransitionTracing = false;
 
@@ -81,6 +80,7 @@ export const alwaysThrottleRetries = true;
 export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
+export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
 
