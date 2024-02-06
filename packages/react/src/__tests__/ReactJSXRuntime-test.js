@@ -17,11 +17,10 @@ let JSXRuntime;
 let JSXDEVRuntime;
 let act;
 
-// NOTE: We're explicitly not using JSX here. This is intended to test
-// a new React.jsx api which does not have a JSX transformer yet.
-// A lot of these tests are pulled from ReactElement-test because
-// this api is meant to be backwards compatible.
-describe('ReactElement.jsx', () => {
+// NOTE: Prefer to call the JSXRuntime directly in these tests so we can be
+// certain that we are testing the runtime behavior, as opposed to the Babel
+// transform that we use in our tests configuration.
+describe('ReactJSXRuntime', () => {
   beforeEach(() => {
     jest.resetModules();
 
