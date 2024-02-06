@@ -11,13 +11,17 @@ import {
   IdentifierId,
   InstructionKind,
   Place,
-  ReactiveBlock,
   ReactiveFunction,
   ReactiveInstruction,
   ReactiveScopeBlock,
+  ReactiveStatement,
 } from "../HIR";
 import { eachPatternOperand, mapPatternOperands } from "../HIR/visitors";
-import { ReactiveFunctionTransform, visitReactiveFunction } from "./visitors";
+import {
+  ReactiveFunctionTransform,
+  Transformed,
+  visitReactiveFunction,
+} from "./visitors";
 
 /*
  * Destructuring statements may sometimes define some variables which are declared by the scope,
@@ -92,41 +96,29 @@ class Visitor extends ReactiveFunctionTransform<State> {
     this.traverseScope(scope, state);
   }
 
-  override visitBlock(block: ReactiveBlock, state: State): void {
-    // Traverse first to transform inner items
-    this.traverseBlock(block, state);
+  override transformInstruction(
+    instruction: ReactiveInstruction,
+    state: State
+  ): Transformed<ReactiveStatement> {
+    this.visitInstruction(instruction, state);
 
-    // Then transform any mixed destructuring instructions
-    let nextBlock: ReactiveBlock | null = null;
-    for (let i = 0; i < block.length; i++) {
-      const instr = block[i];
-      if (
-        instr.kind === "instruction" &&
-        instr.instruction.value.kind === "Destructure"
-      ) {
-        const transformed = transformDestructuring(
-          state,
-          instr.instruction,
-          instr.instruction.value
-        );
-        if (transformed) {
-          nextBlock ??= block.slice(0, i);
-          transformed.forEach((instruction) => {
-            nextBlock?.push({
-              kind: "instruction",
-              instruction,
-            });
-          });
-          continue;
-        }
-      } else if (nextBlock !== null) {
-        nextBlock.push(instr);
+    if (instruction.value.kind === "Destructure") {
+      const transformed = transformDestructuring(
+        state,
+        instruction,
+        instruction.value
+      );
+      if (transformed) {
+        return {
+          kind: "replace-many",
+          value: transformed.map((instruction) => ({
+            kind: "instruction",
+            instruction,
+          })),
+        };
       }
     }
-    if (nextBlock !== null) {
-      block.length = 0;
-      block.push(...nextBlock);
-    }
+    return { kind: "keep" };
   }
 }
 
