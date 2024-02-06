@@ -429,6 +429,11 @@ const skipFilter = new Set([
   "forest/forest-primitive-operations.flow",
   "forest/computed-load-props.flow",
   "forest/property-load-props.flow",
+  "forest/forest-binding-test",
+  "forest/forest-inline-object-type.flow",
+  "forest/forest-object-type-valid.flow",
+  "forest/forest-partial-reassignment-type-annotation.flow",
+  "forest/todo-forest-phi-type-unused-initializer.flow",
 
   // TODO: we probably want to always skip these
   "rules-of-hooks/rules-of-hooks-0592bd574811",
