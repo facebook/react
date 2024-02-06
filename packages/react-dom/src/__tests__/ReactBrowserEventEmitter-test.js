@@ -43,7 +43,7 @@ let container;
 // This test is written in a bizarre way because it was previously using internals.
 // It should probably be rewritten but we're keeping it for some extra coverage.
 describe('ReactBrowserEventEmitter', () => {
-  beforeEach(async () => {
+  beforeEach(() => {
     jest.resetModules();
     LISTENER.mockClear();
 
@@ -88,8 +88,6 @@ describe('ReactBrowserEventEmitter', () => {
       });
     }
 
-    await renderTree();
-
     putListener = async function (node, eventName, listener) {
       switch (node) {
         case CHILD:
@@ -108,6 +106,7 @@ describe('ReactBrowserEventEmitter', () => {
       // Rerender with new event listeners
       await renderTree();
     };
+
     deleteAllListeners = async function (node) {
       switch (node) {
         case CHILD:
@@ -127,6 +126,8 @@ describe('ReactBrowserEventEmitter', () => {
     };
 
     idCallOrder = [];
+
+    return renderTree();
   });
 
   afterEach(() => {
@@ -315,8 +316,8 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should invoke handlers that were removed while bubbling', async () => {
     const handleParentClick = jest.fn();
-    const handleChildClick = function (event) {
-      deleteAllListeners(PARENT);
+    const handleChildClick = async function (event) {
+      await deleteAllListeners(PARENT);
     };
     await putListener(CHILD, ON_CLICK_KEY, handleChildClick);
     await putListener(PARENT, ON_CLICK_KEY, handleParentClick);
