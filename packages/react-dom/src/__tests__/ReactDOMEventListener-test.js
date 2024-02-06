@@ -9,15 +9,13 @@
 
 'use strict';
 
-import {dispatchAndWaitForDiscrete} from 'internal-test-utils';
-
 describe('ReactDOMEventListener', () => {
   let React;
   let ReactDOM;
   let ReactDOMClient;
   let ReactDOMServer;
   let act;
-  let dispatchAndWaitForDiscrete;
+  let simulateEventDispatch;
 
   beforeEach(() => {
     jest.resetModules();
@@ -26,8 +24,8 @@ describe('ReactDOMEventListener', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
-    dispatchAndWaitForDiscrete =
-      require('internal-test-utils').dispatchAndWaitForDiscrete;
+    simulateEventDispatch =
+      require('internal-test-utils').simulateEventDispatch;
   });
 
   describe('Propagation', () => {
@@ -161,21 +159,21 @@ describe('ReactDOMEventListener', () => {
       function Parent() {
         // eslint-disable-next-line no-unused-vars
         const [state, _] = React.useState('Parent');
-        const handleMouseOut = () => {
+        const handleClick = () => {
           childSetState(2);
           mock(childContainer.firstChild.textContent);
         };
-        return <section onClick={handleMouseOut}>{state}</section>;
+        return <section onClick={handleClick}>{state}</section>;
       }
 
       function Child() {
         const [state, setState] = React.useState('Child');
         childSetState = setState;
-        const handleMouseOut = () => {
+        const handleClick = () => {
           setState(1);
           mock(childContainer.firstChild.textContent);
         };
-        return <span onClick={handleMouseOut}>{state}</span>;
+        return <span onClick={handleClick}>{state}</span>;
       }
 
       await act(() => {
@@ -191,7 +189,7 @@ describe('ReactDOMEventListener', () => {
 
       try {
         await act(async () => {
-          await dispatchAndWaitForDiscrete(childNode, 'click');
+          await simulateEventDispatch(childNode, 'click');
         });
 
         // Child and parent should both call from event handlers.
@@ -213,13 +211,7 @@ describe('ReactDOMEventListener', () => {
         // isInputPending?).
         //
         // Since this is a discrete event, the previous update is already done.
-        if (gate(flags => flags.enableLegacyFBSupport)) {
-          // Legacy FB support mode attaches to the document, which is a single event
-          // dispatch for both roots, so this is batched.
-          expect(mock.mock.calls[1][0]).toBe('Child');
-        } else {
-          expect(mock.mock.calls[1][0]).toBe('1');
-        }
+        expect(mock.mock.calls[1][0]).toBe('1');
 
         // And by the time we leave the handler, the second update is flushed.
         expect(childNode.textContent).toBe('2');
@@ -271,7 +263,7 @@ describe('ReactDOMEventListener', () => {
 
       try {
         await act(async () => {
-          await dispatchAndWaitForDiscrete(childNode, 'mouseout');
+          await simulateEventDispatch(childNode, 'mouseout');
         });
 
         // Child and parent should both call from event handlers.

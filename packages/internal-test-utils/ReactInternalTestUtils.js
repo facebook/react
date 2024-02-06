@@ -9,6 +9,7 @@ import * as SchedulerMock from 'scheduler/unstable_mock';
 import {diff} from 'jest-diff';
 import {equals} from '@jest/expect-utils';
 import enqueueTask from './enqueueTask';
+import simulateBrowserEventDispatch from './simulateBrowserEventDispatch';
 
 export {act} from './internalAct';
 
@@ -267,37 +268,37 @@ ${diff(expectedLog, actualLog)}
 
 // Simulates dispatching events, waiting for microtasks in between.
 // This matches the browser behavior, which will flush microtasks
-// between each event handler.
-export async function dispatchAndWaitForDiscrete(
+// between each event handler. This will allow discrete events to
+// flush between events across different event handlers.
+export async function simulateEventDispatch(
   node: Node,
   eventType: string,
 ): Promise<void> {
-  assertYieldsWereCleared(waitForDiscrete);
-
-  // Bubbling phase
-  // Walk the path from the element to the document and dispatch
-  // the event on each node, flushing microtasks in between.
+  // Ensure the node is in the document.
   for (let current = node; current; current = current.parentNode) {
-    const customEvent = new Event(eventType, {
-      bubbles: false,
-      cancelable: true,
-    });
+    if (current === document) {
+      break;
+    } else if (current.parentNode == null) {
+      return;
+    }
+  }
 
-    Object.defineProperty(customEvent, 'eventPhase', {
-      // Avoid going through the capture/bubbling phases,
-      // since we're doing it manually.
-      value: Event.AT_TARGET,
-    });
+  const customEvent = new Event(eventType, {
+    bubbles: true,
+  });
 
-    Object.defineProperty(customEvent, 'target', {
-      // Override the target to the node on which we dispatched the event.
-      value: node,
-    });
+  Object.defineProperty(customEvent, 'target', {
+    // Override the target to the node on which we dispatched the event.
+    value: node,
+  });
 
-    // Dispatch the event on the target
-    current.dispatchEvent(customEvent);
+  const impl = Object.getOwnPropertySymbols(node)[0];
+  const oldDispatch = node[impl].dispatchEvent;
+  try {
+    node[impl].dispatchEvent = simulateBrowserEventDispatch;
 
-    // Flush microtasks
-    await waitForMicrotasks();
+    await node.dispatchEvent(customEvent);
+  } finally {
+    node[impl].dispatchEvent = oldDispatch;
   }
 }
