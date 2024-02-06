@@ -3823,7 +3823,14 @@ function forceStoreRerender(fiber) {
 }
 function mountStateImpl(initialState) {
   var hook = mountWorkInProgressHook();
-  "function" === typeof initialState && (initialState = initialState());
+  if ("function" === typeof initialState) {
+    var initialStateInitializer = initialState;
+    initialState = initialStateInitializer();
+    shouldDoubleInvokeUserFnsInHooksDEV &&
+      (setIsStrictModeForDevtools(!0),
+      initialStateInitializer(),
+      setIsStrictModeForDevtools(!1));
+  }
   hook.memoizedState = hook.baseState = initialState;
   hook.queue = {
     pending: null,
@@ -4490,14 +4497,20 @@ var HooksDispatcherOnMount = {
   },
   useReducer: function (reducer, initialArg, init) {
     var hook = mountWorkInProgressHook();
-    initialArg = void 0 !== init ? init(initialArg) : initialArg;
-    hook.memoizedState = hook.baseState = initialArg;
+    if (void 0 !== init) {
+      var initialState = init(initialArg);
+      shouldDoubleInvokeUserFnsInHooksDEV &&
+        (setIsStrictModeForDevtools(!0),
+        init(initialArg),
+        setIsStrictModeForDevtools(!1));
+    } else initialState = initialArg;
+    hook.memoizedState = hook.baseState = initialState;
     reducer = {
       pending: null,
       lanes: 0,
       dispatch: null,
       lastRenderedReducer: reducer,
-      lastRenderedState: initialArg
+      lastRenderedState: initialState
     };
     hook.queue = reducer;
     reducer = reducer.dispatch = dispatchReducerAction.bind(
@@ -17148,7 +17161,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1823 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-4cdedb24",
+  version: "18.3.0-www-classic-e4ba2ec7",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2185 = {
@@ -17178,7 +17191,7 @@ var internals$jscomp$inline_2185 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-4cdedb24"
+  reconcilerVersion: "18.3.0-www-classic-e4ba2ec7"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2186 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17528,4 +17541,4 @@ exports.useFormStatus = function () {
     return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-4cdedb24";
+exports.version = "18.3.0-www-classic-e4ba2ec7";

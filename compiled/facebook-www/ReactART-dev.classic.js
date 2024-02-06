@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-d2bd5964";
+    var ReactVersion = "18.3.0-www-classic-6e4380f3";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -9070,6 +9070,12 @@ if (__DEV__) {
 
       if (init !== undefined) {
         initialState = init(initialArg);
+
+        if (shouldDoubleInvokeUserFnsInHooksDEV) {
+          setIsStrictModeForDevtools(true);
+          init(initialArg);
+          setIsStrictModeForDevtools(false);
+        }
       } else {
         initialState = initialArg;
       }
@@ -9619,8 +9625,16 @@ if (__DEV__) {
       var hook = mountWorkInProgressHook();
 
       if (typeof initialState === "function") {
-        // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
-        initialState = initialState();
+        var initialStateInitializer = initialState; // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+
+        initialState = initialStateInitializer();
+
+        if (shouldDoubleInvokeUserFnsInHooksDEV) {
+          setIsStrictModeForDevtools(true); // $FlowFixMe[incompatible-use]: Flow doesn't like mixed types
+
+          initialStateInitializer();
+          setIsStrictModeForDevtools(false);
+        }
       }
 
       hook.memoizedState = hook.baseState = initialState;
