@@ -2121,7 +2121,11 @@ describe('ReactDOMComponent', () => {
 
         componentWillUnmount() {
           // Should not throw
-          expect(ReactDOM.findDOMNode(this).nodeName).toBe('SPAN');
+          expect(
+            ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+              this,
+            ).nodeName,
+          ).toBe('SPAN');
         }
       }
 

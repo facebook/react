@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {FindDOMNodeType} from './client/ReactDOMLegacy.js';
 import type {HostDispatcher} from './shared/ReactDOMTypes';
 
 type InternalsType = {
@@ -15,6 +16,7 @@ type InternalsType = {
   ReactDOMCurrentDispatcher: {
     current: HostDispatcher,
   },
+  findDOMNode: null | FindDOMNodeType,
 };
 
 function noop() {}
@@ -35,6 +37,7 @@ const Internals: InternalsType = ({
   ReactDOMCurrentDispatcher: {
     current: DefaultDispatcher,
   },
+  findDOMNode: null,
 }: any);
 
 export default Internals;

@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMClient;
 let ReactDOMServer;
 
@@ -21,6 +22,8 @@ describe('ReactDOM', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    findDOMNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
 
@@ -494,7 +497,7 @@ describe('ReactDOM', () => {
     });
 
     const App = () => {
-      ReactDOM.findDOMNode(instance);
+      findDOMNode(instance);
       return <div />;
     };
 

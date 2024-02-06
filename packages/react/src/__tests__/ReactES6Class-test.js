@@ -607,11 +607,4 @@ describe('ReactES6Class', () => {
       expect(ref.current.refs.inner.getName()).toBe('foo');
     });
   }
-
-  it('supports drilling through to the DOM using findDOMNode', () => {
-    const ref = React.createRef();
-    test(<Inner name="foo" ref={ref} />, 'DIV', 'foo');
-    const node = ReactDOM.findDOMNode(ref.current);
-    expect(node).toBe(container.firstChild);
-  });
 });

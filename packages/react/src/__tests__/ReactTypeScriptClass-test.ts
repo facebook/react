@@ -709,11 +709,4 @@ describe('ReactTypeScriptClass', function() {
       expect(ref.current.refs.inner.getName()).toBe('foo');
     });
   }
-
-  it('supports drilling through to the DOM using findDOMNode', function() {
-    const ref = React.createRef();
-    test(React.createElement(Inner, {name: 'foo', ref: ref}), 'DIV', 'foo');
-    const node = ReactDOM.findDOMNode(ref.current);
-    expect(node).toBe(container.firstChild);
-  });
 });

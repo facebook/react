@@ -9,7 +9,6 @@
 
 export {
   createPortal,
-  findDOMNode,
   flushSync,
   render,
   unmountComponentAtNode,

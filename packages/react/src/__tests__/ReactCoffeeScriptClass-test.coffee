@@ -562,10 +562,4 @@ describe 'ReactCoffeeScriptClass', ->
       ]);
       expect(ref.current.refs.inner.getName()).toBe 'foo'
 
-  it 'supports drilling through to the DOM using findDOMNode', ->
-    ref = React.createRef()
-    test React.createElement(InnerComponent, name: 'foo', ref: ref), 'DIV', 'foo'
-    node = ReactDOM.findDOMNode(ref.current)
-    expect(node).toBe container.firstChild
-
   undefined

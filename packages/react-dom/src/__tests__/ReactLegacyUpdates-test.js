@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let act;
 let Scheduler;
 let assertLog;
@@ -22,6 +23,8 @@ describe('ReactLegacyUpdates', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    findDOMNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
@@ -561,7 +564,7 @@ describe('ReactLegacyUpdates', () => {
       state = {x: 0};
 
       componentDidUpdate() {
-        expect(ReactDOM.findDOMNode(b).textContent).toBe('B1');
+        expect(findDOMNode(b).textContent).toBe('B1');
         aUpdated = true;
       }
 
@@ -699,7 +702,7 @@ describe('ReactLegacyUpdates', () => {
               depth={this.props.depth + 1}
               count={this.props.count}
             />,
-            ReactDOM.findDOMNode(this),
+            findDOMNode(this),
           );
         }
       }
@@ -770,10 +773,10 @@ describe('ReactLegacyUpdates', () => {
     const x = ReactDOM.render(<X />, container);
     container = document.createElement('div');
     const y = ReactDOM.render(<Y />, container);
-    expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
+    expect(findDOMNode(x).textContent).toBe('0');
 
     y.forceUpdate();
-    expect(ReactDOM.findDOMNode(x).textContent).toBe('1');
+    expect(findDOMNode(x).textContent).toBe('1');
   });
 
   // @gate !disableLegacyMode
@@ -816,7 +819,7 @@ describe('ReactLegacyUpdates', () => {
     });
 
     expect(a.state.x).toBe(1);
-    expect(ReactDOM.findDOMNode(a).textContent).toBe('A1');
+    expect(findDOMNode(a).textContent).toBe('A1');
   });
 
   // @gate !disableLegacyMode

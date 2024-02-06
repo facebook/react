@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+let findDOMNode;
 let ReactDOMClient;
 let TogglingComponent;
 let act;
@@ -25,6 +26,8 @@ describe('ReactEmptyComponent', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
+    findDOMNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
     ReactDOMClient = require('react-dom/client');
     Scheduler = require('scheduler');
     const InternalTestUtils = require('internal-test-utils');
@@ -37,12 +40,12 @@ describe('ReactEmptyComponent', () => {
       state = {component: this.props.firstComponent};
 
       componentDidMount() {
-        Scheduler.log('mount ' + ReactDOM.findDOMNode(this)?.nodeName);
+        Scheduler.log('mount ' + findDOMNode(this)?.nodeName);
         this.setState({component: this.props.secondComponent});
       }
 
       componentDidUpdate() {
-        Scheduler.log('update ' + ReactDOM.findDOMNode(this)?.nodeName);
+        Scheduler.log('update ' + findDOMNode(this)?.nodeName);
       }
 
       render() {
@@ -244,13 +247,13 @@ describe('ReactEmptyComponent', () => {
         componentDidMount() {
           // Make sure the DOM node resolves properly even if we're replacing a
           // `null` component
-          expect(ReactDOM.findDOMNode(this)).not.toBe(null);
+          expect(findDOMNode(this)).not.toBe(null);
         }
 
         componentWillUnmount() {
           // Even though we're getting replaced by `null`, we haven't been
           // replaced yet!
-          expect(ReactDOM.findDOMNode(this)).not.toBe(null);
+          expect(findDOMNode(this)).not.toBe(null);
         }
       }
 
