@@ -2636,10 +2636,12 @@ function mountMemo<T>(
 ): T {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  if (shouldDoubleInvokeUserFnsInHooksDEV) {
-    nextCreate();
-  }
   const nextValue = nextCreate();
+  if (shouldDoubleInvokeUserFnsInHooksDEV) {
+    setIsStrictModeForDevtools(true);
+    nextCreate();
+    setIsStrictModeForDevtools(false);
+  }
   hook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
@@ -2658,10 +2660,12 @@ function updateMemo<T>(
       return prevState[0];
     }
   }
-  if (shouldDoubleInvokeUserFnsInHooksDEV) {
-    nextCreate();
-  }
   const nextValue = nextCreate();
+  if (shouldDoubleInvokeUserFnsInHooksDEV) {
+    setIsStrictModeForDevtools(true);
+    nextCreate();
+    setIsStrictModeForDevtools(false);
+  }
   hook.memoizedState = [nextValue, nextDeps];
   return nextValue;
 }
