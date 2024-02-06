@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9bc29bf2feda61e11d1a54a59418b351>>
+ * @generated SignedSource<<ea05f6ff9354df63b851a9e6de2119eb>>
  */
 
 "use strict";
@@ -4177,10 +4177,10 @@ function updateMemo(nextCreate, deps) {
   var prevState = hook.memoizedState;
   if (null !== deps && areHookInputsEqual(deps, prevState[1]))
     return prevState[0];
+  prevState = nextCreate();
   shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-  nextCreate = nextCreate();
-  hook.memoizedState = [nextCreate, deps];
-  return nextCreate;
+  hook.memoizedState = [prevState, deps];
+  return prevState;
 }
 function mountDeferredValueImpl(hook, value, initialValue) {
   return void 0 !== initialValue && 0 === (renderLanes & 1073741824)
@@ -4360,10 +4360,10 @@ var HooksDispatcherOnMount = {
   useMemo: function (nextCreate, deps) {
     var hook = mountWorkInProgressHook();
     deps = void 0 === deps ? null : deps;
+    var nextValue = nextCreate();
     shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-    nextCreate = nextCreate();
-    hook.memoizedState = [nextCreate, deps];
-    return nextCreate;
+    hook.memoizedState = [nextValue, deps];
+    return nextValue;
   },
   useReducer: function (reducer, initialArg, init) {
     var hook = mountWorkInProgressHook();
@@ -10254,7 +10254,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1133 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-9f917a3e",
+    version: "18.3.0-canary-456a9bde",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10310,7 +10310,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-9f917a3e"
+  reconcilerVersion: "18.3.0-canary-456a9bde"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

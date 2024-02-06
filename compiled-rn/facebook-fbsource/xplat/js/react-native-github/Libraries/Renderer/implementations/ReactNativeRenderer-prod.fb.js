@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8e6e06fcc243f8ea94c0222cfcfff2f0>>
+ * @generated SignedSource<<be90fa0a6d50cf6e301ad3f0c518aed2>>
  */
 
 "use strict";
@@ -4129,10 +4129,10 @@ function updateMemo(nextCreate, deps) {
   var prevState = hook.memoizedState;
   if (null !== deps && areHookInputsEqual(deps, prevState[1]))
     return prevState[0];
+  prevState = nextCreate();
   shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-  nextCreate = nextCreate();
-  hook.memoizedState = [nextCreate, deps];
-  return nextCreate;
+  hook.memoizedState = [prevState, deps];
+  return prevState;
 }
 function mountDeferredValueImpl(hook, value, initialValue) {
   return void 0 !== initialValue && 0 === (renderLanes & 1073741824)
@@ -4310,10 +4310,10 @@ var HooksDispatcherOnMount = {
   useMemo: function (nextCreate, deps) {
     var hook = mountWorkInProgressHook();
     deps = void 0 === deps ? null : deps;
+    var nextValue = nextCreate();
     shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-    nextCreate = nextCreate();
-    hook.memoizedState = [nextCreate, deps];
-    return nextCreate;
+    hook.memoizedState = [nextValue, deps];
+    return nextValue;
   },
   useReducer: function (reducer, initialArg, init) {
     var hook = mountWorkInProgressHook();
@@ -9774,7 +9774,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1118 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-22a47d45",
+    version: "18.3.0-canary-2cdd5095",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9817,7 +9817,7 @@ var internals$jscomp$inline_1354 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-22a47d45"
+  reconcilerVersion: "18.3.0-canary-2cdd5095"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1355 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

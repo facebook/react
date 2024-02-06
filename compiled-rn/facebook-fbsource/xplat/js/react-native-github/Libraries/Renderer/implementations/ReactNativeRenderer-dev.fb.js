@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2c765d54304d1dfcbef9d3c7da4bacb5>>
+ * @generated SignedSource<<2f406cc4aeb43540731e1b7fc385303e>>
  */
 
 "use strict";
@@ -12498,12 +12498,14 @@ to return true:wantsResponderID|                            |
     function mountMemo(nextCreate, deps) {
       var hook = mountWorkInProgressHook();
       var nextDeps = deps === undefined ? null : deps;
+      var nextValue = nextCreate();
 
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }
@@ -12521,11 +12523,14 @@ to return true:wantsResponderID|                            |
         }
       }
 
+      var nextValue = nextCreate();
+
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }
@@ -28278,7 +28283,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-f46a3bd0";
+    var ReactVersion = "18.3.0-canary-8114bd18";
 
     function createPortal$1(
       children,

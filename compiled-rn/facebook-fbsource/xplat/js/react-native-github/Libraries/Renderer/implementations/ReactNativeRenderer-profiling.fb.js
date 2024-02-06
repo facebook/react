@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bc0ab8dcace25065924d7dce57a1c0c2>>
+ * @generated SignedSource<<7164b004d589e4941370bae28f48ff29>>
  */
 
 "use strict";
@@ -4253,10 +4253,10 @@ function updateMemo(nextCreate, deps) {
   var prevState = hook.memoizedState;
   if (null !== deps && areHookInputsEqual(deps, prevState[1]))
     return prevState[0];
+  prevState = nextCreate();
   shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-  nextCreate = nextCreate();
-  hook.memoizedState = [nextCreate, deps];
-  return nextCreate;
+  hook.memoizedState = [prevState, deps];
+  return prevState;
 }
 function mountDeferredValueImpl(hook, value, initialValue) {
   return void 0 !== initialValue && 0 === (renderLanes & 1073741824)
@@ -4436,10 +4436,10 @@ var HooksDispatcherOnMount = {
   useMemo: function (nextCreate, deps) {
     var hook = mountWorkInProgressHook();
     deps = void 0 === deps ? null : deps;
+    var nextValue = nextCreate();
     shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-    nextCreate = nextCreate();
-    hook.memoizedState = [nextCreate, deps];
-    return nextCreate;
+    hook.memoizedState = [nextValue, deps];
+    return nextValue;
   },
   useReducer: function (reducer, initialArg, init) {
     var hook = mountWorkInProgressHook();
@@ -10476,7 +10476,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1196 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-57958654",
+    version: "18.3.0-canary-19434d67",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10532,7 +10532,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-57958654"
+  reconcilerVersion: "18.3.0-canary-19434d67"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

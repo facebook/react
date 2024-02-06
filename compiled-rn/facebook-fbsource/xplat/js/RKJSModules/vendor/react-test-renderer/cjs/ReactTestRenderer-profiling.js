@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<cbdd4098615e3e8ca00b094256cf3374>>
+ * @generated SignedSource<<b435a772ad86c95cee4ea13ae18ef64a>>
  */
 
 "use strict";
@@ -2909,10 +2909,10 @@ function updateMemo(nextCreate, deps) {
   var prevState = hook.memoizedState;
   if (null !== deps && areHookInputsEqual(deps, prevState[1]))
     return prevState[0];
+  prevState = nextCreate();
   shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-  nextCreate = nextCreate();
-  hook.memoizedState = [nextCreate, deps];
-  return nextCreate;
+  hook.memoizedState = [prevState, deps];
+  return prevState;
 }
 function mountDeferredValueImpl(hook, value, initialValue) {
   if (void 0 === initialValue || 0 !== (renderLanes & 1073741824))
@@ -3155,10 +3155,10 @@ var HooksDispatcherOnMount = {
   useMemo: function (nextCreate, deps) {
     var hook = mountWorkInProgressHook();
     deps = void 0 === deps ? null : deps;
+    var nextValue = nextCreate();
     shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-    nextCreate = nextCreate();
-    hook.memoizedState = [nextCreate, deps];
-    return nextCreate;
+    hook.memoizedState = [nextValue, deps];
+    return nextValue;
   },
   useReducer: function (reducer, initialArg, init) {
     var hook = mountWorkInProgressHook();
@@ -9578,7 +9578,7 @@ var devToolsConfig$jscomp$inline_1054 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-12d56fca3-20240206",
+  version: "18.3.0-canary-db120f69e-20240206",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1231 = {
@@ -9609,7 +9609,7 @@ var internals$jscomp$inline_1231 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-12d56fca3-20240206"
+  reconcilerVersion: "18.3.0-canary-db120f69e-20240206"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1232 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

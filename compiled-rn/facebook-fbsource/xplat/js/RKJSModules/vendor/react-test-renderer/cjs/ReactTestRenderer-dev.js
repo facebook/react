@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3a64021116badb6467add62a13ee5411>>
+ * @generated SignedSource<<37663b716b538adcc88b05fc968e0638>>
  */
 
 "use strict";
@@ -850,6 +850,103 @@ if (__DEV__) {
     var NormalPriority$1 = Scheduler$1.unstable_NormalPriority;
     var IdlePriority = Scheduler$1.unstable_IdlePriority; // this doesn't actually exist on the scheduler, but it *does*
 
+    // Helpers to patch console.logs to avoid logging during side-effect free
+    // replaying on render function. This currently only patches the object
+    // lazily which won't cover if the log function was extracted eagerly.
+    // We could also eagerly patch the method.
+    var disabledDepth = 0;
+    var prevLog;
+    var prevInfo;
+    var prevWarn;
+    var prevError;
+    var prevGroup;
+    var prevGroupCollapsed;
+    var prevGroupEnd;
+
+    function disabledLog() {}
+
+    disabledLog.__reactDisabledLog = true;
+    function disableLogs() {
+      {
+        if (disabledDepth === 0) {
+          /* eslint-disable react-internal/no-production-logging */
+          prevLog = console.log;
+          prevInfo = console.info;
+          prevWarn = console.warn;
+          prevError = console.error;
+          prevGroup = console.group;
+          prevGroupCollapsed = console.groupCollapsed;
+          prevGroupEnd = console.groupEnd; // https://github.com/facebook/react/issues/19099
+
+          var props = {
+            configurable: true,
+            enumerable: true,
+            value: disabledLog,
+            writable: true
+          }; // $FlowFixMe[cannot-write] Flow thinks console is immutable.
+
+          Object.defineProperties(console, {
+            info: props,
+            log: props,
+            warn: props,
+            error: props,
+            group: props,
+            groupCollapsed: props,
+            groupEnd: props
+          });
+          /* eslint-enable react-internal/no-production-logging */
+        }
+
+        disabledDepth++;
+      }
+    }
+    function reenableLogs() {
+      {
+        disabledDepth--;
+
+        if (disabledDepth === 0) {
+          /* eslint-disable react-internal/no-production-logging */
+          var props = {
+            configurable: true,
+            enumerable: true,
+            writable: true
+          }; // $FlowFixMe[cannot-write] Flow thinks console is immutable.
+
+          Object.defineProperties(console, {
+            log: assign({}, props, {
+              value: prevLog
+            }),
+            info: assign({}, props, {
+              value: prevInfo
+            }),
+            warn: assign({}, props, {
+              value: prevWarn
+            }),
+            error: assign({}, props, {
+              value: prevError
+            }),
+            group: assign({}, props, {
+              value: prevGroup
+            }),
+            groupCollapsed: assign({}, props, {
+              value: prevGroupCollapsed
+            }),
+            groupEnd: assign({}, props, {
+              value: prevGroupEnd
+            })
+          });
+          /* eslint-enable react-internal/no-production-logging */
+        }
+
+        if (disabledDepth < 0) {
+          error(
+            "disabledDepth fell below zero. " +
+              "This is a bug in React. Please file an issue."
+          );
+        }
+      }
+    }
+
     var rendererID = null;
     var injectedHook = null;
     var hasLoggedError = false;
@@ -1008,6 +1105,15 @@ if (__DEV__) {
         }
       }
     }
+    function setIsStrictModeForDevtools(newIsStrictMode) {
+      {
+        if (newIsStrictMode) {
+          disableLogs();
+        } else {
+          reenableLogs();
+        }
+      }
+    } // Profiler API hooks
 
     function injectProfilingHooks(profilingHooks) {}
 
@@ -8759,12 +8865,14 @@ if (__DEV__) {
     function mountMemo(nextCreate, deps) {
       var hook = mountWorkInProgressHook();
       var nextDeps = deps === undefined ? null : deps;
+      var nextValue = nextCreate();
 
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }
@@ -8782,11 +8890,14 @@ if (__DEV__) {
         }
       }
 
+      var nextValue = nextCreate();
+
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }
@@ -25600,7 +25711,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-12d56fca3-20240206";
+    var ReactVersion = "18.3.0-canary-db120f69e-20240206";
 
     // Might add PROFILE later.
 
