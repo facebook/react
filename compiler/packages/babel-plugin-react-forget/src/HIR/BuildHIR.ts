@@ -861,13 +861,24 @@ function lowerStatement(
                 loc: id.node.loc ?? GeneratedSource,
               });
             } else {
+              const typeAnnotation = id.get("typeAnnotation");
+              let type: t.FlowType | t.TSType | null;
+              if (typeAnnotation.isTSTypeAnnotation()) {
+                const typePath = typeAnnotation.get("typeAnnotation");
+                type = typePath.node;
+              } else if (typeAnnotation.isTypeAnnotation()) {
+                const typePath = typeAnnotation.get("typeAnnotation");
+                type = typePath.node;
+              } else {
+                type = null;
+              }
               lowerValueToTemporary(builder, {
                 kind: "DeclareLocal",
                 lvalue: {
                   kind,
                   place,
                 },
-                type: null,
+                type,
                 loc: id.node.loc ?? GeneratedSource,
               });
             }
