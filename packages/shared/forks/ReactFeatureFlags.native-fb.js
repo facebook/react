@@ -91,6 +91,7 @@ export const enableFizzExternalRuntime = false;
 
 export const enableAsyncActions = false;
 export const enableUseDeferredValueInitialArg = true;
+export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
 

@@ -166,6 +166,9 @@ export const enableCustomElementPropertySupport = __NEXT_MAJOR__;
 // request for certain browsers.
 export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
 
+// Disabled caching behavior of `react/cache` in client runtimes.
+export const disableClientCache = false;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
