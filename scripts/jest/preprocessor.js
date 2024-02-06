@@ -8,6 +8,8 @@ const hermesParser = require('hermes-parser');
 
 const tsPreprocessor = require('./typescript/preprocessor');
 const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
+const {ReactVersion} = require('../../ReactVersions');
+const semver = require('semver');
 
 const pathToBabel = path.join(
   require.resolve('@babel/core'),
@@ -28,6 +30,8 @@ const pathToTransformReactVersionPragma = require.resolve(
 );
 const pathToBabelrc = path.join(__dirname, '..', '..', 'babel.config.js');
 const pathToErrorCodes = require.resolve('../error-codes/codes.json');
+
+const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
 
 const babelOptions = {
   plugins: [
@@ -81,14 +85,23 @@ module.exports = {
         plugins.push(pathToTransformReactVersionPragma);
       }
 
-      plugins.push([
-        process.env.NODE_ENV === 'development'
-          ? require.resolve('@babel/plugin-transform-react-jsx-development')
-          : require.resolve('@babel/plugin-transform-react-jsx'),
-        // The "automatic" runtime corresponds to react/jsx-runtime. "classic"
-        // would be React.createElement.
-        {runtime: 'automatic'},
-      ]);
+      // This is only for React DevTools tests with React 16.x
+      // `react/jsx-dev-runtime` and `react/jsx-runtime` are included in the package starting from v17
+      if (semver.gte(ReactVersionTestingAgainst, '17.0.0')) {
+        plugins.push([
+          process.env.NODE_ENV === 'development'
+            ? require.resolve('@babel/plugin-transform-react-jsx-development')
+            : require.resolve('@babel/plugin-transform-react-jsx'),
+          // The "automatic" runtime corresponds to react/jsx-runtime. "classic"
+          // would be React.createElement.
+          {runtime: 'automatic'},
+        ]);
+      } else {
+        plugins.push(
+          require.resolve('@babel/plugin-transform-react-jsx'),
+          require.resolve('@babel/plugin-transform-react-jsx-source')
+        );
+      }
 
       let sourceAst = hermesParser.parse(src, {babel: true});
       return {
