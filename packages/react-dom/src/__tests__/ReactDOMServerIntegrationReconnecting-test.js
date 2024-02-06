@@ -19,9 +19,6 @@ let ReactTestUtils;
 
 describe('ReactDOMServerIntegration', () => {
   function initModules() {
-    // Reset warning cache.
-    jest.resetModules();
-
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
@@ -459,9 +456,6 @@ describe('ReactDOMServerIntegration', () => {
 
 describe('ReactDOMServerIntegration (legacy)', () => {
   function initModules() {
-    // Reset warning cache.
-    jest.resetModules();
-
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');

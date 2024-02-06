@@ -32,7 +32,6 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
   }
 
   function initModules() {
-    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
@@ -197,7 +196,6 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
   }
 
   function initModules() {
-    jest.resetModules();
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.disableJavaScriptURLs = true;
 

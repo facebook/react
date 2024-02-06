@@ -42,7 +42,6 @@ let assertLog;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
-    jest.resetModules();
     jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');

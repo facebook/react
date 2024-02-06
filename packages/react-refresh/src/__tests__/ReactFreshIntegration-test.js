@@ -29,7 +29,6 @@ describe('ReactFreshIntegration', () => {
 
   beforeEach(() => {
     if (__DEV__) {
-      jest.resetModules();
       React = require('react');
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);

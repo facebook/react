@@ -22,21 +22,11 @@ import Circle from 'react-art/Circle';
 import Rectangle from 'react-art/Rectangle';
 import Wedge from 'react-art/Wedge';
 
-// Isolate DOM renderer.
-jest.resetModules();
-
-const ReactDOMClient = require('react-dom/client');
-const act = require('internal-test-utils').act;
-
-// Isolate test renderer.
-jest.resetModules();
-const ReactTestRenderer = require('react-test-renderer');
-
-// Isolate the noop renderer
-jest.resetModules();
-const ReactNoop = require('react-noop-renderer');
-const Scheduler = require('scheduler');
-
+let ReactDOMClient;
+let act;
+let ReactTestRenderer;
+let ReactNoop;
+let Scheduler;
 let Group;
 let Shape;
 let Surface;
@@ -73,6 +63,21 @@ describe('ReactART', () => {
   let container;
 
   beforeEach(() => {
+    // Isolate DOM renderer.
+    jest.resetModules();
+
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
+
+    // Isolate test renderer.
+    jest.resetModules();
+    ReactTestRenderer = require('react-test-renderer');
+
+    // Isolate the noop renderer
+    jest.resetModules();
+    ReactNoop = require('react-noop-renderer');
+    Scheduler = require('scheduler');
+
     container = document.createElement('div');
     document.body.appendChild(container);
 

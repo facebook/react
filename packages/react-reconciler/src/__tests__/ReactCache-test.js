@@ -17,7 +17,6 @@ let cache;
 
 describe('ReactCache', () => {
   beforeEach(() => {
-    jest.resetModules();
     jest.mock('react', () => require('react/react.react-server'));
     React = require('react');
 
@@ -204,7 +203,6 @@ describe('ReactCache', () => {
   it('introspection of returned wrapper function is same on client and server', async () => {
     // When the variant flag is true, test the client version of `cache`.
     if (gate(flags => flags.variant)) {
-      jest.resetModules();
       jest.mock('react', () => jest.requireActual('react'));
       const ClientReact = require('react');
       cache = ClientReact.cache;

@@ -16,7 +16,6 @@ let waitForAll;
 
 describe('ReactDeprecationWarnings', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     const InternalTestUtils = require('internal-test-utils');

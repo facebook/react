@@ -18,7 +18,6 @@ describe('ReactDOMEventListener', () => {
 
   beforeEach(() => {
     window.TextEvent = function () {};
-    jest.resetModules();
     jest.isolateModules(() => {
       React = require('react');
       act = require('internal-test-utils').act;

@@ -21,7 +21,6 @@ let assertLog;
 
 describe('ReactIncremental', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -2719,7 +2718,6 @@ describe('ReactIncremental', () => {
 
     // First, verify that this code path normally receives Fibers as keys,
     // and that they're not extensible.
-    jest.resetModules();
     let receivedNonExtensibleObjects;
     // eslint-disable-next-line no-extend-native
     Map.prototype.set = function (key) {

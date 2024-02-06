@@ -23,8 +23,6 @@ let assertLog;
 // (Node) environment
 describe('useSyncExternalStore (userspace shim, server rendering)', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     // Remove useSyncExternalStore from the React imports so that we use the
     // shim instead. Also removing startTransition, since we use that to detect
     // outdated 18 alphas that don't yet include useSyncExternalStore.

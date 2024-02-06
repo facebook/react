@@ -20,8 +20,6 @@ let ReactDOMServer;
 let ReactTestUtils;
 
 function initModules() {
-  // Reset warning cache.
-  jest.resetModules();
   React = require('react');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');

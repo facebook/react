@@ -18,7 +18,6 @@ describe('InvalidEventListeners', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     act = require('internal-test-utils').act;

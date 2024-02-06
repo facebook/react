@@ -26,8 +26,6 @@ function getTestDocument(markup) {
 
 describe('rendering React components at document', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');

@@ -26,7 +26,6 @@ let waitForAll;
 
 describe('ReactDOM HostSingleton', () => {
   beforeEach(() => {
-    jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
     ReactDOM = require('react-dom');

@@ -924,8 +924,6 @@ describe('console', () => {
 
 describe('console error', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     const Console = require('react-devtools-shared/src/backend/console');
     patchConsole = Console.patch;
     unpatchConsole = Console.unpatch;

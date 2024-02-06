@@ -26,8 +26,6 @@ describe('ReactJSXTransformIntegration', () => {
   let Component;
 
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');

@@ -17,7 +17,6 @@ let ReactCurrentDispatcher;
 
 describe('ReactDOMServer', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     PropTypes = require('prop-types');
     ReactDOMServer = require('react-dom/server');

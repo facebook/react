@@ -37,7 +37,6 @@ describe('ChangeEventPlugin', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
     // TODO pull this into helper method, reduce repetition.
     // mock the browser APIs which are used in schedule:
     // - calling 'window.postMessage' should actually fire postmessage handlers

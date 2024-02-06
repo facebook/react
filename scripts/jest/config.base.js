@@ -6,6 +6,7 @@ module.exports = {
     '<rootDir>/scripts/rollup/shims/',
     '<rootDir>/scripts/bench/',
   ],
+  resetModules: true,
   transform: {
     '.*': require.resolve('./preprocessor.js'),
   },

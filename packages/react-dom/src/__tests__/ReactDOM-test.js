@@ -19,7 +19,6 @@ let act;
 
 describe('ReactDOM', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');

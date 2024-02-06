@@ -22,7 +22,6 @@ let assertLog;
 
 describe('ReactEffectOrdering', () => {
   beforeEach(() => {
-    jest.resetModules();
     jest.useFakeTimers();
 
     React = require('react');

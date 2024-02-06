@@ -32,7 +32,6 @@ let UserBlockingPriority;
 // assumes as little as possible about the order and timing of events.
 describe('SchedulerDOMSetImmediate', () => {
   beforeEach(() => {
-    jest.resetModules();
     runtime = installMockBrowserRuntime();
     jest.unmock('scheduler');
 
