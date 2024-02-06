@@ -296,7 +296,6 @@ export function createRequest(
     onError: onError === undefined ? defaultErrorHandler : onError,
     onPostpone: onPostpone === undefined ? defaultPostponeHandler : onPostpone,
   };
-  request.pendingChunks++;
   const rootTask = createTask(request, model, null, false, abortSet);
   pingedTasks.push(rootTask);
   return request;
@@ -318,7 +317,6 @@ function serializeThenable(
   task: Task,
   thenable: Thenable<any>,
 ): number {
-  request.pendingChunks++;
   const newTask = createTask(
     request,
     null,
@@ -722,6 +720,7 @@ function createTask(
   implicitSlot: boolean,
   abortSet: Set<Task>,
 ): Task {
+  request.pendingChunks++;
   const id = request.nextChunkId++;
   if (typeof model === 'object' && model !== null) {
     // If we're about to write this into a new task we can assign it an ID early so that
@@ -906,7 +905,6 @@ function serializeClientReference(
 }
 
 function outlineModel(request: Request, value: ReactClientValue): number {
-  request.pendingChunks++;
   const newTask = createTask(
     request,
     value,
@@ -1068,7 +1066,6 @@ function renderModel(
       // $FlowFixMe[method-unbinding]
       if (typeof x.then === 'function') {
         // Something suspended, we'll need to create a new task and resolve it later.
-        request.pendingChunks++;
         const newTask = createTask(
           request,
           task.model,
