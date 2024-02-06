@@ -567,6 +567,14 @@ describe('creating element with string ref in constructor', () => {
 });
 
 describe('strings refs across renderers', () => {
+  beforeEach(() => {
+    React = require('react');
+    ReactDOMClient = require('react-dom/client');
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
+  });
+
   it('does not break', async () => {
     class Parent extends React.Component {
       render() {
@@ -582,10 +590,13 @@ describe('strings refs across renderers', () => {
 
     class Indirection extends React.Component {
       componentDidUpdate() {
+        jest.resetModules();
         // One ref is being rendered later using another renderer copy.
         const AnotherCopyOfReactDOM = require('react-dom');
         const AnotherCopyOfReactDOMClient = require('react-dom/client');
         const root = AnotherCopyOfReactDOMClient.createRoot(div2);
+
+        // TODO: this should error since flushSync is called in a lifecycle.
         AnotherCopyOfReactDOM.flushSync(() => {
           root.render(this.props.child2);
         });
