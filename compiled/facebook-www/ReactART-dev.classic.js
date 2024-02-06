@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-14b2377a";
+    var ReactVersion = "18.3.0-www-classic-d2bd5964";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -10353,12 +10353,14 @@ if (__DEV__) {
     function mountMemo(nextCreate, deps) {
       var hook = mountWorkInProgressHook();
       var nextDeps = deps === undefined ? null : deps;
+      var nextValue = nextCreate();
 
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }
@@ -10376,11 +10378,14 @@ if (__DEV__) {
         }
       }
 
+      var nextValue = nextCreate();
+
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }

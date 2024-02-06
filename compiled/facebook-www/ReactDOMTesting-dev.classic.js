@@ -15228,12 +15228,14 @@ if (__DEV__) {
     function mountMemo(nextCreate, deps) {
       var hook = mountWorkInProgressHook();
       var nextDeps = deps === undefined ? null : deps;
+      var nextValue = nextCreate();
 
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }
@@ -15251,11 +15253,14 @@ if (__DEV__) {
         }
       }
 
+      var nextValue = nextCreate();
+
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }
@@ -36355,7 +36360,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-838f52b1";
+    var ReactVersion = "18.3.0-www-classic-19d42c66";
 
     function createPortal$1(
       children,

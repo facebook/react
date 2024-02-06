@@ -200,6 +200,8 @@ var scheduleCallback$3 = Scheduler.unstable_scheduleCallback,
   NormalPriority$1 = Scheduler.unstable_NormalPriority,
   LowPriority = Scheduler.unstable_LowPriority,
   IdlePriority = Scheduler.unstable_IdlePriority,
+  log$1 = Scheduler.log,
+  unstable_setDisableYieldValue = Scheduler.unstable_setDisableYieldValue,
   rendererID = null,
   injectedHook = null;
 function onCommitRoot(root) {
@@ -211,6 +213,13 @@ function onCommitRoot(root) {
         void 0,
         128 === (root.current.flags & 128)
       );
+    } catch (err) {}
+}
+function setIsStrictModeForDevtools(newIsStrictMode) {
+  "function" === typeof log$1 && unstable_setDisableYieldValue(newIsStrictMode);
+  if (injectedHook && "function" === typeof injectedHook.setStrictMode)
+    try {
+      injectedHook.setStrictMode(rendererID, newIsStrictMode);
     } catch (err) {}
 }
 var clz32 = Math.clz32 ? Math.clz32 : clz32Fallback,
@@ -4050,10 +4059,13 @@ function updateMemo(nextCreate, deps) {
   var prevState = hook.memoizedState;
   if (null !== deps && areHookInputsEqual(deps, prevState[1]))
     return prevState[0];
-  shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-  nextCreate = nextCreate();
-  hook.memoizedState = [nextCreate, deps];
-  return nextCreate;
+  prevState = nextCreate();
+  shouldDoubleInvokeUserFnsInHooksDEV &&
+    (setIsStrictModeForDevtools(!0),
+    nextCreate(),
+    setIsStrictModeForDevtools(!1));
+  hook.memoizedState = [prevState, deps];
+  return prevState;
 }
 function mountDeferredValueImpl(hook, value, initialValue) {
   return enableUseDeferredValueInitialArg &&
@@ -4362,10 +4374,13 @@ var HooksDispatcherOnMount = {
   useMemo: function (nextCreate, deps) {
     var hook = mountWorkInProgressHook();
     deps = void 0 === deps ? null : deps;
-    shouldDoubleInvokeUserFnsInHooksDEV && nextCreate();
-    nextCreate = nextCreate();
-    hook.memoizedState = [nextCreate, deps];
-    return nextCreate;
+    var nextValue = nextCreate();
+    shouldDoubleInvokeUserFnsInHooksDEV &&
+      (setIsStrictModeForDevtools(!0),
+      nextCreate(),
+      setIsStrictModeForDevtools(!1));
+    hook.memoizedState = [nextValue, deps];
+    return nextValue;
   },
   useReducer: function (reducer, initialArg, init) {
     var hook = mountWorkInProgressHook();
@@ -16656,7 +16671,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1782 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-1dd03d2d",
+  version: "18.3.0-www-modern-cc13a185",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2149 = {
@@ -16687,7 +16702,7 @@ var internals$jscomp$inline_2149 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-1dd03d2d"
+  reconcilerVersion: "18.3.0-www-modern-cc13a185"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2150 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16965,4 +16980,4 @@ exports.useFormStatus = function () {
     return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-1dd03d2d";
+exports.version = "18.3.0-www-modern-cc13a185";

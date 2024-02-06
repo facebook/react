@@ -1110,6 +1110,15 @@ if (__DEV__) {
         }
       }
     }
+    function setIsStrictModeForDevtools(newIsStrictMode) {
+      {
+        if (newIsStrictMode) {
+          disableLogs();
+        } else {
+          reenableLogs();
+        }
+      }
+    } // Profiler API hooks
 
     function injectProfilingHooks(profilingHooks) {}
 
@@ -9113,12 +9122,14 @@ if (__DEV__) {
     function mountMemo(nextCreate, deps) {
       var hook = mountWorkInProgressHook();
       var nextDeps = deps === undefined ? null : deps;
+      var nextValue = nextCreate();
 
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }
@@ -9136,11 +9147,14 @@ if (__DEV__) {
         }
       }
 
+      var nextValue = nextCreate();
+
       if (shouldDoubleInvokeUserFnsInHooksDEV) {
+        setIsStrictModeForDevtools(true);
         nextCreate();
+        setIsStrictModeForDevtools(false);
       }
 
-      var nextValue = nextCreate();
       hook.memoizedState = [nextValue, nextDeps];
       return nextValue;
     }
@@ -26055,7 +26069,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-c5c74e05";
+    var ReactVersion = "18.3.0-www-modern-209d4750";
 
     // Might add PROFILE later.
 
