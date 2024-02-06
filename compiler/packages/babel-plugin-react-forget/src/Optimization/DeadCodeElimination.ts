@@ -251,6 +251,7 @@ function rewriteInstruction(instr: Instruction, state: State): void {
       instr.value = {
         kind: "DeclareLocal",
         lvalue: instr.value.lvalue,
+        type: instr.value.type,
         loc: instr.value.loc,
       };
     }

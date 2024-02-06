@@ -867,6 +867,7 @@ function lowerStatement(
                   kind,
                   place,
                 },
+                type: null,
                 loc: id.node.loc ?? GeneratedSource,
               });
             }
@@ -1200,6 +1201,7 @@ function lowerStatement(
             kind: InstructionKind.Catch,
             place: { ...place },
           },
+          type: null,
           loc: handlerBindingPath.node.loc ?? GeneratedSource,
         });
 

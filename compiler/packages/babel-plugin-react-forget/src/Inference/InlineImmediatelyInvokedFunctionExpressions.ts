@@ -288,6 +288,7 @@ function declareTemporary(
         place: result,
         kind: InstructionKind.Let,
       },
+      type: null,
       loc: result.loc,
     },
   });

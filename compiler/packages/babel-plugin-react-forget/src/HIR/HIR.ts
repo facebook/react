@@ -664,6 +664,7 @@ export type InstructionValue =
   | {
       kind: "DeclareLocal";
       lvalue: LValue;
+      type: t.FlowType | t.TSType | null;
       loc: SourceLocation;
     }
   | {
