@@ -31,9 +31,10 @@ global.process.env.LIGHT_MODE_DIMMED_ERROR_COLOR =
   LIGHT_MODE_DIMMED_ERROR_COLOR;
 global.process.env.LIGHT_MODE_DIMMED_LOG_COLOR = LIGHT_MODE_DIMMED_LOG_COLOR;
 
+const ReactVersionTestingAgainst = process.env.REACT_VERSION || ReactVersion;
+
 global._test_react_version = (range, testName, callback) => {
-  const reactVersion = process.env.REACT_VERSION || ReactVersion;
-  const shouldPass = semver.satisfies(reactVersion, range);
+  const shouldPass = semver.satisfies(ReactVersionTestingAgainst, range);
 
   if (shouldPass) {
     test(testName, callback);
@@ -43,8 +44,7 @@ global._test_react_version = (range, testName, callback) => {
 };
 
 global._test_react_version_focus = (range, testName, callback) => {
-  const reactVersion = process.env.REACT_VERSION || ReactVersion;
-  const shouldPass = semver.satisfies(reactVersion, range);
+  const shouldPass = semver.satisfies(ReactVersionTestingAgainst, range);
 
   if (shouldPass) {
     // eslint-disable-next-line jest/no-focused-tests
@@ -71,12 +71,14 @@ global._test_ignore_for_react_version = (testName, callback) => {
 // Longer term we should migrate all our tests away from using require() and
 // resetModules, and use import syntax instead so this kind of thing doesn't
 // happen.
-lazyRequireFunctionExports('react/jsx-dev-runtime');
+if (semver.gte(ReactVersionTestingAgainst, '17.0.0')) {
+  lazyRequireFunctionExports('react/jsx-dev-runtime');
 
-// TODO: We shouldn't need to do this in the production runtime, but until
-// we remove string refs they also depend on the shared state object. Remove
-// once we remove string refs.
-lazyRequireFunctionExports('react/jsx-runtime');
+  // TODO: We shouldn't need to do this in the production runtime, but until
+  // we remove string refs they also depend on the shared state object. Remove
+  // once we remove string refs.
+  lazyRequireFunctionExports('react/jsx-runtime');
+}
 
 function lazyRequireFunctionExports(moduleName) {
   jest.mock(moduleName, () => {

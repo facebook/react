@@ -27,6 +27,7 @@
     "@babel/plugin-transform-modules-commonjs": "^7.10.4",
     "@babel/plugin-transform-object-super": "^7.10.4",
     "@babel/plugin-transform-parameters": "^7.10.5",
+    "@babel/plugin-transform-react-jsx-source": "^7.10.5",
     "@babel/plugin-transform-react-jsx": "^7.23.4",
     "@babel/plugin-transform-react-jsx-development": "^7.22.5",
     "@babel/plugin-transform-shorthand-properties": "^7.10.4",
