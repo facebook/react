@@ -1,6 +1,6 @@
-const idlUtils = require('jsdom/lib/jsdom/living/generated/utils');
 const DOMException = require('domexception/webidl2js-wrapper');
 const {nodeRoot} = require('jsdom/lib/jsdom/living/helpers/node');
+const reportException = require('jsdom/lib/jsdom/living/helpers/runtime-script-errors');
 const {
   isNode,
   isShadowRoot,
@@ -11,6 +11,7 @@ const {
 } = require('jsdom/lib/jsdom/living/helpers/shadow-dom');
 
 const {waitForMicrotasks} = require('./ReactInternalTestUtils');
+
 const EVENT_PHASE = {
   NONE: 0,
   CAPTURING_PHASE: 1,
@@ -69,7 +70,7 @@ async function _dispatch(eventImpl, legacyTargetOverrideFlag) {
   eventImpl._dispatchFlag = true;
 
   const targetOverride = legacyTargetOverrideFlag
-    ? idlUtils.implForWrapper(targetImpl._globalObject._document)
+    ? wrapperForImpl(targetImpl._globalObject._document)
     : targetImpl;
   let relatedTarget = retarget(eventImpl.relatedTarget, targetImpl);
 
