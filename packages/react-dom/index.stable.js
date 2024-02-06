@@ -12,7 +12,6 @@ export {
   createPortal,
   createRoot,
   hydrateRoot,
-  findDOMNode,
   flushSync,
   hydrate,
   render,

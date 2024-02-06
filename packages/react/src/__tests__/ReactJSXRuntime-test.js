@@ -16,6 +16,7 @@ let ReactTestUtils;
 let JSXRuntime;
 let JSXDEVRuntime;
 let act;
+let findDOMNode;
 
 // NOTE: Prefer to call the JSXRuntime directly in these tests so we can be
 // certain that we are testing the runtime behavior, as opposed to the Babel
@@ -31,6 +32,8 @@ describe('ReactJSXRuntime', () => {
     ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
+    findDOMNode =
+      ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode;
   });
 
   it('allows static methods to be called using the type property', () => {
@@ -113,9 +116,9 @@ describe('ReactJSXRuntime', () => {
       JSXRuntime.jsx(Outer, {color: 'orange'}),
     );
     if (__DEV__) {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
+      expect(findDOMNode(outer).className).toBe('moo');
     } else {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
+      expect(findDOMNode(outer).className).toBe('quack');
     }
   });
 
