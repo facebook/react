@@ -35,6 +35,7 @@ let PARENT;
 let CHILD;
 let BUTTON;
 
+let renderTree;
 let putListener;
 let deleteAllListeners;
 
@@ -71,7 +72,7 @@ describe('ReactBrowserEventEmitter', () => {
 
     const root = ReactDOMClient.createRoot(container);
 
-    async function renderTree() {
+    renderTree = async function () {
       await act(() => {
         root.render(
           <div ref={c => (GRANDPARENT = c)} {...GRANDPARENT_PROPS}>
@@ -86,7 +87,7 @@ describe('ReactBrowserEventEmitter', () => {
           </div>,
         );
       });
-    }
+    };
 
     putListener = async function (node, eventName, listener) {
       switch (node) {
@@ -126,8 +127,6 @@ describe('ReactBrowserEventEmitter', () => {
     };
 
     idCallOrder = [];
-
-    return renderTree();
   });
 
   afterEach(() => {
@@ -136,6 +135,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should bubble simply', async () => {
+    await renderTree();
     await putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
     await putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
     await putListener(
@@ -153,6 +153,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should bubble to the right handler after an update', async () => {
+    await renderTree();
     await putListener(
       GRANDPARENT,
       ON_CLICK_KEY,
@@ -181,6 +182,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should continue bubbling if an error is thrown', async () => {
+    await renderTree();
     await putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
     await putListener(PARENT, ON_CLICK_KEY, function () {
       recordID(PARENT);
@@ -203,6 +205,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should set currentTarget', async () => {
+    await renderTree();
     await putListener(CHILD, ON_CLICK_KEY, function (event) {
       recordID(CHILD);
       expect(event.currentTarget).toBe(CHILD);
@@ -225,6 +228,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should support stopPropagation()', async () => {
+    await renderTree();
     await putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
     await putListener(
       PARENT,
@@ -245,6 +249,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should support overriding .isPropagationStopped()', async () => {
+    await renderTree();
     // Ew. See D4504876.
     await putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
     await putListener(PARENT, ON_CLICK_KEY, function (e) {
@@ -266,6 +271,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should stop after first dispatch if stopPropagation', async () => {
+    await renderTree();
     await putListener(
       CHILD,
       ON_CLICK_KEY,
@@ -285,6 +291,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should not stopPropagation if false is returned', async () => {
+    await renderTree();
     await putListener(
       CHILD,
       ON_CLICK_KEY,
@@ -315,6 +322,7 @@ describe('ReactBrowserEventEmitter', () => {
    */
 
   it('should invoke handlers that were removed while bubbling', async () => {
+    await renderTree();
     const handleParentClick = jest.fn();
     const handleChildClick = async function (event) {
       await deleteAllListeners(PARENT);
@@ -328,6 +336,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should not invoke newly inserted handlers while bubbling', async () => {
+    await renderTree();
     const handleParentClick = jest.fn();
     const handleChildClick = async function (event) {
       await putListener(PARENT, ON_CLICK_KEY, handleParentClick);
@@ -340,6 +349,7 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should have mouse enter simulated by test utils', async () => {
+    await renderTree();
     await putListener(CHILD, ON_MOUSE_ENTER_KEY, recordID.bind(null, CHILD));
     await act(() => {
       ReactTestUtils.Simulate.mouseEnter(CHILD);
