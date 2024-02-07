@@ -56,8 +56,7 @@ function getIteratorFn(maybeIterable) {
     maybeIterable["@@iterator"];
   return "function" === typeof maybeIterable ? maybeIterable : null;
 }
-var hasOwnProperty = Object.prototype.hasOwnProperty,
-  RESERVED_PROPS$1 = { key: !0, ref: !0, __self: !0, __source: !0 };
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 function cloneAndReplaceKey(oldElement, newKey) {
   return {
     $$typeof: REACT_ELEMENT_TYPE,
@@ -75,8 +74,7 @@ function isValidElement(object) {
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 }
-var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
-  RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
+var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 function jsx$1(type, config, maybeKey) {
   var propName,
     props = {},
@@ -87,7 +85,10 @@ function jsx$1(type, config, maybeKey) {
   void 0 !== config.ref && (ref = config.ref);
   for (propName in config)
     hasOwnProperty.call(config, propName) &&
-      !RESERVED_PROPS.hasOwnProperty(propName) &&
+      "key" !== propName &&
+      "ref" !== propName &&
+      "__self" !== propName &&
+      "__source" !== propName &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
@@ -345,7 +346,10 @@ exports.cloneElement = function (element, config, children) {
       var defaultProps = element.type.defaultProps;
     for (propName in config)
       hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS$1.hasOwnProperty(propName) &&
+        "key" !== propName &&
+        "ref" !== propName &&
+        "__self" !== propName &&
+        "__source" !== propName &&
         (props[propName] =
           void 0 === config[propName] && void 0 !== defaultProps
             ? defaultProps[propName]
@@ -377,7 +381,10 @@ exports.createElement = function (type, config, children) {
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS$1.hasOwnProperty(propName) &&
+        "key" !== propName &&
+        "ref" !== propName &&
+        "__self" !== propName &&
+        "__source" !== propName &&
         (props[propName] = config[propName]);
   var childrenLength = arguments.length - 2;
   if (1 === childrenLength) props.children = children;
@@ -468,4 +475,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-6a0476d6";
+exports.version = "18.3.0-www-modern-48d2dc77";

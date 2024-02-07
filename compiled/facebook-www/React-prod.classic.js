@@ -85,8 +85,7 @@ var isArrayImpl = Array.isArray,
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   hasOwnProperty = Object.prototype.hasOwnProperty,
-  ReactCurrentOwner$1 = { current: null },
-  RESERVED_PROPS$1 = { key: !0, ref: !0, __self: !0, __source: !0 };
+  ReactCurrentOwner$1 = { current: null };
 function createElement$1(type, config, children) {
   var propName,
     props = {},
@@ -97,7 +96,10 @@ function createElement$1(type, config, children) {
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS$1.hasOwnProperty(propName) &&
+        "key" !== propName &&
+        "ref" !== propName &&
+        "__self" !== propName &&
+        "__source" !== propName &&
         (props[propName] = config[propName]);
   var childrenLength = arguments.length - 2;
   if (1 === childrenLength) props.children = children;
@@ -145,8 +147,7 @@ var ReactCurrentDispatcher = { current: null },
     ReactCurrentBatchConfig: ReactCurrentBatchConfig,
     ReactCurrentOwner: ReactCurrentOwner$1
   },
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
-  RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
+  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 function jsx$1(type, config, maybeKey) {
   var propName,
     props = {},
@@ -157,7 +158,10 @@ function jsx$1(type, config, maybeKey) {
   void 0 !== config.ref && (ref = config.ref);
   for (propName in config)
     hasOwnProperty.call(config, propName) &&
-      !RESERVED_PROPS.hasOwnProperty(propName) &&
+      "key" !== propName &&
+      "ref" !== propName &&
+      "__self" !== propName &&
+      "__source" !== propName &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
@@ -382,7 +386,10 @@ exports.cloneElement = function (element, config, children) {
       var defaultProps = element.type.defaultProps;
     for (propName in config)
       hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS$1.hasOwnProperty(propName) &&
+        "key" !== propName &&
+        "ref" !== propName &&
+        "__self" !== propName &&
+        "__source" !== propName &&
         (props[propName] =
           void 0 === config[propName] && void 0 !== defaultProps
             ? defaultProps[propName]
@@ -570,4 +577,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-b2425be8";
+exports.version = "18.3.0-www-classic-a3f180e9";

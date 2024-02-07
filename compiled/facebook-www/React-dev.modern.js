@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-3d181aee";
+    var ReactVersion = "18.3.0-www-modern-20a278f7";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -610,12 +610,6 @@ if (__DEV__) {
       current: null
     };
 
-    var RESERVED_PROPS$1 = {
-      key: true,
-      ref: true,
-      __self: true,
-      __source: true
-    };
     var specialPropKeyWarningShown$1,
       specialPropRefWarningShown$1,
       didWarnAboutStringRefs$1;
@@ -839,8 +833,11 @@ if (__DEV__) {
 
         for (propName in config) {
           if (
-            hasOwnProperty.call(config, propName) &&
-            !RESERVED_PROPS$1.hasOwnProperty(propName)
+            hasOwnProperty.call(config, propName) && // Skip over reserved prop names
+            propName !== "key" && // TODO: These will no longer be reserved in the next major
+            propName !== "ref" &&
+            propName !== "__self" &&
+            propName !== "__source"
           ) {
             props[propName] = config[propName];
           }
@@ -969,8 +966,11 @@ if (__DEV__) {
 
         for (propName in config) {
           if (
-            hasOwnProperty.call(config, propName) &&
-            !RESERVED_PROPS$1.hasOwnProperty(propName)
+            hasOwnProperty.call(config, propName) && // Skip over reserved prop names
+            propName !== "key" && // TODO: These will no longer be reserved in the next major
+            propName !== "ref" &&
+            propName !== "__self" &&
+            propName !== "__source"
           ) {
             if (config[propName] === undefined && defaultProps !== undefined) {
               // Resolve default props
@@ -1678,12 +1678,6 @@ if (__DEV__) {
     }
 
     var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
-    var RESERVED_PROPS = {
-      key: true,
-      ref: true,
-      __self: true,
-      __source: true
-    };
     var specialPropKeyWarningShown;
     var specialPropRefWarningShown;
     var didWarnAboutStringRefs;
@@ -1914,8 +1908,11 @@ if (__DEV__) {
 
         for (propName in config) {
           if (
-            hasOwnProperty.call(config, propName) &&
-            !RESERVED_PROPS.hasOwnProperty(propName)
+            hasOwnProperty.call(config, propName) && // Skip over reserved prop names
+            propName !== "key" && // TODO: These will no longer be reserved in the next major
+            propName !== "ref" &&
+            propName !== "__self" &&
+            propName !== "__source"
           ) {
             props[propName] = config[propName];
           }
