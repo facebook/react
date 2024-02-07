@@ -78,7 +78,7 @@ export const enableDeferRootSchedulingToMicrotask = true;
 
 export const enableAsyncActions = false;
 
-export const alwaysThrottleRetries = true;
+export const alwaysThrottleRetries = false;
 
 export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
