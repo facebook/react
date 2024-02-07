@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0c884277412152d1c48da455f1cf303a>>
+ * @generated SignedSource<<094b3884e2648a1b05433f5d2d2084cc>>
  */
 
 "use strict";
@@ -85,8 +85,7 @@ assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
   hasOwnProperty = Object.prototype.hasOwnProperty,
-  ReactCurrentOwner$1 = { current: null },
-  RESERVED_PROPS$1 = { key: !0, ref: !0, __self: !0, __source: !0 };
+  ReactCurrentOwner$1 = { current: null };
 function cloneAndReplaceKey(oldElement, newKey) {
   return {
     $$typeof: REACT_ELEMENT_TYPE,
@@ -113,8 +112,7 @@ var ReactCurrentDispatcher = { current: null },
     ReactCurrentBatchConfig: ReactCurrentBatchConfig,
     ReactCurrentOwner: ReactCurrentOwner$1
   },
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner,
-  RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
+  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 function jsx$1(type, config, maybeKey) {
   var propName,
     props = {},
@@ -125,7 +123,10 @@ function jsx$1(type, config, maybeKey) {
   void 0 !== config.ref && (ref = config.ref);
   for (propName in config)
     hasOwnProperty.call(config, propName) &&
-      !RESERVED_PROPS.hasOwnProperty(propName) &&
+      "key" !== propName &&
+      "ref" !== propName &&
+      "__self" !== propName &&
+      "__source" !== propName &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
@@ -348,7 +349,10 @@ exports.cloneElement = function (element, config, children) {
       var defaultProps = element.type.defaultProps;
     for (propName in config)
       hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS$1.hasOwnProperty(propName) &&
+        "key" !== propName &&
+        "ref" !== propName &&
+        "__self" !== propName &&
+        "__source" !== propName &&
         (props[propName] =
           void 0 === config[propName] && void 0 !== defaultProps
             ? defaultProps[propName]
@@ -395,7 +399,10 @@ exports.createElement = function (type, config, children) {
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS$1.hasOwnProperty(propName) &&
+        "key" !== propName &&
+        "ref" !== propName &&
+        "__self" !== propName &&
+        "__source" !== propName &&
         (props[propName] = config[propName]);
   var childrenLength = arguments.length - 2;
   if (1 === childrenLength) props.children = children;
@@ -539,7 +546,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-0d11563b4-20240206";
+exports.version = "18.3.0-canary-1beb94133-20240206";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

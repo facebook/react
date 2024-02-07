@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<82444ded84168f50c5e2d5115e52dac9>>
+ * @generated SignedSource<<d95535f2595d28064d67106ad7fa3c58>>
  */
 
 "use strict";
@@ -16,8 +16,7 @@ var React = require("react"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner =
-    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner,
-  RESERVED_PROPS = { key: !0, ref: !0, __self: !0, __source: !0 };
+    React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
 function jsx$1(type, config, maybeKey) {
   var propName,
     props = {},
@@ -28,7 +27,10 @@ function jsx$1(type, config, maybeKey) {
   void 0 !== config.ref && (ref = config.ref);
   for (propName in config)
     hasOwnProperty.call(config, propName) &&
-      !RESERVED_PROPS.hasOwnProperty(propName) &&
+      "key" !== propName &&
+      "ref" !== propName &&
+      "__self" !== propName &&
+      "__source" !== propName &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))

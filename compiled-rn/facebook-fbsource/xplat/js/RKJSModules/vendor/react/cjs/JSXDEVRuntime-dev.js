@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<3b95e8aa7ce2e31fd615f920b4402e91>>
+ * @generated SignedSource<<b24db7b649efc008c0c89e90dba4877a>>
  */
 
 "use strict";
@@ -563,12 +563,6 @@ if (__DEV__) {
     }
 
     var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
-    var RESERVED_PROPS = {
-      key: true,
-      ref: true,
-      __self: true,
-      __source: true
-    };
     var specialPropKeyWarningShown;
     var specialPropRefWarningShown;
     var didWarnAboutStringRefs;
@@ -799,8 +793,11 @@ if (__DEV__) {
 
         for (propName in config) {
           if (
-            hasOwnProperty.call(config, propName) &&
-            !RESERVED_PROPS.hasOwnProperty(propName)
+            hasOwnProperty.call(config, propName) && // Skip over reserved prop names
+            propName !== "key" && // TODO: These will no longer be reserved in the next major
+            propName !== "ref" &&
+            propName !== "__self" &&
+            propName !== "__source"
           ) {
             props[propName] = config[propName];
           }
