@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d95535f2595d28064d67106ad7fa3c58>>
+ * @generated SignedSource<<9119a43311c6e3bbc52baa1c4dfff7c0>>
  */
 
 "use strict";
@@ -29,8 +29,6 @@ function jsx$1(type, config, maybeKey) {
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
       "ref" !== propName &&
-      "__self" !== propName &&
-      "__source" !== propName &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))

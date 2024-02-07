@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4e6cfb0b86828f5be0c6c8e34f4fdb7a>>
+ * @generated SignedSource<<af1d2eacbefd00d9c1bfd4c752fee8c4>>
  */
 
 "use strict";
@@ -794,10 +794,8 @@ if (__DEV__) {
         for (propName in config) {
           if (
             hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-            propName !== "key" && // TODO: These will no longer be reserved in the next major
-            propName !== "ref" &&
-            propName !== "__self" &&
-            propName !== "__source"
+            propName !== "key" && // TODO: `ref` will no longer be reserved in the next major
+            propName !== "ref"
           ) {
             props[propName] = config[propName];
           }
