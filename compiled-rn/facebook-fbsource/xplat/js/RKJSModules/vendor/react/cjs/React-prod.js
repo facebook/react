@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1ef1b2a956caed553f31e9810e8c25be>>
+ * @generated SignedSource<<bc49f7cc6bb91f204e6c74435a3de461>>
  */
 
 "use strict";
@@ -83,6 +83,16 @@ pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner$1 = { current: null };
+function ReactElement$1(type, key, ref, owner, props) {
+  return {
+    $$typeof: REACT_ELEMENT_TYPE,
+    type: type,
+    key: key,
+    ref: ref,
+    props: props,
+    _owner: owner
+  };
+}
 function createElement$1(type, config, children) {
   var propName,
     props = {},
@@ -109,24 +119,16 @@ function createElement$1(type, config, children) {
     for (propName in ((childrenLength = type.defaultProps), childrenLength))
       void 0 === props[propName] &&
         (props[propName] = childrenLength[propName]);
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: type,
-    key: key,
-    ref: ref,
-    props: props,
-    _owner: ReactCurrentOwner$1.current
-  };
+  return ReactElement$1(type, key, ref, ReactCurrentOwner$1.current, props);
 }
 function cloneAndReplaceKey(oldElement, newKey) {
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: oldElement.type,
-    key: newKey,
-    ref: oldElement.ref,
-    props: oldElement.props,
-    _owner: oldElement._owner
-  };
+  return ReactElement$1(
+    oldElement.type,
+    newKey,
+    oldElement.ref,
+    oldElement._owner,
+    oldElement.props
+  );
 }
 function isValidElement(object) {
   return (
@@ -395,14 +397,7 @@ exports.cloneElement = function (element, config, children) {
     for (var i = 0; i < propName; i++) defaultProps[i] = arguments[i + 2];
     props.children = defaultProps;
   }
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: element.type,
-    key: key,
-    ref: ref,
-    props: props,
-    _owner: owner
-  };
+  return ReactElement$1(element.type, key, ref, owner, props);
 };
 exports.createContext = function (defaultValue) {
   defaultValue = {
@@ -548,4 +543,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-5c0866230-20240207";
+exports.version = "18.3.0-canary-37d901e2b-20240207";

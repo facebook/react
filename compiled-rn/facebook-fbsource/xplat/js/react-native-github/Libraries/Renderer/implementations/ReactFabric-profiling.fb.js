@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b774b4f72e37b4cccbba7d6f16797461>>
+ * @generated SignedSource<<4538dd6af840e2e987b1bd748470b553>>
  */
 
 "use strict";
@@ -944,7 +944,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_253 = {
+var injectedNamesToPlugins$jscomp$inline_252 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -990,32 +990,32 @@ var injectedNamesToPlugins$jscomp$inline_253 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_254 = !1,
-  pluginName$jscomp$inline_255;
-for (pluginName$jscomp$inline_255 in injectedNamesToPlugins$jscomp$inline_253)
+  isOrderingDirty$jscomp$inline_253 = !1,
+  pluginName$jscomp$inline_254;
+for (pluginName$jscomp$inline_254 in injectedNamesToPlugins$jscomp$inline_252)
   if (
-    injectedNamesToPlugins$jscomp$inline_253.hasOwnProperty(
-      pluginName$jscomp$inline_255
+    injectedNamesToPlugins$jscomp$inline_252.hasOwnProperty(
+      pluginName$jscomp$inline_254
     )
   ) {
-    var pluginModule$jscomp$inline_256 =
-      injectedNamesToPlugins$jscomp$inline_253[pluginName$jscomp$inline_255];
+    var pluginModule$jscomp$inline_255 =
+      injectedNamesToPlugins$jscomp$inline_252[pluginName$jscomp$inline_254];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_255) ||
-      namesToPlugins[pluginName$jscomp$inline_255] !==
-        pluginModule$jscomp$inline_256
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_254) ||
+      namesToPlugins[pluginName$jscomp$inline_254] !==
+        pluginModule$jscomp$inline_255
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_255])
+      if (namesToPlugins[pluginName$jscomp$inline_254])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_255 + "`.")
+            (pluginName$jscomp$inline_254 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_255] =
-        pluginModule$jscomp$inline_256;
-      isOrderingDirty$jscomp$inline_254 = !0;
+      namesToPlugins[pluginName$jscomp$inline_254] =
+        pluginModule$jscomp$inline_255;
+      isOrderingDirty$jscomp$inline_253 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_254 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_253 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -2042,14 +2042,14 @@ function findCurrentHostFiberImpl(node) {
   }
   return null;
 }
-function describeComponentFrame(name, source, ownerName) {
-  source = "";
-  ownerName && (source = " (created by " + ownerName + ")");
-  return "\n    in " + (name || "Unknown") + source;
+function describeComponentFrame(name, ownerName) {
+  var sourceInfo = "";
+  ownerName && (sourceInfo = " (created by " + ownerName + ")");
+  return "\n    in " + (name || "Unknown") + sourceInfo;
 }
-function describeFunctionComponentFrame(fn, source) {
+function describeFunctionComponentFrame(fn) {
   return fn
-    ? describeComponentFrame(fn.displayName || fn.name || null, source, null)
+    ? describeComponentFrame(fn.displayName || fn.name || null, null)
     : "";
 }
 var hasOwnProperty = Object.prototype.hasOwnProperty,
@@ -2748,23 +2748,35 @@ function describeFiber(fiber) {
     case 26:
     case 27:
     case 5:
-      return describeComponentFrame(fiber.type, null, null);
+      return describeComponentFrame(fiber.type, null);
     case 16:
-      return describeComponentFrame("Lazy", null, null);
+      return describeComponentFrame("Lazy", null);
     case 13:
-      return describeComponentFrame("Suspense", null, null);
+      return describeComponentFrame("Suspense", null);
     case 19:
-      return describeComponentFrame("SuspenseList", null, null);
+      return describeComponentFrame("SuspenseList", null);
     case 0:
     case 2:
     case 15:
-      return describeFunctionComponentFrame(fiber.type, null);
+      return describeFunctionComponentFrame(fiber.type);
     case 11:
-      return describeFunctionComponentFrame(fiber.type.render, null);
+      return describeFunctionComponentFrame(fiber.type.render);
     case 1:
-      return (fiber = describeFunctionComponentFrame(fiber.type, null)), fiber;
+      return (fiber = describeFunctionComponentFrame(fiber.type)), fiber;
     default:
       return "";
+  }
+}
+function getStackByFiberInDevAndProd(workInProgress) {
+  try {
+    var info = "";
+    do
+      (info += describeFiber(workInProgress)),
+        (workInProgress = workInProgress.return);
+    while (workInProgress);
+    return info;
+  } catch (x) {
+    return "\nError generating stack: " + x.message + "\n" + x.stack;
   }
 }
 var SuspenseException = Error(
@@ -3014,7 +3026,6 @@ function createChildReconciler(shouldTrackSideEffects) {
       element.key,
       element.props,
       null,
-      null,
       returnFiber.mode,
       lanes
     );
@@ -3076,7 +3087,6 @@ function createChildReconciler(shouldTrackSideEffects) {
               newChild.type,
               newChild.key,
               newChild.props,
-              null,
               null,
               returnFiber.mode,
               lanes
@@ -3473,7 +3483,6 @@ function createChildReconciler(shouldTrackSideEffects) {
                   newChild.type,
                   newChild.key,
                   newChild.props,
-                  null,
                   null,
                   returnFiber.mode,
                   lanes
@@ -4768,20 +4777,10 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
     (workInProgress.flags |= 4194308);
 }
 function createCapturedValueAtFiber(value, source) {
-  try {
-    var info = "",
-      node = source;
-    do (info += describeFiber(node)), (node = node.return);
-    while (node);
-    var JSCompiler_inline_result = info;
-  } catch (x) {
-    JSCompiler_inline_result =
-      "\nError generating stack: " + x.message + "\n" + x.stack;
-  }
   return {
     value: value,
     source: source,
-    stack: JSCompiler_inline_result,
+    stack: getStackByFiberInDevAndProd(source),
     digest: null
   };
 }
@@ -5071,7 +5070,6 @@ function updateMemoComponent(
       Component.type,
       null,
       nextProps,
-      null,
       workInProgress,
       workInProgress.mode,
       renderLanes
@@ -9854,21 +9852,20 @@ function createFiberFromTypeAndProps(
   type,
   key,
   pendingProps,
-  source,
   owner,
   mode,
   lanes
 ) {
-  owner = 2;
-  source = type;
-  if ("function" === typeof type) shouldConstruct(type) && (owner = 1);
-  else if ("string" === typeof type) owner = 5;
+  var fiberTag = 2;
+  owner = type;
+  if ("function" === typeof type) shouldConstruct(type) && (fiberTag = 1);
+  else if ("string" === typeof type) fiberTag = 5;
   else
     a: switch (type) {
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
-        owner = 8;
+        fiberTag = 8;
         mode |= 8;
         0 !== (mode & 1) && (mode |= 16);
         break;
@@ -9902,20 +9899,20 @@ function createFiberFromTypeAndProps(
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              owner = 10;
+              fiberTag = 10;
               break a;
             case REACT_CONTEXT_TYPE:
-              owner = 9;
+              fiberTag = 9;
               break a;
             case REACT_FORWARD_REF_TYPE:
-              owner = 11;
+              fiberTag = 11;
               break a;
             case REACT_MEMO_TYPE:
-              owner = 14;
+              fiberTag = 14;
               break a;
             case REACT_LAZY_TYPE:
-              owner = 16;
-              source = null;
+              fiberTag = 16;
+              owner = null;
               break a;
           }
         throw Error(
@@ -9923,9 +9920,9 @@ function createFiberFromTypeAndProps(
             ((null == type ? type : typeof type) + ".")
         );
     }
-  key = createFiber(owner, pendingProps, key, mode);
+  key = createFiber(fiberTag, pendingProps, key, mode);
   key.elementType = type;
-  key.type = source;
+  key.type = owner;
   key.lanes = lanes;
   return key;
 }
@@ -10161,7 +10158,6 @@ function createHierarchy(fiberHierarchy) {
       getInspectorData: function (findNodeHandle) {
         return {
           props: getHostProps(fiber$jscomp$0),
-          source: fiber$jscomp$0._debugSource,
           measure: function (callback) {
             var hostFiber = findCurrentHostFiber(fiber$jscomp$0);
             if (
@@ -10210,31 +10206,39 @@ function getInspectorDataForInstance(closestInstance) {
       hierarchy: [],
       props: emptyObject,
       selectedIndex: null,
-      source: null
+      componentStack: ""
     };
-  var fiber = findCurrentFiberUsingSlowPath(closestInstance);
-  closestInstance = [];
-  traverseOwnerTreeUp(closestInstance, fiber);
+  closestInstance = findCurrentFiberUsingSlowPath(closestInstance);
+  var hierarchy = [];
+  traverseOwnerTreeUp(hierarchy, closestInstance);
+  var JSCompiler_inline_result;
   a: {
-    for (fiber = closestInstance.length - 1; 1 < fiber; fiber--) {
-      var instance = closestInstance[fiber];
+    for (
+      JSCompiler_inline_result = hierarchy.length - 1;
+      1 < JSCompiler_inline_result;
+      JSCompiler_inline_result--
+    ) {
+      var instance = hierarchy[JSCompiler_inline_result];
       if (5 !== instance.tag) {
-        fiber = instance;
+        JSCompiler_inline_result = instance;
         break a;
       }
     }
-    fiber = closestInstance[0];
+    JSCompiler_inline_result = hierarchy[0];
   }
-  instance = createHierarchy(closestInstance);
-  var props = getHostProps(fiber),
-    source = fiber._debugSource;
-  closestInstance = closestInstance.indexOf(fiber);
+  instance = createHierarchy(hierarchy);
+  var props = getHostProps(JSCompiler_inline_result);
+  hierarchy = hierarchy.indexOf(JSCompiler_inline_result);
+  closestInstance =
+    null !== closestInstance
+      ? getStackByFiberInDevAndProd(closestInstance)
+      : "";
   return {
-    closestInstance: fiber,
+    closestInstance: JSCompiler_inline_result,
     hierarchy: instance,
     props: props,
-    selectedIndex: closestInstance,
-    source: source
+    selectedIndex: hierarchy,
+    componentStack: closestInstance
   };
 }
 function traverseOwnerTreeUp(hierarchy, instance) {
@@ -10258,10 +10262,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1133 = {
+  devToolsConfig$jscomp$inline_1126 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-56f3cd40",
+    version: "18.3.0-canary-8386d43a",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10291,10 +10295,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1133.bundleType,
-  version: devToolsConfig$jscomp$inline_1133.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1133.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1133.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1126.bundleType,
+  version: devToolsConfig$jscomp$inline_1126.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1126.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1126.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10310,14 +10314,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1133.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1126.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-56f3cd40"
+  reconcilerVersion: "18.3.0-canary-8386d43a"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

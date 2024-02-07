@@ -7,7 +7,7 @@
  * @noformat
  * @flow strict
  * @nolint
- * @generated SignedSource<<30640e7dd83e22e14db1648ca63f4316>>
+ * @generated SignedSource<<fbf33f04ca9428c149262f17c8a4b6ab>>
  */
 
 import type {ElementRef, ElementType, Element, AbstractComponent} from 'react';
@@ -144,11 +144,6 @@ type InspectorDataProps = $ReadOnly<{
   ...
 }>;
 
-type InspectorDataSource = $ReadOnly<{
-  fileName?: string,
-  lineNumber?: number,
-}>;
-
 type InspectorDataGetter = (
   <TElementType: ElementType>(
     componentOrHandle: ElementRef<TElementType> | number,
@@ -156,7 +151,6 @@ type InspectorDataGetter = (
 ) => $ReadOnly<{
   measure: (callback: MeasureOnSuccessCallback) => void,
   props: InspectorDataProps,
-  source: InspectorDataSource,
 }>;
 
 export type InspectorData = $ReadOnly<{
@@ -167,7 +161,7 @@ export type InspectorData = $ReadOnly<{
   }>,
   selectedIndex: ?number,
   props: InspectorDataProps,
-  source: ?InspectorDataSource,
+  componentStack: string,
 }>;
 
 export type TouchedViewDataAtPoint = $ReadOnly<{

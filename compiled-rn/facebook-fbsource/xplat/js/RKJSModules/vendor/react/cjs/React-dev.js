@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e586d9c47ab7cba6a52560196c89aa09>>
+ * @generated SignedSource<<5d34b04f0be910dc803b79f0e846af47>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-5c0866230-20240207";
+    var ReactVersion = "18.3.0-canary-37d901e2b-20240207";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -813,7 +813,7 @@ if (__DEV__) {
      * @internal
      */
 
-    function ReactElement$1(type, key, ref, self, source, owner, props) {
+    function ReactElement$1(type, key, ref, owner, props) {
       var element = {
         // This tag allows us to uniquely identify this as a React Element
         $$typeof: REACT_ELEMENT_TYPE,
@@ -841,21 +841,6 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
-        }); // self and source are DEV only properties.
-
-        Object.defineProperty(element, "_self", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: self
-        }); // Two elements created in two different places should be considered
-        // equal for testing purposes and therefore we hide it from enumeration.
-
-        Object.defineProperty(element, "_source", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: source
         });
 
         if (Object.freeze) {
@@ -877,8 +862,6 @@ if (__DEV__) {
       var props = {};
       var key = null;
       var ref = null;
-      var self = null;
-      var source = null;
 
       if (config != null) {
         if (hasValidRef$1(config)) {
@@ -895,10 +878,7 @@ if (__DEV__) {
           }
 
           key = "" + config.key;
-        }
-
-        self = config.__self === undefined ? null : config.__self;
-        source = config.__source === undefined ? null : config.__source; // Remaining properties are added to a new props object
+        } // Remaining properties are added to a new props object
 
         for (propName in config) {
           if (
@@ -966,23 +946,13 @@ if (__DEV__) {
         }
       }
 
-      return ReactElement$1(
-        type,
-        key,
-        ref,
-        self,
-        source,
-        ReactCurrentOwner$2.current,
-        props
-      );
+      return ReactElement$1(type, key, ref, ReactCurrentOwner$2.current, props);
     }
     function cloneAndReplaceKey(oldElement, newKey) {
       var newElement = ReactElement$1(
         oldElement.type,
         newKey,
         oldElement.ref,
-        oldElement._self,
-        oldElement._source,
         oldElement._owner,
         oldElement.props
       );
@@ -1007,13 +977,7 @@ if (__DEV__) {
       var props = assign({}, element.props); // Reserved names are extracted
 
       var key = element.key;
-      var ref = element.ref; // Self is preserved since the owner is preserved.
-
-      var self = element._self; // Source is preserved since cloneElement is unlikely to be targeted by a
-      // transpiler, and the original source is probably a better indicator of the
-      // true owner.
-
-      var source = element._source; // Owner will be preserved, unless ref is overridden
+      var ref = element.ref; // Owner will be preserved, unless ref is overridden
 
       var owner = element._owner;
 
@@ -1076,7 +1040,7 @@ if (__DEV__) {
         props.children = childArray;
       }
 
-      return ReactElement$1(element.type, key, ref, self, source, owner, props);
+      return ReactElement$1(element.type, key, ref, owner, props);
     }
     /**
      * Verifies the object is a ReactElement.
@@ -1136,7 +1100,7 @@ if (__DEV__) {
       return false;
     }
 
-    function describeBuiltInComponentFrame(name, source, ownerFn) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         var ownerName = null;
 
@@ -1144,7 +1108,7 @@ if (__DEV__) {
           ownerName = ownerFn.displayName || ownerFn.name || null;
         }
 
-        return describeComponentFrame(name, source, ownerName);
+        return describeComponentFrame(name, ownerName);
       }
     }
 
@@ -1152,37 +1116,17 @@ if (__DEV__) {
       var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
       new PossiblyWeakMap();
     }
-    var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
 
-    function describeComponentFrame(name, source, ownerName) {
+    function describeComponentFrame(name, ownerName) {
       var sourceInfo = "";
 
-      if (source) {
-        var path = source.fileName;
-        var fileName = path.replace(BEFORE_SLASH_RE, ""); // In DEV, include code for a common special case:
-        // prefer "folder/index.js" instead of just "index.js".
-
-        if (/^index\./.test(fileName)) {
-          var match = path.match(BEFORE_SLASH_RE);
-
-          if (match) {
-            var pathBeforeSlash = match[1];
-
-            if (pathBeforeSlash) {
-              var folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, "");
-              fileName = folderName + "/" + fileName;
-            }
-          }
-        }
-
-        sourceInfo = " (at " + fileName + ":" + source.lineNumber + ")";
-      } else if (ownerName) {
+      if (ownerName) {
         sourceInfo = " (created by " + ownerName + ")";
       }
 
       return "\n    in " + (name || "Unknown") + sourceInfo;
     }
-    function describeFunctionComponentFrame(fn, source, ownerFn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         if (!fn) {
           return "";
@@ -1195,45 +1139,41 @@ if (__DEV__) {
           ownerName = ownerFn.displayName || ownerFn.name || null;
         }
 
-        return describeComponentFrame(name, source, ownerName);
+        return describeComponentFrame(name, ownerName);
       }
     }
 
-    function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
+    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
       if (type == null) {
         return "";
       }
 
       if (typeof type === "function") {
         {
-          return describeFunctionComponentFrame(type, source, ownerFn);
+          return describeFunctionComponentFrame(type, ownerFn);
         }
       }
 
       if (typeof type === "string") {
-        return describeBuiltInComponentFrame(type, source, ownerFn);
+        return describeBuiltInComponentFrame(type, ownerFn);
       }
 
       switch (type) {
         case REACT_SUSPENSE_TYPE:
-          return describeBuiltInComponentFrame("Suspense", source, ownerFn);
+          return describeBuiltInComponentFrame("Suspense", ownerFn);
 
         case REACT_SUSPENSE_LIST_TYPE:
-          return describeBuiltInComponentFrame("SuspenseList", source, ownerFn);
+          return describeBuiltInComponentFrame("SuspenseList", ownerFn);
       }
 
       if (typeof type === "object") {
         switch (type.$$typeof) {
           case REACT_FORWARD_REF_TYPE:
-            return describeFunctionComponentFrame(type.render, source, ownerFn);
+            return describeFunctionComponentFrame(type.render, ownerFn);
 
           case REACT_MEMO_TYPE:
             // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(
-              type.type,
-              source,
-              ownerFn
-            );
+            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
 
           case REACT_LAZY_TYPE: {
             var lazyComponent = type;
@@ -1244,7 +1184,6 @@ if (__DEV__) {
               // Lazy may contain any component type so we recursively resolve it.
               return describeUnknownElementTypeFrameInDEV(
                 init(payload),
-                source,
                 ownerFn
               );
             } catch (x) {}
@@ -1264,7 +1203,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
@@ -1524,21 +1462,6 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
-        }); // self and source are DEV only properties.
-
-        Object.defineProperty(element, "_self", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: self
-        }); // Two elements created in two different places should be considered
-        // equal for testing purposes and therefore we hide it from enumeration.
-
-        Object.defineProperty(element, "_source", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: source
         });
 
         if (Object.freeze) {
@@ -1645,7 +1568,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           setExtraStackFrame(stack);
@@ -3346,7 +3268,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame.setExtraStackFrame(stack);

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<17f792ae8f705c6dfeba77e32979393b>>
+ * @generated SignedSource<<e7093eebbe37e9294742ef1b3c764083>>
  */
 
 "use strict";
@@ -6179,7 +6179,7 @@ to return true:wantsResponderID|                            |
       return null;
     }
 
-    function describeBuiltInComponentFrame(name, source, ownerFn) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         var ownerName = null;
 
@@ -6187,7 +6187,7 @@ to return true:wantsResponderID|                            |
           ownerName = ownerFn.displayName || ownerFn.name || null;
         }
 
-        return describeComponentFrame(name, source, ownerName);
+        return describeComponentFrame(name, ownerName);
       }
     }
 
@@ -6195,43 +6195,23 @@ to return true:wantsResponderID|                            |
       var PossiblyWeakMap$1 = typeof WeakMap === "function" ? WeakMap : Map;
       new PossiblyWeakMap$1();
     }
-    var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
 
-    function describeComponentFrame(name, source, ownerName) {
+    function describeComponentFrame(name, ownerName) {
       var sourceInfo = "";
 
-      if (source) {
-        var path = source.fileName;
-        var fileName = path.replace(BEFORE_SLASH_RE, ""); // In DEV, include code for a common special case:
-        // prefer "folder/index.js" instead of just "index.js".
-
-        if (/^index\./.test(fileName)) {
-          var match = path.match(BEFORE_SLASH_RE);
-
-          if (match) {
-            var pathBeforeSlash = match[1];
-
-            if (pathBeforeSlash) {
-              var folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, "");
-              fileName = folderName + "/" + fileName;
-            }
-          }
-        }
-
-        sourceInfo = " (at " + fileName + ":" + source.lineNumber + ")";
-      } else if (ownerName) {
+      if (ownerName) {
         sourceInfo = " (created by " + ownerName + ")";
       }
 
       return "\n    in " + (name || "Unknown") + sourceInfo;
     }
 
-    function describeClassComponentFrame(ctor, source, ownerFn) {
+    function describeClassComponentFrame(ctor, ownerFn) {
       {
-        return describeFunctionComponentFrame(ctor, source, ownerFn);
+        return describeFunctionComponentFrame(ctor, ownerFn);
       }
     }
-    function describeFunctionComponentFrame(fn, source, ownerFn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         if (!fn) {
           return "";
@@ -6244,45 +6224,41 @@ to return true:wantsResponderID|                            |
           ownerName = ownerFn.displayName || ownerFn.name || null;
         }
 
-        return describeComponentFrame(name, source, ownerName);
+        return describeComponentFrame(name, ownerName);
       }
     }
 
-    function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
+    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
       if (type == null) {
         return "";
       }
 
       if (typeof type === "function") {
         {
-          return describeFunctionComponentFrame(type, source, ownerFn);
+          return describeFunctionComponentFrame(type, ownerFn);
         }
       }
 
       if (typeof type === "string") {
-        return describeBuiltInComponentFrame(type, source, ownerFn);
+        return describeBuiltInComponentFrame(type, ownerFn);
       }
 
       switch (type) {
         case REACT_SUSPENSE_TYPE:
-          return describeBuiltInComponentFrame("Suspense", source, ownerFn);
+          return describeBuiltInComponentFrame("Suspense", ownerFn);
 
         case REACT_SUSPENSE_LIST_TYPE:
-          return describeBuiltInComponentFrame("SuspenseList", source, ownerFn);
+          return describeBuiltInComponentFrame("SuspenseList", ownerFn);
       }
 
       if (typeof type === "object") {
         switch (type.$$typeof) {
           case REACT_FORWARD_REF_TYPE:
-            return describeFunctionComponentFrame(type.render, source, ownerFn);
+            return describeFunctionComponentFrame(type.render, ownerFn);
 
           case REACT_MEMO_TYPE:
             // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(
-              type.type,
-              source,
-              ownerFn
-            );
+            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
 
           case REACT_LAZY_TYPE: {
             var lazyComponent = type;
@@ -6293,7 +6269,6 @@ to return true:wantsResponderID|                            |
               // Lazy may contain any component type so we recursively resolve it.
               return describeUnknownElementTypeFrameInDEV(
                 init(payload),
-                source,
                 ownerFn
               );
             } catch (x) {}
@@ -6316,7 +6291,6 @@ to return true:wantsResponderID|                            |
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
@@ -8250,37 +8224,32 @@ to return true:wantsResponderID|                            |
 
     function describeFiber(fiber) {
       var owner = fiber._debugOwner ? fiber._debugOwner.type : null;
-      var source = fiber._debugSource;
 
       switch (fiber.tag) {
         case HostHoistable:
         case HostSingleton:
         case HostComponent:
-          return describeBuiltInComponentFrame(fiber.type, source, owner);
+          return describeBuiltInComponentFrame(fiber.type, owner);
 
         case LazyComponent:
-          return describeBuiltInComponentFrame("Lazy", source, owner);
+          return describeBuiltInComponentFrame("Lazy", owner);
 
         case SuspenseComponent:
-          return describeBuiltInComponentFrame("Suspense", source, owner);
+          return describeBuiltInComponentFrame("Suspense", owner);
 
         case SuspenseListComponent:
-          return describeBuiltInComponentFrame("SuspenseList", source, owner);
+          return describeBuiltInComponentFrame("SuspenseList", owner);
 
         case FunctionComponent:
         case IndeterminateComponent:
         case SimpleMemoComponent:
-          return describeFunctionComponentFrame(fiber.type, source, owner);
+          return describeFunctionComponentFrame(fiber.type, owner);
 
         case ForwardRef:
-          return describeFunctionComponentFrame(
-            fiber.type.render,
-            source,
-            owner
-          );
+          return describeFunctionComponentFrame(fiber.type.render, owner);
 
         case ClassComponent:
-          return describeClassComponentFrame(fiber.type, source, owner);
+          return describeClassComponentFrame(fiber.type, owner);
 
         default:
           return "";
@@ -9149,14 +9118,7 @@ to return true:wantsResponderID|                            |
       ) {
         {
           if (
-            // We warn in ReactElement.js if owner and self are equal for string refs
-            // because these cannot be automatically converted to an arrow function
-            // using a codemod. Therefore, we don't have to warn about string refs again.
-            !(
-              element._owner &&
-              element._self &&
-              element._owner.stateNode !== element._self
-            ) && // Will already throw with "Function components cannot have string refs"
+            // Will already throw with "Function components cannot have string refs"
             !(element._owner && element._owner.tag !== ClassComponent) && // Will already warn with "Function components cannot be given refs"
             !(
               typeof element.type === "function" && !isReactClass(element.type)
@@ -9458,7 +9420,6 @@ to return true:wantsResponderID|                            |
             existing.return = returnFiber;
 
             {
-              existing._debugSource = element._source;
               existing._debugOwner = element._owner;
             }
 
@@ -10264,7 +10225,6 @@ to return true:wantsResponderID|                            |
                 existing.return = returnFiber;
 
                 {
-                  existing._debugSource = element._source;
                   existing._debugOwner = element._owner;
                 }
 
@@ -10290,7 +10250,6 @@ to return true:wantsResponderID|                            |
                 _existing.return = returnFiber;
 
                 {
-                  _existing._debugSource = element._source;
                   _existing._debugOwner = element._owner;
                 }
 
@@ -16057,7 +16016,6 @@ to return true:wantsResponderID|                            |
           Component.type,
           null,
           nextProps,
-          null,
           workInProgress,
           workInProgress.mode,
           renderLanes
@@ -17119,18 +17077,14 @@ to return true:wantsResponderID|                            |
 
         if (workInProgress.ref !== null) {
           var info = "";
+          var componentName = getComponentNameFromType(Component) || "Unknown";
           var ownerName = getCurrentFiberOwnerNameInDevOrNull();
 
           if (ownerName) {
             info += "\n\nCheck the render method of `" + ownerName + "`.";
           }
 
-          var warningKey = ownerName || "";
-          var debugSource = workInProgress._debugSource;
-
-          if (debugSource) {
-            warningKey = debugSource.fileName + ":" + debugSource.lineNumber;
-          }
+          var warningKey = componentName + "|" + (ownerName || "");
 
           if (!didWarnAboutFunctionRefs[warningKey]) {
             didWarnAboutFunctionRefs[warningKey] = true;
@@ -17145,32 +17099,33 @@ to return true:wantsResponderID|                            |
         }
 
         if (Component.defaultProps !== undefined) {
-          var componentName = getComponentNameFromType(Component) || "Unknown";
+          var _componentName3 =
+            getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+          if (!didWarnAboutDefaultPropsOnFunctionComponent[_componentName3]) {
             error(
               "%s: Support for defaultProps will be removed from function components " +
                 "in a future major release. Use JavaScript default parameters instead.",
-              componentName
+              _componentName3
             );
 
-            didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+            didWarnAboutDefaultPropsOnFunctionComponent[_componentName3] = true;
           }
         }
 
         if (typeof Component.getDerivedStateFromProps === "function") {
-          var _componentName3 =
+          var _componentName4 =
             getComponentNameFromType(Component) || "Unknown";
 
           if (
-            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3]
+            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName4]
           ) {
             error(
               "%s: Function components do not support getDerivedStateFromProps.",
-              _componentName3
+              _componentName4
             );
 
-            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3] =
+            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName4] =
               true;
           }
         }
@@ -17179,16 +17134,16 @@ to return true:wantsResponderID|                            |
           typeof Component.contextType === "object" &&
           Component.contextType !== null
         ) {
-          var _componentName4 =
+          var _componentName5 =
             getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName4]) {
+          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName5]) {
             error(
               "%s: Function components do not support contextType.",
-              _componentName4
+              _componentName5
             );
 
-            didWarnAboutContextTypeOnFunctionComponent[_componentName4] = true;
+            didWarnAboutContextTypeOnFunctionComponent[_componentName5] = true;
           }
         }
       }
@@ -18835,7 +18790,6 @@ to return true:wantsResponderID|                            |
               workInProgress.type,
               workInProgress.key,
               workInProgress.pendingProps,
-              workInProgress._debugSource || null,
               workInProgress._debugOwner || null,
               workInProgress.mode,
               workInProgress.lanes
@@ -21790,7 +21744,6 @@ to return true:wantsResponderID|                            |
       fiber.stateNode = null;
 
       {
-        fiber._debugSource = null;
         fiber._debugOwner = null;
       } // Theoretically, nothing in here should be necessary, because we already
       // disconnected the fiber from the tree. So even if something leaks this
@@ -27581,7 +27534,6 @@ to return true:wantsResponderID|                            |
 
       {
         // This isn't directly used but is handy for debugging internals:
-        this._debugSource = null;
         this._debugOwner = null;
         this._debugNeedsRemount = false;
         this._debugHookTypes = null;
@@ -27663,7 +27615,6 @@ to return true:wantsResponderID|                            |
 
         {
           // DEV-only fields
-          workInProgress._debugSource = current._debugSource;
           workInProgress._debugOwner = current._debugOwner;
           workInProgress._debugHookTypes = current._debugHookTypes;
         }
@@ -27846,7 +27797,6 @@ to return true:wantsResponderID|                            |
       type, // React$ElementType
       key,
       pendingProps,
-      source,
       owner,
       mode,
       lanes
@@ -27996,18 +27946,15 @@ to return true:wantsResponderID|                            |
       fiber.lanes = lanes;
 
       {
-        fiber._debugSource = source;
         fiber._debugOwner = owner;
       }
 
       return fiber;
     }
     function createFiberFromElement(element, mode, lanes) {
-      var source = null;
       var owner = null;
 
       {
-        source = element._source;
         owner = element._owner;
       }
 
@@ -28018,14 +27965,12 @@ to return true:wantsResponderID|                            |
         type,
         key,
         pendingProps,
-        source,
         owner,
         mode,
         lanes
       );
 
       {
-        fiber._debugSource = element._source;
         fiber._debugOwner = element._owner;
       }
 
@@ -28177,7 +28122,6 @@ to return true:wantsResponderID|                            |
         target.treeBaseDuration = source.treeBaseDuration;
       }
 
-      target._debugSource = source._debugSource;
       target._debugOwner = source._debugOwner;
       target._debugNeedsRemount = source._debugNeedsRemount;
       target._debugHookTypes = source._debugHookTypes;
@@ -28297,7 +28241,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-9e385162";
+    var ReactVersion = "18.3.0-canary-77e52741";
 
     function createPortal$1(
       children,
@@ -29078,7 +29022,6 @@ to return true:wantsResponderID|                            |
           getInspectorData: function (findNodeHandle) {
             return {
               props: getHostProps(fiber),
-              source: fiber._debugSource,
               measure: function (callback) {
                 // If this is Fabric, we'll find a shadow node and use that to measure.
                 var hostFiber = findCurrentHostFiber(fiber);
@@ -29141,7 +29084,7 @@ to return true:wantsResponderID|                            |
             hierarchy: [],
             props: emptyObject,
             selectedIndex: null,
-            source: null
+            componentStack: ""
           };
         }
 
@@ -29150,14 +29093,15 @@ to return true:wantsResponderID|                            |
         var instance = lastNonHostInstance(fiberHierarchy);
         var hierarchy = createHierarchy(fiberHierarchy);
         var props = getHostProps(instance);
-        var source = instance._debugSource;
         var selectedIndex = fiberHierarchy.indexOf(instance);
+        var componentStack =
+          fiber !== null ? getStackByFiberInDevAndProd(fiber) : "";
         return {
           closestInstance: instance,
           hierarchy: hierarchy,
           props: props,
           selectedIndex: selectedIndex,
-          source: source
+          componentStack: componentStack
         };
       }
     }

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f1fec494d1bdfb72e5edd3dbbb0e62a3>>
+ * @generated SignedSource<<bf2ebc94d9d8c1c3351e8a3483385df7>>
  */
 
 "use strict";
@@ -254,7 +254,7 @@ if (__DEV__) {
       return null;
     }
 
-    function describeBuiltInComponentFrame(name, source, ownerFn) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         var ownerName = null;
 
@@ -262,7 +262,7 @@ if (__DEV__) {
           ownerName = ownerFn.displayName || ownerFn.name || null;
         }
 
-        return describeComponentFrame(name, source, ownerName);
+        return describeComponentFrame(name, ownerName);
       }
     }
 
@@ -270,37 +270,17 @@ if (__DEV__) {
       var PossiblyWeakMap = typeof WeakMap === "function" ? WeakMap : Map;
       new PossiblyWeakMap();
     }
-    var BEFORE_SLASH_RE = /^(.*)[\\\/]/;
 
-    function describeComponentFrame(name, source, ownerName) {
+    function describeComponentFrame(name, ownerName) {
       var sourceInfo = "";
 
-      if (source) {
-        var path = source.fileName;
-        var fileName = path.replace(BEFORE_SLASH_RE, ""); // In DEV, include code for a common special case:
-        // prefer "folder/index.js" instead of just "index.js".
-
-        if (/^index\./.test(fileName)) {
-          var match = path.match(BEFORE_SLASH_RE);
-
-          if (match) {
-            var pathBeforeSlash = match[1];
-
-            if (pathBeforeSlash) {
-              var folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, "");
-              fileName = folderName + "/" + fileName;
-            }
-          }
-        }
-
-        sourceInfo = " (at " + fileName + ":" + source.lineNumber + ")";
-      } else if (ownerName) {
+      if (ownerName) {
         sourceInfo = " (created by " + ownerName + ")";
       }
 
       return "\n    in " + (name || "Unknown") + sourceInfo;
     }
-    function describeFunctionComponentFrame(fn, source, ownerFn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         if (!fn) {
           return "";
@@ -313,45 +293,41 @@ if (__DEV__) {
           ownerName = ownerFn.displayName || ownerFn.name || null;
         }
 
-        return describeComponentFrame(name, source, ownerName);
+        return describeComponentFrame(name, ownerName);
       }
     }
 
-    function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
+    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
       if (type == null) {
         return "";
       }
 
       if (typeof type === "function") {
         {
-          return describeFunctionComponentFrame(type, source, ownerFn);
+          return describeFunctionComponentFrame(type, ownerFn);
         }
       }
 
       if (typeof type === "string") {
-        return describeBuiltInComponentFrame(type, source, ownerFn);
+        return describeBuiltInComponentFrame(type, ownerFn);
       }
 
       switch (type) {
         case REACT_SUSPENSE_TYPE:
-          return describeBuiltInComponentFrame("Suspense", source, ownerFn);
+          return describeBuiltInComponentFrame("Suspense", ownerFn);
 
         case REACT_SUSPENSE_LIST_TYPE:
-          return describeBuiltInComponentFrame("SuspenseList", source, ownerFn);
+          return describeBuiltInComponentFrame("SuspenseList", ownerFn);
       }
 
       if (typeof type === "object") {
         switch (type.$$typeof) {
           case REACT_FORWARD_REF_TYPE:
-            return describeFunctionComponentFrame(type.render, source, ownerFn);
+            return describeFunctionComponentFrame(type.render, ownerFn);
 
           case REACT_MEMO_TYPE:
             // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(
-              type.type,
-              source,
-              ownerFn
-            );
+            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
 
           case REACT_LAZY_TYPE: {
             var lazyComponent = type;
@@ -362,7 +338,6 @@ if (__DEV__) {
               // Lazy may contain any component type so we recursively resolve it.
               return describeUnknownElementTypeFrameInDEV(
                 init(payload),
-                source,
                 ownerFn
               );
             } catch (x) {}
@@ -385,7 +360,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
@@ -725,21 +699,6 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
-        }); // self and source are DEV only properties.
-
-        Object.defineProperty(element, "_self", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: self
-        }); // Two elements created in two different places should be considered
-        // equal for testing purposes and therefore we hide it from enumeration.
-
-        Object.defineProperty(element, "_source", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: source
         });
 
         if (Object.freeze) {
@@ -848,7 +807,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame.setExtraStackFrame(stack);
