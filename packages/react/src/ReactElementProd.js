@@ -138,7 +138,7 @@ function warnIfStringRefCannotBeAutoConverted(config) {
  * indicating filename, line number, and/or other information.
  * @internal
  */
-function ReactElement(type, key, ref, self, source, owner, props) {
+function ReactElement(type, key, ref, owner, props) {
   const element = {
     // This tag allows us to uniquely identify this as a React Element
     $$typeof: REACT_ELEMENT_TYPE,
@@ -170,21 +170,6 @@ function ReactElement(type, key, ref, self, source, owner, props) {
       writable: true,
       value: false,
     });
-    // self and source are DEV only properties.
-    Object.defineProperty(element, '_self', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: self,
-    });
-    // Two elements created in two different places should be considered
-    // equal for testing purposes and therefore we hide it from enumeration.
-    Object.defineProperty(element, '_source', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: source,
-    });
     if (Object.freeze) {
       Object.freeze(element.props);
       Object.freeze(element);
@@ -206,8 +191,6 @@ export function createElement(type, config, children) {
 
   let key = null;
   let ref = null;
-  let self = null;
-  let source = null;
 
   if (config != null) {
     if (hasValidRef(config)) {
@@ -224,8 +207,6 @@ export function createElement(type, config, children) {
       key = '' + config.key;
     }
 
-    self = config.__self === undefined ? null : config.__self;
-    source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
     for (propName in config) {
       if (
@@ -289,15 +270,7 @@ export function createElement(type, config, children) {
       }
     }
   }
-  return ReactElement(
-    type,
-    key,
-    ref,
-    self,
-    source,
-    ReactCurrentOwner.current,
-    props,
-  );
+  return ReactElement(type, key, ref, ReactCurrentOwner.current, props);
 }
 
 /**
@@ -320,8 +293,6 @@ export function cloneAndReplaceKey(oldElement, newKey) {
     oldElement.type,
     newKey,
     oldElement.ref,
-    oldElement._self,
-    oldElement._source,
     oldElement._owner,
     oldElement.props,
   );
@@ -348,12 +319,6 @@ export function cloneElement(element, config, children) {
   // Reserved names are extracted
   let key = element.key;
   let ref = element.ref;
-  // Self is preserved since the owner is preserved.
-  const self = element._self;
-  // Source is preserved since cloneElement is unlikely to be targeted by a
-  // transpiler, and the original source is probably a better indicator of the
-  // true owner.
-  const source = element._source;
 
   // Owner will be preserved, unless ref is overridden
   let owner = element._owner;
@@ -415,7 +380,7 @@ export function cloneElement(element, config, children) {
     props.children = childArray;
   }
 
-  return ReactElement(element.type, key, ref, self, source, owner, props);
+  return ReactElement(element.type, key, ref, owner, props);
 }
 
 /**

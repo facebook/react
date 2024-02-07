@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
   ReactContext,
@@ -200,7 +199,6 @@ export type Fiber = {
   // to be the same as work in progress.
   // __DEV__ only
 
-  _debugSource?: Source | null,
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,

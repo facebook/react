@@ -39,7 +39,6 @@ function setCurrentlyValidatingElement(element) {
       const owner = element._owner;
       const stack = describeUnknownElementTypeFrameInDEV(
         element.type,
-        element._source,
         owner ? owner.type : null,
       );
       setExtraStackFrame(stack);
