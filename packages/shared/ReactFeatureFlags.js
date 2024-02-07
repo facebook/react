@@ -15,8 +15,6 @@
 
 export const enableComponentStackLocations = true;
 
-export const enableServerComponentKeys = __EXPERIMENTAL__;
-
 // -----------------------------------------------------------------------------
 // Killswitch
 //
@@ -168,6 +166,9 @@ export const enableFilterEmptyStringAttributesDOM = __NEXT_MAJOR__;
 
 // Disabled caching behavior of `react/cache` in client runtimes.
 export const disableClientCache = false;
+
+// Changes Server Components Reconciliation when they have keys
+export const enableServerComponentKeys = __NEXT_MAJOR__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block
