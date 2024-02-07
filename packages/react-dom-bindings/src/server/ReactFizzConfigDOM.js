@@ -1150,11 +1150,11 @@ function pushAttribute(
     // but should ideally go in this list too.
     case 'className': {
       pushStringAttribute(target, 'class', value);
-      return;
+      break;
     }
     case 'tabIndex': {
       pushStringAttribute(target, 'tabindex', value);
-      return;
+      break;
     }
     case 'dir':
     case 'role':
@@ -1162,7 +1162,7 @@ function pushAttribute(
     case 'width':
     case 'height': {
       pushStringAttribute(target, name, value);
-      return;
+      break;
     }
     case 'style': {
       pushStyleAttribute(target, value);
@@ -1301,34 +1301,16 @@ function pushAttribute(
     case 'scoped':
     case 'seamless':
     case 'itemScope': {
-      if (!enableNewBooleanProps) {
-        // Boolean
-        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
-          target.push(
-            attributeSeparator,
-            stringToChunk(name),
-            attributeEmptyString,
-          );
-        }
-        return;
+      // Boolean
+      if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+        target.push(
+          attributeSeparator,
+          stringToChunk(name),
+          attributeEmptyString,
+        );
       }
+      return;
     }
-    // fallthrough to have a single implementation for boolean props for all states of `enableNewBooleanProps`
-    case 'inert':
-      if (enableNewBooleanProps) {
-        // Boolean
-        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
-          target.push(
-            attributeSeparator,
-            stringToChunk(name),
-            attributeEmptyString,
-          );
-        }
-        return;
-      } else {
-        break;
-      }
-    // fallthrough impossible here because previous cases are exhaustive
     case 'capture':
     case 'download': {
       // Overloaded Boolean
@@ -1417,39 +1399,53 @@ function pushAttribute(
     case 'xmlSpace':
       pushStringAttribute(target, 'xml:space', value);
       return;
-  }
-
-  if (
-    // shouldIgnoreAttribute
-    // We have already filtered out null/undefined and reserved words.
-    name.length > 2 &&
-    (name[0] === 'o' || name[0] === 'O') &&
-    (name[1] === 'n' || name[1] === 'N')
-  ) {
-    return;
-  }
-
-  const attributeName = getAttributeAlias(name);
-  if (isAttributeNameSafe(attributeName)) {
-    // shouldRemoveAttribute
-    switch (typeof value) {
-      case 'function':
-      case 'symbol': // eslint-disable-line
-        return;
-      case 'boolean': {
-        const prefix = attributeName.toLowerCase().slice(0, 5);
-        if (prefix !== 'data-' && prefix !== 'aria-') {
-          return;
+    case 'inert': {
+      if (enableNewBooleanProps) {
+        // Boolean
+        if (value && typeof value !== 'function' && typeof value !== 'symbol') {
+          target.push(
+            attributeSeparator,
+            stringToChunk(name),
+            attributeEmptyString,
+          );
         }
+        return;
       }
     }
-    target.push(
-      attributeSeparator,
-      stringToChunk(attributeName),
-      attributeAssign,
-      stringToChunk(escapeTextForBrowser(value)),
-      attributeEnd,
-    );
+    // fallthrough for new boolean props without the flag on
+    default:
+      if (
+        // shouldIgnoreAttribute
+        // We have already filtered out null/undefined and reserved words.
+        name.length > 2 &&
+        (name[0] === 'o' || name[0] === 'O') &&
+        (name[1] === 'n' || name[1] === 'N')
+      ) {
+        return;
+      }
+
+      const attributeName = getAttributeAlias(name);
+      if (isAttributeNameSafe(attributeName)) {
+        // shouldRemoveAttribute
+        switch (typeof value) {
+          case 'function':
+          case 'symbol': // eslint-disable-line
+            return;
+          case 'boolean': {
+            const prefix = attributeName.toLowerCase().slice(0, 5);
+            if (prefix !== 'data-' && prefix !== 'aria-') {
+              return;
+            }
+          }
+        }
+        target.push(
+          attributeSeparator,
+          stringToChunk(attributeName),
+          attributeAssign,
+          stringToChunk(escapeTextForBrowser(value)),
+          attributeEnd,
+        );
+      }
   }
 }
 
