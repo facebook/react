@@ -569,4 +569,26 @@ describe('ReactElementValidator', () => {
     React.createElement(Lazy);
     expect(didCall).toBe(false);
   });
+
+  it('__self and __source are treated as normal props', async () => {
+    // These used to be reserved props because the classic React.createElement
+    // runtime passed this data as props, whereas the jsxDEV() runtime passes
+    // them as separate arguments.
+    function Child({__self, __source}) {
+      return __self + __source;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    // NOTE: The Babel transform treats the presence of these props as a syntax
+    // error but theoretically it doesn't have to. Using spread here to
+    // circumvent the syntax error and demonstrate that the runtime
+    // doesn't care.
+    const props = {
+      __self: 'Hello ',
+      __source: 'world!',
+    };
+    await act(() => root.render(<Child {...props} />));
+    expect(container.textContent).toBe('Hello world!');
+  });
 });
