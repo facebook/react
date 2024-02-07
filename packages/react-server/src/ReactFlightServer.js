@@ -107,6 +107,9 @@ import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
 initAsyncDebugInfo();
 
+// Dev-only
+type ReactDebugInfo = Array<{+name?: string}>;
+
 const ObjectPrototype = Object.prototype;
 
 type JSONValue =
@@ -325,6 +328,14 @@ function serializeThenable(
     request.abortableTasks,
   );
 
+  if (__DEV__) {
+    // If this came from Flight, forward any debug info into this new row.
+    const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+    if (debugInfo) {
+      forwardDebugInfo(request, newTask.id, debugInfo);
+    }
+  }
+
   switch (thenable.status) {
     case 'fulfilled': {
       // We have the resolved value, we can go ahead and schedule it for serialization.
@@ -475,6 +486,10 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
     _payload: thenable,
     _init: readThenable,
   };
+  if (__DEV__) {
+    // If this came from React, transfer the debug info.
+    lazyType._debugInfo = (thenable: any)._debugInfo || [];
+  }
   return lazyType;
 }
 
@@ -552,6 +567,22 @@ function renderFragment(
   task: Task,
   children: $ReadOnlyArray<ReactClientValue>,
 ): ReactJSONValue {
+  if (__DEV__) {
+    const debugInfo: ?ReactDebugInfo = (children: any)._debugInfo;
+    if (debugInfo) {
+      // If this came from Flight, forward any debug info into this new row.
+      if (debugID === null) {
+        // We don't have a chunk to assign debug info. We need to outline this
+        // component to assign it an ID.
+        return outlineTask(request, task);
+      } else {
+        // Forward any debug info we have the first time we see it.
+        // We do this after init so that we have received all the debug info
+        // from the server by the time we emit it.
+        forwardDebugInfo(request, debugID, debugInfo);
+      }
+    }
+  }
   if (!enableServerComponentKeys) {
     return children;
   }
@@ -1210,6 +1241,22 @@ function renderModelDestructive(
         }
 
         const element: React$Element<any> = (value: any);
+
+        if (__DEV__) {
+          const debugInfo: ?ReactDebugInfo = (value: any)._debugInfo;
+          if (debugInfo) {
+            // If this came from Flight, forward any debug info into this new row.
+            if (debugID === null) {
+              // We don't have a chunk to assign debug info. We need to outline this
+              // component to assign it an ID.
+              return outlineTask(request, task);
+            } else {
+              // Forward any debug info we have the first time we see it.
+              forwardDebugInfo(request, debugID, debugInfo);
+            }
+          }
+        }
+
         // Attempt to render the Server Component.
         return renderElement(
           request,
@@ -1222,9 +1269,30 @@ function renderModelDestructive(
         );
       }
       case REACT_LAZY_TYPE: {
-        const payload = (value: any)._payload;
-        const init = (value: any)._init;
+        // Reset the task's thenable state before continuing. If there was one, it was
+        // from suspending the lazy before.
+        task.thenableState = null;
+
+        const lazy: LazyComponent<any, any> = (value: any);
+        const payload = lazy._payload;
+        const init = lazy._init;
         const resolvedModel = init(payload);
+        if (__DEV__) {
+          const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
+          if (debugInfo) {
+            // If this came from Flight, forward any debug info into this new row.
+            if (debugID === null) {
+              // We don't have a chunk to assign debug info. We need to outline this
+              // component to assign it an ID.
+              return outlineTask(request, task);
+            } else {
+              // Forward any debug info we have the first time we see it.
+              // We do this after init so that we have received all the debug info
+              // from the server by the time we emit it.
+              forwardDebugInfo(request, debugID, debugInfo);
+            }
+          }
+        }
         return renderModelDestructive(
           request,
           task,
@@ -1653,7 +1721,7 @@ function emitModelChunk(request: Request, id: number, json: string): void {
 function emitDebugChunk(
   request: Request,
   id: number,
-  debugInfo: {name: string},
+  debugInfo: {+name?: string},
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1667,6 +1735,17 @@ function emitDebugChunk(
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
+}
+
+function forwardDebugInfo(
+  request: Request,
+  id: number,
+  debugInfo: ReactDebugInfo,
+) {
+  for (let i = 0; i < debugInfo.length; i++) {
+    request.pendingChunks++;
+    emitDebugChunk(request, id, debugInfo[i]);
+  }
 }
 
 const emptyRoot = {};
