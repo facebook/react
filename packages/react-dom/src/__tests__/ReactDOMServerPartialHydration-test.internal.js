@@ -11,7 +11,7 @@
 'use strict';
 
 let Activity;
-let React = require('react');
+let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
@@ -26,6 +26,7 @@ let waitForAll;
 let waitFor;
 let waitForPaint;
 let assertLog;
+let TestAppClass;
 
 function normalizeCodeLocInfo(strOrErr) {
   if (strOrErr && strOrErr.replace) {
@@ -87,17 +88,6 @@ function dispatchMouseEvent(to, from) {
   }
 }
 
-class TestAppClass extends React.Component {
-  render() {
-    return (
-      <div>
-        <>{''}</>
-        <>{'Hello'}</>
-      </div>
-    );
-  }
-}
-
 describe('ReactDOMServerPartialHydration', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -126,6 +116,17 @@ describe('ReactDOMServerPartialHydration', () => {
     waitFor = InternalTestUtils.waitFor;
 
     IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
+
+    TestAppClass = class extends React.Component {
+      render() {
+        return (
+          <div>
+            <>{''}</>
+            <>{'Hello'}</>
+          </div>
+        );
+      }
+    };
   });
 
   // Note: This is based on a similar component we use in www. We can delete

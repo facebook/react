@@ -9,10 +9,9 @@
 
 'use strict';
 
-let act;
-
-let React;
-let ReactDOMClient;
+const React = require('react');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
 
 // NOTE: This module tests the old, "classic" JSX runtime, React.createElement.
 // Do not use JSX syntax in this module; call React.createElement directly.
@@ -20,10 +19,6 @@ describe('ReactCreateElement', () => {
   let ComponentClass;
 
   beforeEach(() => {
-    act = require('internal-test-utils').act;
-
-    React = require('react');
-    ReactDOMClient = require('react-dom/client');
     ComponentClass = class extends React.Component {
       render() {
         return React.createElement('div');

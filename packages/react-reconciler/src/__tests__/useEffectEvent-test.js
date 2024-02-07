@@ -12,11 +12,12 @@
 
 'use strict';
 
+const React = require('react');
+const ReactNoop = require('react-noop-renderer');
+const Scheduler = require('scheduler');
+const act = require('internal-test-utils').act;
+
 describe('useEffectEvent', () => {
-  let React;
-  let ReactNoop;
-  let Scheduler;
-  let act;
   let createContext;
   let useContext;
   let useState;
@@ -30,11 +31,6 @@ describe('useEffectEvent', () => {
   let waitForThrow;
 
   beforeEach(() => {
-    React = require('react');
-    ReactNoop = require('react-noop-renderer');
-    Scheduler = require('scheduler');
-
-    act = require('internal-test-utils').act;
     createContext = React.createContext;
     useContext = React.useContext;
     useState = React.useState;

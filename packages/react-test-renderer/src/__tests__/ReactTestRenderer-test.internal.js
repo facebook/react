@@ -10,8 +10,6 @@
 
 'use strict';
 
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 const React = require('react');
 const ReactTestRenderer = require('react-test-renderer');
 const {format: prettyFormat} = require('pretty-format');
@@ -49,6 +47,11 @@ function cleanNodeOrArray(node) {
     cleanNodeOrArray(node.rendered);
   }
 }
+
+beforeEach(() => {
+  const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+  ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
+});
 
 describe('ReactTestRenderer', () => {
   it('renders a simple component', () => {
@@ -288,7 +291,8 @@ describe('ReactTestRenderer', () => {
     expect(() => ReactTestRenderer.create(<Foo />)).toErrorDev(
       'Warning: Function components cannot be given refs. Attempts ' +
         'to access this ref will fail. ' +
-        'Did you mean to use React.forwardRef()?\n' +
+        'Did you mean to use React.forwardRef()?\n\n' +
+        'Check the render method of `Foo`.\n' +
         '    in Bar (at **)\n' +
         '    in Foo (at **)',
     );
