@@ -1756,7 +1756,7 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   });
 
-  // @gate !disableModulePatternComponents && !disableLegacyContext
+  // @gate !(disableModulePatternComponents && disableLegacyContext)
   it('handles error thrown inside getDerivedStateFromProps of a module-style context provider', async () => {
     function Provider() {
       return {
