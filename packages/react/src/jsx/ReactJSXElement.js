@@ -239,10 +239,8 @@ export function jsx(type, config, maybeKey) {
       hasOwnProperty.call(config, propName) &&
       // Skip over reserved prop names
       propName !== 'key' &&
-      // TODO: These will no longer be reserved in the next major
-      propName !== 'ref' &&
-      propName !== '__self' &&
-      propName !== '__source'
+      // TODO: `ref` will no longer be reserved in the next major
+      propName !== 'ref'
     ) {
       props[propName] = config[propName];
     }
@@ -316,10 +314,8 @@ export function jsxDEV(type, config, maybeKey, source, self) {
         hasOwnProperty.call(config, propName) &&
         // Skip over reserved prop names
         propName !== 'key' &&
-        // TODO: These will no longer be reserved in the next major
-        propName !== 'ref' &&
-        propName !== '__self' &&
-        propName !== '__source'
+        // TODO: `ref` will no longer be reserved in the next major
+        propName !== 'ref'
       ) {
         props[propName] = config[propName];
       }
