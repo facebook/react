@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-be673a16";
+    var ReactVersion = "18.3.0-www-modern-b425cc4f";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -744,7 +744,7 @@ if (__DEV__) {
      * @internal
      */
 
-    function ReactElement$1(type, key, ref, self, source, owner, props) {
+    function ReactElement$1(type, key, ref, owner, props) {
       var element = {
         // This tag allows us to uniquely identify this as a React Element
         $$typeof: REACT_ELEMENT_TYPE,
@@ -772,21 +772,6 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
-        }); // self and source are DEV only properties.
-
-        Object.defineProperty(element, "_self", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: self
-        }); // Two elements created in two different places should be considered
-        // equal for testing purposes and therefore we hide it from enumeration.
-
-        Object.defineProperty(element, "_source", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: source
         });
 
         if (Object.freeze) {
@@ -808,8 +793,6 @@ if (__DEV__) {
       var props = {};
       var key = null;
       var ref = null;
-      var self = null;
-      var source = null;
 
       if (config != null) {
         if (hasValidRef$1(config)) {
@@ -826,10 +809,7 @@ if (__DEV__) {
           }
 
           key = "" + config.key;
-        }
-
-        self = config.__self === undefined ? null : config.__self;
-        source = config.__source === undefined ? null : config.__source; // Remaining properties are added to a new props object
+        } // Remaining properties are added to a new props object
 
         for (propName in config) {
           if (
@@ -897,23 +877,13 @@ if (__DEV__) {
         }
       }
 
-      return ReactElement$1(
-        type,
-        key,
-        ref,
-        self,
-        source,
-        ReactCurrentOwner$2.current,
-        props
-      );
+      return ReactElement$1(type, key, ref, ReactCurrentOwner$2.current, props);
     }
     function cloneAndReplaceKey(oldElement, newKey) {
       var newElement = ReactElement$1(
         oldElement.type,
         newKey,
         oldElement.ref,
-        oldElement._self,
-        oldElement._source,
         oldElement._owner,
         oldElement.props
       );
@@ -938,13 +908,7 @@ if (__DEV__) {
       var props = assign({}, element.props); // Reserved names are extracted
 
       var key = element.key;
-      var ref = element.ref; // Self is preserved since the owner is preserved.
-
-      var self = element._self; // Source is preserved since cloneElement is unlikely to be targeted by a
-      // transpiler, and the original source is probably a better indicator of the
-      // true owner.
-
-      var source = element._source; // Owner will be preserved, unless ref is overridden
+      var ref = element.ref; // Owner will be preserved, unless ref is overridden
 
       var owner = element._owner;
 
@@ -1007,7 +971,7 @@ if (__DEV__) {
         props.children = childArray;
       }
 
-      return ReactElement$1(element.type, key, ref, self, source, owner, props);
+      return ReactElement$1(element.type, key, ref, owner, props);
     }
     /**
      * Verifies the object is a ReactElement.
@@ -1245,7 +1209,7 @@ if (__DEV__) {
 
     var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name, source, ownerFn) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -1514,7 +1478,7 @@ if (__DEV__) {
 
       return syntheticFrame;
     }
-    function describeFunctionComponentFrame(fn, source, ownerFn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -1525,7 +1489,7 @@ if (__DEV__) {
       return !!(prototype && prototype.isReactComponent);
     }
 
-    function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
+    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
       if (type == null) {
         return "";
       }
@@ -1555,11 +1519,7 @@ if (__DEV__) {
 
           case REACT_MEMO_TYPE:
             // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(
-              type.type,
-              source,
-              ownerFn
-            );
+            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
 
           case REACT_LAZY_TYPE: {
             var lazyComponent = type;
@@ -1570,7 +1530,6 @@ if (__DEV__) {
               // Lazy may contain any component type so we recursively resolve it.
               return describeUnknownElementTypeFrameInDEV(
                 init(payload),
-                source,
                 ownerFn
               );
             } catch (x) {}
@@ -1590,7 +1549,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
@@ -1850,21 +1808,6 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
-        }); // self and source are DEV only properties.
-
-        Object.defineProperty(element, "_self", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: self
-        }); // Two elements created in two different places should be considered
-        // equal for testing purposes and therefore we hide it from enumeration.
-
-        Object.defineProperty(element, "_source", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: source
         });
 
         if (Object.freeze) {
@@ -1971,7 +1914,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           setExtraStackFrame(stack);
@@ -3669,7 +3611,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame.setExtraStackFrame(stack);

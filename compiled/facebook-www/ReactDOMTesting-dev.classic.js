@@ -3525,7 +3525,7 @@ if (__DEV__) {
 
     var ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name, source, ownerFn) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -3795,12 +3795,12 @@ if (__DEV__) {
       return syntheticFrame;
     }
 
-    function describeClassComponentFrame(ctor, source, ownerFn) {
+    function describeClassComponentFrame(ctor, ownerFn) {
       {
         return describeNativeComponentFrame(ctor, true);
       }
     }
-    function describeFunctionComponentFrame(fn, source, ownerFn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -3811,7 +3811,7 @@ if (__DEV__) {
       return !!(prototype && prototype.isReactComponent);
     }
 
-    function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
+    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
       if (type == null) {
         return "";
       }
@@ -3841,11 +3841,7 @@ if (__DEV__) {
 
           case REACT_MEMO_TYPE:
             // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(
-              type.type,
-              source,
-              ownerFn
-            );
+            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
 
           case REACT_LAZY_TYPE: {
             var lazyComponent = type;
@@ -3856,7 +3852,6 @@ if (__DEV__) {
               // Lazy may contain any component type so we recursively resolve it.
               return describeUnknownElementTypeFrameInDEV(
                 init(payload),
-                source,
                 ownerFn
               );
             } catch (x) {}
@@ -7571,7 +7566,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame.setExtraStackFrame(stack);
@@ -11282,14 +11276,7 @@ if (__DEV__) {
       ) {
         {
           if (
-            // We warn in ReactElement.js if owner and self are equal for string refs
-            // because these cannot be automatically converted to an arrow function
-            // using a codemod. Therefore, we don't have to warn about string refs again.
-            !(
-              element._owner &&
-              element._self &&
-              element._owner.stateNode !== element._self
-            ) && // Will already throw with "Function components cannot have string refs"
+            // Will already throw with "Function components cannot have string refs"
             !(element._owner && element._owner.tag !== ClassComponent) && // Will already warn with "Function components cannot be given refs"
             !(
               typeof element.type === "function" && !isReactClass(element.type)
@@ -11591,7 +11578,6 @@ if (__DEV__) {
             existing.return = returnFiber;
 
             {
-              existing._debugSource = element._source;
               existing._debugOwner = element._owner;
             }
 
@@ -12427,7 +12413,6 @@ if (__DEV__) {
                 existing.return = returnFiber;
 
                 {
-                  existing._debugSource = element._source;
                   existing._debugOwner = element._owner;
                 }
 
@@ -12453,7 +12438,6 @@ if (__DEV__) {
                 _existing.return = returnFiber;
 
                 {
-                  _existing._debugSource = element._source;
                   _existing._debugOwner = element._owner;
                 }
 
@@ -19734,7 +19718,6 @@ if (__DEV__) {
           Component.type,
           null,
           nextProps,
-          null,
           workInProgress,
           workInProgress.mode,
           renderLanes
@@ -21229,18 +21212,14 @@ if (__DEV__) {
 
         if (workInProgress.ref !== null) {
           var info = "";
+          var componentName = getComponentNameFromType(Component) || "Unknown";
           var ownerName = getCurrentFiberOwnerNameInDevOrNull();
 
           if (ownerName) {
             info += "\n\nCheck the render method of `" + ownerName + "`.";
           }
 
-          var warningKey = ownerName || "";
-          var debugSource = workInProgress._debugSource;
-
-          if (debugSource) {
-            warningKey = debugSource.fileName + ":" + debugSource.lineNumber;
-          }
+          var warningKey = componentName + "|" + (ownerName || "");
 
           if (!didWarnAboutFunctionRefs[warningKey]) {
             didWarnAboutFunctionRefs[warningKey] = true;
@@ -21255,32 +21234,33 @@ if (__DEV__) {
         }
 
         if (Component.defaultProps !== undefined) {
-          var componentName = getComponentNameFromType(Component) || "Unknown";
+          var _componentName3 =
+            getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+          if (!didWarnAboutDefaultPropsOnFunctionComponent[_componentName3]) {
             error(
               "%s: Support for defaultProps will be removed from function components " +
                 "in a future major release. Use JavaScript default parameters instead.",
-              componentName
+              _componentName3
             );
 
-            didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+            didWarnAboutDefaultPropsOnFunctionComponent[_componentName3] = true;
           }
         }
 
         if (typeof Component.getDerivedStateFromProps === "function") {
-          var _componentName3 =
+          var _componentName4 =
             getComponentNameFromType(Component) || "Unknown";
 
           if (
-            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3]
+            !didWarnAboutGetDerivedStateOnFunctionComponent[_componentName4]
           ) {
             error(
               "%s: Function components do not support getDerivedStateFromProps.",
-              _componentName3
+              _componentName4
             );
 
-            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName3] =
+            didWarnAboutGetDerivedStateOnFunctionComponent[_componentName4] =
               true;
           }
         }
@@ -21289,16 +21269,16 @@ if (__DEV__) {
           typeof Component.contextType === "object" &&
           Component.contextType !== null
         ) {
-          var _componentName4 =
+          var _componentName5 =
             getComponentNameFromType(Component) || "Unknown";
 
-          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName4]) {
+          if (!didWarnAboutContextTypeOnFunctionComponent[_componentName5]) {
             error(
               "%s: Function components do not support contextType.",
-              _componentName4
+              _componentName5
             );
 
-            didWarnAboutContextTypeOnFunctionComponent[_componentName4] = true;
+            didWarnAboutContextTypeOnFunctionComponent[_componentName5] = true;
           }
         }
       }
@@ -23205,7 +23185,6 @@ if (__DEV__) {
               workInProgress.type,
               workInProgress.key,
               workInProgress.pendingProps,
-              workInProgress._debugSource || null,
               workInProgress._debugOwner || null,
               workInProgress.mode,
               workInProgress.lanes
@@ -27861,7 +27840,6 @@ if (__DEV__) {
       fiber.stateNode = null;
 
       {
-        fiber._debugSource = null;
         fiber._debugOwner = null;
       } // Theoretically, nothing in here should be necessary, because we already
       // disconnected the fiber from the tree. So even if something leaks this
@@ -35554,7 +35532,6 @@ if (__DEV__) {
 
       {
         // This isn't directly used but is handy for debugging internals:
-        this._debugSource = null;
         this._debugOwner = null;
         this._debugNeedsRemount = false;
         this._debugHookTypes = null;
@@ -35636,7 +35613,6 @@ if (__DEV__) {
 
         {
           // DEV-only fields
-          workInProgress._debugSource = current._debugSource;
           workInProgress._debugOwner = current._debugOwner;
           workInProgress._debugHookTypes = current._debugHookTypes;
         }
@@ -35819,7 +35795,6 @@ if (__DEV__) {
       type, // React$ElementType
       key,
       pendingProps,
-      source,
       owner,
       mode,
       lanes
@@ -35998,18 +35973,15 @@ if (__DEV__) {
       fiber.lanes = lanes;
 
       {
-        fiber._debugSource = source;
         fiber._debugOwner = owner;
       }
 
       return fiber;
     }
     function createFiberFromElement(element, mode, lanes) {
-      var source = null;
       var owner = null;
 
       {
-        source = element._source;
         owner = element._owner;
       }
 
@@ -36020,14 +35992,12 @@ if (__DEV__) {
         type,
         key,
         pendingProps,
-        source,
         owner,
         mode,
         lanes
       );
 
       {
-        fiber._debugSource = element._source;
         fiber._debugOwner = element._owner;
       }
 
@@ -36217,7 +36187,6 @@ if (__DEV__) {
         target.treeBaseDuration = source.treeBaseDuration;
       }
 
-      target._debugSource = source._debugSource;
       target._debugOwner = source._debugOwner;
       target._debugNeedsRemount = source._debugNeedsRemount;
       target._debugHookTypes = source._debugHookTypes;
@@ -36374,7 +36343,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-88f429a3";
+    var ReactVersion = "18.3.0-www-classic-b20371a1";
 
     function createPortal$1(
       children,

@@ -2838,7 +2838,6 @@ function createChildReconciler(shouldTrackSideEffects) {
       element.key,
       element.props,
       null,
-      null,
       returnFiber.mode,
       lanes
     );
@@ -2900,7 +2899,6 @@ function createChildReconciler(shouldTrackSideEffects) {
               newChild.type,
               newChild.key,
               newChild.props,
-              null,
               null,
               returnFiber.mode,
               lanes
@@ -3304,7 +3302,6 @@ function createChildReconciler(shouldTrackSideEffects) {
                   newChild.type,
                   newChild.key,
                   newChild.props,
-                  null,
                   null,
                   returnFiber.mode,
                   lanes
@@ -5598,7 +5595,6 @@ function updateMemoComponent(
       Component.type,
       null,
       nextProps,
-      null,
       workInProgress,
       workInProgress.mode,
       renderLanes
@@ -12853,16 +12849,15 @@ function createFiberFromTypeAndProps(
   type,
   key,
   pendingProps,
-  source,
   owner,
   mode,
   lanes
 ) {
-  owner = 2;
-  source = type;
-  if ("function" === typeof type) shouldConstruct(type) && (owner = 1);
+  var fiberTag = 2;
+  owner = type;
+  if ("function" === typeof type) shouldConstruct(type) && (fiberTag = 1);
   else if ("string" === typeof type)
-    owner = isHostHoistableType(
+    fiberTag = isHostHoistableType(
       type,
       pendingProps,
       contextStackCursor$1.current
@@ -12876,7 +12871,7 @@ function createFiberFromTypeAndProps(
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
-        owner = 8;
+        fiberTag = 8;
         mode |= 8;
         0 !== (mode & 1) &&
           ((mode |= 16),
@@ -12942,7 +12937,7 @@ function createFiberFromTypeAndProps(
           );
       case REACT_DEBUG_TRACING_MODE_TYPE:
         if (enableDebugTracing) {
-          owner = 8;
+          fiberTag = 8;
           mode |= 4;
           break;
         }
@@ -12950,29 +12945,29 @@ function createFiberFromTypeAndProps(
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              owner = 10;
+              fiberTag = 10;
               break a;
             case REACT_CONTEXT_TYPE:
-              owner = 9;
+              fiberTag = 9;
               break a;
             case REACT_FORWARD_REF_TYPE:
-              owner = 11;
+              fiberTag = 11;
               break a;
             case REACT_MEMO_TYPE:
-              owner = 14;
+              fiberTag = 14;
               break a;
             case REACT_LAZY_TYPE:
-              owner = 16;
-              source = null;
+              fiberTag = 16;
+              owner = null;
               break a;
           }
         throw Error(
           formatProdErrorMessage(130, null == type ? type : typeof type, "")
         );
     }
-  pendingProps = createFiber(owner, pendingProps, key, mode);
+  pendingProps = createFiber(fiberTag, pendingProps, key, mode);
   pendingProps.elementType = type;
-  pendingProps.type = source;
+  pendingProps.type = owner;
   pendingProps.lanes = lanes;
   return pendingProps;
 }
@@ -13840,14 +13835,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$373;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1640 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1640) {
-      var element$jscomp$inline_1641 = document.createElement("div");
-      element$jscomp$inline_1641.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1640 =
-        "function" === typeof element$jscomp$inline_1641.oninput;
+    var isSupported$jscomp$inline_1637 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1637) {
+      var element$jscomp$inline_1638 = document.createElement("div");
+      element$jscomp$inline_1638.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1637 =
+        "function" === typeof element$jscomp$inline_1638.oninput;
     }
-    JSCompiler_inline_result$jscomp$373 = isSupported$jscomp$inline_1640;
+    JSCompiler_inline_result$jscomp$373 = isSupported$jscomp$inline_1637;
   } else JSCompiler_inline_result$jscomp$373 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$373 &&
@@ -14222,20 +14217,20 @@ function extractEvents$1(
   }
 }
 for (
-  var i$jscomp$inline_1681 = 0;
-  i$jscomp$inline_1681 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1681++
+  var i$jscomp$inline_1678 = 0;
+  i$jscomp$inline_1678 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1678++
 ) {
-  var eventName$jscomp$inline_1682 =
-      simpleEventPluginEvents[i$jscomp$inline_1681],
-    domEventName$jscomp$inline_1683 =
-      eventName$jscomp$inline_1682.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1684 =
-      eventName$jscomp$inline_1682[0].toUpperCase() +
-      eventName$jscomp$inline_1682.slice(1);
+  var eventName$jscomp$inline_1679 =
+      simpleEventPluginEvents[i$jscomp$inline_1678],
+    domEventName$jscomp$inline_1680 =
+      eventName$jscomp$inline_1679.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1681 =
+      eventName$jscomp$inline_1679[0].toUpperCase() +
+      eventName$jscomp$inline_1679.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1683,
-    "on" + capitalizedEvent$jscomp$inline_1684
+    domEventName$jscomp$inline_1680,
+    "on" + capitalizedEvent$jscomp$inline_1681
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17927,10 +17922,10 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1908 = {
+var devToolsConfig$jscomp$inline_1905 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-18968ae5",
+  version: "18.3.0-www-classic-8953f036",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17948,10 +17943,10 @@ var devToolsConfig$jscomp$inline_1908 = {
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1908.bundleType,
-  version: devToolsConfig$jscomp$inline_1908.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1908.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1908.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1905.bundleType,
+  version: devToolsConfig$jscomp$inline_1905.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1905.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1905.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17967,14 +17962,14 @@ var devToolsConfig$jscomp$inline_1908 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1908.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1905.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-18968ae5"
+  reconcilerVersion: "18.3.0-www-classic-8953f036"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18311,7 +18306,7 @@ exports.useFormStatus = function () {
     return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-18968ae5";
+exports.version = "18.3.0-www-classic-8953f036";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

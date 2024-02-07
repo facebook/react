@@ -90,6 +90,16 @@ var isArrayImpl = Array.isArray,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner$1 = { current: null };
+function ReactElement$1(type, key, ref, owner, props) {
+  return {
+    $$typeof: REACT_ELEMENT_TYPE,
+    type: type,
+    key: key,
+    ref: ref,
+    props: props,
+    _owner: owner
+  };
+}
 function createElement$1(type, config, children) {
   var propName,
     props = {},
@@ -116,24 +126,16 @@ function createElement$1(type, config, children) {
     for (propName in ((childrenLength = type.defaultProps), childrenLength))
       void 0 === props[propName] &&
         (props[propName] = childrenLength[propName]);
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: type,
-    key: key,
-    ref: ref,
-    props: props,
-    _owner: ReactCurrentOwner$1.current
-  };
+  return ReactElement$1(type, key, ref, ReactCurrentOwner$1.current, props);
 }
 function cloneAndReplaceKey(oldElement, newKey) {
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: oldElement.type,
-    key: newKey,
-    ref: oldElement.ref,
-    props: oldElement.props,
-    _owner: oldElement._owner
-  };
+  return ReactElement$1(
+    oldElement.type,
+    newKey,
+    oldElement.ref,
+    oldElement._owner,
+    oldElement.props
+  );
 }
 function isValidElement(object) {
   return (
@@ -404,14 +406,7 @@ exports.cloneElement = function (element, config, children) {
     for (var i = 0; i < propName; i++) defaultProps[i] = arguments[i + 2];
     props.children = defaultProps;
   }
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: element.type,
-    key: key,
-    ref: ref,
-    props: props,
-    _owner: owner
-  };
+  return ReactElement$1(element.type, key, ref, owner, props);
 };
 exports.createContext = function (defaultValue) {
   defaultValue = {
@@ -579,7 +574,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-5f5e8f54";
+exports.version = "18.3.0-www-classic-593873f6";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

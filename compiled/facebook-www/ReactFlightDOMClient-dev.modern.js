@@ -538,18 +538,6 @@ if (__DEV__) {
           writable: true,
           value: true // This element has already been validated on the server.
         });
-        Object.defineProperty(element, "_self", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: null
-        });
-        Object.defineProperty(element, "_source", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: null
-        });
       }
 
       return element;

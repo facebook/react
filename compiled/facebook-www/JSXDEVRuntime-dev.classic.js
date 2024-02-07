@@ -372,7 +372,7 @@ if (__DEV__) {
 
     var ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name, source, ownerFn) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -641,7 +641,7 @@ if (__DEV__) {
 
       return syntheticFrame;
     }
-    function describeFunctionComponentFrame(fn, source, ownerFn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -652,7 +652,7 @@ if (__DEV__) {
       return !!(prototype && prototype.isReactComponent);
     }
 
-    function describeUnknownElementTypeFrameInDEV(type, source, ownerFn) {
+    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
       if (type == null) {
         return "";
       }
@@ -682,11 +682,7 @@ if (__DEV__) {
 
           case REACT_MEMO_TYPE:
             // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(
-              type.type,
-              source,
-              ownerFn
-            );
+            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
 
           case REACT_LAZY_TYPE: {
             var lazyComponent = type;
@@ -697,7 +693,6 @@ if (__DEV__) {
               // Lazy may contain any component type so we recursively resolve it.
               return describeUnknownElementTypeFrameInDEV(
                 init(payload),
-                source,
                 ownerFn
               );
             } catch (x) {}
@@ -720,7 +715,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
@@ -1060,21 +1054,6 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
-        }); // self and source are DEV only properties.
-
-        Object.defineProperty(element, "_self", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: self
-        }); // Two elements created in two different places should be considered
-        // equal for testing purposes and therefore we hide it from enumeration.
-
-        Object.defineProperty(element, "_source", {
-          configurable: false,
-          enumerable: false,
-          writable: false,
-          value: source
         });
 
         if (Object.freeze) {
@@ -1183,7 +1162,6 @@ if (__DEV__) {
           var owner = element._owner;
           var stack = describeUnknownElementTypeFrameInDEV(
             element.type,
-            element._source,
             owner ? owner.type : null
           );
           ReactDebugCurrentFrame.setExtraStackFrame(stack);

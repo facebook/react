@@ -1772,7 +1772,6 @@ function createChildReconciler(shouldTrackSideEffects) {
       element.key,
       element.props,
       null,
-      null,
       returnFiber.mode,
       lanes
     );
@@ -1834,7 +1833,6 @@ function createChildReconciler(shouldTrackSideEffects) {
               newChild.type,
               newChild.key,
               newChild.props,
-              null,
               null,
               returnFiber.mode,
               lanes
@@ -2228,7 +2226,6 @@ function createChildReconciler(shouldTrackSideEffects) {
                   newChild.type,
                   newChild.key,
                   newChild.props,
-                  null,
                   null,
                   returnFiber.mode,
                   lanes
@@ -4260,7 +4257,6 @@ function updateMemoComponent(
       Component.type,
       null,
       nextProps,
-      null,
       workInProgress,
       workInProgress.mode,
       renderLanes
@@ -9849,21 +9845,20 @@ function createFiberFromTypeAndProps(
   type,
   key,
   pendingProps,
-  source,
   owner,
   mode,
   lanes
 ) {
-  owner = 2;
-  source = type;
-  if ("function" === typeof type) shouldConstruct(type) && (owner = 1);
-  else if ("string" === typeof type) owner = 5;
+  var fiberTag = 2;
+  owner = type;
+  if ("function" === typeof type) shouldConstruct(type) && (fiberTag = 1);
+  else if ("string" === typeof type) fiberTag = 5;
   else
     a: switch (type) {
       case REACT_FRAGMENT_TYPE:
         return createFiberFromFragment(pendingProps.children, mode, lanes, key);
       case REACT_STRICT_MODE_TYPE:
-        owner = 8;
+        fiberTag = 8;
         mode |= 8;
         0 !== (mode & 1) &&
           ((mode |= 16),
@@ -9928,7 +9923,7 @@ function createFiberFromTypeAndProps(
           );
       case REACT_DEBUG_TRACING_MODE_TYPE:
         if (enableDebugTracing) {
-          owner = 8;
+          fiberTag = 8;
           mode |= 4;
           break;
         }
@@ -9936,29 +9931,29 @@ function createFiberFromTypeAndProps(
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              owner = 10;
+              fiberTag = 10;
               break a;
             case REACT_CONTEXT_TYPE:
-              owner = 9;
+              fiberTag = 9;
               break a;
             case REACT_FORWARD_REF_TYPE:
-              owner = 11;
+              fiberTag = 11;
               break a;
             case REACT_MEMO_TYPE:
-              owner = 14;
+              fiberTag = 14;
               break a;
             case REACT_LAZY_TYPE:
-              owner = 16;
-              source = null;
+              fiberTag = 16;
+              owner = null;
               break a;
           }
         throw Error(
           formatProdErrorMessage(130, null == type ? type : typeof type, "")
         );
     }
-  pendingProps = createFiber(owner, pendingProps, key, mode);
+  pendingProps = createFiber(fiberTag, pendingProps, key, mode);
   pendingProps.elementType = type;
-  pendingProps.type = source;
+  pendingProps.type = owner;
   pendingProps.lanes = lanes;
   return pendingProps;
 }
@@ -10216,19 +10211,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1132 = {
+  devToolsConfig$jscomp$inline_1129 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-371634b7",
+    version: "18.3.0-www-modern-aaaa6d78",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1303 = {
-  bundleType: devToolsConfig$jscomp$inline_1132.bundleType,
-  version: devToolsConfig$jscomp$inline_1132.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1132.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1132.rendererConfig,
+var internals$jscomp$inline_1300 = {
+  bundleType: devToolsConfig$jscomp$inline_1129.bundleType,
+  version: devToolsConfig$jscomp$inline_1129.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1129.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1129.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10245,26 +10240,26 @@ var internals$jscomp$inline_1303 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1132.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1129.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-371634b7"
+  reconcilerVersion: "18.3.0-www-modern-aaaa6d78"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1304 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1301 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1304.isDisabled &&
-    hook$jscomp$inline_1304.supportsFiber
+    !hook$jscomp$inline_1301.isDisabled &&
+    hook$jscomp$inline_1301.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1304.inject(
-        internals$jscomp$inline_1303
+      (rendererID = hook$jscomp$inline_1301.inject(
+        internals$jscomp$inline_1300
       )),
-        (injectedHook = hook$jscomp$inline_1304);
+        (injectedHook = hook$jscomp$inline_1301);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

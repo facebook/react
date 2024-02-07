@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-4e83ac3b";
+    var ReactVersion = "18.3.0-www-modern-e43084bc";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -8409,7 +8409,7 @@ if (__DEV__) {
 
     var ReactCurrentDispatcher$1 = ReactSharedInternals.ReactCurrentDispatcher;
     var prefix;
-    function describeBuiltInComponentFrame(name, source, ownerFn) {
+    function describeBuiltInComponentFrame(name, ownerFn) {
       {
         if (prefix === undefined) {
           // Extract the VM specific prefix used by each line.
@@ -8679,12 +8679,12 @@ if (__DEV__) {
       return syntheticFrame;
     }
 
-    function describeClassComponentFrame(ctor, source, ownerFn) {
+    function describeClassComponentFrame(ctor, ownerFn) {
       {
         return describeNativeComponentFrame(ctor, true);
       }
     }
-    function describeFunctionComponentFrame(fn, source, ownerFn) {
+    function describeFunctionComponentFrame(fn, ownerFn) {
       {
         return describeNativeComponentFrame(fn, false);
       }
@@ -10683,15 +10683,15 @@ if (__DEV__) {
         do {
           switch (node.tag) {
             case 0:
-              info += describeBuiltInComponentFrame(node.type, null, null);
+              info += describeBuiltInComponentFrame(node.type, null);
               break;
 
             case 1:
-              info += describeFunctionComponentFrame(node.type, null, null);
+              info += describeFunctionComponentFrame(node.type, null);
               break;
 
             case 2:
-              info += describeClassComponentFrame(node.type, null, null);
+              info += describeClassComponentFrame(node.type, null);
               break;
           } // $FlowFixMe[incompatible-type] we bail out when we get a null
 
