@@ -159,6 +159,7 @@ export type InspectorData = $ReadOnly<{
   }>,
   selectedIndex: ?number,
   props: InspectorDataProps,
+  componentStack: string,
 }>;
 
 export type TouchedViewDataAtPoint = $ReadOnly<{

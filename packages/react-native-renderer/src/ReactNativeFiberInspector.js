@@ -24,6 +24,7 @@ import {
 import {enableGetInspectorDataForInstanceInProduction} from 'shared/ReactFeatureFlags';
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {getNodeFromInternalInstanceHandle} from './ReactNativePublicCompat';
+import {getStackByFiberInDevAndProd} from 'react-reconciler/src/ReactFiberComponentStack';
 
 const emptyObject = {};
 if (__DEV__) {
@@ -97,6 +98,7 @@ function getInspectorDataForInstance(
         hierarchy: [],
         props: emptyObject,
         selectedIndex: null,
+        componentStack: '',
       };
     }
 
@@ -106,12 +108,15 @@ function getInspectorDataForInstance(
     const hierarchy = createHierarchy(fiberHierarchy);
     const props = getHostProps(instance);
     const selectedIndex = fiberHierarchy.indexOf(instance);
+    const componentStack =
+      fiber !== null ? getStackByFiberInDevAndProd(fiber) : '';
 
     return {
       closestInstance: instance,
       hierarchy,
       props,
       selectedIndex,
+      componentStack,
     };
   }
 
