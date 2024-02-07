@@ -17,7 +17,7 @@ type Node = {
 export function push<T: Node>(heap: Heap<T>, node: T): void {
   const index = heap.length;
   heap.push(node);
-  siftUp(heap, node, index);
+  shiftUp(heap, node, index);
 }
 
 export function peek<T: Node>(heap: Heap<T>): T | null {
@@ -32,12 +32,12 @@ export function pop<T: Node>(heap: Heap<T>): T | null {
   const last = heap.pop();
   if (last !== first) {
     heap[0] = last;
-    siftDown(heap, last, 0);
+    shiftDown(heap, last, 0);
   }
   return first;
 }
 
-function siftUp<T: Node>(heap: Heap<T>, node: T, i: number): void {
+function shiftUp<T: Node>(heap: Heap<T>, node: T, i: number): void {
   let index = i;
   while (index > 0) {
     const parentIndex = (index - 1) >>> 1;
@@ -54,7 +54,7 @@ function siftUp<T: Node>(heap: Heap<T>, node: T, i: number): void {
   }
 }
 
-function siftDown<T: Node>(heap: Heap<T>, node: T, i: number): void {
+function shiftDown<T: Node>(heap: Heap<T>, node: T, i: number): void {
   let index = i;
   const length = heap.length;
   const halfLength = length >>> 1;
