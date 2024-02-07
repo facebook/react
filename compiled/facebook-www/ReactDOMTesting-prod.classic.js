@@ -17490,7 +17490,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1828 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-a4e84017",
+  version: "18.3.0-www-classic-5f5e8f54",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2197 = {
@@ -17520,7 +17520,7 @@ var internals$jscomp$inline_2197 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-a4e84017"
+  reconcilerVersion: "18.3.0-www-classic-5f5e8f54"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2198 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18021,4 +18021,4 @@ exports.useFormStatus = function () {
     return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-classic-a4e84017";
+exports.version = "18.3.0-www-classic-5f5e8f54";

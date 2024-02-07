@@ -1129,10 +1129,8 @@ if (__DEV__) {
         for (propName in config) {
           if (
             hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-            propName !== "key" && // TODO: These will no longer be reserved in the next major
-            propName !== "ref" &&
-            propName !== "__self" &&
-            propName !== "__source"
+            propName !== "key" && // TODO: `ref` will no longer be reserved in the next major
+            propName !== "ref"
           ) {
             props[propName] = config[propName];
           }

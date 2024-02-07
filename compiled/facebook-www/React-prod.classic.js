@@ -160,8 +160,6 @@ function jsx$1(type, config, maybeKey) {
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
       "ref" !== propName &&
-      "__self" !== propName &&
-      "__source" !== propName &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
@@ -577,4 +575,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-a3f180e9";
+exports.version = "18.3.0-www-classic-88f429a3";

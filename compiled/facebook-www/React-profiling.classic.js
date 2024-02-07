@@ -164,8 +164,6 @@ function jsx$1(type, config, maybeKey) {
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
       "ref" !== propName &&
-      "__self" !== propName &&
-      "__source" !== propName &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
@@ -581,7 +579,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-a4e84017";
+exports.version = "18.3.0-www-classic-5f5e8f54";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

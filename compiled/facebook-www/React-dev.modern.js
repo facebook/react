@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-20a278f7";
+    var ReactVersion = "18.3.0-www-modern-fe0a8b28";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -834,8 +834,13 @@ if (__DEV__) {
         for (propName in config) {
           if (
             hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-            propName !== "key" && // TODO: These will no longer be reserved in the next major
-            propName !== "ref" &&
+            propName !== "key" && // TODO: `ref` will no longer be reserved in the next major
+            propName !== "ref" && // ...and maybe these, too, though we currently rely on them for
+            // warnings and debug information in dev. Need to decide if we're OK
+            // with dropping them. In the jsx() runtime it's not an issue because
+            // the data gets passed as separate arguments instead of props, but
+            // it would be nice to stop relying on them entirely so we can drop
+            // them from the internal Fiber field.
             propName !== "__self" &&
             propName !== "__source"
           ) {
@@ -967,8 +972,13 @@ if (__DEV__) {
         for (propName in config) {
           if (
             hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-            propName !== "key" && // TODO: These will no longer be reserved in the next major
-            propName !== "ref" &&
+            propName !== "key" && // TODO: `ref` will no longer be reserved in the next major
+            propName !== "ref" && // ...and maybe these, too, though we currently rely on them for
+            // warnings and debug information in dev. Need to decide if we're OK
+            // with dropping them. In the jsx() runtime it's not an issue because
+            // the data gets passed as separate arguments instead of props, but
+            // it would be nice to stop relying on them entirely so we can drop
+            // them from the internal Fiber field.
             propName !== "__self" &&
             propName !== "__source"
           ) {
@@ -1909,10 +1919,8 @@ if (__DEV__) {
         for (propName in config) {
           if (
             hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-            propName !== "key" && // TODO: These will no longer be reserved in the next major
-            propName !== "ref" &&
-            propName !== "__self" &&
-            propName !== "__source"
+            propName !== "key" && // TODO: `ref` will no longer be reserved in the next major
+            propName !== "ref"
           ) {
             props[propName] = config[propName];
           }

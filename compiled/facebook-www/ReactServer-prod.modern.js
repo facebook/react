@@ -87,8 +87,6 @@ function jsx$1(type, config, maybeKey) {
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
       "ref" !== propName &&
-      "__self" !== propName &&
-      "__source" !== propName &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
@@ -475,4 +473,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-48d2dc77";
+exports.version = "18.3.0-www-modern-a97dcea7";
