@@ -539,6 +539,31 @@ function createLazyWrapperAroundWakeable(wakeable) {
   }
   return { $$typeof: REACT_LAZY_TYPE, _payload: wakeable, _init: readThenable };
 }
+function renderFunctionComponent(request, task, key, Component, props) {
+  var prevThenableState = task.thenableState;
+  task.thenableState = null;
+  thenableIndexCounter = 0;
+  thenableState = prevThenableState;
+  Component = Component(props, void 0);
+  if (
+    "object" === typeof Component &&
+    null !== Component &&
+    "function" === typeof Component.then
+  ) {
+    props = Component;
+    if ("fulfilled" === props.status) return props.value;
+    Component = createLazyWrapperAroundWakeable(Component);
+  }
+  props = task.keyPath;
+  prevThenableState = task.implicitSlot;
+  null !== key
+    ? (task.keyPath = null === props ? key : props + "," + key)
+    : null === props && (task.implicitSlot = !0);
+  request = renderModelDestructive(request, task, emptyRoot, "", Component);
+  task.keyPath = props;
+  task.implicitSlot = prevThenableState;
+  return request;
+}
 function renderFragment(request, task, children) {
   return null !== task.keyPath
     ? ((request = [
@@ -563,33 +588,10 @@ function renderElement(request, task, type, key, ref, props) {
     throw Error(
       "Refs cannot be used in Server Components, nor passed to Client Components."
     );
-  if ("function" === typeof type) {
-    if (isClientReference(type))
-      return renderClientElement(task, type, key, props);
-    ref = task.thenableState;
-    task.thenableState = null;
-    thenableIndexCounter = 0;
-    thenableState = ref;
-    props = type(props);
-    if (
-      "object" === typeof props &&
-      null !== props &&
-      "function" === typeof props.then
-    ) {
-      type = props;
-      if ("fulfilled" === type.status) return type.value;
-      props = createLazyWrapperAroundWakeable(props);
-    }
-    type = task.keyPath;
-    ref = task.implicitSlot;
-    null !== key
-      ? (task.keyPath = null === type ? key : type + "," + key)
-      : null === type && (task.implicitSlot = !0);
-    request = renderModelDestructive(request, task, emptyRoot, "", props);
-    task.keyPath = type;
-    task.implicitSlot = ref;
-    return request;
-  }
+  if ("function" === typeof type)
+    return isClientReference(type)
+      ? renderClientElement(task, type, key, props)
+      : renderFunctionComponent(request, task, key, type, props);
   if ("string" === typeof type)
     return renderClientElement(task, type, key, props);
   if ("symbol" === typeof type)
@@ -615,23 +617,7 @@ function renderElement(request, task, type, key, ref, props) {
         type = init(type._payload);
         return renderElement(request, task, type, key, ref, props);
       case REACT_FORWARD_REF_TYPE:
-        return (
-          (type = type.render),
-          (ref = task.thenableState),
-          (task.thenableState = null),
-          (thenableIndexCounter = 0),
-          (thenableState = ref),
-          (ref = type(props, void 0)),
-          (props = task.keyPath),
-          (type = task.implicitSlot),
-          null !== key
-            ? (task.keyPath = null === props ? key : props + "," + key)
-            : null === props && (task.implicitSlot = !0),
-          (request = renderModelDestructive(request, task, emptyRoot, "", ref)),
-          (task.keyPath = props),
-          (task.implicitSlot = type),
-          request
-        );
+        return renderFunctionComponent(request, task, key, type.render, props);
       case REACT_MEMO_TYPE:
         return renderElement(request, task, type.type, key, ref, props);
     }
@@ -928,10 +914,10 @@ function renderModelDestructive(
   }
   if ("symbol" === typeof value) {
     task = request.writtenSymbols;
-    var existingId$15 = task.get(value);
-    if (void 0 !== existingId$15) return serializeByValueID(existingId$15);
-    existingId$15 = value.description;
-    if (Symbol.for(existingId$15) !== value)
+    var existingId$8 = task.get(value);
+    if (void 0 !== existingId$8) return serializeByValueID(existingId$8);
+    existingId$8 = value.description;
+    if (Symbol.for(existingId$8) !== value)
       throw Error(
         "Only global symbols received from Symbol.for(...) can be passed to Client Components. The symbol Symbol.for(" +
           (value.description + ") cannot be found among global symbols.") +
@@ -939,7 +925,7 @@ function renderModelDestructive(
       );
     request.pendingChunks++;
     parent = request.nextChunkId++;
-    parentPropertyName = stringify("$S" + existingId$15);
+    parentPropertyName = stringify("$S" + existingId$8);
     parentPropertyName = parent.toString(16) + ":" + parentPropertyName + "\n";
     request.completedImportChunks.push(parentPropertyName);
     task.set(value, parent);

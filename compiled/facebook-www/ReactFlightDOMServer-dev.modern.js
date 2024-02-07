@@ -1308,6 +1308,55 @@ if (__DEV__) {
       return lazyType;
     }
 
+    function renderFunctionComponent(request, task, key, Component, props) {
+      // Reset the task's thenable state before continuing, so that if a later
+      // component suspends we can reuse the same task object. If the same
+      // component suspends again, the thenable state will be restored.
+      var prevThenableState = task.thenableState;
+      task.thenableState = null;
+      prepareToUseHooksForComponent(prevThenableState); // The secondArg is always undefined in Server Components since refs error early.
+
+      var secondArg = undefined;
+      var result = Component(props, secondArg);
+
+      if (
+        typeof result === "object" &&
+        result !== null &&
+        typeof result.then === "function"
+      ) {
+        // When the return value is in children position we can resolve it immediately,
+        // to its value without a wrapper if it's synchronously available.
+        var thenable = result;
+
+        if (thenable.status === "fulfilled") {
+          return thenable.value;
+        } // TODO: Once we accept Promises as children on the client, we can just return
+        // the thenable here.
+
+        result = createLazyWrapperAroundWakeable(result);
+      } // Track this element's key on the Server Component on the keyPath context..
+
+      var prevKeyPath = task.keyPath;
+      var prevImplicitSlot = task.implicitSlot;
+
+      if (key !== null) {
+        // Append the key to the path. Technically a null key should really add the child
+        // index. We don't do that to hold the payload small and implementation simple.
+        task.keyPath = prevKeyPath === null ? key : prevKeyPath + "," + key;
+      } else if (prevKeyPath === null) {
+        // This sequence of Server Components has no keys. This means that it was rendered
+        // in a slot that needs to assign an implicit key. Even if children below have
+        // explicit keys, they should not be used for the outer most key since it might
+        // collide with other slots in that set.
+        task.implicitSlot = true;
+      }
+
+      var json = renderModelDestructive(request, task, emptyRoot, "", result);
+      task.keyPath = prevKeyPath;
+      task.implicitSlot = prevImplicitSlot;
+      return json;
+    }
+
     function renderFragment(request, task, children) {
       if (task.keyPath !== null) {
         // We have a Server Component that specifies a key but we're now splitting
@@ -1397,51 +1446,8 @@ if (__DEV__) {
           // This is a reference to a Client Component.
           return renderClientElement(task, type, key, props);
         } // This is a server-side component.
-        // Reset the task's thenable state before continuing, so that if a later
-        // component suspends we can reuse the same task object. If the same
-        // component suspends again, the thenable state will be restored.
 
-        var prevThenableState = task.thenableState;
-        task.thenableState = null;
-        prepareToUseHooksForComponent(prevThenableState);
-        var result = type(props);
-
-        if (
-          typeof result === "object" &&
-          result !== null &&
-          typeof result.then === "function"
-        ) {
-          // When the return value is in children position we can resolve it immediately,
-          // to its value without a wrapper if it's synchronously available.
-          var thenable = result;
-
-          if (thenable.status === "fulfilled") {
-            return thenable.value;
-          } // TODO: Once we accept Promises as children on the client, we can just return
-          // the thenable here.
-
-          result = createLazyWrapperAroundWakeable(result);
-        } // Track this element's key on the Server Component on the keyPath context..
-
-        var prevKeyPath = task.keyPath;
-        var prevImplicitSlot = task.implicitSlot;
-
-        if (key !== null) {
-          // Append the key to the path. Technically a null key should really add the child
-          // index. We don't do that to hold the payload small and implementation simple.
-          task.keyPath = prevKeyPath === null ? key : prevKeyPath + "," + key;
-        } else if (prevKeyPath === null) {
-          // This sequence of Server Components has no keys. This means that it was rendered
-          // in a slot that needs to assign an implicit key. Even if children below have
-          // explicit keys, they should not be used for the outer most key since it might
-          // collide with other slots in that set.
-          task.implicitSlot = true;
-        }
-
-        var json = renderModelDestructive(request, task, emptyRoot, "", result);
-        task.keyPath = prevKeyPath;
-        task.implicitSlot = prevImplicitSlot;
-        return json;
+        return renderFunctionComponent(request, task, key, type, props);
       } else if (typeof type === "string") {
         // This is a host element. E.g. HTML.
         return renderClientElement(task, type, key, props);
@@ -1449,22 +1455,21 @@ if (__DEV__) {
         if (type === REACT_FRAGMENT_TYPE && key === null) {
           // For key-less fragments, we add a small optimization to avoid serializing
           // it as a wrapper.
-          var _prevImplicitSlot = task.implicitSlot;
+          var prevImplicitSlot = task.implicitSlot;
 
           if (task.keyPath === null) {
             task.implicitSlot = true;
           }
 
-          var _json = renderModelDestructive(
+          var json = renderModelDestructive(
             request,
             task,
             emptyRoot,
             "",
             props.children
           );
-
-          task.implicitSlot = _prevImplicitSlot;
-          return _json;
+          task.implicitSlot = prevImplicitSlot;
+          return json;
         } // This might be a built-in React component. We'll let the client decide.
         // Any built-in works as long as its props are serializable.
 
@@ -1484,43 +1489,13 @@ if (__DEV__) {
           }
 
           case REACT_FORWARD_REF_TYPE: {
-            var render = type.render; // Reset the task's thenable state before continuing, so that if a later
-            // component suspends we can reuse the same task object. If the same
-            // component suspends again, the thenable state will be restored.
-
-            var _prevThenableState = task.thenableState;
-            task.thenableState = null;
-            prepareToUseHooksForComponent(_prevThenableState);
-
-            var _result = render(props, undefined);
-
-            var _prevKeyPath = task.keyPath;
-            var _prevImplicitSlot2 = task.implicitSlot;
-
-            if (key !== null) {
-              // Append the key to the path. Technically a null key should really add the child
-              // index. We don't do that to hold the payload small and implementation simple.
-              task.keyPath =
-                _prevKeyPath === null ? key : _prevKeyPath + "," + key;
-            } else if (_prevKeyPath === null) {
-              // This sequence of Server Components has no keys. This means that it was rendered
-              // in a slot that needs to assign an implicit key. Even if children below have
-              // explicit keys, they should not be used for the outer most key since it might
-              // collide with other slots in that set.
-              task.implicitSlot = true;
-            }
-
-            var _json2 = renderModelDestructive(
+            return renderFunctionComponent(
               request,
               task,
-              emptyRoot,
-              "",
-              _result
+              key,
+              type.render,
+              props
             );
-
-            task.keyPath = _prevKeyPath;
-            task.implicitSlot = _prevImplicitSlot2;
-            return _json2;
           }
 
           case REACT_MEMO_TYPE: {
