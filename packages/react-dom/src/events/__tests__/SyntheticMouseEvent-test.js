@@ -10,15 +10,16 @@
 'use strict';
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
+let act;
 
 describe('SyntheticMouseEvent', () => {
   let container;
 
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
-    ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
 
     // The container has to be attached for events to fire.
     container = document.createElement('div');
@@ -30,7 +31,7 @@ describe('SyntheticMouseEvent', () => {
     container = null;
   });
 
-  it('should only use values from movementX/Y when event type is mousemove', () => {
+  it('should only use values from movementX/Y when event type is mousemove', async () => {
     const events = [];
     const onMouseMove = event => {
       events.push(event.movementX);
@@ -40,10 +41,11 @@ describe('SyntheticMouseEvent', () => {
       events.push(event.movementX);
     };
 
-    const node = ReactDOM.render(
-      <div onMouseMove={onMouseMove} onMouseDown={onMouseDown} />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<div onMouseMove={onMouseMove} onMouseDown={onMouseDown} />);
+    });
+    const node = container.firstChild;
 
     let event = new MouseEvent('mousemove', {
       relatedTarget: null,
@@ -52,7 +54,9 @@ describe('SyntheticMouseEvent', () => {
       screenY: 2,
     });
 
-    node.dispatchEvent(event);
+    await act(() => {
+      node.dispatchEvent(event);
+    });
 
     event = new MouseEvent('mousemove', {
       relatedTarget: null,
@@ -61,7 +65,9 @@ describe('SyntheticMouseEvent', () => {
       screenY: 8,
     });
 
-    node.dispatchEvent(event);
+    await act(() => {
+      node.dispatchEvent(event);
+    });
 
     // Now trigger a mousedown event to see if movementX has changed back to 0
     event = new MouseEvent('mousedown', {
@@ -71,7 +77,9 @@ describe('SyntheticMouseEvent', () => {
       screenY: 65,
     });
 
-    node.dispatchEvent(event);
+    await act(() => {
+      node.dispatchEvent(event);
+    });
 
     expect(events.length).toBe(3);
     expect(events[0]).toBe(0);
@@ -79,7 +87,7 @@ describe('SyntheticMouseEvent', () => {
     expect(events[2]).toBe(0); // mousedown event should have movementX at 0
   });
 
-  it('should correctly calculate movementX/Y for capture phase', () => {
+  it('should correctly calculate movementX/Y for capture phase', async () => {
     const events = [];
     const onMouseMove = event => {
       events.push(['move', false, event.movementX, event.movementY]);
@@ -94,15 +102,18 @@ describe('SyntheticMouseEvent', () => {
       events.push(['down', true, event.movementX, event.movementY]);
     };
 
-    const node = ReactDOM.render(
-      <div
-        onMouseMove={onMouseMove}
-        onMouseMoveCapture={onMouseMoveCapture}
-        onMouseDown={onMouseDown}
-        onMouseDownCapture={onMouseDownCapture}
-      />,
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div
+          onMouseMove={onMouseMove}
+          onMouseMoveCapture={onMouseMoveCapture}
+          onMouseDown={onMouseDown}
+          onMouseDownCapture={onMouseDownCapture}
+        />,
+      );
+    });
+    const node = container.firstChild;
 
     let event = new MouseEvent('mousemove', {
       relatedTarget: null,
@@ -111,7 +122,9 @@ describe('SyntheticMouseEvent', () => {
       screenY: 2,
     });
 
-    node.dispatchEvent(event);
+    await act(() => {
+      node.dispatchEvent(event);
+    });
 
     event = new MouseEvent('mousemove', {
       relatedTarget: null,
@@ -120,7 +133,9 @@ describe('SyntheticMouseEvent', () => {
       screenY: 9,
     });
 
-    node.dispatchEvent(event);
+    await act(() => {
+      node.dispatchEvent(event);
+    });
 
     // Now trigger a mousedown event to see if movementX has changed back to 0
     event = new MouseEvent('mousedown', {
@@ -130,7 +145,9 @@ describe('SyntheticMouseEvent', () => {
       screenY: 65,
     });
 
-    node.dispatchEvent(event);
+    await act(() => {
+      node.dispatchEvent(event);
+    });
 
     expect(events).toEqual([
       ['move', true, 0, 0],

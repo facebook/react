@@ -30,7 +30,6 @@ let shouldYield;
 // and timing of events.
 describe('SchedulerPostTask', () => {
   beforeEach(() => {
-    jest.resetModules();
     jest.mock('scheduler', () =>
       jest.requireActual('scheduler/unstable_post_task'),
     );

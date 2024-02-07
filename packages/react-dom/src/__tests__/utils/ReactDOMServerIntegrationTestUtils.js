@@ -14,11 +14,12 @@ const shouldIgnoreConsoleError = require('../../../../../scripts/jest/shouldIgno
 
 module.exports = function (initModules) {
   let ReactDOM;
+  let ReactDOMClient;
   let ReactDOMServer;
   let act;
 
   function resetModules() {
-    ({ReactDOM, ReactDOMServer} = initModules());
+    ({ReactDOM, ReactDOMClient, ReactDOMServer} = initModules());
     act = require('internal-test-utils').act;
   }
 
@@ -51,11 +52,24 @@ module.exports = function (initModules) {
   async function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
     if (forceHydrate) {
       await act(() => {
-        ReactDOM.hydrate(reactElement, domElement);
+        if (ReactDOMClient) {
+          ReactDOMClient.hydrateRoot(domElement, reactElement, {
+            onRecoverableError: () => {
+              // TODO: assert on recoverable error count.
+            },
+          });
+        } else {
+          ReactDOM.hydrate(reactElement, domElement);
+        }
       });
     } else {
       await act(() => {
-        ReactDOM.render(reactElement, domElement);
+        if (ReactDOMClient) {
+          const root = ReactDOMClient.createRoot(domElement);
+          root.render(reactElement);
+        } else {
+          ReactDOM.render(reactElement, domElement);
+        }
       });
     }
   }
@@ -80,7 +94,11 @@ module.exports = function (initModules) {
       for (let i = 0; i < console.error.mock.calls.length; i++) {
         const args = console.error.mock.calls[i];
         const [format, ...rest] = args;
-        if (!shouldIgnoreConsoleError(format, rest)) {
+        if (
+          !shouldIgnoreConsoleError(format, rest, {
+            TODO_ignoreHydrationErrors: true,
+          })
+        ) {
           filteredWarnings.push(args);
         }
       }

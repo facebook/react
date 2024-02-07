@@ -73,7 +73,7 @@ describe('ReactFlightDOM for FB', () => {
     // condition
     jest.resetModules();
 
-    jest.mock('react', () => require('react/src/ReactSharedSubsetFB'));
+    jest.mock('react', () => require('react/src/ReactServerFB'));
 
     jest.mock('shared/ReactFeatureFlags', () => {
       jest.mock(

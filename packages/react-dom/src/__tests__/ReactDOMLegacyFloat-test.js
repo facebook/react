@@ -15,8 +15,6 @@ let ReactDOMFizzServer;
 
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactDOMFizzServer = require('react-dom/server');
   });

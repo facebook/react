@@ -27,7 +27,6 @@ let useFormState;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOMServer = require('react-dom/server.browser');
     ReactDOMClient = require('react-dom/client');

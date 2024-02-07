@@ -11,8 +11,6 @@
 
 describe('ReactDOMFrameScheduling', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     jest.unmock('scheduler');
   });
 

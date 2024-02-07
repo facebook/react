@@ -17,7 +17,6 @@ let waitForAll;
 
 describe('ReactTestRenderer', () => {
   beforeEach(() => {
-    jest.resetModules();
     ReactDOM = require('react-dom');
 
     // Isolate test renderer.

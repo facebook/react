@@ -13,20 +13,22 @@
 // of dynamic errors when using JSX with Flow.
 let React;
 let ReactDOM;
+let ReactDOMClient;
 let ReactTestUtils;
 let PropTypes;
+let act;
 
 describe('ReactJSXElementValidator', () => {
   let Component;
   let RequiredPropComponent;
 
   beforeEach(() => {
-    jest.resetModules();
-
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMClient = require('react-dom/client');
     ReactTestUtils = require('react-dom/test-utils');
+    act = require('internal-test-utils').act;
 
     Component = class extends React.Component {
       render() {
@@ -172,7 +174,7 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('should update component stack after receiving next element', () => {
+  it('should update component stack after receiving next element', async () => {
     function MyComp() {
       return null;
     }
@@ -192,9 +194,14 @@ describe('ReactJSXElementValidator', () => {
     }
 
     const container = document.createElement('div');
-    ReactDOM.render(<ParentComp warn={false} />, container);
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<ParentComp warn={false} />);
+    });
     expect(() =>
-      ReactDOM.render(<ParentComp warn={true} />, container),
+      ReactDOM.flushSync(() => {
+        root.render(<ParentComp warn={true} />);
+      }),
     ).toErrorDev(
       'Warning: Failed prop type: ' +
         'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
@@ -211,7 +218,7 @@ describe('ReactJSXElementValidator', () => {
     const True = true;
     const Div = 'div';
     expect(() => void (<Undefined />)).toErrorDev(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
+      'Warning: React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: undefined. You likely forgot to export your ' +
         "component from the file it's defined in, or you might have mixed up " +
@@ -220,14 +227,14 @@ describe('ReactJSXElementValidator', () => {
       {withoutStack: true},
     );
     expect(() => void (<Null />)).toErrorDev(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
+      'Warning: React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: null.' +
         '\n\nCheck your code at **.',
       {withoutStack: true},
     );
     expect(() => void (<True />)).toErrorDev(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
+      'Warning: React.jsx: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: boolean.' +
         '\n\nCheck your code at **.',

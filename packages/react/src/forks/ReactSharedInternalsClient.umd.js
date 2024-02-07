@@ -12,8 +12,6 @@ import ReactCurrentActQueue from '../ReactCurrentActQueue';
 import ReactCurrentOwner from '../ReactCurrentOwner';
 import ReactDebugCurrentFrame from '../ReactDebugCurrentFrame';
 import ReactCurrentBatchConfig from '../ReactCurrentBatchConfig';
-import {enableServerContext} from 'shared/ReactFeatureFlags';
-import {ContextRegistry} from '../ReactServerContextRegistry';
 
 const ReactSharedInternalsClient = {
   ReactCurrentDispatcher,
@@ -32,10 +30,6 @@ const ReactSharedInternalsClient = {
 if (__DEV__) {
   ReactSharedInternalsClient.ReactCurrentActQueue = ReactCurrentActQueue;
   ReactSharedInternalsClient.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
-}
-
-if (enableServerContext) {
-  ReactSharedInternalsClient.ContextRegistry = ContextRegistry;
 }
 
 export default ReactSharedInternalsClient;

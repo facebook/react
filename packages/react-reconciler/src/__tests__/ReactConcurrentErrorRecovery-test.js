@@ -12,8 +12,6 @@ let seededCache;
 
 describe('ReactConcurrentErrorRecovery', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');

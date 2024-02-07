@@ -42,8 +42,7 @@ let assertLog;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
-    jest.resetModules();
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
     ReactServer = require('react');
     ReactNoopFlightServer = require('react-noop-renderer/flight-server');
     // This stores the state so we need to preserve it
@@ -121,32 +120,6 @@ describe('ReactFlight', () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
-
-  function createServerContext(globalName, defaultValue, withStack) {
-    let ctx;
-    expect(() => {
-      ctx = React.createServerContext(globalName, defaultValue);
-    }).toErrorDev(
-      'Server Context is deprecated and will soon be removed. ' +
-        'It was never documented and we have found it not to be useful ' +
-        'enough to warrant the downside it imposes on all apps.',
-      {withoutStack: !withStack},
-    );
-    return ctx;
-  }
-
-  function createServerServerContext(globalName, defaultValue, withStack) {
-    let ctx;
-    expect(() => {
-      ctx = ReactServer.createServerContext(globalName, defaultValue);
-    }).toErrorDev(
-      'Server Context is deprecated and will soon be removed. ' +
-        'It was never documented and we have found it not to be useful ' +
-        'enough to warrant the downside it imposes on all apps.',
-      {withoutStack: !withStack},
-    );
-    return ctx;
-  }
 
   function clientReference(value) {
     return Object.defineProperties(
@@ -1009,6 +982,22 @@ describe('ReactFlight', () => {
     ReactNoopFlightClient.read(transport);
   });
 
+  it('should warn in DEV a child is missing keys', () => {
+    function ParentClient({children}) {
+      return children;
+    }
+    const Parent = clientReference(ParentClient);
+    expect(() => {
+      const transport = ReactNoopFlightServer.render(
+        <Parent>{Array(6).fill(<div>no key</div>)}</Parent>,
+      );
+      ReactNoopFlightClient.read(transport);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://reactjs.org/link/warning-keys for more information.',
+    );
+  });
+
   it('should error if a class instance is passed to a host component', () => {
     class Foo {
       method() {}
@@ -1026,18 +1015,50 @@ describe('ReactFlight', () => {
     ]);
   });
 
-  it('should warn in DEV if a a client reference is passed to useContext()', () => {
+  it('should error if useContext is called()', () => {
+    function ServerComponent() {
+      return ReactServer.useContext();
+    }
+    const errors = [];
+    ReactNoopFlightServer.render(<ServerComponent />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+    expect(errors).toEqual(['ReactServer.useContext is not a function']);
+  });
+
+  it('should error if a context without a client reference is passed to use()', () => {
+    const Context = React.createContext();
+    function ServerComponent() {
+      return ReactServer.use(Context);
+    }
+    const errors = [];
+    ReactNoopFlightServer.render(<ServerComponent />, {
+      onError(x) {
+        errors.push(x.message);
+      },
+    });
+    expect(errors).toEqual([
+      'Cannot read a Client Context from a Server Component.',
+    ]);
+  });
+
+  it('should error if a client reference is passed to use()', () => {
     const Context = React.createContext();
     const ClientContext = clientReference(Context);
     function ServerComponent() {
-      return ReactServer.useContext(ClientContext);
+      return ReactServer.use(ClientContext);
     }
-    expect(() => {
-      const transport = ReactNoopFlightServer.render(<ServerComponent />);
-      ReactNoopFlightClient.read(transport);
-    }).toErrorDev('Cannot read a Client Context from a Server Component.', {
-      withoutStack: true,
+    const errors = [];
+    ReactNoopFlightServer.render(<ServerComponent />, {
+      onError(x) {
+        errors.push(x.message);
+      },
     });
+    expect(errors).toEqual([
+      'Cannot read a Client Context from a Server Component.',
+    ]);
   });
 
   describe('Hooks', () => {
@@ -1128,360 +1149,6 @@ describe('ReactFlight', () => {
         <>
           <div prop=":S1:">:S1:</div>
           <div prop=":S1:">:S1:</div>
-        </>,
-      );
-    });
-  });
-
-  describe('ServerContext', () => {
-    // @gate enableServerContext
-    it('supports basic createServerContext usage', async () => {
-      const ServerContext = createServerServerContext(
-        'ServerContext',
-        'hello from server',
-      );
-      function Foo() {
-        const context = ReactServer.useContext(ServerContext);
-        return <div>{context}</div>;
-      }
-
-      const transport = ReactNoopFlightServer.render(<Foo />);
-      await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
-      });
-
-      expect(ReactNoop).toMatchRenderedOutput(<div>hello from server</div>);
-    });
-
-    // @gate enableServerContext
-    it('propagates ServerContext providers in flight', async () => {
-      const ServerContext = createServerServerContext(
-        'ServerContext',
-        'default',
-      );
-
-      function Foo() {
-        return (
-          <div>
-            <ServerContext.Provider value="hi this is server">
-              <Bar />
-            </ServerContext.Provider>
-          </div>
-        );
-      }
-      function Bar() {
-        const context = ReactServer.useContext(ServerContext);
-        return context;
-      }
-
-      const transport = ReactNoopFlightServer.render(<Foo />);
-      await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
-      });
-
-      expect(ReactNoop).toMatchRenderedOutput(<div>hi this is server</div>);
-    });
-
-    // @gate enableServerContext
-    it('errors if you try passing JSX through ServerContext value', () => {
-      const ServerContext = createServerServerContext('ServerContext', {
-        foo: {
-          bar: <span>hi this is default</span>,
-        },
-      });
-
-      function Foo() {
-        return (
-          <div>
-            <ServerContext.Provider
-              value={{
-                foo: {
-                  bar: <span>hi this is server</span>,
-                },
-              }}>
-              <Bar />
-            </ServerContext.Provider>
-          </div>
-        );
-      }
-      function Bar() {
-        const context = ReactServer.useContext(ServerContext);
-        return context.foo.bar;
-      }
-
-      expect(() => {
-        ReactNoopFlightServer.render(<Foo />);
-      }).toErrorDev('React elements are not allowed in ServerContext', {
-        withoutStack: true,
-      });
-    });
-
-    // @gate enableServerContext
-    it('propagates ServerContext and cleans up the providers in flight', async () => {
-      const ServerContext = createServerServerContext(
-        'ServerContext',
-        'default',
-      );
-
-      function Foo() {
-        return (
-          <>
-            <ServerContext.Provider value="hi this is server outer">
-              <ServerContext.Provider value="hi this is server">
-                <Bar />
-              </ServerContext.Provider>
-              <ServerContext.Provider value="hi this is server2">
-                <Bar />
-              </ServerContext.Provider>
-              <Bar />
-            </ServerContext.Provider>
-            <ServerContext.Provider value="hi this is server outer2">
-              <Bar />
-            </ServerContext.Provider>
-            <Bar />
-          </>
-        );
-      }
-      function Bar() {
-        const context = ReactServer.useContext(ServerContext);
-        return <span>{context}</span>;
-      }
-
-      const transport = ReactNoopFlightServer.render(<Foo />);
-      await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
-      });
-
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <span>hi this is server</span>
-          <span>hi this is server2</span>
-          <span>hi this is server outer</span>
-          <span>hi this is server outer2</span>
-          <span>default</span>
-        </>,
-      );
-    });
-
-    // @gate enableServerContext
-    it('propagates ServerContext providers in flight after suspending', async () => {
-      const ServerContext = createServerServerContext(
-        'ServerContext',
-        'default',
-      );
-
-      function Foo() {
-        return (
-          <div>
-            <ServerContext.Provider value="hi this is server">
-              <React.Suspense fallback={'Loading'}>
-                <Bar />
-              </React.Suspense>
-            </ServerContext.Provider>
-          </div>
-        );
-      }
-
-      let resolve;
-      const promise = new Promise(res => {
-        resolve = () => {
-          promise.unsuspend = true;
-          res();
-        };
-      });
-
-      function Bar() {
-        if (!promise.unsuspend) {
-          Scheduler.log('suspended');
-          throw promise;
-        }
-        Scheduler.log('rendered');
-        const context = ReactServer.useContext(ServerContext);
-        return context;
-      }
-
-      const transport = ReactNoopFlightServer.render(<Foo />);
-
-      assertLog(['suspended']);
-
-      await act(async () => {
-        resolve();
-        await promise;
-        jest.runAllImmediates();
-      });
-
-      assertLog(['rendered']);
-
-      await act(async () => {
-        ReactNoop.render(await ReactNoopFlightClient.read(transport));
-      });
-
-      expect(ReactNoop).toMatchRenderedOutput(<div>hi this is server</div>);
-    });
-
-    // @gate enableServerContext
-    it('serializes ServerContext to client', async () => {
-      const ServerContext = createServerServerContext(
-        'ServerContext',
-        'default',
-      );
-      const ClientContext = createServerContext('ServerContext', 'default');
-
-      function ClientBar() {
-        Scheduler.log('ClientBar');
-        const context = React.useContext(ClientContext);
-        return <span>{context}</span>;
-      }
-
-      const Bar = clientReference(ClientBar);
-
-      function Foo() {
-        return (
-          <ServerContext.Provider value="hi this is server">
-            <Bar />
-          </ServerContext.Provider>
-        );
-      }
-
-      const model = {
-        foo: <Foo />,
-      };
-
-      const transport = ReactNoopFlightServer.render(model);
-
-      assertLog([]);
-
-      await act(async () => {
-        const flightModel = await ReactNoopFlightClient.read(transport);
-        ReactNoop.render(flightModel.foo);
-      });
-
-      assertLog(['ClientBar']);
-      expect(ReactNoop).toMatchRenderedOutput(<span>hi this is server</span>);
-
-      expect(() => {
-        createServerContext('ServerContext', 'default');
-      }).toThrow('ServerContext: ServerContext already defined');
-    });
-
-    // @gate enableServerContext
-    it('takes ServerContext from the client for refetching use cases', async () => {
-      const ServerContext = createServerServerContext(
-        'ServerContext',
-        'default',
-      );
-      function Bar() {
-        return <span>{ReactServer.useContext(ServerContext)}</span>;
-      }
-      const transport = ReactNoopFlightServer.render(<Bar />, {
-        context: [['ServerContext', 'Override']],
-      });
-
-      await act(async () => {
-        const flightModel = await ReactNoopFlightClient.read(transport);
-        ReactNoop.render(flightModel);
-      });
-      expect(ReactNoop).toMatchRenderedOutput(<span>Override</span>);
-    });
-
-    // @gate enableServerContext
-    it('sets default initial value when defined lazily on server or client', async () => {
-      let ServerContext;
-      function inlineLazyServerContextInitialization() {
-        if (!ServerContext) {
-          ServerContext = createServerServerContext('ServerContext', 'default');
-        }
-        return ServerContext;
-      }
-
-      let ClientContext;
-      function inlineContextInitialization() {
-        if (!ClientContext) {
-          ClientContext = createServerContext('ServerContext', 'default', true);
-        }
-        return ClientContext;
-      }
-
-      function ClientBaz() {
-        const context = inlineContextInitialization();
-        const value = React.useContext(context);
-        return <div>{value}</div>;
-      }
-
-      const Baz = clientReference(ClientBaz);
-
-      function Bar() {
-        return (
-          <article>
-            <div>
-              {ReactServer.useContext(inlineLazyServerContextInitialization())}
-            </div>
-            <Baz />
-          </article>
-        );
-      }
-
-      function ServerApp() {
-        const Context = inlineLazyServerContextInitialization();
-        return (
-          <>
-            <Context.Provider value="test">
-              <Bar />
-            </Context.Provider>
-            <Bar />
-          </>
-        );
-      }
-
-      function ClientApp({serverModel}) {
-        return (
-          <>
-            {serverModel}
-            <ClientBaz />
-          </>
-        );
-      }
-
-      const transport = ReactNoopFlightServer.render(<ServerApp />);
-
-      expect(ClientContext).toBe(undefined);
-
-      // Reset all modules, except flight-modules which keeps the registry of Client Components
-      const flightModules = require('react-noop-renderer/flight-modules');
-      jest.resetModules();
-      jest.mock('react', () => require('react/react.shared-subset'));
-      jest.mock('react-noop-renderer/flight-modules', () => flightModules);
-
-      ReactServer = require('react');
-      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
-
-      __unmockReact();
-      jest.resetModules();
-      jest.mock('react-noop-renderer/flight-modules', () => flightModules);
-      React = require('react');
-      ReactNoop = require('react-noop-renderer');
-      ReactNoopFlightClient = require('react-noop-renderer/flight-client');
-      act = require('internal-test-utils').act;
-      Scheduler = require('scheduler');
-
-      await act(async () => {
-        const serverModel = await ReactNoopFlightClient.read(transport);
-        ReactNoop.render(<ClientApp serverModel={serverModel} />);
-      });
-
-      expect(ClientContext).not.toBe(ServerContext);
-
-      expect(ReactNoop).toMatchRenderedOutput(
-        <>
-          <article>
-            <div>test</div>
-            <div>test</div>
-          </article>
-          <article>
-            <div>default</div>
-            <div>default</div>
-          </article>
-          <div>default</div>
         </>,
       );
     });
@@ -1683,5 +1350,430 @@ describe('ReactFlight', () => {
     );
 
     expect(errors).toEqual([]);
+  });
+
+  // @gate enableServerComponentKeys
+  it('preserves state when keying a server component', async () => {
+    function StatefulClient({name}) {
+      const [state] = React.useState(name.toLowerCase());
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({item}) {
+      return (
+        <div>
+          {item}
+          <Stateful name={item} />
+        </div>
+      );
+    }
+
+    function Items({items}) {
+      return items.map(item => {
+        return <Item key={item} item={item} />;
+      });
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      <Items items={['A', 'B', 'C']} />,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>Aa</div>
+        <div>Bb</div>
+        <div>Cc</div>
+      </>,
+    );
+
+    const transport2 = ReactNoopFlightServer.render(
+      <Items items={['B', 'A', 'D', 'C']} />,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>Bb</div>
+        <div>Aa</div>
+        <div>Dd</div>
+        <div>Cc</div>
+      </>,
+    );
+  });
+
+  // @gate enableServerComponentKeys
+  it('does not inherit keys of children inside a server component', async () => {
+    function StatefulClient({name, initial}) {
+      const [state] = React.useState(initial);
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({item, initial}) {
+      // This key is the key of the single item of this component.
+      // It's NOT part of the key of the list the parent component is
+      // in.
+      return (
+        <div key={item}>
+          {item}
+          <Stateful name={item} initial={initial} />
+        </div>
+      );
+    }
+
+    function IndirectItem({item, initial}) {
+      // Even though we render two items with the same child key this key
+      // should not conflict, because the key belongs to the parent slot.
+      return <Item key="parent" item={item} initial={initial} />;
+    }
+
+    // These items don't have their own keys because they're in a fixed set
+    const transport = ReactNoopFlightServer.render(
+      <>
+        <Item item="A" initial={1} />
+        <Item item="B" initial={2} />
+        <IndirectItem item="C" initial={5} />
+        <IndirectItem item="C" initial={6} />
+      </>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>A1</div>
+        <div>B2</div>
+        <div>C5</div>
+        <div>C6</div>
+      </>,
+    );
+
+    // This means that they shouldn't swap state when the properties update
+    const transport2 = ReactNoopFlightServer.render(
+      <>
+        <Item item="B" initial={3} />
+        <Item item="A" initial={4} />
+        <IndirectItem item="C" initial={7} />
+        <IndirectItem item="C" initial={8} />
+      </>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>B3</div>
+        <div>A4</div>
+        <div>C5</div>
+        <div>C6</div>
+      </>,
+    );
+  });
+
+  // @gate enableServerComponentKeys
+  it('shares state between single return and array return in a parent', async () => {
+    function StatefulClient({name, initial}) {
+      const [state] = React.useState(initial);
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({item, initial}) {
+      // This key is the key of the single item of this component.
+      // It's NOT part of the key of the list the parent component is
+      // in.
+      return (
+        <span key={item}>
+          {item}
+          <Stateful name={item} initial={initial} />
+        </span>
+      );
+    }
+
+    function Condition({condition}) {
+      if (condition) {
+        return <Item item="A" initial={1} />;
+      }
+      // The first item in the fragment is the same as the single item.
+      return (
+        <>
+          <Item item="A" initial={2} />
+          <Item item="B" initial={3} />
+        </>
+      );
+    }
+
+    function ConditionPlain({condition}) {
+      if (condition) {
+        return (
+          <span>
+            C
+            <Stateful name="C" initial={1} />
+          </span>
+        );
+      }
+      // The first item in the fragment is the same as the single item.
+      return (
+        <>
+          <span>
+            C
+            <Stateful name="C" initial={2} />
+          </span>
+          <span>
+            D
+            <Stateful name="D" initial={3} />
+          </span>
+        </>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      // This two item wrapper ensures we're already one step inside an array.
+      // A single item is not the same as a set when it's nested one level.
+      <>
+        <div>
+          <Condition condition={true} />
+        </div>
+        <div>
+          <ConditionPlain condition={true} />
+        </div>
+        <div key="keyed">
+          <ConditionPlain condition={true} />
+        </div>
+      </>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>
+          <span>A1</span>
+        </div>
+        <div>
+          <span>C1</span>
+        </div>
+        <div>
+          <span>C1</span>
+        </div>
+      </>,
+    );
+
+    const transport2 = ReactNoopFlightServer.render(
+      <>
+        <div>
+          <Condition condition={false} />
+        </div>
+        <div>
+          <ConditionPlain condition={false} />
+        </div>
+        {null}
+        <div key="keyed">
+          <ConditionPlain condition={false} />
+        </div>
+      </>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    // We're intentionally breaking from the semantics here for efficiency of the protocol.
+    // In the case a Server Component inside a fragment is itself implicitly keyed but its
+    // return value has a key, then we need a wrapper fragment. This means they can't
+    // reconcile. To solve this we would need to add a wrapper fragment to every Server
+    // Component just in case it returns a fragment later which is a lot.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <div>
+          <span>A2{/* This should be A1 ideally */}</span>
+          <span>B3</span>
+        </div>
+        <div>
+          <span>C1</span>
+          <span>D3</span>
+        </div>
+        <div>
+          <span>C1</span>
+          <span>D3</span>
+        </div>
+      </>,
+    );
+  });
+
+  it('shares state between single return and array return in a set', async () => {
+    function StatefulClient({name, initial}) {
+      const [state] = React.useState(initial);
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({item, initial}) {
+      // This key is the key of the single item of this component.
+      // It's NOT part of the key of the list the parent component is
+      // in.
+      return (
+        <span key={item}>
+          {item}
+          <Stateful name={item} initial={initial} />
+        </span>
+      );
+    }
+
+    function Condition({condition}) {
+      if (condition) {
+        return <Item item="A" initial={1} />;
+      }
+      // The first item in the fragment is the same as the single item.
+      return (
+        <>
+          <Item item="A" initial={2} />
+          <Item item="B" initial={3} />
+        </>
+      );
+    }
+
+    function ConditionPlain({condition}) {
+      if (condition) {
+        return (
+          <span>
+            C
+            <Stateful name="C" initial={1} />
+          </span>
+        );
+      }
+      // The first item in the fragment is the same as the single item.
+      return (
+        <>
+          <span>
+            C
+            <Stateful name="C" initial={2} />
+          </span>
+          <span>
+            D
+            <Stateful name="D" initial={3} />
+          </span>
+        </>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render(
+      // This two item wrapper ensures we're already one step inside an array.
+      // A single item is not the same as a set when it's nested one level.
+      <div>
+        <Condition condition={true} />
+        <ConditionPlain condition={true} />
+        <ConditionPlain key="keyed" condition={true} />
+      </div>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>A1</span>
+        <span>C1</span>
+        <span>C1</span>
+      </div>,
+    );
+
+    const transport2 = ReactNoopFlightServer.render(
+      <div>
+        <Condition condition={false} />
+        <ConditionPlain condition={false} />
+        {null}
+        <ConditionPlain key="keyed" condition={false} />
+      </div>,
+    );
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    // We're intentionally breaking from the semantics here for efficiency of the protocol.
+    // The issue with this test scenario is that when the Server Component is in a set,
+    // the next slot can't be conditionally a fragment or single. That would require wrapping
+    // in an additional fragment for every single child just in case it every expands to a
+    // fragment.
+    expect(ReactNoop).toMatchRenderedOutput(
+      <div>
+        <span>A2{/* Should be A1 */}</span>
+        <span>B3</span>
+        <span>C2{/* Should be C1 */}</span>
+        <span>D3</span>
+        <span>C2{/* Should be C1 */}</span>
+        <span>D3</span>
+      </div>,
+    );
+  });
+
+  // @gate enableServerComponentKeys
+  it('preserves state with keys split across async work', async () => {
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+
+    function StatefulClient({name}) {
+      const [state] = React.useState(name.toLowerCase());
+      return state;
+    }
+    const Stateful = clientReference(StatefulClient);
+
+    function Item({name}) {
+      if (name === 'A') {
+        return promise.then(() => (
+          <div>
+            {name}
+            <Stateful name={name} />
+          </div>
+        ));
+      }
+      return (
+        <div>
+          {name}
+          <Stateful name={name} />
+        </div>
+      );
+    }
+
+    const transport = ReactNoopFlightServer.render([
+      <Item key="a" name="A" />,
+      null,
+    ]);
+
+    // Create a gap in the stream
+    await resolve();
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>Aa</div>);
+
+    const transport2 = ReactNoopFlightServer.render([
+      null,
+      <Item key="a" name="B" />,
+    ]);
+
+    await act(async () => {
+      ReactNoop.render(await ReactNoopFlightClient.read(transport2));
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<div>Ba</div>);
   });
 });

@@ -43,7 +43,6 @@ describe('ReactDOMSafariMicrotaskBug-test', () => {
       }
     };
 
-    jest.resetModules();
     container = document.createElement('div');
     React = require('react');
     ReactDOMClient = require('react-dom/client');

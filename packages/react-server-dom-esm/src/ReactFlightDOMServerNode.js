@@ -16,7 +16,7 @@ import type {ClientManifest} from './ReactFlightServerConfigESMBundler';
 import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
-import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/ReactTypes';
 
 import {
   createRequest,
@@ -54,7 +54,6 @@ function createDrainHandler(destination: Destination, request: Request) {
 type Options = {
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
-  context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
 };
 
@@ -72,7 +71,6 @@ function renderToPipeableStream(
     model,
     moduleBasePath,
     options ? options.onError : undefined,
-    options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
   );

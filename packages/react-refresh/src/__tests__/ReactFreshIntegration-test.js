@@ -12,9 +12,11 @@
 'use strict';
 
 let React;
-let ReactDOM;
+let ReactDOMClient;
 let ReactFreshRuntime;
+let Scheduler;
 let act;
+let assertLog;
 
 const babel = require('@babel/core');
 const freshPlugin = require('react-refresh/babel');
@@ -22,32 +24,34 @@ const ts = require('typescript');
 
 describe('ReactFreshIntegration', () => {
   let container;
+  let root;
   let exportsObj;
 
   beforeEach(() => {
     if (__DEV__) {
-      jest.resetModules();
       React = require('react');
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
-      ReactDOM = require('react-dom');
-      act = React.unstable_act;
+      ReactDOMClient = require('react-dom/client');
+      Scheduler = require('scheduler/unstable_mock');
+      ({act, assertLog} = require('internal-test-utils'));
       container = document.createElement('div');
       document.body.appendChild(container);
+      root = ReactDOMClient.createRoot(container);
       exportsObj = undefined;
     }
   });
 
   afterEach(() => {
     if (__DEV__) {
-      ReactDOM.unmountComponentAtNode(container);
+      root.unmount();
       // Ensure we don't leak memory by holding onto dead roots.
       expect(ReactFreshRuntime._getMountedRootCount()).toBe(0);
       document.body.removeChild(container);
     }
   });
 
-  function executeCommon(source, compileDestructuring) {
+  function executeJavaScript(source, compileDestructuring) {
     const compiled = babel.transform(source, {
       babelrc: false,
       presets: ['@babel/react'],
@@ -60,17 +64,43 @@ describe('ReactFreshIntegration', () => {
     return executeCompiled(compiled);
   }
 
+  function executeTypescript(source) {
+    const typescriptSource = babel.transform(source, {
+      babelrc: false,
+      configFile: false,
+      presets: ['@babel/react'],
+      plugins: [
+        [freshPlugin, {skipEnvCheck: true}],
+        ['@babel/plugin-syntax-typescript', {isTSX: true}],
+      ],
+    }).code;
+    const compiled = ts.transpileModule(typescriptSource, {
+      module: ts.ModuleKind.CommonJS,
+    }).outputText;
+    return executeCompiled(compiled);
+  }
+
   function executeCompiled(compiled) {
     exportsObj = {};
     // eslint-disable-next-line no-new-func
     new Function(
       'global',
+      'require',
       'React',
+      'Scheduler',
       'exports',
       '$RefreshReg$',
       '$RefreshSig$',
       compiled,
-    )(global, React, exportsObj, $RefreshReg$, $RefreshSig$);
+    )(
+      global,
+      require,
+      React,
+      Scheduler,
+      exportsObj,
+      $RefreshReg$,
+      $RefreshSig$,
+    );
     // Module systems will register exports as a fallback.
     // This is useful for cases when e.g. a class is exported,
     // and we don't want to propagate the update beyond this module.
@@ -86,43 +116,29 @@ describe('ReactFreshIntegration', () => {
     return ReactFreshRuntime.createSignatureFunctionForTransform();
   }
 
-  describe('with compiled destructuring', () => {
-    runTests(executeCommon, testCommon);
-  });
-
-  describe('without compiled destructuring', () => {
-    runTests(executeCommon, testCommon);
-  });
-
-  describe('with typescript syntax', () => {
-    runTests(function (source) {
-      const typescriptSource = babel.transform(source, {
-        babelrc: false,
-        configFile: false,
-        presets: ['@babel/react'],
-        plugins: [
-          [freshPlugin, {skipEnvCheck: true}],
-          ['@babel/plugin-syntax-typescript', {isTSX: true}],
-        ],
-      }).code;
-      const compiled = ts.transpileModule(typescriptSource, {
-        module: ts.ModuleKind.CommonJS,
-      }).outputText;
-      return executeCompiled(compiled);
-    }, testTypescript);
-  });
-
-  function runTests(execute, test) {
-    function render(source) {
+  describe.each([
+    [
+      'JavaScript syntax with destructuring enabled',
+      source => executeJavaScript(source, true),
+      testJavaScript,
+    ],
+    [
+      'JavaScript syntax with destructuring disabled',
+      source => executeJavaScript(source, false),
+      testJavaScript,
+    ],
+    ['TypeScript syntax', executeTypescript, testTypeScript],
+  ])('%s', (language, execute, test) => {
+    async function render(source) {
       const Component = execute(source);
-      act(() => {
-        ReactDOM.render(<Component />, container);
+      await act(() => {
+        root.render(<Component />);
       });
       // Module initialization shouldn't be counted as a hot update.
       expect(ReactFreshRuntime.performReactRefresh()).toBe(null);
     }
 
-    function patch(source) {
+    async function patch(source) {
       const prevExports = exportsObj;
       execute(source);
       const nextExports = exportsObj;
@@ -140,11 +156,11 @@ describe('ReactFreshIntegration', () => {
         // This makes adding/removing/renaming exports re-render references to them.
         // Here, we'll just force a re-render using the newer type to emulate this.
         const NextComponent = nextExports.default;
-        act(() => {
-          ReactDOM.render(<NextComponent />, container);
+        await act(() => {
+          root.render(<NextComponent />);
         });
       }
-      act(() => {
+      await act(() => {
         const result = ReactFreshRuntime.performReactRefresh();
         if (!didExportsChange) {
           // Normally we expect that some components got updated in our tests.
@@ -159,12 +175,12 @@ describe('ReactFreshIntegration', () => {
     }
 
     test(render, patch);
-  }
+  });
 
-  function testCommon(render, patch) {
-    it('reloads function declarations', () => {
+  function testJavaScript(render, patch) {
+    it('reloads function declarations', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           function Parent() {
             return <Child prop="A" />;
           };
@@ -177,7 +193,7 @@ describe('ReactFreshIntegration', () => {
         `);
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           function Parent() {
             return <Child prop="B" />;
           };
@@ -193,9 +209,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('reloads arrow functions', () => {
+    it('reloads arrow functions', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const Parent = () => {
             return <Child prop="A" />;
           };
@@ -208,7 +224,7 @@ describe('ReactFreshIntegration', () => {
         `);
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           const Parent = () => {
             return <Child prop="B" />;
           };
@@ -224,9 +240,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('reloads a combination of memo and forwardRef', () => {
+    it('reloads a combination of memo and forwardRef', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {memo} = React;
 
           const Parent = memo(React.forwardRef(function (props, ref) {
@@ -241,7 +257,7 @@ describe('ReactFreshIntegration', () => {
         `);
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           const {memo} = React;
 
           const Parent = memo(React.forwardRef(function (props, ref) {
@@ -259,9 +275,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('reloads default export with named memo', () => {
+    it('reloads default export with named memo', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {memo} = React;
 
           const Child = React.memo(({prop}) => {
@@ -274,7 +290,7 @@ describe('ReactFreshIntegration', () => {
         `);
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           const {memo} = React;
 
           const Child = React.memo(({prop}) => {
@@ -290,9 +306,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('reloads HOCs if they return functions', () => {
+    it('reloads HOCs if they return functions', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           function hoc(letter) {
             return function() {
               return <h1>{letter}1</h1>;
@@ -307,7 +323,7 @@ describe('ReactFreshIntegration', () => {
         `);
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           function hoc(letter) {
             return function() {
               return <h1>{letter}2</h1>;
@@ -325,9 +341,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets state when renaming a state variable', () => {
+    it('resets state when renaming a state variable', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useState} = React;
           const S = 1;
 
@@ -339,7 +355,7 @@ describe('ReactFreshIntegration', () => {
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 2;
 
@@ -352,7 +368,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 3;
 
@@ -368,9 +384,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets state when renaming a state variable in a HOC', () => {
+    it('resets state when renaming a state variable in a HOC', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useState} = React;
           const S = 1;
 
@@ -388,7 +404,7 @@ describe('ReactFreshIntegration', () => {
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 2;
 
@@ -407,7 +423,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 3;
 
@@ -429,9 +445,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets state when renaming a state variable in a HOC with indirection', () => {
+    it('resets state when renaming a state variable in a HOC with indirection', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useState} = React;
           const S = 1;
 
@@ -451,7 +467,7 @@ describe('ReactFreshIntegration', () => {
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 2;
 
@@ -472,7 +488,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 3;
 
@@ -496,9 +512,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets state when renaming a state variable inside a HOC with direct call', () => {
+    it('resets state when renaming a state variable inside a HOC with direct call', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useState} = React;
           const S = 1;
 
@@ -516,7 +532,7 @@ describe('ReactFreshIntegration', () => {
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 2;
 
@@ -535,7 +551,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 3;
 
@@ -557,9 +573,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('does not crash when changing Hook order inside a HOC with direct call', () => {
+    it('does not crash when changing Hook order inside a HOC with direct call', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useEffect} = React;
 
           function hocWithDirectCall(Wrapped) {
@@ -576,7 +592,7 @@ describe('ReactFreshIntegration', () => {
         const el = container.firstChild;
         expect(el.textContent).toBe('A');
 
-        patch(`
+        await patch(`
           const {useEffect} = React;
 
           function hocWithDirectCall(Wrapped) {
@@ -598,9 +614,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('does not crash when changing Hook order inside a memo-ed HOC with direct call', () => {
+    it('does not crash when changing Hook order inside a memo-ed HOC with direct call', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useEffect, memo} = React;
 
           function hocWithDirectCall(Wrapped) {
@@ -617,7 +633,7 @@ describe('ReactFreshIntegration', () => {
         const el = container.firstChild;
         expect(el.textContent).toBe('A');
 
-        patch(`
+        await patch(`
           const {useEffect, memo} = React;
 
           function hocWithDirectCall(Wrapped) {
@@ -639,9 +655,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('does not crash when changing Hook order inside a memo+forwardRef-ed HOC with direct call', () => {
+    it('does not crash when changing Hook order inside a memo+forwardRef-ed HOC with direct call', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useEffect, memo, forwardRef} = React;
 
           function hocWithDirectCall(Wrapped) {
@@ -658,7 +674,7 @@ describe('ReactFreshIntegration', () => {
         const el = container.firstChild;
         expect(el.textContent).toBe('A');
 
-        patch(`
+        await patch(`
           const {useEffect, memo, forwardRef} = React;
 
           function hocWithDirectCall(Wrapped) {
@@ -680,9 +696,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('does not crash when changing Hook order inside a HOC returning an object', () => {
+    it('does not crash when changing Hook order inside a HOC returning an object', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useEffect} = React;
 
           function hocWithDirectCall(Wrapped) {
@@ -697,7 +713,7 @@ describe('ReactFreshIntegration', () => {
         const el = container.firstChild;
         expect(el.textContent).toBe('A');
 
-        patch(`
+        await patch(`
           const {useEffect} = React;
 
           function hocWithDirectCall(Wrapped) {
@@ -717,9 +733,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets effects while preserving state', () => {
+    it('resets effects while preserving state', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useState} = React;
 
           export default function App() {
@@ -731,41 +747,39 @@ describe('ReactFreshIntegration', () => {
         expect(el.textContent).toBe('A0');
 
         // Add an effect.
-        patch(`
+        await patch(`
           const {useState} = React;
 
           export default function App() {
             const [value, setValue] = useState(0);
             React.useEffect(() => {
-              const id = setInterval(() => {
-                setValue(v => v + 1);
-              }, 1000);
-              return () => clearInterval(id);
+              Scheduler.log('B mount');
+              setValue(1)
+              return () => {
+                Scheduler.log('B unmount');
+              };
             }, []);
             return <h1>B{value}</h1>;
           }
         `);
+
         // We added an effect, thereby changing Hook order.
         // This causes a remount.
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
-        expect(el.textContent).toBe('B0');
-
-        act(() => {
-          jest.advanceTimersByTime(1000);
-        });
         expect(el.textContent).toBe('B1');
+        assertLog(['B mount']);
 
-        patch(`
+        await patch(`
           const {useState} = React;
 
           export default function App() {
             const [value, setValue] = useState(0);
             React.useEffect(() => {
-              const id = setInterval(() => {
-                setValue(v => v + 10);
-              }, 1000);
-              return () => clearInterval(id);
+              Scheduler.log('C mount');
+              return () => {
+                Scheduler.log('C unmount');
+              };
             }, []);
             return <h1>C{value}</h1>;
           }
@@ -774,14 +788,10 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('C1');
 
-        // Effects are always reset, so timer was reinstalled.
-        // The new version increments by 10 rather than 1.
-        act(() => {
-          jest.advanceTimersByTime(1000);
-        });
-        expect(el.textContent).toBe('C11');
+        // Effects are always reset, so effect B was unmounted and C was mounted.
+        assertLog(['B unmount', 'C mount']);
 
-        patch(`
+        await patch(`
           const {useState} = React;
 
           export default function App() {
@@ -794,12 +804,13 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('D0');
+        assertLog(['C unmount']);
       }
     });
 
-    it('does not get confused when custom hooks are reordered', () => {
+    it('does not get confused when custom hooks are reordered', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           function useFancyState(initialState) {
             return React.useState(initialState);
           }
@@ -815,7 +826,7 @@ describe('ReactFreshIntegration', () => {
         let el = container.firstChild;
         expect(el.textContent).toBe('AXY');
 
-        patch(`
+        await patch(`
           function useFancyState(initialState) {
             return React.useState(initialState);
           }
@@ -832,7 +843,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('BXY');
 
-        patch(`
+        await patch(`
           function useFancyState(initialState) {
             return React.useState(initialState);
           }
@@ -853,9 +864,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('does not get confused when component is called early', () => {
+    it('does not get confused when component is called early', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           // This isn't really a valid pattern but it's close enough
           // to simulate what happens when you call ReactDOM.render
           // in the same file. We want to ensure this doesn't confuse
@@ -879,7 +890,7 @@ describe('ReactFreshIntegration', () => {
         let el = container.firstChild;
         expect(el.textContent).toBe('AXY');
 
-        patch(`
+        await patch(`
           // This isn't really a valid pattern but it's close enough
           // to simulate what happens when you call ReactDOM.render
           // in the same file. We want to ensure this doesn't confuse
@@ -904,7 +915,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('BXY');
 
-        patch(`
+        await patch(`
           // This isn't really a valid pattern but it's close enough
           // to simulate what happens when you call ReactDOM.render
           // in the same file. We want to ensure this doesn't confuse
@@ -933,10 +944,10 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('does not get confused by Hooks defined inline', () => {
+    it('does not get confused by Hooks defined inline', async () => {
       // This is not a recommended pattern but at least it shouldn't break.
       if (__DEV__) {
-        render(`
+        await render(`
           const App = () => {
             const useFancyState = (initialState) => {
               const result = React.useState(initialState);
@@ -952,7 +963,7 @@ describe('ReactFreshIntegration', () => {
         let el = container.firstChild;
         expect(el.textContent).toBe('AX1Y1');
 
-        patch(`
+        await patch(`
           const App = () => {
             const useFancyState = (initialState) => {
               const result = React.useState(initialState);
@@ -976,9 +987,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('remounts component if custom hook it uses changes order', () => {
+    it('remounts component if custom hook it uses changes order', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const App = () => {
             const [x, setX] = useFancyState('X');
             const [y, setY] = useFancyState('Y');
@@ -999,7 +1010,7 @@ describe('ReactFreshIntegration', () => {
         let el = container.firstChild;
         expect(el.textContent).toBe('AXY');
 
-        patch(`
+        await patch(`
           const App = () => {
             const [x, setX] = useFancyState('X');
             const [y, setY] = useFancyState('Y');
@@ -1022,7 +1033,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('BXY');
 
-        patch(`
+        await patch(`
           const App = () => {
             const [x, setX] = useFancyState('X');
             const [y, setY] = useFancyState('Y');
@@ -1047,7 +1058,7 @@ describe('ReactFreshIntegration', () => {
         el = container.firstChild;
         expect(el.textContent).toBe('CXY');
 
-        patch(`
+        await patch(`
           const App = () => {
             const [x, setX] = useFancyState('X');
             const [y, setY] = useFancyState('Y');
@@ -1073,9 +1084,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('does not lose the inferred arrow names', () => {
+    it('does not lose the inferred arrow names', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const Parent = () => {
             return <Child/>;
           };
@@ -1095,9 +1106,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('does not lose the inferred function names', () => {
+    it('does not lose the inferred function names', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           var Parent = function() {
             return <Child/>;
           };
@@ -1117,9 +1128,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('resets state on every edit with @refresh reset annotation', () => {
+    it('resets state on every edit with @refresh reset annotation', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useState} = React;
           const S = 1;
 
@@ -1131,7 +1142,7 @@ describe('ReactFreshIntegration', () => {
         let el = container.firstChild;
         expect(el.textContent).toBe('A1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 2;
 
@@ -1144,7 +1155,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 3;
 
@@ -1160,7 +1171,7 @@ describe('ReactFreshIntegration', () => {
         el = container.firstChild;
         expect(el.textContent).toBe('C3');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 4;
 
@@ -1177,7 +1188,7 @@ describe('ReactFreshIntegration', () => {
         el = container.firstChild;
         expect(el.textContent).toBe('D4');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 5;
 
@@ -1191,7 +1202,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('E4');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 6;
 
@@ -1204,7 +1215,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('F4');
 
-        patch(`
+        await patch(`
           const {useState} = React;
           const S = 7;
 
@@ -1225,9 +1236,9 @@ describe('ReactFreshIntegration', () => {
 
     // This is best effort for simple cases.
     // We won't attempt to resolve identifiers.
-    it('resets state when useState initial state is edited', () => {
+    it('resets state when useState initial state is edited', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useState} = React;
 
           export default function App() {
@@ -1238,7 +1249,7 @@ describe('ReactFreshIntegration', () => {
         let el = container.firstChild;
         expect(el.textContent).toBe('A1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
 
           export default function App() {
@@ -1250,7 +1261,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B1');
 
-        patch(`
+        await patch(`
           const {useState} = React;
 
           export default function App() {
@@ -1267,9 +1278,9 @@ describe('ReactFreshIntegration', () => {
 
     // This is best effort for simple cases.
     // We won't attempt to resolve identifiers.
-    it('resets state when useReducer initial state is edited', () => {
+    it('resets state when useReducer initial state is edited', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           const {useReducer} = React;
 
           export default function App() {
@@ -1280,7 +1291,7 @@ describe('ReactFreshIntegration', () => {
         let el = container.firstChild;
         expect(el.textContent).toBe('A1');
 
-        patch(`
+        await patch(`
           const {useReducer} = React;
 
           export default function App() {
@@ -1292,7 +1303,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B1');
 
-        patch(`
+        await patch(`
           const {useReducer} = React;
 
           export default function App() {
@@ -1307,16 +1318,16 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('remounts when switching export from function to class', () => {
+    it('remounts when switching export from function to class', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           export default function App() {
             return <h1>A1</h1>;
           }
         `);
         let el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>A2</h1>;
           }
@@ -1325,7 +1336,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('A2');
 
-        patch(`
+        await patch(`
           export default class App extends React.Component {
             render() {
               return <h1>B1</h1>
@@ -1336,7 +1347,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('B1');
-        patch(`
+        await patch(`
           export default class App extends React.Component {
             render() {
               return <h1>B2</h1>
@@ -1348,7 +1359,7 @@ describe('ReactFreshIntegration', () => {
         el = container.firstChild;
         expect(el.textContent).toBe('B2');
 
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>C1</h1>;
           }
@@ -1357,7 +1368,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('C1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>C2</h1>;
           }
@@ -1365,14 +1376,14 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('C2');
 
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>D1</h1>;
           }
         `);
         el = container.firstChild;
         expect(el.textContent).toBe('D1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>D2</h1>;
           }
@@ -1383,9 +1394,9 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('remounts when switching export from class to function', () => {
+    it('remounts when switching export from class to function', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           export default class App extends React.Component {
             render() {
               return <h1>A1</h1>
@@ -1394,7 +1405,7 @@ describe('ReactFreshIntegration', () => {
         `);
         let el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           export default class App extends React.Component {
             render() {
               return <h1>A2</h1>
@@ -1406,7 +1417,7 @@ describe('ReactFreshIntegration', () => {
         el = container.firstChild;
         expect(el.textContent).toBe('A2');
 
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>B1</h1>;
           }
@@ -1415,7 +1426,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('B1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>B2</h1>;
           }
@@ -1424,7 +1435,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B2');
 
-        patch(`
+        await patch(`
           export default class App extends React.Component {
             render() {
               return <h1>C1</h1>
@@ -1438,16 +1449,16 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('remounts when wrapping export in a HOC', () => {
+    it('remounts when wrapping export in a HOC', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           export default function App() {
             return <h1>A1</h1>;
           }
         `);
         let el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>A2</h1>;
           }
@@ -1456,7 +1467,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('A2');
 
-        patch(`
+        await patch(`
           function hoc(Inner) {
             return function Wrapper() {
               return <Inner />;
@@ -1473,7 +1484,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('B1');
-        patch(`
+        await patch(`
           function hoc(Inner) {
             return function Wrapper() {
               return <Inner />;
@@ -1490,7 +1501,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B2');
 
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>C1</h1>;
           }
@@ -1499,7 +1510,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('C1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>C2</h1>;
           }
@@ -1509,16 +1520,16 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('remounts when wrapping export in memo()', () => {
+    it('remounts when wrapping export in memo()', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           export default function App() {
             return <h1>A1</h1>;
           }
         `);
         let el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>A2</h1>;
           }
@@ -1527,7 +1538,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('A2');
 
-        patch(`
+        await patch(`
           function App() {
             return <h1>B1</h1>;
           }
@@ -1538,7 +1549,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('B1');
-        patch(`
+        await patch(`
           function App() {
             return <h1>B2</h1>;
           }
@@ -1549,7 +1560,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B2');
 
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>C1</h1>;
           }
@@ -1558,7 +1569,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('C1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>C2</h1>;
           }
@@ -1568,16 +1579,16 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
-    it('remounts when wrapping export in forwardRef()', () => {
+    it('remounts when wrapping export in forwardRef()', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           export default function App() {
             return <h1>A1</h1>;
           }
         `);
         let el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>A2</h1>;
           }
@@ -1586,7 +1597,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('A2');
 
-        patch(`
+        await patch(`
           function App() {
             return <h1>B1</h1>;
           }
@@ -1597,7 +1608,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('B1');
-        patch(`
+        await patch(`
           function App() {
             return <h1>B2</h1>;
           }
@@ -1608,7 +1619,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).toBe(el);
         expect(el.textContent).toBe('B2');
 
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>C1</h1>;
           }
@@ -1617,7 +1628,7 @@ describe('ReactFreshIntegration', () => {
         expect(container.firstChild).not.toBe(el);
         el = container.firstChild;
         expect(el.textContent).toBe('C1');
-        patch(`
+        await patch(`
           export default function App() {
             return <h1>C2</h1>;
           }
@@ -1628,10 +1639,10 @@ describe('ReactFreshIntegration', () => {
     });
 
     if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
-      it('remounts deprecated factory components', () => {
+      it('remounts deprecated factory components', async () => {
         if (__DEV__) {
-          expect(() => {
-            render(`
+          await expect(async () => {
+            await render(`
               function Parent() {
                 return {
                   render() {
@@ -1652,7 +1663,7 @@ describe('ReactFreshIntegration', () => {
           );
           const el = container.firstChild;
           expect(el.textContent).toBe('A1');
-          patch(`
+          await patch(`
             function Parent() {
               return {
                 render() {
@@ -1684,14 +1695,14 @@ describe('ReactFreshIntegration', () => {
         delete global.FakeModuleSystem;
       });
 
-      it('remounts component if custom hook it uses changes order on first edit', () => {
+      it('remounts component if custom hook it uses changes order on first edit', async () => {
         // This test verifies that remounting works even if calls to custom Hooks
         // were transformed with an inline requires transform, like we have on RN.
         // Inline requires make it harder to compare previous and next signatures
         // because useFancyState inline require always resolves to the newest version.
         // We're not actually using inline requires in the test, but it has similar semantics.
         if (__DEV__) {
-          render(`
+          await render(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1709,7 +1720,7 @@ describe('ReactFreshIntegration', () => {
           let el = container.firstChild;
           expect(el.textContent).toBe('AXY');
 
-          patch(`
+          await patch(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1731,7 +1742,7 @@ describe('ReactFreshIntegration', () => {
           el = container.firstChild;
           expect(el.textContent).toBe('BXY');
 
-          patch(`
+          await patch(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1754,9 +1765,9 @@ describe('ReactFreshIntegration', () => {
         }
       });
 
-      it('remounts component if custom hook it uses changes order on second edit', () => {
+      it('remounts component if custom hook it uses changes order on second edit', async () => {
         if (__DEV__) {
-          render(`
+          await render(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1774,7 +1785,7 @@ describe('ReactFreshIntegration', () => {
           let el = container.firstChild;
           expect(el.textContent).toBe('AXY');
 
-          patch(`
+          await patch(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1792,7 +1803,7 @@ describe('ReactFreshIntegration', () => {
           expect(container.firstChild).toBe(el);
           expect(el.textContent).toBe('BXY');
 
-          patch(`
+          await patch(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1814,7 +1825,7 @@ describe('ReactFreshIntegration', () => {
           el = container.firstChild;
           expect(el.textContent).toBe('CXY');
 
-          patch(`
+          await patch(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1837,9 +1848,9 @@ describe('ReactFreshIntegration', () => {
         }
       });
 
-      it('recovers if evaluating Hook list throws', () => {
+      it('recovers if evaluating Hook list throws', async () => {
         if (__DEV__) {
-          render(`
+          await render(`
           let FakeModuleSystem = null;
 
           global.FakeModuleSystem.useFancyState = function(initialState) {
@@ -1858,7 +1869,7 @@ describe('ReactFreshIntegration', () => {
           let el = container.firstChild;
           expect(el.textContent).toBe('AXY');
 
-          patch(`
+          await patch(`
           let FakeModuleSystem = null;
 
           global.FakeModuleSystem.useFancyState = function(initialState) {
@@ -1883,9 +1894,9 @@ describe('ReactFreshIntegration', () => {
         }
       });
 
-      it('remounts component if custom hook it uses changes order behind an indirection', () => {
+      it('remounts component if custom hook it uses changes order behind an indirection', async () => {
         if (__DEV__) {
-          render(`
+          await render(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1911,7 +1922,7 @@ describe('ReactFreshIntegration', () => {
           let el = container.firstChild;
           expect(el.textContent).toBe('AXY');
 
-          patch(`
+          await patch(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1942,7 +1953,7 @@ describe('ReactFreshIntegration', () => {
           el = container.firstChild;
           expect(el.textContent).toBe('BXY');
 
-          patch(`
+          await patch(`
             const FakeModuleSystem = global.FakeModuleSystem;
 
             FakeModuleSystem.useFancyState = function(initialState) {
@@ -1975,10 +1986,10 @@ describe('ReactFreshIntegration', () => {
     });
   }
 
-  function testTypescript(render, patch) {
-    it('reloads component exported in typescript namespace', () => {
+  function testTypeScript(render, patch) {
+    it('reloads component exported in typescript namespace', async () => {
       if (__DEV__) {
-        render(`
+        await render(`
           namespace Foo {
             export namespace Bar {
               export const Child = ({prop}) => {
@@ -1993,7 +2004,7 @@ describe('ReactFreshIntegration', () => {
         `);
         const el = container.firstChild;
         expect(el.textContent).toBe('A1');
-        patch(`
+        await patch(`
           namespace Foo {
             export namespace Bar {
               export const Child = ({prop}) => {

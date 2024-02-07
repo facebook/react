@@ -24,14 +24,9 @@ import {
   REACT_LAZY_TYPE,
   REACT_CACHE_TYPE,
   REACT_TRACING_MARKER_TYPE,
-  REACT_SERVER_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 
-import {
-  enableServerContext,
-  enableTransitionTracing,
-  enableCache,
-} from './ReactFeatureFlags';
+import {enableTransitionTracing, enableCache} from './ReactFeatureFlags';
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
 function getWrappedName(
@@ -52,21 +47,19 @@ function getContextName(type: ReactContext<any>) {
   return type.displayName || 'Context';
 }
 
+const REACT_CLIENT_REFERENCE = Symbol.for('react.client.reference');
+
 // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
 export default function getComponentNameFromType(type: mixed): string | null {
   if (type == null) {
     // Host root, text node or just invalid type.
     return null;
   }
-  if (__DEV__) {
-    if (typeof (type: any).tag === 'number') {
-      console.error(
-        'Received an unexpected object in getComponentNameFromType(). ' +
-          'This is likely a bug in React. Please file an issue.',
-      );
-    }
-  }
   if (typeof type === 'function') {
+    if ((type: any).$$typeof === REACT_CLIENT_REFERENCE) {
+      // TODO: Create a convention for naming client references with debug info.
+      return null;
+    }
     return (type: any).displayName || type.name || null;
   }
   if (typeof type === 'string') {
@@ -96,6 +89,14 @@ export default function getComponentNameFromType(type: mixed): string | null {
       }
   }
   if (typeof type === 'object') {
+    if (__DEV__) {
+      if (typeof (type: any).tag === 'number') {
+        console.error(
+          'Received an unexpected object in getComponentNameFromType(). ' +
+            'This is likely a bug in React. Please file an issue.',
+        );
+      }
+    }
     switch (type.$$typeof) {
       case REACT_CONTEXT_TYPE:
         const context: ReactContext<any> = (type: any);
@@ -121,11 +122,6 @@ export default function getComponentNameFromType(type: mixed): string | null {
           return null;
         }
       }
-      case REACT_SERVER_CONTEXT_TYPE:
-        if (enableServerContext) {
-          const context2 = ((type: any): ReactContext<any>);
-          return (context2.displayName || context2._globalName) + '.Provider';
-        }
     }
   }
   return null;

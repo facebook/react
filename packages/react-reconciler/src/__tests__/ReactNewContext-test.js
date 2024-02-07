@@ -20,8 +20,6 @@ let waitForThrow;
 
 describe('ReactNewContext', () => {
   beforeEach(() => {
-    jest.resetModules();
-
     React = require('react');
     useContext = React.useContext;
     ReactNoop = require('react-noop-renderer');

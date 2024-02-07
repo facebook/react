@@ -24,11 +24,10 @@ let caches;
 // React 17.
 describe('act warnings', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     Scheduler = require('scheduler');
     ReactNoop = require('react-noop-renderer');
-    act = React.unstable_act;
+    act = React.act;
     useState = React.useState;
     Suspense = React.Suspense;
     startTransition = React.startTransition;

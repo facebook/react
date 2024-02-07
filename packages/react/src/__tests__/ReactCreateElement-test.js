@@ -9,21 +9,21 @@
 
 'use strict';
 
-let React;
-let ReactDOM;
-let ReactTestUtils;
+let act;
 
-describe('ReactElement', () => {
+let React;
+let ReactDOMClient;
+
+// NOTE: This module tests the old, "classic" JSX runtime, React.createElement.
+// Do not use JSX syntax in this module; call React.createElement directly.
+describe('ReactCreateElement', () => {
   let ComponentClass;
 
   beforeEach(() => {
-    jest.resetModules();
+    act = require('internal-test-utils').act;
 
     React = require('react');
-    ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
-    // NOTE: We're explicitly not using JSX here. This is intended to test
-    // classic JS without JSX.
+    ReactDOMClient = require('react-dom/client');
     ComponentClass = class extends React.Component {
       render() {
         return React.createElement('div');
@@ -43,25 +43,29 @@ describe('ReactElement', () => {
     expect(element.props).toEqual({});
   });
 
-  it('should warn when `key` is being accessed on composite element', () => {
-    const container = document.createElement('div');
+  it('should warn when `key` is being accessed on composite element', async () => {
     class Child extends React.Component {
       render() {
-        return <div> {this.props.key} </div>;
+        return React.createElement('div', null, this.props.key);
       }
     }
     class Parent extends React.Component {
       render() {
-        return (
-          <div>
-            <Child key="0" />
-            <Child key="1" />
-            <Child key="2" />
-          </div>
+        return React.createElement(
+          'div',
+          null,
+          React.createElement(Child, {key: '0'}),
+          React.createElement(Child, {key: '1'}),
+          React.createElement(Child, {key: '2'}),
         );
       }
     }
-    expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await expect(async () => {
+      await act(() => {
+        root.render(React.createElement(Parent));
+      });
+    }).toErrorDev(
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -70,7 +74,7 @@ describe('ReactElement', () => {
   });
 
   it('should warn when `key` is being accessed on a host element', () => {
-    const element = <div key="3" />;
+    const element = React.createElement('div', {key: '3'});
     expect(() => void element.props.key).toErrorDev(
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
@@ -80,23 +84,28 @@ describe('ReactElement', () => {
     );
   });
 
-  it('should warn when `ref` is being accessed', () => {
-    const container = document.createElement('div');
+  it('should warn when `ref` is being accessed', async () => {
     class Child extends React.Component {
       render() {
-        return <div> {this.props.ref} </div>;
+        return React.createElement('div', null, this.props.ref);
       }
     }
     class Parent extends React.Component {
       render() {
-        return (
-          <div>
-            <Child ref={React.createRef()} />
-          </div>
+        return React.createElement(
+          'div',
+          null,
+          React.createElement(Child, {ref: React.createRef()}),
         );
       }
     }
-    expect(() => ReactDOM.render(<Parent />, container)).toErrorDev(
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+
+    await expect(async () => {
+      await act(() => {
+        root.render(React.createElement(Parent));
+      });
+    }).toErrorDev(
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
@@ -210,19 +219,21 @@ describe('ReactElement', () => {
     expect(element.props).toEqual({foo: '56'});
   });
 
-  it('preserves the owner on the element', () => {
+  it('preserves the owner on the element', async () => {
     let element;
+    let instance;
 
     class Wrapper extends React.Component {
+      componentDidMount() {
+        instance = this;
+      }
       render() {
         element = React.createElement(ComponentClass);
         return element;
       }
     }
-
-    const instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(Wrapper),
-    );
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => root.render(React.createElement(Wrapper)));
     expect(element._owner.stateNode).toBe(instance);
   });
 
@@ -264,8 +275,6 @@ describe('ReactElement', () => {
     expect(element.props.children).toEqual([1, 2, 3]);
   });
 
-  // NOTE: We're explicitly not using JSX here. This is intended to test
-  // classic JS without JSX.
   it('allows static methods to be called using the type property', () => {
     class StaticMethodComponentClass extends React.Component {
       render() {
@@ -278,17 +287,13 @@ describe('ReactElement', () => {
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
   });
 
-  // NOTE: We're explicitly not using JSX here. This is intended to test
-  // classic JS without JSX.
   it('is indistinguishable from a plain object', () => {
     const element = React.createElement('div', {className: 'foo'});
     const object = {};
     expect(element.constructor).toBe(object.constructor);
   });
 
-  // NOTE: We're explicitly not using JSX here. This is intended to test
-  // classic JS without JSX.
-  it('should use default prop value when removing a prop', () => {
+  it('should use default prop value when removing a prop', async () => {
     class Component extends React.Component {
       render() {
         return React.createElement('span');
@@ -297,41 +302,49 @@ describe('ReactElement', () => {
     Component.defaultProps = {fruit: 'persimmon'};
 
     const container = document.createElement('div');
-    const instance = ReactDOM.render(
-      React.createElement(Component, {fruit: 'mango'}),
-      container,
-    );
+    const root = ReactDOMClient.createRoot(container);
+
+    const ref = React.createRef();
+    await act(() => {
+      root.render(React.createElement(Component, {ref, fruit: 'mango'}));
+    });
+    const instance = ref.current;
     expect(instance.props.fruit).toBe('mango');
 
-    ReactDOM.render(React.createElement(Component), container);
+    await act(() => {
+      root.render(React.createElement(Component));
+    });
     expect(instance.props.fruit).toBe('persimmon');
   });
 
-  // NOTE: We're explicitly not using JSX here. This is intended to test
-  // classic JS without JSX.
-  it('should normalize props with default values', () => {
+  it('should normalize props with default values', async () => {
+    let instance;
     class Component extends React.Component {
+      componentDidMount() {
+        instance = this;
+      }
       render() {
         return React.createElement('span', null, this.props.prop);
       }
     }
     Component.defaultProps = {prop: 'testKey'};
 
-    const instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(Component),
-    );
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(React.createElement(Component));
+    });
     expect(instance.props.prop).toBe('testKey');
 
-    const inst2 = ReactTestUtils.renderIntoDocument(
-      React.createElement(Component, {prop: null}),
-    );
-    expect(inst2.props.prop).toBe(null);
+    await act(() => {
+      root.render(React.createElement(Component, {prop: null}));
+    });
+    expect(instance.props.prop).toBe(null);
   });
 
-  it('throws when changing a prop (in dev) after element creation', () => {
+  it('throws when changing a prop (in dev) after element creation', async () => {
     class Outer extends React.Component {
       render() {
-        const el = <div className="moo" />;
+        const el = React.createElement('div', {className: 'moo'});
 
         if (__DEV__) {
           expect(function () {
@@ -346,19 +359,25 @@ describe('ReactElement', () => {
         return el;
       }
     }
-    const outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await act(() => {
+      root.render(React.createElement(Outer, {color: 'orange'}));
+    });
     if (__DEV__) {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
+      expect(container.firstChild.className).toBe('moo');
     } else {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
+      expect(container.firstChild.className).toBe('quack');
     }
   });
 
-  it('throws when adding a prop (in dev) after element creation', () => {
+  it('throws when adding a prop (in dev) after element creation', async () => {
     const container = document.createElement('div');
     class Outer extends React.Component {
       render() {
-        const el = <div>{this.props.sound}</div>;
+        const el = React.createElement('div', null, this.props.sound);
 
         if (__DEV__) {
           expect(function () {
@@ -374,22 +393,32 @@ describe('ReactElement', () => {
       }
     }
     Outer.defaultProps = {sound: 'meow'};
-    const outer = ReactDOM.render(<Outer />, container);
-    expect(ReactDOM.findDOMNode(outer).textContent).toBe('meow');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(React.createElement(Outer));
+    });
+    expect(container.firstChild.textContent).toBe('meow');
     if (__DEV__) {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('');
+      expect(container.firstChild.className).toBe('');
     } else {
-      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
+      expect(container.firstChild.className).toBe('quack');
     }
   });
 
-  it('does not warn for NaN props', () => {
+  it('does not warn for NaN props', async () => {
+    let test;
     class Test extends React.Component {
+      componentDidMount() {
+        test = this;
+      }
       render() {
-        return <div />;
+        return React.createElement('div');
       }
     }
-    const test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
+    await act(() => {
+      root.render(React.createElement(Test, {value: +undefined}));
+    });
     expect(test.props.value).toBeNaN();
   });
 });

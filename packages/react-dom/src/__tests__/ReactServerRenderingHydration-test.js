@@ -22,7 +22,6 @@ let act;
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
 describe('ReactDOMServerHydration', () => {
   beforeEach(() => {
-    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
@@ -122,7 +121,7 @@ describe('ReactDOMServerHydration', () => {
   // We have a polyfill for autoFocus on the client, but we intentionally don't
   // want it to call focus() when hydrating because this can mess up existing
   // focus before the JS has loaded.
-  it('should emit autofocus on the server but not focus() when hydrating', () => {
+  it('should emit autofocus on the server but not focus() when hydrating', async () => {
     const element = document.createElement('div');
     element.innerHTML = ReactDOMServer.renderToString(
       <input autoFocus={true} />,
@@ -131,15 +130,19 @@ describe('ReactDOMServerHydration', () => {
 
     // It should not be called on mount.
     element.firstChild.focus = jest.fn();
-    ReactDOM.hydrate(<input autoFocus={true} />, element);
+    const root = await act(() =>
+      ReactDOMClient.hydrateRoot(element, <input autoFocus={true} />),
+    );
     expect(element.firstChild.focus).not.toHaveBeenCalled();
 
     // Or during an update.
-    ReactDOM.render(<input autoFocus={true} />, element);
+    await act(() => {
+      root.render(<input autoFocus={true} />);
+    });
     expect(element.firstChild.focus).not.toHaveBeenCalled();
   });
 
-  it('should not focus on either server or client with autofocus={false}', () => {
+  it('should not focus on either server or client with autofocus={false}', async () => {
     const element = document.createElement('div');
     element.innerHTML = ReactDOMServer.renderToString(
       <input autoFocus={false} />,
@@ -147,10 +150,15 @@ describe('ReactDOMServerHydration', () => {
     expect(element.firstChild.autofocus).toBe(false);
 
     element.firstChild.focus = jest.fn();
-    ReactDOM.hydrate(<input autoFocus={false} />, element);
+    const root = await act(() =>
+      ReactDOMClient.hydrateRoot(element, <input autoFocus={false} />),
+    );
+
     expect(element.firstChild.focus).not.toHaveBeenCalled();
 
-    ReactDOM.render(<input autoFocus={false} />, element);
+    await act(() => {
+      root.render(<input autoFocus={false} />);
+    });
     expect(element.firstChild.focus).not.toHaveBeenCalled();
   });
 

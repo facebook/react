@@ -51,8 +51,6 @@ export const HostTransitionContext: ReactContext<TransitionStatus | null> = {
   _threadCount: 0,
   Provider: (null: any),
   Consumer: (null: any),
-  _defaultValue: (null: any),
-  _globalName: (null: any),
 };
 
 function requiredContext<Value>(c: Value | null): Value {

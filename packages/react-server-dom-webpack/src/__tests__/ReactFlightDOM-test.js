@@ -42,15 +42,13 @@ describe('ReactFlightDOM', () => {
     // For this first reset we are going to load the dom-node version of react-server-dom-webpack/server
     // This can be thought of as essentially being the React Server Components scope with react-server
     // condition
-    jest.resetModules();
-
     JSDOM = require('jsdom').JSDOM;
 
     // Simulate the condition resolution
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.node.unbundled'),
     );
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
 
     const WebpackMock = require('./utils/WebpackMock');
     clientExports = WebpackMock.clientExports;

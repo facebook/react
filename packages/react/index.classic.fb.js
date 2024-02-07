@@ -9,7 +9,7 @@
 
 export {
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  act as unstable_act,
+  act,
   Children,
   Component,
   Fragment,
@@ -58,5 +58,5 @@ export {
   useSyncExternalStore,
   useTransition,
   version,
-} from './src/React';
+} from './src/ReactClient';
 export {jsx, jsxs, jsxDEV} from './src/jsx/ReactJSX';

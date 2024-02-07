@@ -12,8 +12,6 @@
 
 'use strict';
 
-import {useInsertionEffect} from 'react';
-
 describe('useEffectEvent', () => {
   let React;
   let ReactNoop;
@@ -25,6 +23,7 @@ describe('useEffectEvent', () => {
   let useEffectEvent;
   let useEffect;
   let useLayoutEffect;
+  let useInsertionEffect;
   let useMemo;
   let waitForAll;
   let assertLog;
@@ -43,6 +42,7 @@ describe('useEffectEvent', () => {
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
     useMemo = React.useMemo;
+    useInsertionEffect = React.useInsertionEffect;
 
     const InternalTestUtils = require('internal-test-utils');
     waitForAll = InternalTestUtils.waitForAll;
