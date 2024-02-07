@@ -76,7 +76,7 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
-export const allowConcurrentByDefault = true;
+export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
