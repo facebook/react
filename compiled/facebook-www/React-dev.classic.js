@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-classic-87aadbfe";
+    var ReactVersion = "18.3.0-www-classic-8ed7454f";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -3061,26 +3061,25 @@ if (__DEV__) {
       return elementType;
     }
 
-    function cache(fn) {
-      {
-        // On the client (i.e. not a Server Components environment) `cache` has
-        // no caching behavior. We just return the function as-is.
-        //
-        // We intend to implement client caching in a future major release. In the
-        // meantime, it's only exposed as an API so that Shared Components can use
-        // per-request caching on the server without breaking on the client. But it
-        // does mean they need to be aware of the behavioral difference.
-        //
-        // The rest of the behavior is the same as the server implementation — it
-        // returns a new reference, extra properties like `displayName` are not
-        // preserved, the length of the new function is 0, etc. That way apps can't
-        // accidentally depend on those details.
-        return function () {
-          // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
-          return fn.apply(null, arguments);
-        };
-      }
+    function noopCache(fn) {
+      // On the client (i.e. not a Server Components environment) `cache` has
+      // no caching behavior. We just return the function as-is.
+      //
+      // We intend to implement client caching in a future major release. In the
+      // meantime, it's only exposed as an API so that Shared Components can use
+      // per-request caching on the server without breaking on the client. But it
+      // does mean they need to be aware of the behavioral difference.
+      //
+      // The rest of the behavior is the same as the server implementation — it
+      // returns a new reference, extra properties like `displayName` are not
+      // preserved, the length of the new function is 0, etc. That way apps can't
+      // accidentally depend on those details.
+      return function () {
+        // $FlowFixMe[incompatible-call]: We don't want to use rest arguments since we transpile the code.
+        return fn.apply(null, arguments);
+      };
     }
+    var cache = noopCache;
 
     function resolveDispatcher() {
       var dispatcher = ReactCurrentDispatcher$1.current;
