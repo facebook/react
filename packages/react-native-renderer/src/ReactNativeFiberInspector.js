@@ -37,7 +37,6 @@ function createHierarchy(fiberHierarchy) {
     getInspectorData: findNodeHandle => {
       return {
         props: getHostProps(fiber),
-        source: fiber._debugSource,
         measure: callback => {
           // If this is Fabric, we'll find a shadow node and use that to measure.
           const hostFiber = findCurrentHostFiber(fiber);
@@ -98,7 +97,6 @@ function getInspectorDataForInstance(
         hierarchy: [],
         props: emptyObject,
         selectedIndex: null,
-        source: null,
       };
     }
 
@@ -107,7 +105,6 @@ function getInspectorDataForInstance(
     const instance = lastNonHostInstance(fiberHierarchy);
     const hierarchy = createHierarchy(fiberHierarchy);
     const props = getHostProps(instance);
-    const source = instance._debugSource;
     const selectedIndex = fiberHierarchy.indexOf(instance);
 
     return {
@@ -115,7 +112,6 @@ function getInspectorDataForInstance(
       hierarchy,
       props,
       selectedIndex,
-      source,
     };
   }
 

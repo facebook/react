@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Source} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
@@ -29,7 +28,6 @@ const {ReactCurrentDispatcher} = ReactSharedInternals;
 let prefix;
 export function describeBuiltInComponentFrame(
   name: string,
-  source: void | null | Source,
   ownerFn: void | null | Function,
 ): string {
   if (enableComponentStackLocations) {
@@ -49,7 +47,7 @@ export function describeBuiltInComponentFrame(
     if (__DEV__ && ownerFn) {
       ownerName = ownerFn.displayName || ownerFn.name || null;
     }
-    return describeComponentFrame(name, source, ownerName);
+    return describeComponentFrame(name, ownerName);
   }
 }
 
@@ -293,31 +291,9 @@ export function describeNativeComponentFrame(
   return syntheticFrame;
 }
 
-const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
-
-function describeComponentFrame(
-  name: null | string,
-  source: void | null | Source,
-  ownerName: null | string,
-) {
+function describeComponentFrame(name: null | string, ownerName: null | string) {
   let sourceInfo = '';
-  if (__DEV__ && source) {
-    const path = source.fileName;
-    let fileName = path.replace(BEFORE_SLASH_RE, '');
-    // In DEV, include code for a common special case:
-    // prefer "folder/index.js" instead of just "index.js".
-    if (/^index\./.test(fileName)) {
-      const match = path.match(BEFORE_SLASH_RE);
-      if (match) {
-        const pathBeforeSlash = match[1];
-        if (pathBeforeSlash) {
-          const folderName = pathBeforeSlash.replace(BEFORE_SLASH_RE, '');
-          fileName = folderName + '/' + fileName;
-        }
-      }
-    }
-    sourceInfo = ' (at ' + fileName + ':' + source.lineNumber + ')';
-  } else if (ownerName) {
+  if (ownerName) {
     sourceInfo = ' (created by ' + ownerName + ')';
   }
   return '\n    in ' + (name || 'Unknown') + sourceInfo;
@@ -325,19 +301,17 @@ function describeComponentFrame(
 
 export function describeClassComponentFrame(
   ctor: Function,
-  source: void | null | Source,
   ownerFn: void | null | Function,
 ): string {
   if (enableComponentStackLocations) {
     return describeNativeComponentFrame(ctor, true);
   } else {
-    return describeFunctionComponentFrame(ctor, source, ownerFn);
+    return describeFunctionComponentFrame(ctor, ownerFn);
   }
 }
 
 export function describeFunctionComponentFrame(
   fn: Function,
-  source: void | null | Source,
   ownerFn: void | null | Function,
 ): string {
   if (enableComponentStackLocations) {
@@ -351,7 +325,7 @@ export function describeFunctionComponentFrame(
     if (__DEV__ && ownerFn) {
       ownerName = ownerFn.displayName || ownerFn.name || null;
     }
-    return describeComponentFrame(name, source, ownerName);
+    return describeComponentFrame(name, ownerName);
   }
 }
 
@@ -362,7 +336,6 @@ function shouldConstruct(Component: Function) {
 
 export function describeUnknownElementTypeFrameInDEV(
   type: any,
-  source: void | null | Source,
   ownerFn: void | null | Function,
 ): string {
   if (!__DEV__) {
@@ -375,36 +348,32 @@ export function describeUnknownElementTypeFrameInDEV(
     if (enableComponentStackLocations) {
       return describeNativeComponentFrame(type, shouldConstruct(type));
     } else {
-      return describeFunctionComponentFrame(type, source, ownerFn);
+      return describeFunctionComponentFrame(type, ownerFn);
     }
   }
   if (typeof type === 'string') {
-    return describeBuiltInComponentFrame(type, source, ownerFn);
+    return describeBuiltInComponentFrame(type, ownerFn);
   }
   switch (type) {
     case REACT_SUSPENSE_TYPE:
-      return describeBuiltInComponentFrame('Suspense', source, ownerFn);
+      return describeBuiltInComponentFrame('Suspense', ownerFn);
     case REACT_SUSPENSE_LIST_TYPE:
-      return describeBuiltInComponentFrame('SuspenseList', source, ownerFn);
+      return describeBuiltInComponentFrame('SuspenseList', ownerFn);
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE:
-        return describeFunctionComponentFrame(type.render, source, ownerFn);
+        return describeFunctionComponentFrame(type.render, ownerFn);
       case REACT_MEMO_TYPE:
         // Memo may contain any component type so we recursively resolve it.
-        return describeUnknownElementTypeFrameInDEV(type.type, source, ownerFn);
+        return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;
         const init = lazyComponent._init;
         try {
           // Lazy may contain any component type so we recursively resolve it.
-          return describeUnknownElementTypeFrameInDEV(
-            init(payload),
-            source,
-            ownerFn,
-          );
+          return describeUnknownElementTypeFrameInDEV(init(payload), ownerFn);
         } catch (x) {}
       }
     }

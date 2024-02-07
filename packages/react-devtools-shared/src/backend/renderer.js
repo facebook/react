@@ -958,7 +958,7 @@ export function attach(
 
   // NOTICE Keep in sync with get*ForFiber methods
   function shouldFilterFiber(fiber: Fiber): boolean {
-    const {_debugSource, tag, type, key} = fiber;
+    const {tag, type, key} = fiber;
 
     switch (tag) {
       case DehydratedSuspenseComponent:
@@ -1010,15 +1010,15 @@ export function attach(
       }
     }
 
-    if (_debugSource != null && hideElementsWithPaths.size > 0) {
-      const {fileName} = _debugSource;
-      // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (const pathRegExp of hideElementsWithPaths) {
-        if (pathRegExp.test(fileName)) {
-          return true;
-        }
-      }
-    }
+    // TODO: Figure out a way to filter by path in the new model which has no debug info.
+    // if (hideElementsWithPaths.size > 0) {
+    //  const {fileName} = ...;
+    //  for (const pathRegExp of hideElementsWithPaths) {
+    //    if (pathRegExp.test(fileName)) {
+    //      return true;
+    //    }
+    //  }
+    // }
 
     return false;
   }
@@ -3132,7 +3132,6 @@ export function attach(
 
     const {
       _debugOwner,
-      _debugSource,
       stateNode,
       key,
       memoizedProps,
@@ -3361,9 +3360,6 @@ export function attach(
 
       // List of owners
       owners,
-
-      // Location of component in source code.
-      source: _debugSource || null,
 
       rootType,
       rendererPackageName: renderer.rendererPackageName,
@@ -3724,9 +3720,6 @@ export function attach(
     const nativeNodes = findNativeNodesForFiberID(id);
     if (nativeNodes !== null) {
       console.log('Nodes:', nativeNodes);
-    }
-    if (result.source !== null) {
-      console.log('Location:', result.source);
     }
     if (window.chrome || /firefox/i.test(navigator.userAgent)) {
       console.log(

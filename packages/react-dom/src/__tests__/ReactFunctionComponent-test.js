@@ -270,7 +270,6 @@ describe('ReactFunctionComponent', () => {
         return <FunctionComponent name="A" ref={() => {}} />;
       }
     }
-    Object.defineProperty(AnonymousParentUsingJSX, 'name', {value: undefined});
 
     let instance1;
 
@@ -293,9 +292,6 @@ describe('ReactFunctionComponent', () => {
         });
       }
     }
-    Object.defineProperty(AnonymousParentNotUsingJSX, 'name', {
-      value: undefined,
-    });
 
     let instance2;
     expect(() => {

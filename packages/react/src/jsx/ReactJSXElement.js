@@ -170,21 +170,6 @@ function ReactElement(type, key, ref, self, source, owner, props) {
       writable: true,
       value: false,
     });
-    // self and source are DEV only properties.
-    Object.defineProperty(element, '_self', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: self,
-    });
-    // Two elements created in two different places should be considered
-    // equal for testing purposes and therefore we hide it from enumeration.
-    Object.defineProperty(element, '_source', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: source,
-    });
     if (Object.freeze) {
       Object.freeze(element.props);
       Object.freeze(element);

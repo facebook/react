@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactElement, Source} from 'shared/ReactElementType';
+import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
@@ -202,7 +202,6 @@ function FiberNode(
   if (__DEV__) {
     // This isn't directly used but is handy for debugging internals:
 
-    this._debugSource = null;
     this._debugOwner = null;
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
@@ -285,7 +284,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     if (__DEV__) {
       // DEV-only fields
 
-      workInProgress._debugSource = current._debugSource;
       workInProgress._debugOwner = current._debugOwner;
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
@@ -488,7 +486,6 @@ export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
   pendingProps: any,
-  source: null | Source,
   owner: null | Fiber,
   mode: TypeOfMode,
   lanes: Lanes,
@@ -637,7 +634,6 @@ export function createFiberFromTypeAndProps(
   fiber.lanes = lanes;
 
   if (__DEV__) {
-    fiber._debugSource = source;
     fiber._debugOwner = owner;
   }
 
@@ -649,10 +645,8 @@ export function createFiberFromElement(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let source = null;
   let owner = null;
   if (__DEV__) {
-    source = element._source;
     owner = element._owner;
   }
   const type = element.type;
@@ -662,13 +656,11 @@ export function createFiberFromElement(
     type,
     key,
     pendingProps,
-    source,
     owner,
     mode,
     lanes,
   );
   if (__DEV__) {
-    fiber._debugSource = element._source;
     fiber._debugOwner = element._owner;
   }
   return fiber;
@@ -919,7 +911,6 @@ export function assignFiberPropertiesInDEV(
     target.treeBaseDuration = source.treeBaseDuration;
   }
 
-  target._debugSource = source._debugSource;
   target._debugOwner = source._debugOwner;
   target._debugNeedsRemount = source._debugNeedsRemount;
   target._debugHookTypes = source._debugHookTypes;

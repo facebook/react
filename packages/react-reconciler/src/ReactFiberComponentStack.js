@@ -34,26 +34,25 @@ function describeFiber(fiber: Fiber): string {
       ? fiber._debugOwner.type
       : null
     : null;
-  const source = __DEV__ ? fiber._debugSource : null;
   switch (fiber.tag) {
     case HostHoistable:
     case HostSingleton:
     case HostComponent:
-      return describeBuiltInComponentFrame(fiber.type, source, owner);
+      return describeBuiltInComponentFrame(fiber.type, owner);
     case LazyComponent:
-      return describeBuiltInComponentFrame('Lazy', source, owner);
+      return describeBuiltInComponentFrame('Lazy', owner);
     case SuspenseComponent:
-      return describeBuiltInComponentFrame('Suspense', source, owner);
+      return describeBuiltInComponentFrame('Suspense', owner);
     case SuspenseListComponent:
-      return describeBuiltInComponentFrame('SuspenseList', source, owner);
+      return describeBuiltInComponentFrame('SuspenseList', owner);
     case FunctionComponent:
     case IndeterminateComponent:
     case SimpleMemoComponent:
-      return describeFunctionComponentFrame(fiber.type, source, owner);
+      return describeFunctionComponentFrame(fiber.type, owner);
     case ForwardRef:
-      return describeFunctionComponentFrame(fiber.type.render, source, owner);
+      return describeFunctionComponentFrame(fiber.type.render, owner);
     case ClassComponent:
-      return describeClassComponentFrame(fiber.type, source, owner);
+      return describeClassComponentFrame(fiber.type, owner);
     default:
       return '';
   }
