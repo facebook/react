@@ -488,5 +488,6 @@
   "500": "React expected a headers state to exist when emitEarlyPreloads was called but did not find it. This suggests emitEarlyPreloads was called more than once per request. This is a bug in React.",
   "501": "The render was aborted with postpone when the shell is incomplete. Reason: %s",
   "502": "Cannot read a Client Context from a Server Component.",
-  "503": "Cannot use() an already resolved Client Reference."
+  "503": "Cannot use() an already resolved Client Reference.",
+  "504": "Failed to read a RSC payload created by a development version of React on the server while using a production version on the client. Always use matching versions on the server and the client."
 }

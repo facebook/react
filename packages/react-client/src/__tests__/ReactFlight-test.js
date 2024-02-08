@@ -186,7 +186,37 @@ describe('ReactFlight', () => {
     await act(async () => {
       const rootModel = await ReactNoopFlightClient.read(transport);
       const greeting = rootModel.greeting;
+      expect(greeting._debugInfo).toEqual(
+        __DEV__ ? [{name: 'Greeting'}] : undefined,
+      );
       ReactNoop.render(greeting);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
+  });
+
+  it('can render a shared forwardRef Component', async () => {
+    const Greeting = React.forwardRef(function Greeting(
+      {firstName, lastName},
+      ref,
+    ) {
+      return (
+        <span ref={ref}>
+          Hello, {firstName} {lastName}
+        </span>
+      );
+    });
+
+    const root = <Greeting firstName="Seb" lastName="Smith" />;
+
+    const transport = ReactNoopFlightServer.render(root);
+
+    await act(async () => {
+      const promise = ReactNoopFlightClient.read(transport);
+      expect(promise._debugInfo).toEqual(
+        __DEV__ ? [{name: 'Greeting'}] : undefined,
+      );
+      ReactNoop.render(await promise);
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
