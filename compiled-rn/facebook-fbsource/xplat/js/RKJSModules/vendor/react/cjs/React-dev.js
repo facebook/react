@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5d34b04f0be910dc803b79f0e846af47>>
+ * @generated SignedSource<<a5c4bb9a8fd2ccf90d2a03b031b104d0>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-37d901e2b-20240207";
+    var ReactVersion = "18.3.0-canary-b229f540e-20240208";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -841,6 +841,13 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
+        }); // debugInfo contains Server Component debug information.
+
+        Object.defineProperty(element, "_debugInfo", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: null
         });
 
         if (Object.freeze) {
@@ -1462,6 +1469,13 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
+        }); // debugInfo contains Server Component debug information.
+
+        Object.defineProperty(element, "_debugInfo", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: null
         });
 
         if (Object.freeze) {

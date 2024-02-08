@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bf2ebc94d9d8c1c3351e8a3483385df7>>
+ * @generated SignedSource<<b469953f97ee3dddb995beaf72431eac>>
  */
 
 "use strict";
@@ -699,6 +699,13 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
+        }); // debugInfo contains Server Component debug information.
+
+        Object.defineProperty(element, "_debugInfo", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: null
         });
 
         if (Object.freeze) {
