@@ -476,7 +476,7 @@ export class Environment {
     let resolvedGlobal: Global | null = this.#globals.get(resolvedName) ?? null;
     if (resolvedGlobal === null) {
       // Hack, since we don't track module level declarations and imports
-      if (isHookName(name)) {
+      if (isHookName(resolvedName)) {
         return this.#getCustomHookType();
       } else {
         log(() => `Undefined global '${name}'`);
