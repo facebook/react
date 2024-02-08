@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bc49f7cc6bb91f204e6c74435a3de461>>
+ * @generated SignedSource<<bfea370d77b8a2763632472a0306ca34>>
  */
 
 "use strict";
@@ -145,33 +145,7 @@ var ReactCurrentDispatcher = { current: null },
     ReactCurrentCache: ReactCurrentCache,
     ReactCurrentBatchConfig: ReactCurrentBatchConfig,
     ReactCurrentOwner: ReactCurrentOwner$1
-  },
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-function jsx$1(type, config, maybeKey) {
-  var propName,
-    props = {},
-    key = null,
-    ref = null;
-  void 0 !== maybeKey && (key = "" + maybeKey);
-  void 0 !== config.key && (key = "" + config.key);
-  void 0 !== config.ref && (ref = config.ref);
-  for (propName in config)
-    hasOwnProperty.call(config, propName) &&
-      "key" !== propName &&
-      "ref" !== propName &&
-      (props[propName] = config[propName]);
-  if (type && type.defaultProps)
-    for (propName in ((config = type.defaultProps), config))
-      void 0 === props[propName] && (props[propName] = config[propName]);
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: type,
-    key: key,
-    ref: ref,
-    props: props,
-    _owner: ReactCurrentOwner.current
   };
-}
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
   return (
@@ -313,6 +287,32 @@ function lazyInitializer(payload) {
   : function (error) {
       console.error(error);
     };
+var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+function jsx$1(type, config, maybeKey) {
+  var propName,
+    props = {},
+    key = null,
+    ref = null;
+  void 0 !== maybeKey && (key = "" + maybeKey);
+  void 0 !== config.key && (key = "" + config.key);
+  void 0 !== config.ref && (ref = config.ref);
+  for (propName in config)
+    hasOwnProperty.call(config, propName) &&
+      "key" !== propName &&
+      "ref" !== propName &&
+      (props[propName] = config[propName]);
+  if (type && type.defaultProps)
+    for (propName in ((config = type.defaultProps), config))
+      void 0 === props[propName] && (props[propName] = config[propName]);
+  return {
+    $$typeof: REACT_ELEMENT_TYPE,
+    type: type,
+    key: key,
+    ref: ref,
+    props: props,
+    _owner: ReactCurrentOwner.current
+  };
+}
 exports.Children = {
   map: mapChildren,
   forEach: function (children, forEachFunc, forEachContext) {
@@ -543,4 +543,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-b229f540e-20240208";
+exports.version = "18.3.0-canary-d3def4793-20240208";
