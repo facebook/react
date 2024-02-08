@@ -783,8 +783,9 @@ function renderModelDestructive(
             if (modelRoot === value) modelRoot = null;
             else
               return -1 === parentPropertyName
-                ? "$L" + outlineModel(request, value).toString(16)
-                : "$L" + parentPropertyName.toString(16);
+                ? ((request = outlineModel(request, value)),
+                  serializeByValueID(request))
+                : serializeByValueID(parentPropertyName);
         } else parent.set(value, -1);
         return renderElement(
           request,
