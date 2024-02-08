@@ -1,0 +1,38 @@
+import React from 'react';
+import PropTypes from 'prop-types';
+
+const ProgressBar = ({ percent, barColor, height }) => {
+  const containerStyle = {
+    width: '100%',
+    backgroundColor: '#f0f0f0',
+    borderRadius: '5px',
+    overflow: 'hidden',
+    height,
+  };
+
+  const fillerStyle = {
+    height: '100%',
+    width: `${percent}%`,
+    backgroundColor: barColor,
+    transition: 'width 0.5s ease-in-out',
+  };
+
+  return (
+    <div style={containerStyle}>
+      <div style={fillerStyle}></div>
+    </div>
+  );
+};
+
+ProgressBar.propTypes = {
+  percent: PropTypes.number.isRequired,
+  barColor: PropTypes.string,
+  height: PropTypes.string,
+};
+
+ProgressBar.defaultProps = {
+  barColor: '#007bff',
+  height: '20px',
+};
+
+export default ProgressBar;
