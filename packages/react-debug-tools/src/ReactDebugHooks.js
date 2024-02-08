@@ -12,6 +12,7 @@ import type {
   ReactContext,
   ReactProviderType,
   StartTransitionOptions,
+  Thenable,
   Usable,
 } from 'shared/ReactTypes';
 import type {
@@ -122,14 +123,33 @@ function readContext<T>(context: ReactContext<T>): T {
   return context._currentValue;
 }
 
+function useThenable<T>(thenable: Thenable<T>): T {
+  switch (thenable.status) {
+    case 'fulfilled':
+      return thenable.value;
+    case 'rejected':
+      throw thenable.reason;
+    case 'pending':
+    default:
+      throw thenable;
+  }
+}
+
 function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
-      // TODO: What should this do if it receives an unresolved promise?
-      throw new Error(
-        'Support for `use(Promise)` not yet implemented in react-debug-tools.',
-      );
+      // This is a thenable.
+      const thenable: Thenable<T> = (usable: any);
+      const value = useThenable(thenable);
+
+      hookLog.push({
+        primitive: 'Use',
+        stackError: new Error(),
+        value,
+      });
+
+      return value;
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
       const context: ReactContext<T> = (usable: any);
       const value = readContext(context);
