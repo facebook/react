@@ -155,6 +155,11 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
           case REACT_ELEMENT_TYPE:
           case REACT_PORTAL_TYPE:
             invokeCallback = !0;
+            break;
+          case REACT_LAZY_TYPE:
+            throw Error(
+              "Cannot render an Async Component, Promise or React.Lazy inside React.Children. We recommend not iterating over children and just rendering them plain."
+            );
         }
     }
   if (invokeCallback)
@@ -219,17 +224,20 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
           nextName,
           callback
         ));
-  else if ("object" === type)
-    throw (
-      ((array = String(children)),
-      Error(
-        "Objects are not valid as a React child (found: " +
-          ("[object Object]" === array
-            ? "object with keys {" + Object.keys(children).join(", ") + "}"
-            : array) +
-          "). If you meant to render a collection of children, use an array instead."
-      ))
+  else if ("object" === type) {
+    array = String(children);
+    if ("function" === typeof children.then)
+      throw Error(
+        "Cannot render an Async Component, Promise or React.Lazy inside React.Children. We recommend not iterating over children and just rendering them plain."
+      );
+    throw Error(
+      "Objects are not valid as a React child (found: " +
+        ("[object Object]" === array
+          ? "object with keys {" + Object.keys(children).join(", ") + "}"
+          : array) +
+        "). If you meant to render a collection of children, use an array instead."
     );
+  }
   return invokeCallback;
 }
 function mapChildren(children, func, context) {
@@ -566,7 +574,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-5a1ab6a0";
+exports.version = "18.3.0-www-modern-eaf51360";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

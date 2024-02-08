@@ -114,6 +114,9 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
           case REACT_ELEMENT_TYPE:
           case REACT_PORTAL_TYPE:
             invokeCallback = !0;
+            break;
+          case REACT_LAZY_TYPE:
+            throw Error(formatProdErrorMessage(505));
         }
     }
   if (invokeCallback)
@@ -178,18 +181,19 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
           nextName,
           callback
         ));
-  else if ("object" === type)
-    throw (
-      ((array = String(children)),
-      Error(
-        formatProdErrorMessage(
-          31,
-          "[object Object]" === array
-            ? "object with keys {" + Object.keys(children).join(", ") + "}"
-            : array
-        )
-      ))
+  else if ("object" === type) {
+    array = String(children);
+    if ("function" === typeof children.then)
+      throw Error(formatProdErrorMessage(505));
+    throw Error(
+      formatProdErrorMessage(
+        31,
+        "[object Object]" === array
+          ? "object with keys {" + Object.keys(children).join(", ") + "}"
+          : array
+      )
     );
+  }
   return invokeCallback;
 }
 function mapChildren(children, func, context) {
@@ -468,4 +472,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-b9404dd8";
+exports.version = "18.3.0-www-modern-80035f71";
