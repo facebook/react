@@ -69,26 +69,23 @@ export {
 } from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
 /**
- * This function validate the typeof prototype
- * @param {MapConstructor | SetConstructor} type prototype
+ * This function validate the typeof of Map and Set prototypes
  * @returns {boolean}
  */
-const validateProtoType = type => {
-  return (
-    !type.prototype ||
-    typeof type !== 'function' ||
-    typeof type.prototype.forEach !== 'function'
-  );
-};
+const isNotValidProtoTypes =
+  typeof Map !== 'function' ||
+  // $FlowFixMe[prop-missing] Flow incorrectly thinks Map has no prototype
+  !Map.prototype ||
+  typeof Map.prototype.forEach !== 'function' ||
+  typeof Set !== 'function' ||
+  // $FlowFixMe[prop-missing] Flow incorrectly thinks Set has no prototype
+  !Set.prototype ||
+  typeof Set.prototype.clear !== 'function' ||
+  typeof Set.prototype.forEach !== 'function' ||
+  typeof Set.prototype.clear !== 'function';
 
 if (__DEV__) {
-  if (
-    // $FlowFixMe[prop-missing] Flow incorrectly thinks Map has no prototype
-    validateProtoType(Map) ||
-    // $FlowFixMe[prop-missing] Flow incorrectly thinks Set has no prototype
-    validateProtoType(Set) ||
-    typeof Set.prototype.clear !== 'function'
-  ) {
+  if (isNotValidProtoTypes) {
     console.error(
       'React depends on Map and Set built-in types. Make sure that you load a ' +
         'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
