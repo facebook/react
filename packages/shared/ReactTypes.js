@@ -173,3 +173,18 @@ export type Awaited<T> = T extends null | void
       : empty // the argument to `then` was not callable.
     : T // argument was not an object
   : T; // non-thenable
+
+export type ReactComponentInfo = {
+  +name?: string,
+  +env?: string,
+};
+
+export type ReactAsyncInfo = {
+  +started?: number,
+  +completed?: number,
+  +stack?: string,
+};
+
+export type ReactDebugInfo = Array<
+  ReactComponentInfo | ReactAsyncInfo,
+>;

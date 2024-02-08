@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Wakeable, Thenable} from 'shared/ReactTypes';
+import type {Wakeable, Thenable, ReactDebugInfo} from 'shared/ReactTypes';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
@@ -46,7 +46,7 @@ export type LazyComponent<T, P> = {
   $$typeof: symbol | number,
   _payload: P,
   _init: (payload: P) => T,
-  _debugInfo?: null | Array<{+name?: string, +env?: string}>,
+  _debugInfo?: null | ReactDebugInfo,
 };
 
 function lazyInitializer<T>(payload: Payload<T>): T {
