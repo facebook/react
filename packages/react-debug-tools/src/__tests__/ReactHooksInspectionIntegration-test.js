@@ -1108,6 +1108,44 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
+  it('should support use(Context) hook', () => {
+    const Context = React.createContext('default');
+    function Foo() {
+      const value = React.use(Context);
+      React.useMemo(() => 'memo', []);
+      React.useMemo(() => 'not used', []);
+
+      return value;
+    }
+
+    const renderer = ReactTestRenderer.create(<Foo />);
+    const childFiber = renderer.root.findByType(Foo)._currentFiber();
+    const tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree).toEqual([
+      {
+        id: null,
+        isStateEditable: false,
+        name: 'Use',
+        value: 'default',
+        subHooks: [],
+      },
+      {
+        id: 0,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'memo',
+        subHooks: [],
+      },
+      {
+        id: 1,
+        isStateEditable: false,
+        name: 'Memo',
+        value: 'not used',
+        subHooks: [],
+      },
+    ]);
+  });
+
   // @gate enableAsyncActions
   it('should support useOptimistic hook', () => {
     const useOptimistic = React.useOptimistic;
