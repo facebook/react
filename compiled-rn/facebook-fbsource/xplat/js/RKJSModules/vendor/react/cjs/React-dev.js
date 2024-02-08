@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0dd9a827f64fd255297b65cbaecd6c33>>
+ * @generated SignedSource<<46e4507c5c03b4e9b651f29123272054>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-cd63ef792-20240208";
+    var ReactVersion = "18.3.0-canary-e41ee9ea7-20240208";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1791,6 +1791,13 @@ if (__DEV__) {
               case REACT_ELEMENT_TYPE:
               case REACT_PORTAL_TYPE:
                 invokeCallback = true;
+                break;
+
+              case REACT_LAZY_TYPE:
+                throw new Error(
+                  "Cannot render an Async Component, Promise or React.Lazy inside React.Children. " +
+                    "We recommend not iterating over children and just rendering them plain."
+                );
             }
         }
       }
@@ -1904,6 +1911,14 @@ if (__DEV__) {
         } else if (type === "object") {
           // eslint-disable-next-line react-internal/safe-string-coercion
           var childrenString = String(children);
+
+          if (typeof children.then === "function") {
+            throw new Error(
+              "Cannot render an Async Component, Promise or React.Lazy inside React.Children. " +
+                "We recommend not iterating over children and just rendering them plain."
+            );
+          }
+
           throw new Error(
             "Objects are not valid as a React child (found: " +
               (childrenString === "[object Object]"
