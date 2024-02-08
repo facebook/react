@@ -83,15 +83,10 @@ const validateProtoType = type => {
 
 if (__DEV__) {
   if (
-    typeof Map !== 'function' ||
     // $FlowFixMe[prop-missing] Flow incorrectly thinks Map has no prototype
-    Map.prototype == null ||
-    typeof Map.prototype.forEach !== 'function' ||
-    typeof Set !== 'function' ||
+    validateProtoType(Map) ||
     // $FlowFixMe[prop-missing] Flow incorrectly thinks Set has no prototype
-    Set.prototype == null ||
-    typeof Set.prototype.clear !== 'function' ||
-    typeof Set.prototype.forEach !== 'function' ||
+    validateProtoType(Set) ||
     typeof Set.prototype.clear !== 'function'
   ) {
     console.error(
@@ -102,7 +97,7 @@ if (__DEV__) {
 }
 
 /**
- * This function create portal implementation
+ * This function create the portal implementation
  * @param {ReactNodeList} children element to create the portal implementation
  * @param {Element | DocumentFragment} container container of element create portal implementation
  * @param {?string} key optional identifier
