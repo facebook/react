@@ -450,6 +450,13 @@ module.exports = {
         __IS_EDGE__: 'readonly',
       },
     },
+    {
+      files: ['packages/react-devtools-shell/**/*.js'],
+      rules: {
+        // DevTools shell is an internal app not published to NPM
+        'react-internal/prod-error-codes': 'off',
+      },
+    },
   ],
 
   env: {

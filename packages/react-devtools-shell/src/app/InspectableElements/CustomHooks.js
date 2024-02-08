@@ -13,6 +13,7 @@ import {
   forwardRef,
   Fragment,
   memo,
+  Suspense,
   useCallback,
   useContext,
   useDebugValue,
@@ -20,6 +21,7 @@ import {
   useOptimistic,
   useState,
   use,
+  useReducer,
 } from 'react';
 import {useFormState} from 'react-dom';
 
@@ -132,6 +134,55 @@ function Forms() {
   );
 }
 
+let promise = Promise.resolve('initial');
+function FunctionWithUse() {
+  // $FlowFixMe[underconstrained-implicit-instantiation]
+  const [, rerender] = useReducer((n: number) => n + 1, 0);
+  const value = use(promise);
+
+  return (
+    <Fragment>
+      {value}
+      <form
+        onSubmit={event => {
+          event.preventDefault();
+          const delay = +event.target.elements.delay.value;
+          const shouldReject = event.target.elements.shouldReject.checked;
+          const settledValue = event.target.elements.settledValue.value;
+          promise = new Promise((resolve, reject) => {
+            setTimeout(() => {
+              if (shouldReject) {
+                reject(new Error(settledValue));
+              } else {
+                resolve(settledValue);
+              }
+            }, delay);
+          });
+          rerender();
+        }}>
+        <label>
+          delay
+          <input
+            name="delay"
+            type="text"
+            inputMode="numeric"
+            defaultValue={1000}
+          />
+        </label>
+        <label>
+          settled value
+          <input name="settledValue" type="text" />
+        </label>
+        <label>
+          reject
+          <input name="shouldReject" type="checkbox" defaultChecked={false} />
+        </label>
+        <button type="submit">Suspend</button>
+      </form>
+    </Fragment>
+  );
+}
+
 export default function CustomHooks(): React.Node {
   return (
     <Fragment>
@@ -140,6 +191,9 @@ export default function CustomHooks(): React.Node {
       <ForwardRefWithHooks />
       <HocWithHooks />
       <Forms />
+      <Suspense fallback="loading">
+        <FunctionWithUse />
+      </Suspense>
     </Fragment>
   );
 }
