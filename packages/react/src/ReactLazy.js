@@ -46,7 +46,7 @@ export type LazyComponent<T, P> = {
   $$typeof: symbol | number,
   _payload: P,
   _init: (payload: P) => T,
-  _debugInfo?: null | Array<{+name?: string}>,
+  _debugInfo?: null | Array<{+name?: string, +env?: string}>,
 };
 
 function lazyInitializer<T>(payload: Payload<T>): T {

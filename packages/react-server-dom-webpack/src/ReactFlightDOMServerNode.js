@@ -61,6 +61,7 @@ function createCancelHandler(request: Request, reason: string) {
 }
 
 type Options = {
+  environmentName?: string,
   onError?: (error: mixed) => void,
   onPostpone?: (reason: string) => void,
   identifierPrefix?: string,
@@ -82,6 +83,7 @@ function renderToPipeableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);

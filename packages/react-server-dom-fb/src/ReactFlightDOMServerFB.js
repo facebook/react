@@ -50,6 +50,8 @@ function renderToDestination(
     model,
     null,
     options ? options.onError : undefined,
+    undefined,
+    undefined,
   );
   startWork(request);
   startFlowing(request, destination);

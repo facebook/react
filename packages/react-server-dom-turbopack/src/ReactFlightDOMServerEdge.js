@@ -34,6 +34,7 @@ export {
 } from './ReactFlightTurbopackReferences';
 
 type Options = {
+  environmentName?: string,
   identifierPrefix?: string,
   signal?: AbortSignal,
   onError?: (error: mixed) => void,
@@ -51,6 +52,7 @@ function renderToReadableStream(
     options ? options.onError : undefined,
     options ? options.identifierPrefix : undefined,
     options ? options.onPostpone : undefined,
+    options ? options.environmentName : undefined,
   );
   if (options && options.signal) {
     const signal = options.signal;
