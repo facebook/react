@@ -13,6 +13,7 @@ import isArray from 'shared/isArray';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
+  REACT_LAZY_TYPE,
   REACT_PORTAL_TYPE,
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
@@ -103,6 +104,12 @@ function mapIntoArray(
           case REACT_ELEMENT_TYPE:
           case REACT_PORTAL_TYPE:
             invokeCallback = true;
+            break;
+          case REACT_LAZY_TYPE:
+            throw new Error(
+              'Cannot render an Async Component, Promise or React.Lazy inside React.Children. ' +
+                'We recommend not iterating over children and just rendering them plain.',
+            );
         }
     }
   }
@@ -206,6 +213,13 @@ function mapIntoArray(
     } else if (type === 'object') {
       // eslint-disable-next-line react-internal/safe-string-coercion
       const childrenString = String((children: any));
+
+      if (typeof (children: any).then === 'function') {
+        throw new Error(
+          'Cannot render an Async Component, Promise or React.Lazy inside React.Children. ' +
+            'We recommend not iterating over children and just rendering them plain.',
+        );
+      }
 
       throw new Error(
         `Objects are not valid as a React child (found: ${

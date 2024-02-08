@@ -948,6 +948,28 @@ describe('ReactChildren', () => {
     );
   });
 
+  it('should throw on React.lazy', async () => {
+    const lazyElement = React.lazy(async () => ({default: <div />}));
+    await expect(() => {
+      React.Children.forEach([lazyElement], () => {}, null);
+    }).toThrowError(
+      'Cannot render an Async Component, Promise or React.Lazy inside React.Children. ' +
+        'We recommend not iterating over children and just rendering them plain.',
+      {withoutStack: true}, // There's nothing on the stack
+    );
+  });
+
+  it('should throw on Promises', async () => {
+    const promise = Promise.resolve(<div />);
+    await expect(() => {
+      React.Children.forEach([promise], () => {}, null);
+    }).toThrowError(
+      'Cannot render an Async Component, Promise or React.Lazy inside React.Children. ' +
+        'We recommend not iterating over children and just rendering them plain.',
+      {withoutStack: true}, // There's nothing on the stack
+    );
+  });
+
   it('should throw on regex', () => {
     // Really, we care about dates (#4840) but those have nondeterministic
     // serialization (timezones) so let's test a regex instead:
