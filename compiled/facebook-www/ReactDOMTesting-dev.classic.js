@@ -36343,7 +36343,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-b20371a1";
+    var ReactVersion = "18.3.0-www-classic-11e5103a";
 
     function createPortal$1(
       children,

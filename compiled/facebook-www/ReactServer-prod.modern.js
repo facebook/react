@@ -83,32 +83,6 @@ function isValidElement(object) {
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 }
-var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-function jsx$1(type, config, maybeKey) {
-  var propName,
-    props = {},
-    key = null,
-    ref = null;
-  void 0 !== maybeKey && (key = "" + maybeKey);
-  void 0 !== config.key && (key = "" + config.key);
-  void 0 !== config.ref && (ref = config.ref);
-  for (propName in config)
-    hasOwnProperty.call(config, propName) &&
-      "key" !== propName &&
-      "ref" !== propName &&
-      (props[propName] = config[propName]);
-  if (type && type.defaultProps)
-    for (propName in ((config = type.defaultProps), config))
-      void 0 === props[propName] && (props[propName] = config[propName]);
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: type,
-    key: key,
-    ref: ref,
-    props: props,
-    _owner: ReactCurrentOwner.current
-  };
-}
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
   return (
@@ -255,11 +229,37 @@ function createCacheNode() {
 var ReactCurrentBatchConfig = { transition: null };
 function noop() {}
 var onError =
-  "function" === typeof reportError
-    ? reportError
-    : function (error) {
-        console.error(error);
-      };
+    "function" === typeof reportError
+      ? reportError
+      : function (error) {
+          console.error(error);
+        },
+  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+function jsx$1(type, config, maybeKey) {
+  var propName,
+    props = {},
+    key = null,
+    ref = null;
+  void 0 !== maybeKey && (key = "" + maybeKey);
+  void 0 !== config.key && (key = "" + config.key);
+  void 0 !== config.ref && (ref = config.ref);
+  for (propName in config)
+    hasOwnProperty.call(config, propName) &&
+      "key" !== propName &&
+      "ref" !== propName &&
+      (props[propName] = config[propName]);
+  if (type && type.defaultProps)
+    for (propName in ((config = type.defaultProps), config))
+      void 0 === props[propName] && (props[propName] = config[propName]);
+  return {
+    $$typeof: REACT_ELEMENT_TYPE,
+    type: type,
+    key: key,
+    ref: ref,
+    props: props,
+    _owner: ReactCurrentOwner.current
+  };
+}
 exports.Children = {
   map: mapChildren,
   forEach: function (children, forEachFunc, forEachContext) {
@@ -468,4 +468,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-8cbdba22";
+exports.version = "18.3.0-www-modern-b9404dd8";

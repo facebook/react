@@ -148,33 +148,7 @@ var ReactCurrentDispatcher = { current: null },
     ReactCurrentCache: ReactCurrentCache,
     ReactCurrentBatchConfig: ReactCurrentBatchConfig,
     ReactCurrentOwner: ReactCurrentOwner$1
-  },
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-function jsx$1(type, config, maybeKey) {
-  var propName,
-    props = {},
-    key = null,
-    ref = null;
-  void 0 !== maybeKey && (key = "" + maybeKey);
-  void 0 !== config.key && (key = "" + config.key);
-  void 0 !== config.ref && (ref = config.ref);
-  for (propName in config)
-    hasOwnProperty.call(config, propName) &&
-      "key" !== propName &&
-      "ref" !== propName &&
-      (props[propName] = config[propName]);
-  if (type && type.defaultProps)
-    for (propName in ((config = type.defaultProps), config))
-      void 0 === props[propName] && (props[propName] = config[propName]);
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: type,
-    key: key,
-    ref: ref,
-    props: props,
-    _owner: ReactCurrentOwner.current
   };
-}
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
   return (
@@ -313,11 +287,37 @@ function lazyInitializer(payload) {
 }
 function noop() {}
 var onError =
-  "function" === typeof reportError
-    ? reportError
-    : function (error) {
-        console.error(error);
-      };
+    "function" === typeof reportError
+      ? reportError
+      : function (error) {
+          console.error(error);
+        },
+  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+function jsx$1(type, config, maybeKey) {
+  var propName,
+    props = {},
+    key = null,
+    ref = null;
+  void 0 !== maybeKey && (key = "" + maybeKey);
+  void 0 !== config.key && (key = "" + config.key);
+  void 0 !== config.ref && (ref = config.ref);
+  for (propName in config)
+    hasOwnProperty.call(config, propName) &&
+      "key" !== propName &&
+      "ref" !== propName &&
+      (props[propName] = config[propName]);
+  if (type && type.defaultProps)
+    for (propName in ((config = type.defaultProps), config))
+      void 0 === props[propName] && (props[propName] = config[propName]);
+  return {
+    $$typeof: REACT_ELEMENT_TYPE,
+    type: type,
+    key: key,
+    ref: ref,
+    props: props,
+    _owner: ReactCurrentOwner.current
+  };
+}
 exports.Children = {
   map: mapChildren,
   forEach: function (children, forEachFunc, forEachContext) {
@@ -570,4 +570,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-b20371a1";
+exports.version = "18.3.0-www-classic-11e5103a";
