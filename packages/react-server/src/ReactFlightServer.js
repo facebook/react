@@ -108,7 +108,7 @@ import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 initAsyncDebugInfo();
 
 // Dev-only
-type ReactDebugInfo = Array<{+name?: string}>;
+type ReactDebugInfo = Array<{+name?: string, +env?: string}>;
 
 const ObjectPrototype = Object.prototype;
 
@@ -202,6 +202,8 @@ export type Request = {
   taintCleanupQueue: Array<string | bigint>,
   onError: (error: mixed) => ?string,
   onPostpone: (reason: string) => void,
+  // DEV-only
+  environmentName: string,
 };
 
 const {
@@ -254,6 +256,7 @@ export function createRequest(
   onError: void | ((error: mixed) => ?string),
   identifierPrefix?: string,
   onPostpone: void | ((reason: string) => void),
+  environmentName: void | string,
 ): Request {
   if (
     ReactCurrentCache.current !== null &&
@@ -273,7 +276,7 @@ export function createRequest(
     TaintRegistryPendingRequests.add(cleanupQueue);
   }
   const hints = createHints();
-  const request: Request = {
+  const request: Request = ({
     status: OPEN,
     flushScheduled: false,
     fatalError: null,
@@ -298,7 +301,11 @@ export function createRequest(
     taintCleanupQueue: cleanupQueue,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onPostpone: onPostpone === undefined ? defaultPostponeHandler : onPostpone,
-  };
+  }: any);
+  if (__DEV__) {
+    request.environmentName =
+      environmentName === undefined ? 'server' : environmentName;
+  }
   const rootTask = createTask(request, model, null, false, abortSet);
   pingedTasks.push(rootTask);
   return request;
@@ -519,7 +526,10 @@ function renderFunctionComponent<Props>(
       const componentName =
         (Component: any).displayName || Component.name || '';
       request.pendingChunks++;
-      emitDebugChunk(request, debugID, {name: componentName});
+      emitDebugChunk(request, debugID, {
+        name: componentName,
+        env: request.environmentName,
+      });
     }
   }
 
@@ -1721,7 +1731,7 @@ function emitModelChunk(request: Request, id: number, json: string): void {
 function emitDebugChunk(
   request: Request,
   id: number,
-  debugInfo: {+name?: string},
+  debugInfo: {+name?: string, +env?: string},
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json

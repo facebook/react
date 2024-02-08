@@ -77,7 +77,7 @@ const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
 
 // Dev-only
-type ReactDebugInfo = Array<{+name?: string}>;
+type ReactDebugInfo = Array<{+name?: string, +env?: string}>;
 
 type PendingChunk<T> = {
   status: 'pending',

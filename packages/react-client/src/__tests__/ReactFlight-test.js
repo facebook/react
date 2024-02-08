@@ -187,7 +187,7 @@ describe('ReactFlight', () => {
       const rootModel = await ReactNoopFlightClient.read(transport);
       const greeting = rootModel.greeting;
       expect(greeting._debugInfo).toEqual(
-        __DEV__ ? [{name: 'Greeting'}] : undefined,
+        __DEV__ ? [{name: 'Greeting', env: 'server'}] : undefined,
       );
       ReactNoop.render(greeting);
     });
@@ -214,7 +214,7 @@ describe('ReactFlight', () => {
     await act(async () => {
       const promise = ReactNoopFlightClient.read(transport);
       expect(promise._debugInfo).toEqual(
-        __DEV__ ? [{name: 'Greeting'}] : undefined,
+        __DEV__ ? [{name: 'Greeting', env: 'server'}] : undefined,
       );
       ReactNoop.render(await promise);
     });
@@ -1826,9 +1826,14 @@ describe('ReactFlight', () => {
       return <div>Hello, {children}</div>;
     }
 
-    const promise = Promise.resolve(<ThirdPartyComponent />);
+    const promiseComponent = Promise.resolve(<ThirdPartyComponent />);
 
-    const thirdPartyTransport = ReactNoopFlightServer.render([promise, lazy]);
+    const thirdPartyTransport = ReactNoopFlightServer.render(
+      [promiseComponent, lazy],
+      {
+        environmentName: 'third-party',
+      },
+    );
 
     // Wait for the lazy component to initialize
     await 0;
@@ -1840,16 +1845,20 @@ describe('ReactFlight', () => {
     await act(async () => {
       const promise = ReactNoopFlightClient.read(transport);
       expect(promise._debugInfo).toEqual(
-        __DEV__ ? [{name: 'ServerComponent'}] : undefined,
+        __DEV__ ? [{name: 'ServerComponent', env: 'server'}] : undefined,
       );
       const result = await promise;
       const thirdPartyChildren = await result.props.children[1];
       // We expect the debug info to be transferred from the inner stream to the outer.
       expect(thirdPartyChildren[0]._debugInfo).toEqual(
-        __DEV__ ? [{name: 'ThirdPartyComponent'}] : undefined,
+        __DEV__
+          ? [{name: 'ThirdPartyComponent', env: 'third-party'}]
+          : undefined,
       );
       expect(thirdPartyChildren[1]._debugInfo).toEqual(
-        __DEV__ ? [{name: 'ThirdPartyLazyComponent'}] : undefined,
+        __DEV__
+          ? [{name: 'ThirdPartyLazyComponent', env: 'third-party'}]
+          : undefined,
       );
       ReactNoop.render(result);
     });
