@@ -171,7 +171,11 @@ function polyTypeEquals(tA: Type, tB: Type): boolean {
 }
 
 function objectTypeEquals(tA: Type, tB: Type): boolean {
-  return typeKindCheck(tA, tB, "Object");
+  if (tA.kind === "Object" && tB.kind == "Object") {
+    return tA.shapeId === tB.shapeId;
+  }
+
+  return false;
 }
 
 function funcTypeEquals(tA: Type, tB: Type): boolean {
