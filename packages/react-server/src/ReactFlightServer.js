@@ -55,7 +55,6 @@ import type {
   ReactDebugInfo,
   ReactComponentInfo,
   ReactAsyncInfo,
-  ReactConsoleInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -1732,7 +1731,7 @@ function emitModelChunk(request: Request, id: number, json: string): void {
 function emitDebugChunk(
   request: Request,
   id: number,
-  debugInfo: ReactComponentInfo | ReactAsyncInfo | ReactConsoleInfo,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json

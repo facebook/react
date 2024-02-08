@@ -12,7 +12,6 @@ import type {
   ReactDebugInfo,
   ReactComponentInfo,
   ReactAsyncInfo,
-  ReactConsoleInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -1017,7 +1016,7 @@ function resolveHint<Code: HintCode>(
 function resolveDebugInfo(
   response: Response,
   id: number,
-  debugInfo: ReactComponentInfo | ReactAsyncInfo | ReactConsoleInfo,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json

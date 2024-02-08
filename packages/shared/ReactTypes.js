@@ -111,20 +111,24 @@ interface ThenableImpl<T> {
 }
 interface UntrackedThenable<T> extends ThenableImpl<T> {
   status?: void;
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export interface PendingThenable<T> extends ThenableImpl<T> {
   status: 'pending';
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export interface FulfilledThenable<T> extends ThenableImpl<T> {
   status: 'fulfilled';
   value: T;
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export interface RejectedThenable<T> extends ThenableImpl<T> {
   status: 'rejected';
   reason: mixed;
+  _debugInfo?: null | ReactDebugInfo;
 }
 
 export type Thenable<T> =
@@ -185,6 +189,4 @@ export type ReactAsyncInfo = {
   +stack?: string,
 };
 
-export type ReactDebugInfo = Array<
-  ReactComponentInfo | ReactAsyncInfo,
->;
+export type ReactDebugInfo = Array<ReactComponentInfo | ReactAsyncInfo>;
