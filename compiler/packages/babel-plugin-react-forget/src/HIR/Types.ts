@@ -143,6 +143,7 @@ export function typeEquals(tA: Type, tB: Type): boolean {
     primitiveTypeEquals(tA, tB) ||
     polyTypeEquals(tA, tB) ||
     phiTypeEquals(tA, tB) ||
+    propTypeEquals(tA, tB) ||
     objectMethodTypeEquals(tA, tB)
   );
 }
@@ -160,6 +161,18 @@ function typeKindCheck(tA: Type, tb: Type, type: string): boolean {
 
 function objectMethodTypeEquals(tA: Type, tB: Type): boolean {
   return typeKindCheck(tA, tB, "ObjectMethod");
+}
+
+function propTypeEquals(tA: Type, tB: Type): boolean {
+  if (tA.kind === "Property" && tB.kind === "Property") {
+    if (!typeEquals(tA.object, tB.object)) {
+      return false;
+    }
+
+    return tA.propertyName === tB.propertyName;
+  }
+
+  return false;
 }
 
 function primitiveTypeEquals(tA: Type, tB: Type): boolean {
