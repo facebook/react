@@ -1192,12 +1192,16 @@ function renderModelDestructive(
             // but that is able to reuse the same task if we're already in one but then that
             // will be a lazy future value rather than guaranteed to exist but maybe that's good.
             const newId = outlineModel(request, (value: any));
-            return serializeLazyID(newId);
+            return serializeByValueID(newId);
           } else {
             // We've already emitted this as an outlined object, so we can refer to that by its
-            // existing ID. We use a lazy reference since, unlike plain objects, elements might
-            // suspend so it might not have emitted yet even if we have the ID for it.
-            return serializeLazyID(existingId);
+            // existing ID. TODO: We should use a lazy reference since, unlike plain objects,
+            // elements might suspend so it might not have emitted yet even if we have the ID for
+            // it. However, this creates an extra wrapper when it's not needed. We should really
+            // detect whether this already was emitted and synchronously available. In that
+            // case we can refer to it synchronously and only make it lazy otherwise.
+            // We currently don't have a data structure that lets us see that though.
+            return serializeByValueID(existingId);
           }
         } else {
           // This is the first time we've seen this object. We may never see it again
