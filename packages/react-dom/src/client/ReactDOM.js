@@ -68,6 +68,19 @@ export {
   useFormState,
 } from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
+/**
+ * This function validate the typeof prototype
+ * @param {MapConstructor | SetConstructor} type prototype
+ * @returns {boolean}
+ */
+const validateProtoType = type => {
+  return (
+    !type.prototype ||
+    typeof type !== 'function' ||
+    typeof type.prototype.forEach !== 'function'
+  );
+};
+
 if (__DEV__) {
   if (
     typeof Map !== 'function' ||
@@ -78,7 +91,8 @@ if (__DEV__) {
     // $FlowFixMe[prop-missing] Flow incorrectly thinks Set has no prototype
     Set.prototype == null ||
     typeof Set.prototype.clear !== 'function' ||
-    typeof Set.prototype.forEach !== 'function'
+    typeof Set.prototype.forEach !== 'function' ||
+    typeof Set.prototype.clear !== 'function'
   ) {
     console.error(
       'React depends on Map and Set built-in types. Make sure that you load a ' +
@@ -87,6 +101,14 @@ if (__DEV__) {
   }
 }
 
+/**
+ * This function create portal implementation
+ * @param {ReactNodeList} children element to create the portal implementation
+ * @param {Element | DocumentFragment} container container of element create portal implementation
+ * @param {?string} key optional identifier
+ * @throws error when the container is not valid
+ * @returns {boolean}
+ */
 function createPortal(
   children: ReactNodeList,
   container: Element | DocumentFragment,
@@ -101,6 +123,14 @@ function createPortal(
   return createPortalImpl(children, container, null, key);
 }
 
+/**
+ * This function render subtree into container
+ * @param {React$Component<any, any>} parentComponent parent react component
+ * @param {React$Element<any>} element react element
+ * @param {Container} containerNode a node container to render
+ * @param {?Function} callback optional callback function
+ * @returns {React$Component<any, any> | PublicInstance | null}
+ */
 function renderSubtreeIntoContainer(
   parentComponent: React$Component<any, any>,
   element: React$Element<any>,
@@ -115,6 +145,12 @@ function renderSubtreeIntoContainer(
   );
 }
 
+/**
+ * This function create the root of react three
+ * @param {Element | Document | DocumentFragment} container element to render react
+ * @param {?CreateRootOptions} options optional creation options
+ * @returns {RootType}
+ */
 function createRoot(
   container: Element | Document | DocumentFragment,
   options?: CreateRootOptions,
@@ -130,6 +166,13 @@ function createRoot(
   return createRootImpl(container, options);
 }
 
+/**
+ * This function hydrate the creation of the root of react three
+ * @param {Document | Element} container element to create hydration
+ * @param {ReactNodeList} initialChildren react element
+ * @param {?HydrateRootOptions} options optional hydration creation options
+ * @returns {RootType}
+ */
 function hydrateRoot(
   container: Document | Element,
   initialChildren: ReactNodeList,
