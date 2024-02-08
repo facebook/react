@@ -236,7 +236,7 @@ var currentRequest$1 = null,
   thenableIndexCounter = 0,
   thenableState = null;
 function getThenableStateAfterSuspending() {
-  var state = thenableState;
+  var state = thenableState || [];
   thenableState = null;
   return state;
 }
@@ -987,20 +987,21 @@ function retryTask(request, task) {
       request.abortableTasks.delete(task);
       task.status = 1;
     } catch (thrownValue) {
-      (resolvedModel =
+      var x =
         thrownValue === SuspenseException
           ? getSuspendedThenable()
-          : thrownValue),
-        "object" === typeof resolvedModel &&
-        null !== resolvedModel &&
-        "function" === typeof resolvedModel.then
-          ? ((request = task.ping),
-            resolvedModel.then(request, request),
-            (task.thenableState = getThenableStateAfterSuspending()))
-          : (request.abortableTasks.delete(task),
-            (task.status = 4),
-            (resolvedModel = logRecoverableError(request, resolvedModel)),
-            emitErrorChunk(request, task.id, resolvedModel));
+          : thrownValue;
+      if ("object" === typeof x && null !== x && "function" === typeof x.then) {
+        var ping = task.ping;
+        x.then(ping, ping);
+        task.thenableState = getThenableStateAfterSuspending();
+      } else {
+        request.abortableTasks.delete(task);
+        task.status = 4;
+        var digest = logRecoverableError(request, x);
+        emitErrorChunk(request, task.id, digest);
+      }
+    } finally {
     }
 }
 function performWork(request) {

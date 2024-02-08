@@ -506,6 +506,10 @@ function startReadingFromStream(response, stream) {
                 new Chunk("fulfilled", rowTag, null, rowLength)
               );
               break;
+            case 68:
+              throw Error(
+                "Failed to read a RSC payload created by a development version of React on the server while using a production version on the client. Always use matching versions on the server and the client."
+              );
             default:
               (i = rowLength._chunks),
                 (offset = i.get(rowID))

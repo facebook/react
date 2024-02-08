@@ -581,7 +581,10 @@ if (__DEV__) {
       thenableState = prevThenableState;
     }
     function getThenableStateAfterSuspending() {
-      var state = thenableState;
+      // If you use() to Suspend this should always exist but if you throw a Promise instead,
+      // which is not really supported anymore, it will be empty. We use the empty set as a
+      // marker to know if this was a replay of the same component or first attempt.
+      var state = thenableState || createThenableState();
       thenableState = null;
       return state;
     }
@@ -1314,6 +1317,23 @@ if (__DEV__) {
       // component suspends again, the thenable state will be restored.
       var prevThenableState = task.thenableState;
       task.thenableState = null;
+
+      {
+        if (debugID === null) {
+          // We don't have a chunk to assign debug info. We need to outline this
+          // component to assign it an ID.
+          return outlineTask(request, task);
+        } else if (prevThenableState !== null);
+        else {
+          // This is a new component in the same task so we can emit more debug info.
+          var componentName = Component.displayName || Component.name || "";
+          request.pendingChunks++;
+          emitDebugChunk(request, debugID, {
+            name: componentName
+          });
+        }
+      }
+
       prepareToUseHooksForComponent(prevThenableState); // The secondArg is always undefined in Server Components since refs error early.
 
       var secondArg = undefined;
@@ -1421,6 +1441,28 @@ if (__DEV__) {
       // or anything else too which we also get implicitly.
 
       return element;
+    } // The chunk ID we're currently rendering that we can assign debug data to.
+
+    var debugID = null;
+
+    function outlineTask(request, task) {
+      var newTask = createTask(
+        request,
+        task.model, // the currently rendering element
+        task.keyPath, // unlike outlineModel this one carries along context
+        task.implicitSlot,
+        request.abortableTasks
+      );
+      retryTask(request, newTask);
+
+      if (newTask.status === COMPLETED) {
+        // We completed synchronously so we can refer to this by reference. This
+        // makes it behaves the same as prod during deserialization.
+        return serializeByValueID(newTask.id);
+      } // This didn't complete synchronously so it wouldn't have even if we didn't
+      // outline it, so this would reduce to a lazy reference even in prod.
+
+      return serializeLazyID(newTask.id);
     }
 
     function renderElement(request, task, type, key, ref, props) {
@@ -1445,7 +1487,7 @@ if (__DEV__) {
         if (isClientReference(type)) {
           // This is a reference to a Client Component.
           return renderClientElement(task, type, key, props);
-        } // This is a server-side component.
+        } // This is a Server Component.
 
         return renderFunctionComponent(request, task, key, type, props);
       } else if (typeof type === "string") {
@@ -2257,6 +2299,13 @@ if (__DEV__) {
       request.completedRegularChunks.push(processedChunk);
     }
 
+    function emitDebugChunk(request, id, debugInfo) {
+      var json = stringify(debugInfo);
+      var row = serializeRowHeader("D", id) + json + "\n";
+      var processedChunk = stringToChunk(row);
+      request.completedRegularChunks.push(processedChunk);
+    }
+
     var emptyRoot = {};
 
     function retryTask(request, task) {
@@ -2265,11 +2314,18 @@ if (__DEV__) {
         return;
       }
 
+      var prevDebugID = debugID;
+
       try {
         // Track the root so we know that we have to emit this object even though it
         // already has an ID. This is needed because we might see this object twice
         // in the same toJSON if it is cyclic.
-        modelRoot = task.model; // We call the destructive form that mutates this task. That way if something
+        modelRoot = task.model;
+
+        if (true) {
+          // Track the ID of the current task so we can assign debug info to this id.
+          debugID = task.id;
+        } // We call the destructive form that mutates this task. That way if something
         // suspends again, we can reuse the same task instead of spawning a new one.
 
         var resolvedModel = renderModelDestructive(
@@ -2278,7 +2334,13 @@ if (__DEV__) {
           emptyRoot,
           "",
           task.model
-        ); // Track the root again for the resolved object.
+        );
+
+        if (true) {
+          // We're now past rendering this task and future renders will spawn new tasks for their
+          // debug info.
+          debugID = null;
+        } // Track the root again for the resolved object.
 
         modelRoot = resolvedModel; // The keyPath resets at any terminal child node.
 
@@ -2326,6 +2388,10 @@ if (__DEV__) {
         task.status = ERRORED;
         var digest = logRecoverableError(request, x);
         emitErrorChunk(request, task.id, digest, x);
+      } finally {
+        {
+          debugID = prevDebugID;
+        }
       }
     }
 

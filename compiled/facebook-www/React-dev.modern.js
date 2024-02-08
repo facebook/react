@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-b425cc4f";
+    var ReactVersion = "18.3.0-www-modern-f7a0584c";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -772,6 +772,13 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
+        }); // debugInfo contains Server Component debug information.
+
+        Object.defineProperty(element, "_debugInfo", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: null
         });
 
         if (Object.freeze) {
@@ -1808,6 +1815,13 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
+        }); // debugInfo contains Server Component debug information.
+
+        Object.defineProperty(element, "_debugInfo", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: null
         });
 
         if (Object.freeze) {

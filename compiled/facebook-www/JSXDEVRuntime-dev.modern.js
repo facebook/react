@@ -1054,6 +1054,13 @@ if (__DEV__) {
           enumerable: false,
           writable: true,
           value: false
+        }); // debugInfo contains Server Component debug information.
+
+        Object.defineProperty(element, "_debugInfo", {
+          configurable: false,
+          enumerable: false,
+          writable: true,
+          value: null
         });
 
         if (Object.freeze) {
