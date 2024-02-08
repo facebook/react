@@ -15,6 +15,7 @@ describe('ReactDOMEventListener', () => {
   let ReactDOMClient;
   let ReactDOMServer;
   let act;
+  let simulateEventDispatch;
 
   beforeEach(() => {
     React = require('react');
@@ -22,6 +23,8 @@ describe('ReactDOMEventListener', () => {
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
     act = require('internal-test-utils').act;
+    simulateEventDispatch =
+      require('internal-test-utils').simulateEventDispatch;
   });
 
   describe('Propagation', () => {
@@ -142,36 +145,51 @@ describe('ReactDOMEventListener', () => {
       }
     });
 
-    it('should batch between handlers from different roots', () => {
+    it('should batch between handlers from different roots (discrete)', async () => {
       const mock = jest.fn();
 
       const childContainer = document.createElement('div');
-      const handleChildMouseOut = () => {
-        ReactDOM.render(<div>1</div>, childContainer);
-        mock(childNode.textContent);
-      };
+      const parentContainer = document.createElement('main');
 
-      const parentContainer = document.createElement('div');
-      const handleParentMouseOut = () => {
-        ReactDOM.render(<div>2</div>, childContainer);
-        mock(childNode.textContent);
-      };
+      const childRoot = ReactDOMClient.createRoot(childContainer);
+      const parentRoot = ReactDOMClient.createRoot(parentContainer);
+      let childSetState;
 
-      const childNode = ReactDOM.render(
-        <div onMouseOut={handleChildMouseOut}>Child</div>,
-        childContainer,
-      );
-      const parentNode = ReactDOM.render(
-        <div onMouseOut={handleParentMouseOut}>Parent</div>,
-        parentContainer,
-      );
+      function Parent() {
+        // eslint-disable-next-line no-unused-vars
+        const [state, _] = React.useState('Parent');
+        const handleClick = () => {
+          childSetState(2);
+          mock(childContainer.firstChild.textContent);
+        };
+        return <section onClick={handleClick}>{state}</section>;
+      }
+
+      function Child() {
+        const [state, setState] = React.useState('Child');
+        childSetState = setState;
+        const handleClick = () => {
+          setState(1);
+          mock(childContainer.firstChild.textContent);
+        };
+        return <span onClick={handleClick}>{state}</span>;
+      }
+
+      await act(() => {
+        childRoot.render(<Child />);
+        parentRoot.render(<Parent />);
+      });
+
+      const childNode = childContainer.firstChild;
+      const parentNode = parentContainer.firstChild;
+
       parentNode.appendChild(childContainer);
       document.body.appendChild(parentContainer);
 
       try {
-        const nativeEvent = document.createEvent('Event');
-        nativeEvent.initEvent('mouseout', true, true);
-        childNode.dispatchEvent(nativeEvent);
+        await act(async () => {
+          await simulateEventDispatch(childNode, 'click');
+        });
 
         // Child and parent should both call from event handlers.
         expect(mock).toHaveBeenCalledTimes(2);
@@ -190,8 +208,74 @@ describe('ReactDOMEventListener', () => {
         // change anyway. We can maybe revisit this later as part of
         // the work to refine this in the scheduler (maybe by leveraging
         // isInputPending?).
+        //
+        // Since this is a discrete event, the previous update is already done.
         expect(mock.mock.calls[1][0]).toBe('1');
-        // By the time we leave the handler, the second update is flushed.
+
+        // And by the time we leave the handler, the second update is flushed.
+        expect(childNode.textContent).toBe('2');
+      } finally {
+        document.body.removeChild(parentContainer);
+      }
+    });
+
+    it('should batch between handlers from different roots (continuous)', async () => {
+      const mock = jest.fn();
+
+      const childContainer = document.createElement('div');
+      const parentContainer = document.createElement('main');
+
+      const childRoot = ReactDOMClient.createRoot(childContainer);
+      const parentRoot = ReactDOMClient.createRoot(parentContainer);
+      let childSetState;
+
+      function Parent() {
+        // eslint-disable-next-line no-unused-vars
+        const [state, _] = React.useState('Parent');
+        const handleMouseOut = () => {
+          childSetState(2);
+          mock(childContainer.firstChild.textContent);
+        };
+        return <section onMouseOut={handleMouseOut}>{state}</section>;
+      }
+
+      function Child() {
+        const [state, setState] = React.useState('Child');
+        childSetState = setState;
+        const handleMouseOut = () => {
+          setState(1);
+          mock(childContainer.firstChild.textContent);
+        };
+        return <span onMouseOut={handleMouseOut}>{state}</span>;
+      }
+
+      await act(() => {
+        childRoot.render(<Child />);
+        parentRoot.render(<Parent />);
+      });
+
+      const childNode = childContainer.firstChild;
+      const parentNode = parentContainer.firstChild;
+
+      parentNode.appendChild(childContainer);
+      document.body.appendChild(parentContainer);
+
+      try {
+        await act(async () => {
+          await simulateEventDispatch(childNode, 'mouseout');
+        });
+
+        // Child and parent should both call from event handlers.
+        expect(mock).toHaveBeenCalledTimes(2);
+        // The first call schedules a render of '1' into the 'Child'.
+        // However, we're batching, so it isn't flushed yet.
+        expect(mock.mock.calls[0][0]).toBe('Child');
+        // As we have two roots, it means we have two event listeners.
+        // This also means we enter the event batching phase twice.
+        // But since this is a continuous event, we still haven't flushed.
+        expect(mock.mock.calls[1][0]).toBe('Child');
+
+        // The batched update is applied after the events.
         expect(childNode.textContent).toBe('2');
       } finally {
         document.body.removeChild(parentContainer);
