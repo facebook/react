@@ -116,29 +116,15 @@ describe('ReactStrictMode', () => {
       container,
     );
 
-    if (gate(flags => flags.useModernStrictMode)) {
-      expect(log).toEqual([
-        'constructor',
-        'constructor',
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'render',
-        'render',
-        'componentDidMount',
-        'componentWillUnmount',
-        'componentDidMount',
-      ]);
-    } else {
-      expect(log).toEqual([
-        'constructor',
-        'constructor',
-        'getDerivedStateFromProps',
-        'getDerivedStateFromProps',
-        'render',
-        'render',
-        'componentDidMount',
-      ]);
-    }
+    expect(log).toEqual([
+      'constructor',
+      'constructor',
+      'getDerivedStateFromProps',
+      'getDerivedStateFromProps',
+      'render',
+      'render',
+      'componentDidMount',
+    ]);
 
     log = [];
     shouldComponentUpdate = true;
