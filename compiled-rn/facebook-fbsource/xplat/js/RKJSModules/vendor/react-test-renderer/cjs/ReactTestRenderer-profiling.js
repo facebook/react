@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5b49f712bb1a860452ac3790a15aa134>>
+ * @generated SignedSource<<a0a2d876cbe4fb943cdc49c02ecf6a31>>
  */
 
 "use strict";
@@ -470,7 +470,7 @@ function createLaneMap(initial) {
   for (var laneMap = [], i = 0; 31 > i; i++) laneMap.push(initial);
   return laneMap;
 }
-function markRootUpdated(root, updateLane) {
+function markRootUpdated$1(root, updateLane) {
   root.pendingLanes |= updateLane;
   268435456 !== updateLane &&
     ((root.suspendedLanes = 0), (root.pingedLanes = 0));
@@ -893,6 +893,7 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
                       workInProgressRootRenderLanes$7,
                       workInProgressRootRecoverableErrors,
                       workInProgressTransitions,
+                      workInProgressRootDidIncludeRecursiveRenderUpdate,
                       workInProgressDeferredLane
                     ));
               }
@@ -7348,6 +7349,7 @@ var DefaultCacheDispatcher = {
   workInProgressDeferredLane = 0,
   workInProgressRootConcurrentErrors = null,
   workInProgressRootRecoverableErrors = null,
+  workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
   globalMostRecentFallbackTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
@@ -7395,7 +7397,7 @@ function scheduleUpdateOnFiber(root, fiber, lane) {
         workInProgressRootRenderLanes,
         workInProgressDeferredLane
       );
-  markRootUpdated(root, lane);
+  markRootUpdated$1(root, lane);
   if (0 === (executionContext & 2) || root !== workInProgressRoot)
     root === workInProgressRoot &&
       (0 === (executionContext & 2) &&
@@ -7511,6 +7513,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
                 shouldTimeSlice,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
+                workInProgressRootDidIncludeRecursiveRenderUpdate,
                 lanes,
                 workInProgressDeferredLane
               ),
@@ -7523,6 +7526,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             shouldTimeSlice,
             workInProgressRootRecoverableErrors,
             workInProgressTransitions,
+            workInProgressRootDidIncludeRecursiveRenderUpdate,
             lanes,
             workInProgressDeferredLane
           );
@@ -7575,11 +7579,18 @@ function commitRootWhenReady(
   finishedWork,
   recoverableErrors,
   transitions,
+  didIncludeRenderPhaseUpdate,
   lanes,
   spawnedLane
 ) {
   0 === (lanes & 42) && accumulateSuspenseyCommitOnFiber(finishedWork);
-  commitRoot(root, recoverableErrors, transitions, spawnedLane);
+  commitRoot(
+    root,
+    recoverableErrors,
+    transitions,
+    didIncludeRenderPhaseUpdate,
+    spawnedLane
+  );
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
   for (var node = finishedWork; ; ) {
@@ -7698,6 +7709,7 @@ function prepareFreshStack(root, lanes) {
       0;
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
+  workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
   0 === (root.current.mode & 32) && 0 !== (lanes & 8) && (lanes |= lanes & 32);
   var allEntangledLanes = root.entangledLanes;
   if (0 !== allEntangledLanes)
@@ -8085,7 +8097,13 @@ function completeUnitOfWork(unitOfWork) {
   } while (null !== completedWork);
   0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 5);
 }
-function commitRoot(root, recoverableErrors, transitions, spawnedLane) {
+function commitRoot(
+  root,
+  recoverableErrors,
+  transitions,
+  didIncludeRenderPhaseUpdate,
+  spawnedLane
+) {
   var previousUpdateLanePriority = currentUpdatePriority,
     prevTransition = ReactCurrentBatchConfig.transition;
   try {
@@ -8095,6 +8113,7 @@ function commitRoot(root, recoverableErrors, transitions, spawnedLane) {
         root,
         recoverableErrors,
         transitions,
+        didIncludeRenderPhaseUpdate,
         previousUpdateLanePriority,
         spawnedLane
       );
@@ -8108,6 +8127,7 @@ function commitRootImpl(
   root,
   recoverableErrors,
   transitions,
+  didIncludeRenderPhaseUpdate,
   renderPriorityLevel,
   spawnedLane
 ) {
@@ -8115,8 +8135,8 @@ function commitRootImpl(
   while (null !== rootWithPendingPassiveEffects);
   if (0 !== (executionContext & 6))
     throw Error("Should not already be working.");
-  var finishedWork = root.finishedWork,
-    lanes = root.finishedLanes;
+  var finishedWork = root.finishedWork;
+  didIncludeRenderPhaseUpdate = root.finishedLanes;
   if (null === finishedWork) return null;
   root.finishedWork = null;
   root.finishedLanes = 0;
@@ -8165,7 +8185,7 @@ function commitRootImpl(
   rootDoesHavePassiveEffects
     ? ((rootDoesHavePassiveEffects = !1),
       (rootWithPendingPassiveEffects = root),
-      (pendingPassiveEffectsLanes = lanes))
+      (pendingPassiveEffectsLanes = didIncludeRenderPhaseUpdate))
     : releaseRootPooledCache(root, remainingLanes);
   remainingLanes = root.pendingLanes;
   0 === remainingLanes && (legacyErrorBoundariesThatAlreadyFailed = null);
@@ -8194,7 +8214,7 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (lanes & 4194218) && 0 !== (remainingLanes & 42)
+  0 !== (didIncludeRenderPhaseUpdate & 4194218) && 0 !== (remainingLanes & 42)
     ? ((nestedUpdateScheduled = !0),
       root === rootWithNestedUpdates
         ? nestedUpdateCount++
@@ -8311,7 +8331,7 @@ function captureCommitPhaseErrorOnRoot(rootFiber, sourceFiber, error) {
   sourceFiber = createRootErrorUpdate(rootFiber, sourceFiber, 2);
   rootFiber = enqueueUpdate(rootFiber, sourceFiber, 2);
   null !== rootFiber &&
-    (markRootUpdated(rootFiber, 2), ensureRootIsScheduled(rootFiber));
+    (markRootUpdated$1(rootFiber, 2), ensureRootIsScheduled(rootFiber));
 }
 function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
   if (3 === sourceFiber.tag)
@@ -8346,7 +8366,7 @@ function captureCommitPhaseError(sourceFiber, nearestMountedAncestor, error) {
             2
           );
           null !== nearestMountedAncestor &&
-            (markRootUpdated(nearestMountedAncestor, 2),
+            (markRootUpdated$1(nearestMountedAncestor, 2),
             ensureRootIsScheduled(nearestMountedAncestor));
           break;
         }
@@ -8390,7 +8410,7 @@ function retryTimedOutBoundary(boundaryFiber, retryLane) {
     (retryLane = 0 === (boundaryFiber.mode & 1) ? 2 : claimNextRetryLane());
   boundaryFiber = enqueueConcurrentRenderForLane(boundaryFiber, retryLane);
   null !== boundaryFiber &&
-    (markRootUpdated(boundaryFiber, retryLane),
+    (markRootUpdated$1(boundaryFiber, retryLane),
     ensureRootIsScheduled(boundaryFiber));
 }
 function retryDehydratedSuspenseBoundary(boundaryFiber) {
@@ -9576,19 +9596,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1053 = {
+var devToolsConfig$jscomp$inline_1065 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-03d6f7cf0-20240209",
+  version: "18.3.0-canary-d8c1fa6b0-20240209",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1230 = {
-  bundleType: devToolsConfig$jscomp$inline_1053.bundleType,
-  version: devToolsConfig$jscomp$inline_1053.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1053.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1053.rendererConfig,
+var internals$jscomp$inline_1245 = {
+  bundleType: devToolsConfig$jscomp$inline_1065.bundleType,
+  version: devToolsConfig$jscomp$inline_1065.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1065.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1065.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9605,26 +9625,26 @@ var internals$jscomp$inline_1230 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1053.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1065.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-03d6f7cf0-20240209"
+  reconcilerVersion: "18.3.0-canary-d8c1fa6b0-20240209"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1231 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1246 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1231.isDisabled &&
-    hook$jscomp$inline_1231.supportsFiber
+    !hook$jscomp$inline_1246.isDisabled &&
+    hook$jscomp$inline_1246.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1231.inject(
-        internals$jscomp$inline_1230
+      (rendererID = hook$jscomp$inline_1246.inject(
+        internals$jscomp$inline_1245
       )),
-        (injectedHook = hook$jscomp$inline_1231);
+        (injectedHook = hook$jscomp$inline_1246);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
