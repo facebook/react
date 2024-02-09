@@ -1733,7 +1733,7 @@ if (__DEV__) {
 
       return laneMap;
     }
-    function markRootUpdated(root, updateLane) {
+    function markRootUpdated$1(root, updateLane) {
       root.pendingLanes |= updateLane; // If there are any suspended transitions, it's possible this new update
       // could unblock them. Clear the suspended lanes so that we can try rendering
       // them again.
@@ -1770,7 +1770,7 @@ if (__DEV__) {
         markSpawnedDeferredLane(root, spawnedLane, suspendedLanes);
       }
     }
-    function markRootPinged(root, pingedLanes) {
+    function markRootPinged$1(root, pingedLanes) {
       root.pingedLanes |= root.suspendedLanes & pingedLanes;
     }
     function markRootFinished(root, remainingLanes, spawnedLane) {
@@ -21965,7 +21965,9 @@ if (__DEV__) {
     var workInProgressRootConcurrentErrors = null; // These are errors that we recovered from without surfacing them to the UI.
     // We will log them once the tree commits.
 
-    var workInProgressRootRecoverableErrors = null; // The most recent time we either committed a fallback, or when a fallback was
+    var workInProgressRootRecoverableErrors = null; // Tracks when an update occurs during the render phase.
+
+    var workInProgressRootDidIncludeRecursiveRenderUpdate = false; // Thacks when an update occurs during the commit phase. It's a separate
     // filled in with the resolved UI. This lets us throttle the appearance of new
     // content as it streams in, to minimize jank.
     // TODO: Think of a better name for this variable?
@@ -22475,6 +22477,7 @@ if (__DEV__) {
           root,
           workInProgressRootRecoverableErrors,
           workInProgressTransitions,
+          workInProgressRootDidIncludeRecursiveRenderUpdate,
           workInProgressDeferredLane
         );
       } else {
@@ -22505,6 +22508,7 @@ if (__DEV__) {
                 finishedWork,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
+                workInProgressRootDidIncludeRecursiveRenderUpdate,
                 lanes,
                 workInProgressDeferredLane
               ),
@@ -22519,6 +22523,7 @@ if (__DEV__) {
           finishedWork,
           workInProgressRootRecoverableErrors,
           workInProgressTransitions,
+          workInProgressRootDidIncludeRecursiveRenderUpdate,
           lanes,
           workInProgressDeferredLane
         );
@@ -22530,6 +22535,7 @@ if (__DEV__) {
       finishedWork,
       recoverableErrors,
       transitions,
+      didIncludeRenderPhaseUpdate,
       lanes,
       spawnedLane
     ) {
@@ -22554,14 +22560,26 @@ if (__DEV__) {
           // us that it's ready. This will be canceled if we start work on the
           // root again.
           root.cancelPendingCommit = schedulePendingCommit(
-            commitRoot.bind(null, root, recoverableErrors, transitions)
+            commitRoot.bind(
+              null,
+              root,
+              recoverableErrors,
+              transitions,
+              didIncludeRenderPhaseUpdate
+            )
           );
           markRootSuspended(root, lanes, spawnedLane);
           return;
         }
       } // Otherwise, commit immediately.
 
-      commitRoot(root, recoverableErrors, transitions, spawnedLane);
+      commitRoot(
+        root,
+        recoverableErrors,
+        transitions,
+        didIncludeRenderPhaseUpdate,
+        spawnedLane
+      );
     }
 
     function isRenderConsistentWithExternalStores(finishedWork) {
@@ -22624,13 +22642,23 @@ if (__DEV__) {
       // eslint-disable-next-line no-unreachable
 
       return true;
+    } // The extra indirections around markRootUpdated and markRootSuspended is
+    // needed to avoid a circular dependency between this module and
+    // ReactFiberLane. There's probably a better way to split up these modules and
+    // avoid this problem. Perhaps all the root-marking functions should move into
+    // the work loop.
+
+    function markRootUpdated(root, updatedLanes) {
+      markRootUpdated$1(root, updatedLanes);
+    }
+
+    function markRootPinged(root, pingedLanes) {
+      markRootPinged$1(root, pingedLanes);
     }
 
     function markRootSuspended(root, suspendedLanes, spawnedLane) {
       // When suspending, we should always exclude lanes that were pinged or (more
       // rarely, since we try to avoid it) updated during the render phase.
-      // TODO: Lol maybe there's a better way to factor this besides this
-      // obnoxiously named function :)
       suspendedLanes = removeLanes(
         suspendedLanes,
         workInProgressRootPingedLanes
@@ -22639,6 +22667,7 @@ if (__DEV__) {
         suspendedLanes,
         workInProgressRootInterleavedUpdatedLanes
       );
+
       markRootSuspended$1(root, suspendedLanes, spawnedLane);
     } // This is the entry point for synchronous tasks that don't go
     // through Scheduler
@@ -22713,6 +22742,7 @@ if (__DEV__) {
         root,
         workInProgressRootRecoverableErrors,
         workInProgressTransitions,
+        workInProgressRootDidIncludeRecursiveRenderUpdate,
         workInProgressDeferredLane
       ); // Before exiting, make sure there's a callback scheduled for the next
       // pending level.
@@ -22857,7 +22887,8 @@ if (__DEV__) {
       workInProgressRootPingedLanes = NoLanes;
       workInProgressDeferredLane = NoLane;
       workInProgressRootConcurrentErrors = null;
-      workInProgressRootRecoverableErrors = null; // Get the lanes that are entangled with whatever we're about to render. We
+      workInProgressRootRecoverableErrors = null;
+      workInProgressRootDidIncludeRecursiveRenderUpdate = false; // Get the lanes that are entangled with whatever we're about to render. We
       // track these separately so we can distinguish the priority of the render
       // task from the priority of the lanes it is entangled with. For example, a
       // transition may not be allowed to finish unless it includes the Sync lane,
@@ -23807,7 +23838,13 @@ if (__DEV__) {
       workInProgress = null;
     }
 
-    function commitRoot(root, recoverableErrors, transitions, spawnedLane) {
+    function commitRoot(
+      root,
+      recoverableErrors,
+      transitions,
+      didIncludeRenderPhaseUpdate,
+      spawnedLane
+    ) {
       // TODO: This no longer makes any sense. We already wrap the mutation and
       // layout phases. Should be able to remove.
       var previousUpdateLanePriority = getCurrentUpdatePriority();
@@ -23820,6 +23857,7 @@ if (__DEV__) {
           root,
           recoverableErrors,
           transitions,
+          didIncludeRenderPhaseUpdate,
           previousUpdateLanePriority,
           spawnedLane
         );
@@ -23835,6 +23873,7 @@ if (__DEV__) {
       root,
       recoverableErrors,
       transitions,
+      didIncludeRenderPhaseUpdate,
       renderPriorityLevel,
       spawnedLane
     ) {
@@ -23894,7 +23933,7 @@ if (__DEV__) {
 
       var concurrentlyUpdatedLanes = getConcurrentlyUpdatedLanes();
       remainingLanes = mergeLanes(remainingLanes, concurrentlyUpdatedLanes);
-      markRootFinished(root, remainingLanes, spawnedLane);
+      markRootFinished(root, remainingLanes, spawnedLane); // Reset this before firing side effects so we can detect recursive updates.
 
       if (root === workInProgressRoot) {
         // We can reset these now that they are finished.
@@ -24082,6 +24121,9 @@ if (__DEV__) {
       // hydration is conceptually not an update.
 
       if (
+        // Check if there was a recursive update spawned by this render, in either
+        // the render phase or the commit phase. We track these explicitly because
+        // we can't infer from the remaining lanes alone.
         // Was the finished render the result of an update (not hydration)?
         includesSomeLane(lanes, UpdateLanes) && // Did it schedule a sync update?
         includesSomeLane(remainingLanes, SyncUpdateLanes)
@@ -24529,6 +24571,7 @@ if (__DEV__) {
         nestedPassiveUpdateCount = 0;
         rootWithNestedUpdates = null;
         rootWithPassiveNestedUpdates = null;
+
         throw new Error(
           "Maximum update depth exceeded. This can happen when a component " +
             "repeatedly calls setState inside componentWillUpdate or " +
@@ -26053,7 +26096,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-9c82ad3d";
+    var ReactVersion = "18.3.0-www-modern-623a68d9";
 
     // Might add PROFILE later.
 

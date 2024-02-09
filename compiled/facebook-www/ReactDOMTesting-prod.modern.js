@@ -65,6 +65,8 @@ var assign = Object.assign,
   retryLaneExpirationMs = dynamicFeatureFlags.retryLaneExpirationMs,
   syncLaneExpirationMs = dynamicFeatureFlags.syncLaneExpirationMs,
   transitionLaneExpirationMs = dynamicFeatureFlags.transitionLaneExpirationMs,
+  enableInfiniteRenderLoopDetection =
+    dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
   ReactSharedInternals =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   ReactCurrentDispatcher$2 = ReactSharedInternals.ReactCurrentDispatcher,
@@ -382,11 +384,6 @@ function claimNextRetryLane() {
 function createLaneMap(initial) {
   for (var laneMap = [], i = 0; 31 > i; i++) laneMap.push(initial);
   return laneMap;
-}
-function markRootUpdated(root, updateLane) {
-  root.pendingLanes |= updateLane;
-  268435456 !== updateLane &&
-    ((root.suspendedLanes = 0), (root.pingedLanes = 0));
 }
 function markRootFinished(root, remainingLanes, spawnedLane) {
   var noLongerPendingLanes = root.pendingLanes & ~remainingLanes;
@@ -1953,12 +1950,7 @@ function markUpdateLaneFromFiberToRoot(sourceFiber, update, lane) {
     (update.lane = lane | 536870912));
 }
 function getRootForUpdatedFiber(sourceFiber) {
-  if (50 < nestedUpdateCount)
-    throw (
-      ((nestedUpdateCount = 0),
-      (rootWithNestedUpdates = null),
-      Error(formatProdErrorMessage(185)))
-    );
+  throwIfInfiniteUpdateLoopDetected();
   for (var parent = sourceFiber.return; null !== parent; )
     (sourceFiber = parent), (parent = sourceFiber.return);
   return 3 === sourceFiber.tag ? sourceFiber.stateNode : null;
@@ -2051,6 +2043,7 @@ function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
                       workInProgressRootRenderLanes$27,
                       workInProgressRootRecoverableErrors,
                       workInProgressTransitions,
+                      workInProgressRootDidIncludeRecursiveRenderUpdate,
                       workInProgressDeferredLane
                     ));
               }
@@ -10372,6 +10365,8 @@ var PossiblyWeakMap = "function" === typeof WeakMap ? WeakMap : Map,
   workInProgressDeferredLane = 0,
   workInProgressRootConcurrentErrors = null,
   workInProgressRootRecoverableErrors = null,
+  workInProgressRootDidIncludeRecursiveRenderUpdate = !1,
+  didIncludeCommitPhaseUpdate = !1,
   globalMostRecentFallbackTime = 0,
   workInProgressRootRenderTargetTime = Infinity,
   workInProgressTransitions = null,
@@ -10615,6 +10610,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
                 didTimeout,
                 workInProgressRootRecoverableErrors,
                 workInProgressTransitions,
+                workInProgressRootDidIncludeRecursiveRenderUpdate,
                 lanes,
                 workInProgressDeferredLane
               ),
@@ -10627,6 +10623,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
             didTimeout,
             workInProgressRootRecoverableErrors,
             workInProgressTransitions,
+            workInProgressRootDidIncludeRecursiveRenderUpdate,
             lanes,
             workInProgressDeferredLane
           );
@@ -10678,6 +10675,7 @@ function commitRootWhenReady(
   finishedWork,
   recoverableErrors,
   transitions,
+  didIncludeRenderPhaseUpdate,
   lanes,
   spawnedLane
 ) {
@@ -10689,12 +10687,24 @@ function commitRootWhenReady(
     null !== finishedWork)
   ) {
     root.cancelPendingCommit = finishedWork(
-      commitRoot.bind(null, root, recoverableErrors, transitions)
+      commitRoot.bind(
+        null,
+        root,
+        recoverableErrors,
+        transitions,
+        didIncludeRenderPhaseUpdate
+      )
     );
     markRootSuspended(root, lanes, spawnedLane);
     return;
   }
-  commitRoot(root, recoverableErrors, transitions, spawnedLane);
+  commitRoot(
+    root,
+    recoverableErrors,
+    transitions,
+    didIncludeRenderPhaseUpdate,
+    spawnedLane
+  );
 }
 function isRenderConsistentWithExternalStores(finishedWork) {
   for (var node = finishedWork; ; ) {
@@ -10729,6 +10739,16 @@ function isRenderConsistentWithExternalStores(finishedWork) {
     }
   }
   return !0;
+}
+function markRootUpdated(root, updatedLanes) {
+  root.pendingLanes |= updatedLanes;
+  268435456 !== updatedLanes &&
+    ((root.suspendedLanes = 0), (root.pingedLanes = 0));
+  enableInfiniteRenderLoopDetection &&
+    (executionContext & 2
+      ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
+      : executionContext & 4 && (didIncludeCommitPhaseUpdate = !0),
+    throwIfInfiniteUpdateLoopDetected());
 }
 function markRootSuspended(root, suspendedLanes, spawnedLane) {
   suspendedLanes &= ~workInProgressRootPingedLanes;
@@ -10825,6 +10845,7 @@ function prepareFreshStack(root, lanes) {
       0;
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
+  workInProgressRootDidIncludeRecursiveRenderUpdate = !1;
   0 === (root.current.mode & 32) && 0 !== (lanes & 8) && (lanes |= lanes & 32);
   var allEntangledLanes = root.entangledLanes;
   if (0 !== allEntangledLanes)
@@ -11192,7 +11213,13 @@ function completeUnitOfWork(unitOfWork) {
   } while (null !== completedWork);
   0 === workInProgressRootExitStatus && (workInProgressRootExitStatus = 5);
 }
-function commitRoot(root, recoverableErrors, transitions, spawnedLane) {
+function commitRoot(
+  root,
+  recoverableErrors,
+  transitions,
+  didIncludeRenderPhaseUpdate,
+  spawnedLane
+) {
   var previousUpdateLanePriority = currentUpdatePriority,
     prevTransition = ReactCurrentBatchConfig$1.transition;
   try {
@@ -11202,6 +11229,7 @@ function commitRoot(root, recoverableErrors, transitions, spawnedLane) {
         root,
         recoverableErrors,
         transitions,
+        didIncludeRenderPhaseUpdate,
         previousUpdateLanePriority,
         spawnedLane
       );
@@ -11215,6 +11243,7 @@ function commitRootImpl(
   root,
   recoverableErrors,
   transitions,
+  didIncludeRenderPhaseUpdate,
   renderPriorityLevel,
   spawnedLane
 ) {
@@ -11233,6 +11262,7 @@ function commitRootImpl(
   var remainingLanes = finishedWork.lanes | finishedWork.childLanes;
   remainingLanes |= concurrentlyUpdatedLanes;
   markRootFinished(root, remainingLanes, spawnedLane);
+  didIncludeCommitPhaseUpdate = !1;
   root === workInProgressRoot &&
     ((workInProgress = workInProgressRoot = null),
     (workInProgressRootRenderLanes = 0));
@@ -11306,7 +11336,9 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (lanes & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes)
+  (enableInfiniteRenderLoopDetection &&
+    (didIncludeRenderPhaseUpdate || didIncludeCommitPhaseUpdate)) ||
+  (0 !== (lanes & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes))
     ? root === rootWithNestedUpdates
       ? nestedUpdateCount++
       : ((nestedUpdateCount = 0), (rootWithNestedUpdates = root))
@@ -11465,6 +11497,11 @@ function pingSuspendedRoot(root, wakeable, pingedLanes) {
   var pingCache = root.pingCache;
   null !== pingCache && pingCache.delete(wakeable);
   root.pingedLanes |= root.suspendedLanes & pingedLanes;
+  enableInfiniteRenderLoopDetection &&
+    (executionContext & 2
+      ? (workInProgressRootDidIncludeRecursiveRenderUpdate = !0)
+      : executionContext & 4 && (didIncludeCommitPhaseUpdate = !0),
+    throwIfInfiniteUpdateLoopDetected());
   workInProgressRoot === root &&
     (workInProgressRootRenderLanes & pingedLanes) === pingedLanes &&
     (4 === workInProgressRootExitStatus ||
@@ -11509,6 +11546,19 @@ function resolveRetryWakeable(boundaryFiber, wakeable) {
   }
   null !== retryCache && retryCache.delete(wakeable);
   retryTimedOutBoundary(boundaryFiber, retryLane);
+}
+function throwIfInfiniteUpdateLoopDetected() {
+  if (50 < nestedUpdateCount)
+    throw (
+      ((nestedUpdateCount = 0),
+      (rootWithNestedUpdates = null),
+      enableInfiniteRenderLoopDetection &&
+        executionContext & 2 &&
+        null !== workInProgressRoot &&
+        (workInProgressRoot.errorRecoveryDisabledLanes |=
+          workInProgressRootRenderLanes),
+      Error(formatProdErrorMessage(185)))
+    );
 }
 var beginWork;
 beginWork = function (current, workInProgress, renderLanes) {
@@ -13761,14 +13811,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$352;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1579 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1579) {
-      var element$jscomp$inline_1580 = document.createElement("div");
-      element$jscomp$inline_1580.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1579 =
-        "function" === typeof element$jscomp$inline_1580.oninput;
+    var isSupported$jscomp$inline_1581 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1581) {
+      var element$jscomp$inline_1582 = document.createElement("div");
+      element$jscomp$inline_1582.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1581 =
+        "function" === typeof element$jscomp$inline_1582.oninput;
     }
-    JSCompiler_inline_result$jscomp$352 = isSupported$jscomp$inline_1579;
+    JSCompiler_inline_result$jscomp$352 = isSupported$jscomp$inline_1581;
   } else JSCompiler_inline_result$jscomp$352 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$352 &&
@@ -14080,20 +14130,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1620 = 0;
-  i$jscomp$inline_1620 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1620++
+  var i$jscomp$inline_1622 = 0;
+  i$jscomp$inline_1622 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1622++
 ) {
-  var eventName$jscomp$inline_1621 =
-      simpleEventPluginEvents[i$jscomp$inline_1620],
-    domEventName$jscomp$inline_1622 =
-      eventName$jscomp$inline_1621.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1623 =
-      eventName$jscomp$inline_1621[0].toUpperCase() +
-      eventName$jscomp$inline_1621.slice(1);
+  var eventName$jscomp$inline_1623 =
+      simpleEventPluginEvents[i$jscomp$inline_1622],
+    domEventName$jscomp$inline_1624 =
+      eventName$jscomp$inline_1623.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1625 =
+      eventName$jscomp$inline_1623[0].toUpperCase() +
+      eventName$jscomp$inline_1623.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1622,
-    "on" + capitalizedEvent$jscomp$inline_1623
+    domEventName$jscomp$inline_1624,
+    "on" + capitalizedEvent$jscomp$inline_1625
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17063,17 +17113,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1784 = {
+var devToolsConfig$jscomp$inline_1786 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-be690e4d",
+  version: "18.3.0-www-modern-6880028a",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2157 = {
-  bundleType: devToolsConfig$jscomp$inline_1784.bundleType,
-  version: devToolsConfig$jscomp$inline_1784.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1784.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1784.rendererConfig,
+var internals$jscomp$inline_2162 = {
+  bundleType: devToolsConfig$jscomp$inline_1786.bundleType,
+  version: devToolsConfig$jscomp$inline_1786.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1786.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1786.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17090,26 +17140,26 @@ var internals$jscomp$inline_2157 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1784.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1786.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-be690e4d"
+  reconcilerVersion: "18.3.0-www-modern-6880028a"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2158 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2163 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2158.isDisabled &&
-    hook$jscomp$inline_2158.supportsFiber
+    !hook$jscomp$inline_2163.isDisabled &&
+    hook$jscomp$inline_2163.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2158.inject(
-        internals$jscomp$inline_2157
+      (rendererID = hook$jscomp$inline_2163.inject(
+        internals$jscomp$inline_2162
       )),
-        (injectedHook = hook$jscomp$inline_2158);
+        (injectedHook = hook$jscomp$inline_2163);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -17525,4 +17575,4 @@ exports.useFormStatus = function () {
     return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-be690e4d";
+exports.version = "18.3.0-www-modern-6880028a";
