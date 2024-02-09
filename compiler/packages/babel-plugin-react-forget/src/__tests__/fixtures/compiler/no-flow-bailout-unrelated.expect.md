@@ -4,6 +4,8 @@
 ```javascript
 // @enableFlowSuppressions
 
+function useX() {}
+
 function Foo(props) {
   // $FlowFixMe[incompatible-type]
   useX();
@@ -27,6 +29,8 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react"; // @enableFlowSuppressions
+
+function useX() {}
 
 function Foo(props) {
   const $ = useMemoCache(3);
