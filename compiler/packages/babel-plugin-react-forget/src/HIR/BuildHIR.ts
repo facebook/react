@@ -1869,6 +1869,7 @@ function lowerExpression(
               type: null,
               loc: exprLoc,
             });
+            return { kind: "LoadLocal", place: identifier, loc: exprLoc };
           } else {
             lowerValueToTemporary(builder, {
               kind: "StoreContext",
@@ -1879,8 +1880,8 @@ function lowerExpression(
               value: { ...binaryPlace },
               loc: exprLoc,
             });
+            return { kind: "LoadContext", place: identifier, loc: exprLoc };
           }
-          return { kind: "LoadLocal", place: identifier, loc: exprLoc };
         }
         case "MemberExpression": {
           // a.b.c += <right>
