@@ -5,16 +5,10 @@ function useX() {}
 function Foo(props) {
   // $FlowFixMe[incompatible-type]
   useX();
-  const x = new Foo(...props.foo, null, ...[props.bar]);
-  return x;
+  return null;
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Foo,
-  params: [
-    {
-      foo: [1],
-      bar: 2,
-    },
-  ],
+  params: [{}],
 };
