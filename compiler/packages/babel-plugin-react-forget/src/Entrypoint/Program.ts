@@ -20,15 +20,15 @@ import {
 import { CodegenFunction } from "../ReactiveScopes";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
 import { assertExhaustive } from "../Utils/utils";
-import {
-  filterEslintSuppressionsThatAffectFunction,
-  findProgramEslintSuppressions,
-  suppressionsToCompilerError,
-} from "./EslintSuppression";
 import { insertGatedFunctionDeclaration } from "./Gating";
 import { addImportsToProgram, updateUseMemoCacheImport } from "./Imports";
 import { PluginOptions, parsePluginOptions } from "./Options";
 import { compileFn } from "./Pipeline";
+import {
+  filterSuppressionsThatAffectFunction,
+  findProgramSuppressions,
+  suppressionsToCompilerError,
+} from "./Suppression";
 
 export type CompilerPass = {
   opts: PluginOptions;
@@ -196,11 +196,12 @@ export function compileProgram(
    * we may still need to run Forget's analysis on every function (even if we
    * have already encountered errors) for reporting.
    */
-  const eslintSuppressions = findProgramEslintSuppressions(
+  const suppressions = findProgramSuppressions(
     pass.comments,
-    options.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS
+    options.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
+    options.flowSuppressions,
   );
-  const lintError = suppressionsToCompilerError(eslintSuppressions);
+  const lintError = suppressionsToCompilerError(suppressions);
   let hasCriticalError = lintError != null;
   const compiledFns: CompileResult[] = [];
 
@@ -223,9 +224,9 @@ export function compileProgram(
        * Program node itself. We need to figure out whether an eslint suppression range
        * applies to this function first.
        */
-      const eslintSuppressionsInFunction =
-        filterEslintSuppressionsThatAffectFunction(eslintSuppressions, fn);
-      if (eslintSuppressionsInFunction.length > 0) {
+      const suppressionsInFunction =
+        filterSuppressionsThatAffectFunction(suppressions, fn);
+      if (suppressionsInFunction.length > 0) {
         handleError(lintError, pass, fn.node.loc ?? null);
       }
     }

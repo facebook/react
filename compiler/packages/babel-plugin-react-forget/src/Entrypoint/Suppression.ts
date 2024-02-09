@@ -16,26 +16,31 @@ import {
 
 /**
  * Captures the start and end range of a pair of eslint-disable ... eslint-enable comments. In the
- * case of a CommentLine, both the disable and enable point to the same comment.
+ * case of a CommentLine or a relevant Flow suppression, both the disable and enable point to the
+ * same comment.
  *
  * The enable comment can be missing in the case where only a disable block is present, ie the rest
  * of the file has potential React violations.
  */
-export type EslintSuppressionRange = {
+export type SuppressionRange = {
   disableComment: t.Comment;
   enableComment: t.Comment | null;
+  source: SuppressionSource;
 };
 
+type SuppressionSource =
+  'Eslint' | 'Flow'
+
 /**
- * An eslint suppression affects a function if:
+ * An suppression affects a function if:
  *   1. The suppression is within the function's body; or
  *   2. The suppression wraps the function
  */
-export function filterEslintSuppressionsThatAffectFunction(
-  suppressionRanges: Array<EslintSuppressionRange>,
+export function filterSuppressionsThatAffectFunction(
+  suppressionRanges: Array<SuppressionRange>,
   fn: NodePath<t.Function>
-): Array<EslintSuppressionRange> {
-  const suppressionsInScope: Array<EslintSuppressionRange> = [];
+): Array<SuppressionRange> {
+  const suppressionsInScope: Array<SuppressionRange> = [];
   const fnNode = fn.node;
   for (const suppressionRange of suppressionRanges) {
     if (
@@ -70,13 +75,15 @@ export function filterEslintSuppressionsThatAffectFunction(
   return suppressionsInScope;
 }
 
-export function findProgramEslintSuppressions(
+export function findProgramSuppressions(
   programComments: Array<t.Comment>,
-  ruleNames: Array<string>
-): Array<EslintSuppressionRange> {
-  const suppressionRanges: Array<EslintSuppressionRange> = [];
+  ruleNames: Array<string>,
+  flowSuppressions: boolean,
+): Array<SuppressionRange> {
+  const suppressionRanges: Array<SuppressionRange> = [];
   let disableComment: t.Comment | null = null;
   let enableComment: t.Comment | null = null;
+  let source: SuppressionSource | null = null;
 
   const rulePattern = `(${ruleNames.join("|")})`;
   const disableNextLinePattern = new RegExp(
@@ -84,6 +91,9 @@ export function findProgramEslintSuppressions(
   );
   const disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
   const enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
+  const flowSuppressionPattern = new RegExp(
+    '\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule'
+  );
 
   for (const comment of programComments) {
     if (comment.start == null || comment.end == null) {
@@ -100,36 +110,48 @@ export function findProgramEslintSuppressions(
     ) {
       disableComment = comment;
       enableComment = comment;
+      source = 'Eslint';
+    }
+
+    if (
+      flowSuppressions &&
+      disableComment == null &&
+      flowSuppressionPattern.test(comment.value)
+    ) {
+      disableComment = comment;
+      enableComment = comment;
+      source = 'Flow';
     }
 
     if (disablePattern.test(comment.value)) {
       disableComment = comment;
+      source = 'Eslint';
     }
 
-    if (enablePattern.test(comment.value)) {
+    if (enablePattern.test(comment.value) && source === 'Eslint') {
       enableComment = comment;
     }
 
-    if (disableComment != null) {
+    if (disableComment != null && source != null) {
       suppressionRanges.push({
         disableComment: disableComment,
         enableComment: enableComment,
+        source,
       });
       disableComment = null;
       enableComment = null;
+      source = null;
     }
   }
   return suppressionRanges;
 }
 
 export function suppressionsToCompilerError(
-  suppressionRanges: Array<EslintSuppressionRange>
+  suppressionRanges: Array<SuppressionRange>
 ): CompilerError | null {
   if (suppressionRanges.length === 0) {
     return null;
   }
-  const reason =
-    "React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior";
   const error = new CompilerError();
   for (const suppressionRange of suppressionRanges) {
     if (
@@ -138,15 +160,25 @@ export function suppressionsToCompilerError(
     ) {
       continue;
     }
+    let reason, suggestion;
+    switch (suppressionRange.source) {
+      case 'Eslint':
+        reason = "React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled";
+        suggestion = "Remove the eslint disable";
+        break;
+      case 'Flow':
+        reason = "React Forget has bailed out of optimizing this component as one or more React rule violations were reported by Flow";
+        suggestion = "Remove the Flow suppression and address the React error";
+    }
     error.pushErrorDetail(
       new CompilerErrorDetail({
-        reason,
+        reason: `${reason}. React Forget only works when your components follow all the rules of React, disabling them may result in undefined behavior`,
         description: suppressionRange.disableComment.value.trim(),
         severity: ErrorSeverity.InvalidReact,
         loc: suppressionRange.disableComment.loc ?? null,
         suggestions: [
           {
-            description: "Remove the eslint disable",
+            description: suggestion,
             range: [
               suppressionRange.disableComment.start,
               suppressionRange.disableComment.end,

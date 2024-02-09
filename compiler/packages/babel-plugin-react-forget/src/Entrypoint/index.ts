@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export * from "./EslintSuppression";
 export * from "./Gating";
 export * from "./Imports";
 export * from "./Options";
 export * from "./Pipeline";
 export * from "./Program";
+export * from "./Suppression";

@@ -102,6 +102,8 @@ export type PluginOptions = {
    * even if the default ESLint is suppressed), pass an empty array.
    */
   eslintSuppressionRules?: Array<string> | null | undefined;
+
+  flowSuppressions: boolean;
 };
 
 const CompilationModeSchema = z.enum([
@@ -169,6 +171,7 @@ export const defaultOptions: PluginOptions = {
   noEmit: false,
   enableUseMemoCachePolyfill: false,
   eslintSuppressionRules: null,
+  flowSuppressions: false,
 } as const;
 
 export function parsePluginOptions(obj: unknown): PluginOptions {

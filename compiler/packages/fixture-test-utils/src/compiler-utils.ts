@@ -93,6 +93,12 @@ export function transformFixtureInput(
     eslintSuppressionRules = eslintSuppressionMatch[1].split("|");
   }
 
+  let flowSuppressions: boolean = false;
+  if (firstLine.includes("@enableFlowSuppressions")) {
+    flowSuppressions = true;
+  }
+
+
   const hookPatternMatch = /@hookPattern:"([^"]+)"/.exec(firstLine);
   if (
     hookPatternMatch &&
@@ -156,6 +162,7 @@ export function transformFixtureInput(
       noEmit: false,
       enableUseMemoCachePolyfill,
       eslintSuppressionRules,
+      flowSuppressions,
     },
     includeAst
   );
@@ -165,9 +172,9 @@ export function transformFixtureInput(
     code:
       result.code != null
         ? prettier.format(result.code, {
-            semi: true,
-            parser: language === "typescript" ? "babel-ts" : "flow",
-          })
+          semi: true,
+          parser: language === "typescript" ? "babel-ts" : "flow",
+        })
         : result.code,
   };
 }
