@@ -23,6 +23,8 @@ describe('Store', () => {
   let withErrorsOrWarningsIgnored;
 
   beforeEach(() => {
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+
     agent = global.agent;
     bridge = global.bridge;
     store = global.store;
