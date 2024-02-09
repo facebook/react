@@ -20,7 +20,6 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 export const {
   alwaysThrottleRetries,
   enableDeferRootSchedulingToMicrotask,
-  enableUnifiedSyncLane,
   enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes,
   useMicrotasksForSchedulingInFabric,
@@ -44,13 +43,14 @@ export const enableFormActions = true; // Doesn't affect Native
 export const enableBinaryFlight = true;
 export const enableTaint = true;
 export const enablePostpone = false;
-export const debugRenderPhaseSideEffectsForStrictMode = true;
+export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const disableJavaScriptURLs = false;
 export const disableCommentsAsDOMContainers = true;
 export const disableInputAttributeSyncing = false;
 export const disableIEWorkarounds = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableScopeAPI = false;
+export const enableUnifiedSyncLane = true;
 export const enableCreateEventHandleAPI = false;
 export const enableSuspenseCallback = false;
 export const disableLegacyContext = false;
@@ -74,9 +74,9 @@ export const transitionLaneExpirationMs = 5000;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
-export const enableLegacyHidden = true;
+export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
-export const allowConcurrentByDefault = true;
+export const allowConcurrentByDefault = false;
 export const enableCustomElementPropertySupport = false;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;

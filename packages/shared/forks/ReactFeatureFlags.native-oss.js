@@ -10,7 +10,7 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-oss';
 
-export const debugRenderPhaseSideEffectsForStrictMode = false;
+export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
 export const enableSchedulingProfiler = false;
@@ -74,11 +74,11 @@ export const enableFloat = true;
 export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
-export const enableDeferRootSchedulingToMicrotask = true;
+export const enableDeferRootSchedulingToMicrotask = false;
 
 export const enableAsyncActions = false;
 
-export const alwaysThrottleRetries = true;
+export const alwaysThrottleRetries = false;
 
 export const useMicrotasksForSchedulingInFabric = false;
 export const passChildrenWhenCloningPersistedNodes = false;
