@@ -13,6 +13,7 @@ import {
   CompilerSuggestionOperation,
   ErrorSeverity,
 } from "../CompilerError";
+import { assertExhaustive } from "../Utils/utils";
 
 /**
  * Captures the start and end range of a pair of eslint-disable ... eslint-enable comments. In the
@@ -170,6 +171,12 @@ export function suppressionsToCompilerError(
         reason =
           "React Forget has bailed out of optimizing this component as one or more React rule violations were reported by Flow";
         suggestion = "Remove the Flow suppression and address the React error";
+        break;
+      default:
+        assertExhaustive(
+          suppressionRange.source,
+          "Unhandled suppression source"
+        );
     }
     error.pushErrorDetail(
       new CompilerErrorDetail({
