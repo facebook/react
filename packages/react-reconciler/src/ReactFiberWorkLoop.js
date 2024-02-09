@@ -3792,12 +3792,9 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__) {
-    if (useModernStrictMode) {
+    if (useModernStrictMode && root.tag !== LegacyRoot) {
       let doubleInvokeEffects = true;
 
-      if (root.tag === LegacyRoot && !(root.current.mode & StrictLegacyMode)) {
-        doubleInvokeEffects = false;
-      }
       if (
         root.tag === ConcurrentRoot &&
         !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))

@@ -147,7 +147,7 @@ export const disableJavaScriptURLs = false;
 // Modern <StrictMode /> behaviour aligns more with what components
 // components will encounter in production, especially when used With <Offscreen />.
 // TODO: clean up legacy <StrictMode /> once tests pass WWW.
-export const useModernStrictMode = false;
+export const useModernStrictMode = __NEXT_MAJOR__;
 
 // Not ready to break experimental yet.
 // Remove IE and MsApp specific workarounds for innerHTML
