@@ -202,6 +202,7 @@ function FiberNode(
   if (__DEV__) {
     // This isn't directly used but is handy for debugging internals:
     this._debugInfo = null;
+    this._debugUsables = null;
     this._debugOwner = null;
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
@@ -348,6 +349,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
   if (__DEV__) {
     workInProgress._debugInfo = current._debugInfo;
+    workInProgress._debugUsables = current._debugUsables;
     workInProgress._debugNeedsRemount = current._debugNeedsRemount;
     switch (workInProgress.tag) {
       case IndeterminateComponent:
@@ -913,6 +915,7 @@ export function assignFiberPropertiesInDEV(
   }
 
   target._debugInfo = source._debugInfo;
+  target._debugUsables = source._debugUsables;
   target._debugOwner = source._debugOwner;
   target._debugNeedsRemount = source._debugNeedsRemount;
   target._debugHookTypes = source._debugHookTypes;

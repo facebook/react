@@ -200,7 +200,11 @@ export type Fiber = {
   // to be the same as work in progress.
   // __DEV__ only
 
+  // DebugInfo for Virtual Parents used to render this Component.
   _debugInfo?: ReactDebugInfo | null,
+  // Usables use():ed inside this Component. These might themselves include DebugInfo.
+  _debugUsables?: Array<Usable<any>> | null,
+  // The Fiber that rendered the JSX which resulted in this Component.
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,

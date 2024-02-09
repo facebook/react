@@ -501,6 +501,11 @@ export function renderWithHooks<Props, SecondArg>(
   workInProgress.updateQueue = null;
   workInProgress.lanes = NoLanes;
 
+  if (__DEV__) {
+    // Reset list of use() calls.
+    workInProgress._debugUsables = null;
+  }
+
   // The following should have already been reset
   // currentHook = null;
   // workInProgressHook = null;
@@ -760,6 +765,11 @@ function renderWithHooksAgain<Props, SecondArg>(
   // be scheduled. Use a counter to prevent infinite loops.
 
   currentlyRenderingFiber = workInProgress;
+
+  if (__DEV__) {
+    // Reset list of use() calls.
+    workInProgress._debugUsables = null;
+  }
 
   let numberOfReRenders: number = 0;
   let children;
@@ -1064,15 +1074,26 @@ function useThenable<T>(thenable: Thenable<T>): T {
   return result;
 }
 
+function pushDebugUsable(usable: Usable<any>): void {
+  if (__DEV__) {
+    const debugUsables =
+      currentlyRenderingFiber._debugUsables ||
+      (currentlyRenderingFiber._debugUsables = []);
+    debugUsables.push(usable);
+  }
+}
+
 function use<T>(usable: Usable<T>): T {
   if (usable !== null && typeof usable === 'object') {
     // $FlowFixMe[method-unbinding]
     if (typeof usable.then === 'function') {
       // This is a thenable.
       const thenable: Thenable<T> = (usable: any);
+      pushDebugUsable(thenable);
       return useThenable(thenable);
     } else if (usable.$$typeof === REACT_CONTEXT_TYPE) {
       const context: ReactContext<T> = (usable: any);
+      pushDebugUsable(context);
       return readContext(context);
     }
   }
