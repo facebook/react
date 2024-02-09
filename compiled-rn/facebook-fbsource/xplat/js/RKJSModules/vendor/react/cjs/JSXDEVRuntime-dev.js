@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b469953f97ee3dddb995beaf72431eac>>
+ * @generated SignedSource<<92d00185b2c6632a796a631b06f16e7c>>
  */
 
 "use strict";
@@ -35,7 +35,6 @@ if (__DEV__) {
     var REACT_MEMO_TYPE = Symbol.for("react.memo");
     var REACT_LAZY_TYPE = Symbol.for("react.lazy");
     var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
-    var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
     var REACT_CACHE_TYPE = Symbol.for("react.cache");
     var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
     var FAUX_ITERATOR_SYMBOL = "@@iterator";
@@ -104,6 +103,7 @@ if (__DEV__) {
     // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
     var enableDebugTracing = false;
     var enableScopeAPI = false;
+    var enableLegacyHidden = false;
     var enableTransitionTracing = false;
 
     var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
@@ -119,7 +119,7 @@ if (__DEV__) {
         type === REACT_STRICT_MODE_TYPE ||
         type === REACT_SUSPENSE_TYPE ||
         type === REACT_SUSPENSE_LIST_TYPE ||
-        type === REACT_LEGACY_HIDDEN_TYPE ||
+        enableLegacyHidden ||
         type === REACT_OFFSCREEN_TYPE ||
         enableScopeAPI ||
         type === REACT_CACHE_TYPE ||

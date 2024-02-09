@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<46e4507c5c03b4e9b651f29123272054>>
+ * @generated SignedSource<<70ab383eec7c39690b53a887a16d26d0>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-ba5e6a832-20240208";
+    var ReactVersion = "18.3.0-canary-36b078cc7-20240209";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -568,6 +568,7 @@ if (__DEV__) {
     // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
     var enableDebugTracing = false;
     var enableScopeAPI = false;
+    var enableLegacyHidden = false;
     var enableTransitionTracing = false;
 
     function getWrappedName(outerType, innerType, wrapperName) {
@@ -1078,7 +1079,7 @@ if (__DEV__) {
         type === REACT_STRICT_MODE_TYPE ||
         type === REACT_SUSPENSE_TYPE ||
         type === REACT_SUSPENSE_LIST_TYPE ||
-        type === REACT_LEGACY_HIDDEN_TYPE ||
+        enableLegacyHidden ||
         type === REACT_OFFSCREEN_TYPE ||
         enableScopeAPI ||
         type === REACT_CACHE_TYPE ||

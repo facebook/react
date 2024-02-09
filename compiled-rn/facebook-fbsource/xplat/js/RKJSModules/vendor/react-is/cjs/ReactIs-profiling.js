@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0785b258643804110befe2a444659c39>>
+ * @generated SignedSource<<9d53980cc5930d508194f32bc4d63656>>
  */
 
 "use strict";
@@ -24,7 +24,6 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_MEMO_TYPE = Symbol.for("react.memo"),
   REACT_LAZY_TYPE = Symbol.for("react.lazy"),
   REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden"),
   REACT_CACHE_TYPE = Symbol.for("react.cache"),
   REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
 function typeOf(object) {
@@ -122,7 +121,6 @@ exports.isValidElementType = function (type) {
     type === REACT_STRICT_MODE_TYPE ||
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
-    type === REACT_LEGACY_HIDDEN_TYPE ||
     type === REACT_OFFSCREEN_TYPE ||
     type === REACT_CACHE_TYPE ||
     ("object" === typeof type &&

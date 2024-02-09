@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e7093eebbe37e9294742ef1b3c764083>>
+ * @generated SignedSource<<00f508d7f31eb3a54a0d5c56ac931ed9>>
  */
 
 "use strict";
@@ -2946,7 +2946,6 @@ to return true:wantsResponderID|                            |
     var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
       enableDeferRootSchedulingToMicrotask =
         dynamicFlags.enableDeferRootSchedulingToMicrotask,
-      enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
       enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning;
     // The rest of the flags are static for better dead code elimination.
     var enableSchedulingProfiler = true;
@@ -2956,6 +2955,7 @@ to return true:wantsResponderID|                            |
     var syncLaneExpirationMs = 250;
     var transitionLaneExpirationMs = 5000;
     var enableLazyContextPropagation = false;
+    var enableLegacyHidden = false;
     var enableAsyncActions = false;
 
     // ATTENTION
@@ -3205,10 +3205,6 @@ to return true:wantsResponderID|                            |
           }
 
           break;
-
-        case LegacyHiddenComponent: {
-          return "LegacyHidden";
-        }
       }
 
       return null;
@@ -4836,9 +4832,6 @@ to return true:wantsResponderID|                            |
     var StrictEffectsMode =
       /*              */
       16;
-    var ConcurrentUpdatesByDefaultMode =
-      /* */
-      32;
     var NoStrictPassiveEffectsMode =
       /*     */
       64;
@@ -4889,9 +4882,7 @@ to return true:wantsResponderID|                            |
     var DefaultLane =
       /*                     */
       32;
-    var SyncUpdateLanes = enableUnifiedSyncLane
-      ? SyncLane | InputContinuousLane | DefaultLane
-      : SyncLane;
+    var SyncUpdateLanes = SyncLane | InputContinuousLane | DefaultLane;
     var TransitionHydrationLane =
       /*                */
       64;
@@ -5047,7 +5038,7 @@ to return true:wantsResponderID|                            |
     var nextRetryLane = RetryLane1;
 
     function getHighestPriorityLanes(lanes) {
-      if (enableUnifiedSyncLane) {
+      {
         var pendingSyncLanes = lanes & SyncUpdateLanes;
 
         if (pendingSyncLanes !== 0) {
@@ -5201,8 +5192,7 @@ to return true:wantsResponderID|                            |
     function getEntangledLanes(root, renderLanes) {
       var entangledLanes = renderLanes;
 
-      if ((root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode);
-      else if ((entangledLanes & InputContinuousLane) !== NoLanes) {
+      if ((entangledLanes & InputContinuousLane) !== NoLanes) {
         // When updates are sync by default, we entangle continuous priority updates
         // and default updates, so they render in the same batch. The only reason
         // they use separate lanes is because continuous updates should interrupt
@@ -5395,11 +5385,6 @@ to return true:wantsResponderID|                            |
       return (lanes & TransitionLanes) === lanes;
     }
     function includesBlockingLane(root, lanes) {
-      if ((root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode) {
-        // Concurrent updates by default always use time slicing.
-        return false;
-      }
-
       var SyncDefaultLanes =
         InputContinuousHydrationLane |
         InputContinuousLane |
@@ -5653,7 +5638,7 @@ to return true:wantsResponderID|                            |
       var renderLane = getHighestPriorityLane(renderLanes);
       var lane;
 
-      if (enableUnifiedSyncLane && (renderLane & SyncUpdateLanes) !== NoLane) {
+      if ((renderLane & SyncUpdateLanes) !== NoLane) {
         lane = SyncHydrationLane;
       } else {
         switch (renderLane) {
@@ -16195,11 +16180,7 @@ to return true:wantsResponderID|                            |
       var prevState = current !== null ? current.memoizedState : null;
       markRef$1(current, workInProgress);
 
-      if (
-        nextProps.mode === "hidden" ||
-        nextProps.mode === "unstable-defer-without-hiding" ||
-        nextIsDetached
-      ) {
+      if (nextProps.mode === "hidden" || enableLegacyHidden || nextIsDetached) {
         // Rendering a hidden tree.
         var didSuspend = (workInProgress.flags & DidCapture) !== NoFlags$1;
 
@@ -16330,10 +16311,6 @@ to return true:wantsResponderID|                            |
 
       return null;
     } // Note: These happen to have identical begin phases, for now. We shouldn't hold
-    // ourselves to this constraint, though. If the behavior diverges, we should
-    // fork the function.
-
-    var updateLegacyHiddenComponent = updateOffscreenComponent;
 
     function updateFragment(current, workInProgress, renderLanes) {
       var nextChildren = workInProgress.pendingProps;
@@ -19038,16 +19015,6 @@ to return true:wantsResponderID|                            |
         case OffscreenComponent: {
           return updateOffscreenComponent(current, workInProgress, renderLanes);
         }
-
-        case LegacyHiddenComponent: {
-          {
-            return updateLegacyHiddenComponent(
-              current,
-              workInProgress,
-              renderLanes
-            );
-          }
-        }
       }
 
       throw new Error(
@@ -20362,8 +20329,7 @@ to return true:wantsResponderID|                            |
           var _nextState = workInProgress.memoizedState;
           var nextIsHidden = _nextState !== null; // Schedule a Visibility effect if the visibility has changed
 
-          if (workInProgress.tag === LegacyHiddenComponent);
-          else {
+          {
             if (current !== null) {
               var _prevState = current.memoizedState;
               var prevIsHidden = _prevState !== null;
@@ -20396,10 +20362,7 @@ to return true:wantsResponderID|                            |
               // If so, we need to hide those nodes in the commit phase, so
               // schedule a visibility effect.
 
-              if (
-                workInProgress.tag !== LegacyHiddenComponent &&
-                workInProgress.subtreeFlags & (Placement | Update)
-              ) {
+              if (workInProgress.subtreeFlags & (Placement | Update)) {
                 workInProgress.flags |= Visibility;
               }
             }
@@ -23172,10 +23135,6 @@ to return true:wantsResponderID|                            |
         }
 
         case LegacyHiddenComponent: {
-          {
-            recursivelyTraversePassiveMountEffects(finishedRoot, finishedWork);
-          }
-
           break;
         }
 
@@ -23288,13 +23247,6 @@ to return true:wantsResponderID|                            |
         // }
 
         case LegacyHiddenComponent: {
-          {
-            recursivelyTraverseReconnectPassiveEffects(
-              finishedRoot,
-              finishedWork
-            );
-          }
-
           break;
         }
 
@@ -27773,13 +27725,6 @@ to return true:wantsResponderID|                            |
         if (isStrictMode === true) {
           mode |= StrictLegacyMode | StrictEffectsMode;
         }
-
-        if (
-          // Only for internal experiments.
-          concurrentUpdatesByDefaultOverride
-        ) {
-          mode |= ConcurrentUpdatesByDefaultMode;
-        }
       } else {
         mode = NoMode;
       }
@@ -27854,9 +27799,7 @@ to return true:wantsResponderID|                            |
           case REACT_OFFSCREEN_TYPE:
             return createFiberFromOffscreen(pendingProps, mode, lanes, key);
 
-          case REACT_LEGACY_HIDDEN_TYPE: {
-            return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
-          }
+          case REACT_LEGACY_HIDDEN_TYPE:
 
           // Fall through
 
@@ -28039,29 +27982,6 @@ to return true:wantsResponderID|                            |
       fiber.stateNode = primaryChildInstance;
       return fiber;
     }
-    function createFiberFromLegacyHidden(pendingProps, mode, lanes, key) {
-      var fiber = createFiber(LegacyHiddenComponent, pendingProps, key, mode);
-      fiber.elementType = REACT_LEGACY_HIDDEN_TYPE;
-      fiber.lanes = lanes; // Adding a stateNode for legacy hidden because it's currently using
-      // the offscreen implementation, which depends on a state node
-
-      var instance = {
-        _visibility: OffscreenVisible,
-        _pendingVisibility: OffscreenVisible,
-        _pendingMarkers: null,
-        _transitions: null,
-        _retryCache: null,
-        _current: null,
-        detach: function () {
-          return detachOffscreenInstance(instance);
-        },
-        attach: function () {
-          return attachOffscreenInstance(instance);
-        }
-      };
-      fiber.stateNode = instance;
-      return fiber;
-    }
     function createFiberFromText(content, mode, lanes) {
       var fiber = createFiber(HostText, content, null, mode);
       fiber.lanes = lanes;
@@ -28220,11 +28140,7 @@ to return true:wantsResponderID|                            |
       );
       // stateNode is any.
 
-      var uninitializedFiber = createHostRootFiber(
-        tag,
-        isStrictMode,
-        concurrentUpdatesByDefaultOverride
-      );
+      var uninitializedFiber = createHostRootFiber(tag, isStrictMode);
       root.current = uninitializedFiber;
       uninitializedFiber.stateNode = root;
 
@@ -28241,7 +28157,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-77e52741";
+    var ReactVersion = "18.3.0-canary-76ba627b";
 
     function createPortal$1(
       children,

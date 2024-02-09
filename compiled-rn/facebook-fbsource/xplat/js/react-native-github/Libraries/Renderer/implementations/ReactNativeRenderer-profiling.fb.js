@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<b81a204e2d31f632bc3a82f44ce547d1>>
+ * @generated SignedSource<<6091affeffc32510dd63cf6b69a72d7e>>
  */
 
 "use strict";
@@ -944,7 +944,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_259 = {
+var injectedNamesToPlugins$jscomp$inline_261 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -990,32 +990,32 @@ var injectedNamesToPlugins$jscomp$inline_259 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_260 = !1,
-  pluginName$jscomp$inline_261;
-for (pluginName$jscomp$inline_261 in injectedNamesToPlugins$jscomp$inline_259)
+  isOrderingDirty$jscomp$inline_262 = !1,
+  pluginName$jscomp$inline_263;
+for (pluginName$jscomp$inline_263 in injectedNamesToPlugins$jscomp$inline_261)
   if (
-    injectedNamesToPlugins$jscomp$inline_259.hasOwnProperty(
-      pluginName$jscomp$inline_261
+    injectedNamesToPlugins$jscomp$inline_261.hasOwnProperty(
+      pluginName$jscomp$inline_263
     )
   ) {
-    var pluginModule$jscomp$inline_262 =
-      injectedNamesToPlugins$jscomp$inline_259[pluginName$jscomp$inline_261];
+    var pluginModule$jscomp$inline_264 =
+      injectedNamesToPlugins$jscomp$inline_261[pluginName$jscomp$inline_263];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_261) ||
-      namesToPlugins[pluginName$jscomp$inline_261] !==
-        pluginModule$jscomp$inline_262
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_263) ||
+      namesToPlugins[pluginName$jscomp$inline_263] !==
+        pluginModule$jscomp$inline_264
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_261])
+      if (namesToPlugins[pluginName$jscomp$inline_263])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_261 + "`.")
+            (pluginName$jscomp$inline_263 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_261] =
-        pluginModule$jscomp$inline_262;
-      isOrderingDirty$jscomp$inline_260 = !0;
+      namesToPlugins[pluginName$jscomp$inline_263] =
+        pluginModule$jscomp$inline_264;
+      isOrderingDirty$jscomp$inline_262 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_260 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_262 && recomputePluginOrdering();
 var instanceCache = new Map(),
   instanceProps = new Map();
 function getInstanceFromTag(tag) {
@@ -1166,7 +1166,6 @@ var ReactSharedInternals =
   alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
-  enableUnifiedSyncLane = dynamicFlags.enableUnifiedSyncLane,
   enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
@@ -1182,8 +1181,8 @@ var ReactSharedInternals =
   REACT_LAZY_TYPE = Symbol.for("react.lazy");
 Symbol.for("react.scope");
 Symbol.for("react.debug_trace_mode");
-var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen"),
-  REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
+var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+Symbol.for("react.legacy_hidden");
 Symbol.for("react.cache");
 Symbol.for("react.tracing_marker");
 var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel"),
@@ -1301,9 +1300,6 @@ function getComponentNameFromFiber(fiber) {
       if ("function" === typeof type)
         return type.displayName || type.name || null;
       if ("string" === typeof type) return type;
-      break;
-    case 23:
-      return "LegacyHidden";
   }
   return null;
 }
@@ -1804,7 +1800,6 @@ function clz32Fallback(x) {
   x >>>= 0;
   return 0 === x ? 32 : (31 - ((log(x) / LN2) | 0)) | 0;
 }
-var SyncUpdateLanes = enableUnifiedSyncLane ? 42 : 2;
 function getLabelForLane(lane) {
   if (lane & 1) return "SyncHydrationLane";
   if (lane & 2) return "Sync";
@@ -1824,10 +1819,8 @@ function getLabelForLane(lane) {
 var nextTransitionLane = 128,
   nextRetryLane = 4194304;
 function getHighestPriorityLanes(lanes) {
-  if (enableUnifiedSyncLane) {
-    var pendingSyncLanes = lanes & SyncUpdateLanes;
-    if (0 !== pendingSyncLanes) return pendingSyncLanes;
-  }
+  var pendingSyncLanes = lanes & 42;
+  if (0 !== pendingSyncLanes) return pendingSyncLanes;
   switch (lanes & -lanes) {
     case 1:
       return 1;
@@ -1952,9 +1945,6 @@ function getLanesToRetrySynchronouslyOnError(root, originallyAttemptedLanes) {
   if (root.errorRecoveryDisabledLanes & originallyAttemptedLanes) return 0;
   root = root.pendingLanes & -536870913;
   return 0 !== root ? root : root & 536870912 ? 536870912 : 0;
-}
-function includesBlockingLane(root, lanes) {
-  return 0 !== (root.current.mode & 32) ? !1 : 0 !== (lanes & 60);
 }
 function claimNextTransitionLane() {
   var lane = nextTransitionLane;
@@ -4100,12 +4090,11 @@ function updateSyncExternalStore(subscribe, getSnapshot) {
       { destroy: void 0 },
       null
     );
-    subscribe = workInProgressRoot;
-    if (null === subscribe)
+    if (null === workInProgressRoot)
       throw Error(
         "Expected a work-in-progress root. This is a bug in React. Please file an issue."
       );
-    includesBlockingLane(subscribe, renderLanes) ||
+    0 !== (renderLanes & 60) ||
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
   }
   return nextSnapshot;
@@ -4502,23 +4491,22 @@ var HooksDispatcherOnMount = {
     var fiber = currentlyRenderingFiber$1,
       hook = mountWorkInProgressHook();
     var nextSnapshot = getSnapshot();
-    var root = workInProgressRoot;
-    if (null === root)
+    if (null === workInProgressRoot)
       throw Error(
         "Expected a work-in-progress root. This is a bug in React. Please file an issue."
       );
-    includesBlockingLane(root, workInProgressRootRenderLanes) ||
+    0 !== (workInProgressRootRenderLanes & 60) ||
       pushStoreConsistencyCheck(fiber, getSnapshot, nextSnapshot);
     hook.memoizedState = nextSnapshot;
-    root = { value: nextSnapshot, getSnapshot: getSnapshot };
-    hook.queue = root;
-    mountEffect(subscribeToStore.bind(null, fiber, root, subscribe), [
+    var inst = { value: nextSnapshot, getSnapshot: getSnapshot };
+    hook.queue = inst;
+    mountEffect(subscribeToStore.bind(null, fiber, inst, subscribe), [
       subscribe
     ]);
     fiber.flags |= 2048;
     pushEffect(
       9,
-      updateStoreInstance.bind(null, fiber, root, nextSnapshot, getSnapshot),
+      updateStoreInstance.bind(null, fiber, inst, nextSnapshot, getSnapshot),
       { destroy: void 0 },
       null
     );
@@ -5195,11 +5183,7 @@ function updateOffscreenComponent(current, workInProgress, renderLanes) {
     nextIsDetached = 0 !== (workInProgress.stateNode._pendingVisibility & 2),
     prevState = null !== current ? current.memoizedState : null;
   markRef$1(current, workInProgress);
-  if (
-    "hidden" === nextProps.mode ||
-    "unstable-defer-without-hiding" === nextProps.mode ||
-    nextIsDetached
-  ) {
+  if ("hidden" === nextProps.mode || nextIsDetached) {
     if (0 !== (workInProgress.flags & 128)) {
       renderLanes =
         null !== prevState ? prevState.baseLanes | renderLanes : renderLanes;
@@ -5898,8 +5882,7 @@ function updateDehydratedSuspenseComponent(
     didPrimaryChildrenDefer = workInProgressRoot;
     if (null !== didPrimaryChildrenDefer) {
       nextProps = renderLanes & -renderLanes;
-      if (enableUnifiedSyncLane && 0 !== (nextProps & SyncUpdateLanes))
-        nextProps = 1;
+      if (0 !== (nextProps & 42)) nextProps = 1;
       else
         switch (nextProps) {
           case 2:
@@ -6645,18 +6628,15 @@ function completeWork(current, workInProgress, renderLanes) {
         popSuspenseHandler(workInProgress),
         popHiddenContext(),
         (newProps = null !== workInProgress.memoizedState),
-        23 !== workInProgress.tag &&
-          (null !== current
-            ? (null !== current.memoizedState) !== newProps &&
-              (workInProgress.flags |= 8192)
-            : newProps && (workInProgress.flags |= 8192)),
+        null !== current
+          ? (null !== current.memoizedState) !== newProps &&
+            (workInProgress.flags |= 8192)
+          : newProps && (workInProgress.flags |= 8192),
         newProps && 0 !== (workInProgress.mode & 1)
           ? 0 !== (renderLanes & 536870912) &&
             0 === (workInProgress.flags & 128) &&
             (bubbleProperties(workInProgress),
-            23 !== workInProgress.tag &&
-              workInProgress.subtreeFlags & 6 &&
-              (workInProgress.flags |= 8192))
+            workInProgress.subtreeFlags & 6 && (workInProgress.flags |= 8192))
           : bubbleProperties(workInProgress),
         (renderLanes = workInProgress.updateQueue),
         null !== renderLanes &&
@@ -7542,32 +7522,6 @@ function getRetryCache(finishedWork) {
       );
   }
 }
-function detachOffscreenInstance(instance) {
-  var fiber = instance._current;
-  if (null === fiber)
-    throw Error(
-      "Calling Offscreen.detach before instance handle has been set."
-    );
-  if (0 === (instance._pendingVisibility & 2)) {
-    var root = enqueueConcurrentRenderForLane(fiber, 2);
-    null !== root &&
-      ((instance._pendingVisibility |= 2),
-      scheduleUpdateOnFiber(root, fiber, 2));
-  }
-}
-function attachOffscreenInstance(instance) {
-  var fiber = instance._current;
-  if (null === fiber)
-    throw Error(
-      "Calling Offscreen.detach before instance handle has been set."
-    );
-  if (0 !== (instance._pendingVisibility & 2)) {
-    var root = enqueueConcurrentRenderForLane(fiber, 2);
-    null !== root &&
-      ((instance._pendingVisibility &= -3),
-      scheduleUpdateOnFiber(root, fiber, 2));
-  }
-}
 function attachSuspenseRetryListeners(finishedWork, wakeables) {
   var retryCache = getRetryCache(finishedWork);
   wakeables.forEach(function (wakeable) {
@@ -8147,7 +8101,6 @@ function commitPassiveMountOnFiber(finishedRoot, finishedWork) {
       recursivelyTraversePassiveMountEffects(finishedRoot, finishedWork);
       break;
     case 23:
-      recursivelyTraversePassiveMountEffects(finishedRoot, finishedWork);
       break;
     case 22:
       flags = finishedWork.stateNode;
@@ -8187,7 +8140,6 @@ function recursivelyTraverseReconnectPassiveEffects(
         commitHookPassiveMountEffects(finishedWork, 8);
         break;
       case 23:
-        recursivelyTraverseReconnectPassiveEffects(finishedRoot, finishedWork);
         break;
       case 22:
         var instance = finishedWork.stateNode;
@@ -8498,9 +8450,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   );
   if (0 === lanes) return null;
   var exitStatus = (didTimeout =
-    !includesBlockingLane(root, lanes) &&
-    0 === (lanes & root.expiredLanes) &&
-    !didTimeout)
+    0 === (lanes & 60) && 0 === (lanes & root.expiredLanes) && !didTimeout)
     ? renderRootConcurrent(root, lanes)
     : renderRootSync(root, lanes);
   if (0 !== exitStatus) {
@@ -8747,7 +8697,7 @@ function prepareFreshStack(root, lanes) {
       0;
   workInProgressRootRecoverableErrors = workInProgressRootConcurrentErrors =
     null;
-  0 === (root.current.mode & 32) && 0 !== (lanes & 8) && (lanes |= lanes & 32);
+  0 !== (lanes & 8) && (lanes |= lanes & 32);
   var allEntangledLanes = root.entangledLanes;
   if (0 !== allEntangledLanes)
     for (
@@ -9295,7 +9245,7 @@ function commitRootImpl(
     0 !== root.tag &&
     flushPassiveEffects();
   remainingLanes = root.pendingLanes;
-  0 !== (transitions & 4194218) && 0 !== (remainingLanes & SyncUpdateLanes)
+  0 !== (transitions & 4194218) && 0 !== (remainingLanes & 42)
     ? ((nestedUpdateScheduled = !0),
       root === rootWithNestedUpdates
         ? nestedUpdateCount++
@@ -9922,8 +9872,6 @@ beginWork = function (current, workInProgress, renderLanes) {
       return updateSuspenseListComponent(current, workInProgress, renderLanes);
     case 22:
       return updateOffscreenComponent(current, workInProgress, renderLanes);
-    case 23:
-      return updateOffscreenComponent(current, workInProgress, renderLanes);
   }
   throw Error(
     "Unknown unit of work tag (" +
@@ -10106,8 +10054,6 @@ function createFiberFromTypeAndProps(
         );
       case REACT_OFFSCREEN_TYPE:
         return createFiberFromOffscreen(pendingProps, mode, lanes, key);
-      case REACT_LEGACY_HIDDEN_TYPE:
-        return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
       default:
         if ("object" === typeof type && null !== type)
           switch (type.$$typeof) {
@@ -10156,34 +10102,33 @@ function createFiberFromOffscreen(pendingProps, mode, lanes, key) {
     _transitions: null,
     _current: null,
     detach: function () {
-      return detachOffscreenInstance(primaryChildInstance);
+      var fiber = primaryChildInstance._current;
+      if (null === fiber)
+        throw Error(
+          "Calling Offscreen.detach before instance handle has been set."
+        );
+      if (0 === (primaryChildInstance._pendingVisibility & 2)) {
+        var root = enqueueConcurrentRenderForLane(fiber, 2);
+        null !== root &&
+          ((primaryChildInstance._pendingVisibility |= 2),
+          scheduleUpdateOnFiber(root, fiber, 2));
+      }
     },
     attach: function () {
-      return attachOffscreenInstance(primaryChildInstance);
+      var fiber = primaryChildInstance._current;
+      if (null === fiber)
+        throw Error(
+          "Calling Offscreen.detach before instance handle has been set."
+        );
+      if (0 !== (primaryChildInstance._pendingVisibility & 2)) {
+        var root = enqueueConcurrentRenderForLane(fiber, 2);
+        null !== root &&
+          ((primaryChildInstance._pendingVisibility &= -3),
+          scheduleUpdateOnFiber(root, fiber, 2));
+      }
     }
   };
   pendingProps.stateNode = primaryChildInstance;
-  return pendingProps;
-}
-function createFiberFromLegacyHidden(pendingProps, mode, lanes, key) {
-  pendingProps = createFiber(23, pendingProps, key, mode);
-  pendingProps.elementType = REACT_LEGACY_HIDDEN_TYPE;
-  pendingProps.lanes = lanes;
-  var instance = {
-    _visibility: 1,
-    _pendingVisibility: 1,
-    _pendingMarkers: null,
-    _transitions: null,
-    _retryCache: null,
-    _current: null,
-    detach: function () {
-      return detachOffscreenInstance(instance);
-    },
-    attach: function () {
-      return attachOffscreenInstance(instance);
-    }
-  };
-  pendingProps.stateNode = instance;
   return pendingProps;
 }
 function createFiberFromText(content, mode, lanes) {
@@ -10482,10 +10427,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1195 = {
+  devToolsConfig$jscomp$inline_1205 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-1c912a48",
+    version: "18.3.0-canary-3a0ee90f",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10515,10 +10460,10 @@ var roots = new Map(),
   } catch (err) {}
   return hook.checkDCE ? !0 : !1;
 })({
-  bundleType: devToolsConfig$jscomp$inline_1195.bundleType,
-  version: devToolsConfig$jscomp$inline_1195.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1195.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1195.rendererConfig,
+  bundleType: devToolsConfig$jscomp$inline_1205.bundleType,
+  version: devToolsConfig$jscomp$inline_1205.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1205.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1205.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10534,14 +10479,14 @@ var roots = new Map(),
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1195.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1205.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-1c912a48"
+  reconcilerVersion: "18.3.0-canary-3a0ee90f"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

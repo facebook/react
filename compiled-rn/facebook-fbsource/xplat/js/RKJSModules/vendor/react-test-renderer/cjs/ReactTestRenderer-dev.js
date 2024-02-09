@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ea022c092172304074f5cd8ffd460a9f>>
+ * @generated SignedSource<<491e433a3e81760180afd88ca49b58ec>>
  */
 
 "use strict";
@@ -3212,6 +3212,14 @@ if (__DEV__) {
           didScheduleMicrotask = true;
           scheduleImmediateTask(processRootScheduleInMicrotask);
         }
+      }
+
+      {
+        // While this flag is disabled, we schedule the render task immediately
+        // instead of waiting a microtask.
+        // TODO: We need to land enableDeferRootSchedulingToMicrotask ASAP to
+        // unblock additional features we have planned.
+        scheduleTaskForRootDuringMicrotask(root, now$1());
       }
 
       if (ReactCurrentActQueue$3.isBatchingLegacy && root.tag === LegacyRoot) {
@@ -25670,7 +25678,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-ba5e6a832-20240208";
+    var ReactVersion = "18.3.0-canary-36b078cc7-20240209";
 
     // Might add PROFILE later.
 

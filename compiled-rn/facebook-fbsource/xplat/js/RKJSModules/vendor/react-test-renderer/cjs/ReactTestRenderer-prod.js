@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<28cd2d45c2e89bdb4e404f0aa2b0ab0d>>
+ * @generated SignedSource<<cfe361eb4fa2b4fe46b23ad891da5cee>>
  */
 
 "use strict";
@@ -805,6 +805,7 @@ function ensureRootIsScheduled(root) {
   didScheduleMicrotask ||
     ((didScheduleMicrotask = !0),
     scheduleCallback$3(ImmediatePriority, processRootScheduleInMicrotask));
+  scheduleTaskForRootDuringMicrotask(root, now());
 }
 function flushSyncWorkAcrossRoots_impl(onlyLegacy) {
   if (!isFlushingWork && mightHavePendingSyncWork) {
@@ -9152,7 +9153,7 @@ var devToolsConfig$jscomp$inline_1011 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-ba5e6a832-20240208",
+  version: "18.3.0-canary-36b078cc7-20240209",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1189 = {
@@ -9183,7 +9184,7 @@ var internals$jscomp$inline_1189 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-ba5e6a832-20240208"
+  reconcilerVersion: "18.3.0-canary-36b078cc7-20240209"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1190 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
