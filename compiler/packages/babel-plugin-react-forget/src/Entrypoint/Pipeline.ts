@@ -69,6 +69,7 @@ import {
 } from "../Utils/logger";
 import { assertExhaustive } from "../Utils/utils";
 import {
+  validateContextVariableLValues,
   validateFrozenLambdas,
   validateHooksUsage,
   validateMemoizedEffectDependencies,
@@ -117,6 +118,7 @@ function* runWithEnvironment(
   pruneMaybeThrows(hir);
   yield log({ kind: "hir", name: "PruneMaybeThrows", value: hir });
 
+  validateContextVariableLValues(hir);
   validateUseMemo(hir);
 
   dropManualMemoization(hir);

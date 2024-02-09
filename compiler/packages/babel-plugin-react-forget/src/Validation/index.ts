@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+export { validateContextVariableLValues } from "./ValidateContextVariableLValues";
 export { validateFrozenLambdas } from "./ValidateFrozenLambdas";
 export { validateHooksUsage } from "./ValidateHooksUsage";
 export { validateMemoizedEffectDependencies } from "./ValidateMemoizedEffectDependencies";

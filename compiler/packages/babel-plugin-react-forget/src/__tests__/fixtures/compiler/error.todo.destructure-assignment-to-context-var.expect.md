@@ -18,7 +18,7 @@ function useFoo(props) {
 ## Error
 
 ```
-[ReactForget] Invariant: [InferReferenceEffects] Context variables are always mutable. (5:5)
+[ReactForget] Invariant: Expected all references to a variable to be consistently local or context references. Identifier <unknown> x$1 is referenced as a local variable, but was previously referenced as a context variable (3:3)
 ```
           
       
