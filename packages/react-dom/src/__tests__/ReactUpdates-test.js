@@ -1709,6 +1709,70 @@ describe('ReactUpdates', () => {
     expect(subscribers.length).toBe(limit);
   });
 
+  it("does not infinite loop if there's a synchronous render phase update on another component", () => {
+    if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
+      return;
+    }
+    let setState;
+    function App() {
+      const [, _setState] = React.useState(0);
+      setState = _setState;
+      return <Child />;
+    }
+
+    function Child(step) {
+      // This will cause an infinite update loop, and a warning in dev.
+      setState(n => n + 1);
+      return null;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    expect(() => {
+      expect(() => ReactDOM.flushSync(() => root.render(<App />))).toThrow(
+        'Maximum update depth exceeded',
+      );
+    }).toErrorDev(
+      'Warning: Cannot update a component (`App`) while rendering a different component (`Child`)',
+    );
+  });
+
+  it("does not infinite loop if there's an async render phase update on another component", async () => {
+    if (gate(flags => !flags.enableInfiniteRenderLoopDetection)) {
+      return;
+    }
+    let setState;
+    function App() {
+      const [, _setState] = React.useState(0);
+      setState = _setState;
+      return <Child />;
+    }
+
+    function Child(step) {
+      // This will cause an infinite update loop, and a warning in dev.
+      setState(n => n + 1);
+      return null;
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    await expect(async () => {
+      let error;
+      try {
+        await act(() => {
+          React.startTransition(() => root.render(<App />));
+        });
+      } catch (e) {
+        error = e;
+      }
+      expect(error.message).toMatch('Maximum update depth exceeded');
+    }).toErrorDev(
+      'Warning: Cannot update a component (`App`) while rendering a different component (`Child`)',
+    );
+  });
+
   // TODO: Replace this branch with @gate pragmas
   if (__DEV__) {
     it('warns about a deferred infinite update loop with useEffect', async () => {

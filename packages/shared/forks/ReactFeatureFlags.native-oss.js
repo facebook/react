@@ -75,6 +75,7 @@ export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = false;
 export const enableDeferRootSchedulingToMicrotask = false;
+export const enableInfiniteRenderLoopDetection = false;
 
 export const enableAsyncActions = false;
 
