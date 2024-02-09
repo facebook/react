@@ -2238,6 +2238,14 @@ function lowerExpression(
           suggestions: null,
         });
         return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
+      } else if (builder.isContextIdentifier(argument)) {
+        builder.errors.push({
+          reason: `(BuildHIR::lowerExpression) Handle UpdateExpression to variables captured within lambdas.`,
+          severity: ErrorSeverity.Todo,
+          loc: exprPath.node.loc ?? null,
+          suggestions: null,
+        });
+        return { kind: "UnsupportedNode", node: exprNode, loc: exprLoc };
       }
       const lvalue = lowerIdentifierForAssignment(
         builder,

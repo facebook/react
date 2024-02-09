@@ -66,6 +66,16 @@ export function findContextIdentifiers(
         const currentFn = state.currentFn.at(-1) ?? null;
         handleAssignment(currentFn, state.identifiers, left);
       },
+      UpdateExpression(
+        path: NodePath<t.UpdateExpression>,
+        state: FindContextIdentifierState
+      ): void {
+        const argument = path.get("argument");
+        const currentFn = state.currentFn.at(-1) ?? null;
+        if (argument.isLVal()) {
+          handleAssignment(currentFn, state.identifiers, argument);
+        }
+      },
       Identifier(
         path: NodePath<t.Identifier>,
         state: FindContextIdentifierState
