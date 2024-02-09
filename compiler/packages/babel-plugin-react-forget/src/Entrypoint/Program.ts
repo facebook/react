@@ -199,7 +199,7 @@ export function compileProgram(
   const suppressions = findProgramSuppressions(
     pass.comments,
     options.eslintSuppressionRules ?? DEFAULT_ESLINT_SUPPRESSIONS,
-    options.flowSuppressions,
+    options.flowSuppressions
   );
   const lintError = suppressionsToCompilerError(suppressions);
   let hasCriticalError = lintError != null;
@@ -224,8 +224,10 @@ export function compileProgram(
        * Program node itself. We need to figure out whether an eslint suppression range
        * applies to this function first.
        */
-      const suppressionsInFunction =
-        filterSuppressionsThatAffectFunction(suppressions, fn);
+      const suppressionsInFunction = filterSuppressionsThatAffectFunction(
+        suppressions,
+        fn
+      );
       if (suppressionsInFunction.length > 0) {
         handleError(lintError, pass, fn.node.loc ?? null);
       }

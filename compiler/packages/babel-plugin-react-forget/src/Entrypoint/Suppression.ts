@@ -28,8 +28,7 @@ export type SuppressionRange = {
   source: SuppressionSource;
 };
 
-type SuppressionSource =
-  'Eslint' | 'Flow'
+type SuppressionSource = "Eslint" | "Flow";
 
 /**
  * An suppression affects a function if:
@@ -78,7 +77,7 @@ export function filterSuppressionsThatAffectFunction(
 export function findProgramSuppressions(
   programComments: Array<t.Comment>,
   ruleNames: Array<string>,
-  flowSuppressions: boolean,
+  flowSuppressions: boolean
 ): Array<SuppressionRange> {
   const suppressionRanges: Array<SuppressionRange> = [];
   let disableComment: t.Comment | null = null;
@@ -92,7 +91,7 @@ export function findProgramSuppressions(
   const disablePattern = new RegExp(`eslint-disable ${rulePattern}`);
   const enablePattern = new RegExp(`eslint-enable ${rulePattern}`);
   const flowSuppressionPattern = new RegExp(
-    '\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule'
+    "\\$(FlowFixMe\\w*|FlowExpectedError|FlowIssue)\\[react\\-rule"
   );
 
   for (const comment of programComments) {
@@ -110,7 +109,7 @@ export function findProgramSuppressions(
     ) {
       disableComment = comment;
       enableComment = comment;
-      source = 'Eslint';
+      source = "Eslint";
     }
 
     if (
@@ -120,15 +119,15 @@ export function findProgramSuppressions(
     ) {
       disableComment = comment;
       enableComment = comment;
-      source = 'Flow';
+      source = "Flow";
     }
 
     if (disablePattern.test(comment.value)) {
       disableComment = comment;
-      source = 'Eslint';
+      source = "Eslint";
     }
 
-    if (enablePattern.test(comment.value) && source === 'Eslint') {
+    if (enablePattern.test(comment.value) && source === "Eslint") {
       enableComment = comment;
     }
 
@@ -162,12 +161,14 @@ export function suppressionsToCompilerError(
     }
     let reason, suggestion;
     switch (suppressionRange.source) {
-      case 'Eslint':
-        reason = "React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled";
+      case "Eslint":
+        reason =
+          "React Forget has bailed out of optimizing this component as one or more React eslint rules were disabled";
         suggestion = "Remove the eslint disable";
         break;
-      case 'Flow':
-        reason = "React Forget has bailed out of optimizing this component as one or more React rule violations were reported by Flow";
+      case "Flow":
+        reason =
+          "React Forget has bailed out of optimizing this component as one or more React rule violations were reported by Flow";
         suggestion = "Remove the Flow suppression and address the React error";
     }
     error.pushErrorDetail(
