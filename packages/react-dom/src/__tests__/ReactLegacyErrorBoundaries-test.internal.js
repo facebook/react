@@ -824,7 +824,8 @@ describe('ReactLegacyErrorBoundaries', () => {
     );
     expect(container.firstChild.textContent).toBe('Caught an error: Hello.');
   });
-  // @gate !disableModulePatternComponents && !disableLegacyContext
+  // @gate !disableModulePatternComponents
+  // @gate !disableLegacyContext || !__DEV__
   it('renders an error state if module-style context provider throws in componentWillMount', () => {
     function BrokenComponentWillMountWithContext() {
       return {
