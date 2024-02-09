@@ -20,6 +20,8 @@ describe('Fast Refresh', () => {
   let withErrorsOrWarningsIgnored;
 
   beforeEach(() => {
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+
     exportsObj = undefined;
 
     babel = require('@babel/core');

@@ -33,6 +33,8 @@ describe('TreeListContext', () => {
   let state: StateContext;
 
   beforeEach(() => {
+    global.IS_REACT_ACT_ENVIRONMENT = true;
+
     utils = require('./utils');
     utils.beforeEachProfiling();
 
