@@ -212,19 +212,19 @@ export function trackUsedThenable<T>(
             }
           },
         );
+      }
 
-        // Check one more time in case the thenable resolved synchronously.
-        switch (thenable.status) {
-          case 'fulfilled': {
-            const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
-            return fulfilledThenable.value;
-          }
-          case 'rejected': {
-            const rejectedThenable: RejectedThenable<T> = (thenable: any);
-            const rejectedError = rejectedThenable.reason;
-            checkIfUseWrappedInAsyncCatch(rejectedError);
-            throw rejectedError;
-          }
+      // Check one more time in case the thenable resolved synchronously.
+      switch (thenable.status) {
+        case 'fulfilled': {
+          const fulfilledThenable: FulfilledThenable<T> = (thenable: any);
+          return fulfilledThenable.value;
+        }
+        case 'rejected': {
+          const rejectedThenable: RejectedThenable<T> = (thenable: any);
+          const rejectedError = rejectedThenable.reason;
+          checkIfUseWrappedInAsyncCatch(rejectedError);
+          throw rejectedError;
         }
       }
 
