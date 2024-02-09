@@ -31,7 +31,7 @@ function setCurrentlyValidatingElement(element: any) {
   }
 }
 
-export default function checkPropTypes(
+export default function checkContextPropTypes(
   typeSpecs: Object,
   values: Object,
   location: string,

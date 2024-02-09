@@ -137,7 +137,6 @@ export function lazy<T>(
   if (__DEV__) {
     // In production, this would just set it on the object.
     let defaultProps;
-    let propTypes;
     // $FlowFixMe[prop-missing]
     Object.defineProperties(lazyType, {
       defaultProps: {
@@ -156,26 +155,6 @@ export function lazy<T>(
           // Match production behavior more closely:
           // $FlowFixMe[prop-missing]
           Object.defineProperty(lazyType, 'defaultProps', {
-            enumerable: true,
-          });
-        },
-      },
-      propTypes: {
-        configurable: true,
-        get() {
-          return propTypes;
-        },
-        // $FlowFixMe[missing-local-annot]
-        set(newPropTypes) {
-          console.error(
-            'React.lazy(...): It is not supported to assign `propTypes` to ' +
-              'a lazy component import. Either specify them where the component ' +
-              'is defined, or create a wrapping component around it.',
-          );
-          propTypes = newPropTypes;
-          // Match production behavior more closely:
-          // $FlowFixMe[prop-missing]
-          Object.defineProperty(lazyType, 'propTypes', {
             enumerable: true,
           });
         },

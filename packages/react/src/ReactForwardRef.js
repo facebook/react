@@ -34,15 +34,6 @@ export function forwardRef<Props, ElementType: React$ElementType>(
         );
       }
     }
-
-    if (render != null) {
-      if (render.defaultProps != null || render.propTypes != null) {
-        console.error(
-          'forwardRef render functions do not support propTypes or defaultProps. ' +
-            'Did you accidentally pass a React component?',
-        );
-      }
-    }
   }
 
   const elementType = {

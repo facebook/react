@@ -9,7 +9,7 @@
 
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
-import checkPropTypes from 'shared/checkPropTypes';
+import checkContextPropTypes from 'shared/checkContextPropTypes';
 
 let warnedAboutMissingGetChildContext;
 
@@ -38,7 +38,7 @@ export function getMaskedContext(type: any, unmaskedContext: Object): Object {
 
     if (__DEV__) {
       const name = getComponentNameFromType(type) || 'Unknown';
-      checkPropTypes(contextTypes, context, 'context', name);
+      checkContextPropTypes(contextTypes, context, 'context', name);
     }
 
     return context;
@@ -86,7 +86,12 @@ export function processChildContext(
     }
     if (__DEV__) {
       const name = getComponentNameFromType(type) || 'Unknown';
-      checkPropTypes(childContextTypes, childContext, 'child context', name);
+      checkContextPropTypes(
+        childContextTypes,
+        childContext,
+        'child context',
+        name,
+      );
     }
 
     return {...parentContext, ...childContext};

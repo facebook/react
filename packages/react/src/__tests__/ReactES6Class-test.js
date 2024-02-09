@@ -448,7 +448,6 @@ describe('ReactES6Class', () => {
           super();
           this.contextTypes = {};
           this.contextType = {};
-          this.propTypes = {};
         }
         getInitialState() {
           getInitialStateWasCalled = true;
@@ -466,7 +465,6 @@ describe('ReactES6Class', () => {
       expect(() => test(<Foo />, 'SPAN', 'foo')).toErrorDev([
         'getInitialState was defined on Foo, a plain JavaScript class.',
         'getDefaultProps was defined on Foo, a plain JavaScript class.',
-        'propTypes was defined as an instance property on Foo.',
         'contextType was defined as an instance property on Foo.',
         'contextTypes was defined as an instance property on Foo.',
       ]);

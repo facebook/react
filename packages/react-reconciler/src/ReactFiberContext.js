@@ -14,7 +14,7 @@ import {isFiberMounted} from './ReactFiberTreeReflection';
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {ClassComponent, HostRoot} from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import checkPropTypes from 'shared/checkPropTypes';
+import checkContextPropTypes from 'shared/checkContextPropTypes';
 
 import {createCursor, push, pop} from './ReactFiberStack';
 
@@ -103,7 +103,7 @@ function getMaskedContext(
 
     if (__DEV__) {
       const name = getComponentNameFromFiber(workInProgress) || 'Unknown';
-      checkPropTypes(contextTypes, context, 'context', name);
+      checkContextPropTypes(contextTypes, context, 'context', name);
     }
 
     // Cache unmasked context so we can avoid recreating masked context unless necessary.
@@ -214,7 +214,12 @@ function processChildContext(
     }
     if (__DEV__) {
       const name = getComponentNameFromFiber(fiber) || 'Unknown';
-      checkPropTypes(childContextTypes, childContext, 'child context', name);
+      checkContextPropTypes(
+        childContextTypes,
+        childContext,
+        'child context',
+        name,
+      );
     }
 
     return {...parentContext, ...childContext};

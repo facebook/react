@@ -386,13 +386,9 @@ describe('ReactFunctionComponent', () => {
       return <div>{props.test}</div>;
     }
     Child.defaultProps = {test: 2};
-    Child.propTypes = {test: PropTypes.string};
 
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).toErrorDev([
       'Warning: Child: Support for defaultProps will be removed from function components in a future major release. Use JavaScript default parameters instead.',
-      'Warning: Failed prop type: Invalid prop `test` of type `number` ' +
-        'supplied to `Child`, expected `string`.\n' +
-        '    in Child (at **)',
     ]);
   });
 
