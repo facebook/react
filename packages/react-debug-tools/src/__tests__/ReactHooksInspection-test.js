@@ -31,6 +31,7 @@ describe('ReactHooksInspection', () => {
         id: 0,
         name: 'State',
         value: 'hello world',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -53,12 +54,14 @@ describe('ReactHooksInspection', () => {
         id: null,
         name: 'Custom',
         value: __DEV__ ? 'custom hook label' : undefined,
+        debugInfo: null,
         subHooks: [
           {
             isStateEditable: true,
             id: 0,
             name: 'State',
             value: 'hello world',
+            debugInfo: null,
             subHooks: [],
           },
         ],
@@ -89,11 +92,13 @@ describe('ReactHooksInspection', () => {
         id: null,
         name: 'Custom',
         value: undefined,
+        debugInfo: null,
         subHooks: [
           {
             isStateEditable: true,
             id: 0,
             name: 'State',
+            debugInfo: null,
             subHooks: [],
             value: 'hello',
           },
@@ -101,6 +106,7 @@ describe('ReactHooksInspection', () => {
             isStateEditable: false,
             id: 1,
             name: 'Effect',
+            debugInfo: null,
             subHooks: [],
             value: effect,
           },
@@ -111,12 +117,14 @@ describe('ReactHooksInspection', () => {
         id: null,
         name: 'Custom',
         value: undefined,
+        debugInfo: null,
         subHooks: [
           {
             isStateEditable: true,
             id: 2,
             name: 'State',
             value: 'world',
+            debugInfo: null,
             subHooks: [],
           },
           {
@@ -124,6 +132,7 @@ describe('ReactHooksInspection', () => {
             id: 3,
             name: 'Effect',
             value: effect,
+            debugInfo: null,
             subHooks: [],
           },
         ],
@@ -164,18 +173,21 @@ describe('ReactHooksInspection', () => {
         id: null,
         name: 'Bar',
         value: undefined,
+        debugInfo: null,
         subHooks: [
           {
             isStateEditable: false,
             id: null,
             name: 'Custom',
             value: undefined,
+            debugInfo: null,
             subHooks: [
               {
                 isStateEditable: true,
                 id: 0,
                 name: 'Reducer',
                 value: 'hello',
+                debugInfo: null,
                 subHooks: [],
               },
               {
@@ -183,6 +195,7 @@ describe('ReactHooksInspection', () => {
                 id: 1,
                 name: 'Effect',
                 value: effect,
+                debugInfo: null,
                 subHooks: [],
               },
             ],
@@ -192,6 +205,7 @@ describe('ReactHooksInspection', () => {
             id: 2,
             name: 'LayoutEffect',
             value: effect,
+            debugInfo: null,
             subHooks: [],
           },
         ],
@@ -201,23 +215,27 @@ describe('ReactHooksInspection', () => {
         id: null,
         name: 'Baz',
         value: undefined,
+        debugInfo: null,
         subHooks: [
           {
             isStateEditable: false,
             id: 3,
             name: 'LayoutEffect',
             value: effect,
+            debugInfo: null,
             subHooks: [],
           },
           {
             isStateEditable: false,
             id: null,
             name: 'Custom',
+            debugInfo: null,
             subHooks: [
               {
                 isStateEditable: true,
                 id: 4,
                 name: 'Reducer',
+                debugInfo: null,
                 subHooks: [],
                 value: 'world',
               },
@@ -225,6 +243,7 @@ describe('ReactHooksInspection', () => {
                 isStateEditable: false,
                 id: 5,
                 name: 'Effect',
+                debugInfo: null,
                 subHooks: [],
                 value: effect,
               },
@@ -249,6 +268,7 @@ describe('ReactHooksInspection', () => {
         id: null,
         name: 'Context',
         value: 'default',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -287,6 +307,86 @@ describe('ReactHooksInspection', () => {
     expect(setterCalls[1]).toBe(initial);
   });
 
+  it('should inspect use() calls for Promise and Context', async () => {
+    const MyContext = React.createContext('hi');
+    const promise = Promise.resolve('world');
+    await promise;
+    promise.status = 'fulfilled';
+    promise.value = 'world';
+    promise._debugInfo = [{name: 'Hello'}];
+
+    function useCustom() {
+      const value = React.use(promise);
+      const [state] = React.useState(value);
+      return state;
+    }
+    function Foo(props) {
+      const value1 = React.use(MyContext);
+      const value2 = useCustom();
+      return (
+        <div>
+          {value1} {value2}
+        </div>
+      );
+    }
+    const tree = ReactDebugTools.inspectHooks(Foo, {});
+    expect(tree).toEqual([
+      {
+        isStateEditable: false,
+        id: null,
+        name: 'Context',
+        value: 'hi',
+        debugInfo: null,
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: null,
+        name: 'Custom',
+        value: undefined,
+        debugInfo: null,
+        subHooks: [
+          {
+            isStateEditable: false,
+            id: null,
+            name: 'Promise',
+            value: 'world',
+            debugInfo: [{name: 'Hello'}],
+            subHooks: [],
+          },
+          {
+            isStateEditable: true,
+            id: 0,
+            name: 'State',
+            value: 'world',
+            debugInfo: null,
+            subHooks: [],
+          },
+        ],
+      },
+    ]);
+  });
+
+  it('should inspect use() calls for unresolved Promise', () => {
+    const promise = Promise.resolve('hi');
+
+    function Foo(props) {
+      const value = React.use(promise);
+      return <div>{value}</div>;
+    }
+    const tree = ReactDebugTools.inspectHooks(Foo, {});
+    expect(tree).toEqual([
+      {
+        isStateEditable: false,
+        id: null,
+        name: 'Unresolved',
+        value: promise,
+        debugInfo: null,
+        subHooks: [],
+      },
+    ]);
+  });
+
   describe('useDebugValue', () => {
     it('should be ignored when called outside of a custom hook', () => {
       function Foo(props) {
@@ -313,11 +413,13 @@ describe('ReactHooksInspection', () => {
           id: null,
           name: 'Custom',
           value: __DEV__ ? 'bar:123' : undefined,
+          debugInfo: null,
           subHooks: [
             {
               isStateEditable: true,
               id: 0,
               name: 'State',
+              debugInfo: null,
               subHooks: [],
               value: 0,
             },
