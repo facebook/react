@@ -1007,5 +1007,40 @@ describe('ReactDOMServerHydration', () => {
           ]
         `);
     });
+
+    // @gate __DEV__
+    it('warn when client renders null at the initial rendering', () => {
+      const Component = () => (
+        <div>
+          <p>Hello</p>
+        </div>
+      );
+      const App = ({isRenderingNull}) => {
+        if (isRenderingNull) {
+          return null;
+        }
+        return <Component />;
+      };
+      const htmlString = ReactDOMServer.renderToString(
+        <App isRenderingNull={false} />,
+      );
+      container.innerHTML = htmlString;
+      let root;
+
+      const previousIsActEnvironment = global.IS_REACT_ACT_ENVIRONMENT;
+      global.IS_REACT_ACT_ENVIRONMENT = true;
+      act(() => {
+        root = ReactDOMClient.hydrateRoot(
+          container,
+          <App isRenderingNull={true} />,
+        );
+      });
+      act(() => {
+        root.render(<App isRenderingNull={false} />);
+      });
+      expect(container.innerHTML).toBe('<div><p>Hello</p></div><div>');
+      expect(formatConsoleErrors()).toMatchInlineSnapshot(`[]`);
+      global.IS_REACT_ACT_ENVIRONMENT = previousIsActEnvironment;
+    });
   });
 });
