@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<5b6ff80f7667876576d71d875716de3c>>
+ * @generated SignedSource<<99069a73679761ba23b9ab688e792429>>
  */
 
 "use strict";
@@ -134,37 +134,6 @@ if (__DEV__) {
     var StrictMode = REACT_STRICT_MODE_TYPE;
     var Suspense = REACT_SUSPENSE_TYPE;
     var SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-    var hasWarnedAboutDeprecatedIsAsyncMode = false;
-    var hasWarnedAboutDeprecatedIsConcurrentMode = false; // AsyncMode should be deprecated
-
-    function isAsyncMode(object) {
-      {
-        if (!hasWarnedAboutDeprecatedIsAsyncMode) {
-          hasWarnedAboutDeprecatedIsAsyncMode = true; // Using console['warn'] to evade Babel and ESLint
-
-          console["warn"](
-            "The ReactIs.isAsyncMode() alias has been deprecated, " +
-              "and will be removed in React 18+."
-          );
-        }
-      }
-
-      return false;
-    }
-    function isConcurrentMode(object) {
-      {
-        if (!hasWarnedAboutDeprecatedIsConcurrentMode) {
-          hasWarnedAboutDeprecatedIsConcurrentMode = true; // Using console['warn'] to evade Babel and ESLint
-
-          console["warn"](
-            "The ReactIs.isConcurrentMode() alias has been deprecated, " +
-              "and will be removed in React 18+."
-          );
-        }
-      }
-
-      return false;
-    }
     function isContextConsumer(object) {
       return typeOf(object) === REACT_CONTEXT_TYPE;
     }
@@ -218,8 +187,6 @@ if (__DEV__) {
     exports.StrictMode = StrictMode;
     exports.Suspense = Suspense;
     exports.SuspenseList = SuspenseList;
-    exports.isAsyncMode = isAsyncMode;
-    exports.isConcurrentMode = isConcurrentMode;
     exports.isContextConsumer = isContextConsumer;
     exports.isContextProvider = isContextProvider;
     exports.isElement = isElement;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9d53980cc5930d508194f32bc4d63656>>
+ * @generated SignedSource<<41fcb3aed2a769fa81ed6b7a5c498689>>
  */
 
 "use strict";
@@ -67,12 +67,6 @@ exports.Profiler = REACT_PROFILER_TYPE;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-exports.isAsyncMode = function () {
-  return !1;
-};
-exports.isConcurrentMode = function () {
-  return !1;
-};
 exports.isContextConsumer = function (object) {
   return typeOf(object) === REACT_CONTEXT_TYPE;
 };
