@@ -76,36 +76,6 @@ export const SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 
 export {isValidElementType};
 
-let hasWarnedAboutDeprecatedIsAsyncMode = false;
-let hasWarnedAboutDeprecatedIsConcurrentMode = false;
-
-// AsyncMode should be deprecated
-export function isAsyncMode(object: any): boolean {
-  if (__DEV__) {
-    if (!hasWarnedAboutDeprecatedIsAsyncMode) {
-      hasWarnedAboutDeprecatedIsAsyncMode = true;
-      // Using console['warn'] to evade Babel and ESLint
-      console['warn'](
-        'The ReactIs.isAsyncMode() alias has been deprecated, ' +
-          'and will be removed in React 18+.',
-      );
-    }
-  }
-  return false;
-}
-export function isConcurrentMode(object: any): boolean {
-  if (__DEV__) {
-    if (!hasWarnedAboutDeprecatedIsConcurrentMode) {
-      hasWarnedAboutDeprecatedIsConcurrentMode = true;
-      // Using console['warn'] to evade Babel and ESLint
-      console['warn'](
-        'The ReactIs.isConcurrentMode() alias has been deprecated, ' +
-          'and will be removed in React 18+.',
-      );
-    }
-  }
-  return false;
-}
 export function isContextConsumer(object: any): boolean {
   return typeOf(object) === REACT_CONTEXT_TYPE;
 }
