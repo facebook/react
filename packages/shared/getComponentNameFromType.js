@@ -18,6 +18,7 @@ import {
   REACT_PORTAL_TYPE,
   REACT_MEMO_TYPE,
   REACT_PROFILER_TYPE,
+  REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
@@ -26,7 +27,11 @@ import {
   REACT_TRACING_MARKER_TYPE,
 } from 'shared/ReactSymbols';
 
-import {enableTransitionTracing, enableCache} from './ReactFeatureFlags';
+import {
+  enableTransitionTracing,
+  enableCache,
+  enableRenderableContext,
+} from './ReactFeatureFlags';
 
 // Keep in sync with react-reconciler/getComponentNameFromFiber
 function getWrappedName(
@@ -98,12 +103,27 @@ export default function getComponentNameFromType(type: mixed): string | null {
       }
     }
     switch (type.$$typeof) {
+      case REACT_PROVIDER_TYPE:
+        if (enableRenderableContext) {
+          return null;
+        } else {
+          const provider = (type: any);
+          return getContextName(provider._context) + '.Provider';
+        }
       case REACT_CONTEXT_TYPE:
         const context: ReactContext<any> = (type: any);
-        return getContextName(context) + '.Provider';
+        if (enableRenderableContext) {
+          return getContextName(context) + '.Provider';
+        } else {
+          return getContextName(context) + '.Consumer';
+        }
       case REACT_CONSUMER_TYPE:
-        const consumer: ReactConsumerType<any> = (type: any);
-        return getContextName(consumer._context) + '.Consumer';
+        if (enableRenderableContext) {
+          const consumer: ReactConsumerType<any> = (type: any);
+          return getContextName(consumer._context) + '.Consumer';
+        } else {
+          return null;
+        }
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:

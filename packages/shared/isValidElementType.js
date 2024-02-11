@@ -10,6 +10,7 @@
 import {
   REACT_CONTEXT_TYPE,
   REACT_CONSUMER_TYPE,
+  REACT_PROVIDER_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PROFILER_TYPE,
@@ -31,6 +32,7 @@ import {
   enableTransitionTracing,
   enableDebugTracing,
   enableLegacyHidden,
+  enableRenderableContext,
 } from './ReactFeatureFlags';
 
 const REACT_CLIENT_REFERENCE: symbol = Symbol.for('react.client.reference');
@@ -62,7 +64,8 @@ export default function isValidElementType(type: mixed): boolean {
       type.$$typeof === REACT_LAZY_TYPE ||
       type.$$typeof === REACT_MEMO_TYPE ||
       type.$$typeof === REACT_CONTEXT_TYPE ||
-      type.$$typeof === REACT_CONSUMER_TYPE ||
+      (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+      (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
       type.$$typeof === REACT_FORWARD_REF_TYPE ||
       // This needs to include all possible module reference object
       // types supported by any Flight configuration anywhere since

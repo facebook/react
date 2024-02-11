@@ -110,6 +110,7 @@ import {
   enableFormActions,
   enableAsyncActions,
   enablePostpone,
+  enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -3528,7 +3529,12 @@ function updateContextProvider(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  const context: ReactContext<any> = workInProgress.type;
+  let context: ReactContext<any>;
+  if (enableRenderableContext) {
+    context = workInProgress.type;
+  } else {
+    context = workInProgress.type._context;
+  }
   const newProps = workInProgress.pendingProps;
   const oldProps = workInProgress.memoizedProps;
 
@@ -3590,9 +3596,18 @@ function updateContextConsumer(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  const consumerType: ReactConsumerType<any> = workInProgress.type;
-  const context = consumerType._context;
-
+  let context: ReactContext<any>;
+  if (enableRenderableContext) {
+    const consumerType: ReactConsumerType<any> = workInProgress.type;
+    context = consumerType._context;
+  } else {
+    context = workInProgress.type;
+    if (__DEV__) {
+      if ((context: any)._context !== undefined) {
+        context = (context: any)._context;
+      }
+    }
+  }
   const newProps = workInProgress.pendingProps;
   const render = newProps.children;
 
@@ -3838,7 +3853,12 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       break;
     case ContextProvider: {
       const newValue = workInProgress.memoizedProps.value;
-      const context: ReactContext<any> = workInProgress.type;
+      let context: ReactContext<any>;
+      if (enableRenderableContext) {
+        context = workInProgress.type;
+      } else {
+        context = workInProgress.type._context;
+      }
       pushProvider(workInProgress, context, newValue);
       break;
     }

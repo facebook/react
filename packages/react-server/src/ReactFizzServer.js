@@ -32,6 +32,7 @@ import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
+import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
@@ -127,6 +128,7 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
+  REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
   REACT_CONSUMER_TYPE,
   REACT_SCOPE_TYPE,
@@ -1699,10 +1701,9 @@ function renderContextConsumer(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  type: ReactConsumerType<any>,
+  context: ReactContext<any>,
   props: Object,
 ): void {
-  const context = type._context;
   const render = props.children;
 
   if (__DEV__) {
@@ -1882,13 +1883,38 @@ function renderElement(
         renderMemo(request, task, keyPath, type, props, ref);
         return;
       }
+      case REACT_PROVIDER_TYPE: {
+        if (!enableRenderableContext) {
+          const context: ReactContext<any> = (type: any)._context;
+          renderContextProvider(request, task, keyPath, context, props);
+          return;
+        }
+        // Fall through
+      }
       case REACT_CONTEXT_TYPE: {
-        renderContextProvider(request, task, keyPath, type, props);
-        return;
+        if (enableRenderableContext) {
+          const context = type;
+          renderContextProvider(request, task, keyPath, context, props);
+          return;
+        } else {
+          let context: ReactContext<any> = (type: any);
+          if (__DEV__) {
+            if ((context: any)._context !== undefined) {
+              context = (context: any)._context;
+            }
+          }
+          renderContextConsumer(request, task, keyPath, context, props);
+          return;
+        }
       }
       case REACT_CONSUMER_TYPE: {
-        renderContextConsumer(request, task, keyPath, type, props);
-        return;
+        if (enableRenderableContext) {
+          const context: ReactContext<any> = (type: ReactConsumerType<any>)
+            ._context;
+          renderContextConsumer(request, task, keyPath, context, props);
+          return;
+        }
+        // Fall through
       }
       case REACT_LAZY_TYPE: {
         renderLazyComponent(request, task, keyPath, type, props);

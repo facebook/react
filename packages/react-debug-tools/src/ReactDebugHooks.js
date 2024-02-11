@@ -821,7 +821,11 @@ function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
   let current: null | Fiber = fiber;
   while (current) {
     if (current.tag === ContextProvider) {
-      const context: ReactContext<any> = current.type;
+      let context: ReactContext<any> = current.type;
+      if ((context: any)._context !== undefined) {
+        // Support inspection of pre-19+ providers.
+        context = (context: any)._context;
+      }
       if (!contextMap.has(context)) {
         // Store the current value that we're going to restore later.
         contextMap.set(context, context._currentValue);

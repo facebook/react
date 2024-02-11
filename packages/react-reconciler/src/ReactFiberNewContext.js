@@ -46,6 +46,7 @@ import {
   enableLazyContextPropagation,
   enableFormActions,
   enableAsyncActions,
+  enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
 import {
   getHostTransitionProvider,
@@ -561,7 +562,12 @@ function propagateParentContextChanges(
 
       const oldProps = currentParent.memoizedProps;
       if (oldProps !== null) {
-        const context: ReactContext<any> = parent.type;
+        let context: ReactContext<any>;
+        if (enableRenderableContext) {
+          context = parent.type;
+        } else {
+          context = parent.type._context;
+        }
 
         const newProps = parent.pendingProps;
         const newValue = newProps.value;

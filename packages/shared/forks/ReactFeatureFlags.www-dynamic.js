@@ -29,6 +29,7 @@ export const enableFormActions = __VARIANT__;
 export const alwaysThrottleRetries = __VARIANT__;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableUseDeferredValueInitialArg = __VARIANT__;
+export const enableRenderableContext = __VARIANT__;
 
 export const enableRetryLaneExpiration = __VARIANT__;
 export const retryLaneExpirationMs = 5000;
