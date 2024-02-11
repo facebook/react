@@ -33,7 +33,7 @@ export function createPortal(
   return {
     // This tag allow us to uniquely identify this as a React Portal
     $$typeof: REACT_PORTAL_TYPE,
-    key: typeof key === typeof 'null' ? null : `${key}`,
+    key: key && typeof key === typeof 'null' ? null : `${key}`,
     children,
     containerInfo,
     implementation,
