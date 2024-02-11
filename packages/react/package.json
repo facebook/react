@@ -15,6 +15,7 @@
     "cjs/",
     "umd/",
     "jsx-runtime.js",
+    "jsx-runtime.react-server.js",
     "jsx-dev-runtime.js",
     "react.react-server.js"
   ],
