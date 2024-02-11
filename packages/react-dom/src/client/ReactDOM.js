@@ -69,17 +69,41 @@ export {
 } from 'react-dom-bindings/src/shared/ReactDOMFormActions';
 
 if (__DEV__) {
-  if (
-    typeof Map !== 'function' ||
+  /**
+   * This function validate the Map prototypes
+   * @param {Map} Map representing a Map to validate prototypes and nullable
+   * @returns {boolean}
+   */
+  const isNotValidMapProtoType = Map => {
+    if (!Map) return false;
+
     // $FlowFixMe[prop-missing] Flow incorrectly thinks Map has no prototype
-    Map.prototype == null ||
-    typeof Map.prototype.forEach !== 'function' ||
-    typeof Set !== 'function' ||
+    return (
+      Map.prototype == null ||
+      typeof Map !== 'function' ||
+      Map.prototype == null ||
+      typeof Map.prototype.forEach !== 'function'
+    );
+  };
+
+  /**
+   * This function validate the Set prototypes
+   * @param {Set} Set representing a Set to validate prototypes and nullable
+   * @returns {boolean}
+   */
+  const isNotValidSetProtoType = Set => {
+    if (!Set) return false;
+
     // $FlowFixMe[prop-missing] Flow incorrectly thinks Set has no prototype
-    Set.prototype == null ||
-    typeof Set.prototype.clear !== 'function' ||
-    typeof Set.prototype.forEach !== 'function'
-  ) {
+    return (
+      Set.prototype == null ||
+      typeof Set !== 'function' ||
+      typeof Set.prototype.forEach !== 'function' ||
+      typeof Set.prototype.clear !== 'function'
+    );
+  };
+
+  if (isNotValidMapProtoType(Map) || isNotValidSetProtoType(Set)) {
     console.error(
       'React depends on Map and Set built-in types. Make sure that you load a ' +
         'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
@@ -101,6 +125,14 @@ function createPortal(
   return createPortalImpl(children, container, null, key);
 }
 
+/**
+ * This function render subtree into container
+ * @param {React$Component<any, any>} parentComponent parent react component
+ * @param {React$Element<any>} element react element
+ * @param {Container} containerNode a node container to render
+ * @param {?Function} callback optional callback function
+ * @returns {React$Component<any, any> | PublicInstance | null}
+ */
 function renderSubtreeIntoContainer(
   parentComponent: React$Component<any, any>,
   element: React$Element<any>,
@@ -115,6 +147,12 @@ function renderSubtreeIntoContainer(
   );
 }
 
+/**
+ * This function create the root of react three
+ * @param {Element | Document | DocumentFragment} container element to render react
+ * @param {?CreateRootOptions} options optional creation options
+ * @returns {RootType}
+ */
 function createRoot(
   container: Element | Document | DocumentFragment,
   options?: CreateRootOptions,
@@ -130,6 +168,13 @@ function createRoot(
   return createRootImpl(container, options);
 }
 
+/**
+ * This function hydrate the creation of the root of react three
+ * @param {Document | Element} container element to create hydration
+ * @param {ReactNodeList} initialChildren react element
+ * @param {?HydrateRootOptions} options optional hydration creation options
+ * @returns {RootType}
+ */
 function hydrateRoot(
   container: Document | Element,
   initialChildren: ReactNodeList,
