@@ -74,12 +74,6 @@ exports.Profiler = REACT_PROFILER_TYPE;
 exports.StrictMode = REACT_STRICT_MODE_TYPE;
 exports.Suspense = REACT_SUSPENSE_TYPE;
 exports.SuspenseList = REACT_SUSPENSE_LIST_TYPE;
-exports.isAsyncMode = function () {
-  return !1;
-};
-exports.isConcurrentMode = function () {
-  return !1;
-};
 exports.isContextConsumer = function (object) {
   return typeOf(object) === REACT_CONTEXT_TYPE;
 };
