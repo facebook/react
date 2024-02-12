@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9e5c6574214265b8a7f68fb3d0ee99e5>>
+ * @generated SignedSource<<4781c0c583d1e61ede17a8c473948719>>
  */
 
 "use strict";
@@ -5112,6 +5112,20 @@ if (__DEV__) {
 
     var thenableState$1 = null;
     var thenableIndexCounter$1 = 0;
+
+    function mergeDebugInfo(outer, inner) {
+      if (inner == null) {
+        return outer;
+      } else if (outer === null) {
+        return inner;
+      } else {
+        // If we have two debugInfo, we need to create a new one. This makes the array no longer
+        // live so we'll miss any future updates if we received more so ideally we should always
+        // do this after both have fully resolved/unsuspended.
+        return outer.concat(inner);
+      }
+    }
+
     var didWarnAboutMaps;
     var didWarnAboutGenerators;
     var didWarnAboutStringRefs;
@@ -5445,7 +5459,13 @@ if (__DEV__) {
         return newFiber;
       }
 
-      function updateTextNode(returnFiber, current, textContent, lanes) {
+      function updateTextNode(
+        returnFiber,
+        current,
+        textContent,
+        lanes,
+        debugInfo
+      ) {
         if (current === null || current.tag !== HostText) {
           // Insert
           var created = createFiberFromText(
@@ -5454,16 +5474,26 @@ if (__DEV__) {
             lanes
           );
           created.return = returnFiber;
+
+          {
+            created._debugInfo = debugInfo;
+          }
+
           return created;
         } else {
           // Update
           var existing = useFiber(current, textContent);
           existing.return = returnFiber;
+
+          {
+            existing._debugInfo = debugInfo;
+          }
+
           return existing;
         }
       }
 
-      function updateElement(returnFiber, current, element, lanes) {
+      function updateElement(returnFiber, current, element, lanes, debugInfo) {
         var elementType = element.type;
 
         if (elementType === REACT_FRAGMENT_TYPE) {
@@ -5472,7 +5502,8 @@ if (__DEV__) {
             current,
             element.props.children,
             lanes,
-            element.key
+            element.key,
+            debugInfo
           );
         }
 
@@ -5495,6 +5526,7 @@ if (__DEV__) {
 
             {
               existing._debugOwner = element._owner;
+              existing._debugInfo = debugInfo;
             }
 
             return existing;
@@ -5504,10 +5536,15 @@ if (__DEV__) {
         var created = createFiberFromElement(element, returnFiber.mode, lanes);
         created.ref = coerceRef(returnFiber, current, element);
         created.return = returnFiber;
+
+        {
+          created._debugInfo = debugInfo;
+        }
+
         return created;
       }
 
-      function updatePortal(returnFiber, current, portal, lanes) {
+      function updatePortal(returnFiber, current, portal, lanes, debugInfo) {
         if (
           current === null ||
           current.tag !== HostPortal ||
@@ -5517,16 +5554,33 @@ if (__DEV__) {
           // Insert
           var created = createFiberFromPortal(portal, returnFiber.mode, lanes);
           created.return = returnFiber;
+
+          {
+            created._debugInfo = debugInfo;
+          }
+
           return created;
         } else {
           // Update
           var existing = useFiber(current, portal.children || []);
           existing.return = returnFiber;
+
+          {
+            existing._debugInfo = debugInfo;
+          }
+
           return existing;
         }
       }
 
-      function updateFragment(returnFiber, current, fragment, lanes, key) {
+      function updateFragment(
+        returnFiber,
+        current,
+        fragment,
+        lanes,
+        key,
+        debugInfo
+      ) {
         if (current === null || current.tag !== Fragment) {
           // Insert
           var created = createFiberFromFragment(
@@ -5536,16 +5590,26 @@ if (__DEV__) {
             key
           );
           created.return = returnFiber;
+
+          {
+            created._debugInfo = debugInfo;
+          }
+
           return created;
         } else {
           // Update
           var existing = useFiber(current, fragment);
           existing.return = returnFiber;
+
+          {
+            existing._debugInfo = debugInfo;
+          }
+
           return existing;
         }
       }
 
-      function createChild(returnFiber, newChild, lanes) {
+      function createChild(returnFiber, newChild, lanes, debugInfo) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
           typeof newChild === "number"
@@ -5559,6 +5623,11 @@ if (__DEV__) {
             lanes
           );
           created.return = returnFiber;
+
+          {
+            created._debugInfo = debugInfo;
+          }
+
           return created;
         }
 
@@ -5573,6 +5642,14 @@ if (__DEV__) {
 
               _created.ref = coerceRef(returnFiber, null, newChild);
               _created.return = returnFiber;
+
+              {
+                _created._debugInfo = mergeDebugInfo(
+                  debugInfo,
+                  newChild._debugInfo
+                );
+              }
+
               return _created;
             }
 
@@ -5584,13 +5661,23 @@ if (__DEV__) {
               );
 
               _created2.return = returnFiber;
+
+              {
+                _created2._debugInfo = debugInfo;
+              }
+
               return _created2;
             }
 
             case REACT_LAZY_TYPE: {
               var payload = newChild._payload;
               var init = newChild._init;
-              return createChild(returnFiber, init(payload), lanes);
+              return createChild(
+                returnFiber,
+                init(payload),
+                lanes,
+                mergeDebugInfo(debugInfo, newChild._debugInfo) // call merge after init
+              );
             }
           }
 
@@ -5603,6 +5690,14 @@ if (__DEV__) {
             );
 
             _created3.return = returnFiber;
+
+            {
+              _created3._debugInfo = mergeDebugInfo(
+                debugInfo,
+                newChild._debugInfo
+              );
+            }
+
             return _created3;
           } // Usable node types
           //
@@ -5610,7 +5705,12 @@ if (__DEV__) {
 
           if (typeof newChild.then === "function") {
             var thenable = newChild;
-            return createChild(returnFiber, unwrapThenable(thenable), lanes);
+            return createChild(
+              returnFiber,
+              unwrapThenable(thenable),
+              lanes,
+              mergeDebugInfo(debugInfo, newChild._debugInfo)
+            );
           }
 
           if (newChild.$$typeof === REACT_CONTEXT_TYPE) {
@@ -5618,7 +5718,8 @@ if (__DEV__) {
             return createChild(
               returnFiber,
               readContextDuringReconcilation(returnFiber, context, lanes),
-              lanes
+              lanes,
+              debugInfo
             );
           }
 
@@ -5634,7 +5735,7 @@ if (__DEV__) {
         return null;
       }
 
-      function updateSlot(returnFiber, oldFiber, newChild, lanes) {
+      function updateSlot(returnFiber, oldFiber, newChild, lanes, debugInfo) {
         // Update the fiber if the keys match, otherwise return null.
         var key = oldFiber !== null ? oldFiber.key : null;
 
@@ -5649,14 +5750,26 @@ if (__DEV__) {
             return null;
           }
 
-          return updateTextNode(returnFiber, oldFiber, "" + newChild, lanes);
+          return updateTextNode(
+            returnFiber,
+            oldFiber,
+            "" + newChild,
+            lanes,
+            debugInfo
+          );
         }
 
         if (typeof newChild === "object" && newChild !== null) {
           switch (newChild.$$typeof) {
             case REACT_ELEMENT_TYPE: {
               if (newChild.key === key) {
-                return updateElement(returnFiber, oldFiber, newChild, lanes);
+                return updateElement(
+                  returnFiber,
+                  oldFiber,
+                  newChild,
+                  lanes,
+                  mergeDebugInfo(debugInfo, newChild._debugInfo)
+                );
               } else {
                 return null;
               }
@@ -5664,7 +5777,13 @@ if (__DEV__) {
 
             case REACT_PORTAL_TYPE: {
               if (newChild.key === key) {
-                return updatePortal(returnFiber, oldFiber, newChild, lanes);
+                return updatePortal(
+                  returnFiber,
+                  oldFiber,
+                  newChild,
+                  lanes,
+                  debugInfo
+                );
               } else {
                 return null;
               }
@@ -5673,7 +5792,13 @@ if (__DEV__) {
             case REACT_LAZY_TYPE: {
               var payload = newChild._payload;
               var init = newChild._init;
-              return updateSlot(returnFiber, oldFiber, init(payload), lanes);
+              return updateSlot(
+                returnFiber,
+                oldFiber,
+                init(payload),
+                lanes,
+                mergeDebugInfo(debugInfo, newChild._debugInfo)
+              );
             }
           }
 
@@ -5682,7 +5807,14 @@ if (__DEV__) {
               return null;
             }
 
-            return updateFragment(returnFiber, oldFiber, newChild, lanes, null);
+            return updateFragment(
+              returnFiber,
+              oldFiber,
+              newChild,
+              lanes,
+              null,
+              mergeDebugInfo(debugInfo, newChild._debugInfo)
+            );
           } // Usable node types
           //
           // Unwrap the inner value and recursively call this function again.
@@ -5693,7 +5825,8 @@ if (__DEV__) {
               returnFiber,
               oldFiber,
               unwrapThenable(thenable),
-              lanes
+              lanes,
+              debugInfo
             );
           }
 
@@ -5703,7 +5836,8 @@ if (__DEV__) {
               returnFiber,
               oldFiber,
               readContextDuringReconcilation(returnFiber, context, lanes),
-              lanes
+              lanes,
+              debugInfo
             );
           }
 
@@ -5724,7 +5858,8 @@ if (__DEV__) {
         returnFiber,
         newIdx,
         newChild,
-        lanes
+        lanes,
+        debugInfo
       ) {
         if (
           (typeof newChild === "string" && newChild !== "") ||
@@ -5737,7 +5872,8 @@ if (__DEV__) {
             returnFiber,
             matchedFiber,
             "" + newChild,
-            lanes
+            lanes,
+            debugInfo
           );
         }
 
@@ -5749,7 +5885,13 @@ if (__DEV__) {
                   newChild.key === null ? newIdx : newChild.key
                 ) || null;
 
-              return updateElement(returnFiber, _matchedFiber, newChild, lanes);
+              return updateElement(
+                returnFiber,
+                _matchedFiber,
+                newChild,
+                lanes,
+                mergeDebugInfo(debugInfo, newChild._debugInfo)
+              );
             }
 
             case REACT_PORTAL_TYPE: {
@@ -5758,7 +5900,13 @@ if (__DEV__) {
                   newChild.key === null ? newIdx : newChild.key
                 ) || null;
 
-              return updatePortal(returnFiber, _matchedFiber2, newChild, lanes);
+              return updatePortal(
+                returnFiber,
+                _matchedFiber2,
+                newChild,
+                lanes,
+                debugInfo
+              );
             }
 
             case REACT_LAZY_TYPE:
@@ -5769,7 +5917,8 @@ if (__DEV__) {
                 returnFiber,
                 newIdx,
                 init(payload),
-                lanes
+                lanes,
+                mergeDebugInfo(debugInfo, newChild._debugInfo)
               );
           }
 
@@ -5781,7 +5930,8 @@ if (__DEV__) {
               _matchedFiber3,
               newChild,
               lanes,
-              null
+              null,
+              mergeDebugInfo(debugInfo, newChild._debugInfo)
             );
           } // Usable node types
           //
@@ -5794,7 +5944,8 @@ if (__DEV__) {
               returnFiber,
               newIdx,
               unwrapThenable(thenable),
-              lanes
+              lanes,
+              debugInfo
             );
           }
 
@@ -5805,7 +5956,8 @@ if (__DEV__) {
               returnFiber,
               newIdx,
               readContextDuringReconcilation(returnFiber, context, lanes),
-              lanes
+              lanes,
+              debugInfo
             );
           }
 
@@ -5877,7 +6029,8 @@ if (__DEV__) {
         returnFiber,
         currentFirstChild,
         newChildren,
-        lanes
+        lanes,
+        debugInfo
       ) {
         // This algorithm can't optimize by searching from both ends since we
         // don't have backpointers on fibers. I'm trying to see how far we can get
@@ -5923,7 +6076,8 @@ if (__DEV__) {
             returnFiber,
             oldFiber,
             newChildren[newIdx],
-            lanes
+            lanes,
+            debugInfo
           );
 
           if (newFiber === null) {
@@ -5977,7 +6131,8 @@ if (__DEV__) {
             var _newFiber = createChild(
               returnFiber,
               newChildren[newIdx],
-              lanes
+              lanes,
+              debugInfo
             );
 
             if (_newFiber === null) {
@@ -6007,7 +6162,8 @@ if (__DEV__) {
             returnFiber,
             newIdx,
             newChildren[newIdx],
-            lanes
+            lanes,
+            debugInfo
           );
 
           if (_newFiber2 !== null) {
@@ -6050,7 +6206,8 @@ if (__DEV__) {
         returnFiber,
         currentFirstChild,
         newChildrenIterable,
-        lanes
+        lanes,
+        debugInfo
       ) {
         // This is the same implementation as reconcileChildrenArray(),
         // but using the iterator instead.
@@ -6135,7 +6292,13 @@ if (__DEV__) {
             nextOldFiber = oldFiber.sibling;
           }
 
-          var newFiber = updateSlot(returnFiber, oldFiber, step.value, lanes);
+          var newFiber = updateSlot(
+            returnFiber,
+            oldFiber,
+            step.value,
+            lanes,
+            debugInfo
+          );
 
           if (newFiber === null) {
             // TODO: This breaks on empty slots like null children. That's
@@ -6185,7 +6348,12 @@ if (__DEV__) {
           // If we don't have any more existing children we can choose a fast path
           // since the rest will all be insertions.
           for (; !step.done; newIdx++, step = newChildren.next()) {
-            var _newFiber3 = createChild(returnFiber, step.value, lanes);
+            var _newFiber3 = createChild(
+              returnFiber,
+              step.value,
+              lanes,
+              debugInfo
+            );
 
             if (_newFiber3 === null) {
               continue;
@@ -6214,7 +6382,8 @@ if (__DEV__) {
             returnFiber,
             newIdx,
             step.value,
-            lanes
+            lanes,
+            debugInfo
           );
 
           if (_newFiber4 !== null) {
@@ -6281,7 +6450,8 @@ if (__DEV__) {
         returnFiber,
         currentFirstChild,
         element,
-        lanes
+        lanes,
+        debugInfo
       ) {
         var key = element.key;
         var child = currentFirstChild;
@@ -6300,6 +6470,7 @@ if (__DEV__) {
 
                 {
                   existing._debugOwner = element._owner;
+                  existing._debugInfo = debugInfo;
                 }
 
                 return existing;
@@ -6325,6 +6496,7 @@ if (__DEV__) {
 
                 {
                   _existing._debugOwner = element._owner;
+                  _existing._debugInfo = debugInfo;
                 }
 
                 return _existing;
@@ -6348,6 +6520,11 @@ if (__DEV__) {
             element.key
           );
           created.return = returnFiber;
+
+          {
+            created._debugInfo = debugInfo;
+          }
+
           return created;
         } else {
           var _created4 = createFiberFromElement(
@@ -6358,6 +6535,11 @@ if (__DEV__) {
 
           _created4.ref = coerceRef(returnFiber, currentFirstChild, element);
           _created4.return = returnFiber;
+
+          {
+            _created4._debugInfo = debugInfo;
+          }
+
           return _created4;
         }
       }
@@ -6366,7 +6548,8 @@ if (__DEV__) {
         returnFiber,
         currentFirstChild,
         portal,
-        lanes
+        lanes,
+        debugInfo
       ) {
         var key = portal.key;
         var child = currentFirstChild;
@@ -6406,7 +6589,8 @@ if (__DEV__) {
         returnFiber,
         currentFirstChild,
         newChild,
-        lanes
+        lanes,
+        debugInfo
       ) {
         // This function is not recursive.
         // If the top level item is an array, we treat it as a set of children,
@@ -6434,7 +6618,8 @@ if (__DEV__) {
                   returnFiber,
                   currentFirstChild,
                   newChild,
-                  lanes
+                  lanes,
+                  mergeDebugInfo(debugInfo, newChild._debugInfo)
                 )
               );
 
@@ -6450,13 +6635,13 @@ if (__DEV__) {
 
             case REACT_LAZY_TYPE:
               var payload = newChild._payload;
-              var init = newChild._init; // TODO: This function is supposed to be non-recursive.
-
-              return reconcileChildFibers(
+              var init = newChild._init;
+              return reconcileChildFibersImpl(
                 returnFiber,
                 currentFirstChild,
                 init(payload),
-                lanes
+                lanes,
+                mergeDebugInfo(debugInfo, newChild._debugInfo)
               );
           }
 
@@ -6465,7 +6650,8 @@ if (__DEV__) {
               returnFiber,
               currentFirstChild,
               newChild,
-              lanes
+              lanes,
+              mergeDebugInfo(debugInfo, newChild._debugInfo)
             );
           }
 
@@ -6474,7 +6660,8 @@ if (__DEV__) {
               returnFiber,
               currentFirstChild,
               newChild,
-              lanes
+              lanes,
+              mergeDebugInfo(debugInfo, newChild._debugInfo)
             );
           } // Usables are a valid React node type. When React encounters a Usable in
           // a child position, it unwraps it using the same algorithm as `use`. For
@@ -6499,7 +6686,8 @@ if (__DEV__) {
               returnFiber,
               currentFirstChild,
               unwrapThenable(thenable),
-              lanes
+              lanes,
+              mergeDebugInfo(debugInfo, thenable._debugInfo)
             );
           }
 
@@ -6509,7 +6697,8 @@ if (__DEV__) {
               returnFiber,
               currentFirstChild,
               readContextDuringReconcilation(returnFiber, context, lanes),
-              lanes
+              lanes,
+              debugInfo
             );
           }
 
@@ -6552,7 +6741,8 @@ if (__DEV__) {
           returnFiber,
           currentFirstChild,
           newChild,
-          lanes
+          lanes,
+          null // debugInfo
         );
         thenableState$1 = null; // Don't bother to reset `thenableIndexCounter` to 0 because it always gets
         // set at the beginning.
@@ -15381,7 +15571,11 @@ if (__DEV__) {
         newWorkInProgress.index = oldWorkInProgress.index;
         newWorkInProgress.sibling = oldWorkInProgress.sibling;
         newWorkInProgress.return = oldWorkInProgress.return;
-        newWorkInProgress.ref = oldWorkInProgress.ref; // Replace the child/sibling pointers above it.
+        newWorkInProgress.ref = oldWorkInProgress.ref;
+
+        {
+          newWorkInProgress._debugInfo = oldWorkInProgress._debugInfo;
+        } // Replace the child/sibling pointers above it.
 
         if (oldWorkInProgress === returnFiber.child) {
           returnFiber.child = newWorkInProgress;
@@ -25072,6 +25266,7 @@ if (__DEV__) {
 
       {
         // This isn't directly used but is handy for debugging internals:
+        this._debugInfo = null;
         this._debugOwner = null;
         this._debugNeedsRemount = false;
         this._debugHookTypes = null;
@@ -25210,6 +25405,7 @@ if (__DEV__) {
       }
 
       {
+        workInProgress._debugInfo = current._debugInfo;
         workInProgress._debugNeedsRemount = current._debugNeedsRemount;
 
         switch (workInProgress.tag) {
@@ -25721,7 +25917,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-9e7944f67-20240212";
+    var ReactVersion = "18.3.0-canary-3f93ca1c8-20240212";
 
     // Might add PROFILE later.
 

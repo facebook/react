@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<fc95ca49937d1f46da732c34d4fb8f5a>>
+ * @generated SignedSource<<bba025aaac7b8737d434418e9443f4b9>>
  */
 
 "use strict";
@@ -3403,7 +3403,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         case REACT_LAZY_TYPE:
           return (
             (child = newChild._init),
-            reconcileChildFibers(
+            reconcileChildFibersImpl(
               returnFiber,
               currentFirstChild,
               child(newChild._payload),
@@ -3460,12 +3460,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         placeSingleChild(returnFiber))
       : deleteRemainingChildren(returnFiber, currentFirstChild);
   }
-  function reconcileChildFibers(
-    returnFiber,
-    currentFirstChild,
-    newChild,
-    lanes
-  ) {
+  return function (returnFiber, currentFirstChild, newChild, lanes) {
     thenableIndexCounter$1 = 0;
     returnFiber = reconcileChildFibersImpl(
       returnFiber,
@@ -3475,8 +3470,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     );
     thenableState$1 = null;
     return returnFiber;
-  }
-  return reconcileChildFibers;
+  };
 }
 var reconcileChildFibers = createChildReconciler(!0),
   mountChildFibers = createChildReconciler(!1),
@@ -9530,10 +9524,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1070 = {
+  devToolsConfig$jscomp$inline_1072 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-0b7d95b8",
+    version: "18.3.0-canary-c7241fda",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9549,11 +9543,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1295 = {
-  bundleType: devToolsConfig$jscomp$inline_1070.bundleType,
-  version: devToolsConfig$jscomp$inline_1070.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1070.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1070.rendererConfig,
+var internals$jscomp$inline_1297 = {
+  bundleType: devToolsConfig$jscomp$inline_1072.bundleType,
+  version: devToolsConfig$jscomp$inline_1072.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1072.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1072.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9569,26 +9563,26 @@ var internals$jscomp$inline_1295 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1070.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1072.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-0b7d95b8"
+  reconcilerVersion: "18.3.0-canary-c7241fda"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1296 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1298 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1296.isDisabled &&
-    hook$jscomp$inline_1296.supportsFiber
+    !hook$jscomp$inline_1298.isDisabled &&
+    hook$jscomp$inline_1298.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1296.inject(
-        internals$jscomp$inline_1295
+      (rendererID = hook$jscomp$inline_1298.inject(
+        internals$jscomp$inline_1297
       )),
-        (injectedHook = hook$jscomp$inline_1296);
+        (injectedHook = hook$jscomp$inline_1298);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {

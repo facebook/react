@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9a90acaf1cc6a5a23ed59dfb8d38c84f>>
+ * @generated SignedSource<<69981d07258d151fac632e0cccfb55ee>>
  */
 
 "use strict";
@@ -2128,7 +2128,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         case REACT_LAZY_TYPE:
           return (
             (child = newChild._init),
-            reconcileChildFibers(
+            reconcileChildFibersImpl(
               returnFiber,
               currentFirstChild,
               child(newChild._payload),
@@ -2185,12 +2185,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         placeSingleChild(returnFiber))
       : deleteRemainingChildren(returnFiber, currentFirstChild);
   }
-  function reconcileChildFibers(
-    returnFiber,
-    currentFirstChild,
-    newChild,
-    lanes
-  ) {
+  return function (returnFiber, currentFirstChild, newChild, lanes) {
     thenableIndexCounter$1 = 0;
     returnFiber = reconcileChildFibersImpl(
       returnFiber,
@@ -2200,8 +2195,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     );
     thenableState$1 = null;
     return returnFiber;
-  }
-  return reconcileChildFibers;
+  };
 }
 var reconcileChildFibers = createChildReconciler(!0),
   mountChildFibers = createChildReconciler(!1),
@@ -9596,19 +9590,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1065 = {
+var devToolsConfig$jscomp$inline_1067 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-9e7944f67-20240212",
+  version: "18.3.0-canary-3f93ca1c8-20240212",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1245 = {
-  bundleType: devToolsConfig$jscomp$inline_1065.bundleType,
-  version: devToolsConfig$jscomp$inline_1065.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1065.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1065.rendererConfig,
+var internals$jscomp$inline_1247 = {
+  bundleType: devToolsConfig$jscomp$inline_1067.bundleType,
+  version: devToolsConfig$jscomp$inline_1067.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1067.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1067.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9625,26 +9619,26 @@ var internals$jscomp$inline_1245 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1065.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1067.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-9e7944f67-20240212"
+  reconcilerVersion: "18.3.0-canary-3f93ca1c8-20240212"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1246 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1248 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1246.isDisabled &&
-    hook$jscomp$inline_1246.supportsFiber
+    !hook$jscomp$inline_1248.isDisabled &&
+    hook$jscomp$inline_1248.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1246.inject(
-        internals$jscomp$inline_1245
+      (rendererID = hook$jscomp$inline_1248.inject(
+        internals$jscomp$inline_1247
       )),
-        (injectedHook = hook$jscomp$inline_1246);
+        (injectedHook = hook$jscomp$inline_1248);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
