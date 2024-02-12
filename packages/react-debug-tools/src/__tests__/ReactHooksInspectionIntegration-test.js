@@ -48,6 +48,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: 'hello',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -55,6 +56,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 1,
         name: 'State',
         value: 'world',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -73,6 +75,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: 'Hi',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -80,6 +83,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 1,
         name: 'State',
         value: 'world',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -95,6 +99,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: 'Hi',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -102,6 +107,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 1,
         name: 'State',
         value: 'world!',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -157,6 +163,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: 'a',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -164,14 +171,23 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 1,
         name: 'Reducer',
         value: 'b',
+        debugInfo: null,
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: []},
+      {
+        isStateEditable: false,
+        id: 2,
+        name: 'Ref',
+        value: 'c',
+        debugInfo: null,
+        subHooks: [],
+      },
       {
         isStateEditable: false,
         id: 3,
         name: 'LayoutEffect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -179,6 +195,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 4,
         name: 'Effect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -186,6 +203,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 5,
         name: 'ImperativeHandle',
         value: outsideRef.current,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -193,6 +211,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 6,
         name: 'Memo',
         value: 'ab',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -200,6 +219,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 7,
         name: 'Callback',
         value: updateStates,
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -217,6 +237,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: 'A',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -224,14 +245,23 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 1,
         name: 'Reducer',
         value: 'B',
+        debugInfo: null,
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
+      {
+        isStateEditable: false,
+        id: 2,
+        name: 'Ref',
+        value: 'C',
+        debugInfo: null,
+        subHooks: [],
+      },
       {
         isStateEditable: false,
         id: 3,
         name: 'LayoutEffect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -239,6 +269,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 4,
         name: 'Effect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -246,6 +277,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 5,
         name: 'ImperativeHandle',
         value: outsideRef.current,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -253,6 +285,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 6,
         name: 'Memo',
         value: 'Ab',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -260,6 +293,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 7,
         name: 'Callback',
         value: updateStates,
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -317,6 +351,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: 'a',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -324,14 +359,23 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 1,
         name: 'Reducer',
         value: 'b',
+        debugInfo: null,
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'c', subHooks: []},
+      {
+        isStateEditable: false,
+        id: 2,
+        name: 'Ref',
+        value: 'c',
+        debugInfo: null,
+        subHooks: [],
+      },
       {
         isStateEditable: false,
         id: 3,
         name: 'InsertionEffect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -339,6 +383,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 4,
         name: 'LayoutEffect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -346,6 +391,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 5,
         name: 'Effect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -353,6 +399,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 6,
         name: 'ImperativeHandle',
         value: outsideRef.current,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -360,6 +407,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 7,
         name: 'Memo',
         value: 'ab',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -367,6 +415,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 8,
         name: 'Callback',
         value: updateStates,
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -384,6 +433,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: 'A',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -391,14 +441,23 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 1,
         name: 'Reducer',
         value: 'B',
+        debugInfo: null,
         subHooks: [],
       },
-      {isStateEditable: false, id: 2, name: 'Ref', value: 'C', subHooks: []},
+      {
+        isStateEditable: false,
+        id: 2,
+        name: 'Ref',
+        value: 'C',
+        debugInfo: null,
+        subHooks: [],
+      },
       {
         isStateEditable: false,
         id: 3,
         name: 'InsertionEffect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -406,6 +465,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 4,
         name: 'LayoutEffect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -413,6 +473,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 5,
         name: 'Effect',
         value: effect,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -420,6 +481,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 6,
         name: 'ImperativeHandle',
         value: outsideRef.current,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -427,6 +489,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 7,
         name: 'Memo',
         value: 'Ab',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -434,6 +497,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 8,
         name: 'Callback',
         value: updateStates,
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -458,6 +522,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: null,
         name: 'Context',
         value: 'contextual',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -480,6 +545,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'ImperativeHandle',
         value: obj,
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -501,6 +567,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: 'hello',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -524,12 +591,14 @@ describe('ReactHooksInspectionIntegration', () => {
         id: null,
         name: 'Custom',
         value: undefined,
+        debugInfo: null,
         subHooks: [
           {
             isStateEditable: true,
             id: 0,
             name: 'State',
             value: 'hello',
+            debugInfo: null,
             subHooks: [],
           },
         ],
@@ -553,6 +622,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Transition',
         value: undefined,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -560,6 +630,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'hello',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -567,6 +638,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'not used',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -588,6 +660,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'DeferredValue',
         value: 'abc',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -595,6 +668,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 1,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -602,6 +676,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 2,
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -630,6 +705,7 @@ describe('ReactHooksInspectionIntegration', () => {
       isStateEditable: true,
       name: 'State',
       value: 'hello',
+      debugInfo: null,
       subHooks: [],
     });
   });
@@ -721,12 +797,14 @@ describe('ReactHooksInspectionIntegration', () => {
           id: null,
           name: 'LabeledValue',
           value: __DEV__ ? 'custom label a' : undefined,
+          debugInfo: null,
           subHooks: [
             {
               isStateEditable: true,
               id: 0,
               name: 'State',
               value: 'a',
+              debugInfo: null,
               subHooks: [],
             },
           ],
@@ -736,6 +814,7 @@ describe('ReactHooksInspectionIntegration', () => {
           id: 1,
           name: 'State',
           value: 'b',
+          debugInfo: null,
           subHooks: [],
         },
         {
@@ -743,12 +822,14 @@ describe('ReactHooksInspectionIntegration', () => {
           id: null,
           name: 'Anonymous',
           value: undefined,
+          debugInfo: null,
           subHooks: [
             {
               isStateEditable: true,
               id: 2,
               name: 'State',
               value: 'c',
+              debugInfo: null,
               subHooks: [],
             },
           ],
@@ -758,12 +839,14 @@ describe('ReactHooksInspectionIntegration', () => {
           id: null,
           name: 'LabeledValue',
           value: __DEV__ ? 'custom label d' : undefined,
+          debugInfo: null,
           subHooks: [
             {
               isStateEditable: true,
               id: 3,
               name: 'State',
               value: 'd',
+              debugInfo: null,
               subHooks: [],
             },
           ],
@@ -793,18 +876,21 @@ describe('ReactHooksInspectionIntegration', () => {
           id: null,
           name: 'Outer',
           value: __DEV__ ? 'outer' : undefined,
+          debugInfo: null,
           subHooks: [
             {
               isStateEditable: false,
               id: null,
               name: 'Inner',
               value: __DEV__ ? 'inner' : undefined,
+              debugInfo: null,
               subHooks: [
                 {
                   isStateEditable: true,
                   id: 0,
                   name: 'State',
                   value: 0,
+                  debugInfo: null,
                   subHooks: [],
                 },
               ],
@@ -840,12 +926,14 @@ describe('ReactHooksInspectionIntegration', () => {
           id: null,
           name: 'SingleLabelCustom',
           value: __DEV__ ? 'single one' : undefined,
+          debugInfo: null,
           subHooks: [
             {
               isStateEditable: true,
               id: 0,
               name: 'State',
               value: 0,
+              debugInfo: null,
               subHooks: [],
             },
           ],
@@ -855,12 +943,14 @@ describe('ReactHooksInspectionIntegration', () => {
           id: null,
           name: 'MultiLabelCustom',
           value: __DEV__ ? ['one', 'two', 'three'] : undefined,
+          debugInfo: null,
           subHooks: [
             {
               isStateEditable: true,
               id: 1,
               name: 'State',
               value: 0,
+              debugInfo: null,
               subHooks: [],
             },
           ],
@@ -870,12 +960,14 @@ describe('ReactHooksInspectionIntegration', () => {
           id: null,
           name: 'SingleLabelCustom',
           value: __DEV__ ? 'single two' : undefined,
+          debugInfo: null,
           subHooks: [
             {
               isStateEditable: true,
               id: 2,
               name: 'State',
               value: 0,
+              debugInfo: null,
               subHooks: [],
             },
           ],
@@ -912,11 +1004,13 @@ describe('ReactHooksInspectionIntegration', () => {
           id: null,
           name: 'Custom',
           value: __DEV__ ? 'bar:123' : undefined,
+          debugInfo: null,
           subHooks: [
             {
               isStateEditable: true,
               id: 0,
               name: 'State',
+              debugInfo: null,
               subHooks: [],
               value: 0,
             },
@@ -963,6 +1057,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: 'def',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -1056,6 +1151,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: null,
         name: 'Context',
         value: 1,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -1063,6 +1159,7 @@ describe('ReactHooksInspectionIntegration', () => {
         id: 0,
         name: 'State',
         value: {count: 2},
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -1089,6 +1186,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'SyncExternalStore',
         value: 'snapshot',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -1096,6 +1194,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'memo',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -1103,6 +1202,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'not used',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -1125,8 +1225,9 @@ describe('ReactHooksInspectionIntegration', () => {
       {
         id: null,
         isStateEditable: false,
-        name: 'Use',
+        name: 'Context',
         value: 'default',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -1134,6 +1235,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'memo',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -1141,6 +1243,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'not used',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -1165,6 +1268,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Optimistic',
         value: 'abc',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -1172,6 +1276,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'memo',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -1179,6 +1284,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'not used',
+        debugInfo: null,
         subHooks: [],
       },
     ]);
@@ -1205,6 +1311,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'FormState',
         value: 0,
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -1212,6 +1319,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'memo',
+        debugInfo: null,
         subHooks: [],
       },
       {
@@ -1219,6 +1327,7 @@ describe('ReactHooksInspectionIntegration', () => {
         isStateEditable: false,
         name: 'Memo',
         value: 'not used',
+        debugInfo: null,
         subHooks: [],
       },
     ]);

@@ -198,6 +198,7 @@ describe('InspectedElement', () => {
         "events": undefined,
         "hooks": [
           {
+            "debugInfo": null,
             "hookSource": {
               "columnNumber": "removed by Jest serializer",
               "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -240,6 +241,7 @@ describe('InspectedElement', () => {
         "events": undefined,
         "hooks": [
           {
+            "debugInfo": null,
             "hookSource": {
               "columnNumber": "removed by Jest serializer",
               "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -1157,6 +1159,7 @@ describe('InspectedElement', () => {
     expect(inspectedElement.hooks).toMatchInlineSnapshot(`
       [
         {
+          "debugInfo": null,
           "hookSource": {
             "columnNumber": "removed by Jest serializer",
             "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -1184,6 +1187,7 @@ describe('InspectedElement', () => {
     expect(inspectedElement.hooks).toMatchInlineSnapshot(`
       [
         {
+          "debugInfo": null,
           "hookSource": {
             "columnNumber": "removed by Jest serializer",
             "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -1659,6 +1663,7 @@ describe('InspectedElement', () => {
         "events": undefined,
         "hooks": [
           {
+            "debugInfo": null,
             "hookSource": {
               "columnNumber": "removed by Jest serializer",
               "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -1700,6 +1705,7 @@ describe('InspectedElement', () => {
         "events": undefined,
         "hooks": [
           {
+            "debugInfo": null,
             "hookSource": {
               "columnNumber": "removed by Jest serializer",
               "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -1945,6 +1951,7 @@ describe('InspectedElement', () => {
     expect(hooks).toMatchInlineSnapshot(`
       [
         {
+          "debugInfo": null,
           "hookSource": {
             "columnNumber": "removed by Jest serializer",
             "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -1956,6 +1963,7 @@ describe('InspectedElement', () => {
           "name": "DebuggableHook",
           "subHooks": [
             {
+              "debugInfo": null,
               "hookSource": {
                 "columnNumber": "removed by Jest serializer",
                 "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -2239,6 +2247,7 @@ describe('InspectedElement', () => {
         {
           "hooks": [
             {
+              "debugInfo": null,
               "hookSource": {
                 "columnNumber": "removed by Jest serializer",
                 "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -2275,6 +2284,7 @@ describe('InspectedElement', () => {
         {
           "hooks": [
             {
+              "debugInfo": null,
               "hookSource": {
                 "columnNumber": "removed by Jest serializer",
                 "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
@@ -2311,6 +2321,7 @@ describe('InspectedElement', () => {
         {
           "hooks": [
             {
+              "debugInfo": null,
               "hookSource": {
                 "columnNumber": "removed by Jest serializer",
                 "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
