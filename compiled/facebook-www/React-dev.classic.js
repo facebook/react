@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-classic-98f29e71";
+    var ReactVersion = "18.3.0-www-classic-ab1e0612";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -2113,6 +2113,69 @@ if (__DEV__) {
       return index.toString(36);
     }
 
+    function noop$1() {}
+
+    function resolveThenable(thenable) {
+      switch (thenable.status) {
+        case "fulfilled": {
+          var fulfilledValue = thenable.value;
+          return fulfilledValue;
+        }
+
+        case "rejected": {
+          var rejectedError = thenable.reason;
+          throw rejectedError;
+        }
+
+        default: {
+          if (typeof thenable.status === "string") {
+            // Only instrument the thenable if the status if not defined. If
+            // it's defined, but an unknown value, assume it's been instrumented by
+            // some custom userspace implementation. We treat it as "pending".
+            // Attach a dummy listener, to ensure that any lazy initialization can
+            // happen. Flight lazily parses JSON when the value is actually awaited.
+            thenable.then(noop$1, noop$1);
+          } else {
+            // This is an uncached thenable that we haven't seen before.
+            // TODO: Detect infinite ping loops caused by uncached promises.
+            var pendingThenable = thenable;
+            pendingThenable.status = "pending";
+            pendingThenable.then(
+              function (fulfilledValue) {
+                if (thenable.status === "pending") {
+                  var fulfilledThenable = thenable;
+                  fulfilledThenable.status = "fulfilled";
+                  fulfilledThenable.value = fulfilledValue;
+                }
+              },
+              function (error) {
+                if (thenable.status === "pending") {
+                  var rejectedThenable = thenable;
+                  rejectedThenable.status = "rejected";
+                  rejectedThenable.reason = error;
+                }
+              }
+            );
+          } // Check one more time in case the thenable resolved synchronously.
+
+          switch (thenable.status) {
+            case "fulfilled": {
+              var fulfilledThenable = thenable;
+              return fulfilledThenable.value;
+            }
+
+            case "rejected": {
+              var rejectedThenable = thenable;
+              var _rejectedError = rejectedThenable.reason;
+              throw _rejectedError;
+            }
+          }
+        }
+      }
+
+      throw thenable;
+    }
+
     function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
       var type = typeof children;
 
@@ -2140,9 +2203,14 @@ if (__DEV__) {
                 break;
 
               case REACT_LAZY_TYPE:
-                throw new Error(
-                  "Cannot render an Async Component, Promise or React.Lazy inside React.Children. " +
-                    "We recommend not iterating over children and just rendering them plain."
+                var payload = children._payload;
+                var init = children._init;
+                return mapIntoArray(
+                  init(payload),
+                  array,
+                  escapedPrefix,
+                  nameSoFar,
+                  callback
                 );
             }
         }
@@ -2255,16 +2323,17 @@ if (__DEV__) {
             );
           }
         } else if (type === "object") {
-          // eslint-disable-next-line react-internal/safe-string-coercion
-          var childrenString = String(children);
-
           if (typeof children.then === "function") {
-            throw new Error(
-              "Cannot render an Async Component, Promise or React.Lazy inside React.Children. " +
-                "We recommend not iterating over children and just rendering them plain."
+            return mapIntoArray(
+              resolveThenable(children),
+              array,
+              escapedPrefix,
+              nameSoFar,
+              callback
             );
-          }
+          } // eslint-disable-next-line react-internal/safe-string-coercion
 
+          var childrenString = String(children);
           throw new Error(
             "Objects are not valid as a React child (found: " +
               (childrenString === "[object Object]"

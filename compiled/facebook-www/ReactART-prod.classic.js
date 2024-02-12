@@ -1787,15 +1787,15 @@ function trackUsedThenable(thenableState, thenable, index) {
             }
           }
         );
-        switch (thenable.status) {
-          case "fulfilled":
-            return thenable.value;
-          case "rejected":
-            thenableState = thenable.reason;
-            if (thenableState === SuspenseException)
-              throw Error(formatProdErrorMessage(483));
-            throw thenableState;
-        }
+      }
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          thenableState = thenable.reason;
+          if (thenableState === SuspenseException)
+            throw Error(formatProdErrorMessage(483));
+          throw thenableState;
       }
       suspendedThenable = thenable;
       throw SuspenseException;
@@ -10594,7 +10594,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-dfd84b0a",
+    version: "18.3.0-www-classic-1828fb17",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1325 = {
@@ -10625,7 +10625,7 @@ var internals$jscomp$inline_1325 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-dfd84b0a"
+  reconcilerVersion: "18.3.0-www-classic-1828fb17"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1326 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

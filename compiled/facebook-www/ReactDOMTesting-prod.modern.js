@@ -2554,15 +2554,15 @@ function trackUsedThenable(thenableState, thenable, index) {
             }
           }
         );
-        switch (thenable.status) {
-          case "fulfilled":
-            return thenable.value;
-          case "rejected":
-            thenableState = thenable.reason;
-            if (thenableState === SuspenseException)
-              throw Error(formatProdErrorMessage(483));
-            throw thenableState;
-        }
+      }
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          thenableState = thenable.reason;
+          if (thenableState === SuspenseException)
+            throw Error(formatProdErrorMessage(483));
+          throw thenableState;
       }
       suspendedThenable = thenable;
       throw SuspenseException;
@@ -17116,7 +17116,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1786 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-9c7ddd0b",
+  version: "18.3.0-www-modern-54c9ed44",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2162 = {
@@ -17147,7 +17147,7 @@ var internals$jscomp$inline_2162 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-9c7ddd0b"
+  reconcilerVersion: "18.3.0-www-modern-54c9ed44"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2163 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -17575,4 +17575,4 @@ exports.useFormStatus = function () {
     return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-9c7ddd0b";
+exports.version = "18.3.0-www-modern-54c9ed44";

@@ -168,6 +168,39 @@ function getElementKey(element, index) {
     ? escape("" + element.key)
     : index.toString(36);
 }
+function noop$1() {}
+function resolveThenable(thenable) {
+  switch (thenable.status) {
+    case "fulfilled":
+      return thenable.value;
+    case "rejected":
+      throw thenable.reason;
+    default:
+      switch (
+        ("string" === typeof thenable.status
+          ? thenable.then(noop$1, noop$1)
+          : ((thenable.status = "pending"),
+            thenable.then(
+              function (fulfilledValue) {
+                "pending" === thenable.status &&
+                  ((thenable.status = "fulfilled"),
+                  (thenable.value = fulfilledValue));
+              },
+              function (error) {
+                "pending" === thenable.status &&
+                  ((thenable.status = "rejected"), (thenable.reason = error));
+              }
+            )),
+        thenable.status)
+      ) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw thenable.reason;
+      }
+  }
+  throw thenable;
+}
 function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
   var type = typeof children;
   if ("undefined" === type || "boolean" === type) children = null;
@@ -186,22 +219,28 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
             invokeCallback = !0;
             break;
           case REACT_LAZY_TYPE:
-            throw Error(
-              "Cannot render an Async Component, Promise or React.Lazy inside React.Children. We recommend not iterating over children and just rendering them plain."
+            return (
+              (invokeCallback = children._init),
+              mapIntoArray(
+                invokeCallback(children._payload),
+                array,
+                escapedPrefix,
+                nameSoFar,
+                callback
+              )
             );
         }
     }
   if (invokeCallback)
     return (
-      (invokeCallback = children),
-      (callback = callback(invokeCallback)),
-      (children =
-        "" === nameSoFar ? "." + getElementKey(invokeCallback, 0) : nameSoFar),
+      (callback = callback(children)),
+      (invokeCallback =
+        "" === nameSoFar ? "." + getElementKey(children, 0) : nameSoFar),
       isArrayImpl(callback)
         ? ((escapedPrefix = ""),
-          null != children &&
+          null != invokeCallback &&
             (escapedPrefix =
-              children.replace(userProvidedKeyEscapeRegex, "$&/") + "/"),
+              invokeCallback.replace(userProvidedKeyEscapeRegex, "$&/") + "/"),
           mapIntoArray(callback, array, escapedPrefix, "", function (c) {
             return c;
           }))
@@ -210,55 +249,55 @@ function mapIntoArray(children, array, escapedPrefix, nameSoFar, callback) {
             (callback = cloneAndReplaceKey(
               callback,
               escapedPrefix +
-                (!callback.key ||
-                (invokeCallback && invokeCallback.key === callback.key)
+                (!callback.key || (children && children.key === callback.key)
                   ? ""
                   : ("" + callback.key).replace(
                       userProvidedKeyEscapeRegex,
                       "$&/"
                     ) + "/") +
-                children
+                invokeCallback
             )),
           array.push(callback)),
       1
     );
   invokeCallback = 0;
-  nameSoFar = "" === nameSoFar ? "." : nameSoFar + ":";
+  var nextNamePrefix = "" === nameSoFar ? "." : nameSoFar + ":";
   if (isArrayImpl(children))
-    for (var i = 0; i < children.length; i++) {
-      type = children[i];
-      var nextName = nameSoFar + getElementKey(type, i);
-      invokeCallback += mapIntoArray(
-        type,
-        array,
-        escapedPrefix,
-        nextName,
-        callback
-      );
-    }
-  else if (
-    ((nextName = getIteratorFn(children)), "function" === typeof nextName)
-  )
-    for (
-      children = nextName.call(children), i = 0;
-      !(type = children.next()).done;
-
-    )
-      (type = type.value),
-        (nextName = nameSoFar + getElementKey(type, i++)),
+    for (var i = 0; i < children.length; i++)
+      (nameSoFar = children[i]),
+        (type = nextNamePrefix + getElementKey(nameSoFar, i)),
         (invokeCallback += mapIntoArray(
-          type,
+          nameSoFar,
           array,
           escapedPrefix,
-          nextName,
+          type,
+          callback
+        ));
+  else if (((i = getIteratorFn(children)), "function" === typeof i))
+    for (
+      children = i.call(children), i = 0;
+      !(nameSoFar = children.next()).done;
+
+    )
+      (nameSoFar = nameSoFar.value),
+        (type = nextNamePrefix + getElementKey(nameSoFar, i++)),
+        (invokeCallback += mapIntoArray(
+          nameSoFar,
+          array,
+          escapedPrefix,
+          type,
           callback
         ));
   else if ("object" === type) {
-    array = String(children);
     if ("function" === typeof children.then)
-      throw Error(
-        "Cannot render an Async Component, Promise or React.Lazy inside React.Children. We recommend not iterating over children and just rendering them plain."
+      return mapIntoArray(
+        resolveThenable(children),
+        array,
+        escapedPrefix,
+        nameSoFar,
+        callback
       );
+    array = String(children);
     throw Error(
       "Objects are not valid as a React child (found: " +
         ("[object Object]" === array
@@ -582,7 +621,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-08828b5d";
+exports.version = "18.3.0-www-classic-3fb37a53";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
