@@ -3243,7 +3243,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         case REACT_LAZY_TYPE:
           return (
             (child = newChild._init),
-            reconcileChildFibers(
+            reconcileChildFibersImpl(
               returnFiber,
               currentFirstChild,
               child(newChild._payload),
@@ -3300,12 +3300,7 @@ function createChildReconciler(shouldTrackSideEffects) {
         placeSingleChild(returnFiber))
       : deleteRemainingChildren(returnFiber, currentFirstChild);
   }
-  function reconcileChildFibers(
-    returnFiber,
-    currentFirstChild,
-    newChild,
-    lanes
-  ) {
+  return function (returnFiber, currentFirstChild, newChild, lanes) {
     thenableIndexCounter$1 = 0;
     returnFiber = reconcileChildFibersImpl(
       returnFiber,
@@ -3315,8 +3310,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     );
     thenableState$1 = null;
     return returnFiber;
-  }
-  return reconcileChildFibers;
+  };
 }
 var reconcileChildFibers = createChildReconciler(!0),
   mountChildFibers = createChildReconciler(!1),
@@ -13811,14 +13805,14 @@ var isInputEventSupported = !1;
 if (canUseDOM) {
   var JSCompiler_inline_result$jscomp$352;
   if (canUseDOM) {
-    var isSupported$jscomp$inline_1581 = "oninput" in document;
-    if (!isSupported$jscomp$inline_1581) {
-      var element$jscomp$inline_1582 = document.createElement("div");
-      element$jscomp$inline_1582.setAttribute("oninput", "return;");
-      isSupported$jscomp$inline_1581 =
-        "function" === typeof element$jscomp$inline_1582.oninput;
+    var isSupported$jscomp$inline_1583 = "oninput" in document;
+    if (!isSupported$jscomp$inline_1583) {
+      var element$jscomp$inline_1584 = document.createElement("div");
+      element$jscomp$inline_1584.setAttribute("oninput", "return;");
+      isSupported$jscomp$inline_1583 =
+        "function" === typeof element$jscomp$inline_1584.oninput;
     }
-    JSCompiler_inline_result$jscomp$352 = isSupported$jscomp$inline_1581;
+    JSCompiler_inline_result$jscomp$352 = isSupported$jscomp$inline_1583;
   } else JSCompiler_inline_result$jscomp$352 = !1;
   isInputEventSupported =
     JSCompiler_inline_result$jscomp$352 &&
@@ -14130,20 +14124,20 @@ function registerSimpleEvent(domEventName, reactName) {
   registerTwoPhaseEvent(reactName, [domEventName]);
 }
 for (
-  var i$jscomp$inline_1622 = 0;
-  i$jscomp$inline_1622 < simpleEventPluginEvents.length;
-  i$jscomp$inline_1622++
+  var i$jscomp$inline_1624 = 0;
+  i$jscomp$inline_1624 < simpleEventPluginEvents.length;
+  i$jscomp$inline_1624++
 ) {
-  var eventName$jscomp$inline_1623 =
-      simpleEventPluginEvents[i$jscomp$inline_1622],
-    domEventName$jscomp$inline_1624 =
-      eventName$jscomp$inline_1623.toLowerCase(),
-    capitalizedEvent$jscomp$inline_1625 =
-      eventName$jscomp$inline_1623[0].toUpperCase() +
-      eventName$jscomp$inline_1623.slice(1);
+  var eventName$jscomp$inline_1625 =
+      simpleEventPluginEvents[i$jscomp$inline_1624],
+    domEventName$jscomp$inline_1626 =
+      eventName$jscomp$inline_1625.toLowerCase(),
+    capitalizedEvent$jscomp$inline_1627 =
+      eventName$jscomp$inline_1625[0].toUpperCase() +
+      eventName$jscomp$inline_1625.slice(1);
   registerSimpleEvent(
-    domEventName$jscomp$inline_1624,
-    "on" + capitalizedEvent$jscomp$inline_1625
+    domEventName$jscomp$inline_1626,
+    "on" + capitalizedEvent$jscomp$inline_1627
   );
 }
 registerSimpleEvent(ANIMATION_END, "onAnimationEnd");
@@ -17113,17 +17107,17 @@ Internals.Events = [
   restoreStateIfNeeded,
   batchedUpdates$1
 ];
-var devToolsConfig$jscomp$inline_1786 = {
+var devToolsConfig$jscomp$inline_1788 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-54c9ed44",
+  version: "18.3.0-www-modern-6516f3a6",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2162 = {
-  bundleType: devToolsConfig$jscomp$inline_1786.bundleType,
-  version: devToolsConfig$jscomp$inline_1786.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1786.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1786.rendererConfig,
+var internals$jscomp$inline_2164 = {
+  bundleType: devToolsConfig$jscomp$inline_1788.bundleType,
+  version: devToolsConfig$jscomp$inline_1788.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1788.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1788.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -17140,26 +17134,26 @@ var internals$jscomp$inline_2162 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1786.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1788.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-54c9ed44"
+  reconcilerVersion: "18.3.0-www-modern-6516f3a6"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2163 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2165 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2163.isDisabled &&
-    hook$jscomp$inline_2163.supportsFiber
+    !hook$jscomp$inline_2165.isDisabled &&
+    hook$jscomp$inline_2165.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2163.inject(
-        internals$jscomp$inline_2162
+      (rendererID = hook$jscomp$inline_2165.inject(
+        internals$jscomp$inline_2164
       )),
-        (injectedHook = hook$jscomp$inline_2163);
+        (injectedHook = hook$jscomp$inline_2165);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
@@ -17575,4 +17569,4 @@ exports.useFormStatus = function () {
     return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
   throw Error(formatProdErrorMessage(248));
 };
-exports.version = "18.3.0-www-modern-54c9ed44";
+exports.version = "18.3.0-www-modern-6516f3a6";

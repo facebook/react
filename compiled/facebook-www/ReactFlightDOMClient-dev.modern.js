@@ -233,8 +233,7 @@ if (__DEV__) {
     var RESOLVED_MODEL = "resolved_model";
     var RESOLVED_MODULE = "resolved_module";
     var INITIALIZED = "fulfilled";
-    var ERRORED = "rejected"; // Dev-only
-    // $FlowFixMe[missing-this-annot]
+    var ERRORED = "rejected"; // $FlowFixMe[missing-this-annot]
 
     function Chunk(status, value, reason, response) {
       this.status = status;
