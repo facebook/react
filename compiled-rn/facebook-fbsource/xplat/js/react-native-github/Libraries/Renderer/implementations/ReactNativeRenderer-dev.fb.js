@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<0d06e547a6cd0c1810b6eaac83860f87>>
+ * @generated SignedSource<<2c1c4e4b5396fa0baf10b58ee57031f6>>
  */
 
 "use strict";
@@ -8932,20 +8932,20 @@ to return true:wantsResponderID|                            |
                   rejectedThenable.reason = error;
                 }
               }
-            ); // Check one more time in case the thenable resolved synchronously.
+            );
+          } // Check one more time in case the thenable resolved synchronously.
 
-            switch (thenable.status) {
-              case "fulfilled": {
-                var fulfilledThenable = thenable;
-                return fulfilledThenable.value;
-              }
+          switch (thenable.status) {
+            case "fulfilled": {
+              var fulfilledThenable = thenable;
+              return fulfilledThenable.value;
+            }
 
-              case "rejected": {
-                var rejectedThenable = thenable;
-                var _rejectedError = rejectedThenable.reason;
-                checkIfUseWrappedInAsyncCatch(_rejectedError);
-                throw _rejectedError;
-              }
+            case "rejected": {
+              var rejectedThenable = thenable;
+              var _rejectedError = rejectedThenable.reason;
+              checkIfUseWrappedInAsyncCatch(_rejectedError);
+              throw _rejectedError;
             }
           } // Suspend.
           //
@@ -28200,7 +28200,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-2c1d8ed1";
+    var ReactVersion = "18.3.0-canary-54ae0c74";
 
     function createPortal$1(
       children,

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1aed0b993a4c164c11bd44255ec4ddac>>
+ * @generated SignedSource<<9e5c6574214265b8a7f68fb3d0ee99e5>>
  */
 
 "use strict";
@@ -5021,20 +5021,20 @@ if (__DEV__) {
                   rejectedThenable.reason = error;
                 }
               }
-            ); // Check one more time in case the thenable resolved synchronously.
+            );
+          } // Check one more time in case the thenable resolved synchronously.
 
-            switch (thenable.status) {
-              case "fulfilled": {
-                var fulfilledThenable = thenable;
-                return fulfilledThenable.value;
-              }
+          switch (thenable.status) {
+            case "fulfilled": {
+              var fulfilledThenable = thenable;
+              return fulfilledThenable.value;
+            }
 
-              case "rejected": {
-                var rejectedThenable = thenable;
-                var _rejectedError = rejectedThenable.reason;
-                checkIfUseWrappedInAsyncCatch(_rejectedError);
-                throw _rejectedError;
-              }
+            case "rejected": {
+              var rejectedThenable = thenable;
+              var _rejectedError = rejectedThenable.reason;
+              checkIfUseWrappedInAsyncCatch(_rejectedError);
+              throw _rejectedError;
             }
           } // Suspend.
           //
@@ -25721,7 +25721,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-629541bcc-20240212";
+    var ReactVersion = "18.3.0-canary-9e7944f67-20240212";
 
     // Might add PROFILE later.
 

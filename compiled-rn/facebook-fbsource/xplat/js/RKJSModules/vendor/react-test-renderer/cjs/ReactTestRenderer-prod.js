@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<1fafe8c779f4832b19959f28b49afe3e>>
+ * @generated SignedSource<<6223b3402ebe91d202065e784f2d9af4>>
  */
 
 "use strict";
@@ -1402,16 +1402,16 @@ function trackUsedThenable(thenableState, thenable, index) {
             }
           }
         );
-        switch (thenable.status) {
-          case "fulfilled":
-            return thenable.value;
-          case "rejected":
-            throw (
-              ((thenableState = thenable.reason),
-              checkIfUseWrappedInAsyncCatch(thenableState),
-              thenableState)
-            );
-        }
+      }
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw (
+            ((thenableState = thenable.reason),
+            checkIfUseWrappedInAsyncCatch(thenableState),
+            thenableState)
+          );
       }
       suspendedThenable = thenable;
       throw SuspenseException;
@@ -9173,7 +9173,7 @@ var devToolsConfig$jscomp$inline_1023 = {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-629541bcc-20240212",
+  version: "18.3.0-canary-9e7944f67-20240212",
   rendererPackageName: "react-test-renderer"
 };
 var internals$jscomp$inline_1204 = {
@@ -9204,7 +9204,7 @@ var internals$jscomp$inline_1204 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-629541bcc-20240212"
+  reconcilerVersion: "18.3.0-canary-9e7944f67-20240212"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1205 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

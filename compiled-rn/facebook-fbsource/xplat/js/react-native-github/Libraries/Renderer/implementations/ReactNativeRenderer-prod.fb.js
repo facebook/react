@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<39cc3a87ca227564cdd813f55956ea9b>>
+ * @generated SignedSource<<317e792f1cd9362e1233f87a5e42e7b9>>
  */
 
 "use strict";
@@ -2762,16 +2762,16 @@ function trackUsedThenable(thenableState, thenable, index) {
             }
           }
         );
-        switch (thenable.status) {
-          case "fulfilled":
-            return thenable.value;
-          case "rejected":
-            throw (
-              ((thenableState = thenable.reason),
-              checkIfUseWrappedInAsyncCatch(thenableState),
-              thenableState)
-            );
-        }
+      }
+      switch (thenable.status) {
+        case "fulfilled":
+          return thenable.value;
+        case "rejected":
+          throw (
+            ((thenableState = thenable.reason),
+            checkIfUseWrappedInAsyncCatch(thenableState),
+            thenableState)
+          );
       }
       suspendedThenable = thenable;
       throw SuspenseException;
@@ -9754,7 +9754,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1139 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-b7eb11d7",
+    version: "18.3.0-canary-00814a23",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9797,7 +9797,7 @@ var internals$jscomp$inline_1378 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-b7eb11d7"
+  reconcilerVersion: "18.3.0-canary-00814a23"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1379 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
