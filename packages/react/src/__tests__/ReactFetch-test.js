@@ -85,7 +85,7 @@ describe('ReactFetch', () => {
     const promise = render(Component);
     expect(await promise).toMatchInlineSnapshot(`"GET world []"`);
     expect(promise._debugInfo).toEqual(
-      __DEV__ ? [{name: 'Component'}] : undefined,
+      __DEV__ ? [{name: 'Component', env: 'server'}] : undefined,
     );
     expect(fetchCount).toBe(1);
   });

@@ -286,7 +286,7 @@ describe('ReactFlightDOMEdge', () => {
       <ServerComponent recurse={20} />,
     );
     const serializedContent = await readResult(stream);
-    const expectedDebugInfoSize = __DEV__ ? 30 * 20 : 0;
+    const expectedDebugInfoSize = __DEV__ ? 42 * 20 : 0;
     expect(serializedContent.length).toBeLessThan(150 + expectedDebugInfoSize);
   });
 
