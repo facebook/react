@@ -1104,7 +1104,8 @@ if (__DEV__) {
       bundlerConfig,
       onError,
       identifierPrefix,
-      onPostpone
+      onPostpone,
+      environmentName
     ) {
       if (
         ReactCurrentCache.current !== null &&
@@ -1149,6 +1150,12 @@ if (__DEV__) {
         onPostpone:
           onPostpone === undefined ? defaultPostponeHandler : onPostpone
       };
+
+      {
+        request.environmentName =
+          environmentName === undefined ? "server" : environmentName;
+      }
+
       var rootTask = createTask(request, model, null, false, abortSet);
       pingedTasks.push(rootTask);
       return request;
@@ -1168,6 +1175,15 @@ if (__DEV__) {
         task.implicitSlot,
         request.abortableTasks
       );
+
+      {
+        // If this came from Flight, forward any debug info into this new row.
+        var debugInfo = thenable._debugInfo;
+
+        if (debugInfo) {
+          forwardDebugInfo(request, newTask.id, debugInfo);
+        }
+      }
 
       switch (thenable.status) {
         case "fulfilled": {
@@ -1308,6 +1324,12 @@ if (__DEV__) {
         _payload: thenable,
         _init: readThenable
       };
+
+      {
+        // If this came from React, transfer the debug info.
+        lazyType._debugInfo = thenable._debugInfo || [];
+      }
+
       return lazyType;
     }
 
@@ -1329,7 +1351,8 @@ if (__DEV__) {
           var componentName = Component.displayName || Component.name || "";
           request.pendingChunks++;
           emitDebugChunk(request, debugID, {
-            name: componentName
+            name: componentName,
+            env: request.environmentName
           });
         }
       }
@@ -1378,6 +1401,24 @@ if (__DEV__) {
     }
 
     function renderFragment(request, task, children) {
+      {
+        var debugInfo = children._debugInfo;
+
+        if (debugInfo) {
+          // If this came from Flight, forward any debug info into this new row.
+          if (debugID === null) {
+            // We don't have a chunk to assign debug info. We need to outline this
+            // component to assign it an ID.
+            return outlineTask(request, task);
+          } else {
+            // Forward any debug info we have the first time we see it.
+            // We do this after init so that we have received all the debug info
+            // from the server by the time we emit it.
+            forwardDebugInfo(request, debugID, debugInfo);
+          }
+        }
+      }
+
       if (task.keyPath !== null) {
         // We have a Server Component that specifies a key but we're now splitting
         // the tree using a fragment.
@@ -1969,7 +2010,23 @@ if (__DEV__) {
               _writtenObjects.set(value, -1);
             }
 
-            var element = value; // Attempt to render the Server Component.
+            var element = value;
+
+            {
+              var debugInfo = value._debugInfo;
+
+              if (debugInfo) {
+                // If this came from Flight, forward any debug info into this new row.
+                if (debugID === null) {
+                  // We don't have a chunk to assign debug info. We need to outline this
+                  // component to assign it an ID.
+                  return outlineTask(request, task);
+                } else {
+                  // Forward any debug info we have the first time we see it.
+                  forwardDebugInfo(request, debugID, debugInfo);
+                }
+              }
+            } // Attempt to render the Server Component.
 
             return renderElement(
               request,
@@ -1982,9 +2039,32 @@ if (__DEV__) {
           }
 
           case REACT_LAZY_TYPE: {
-            var payload = value._payload;
-            var init = value._init;
+            // Reset the task's thenable state before continuing. If there was one, it was
+            // from suspending the lazy before.
+            task.thenableState = null;
+            var lazy = value;
+            var payload = lazy._payload;
+            var init = lazy._init;
             var resolvedModel = init(payload);
+
+            {
+              var _debugInfo = lazy._debugInfo;
+
+              if (_debugInfo) {
+                // If this came from Flight, forward any debug info into this new row.
+                if (debugID === null) {
+                  // We don't have a chunk to assign debug info. We need to outline this
+                  // component to assign it an ID.
+                  return outlineTask(request, task);
+                } else {
+                  // Forward any debug info we have the first time we see it.
+                  // We do this after init so that we have received all the debug info
+                  // from the server by the time we emit it.
+                  forwardDebugInfo(request, debugID, _debugInfo);
+                }
+              }
+            }
+
             return renderModelDestructive(
               request,
               task,
@@ -2310,6 +2390,13 @@ if (__DEV__) {
       request.completedRegularChunks.push(processedChunk);
     }
 
+    function forwardDebugInfo(request, id, debugInfo) {
+      for (var i = 0; i < debugInfo.length; i++) {
+        request.pendingChunks++;
+        emitDebugChunk(request, id, debugInfo[i]);
+      }
+    }
+
     var emptyRoot = {};
 
     function retryTask(request, task) {
@@ -2578,7 +2665,9 @@ if (__DEV__) {
       var request = createRequest(
         model,
         null,
-        options ? options.onError : undefined
+        options ? options.onError : undefined,
+        undefined,
+        undefined
       );
       startWork(request);
       startFlowing(request, destination);

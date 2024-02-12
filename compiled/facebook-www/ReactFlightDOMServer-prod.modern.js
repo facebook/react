@@ -797,6 +797,7 @@ function renderModelDestructive(
         );
       case REACT_LAZY_TYPE:
         return (
+          (task.thenableState = null),
           (parent = value._init),
           (value = parent(value._payload)),
           renderModelDestructive(request, task, emptyRoot, "", value)
