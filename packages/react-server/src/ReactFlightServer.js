@@ -52,6 +52,9 @@ import type {
   PendingThenable,
   FulfilledThenable,
   RejectedThenable,
+  ReactDebugInfo,
+  ReactComponentInfo,
+  ReactAsyncInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -106,9 +109,6 @@ import binaryToComparableString from 'shared/binaryToComparableString';
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
 initAsyncDebugInfo();
-
-// Dev-only
-type ReactDebugInfo = Array<{+name?: string, +env?: string}>;
 
 const ObjectPrototype = Object.prototype;
 
@@ -1731,7 +1731,7 @@ function emitModelChunk(request: Request, id: number, json: string): void {
 function emitDebugChunk(
   request: Request,
   id: number,
-  debugInfo: {+name?: string, +env?: string},
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json

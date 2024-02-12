@@ -7,7 +7,12 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {
+  Thenable,
+  ReactDebugInfo,
+  ReactComponentInfo,
+  ReactAsyncInfo,
+} from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import type {
@@ -75,9 +80,6 @@ const RESOLVED_MODEL = 'resolved_model';
 const RESOLVED_MODULE = 'resolved_module';
 const INITIALIZED = 'fulfilled';
 const ERRORED = 'rejected';
-
-// Dev-only
-type ReactDebugInfo = Array<{+name?: string, +env?: string}>;
 
 type PendingChunk<T> = {
   status: 'pending',
@@ -1014,7 +1016,7 @@ function resolveHint<Code: HintCode>(
 function resolveDebugInfo(
   response: Response,
   id: number,
-  debugInfo: {name: string},
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
