@@ -27,8 +27,6 @@ export const {
   enableRetryLaneExpiration,
   enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask,
-  enableAsyncActions,
-  enableFormActions,
   alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect,
   disableSchedulerTimeoutInWorkLoop,
@@ -61,6 +59,8 @@ export const enableUseMemoCacheHook = true;
 export const enableUseEffectEventHook = true;
 export const enableClientRenderFallbackOnTextMismatch = false;
 export const enableFilterEmptyStringAttributesDOM = true;
+export const enableFormActions = true;
+export const enableAsyncActions = true;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler: boolean =
