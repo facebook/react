@@ -120,16 +120,60 @@ function wrapWithHoc(Component: (props: any, ref: React$Ref<any>) => any) {
 }
 const HocWithHooks = wrapWithHoc(FunctionWithHooks);
 
+function incrementWithDelay(previousState: number, formData: FormData) {
+  const incrementDelay = +formData.get('incrementDelay');
+  const shouldReject = formData.get('shouldReject');
+  const reason = formData.get('reason');
+
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      if (shouldReject) {
+        reject(reason);
+      } else {
+        resolve(previousState + 1);
+      }
+    }, incrementDelay);
+  });
+}
+
 function Forms() {
-  const [state, formAction] = useFormState((n: number, formData: FormData) => {
-    return n + 1;
-  }, 0);
+  const [state, formAction] = useFormState<any, any>(incrementWithDelay, 0);
   return (
     <form>
-      {state}
+      State: {state}&nbsp;
+      <label>
+        delay:
+        <input
+          name="incrementDelay"
+          defaultValue={5000}
+          type="text"
+          inputMode="numeric"
+        />
+      </label>
+      <label>
+        Reject:
+        <input name="reason" type="text" />
+        <input name="shouldReject" type="checkbox" />
+      </label>
       <button formAction={formAction}>Increment</button>
     </form>
   );
+}
+
+class ErrorBoundary extends React.Component<{children?: React$Node}> {
+  state: {error: any} = {error: null};
+  static getDerivedStateFromError(error: mixed): {error: any} {
+    return {error};
+  }
+  componentDidCatch(error: any, info: any) {
+    console.error(error, info);
+  }
+  render(): any {
+    if (this.state.error) {
+      return <div>Error: {String(this.state.error)}</div>;
+    }
+    return this.props.children;
+  }
 }
 
 export default function CustomHooks(): React.Node {
@@ -139,7 +183,9 @@ export default function CustomHooks(): React.Node {
       <MemoWithHooks />
       <ForwardRefWithHooks />
       <HocWithHooks />
-      <Forms />
+      <ErrorBoundary>
+        <Forms />
+      </ErrorBoundary>
     </Fragment>
   );
 }

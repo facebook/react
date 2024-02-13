@@ -494,8 +494,42 @@ function useFormState<S, P>(
   const hook = nextHook(); // FormState
   nextHook(); // ActionQueue
   let state;
+  let debugInfo = null;
   if (hook !== null) {
-    state = hook.memoizedState;
+    const actionResult = hook.memoizedState;
+    if (
+      typeof actionResult === 'object' &&
+      actionResult !== null &&
+      // $FlowFixMe[method-unbinding]
+      typeof actionResult.then === 'function'
+    ) {
+      const thenable: Thenable<Awaited<S>> = (actionResult: any);
+      switch (thenable.status) {
+        case 'fulfilled': {
+          state = thenable.value;
+          debugInfo =
+            thenable._debugInfo === undefined ? null : thenable._debugInfo;
+          break;
+        }
+        case 'rejected': {
+          const rejectedError = thenable.reason;
+          throw rejectedError;
+        }
+        default:
+          // If this was an uncached Promise we have to abandon this attempt
+          // but we can still emit anything up until this point.
+          hookLog.push({
+            primitive: 'Unresolved',
+            stackError: new Error(),
+            value: thenable,
+            debugInfo:
+              thenable._debugInfo === undefined ? null : thenable._debugInfo,
+          });
+          throw SuspenseException;
+      }
+    } else {
+      state = (actionResult: any);
+    }
   } else {
     state = initialState;
   }
@@ -503,7 +537,7 @@ function useFormState<S, P>(
     primitive: 'FormState',
     stackError: new Error(),
     value: state,
-    debugInfo: null,
+    debugInfo: debugInfo,
   });
   return [state, (payload: P) => {}];
 }
