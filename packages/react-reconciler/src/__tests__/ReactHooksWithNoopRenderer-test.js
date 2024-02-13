@@ -43,6 +43,7 @@ let assertLog;
 
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
+    jest.resetModules();
     jest.useFakeTimers();
 
     React = require('react');

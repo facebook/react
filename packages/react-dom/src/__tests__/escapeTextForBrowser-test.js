@@ -14,6 +14,7 @@ let ReactDOMServer;
 
 describe('escapeTextForBrowser', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOMServer = require('react-dom/server');
   });

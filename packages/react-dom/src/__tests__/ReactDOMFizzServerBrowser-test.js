@@ -20,6 +20,7 @@ let Suspense;
 
 describe('ReactDOMFizzServerBrowser', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOMFizzServer = require('react-dom/server.browser');
     Suspense = React.Suspense;

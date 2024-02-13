@@ -24,6 +24,8 @@ let assertLog;
 
 describe('ReactSuspenseEffectsSemantics', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');

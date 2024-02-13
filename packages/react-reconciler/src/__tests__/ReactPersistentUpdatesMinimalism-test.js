@@ -16,6 +16,7 @@ let act;
 
 describe('ReactPersistentUpdatesMinimalism', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactNoopPersistent = require('react-noop-renderer/persistent');
     act = require('internal-test-utils').act;

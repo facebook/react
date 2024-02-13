@@ -49,6 +49,7 @@ let streamingContainer;
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
+    jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
 
     const jsdom = new JSDOM(

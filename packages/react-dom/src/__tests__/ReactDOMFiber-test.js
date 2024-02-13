@@ -22,6 +22,7 @@ describe('ReactDOMFiber', () => {
   let container;
 
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     PropTypes = require('prop-types');

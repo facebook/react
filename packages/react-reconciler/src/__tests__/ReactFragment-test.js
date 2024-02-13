@@ -15,6 +15,8 @@ let waitForAll;
 
 describe('ReactFragment', () => {
   beforeEach(function () {
+    jest.resetModules();
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 

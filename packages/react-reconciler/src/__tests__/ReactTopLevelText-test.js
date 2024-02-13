@@ -18,6 +18,7 @@ let waitForAll;
 // probably move to one of the other test files once it is official.
 describe('ReactTopLevelText', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
 

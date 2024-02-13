@@ -57,6 +57,7 @@ describe('Scheduler', () => {
   }
 
   beforeEach(() => {
+    jest.resetModules();
     jest.mock('scheduler', () => require('scheduler/unstable_mock'));
     Scheduler = require('scheduler');
 

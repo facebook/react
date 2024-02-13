@@ -48,6 +48,8 @@ describe('parseHookNames', () => {
   let parseHookNames;
 
   beforeEach(() => {
+    jest.resetModules();
+
     jest.mock('source-map-support', () => {
       console.trace('source-map-support');
     });

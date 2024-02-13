@@ -32,6 +32,7 @@ let Suspense;
 
 describe('ReactDOMFizzForm', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     Scheduler = require('scheduler');
     ReactDOMServer = require('react-dom/server.browser');

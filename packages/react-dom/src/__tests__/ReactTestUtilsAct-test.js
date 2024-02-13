@@ -81,6 +81,7 @@ describe('ReactTestUtils.act()', () => {
 function runActTests(render, unmount, rerender) {
   describe('concurrent render', () => {
     beforeEach(() => {
+      jest.resetModules();
       React = require('react');
       ReactDOMClient = require('react-dom/client');
       ReactTestUtils = require('react-dom/test-utils');

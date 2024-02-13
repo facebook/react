@@ -23,6 +23,8 @@ describe('ReactJSXElementValidator', () => {
   let RequiredPropComponent;
 
   beforeEach(() => {
+    jest.resetModules();
+
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');

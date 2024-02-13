@@ -27,6 +27,7 @@ let fatalError = undefined;
 
 describe('ReactDOMFizzStatic', () => {
   beforeEach(() => {
+    jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
     React = require('react');
     ReactDOM = require('react-dom');

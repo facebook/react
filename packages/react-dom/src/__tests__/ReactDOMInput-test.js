@@ -79,6 +79,8 @@ describe('ReactDOMInput', () => {
   }
 
   beforeEach(() => {
+    jest.resetModules();
+
     setUntrackedValue = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       'value',

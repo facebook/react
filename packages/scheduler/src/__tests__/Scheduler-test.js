@@ -33,6 +33,7 @@ let NormalPriority;
 // assumes as little as possible about the order and timing of events.
 describe('SchedulerBrowser', () => {
   beforeEach(() => {
+    jest.resetModules();
     runtime = installMockBrowserRuntime();
     jest.unmock('scheduler');
 

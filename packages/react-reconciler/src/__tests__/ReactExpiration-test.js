@@ -25,6 +25,8 @@ let unstable_waitForExpired;
 
 describe('ReactExpiration', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -403,6 +405,7 @@ describe('ReactExpiration', () => {
     // Tests an implementation detail where expiration times are computed using
     // bitwise operations.
 
+    jest.resetModules();
     Scheduler = require('scheduler');
 
     if (gate(flags => flags.forceConcurrentByDefaultForTesting)) {

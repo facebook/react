@@ -304,6 +304,10 @@ async function testPropsSequence(sequence) {
 }
 
 describe('ReactMultiChildReconcile', () => {
+  beforeEach(() => {
+    jest.resetModules();
+  });
+
   it('should reset internal state if removed then readded in an array', async () => {
     // Test basics.
     const props = {

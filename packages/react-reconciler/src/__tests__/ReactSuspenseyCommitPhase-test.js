@@ -14,6 +14,8 @@ let waitForPaint;
 
 describe('ReactSuspenseyCommitPhase', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');

@@ -19,6 +19,7 @@ describe('ReactDOMConsoleErrorReporting', () => {
   let waitForThrow;
 
   beforeEach(() => {
+    jest.resetModules();
     act = require('internal-test-utils').act;
     React = require('react');
     ReactDOMClient = require('react-dom/client');

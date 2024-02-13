@@ -520,82 +520,78 @@ describe('ReactCompositeComponent-state', () => {
     assertLog([
       'render -- step: 3, extra: false',
       'callback -- step: 3, extra: false',
+
+      // A second time for the retry.
+      'render -- step: 3, extra: false',
+      'callback -- step: 3, extra: false',
     ]);
   });
 
-  // @gate !disableModulePatternComponents
-  it('should support stateful module pattern components', async () => {
-    function Child() {
-      return {
-        state: {
-          count: 123,
-        },
-        render() {
-          return <div>{`count:${this.state.count}`}</div>;
-        },
+  if (!require('shared/ReactFeatureFlags').disableModulePatternComponents) {
+    it('should support stateful module pattern components', async () => {
+      function Child() {
+        return {
+          state: {
+            count: 123,
+          },
+          render() {
+            return <div>{`count:${this.state.count}`}</div>;
+          },
+        };
+      }
+
+      const el = document.createElement('div');
+      const root = ReactDOMClient.createRoot(el);
+      expect(() => {
+        ReactDOM.flushSync(() => {
+          root.render(<Child />);
+        });
+      }).toErrorDev(
+        'Warning: The <Child /> component appears to be a function component that returns a class instance. ' +
+          'Change Child to a class that extends React.Component instead. ' +
+          "If you can't use a class try assigning the prototype on the function as a workaround. " +
+          '`Child.prototype = React.Component.prototype`. ' +
+          "Don't use an arrow function since it cannot be called with `new` by React.",
+      );
+
+      expect(el.textContent).toBe('count:123');
+    });
+
+    it('should support getDerivedStateFromProps for module pattern components', async () => {
+      function Child() {
+        return {
+          state: {
+            count: 1,
+          },
+          render() {
+            return <div>{`count:${this.state.count}`}</div>;
+          },
+        };
+      }
+      Child.getDerivedStateFromProps = (props, prevState) => {
+        return {
+          count: prevState.count + props.incrementBy,
+        };
       };
-    }
 
-    const el = document.createElement('div');
-    const root = ReactDOMClient.createRoot(el);
-    expect(() => {
-      ReactDOM.flushSync(() => {
-        root.render(<Child />);
-      });
-    }).toErrorDev(
-      'Warning: The <Child /> component appears to be a function component that returns a class instance. ' +
-        'Change Child to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Child.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-    );
-
-    expect(el.textContent).toBe('count:123');
-  });
-
-  // @gate !disableModulePatternComponents
-  it('should support getDerivedStateFromProps for module pattern components', async () => {
-    function Child() {
-      return {
-        state: {
-          count: 1,
-        },
-        render() {
-          return <div>{`count:${this.state.count}`}</div>;
-        },
-      };
-    }
-    Child.getDerivedStateFromProps = (props, prevState) => {
-      return {
-        count: prevState.count + props.incrementBy,
-      };
-    };
-
-    const el = document.createElement('div');
-    const root = ReactDOMClient.createRoot(el);
-    expect(() => {
-      ReactDOM.flushSync(() => {
+      const el = document.createElement('div');
+      const root = ReactDOMClient.createRoot(el);
+      await act(() => {
         root.render(<Child incrementBy={0} />);
       });
-    }).toErrorDev(
-      'Warning: The <Child /> component appears to be a function component that returns a class instance. ' +
-        'Change Child to a class that extends React.Component instead. ' +
-        "If you can't use a class try assigning the prototype on the function as a workaround. " +
-        '`Child.prototype = React.Component.prototype`. ' +
-        "Don't use an arrow function since it cannot be called with `new` by React.",
-    );
 
-    expect(el.textContent).toBe('count:1');
-    await act(() => {
-      root.render(<Child incrementBy={2} />);
-    });
-    expect(el.textContent).toBe('count:3');
+      expect(el.textContent).toBe('count:1');
+      await act(() => {
+        root.render(<Child incrementBy={2} />);
+      });
+      expect(el.textContent).toBe('count:3');
 
-    await act(() => {
-      root.render(<Child incrementBy={1} />);
+      await act(() => {
+        root.render(<Child incrementBy={1} />);
+      });
+      expect(el.textContent).toBe('count:4');
     });
-    expect(el.textContent).toBe('count:4');
-  });
+  }
 
   it('should not support setState in componentWillUnmount', async () => {
     let subscription;

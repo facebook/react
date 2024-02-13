@@ -19,6 +19,7 @@ const SUSPICIOUS_NUMBER_OF_FIBERS_UPDATED = 10;
 
 describe('ReactStartTransition', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     act = require('internal-test-utils').act;

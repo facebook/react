@@ -45,6 +45,7 @@ let container;
 // It should probably be rewritten but we're keeping it for some extra coverage.
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
+    jest.resetModules();
     LISTENER.mockClear();
 
     React = require('react');
