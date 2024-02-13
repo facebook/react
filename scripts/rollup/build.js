@@ -575,6 +575,9 @@ function getPlugins(
           sourcemapAfterClosure.sources = [preMinifiedFilename];
           sourcemapAfterClosure.file = filename;
 
+          // All our code is considered "third-party" and should be ignored by default.
+          sourcemapAfterClosure.ignoreList = [0];
+
           // We'll write the pre-minified source to disk as a separate file.
           // Because it sits on disk, there's no need to have it in the `sourcesContent` array.
           // That also makes the file easier to read, and available for use by scripts.
