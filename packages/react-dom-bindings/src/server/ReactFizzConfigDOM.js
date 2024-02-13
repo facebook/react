@@ -3698,7 +3698,7 @@ export function pushStartInstance(
       return pushSelfClosing(target, props, type);
     }
     // These are reserved SVG and MathML elements, that are never custom elements.
-    // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
+    // https://www.w3.org/TR/custom-elements/
     case 'annotation-xml':
     case 'color-profile':
     case 'font-face':
