@@ -25,7 +25,9 @@ if (__DEV__) {
     var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
     var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
     var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-    var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
+    var REACT_PROVIDER_TYPE = Symbol.for("react.provider"); // TODO: Delete with enableRenderableContext
+
+    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
     var REACT_CONTEXT_TYPE = Symbol.for("react.context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
@@ -43,8 +45,8 @@ if (__DEV__) {
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
-      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing;
-    // On WWW, false is used for a new modern build.
+      enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, false is used for a new modern build.
 
     var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
     function isValidElementType(type) {
@@ -72,8 +74,9 @@ if (__DEV__) {
         if (
           type.$$typeof === REACT_LAZY_TYPE ||
           type.$$typeof === REACT_MEMO_TYPE ||
-          type.$$typeof === REACT_PROVIDER_TYPE ||
           type.$$typeof === REACT_CONTEXT_TYPE ||
+          (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+          (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
           type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used
@@ -112,8 +115,21 @@ if (__DEV__) {
                   case REACT_FORWARD_REF_TYPE:
                   case REACT_LAZY_TYPE:
                   case REACT_MEMO_TYPE:
-                  case REACT_PROVIDER_TYPE:
                     return $$typeofType;
+
+                  case REACT_CONSUMER_TYPE:
+                    if (enableRenderableContext) {
+                      return $$typeofType;
+                    }
+
+                  // Fall through
+
+                  case REACT_PROVIDER_TYPE:
+                    if (!enableRenderableContext) {
+                      return $$typeofType;
+                    }
+
+                  // Fall through
 
                   default:
                     return $$typeof;
@@ -127,8 +143,12 @@ if (__DEV__) {
 
       return undefined;
     }
-    var ContextConsumer = REACT_CONTEXT_TYPE;
-    var ContextProvider = REACT_PROVIDER_TYPE;
+    var ContextConsumer = enableRenderableContext
+      ? REACT_CONSUMER_TYPE
+      : REACT_CONTEXT_TYPE;
+    var ContextProvider = enableRenderableContext
+      ? REACT_CONTEXT_TYPE
+      : REACT_PROVIDER_TYPE;
     var Element = REACT_ELEMENT_TYPE;
     var ForwardRef = REACT_FORWARD_REF_TYPE;
     var Fragment = REACT_FRAGMENT_TYPE;
@@ -140,10 +160,18 @@ if (__DEV__) {
     var Suspense = REACT_SUSPENSE_TYPE;
     var SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     function isContextConsumer(object) {
-      return typeOf(object) === REACT_CONTEXT_TYPE;
+      if (enableRenderableContext) {
+        return typeOf(object) === REACT_CONSUMER_TYPE;
+      } else {
+        return typeOf(object) === REACT_CONTEXT_TYPE;
+      }
     }
     function isContextProvider(object) {
-      return typeOf(object) === REACT_PROVIDER_TYPE;
+      if (enableRenderableContext) {
+        return typeOf(object) === REACT_CONTEXT_TYPE;
+      } else {
+        return typeOf(object) === REACT_PROVIDER_TYPE;
+      }
     }
     function isElement(object) {
       return (

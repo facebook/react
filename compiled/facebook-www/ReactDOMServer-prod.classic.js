@@ -52,6 +52,13 @@ function formatProdErrorMessage(code) {
     " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
   );
 }
+var dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+  enableFormActions = dynamicFeatureFlags.enableFormActions,
+  enableUseDeferredValueInitialArg =
+    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
 function murmurhash3_32_gc(key, seed) {
   var remainder = key.length & 3;
   var bytes = key.length - remainder;
@@ -106,12 +113,6 @@ function murmurhash3_32_gc(key, seed) {
   return (h1 ^ (h1 >>> 16)) >>> 0;
 }
 var assign = Object.assign,
-  dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
-  enableFormActions = dynamicFeatureFlags.enableFormActions,
-  enableUseDeferredValueInitialArg =
-    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX = RegExp(
     "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
@@ -2569,16 +2570,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     );
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1609 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1594 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1623 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1624 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1625 = new Set(),
-    JSCompiler_object_inline_styles_1626 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1627 = new Set(),
-    JSCompiler_object_inline_scripts_1628 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1629 = new Set(),
-    JSCompiler_object_inline_preloads_1630 = {
+  var JSCompiler_object_inline_preconnects_1608 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1609 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1610 = new Set(),
+    JSCompiler_object_inline_styles_1611 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1612 = new Set(),
+    JSCompiler_object_inline_scripts_1613 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1614 = new Set(),
+    JSCompiler_object_inline_preloads_1615 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2615,7 +2616,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1627.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1612.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src));
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
@@ -2656,7 +2657,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1627.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1612.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i)
@@ -2671,7 +2672,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push('" async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1609,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1594,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2691,14 +2692,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1623,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1624,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1625,
-    styles: JSCompiler_object_inline_styles_1626,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1627,
-    scripts: JSCompiler_object_inline_scripts_1628,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1629,
-    preloads: JSCompiler_object_inline_preloads_1630,
+    preconnects: JSCompiler_object_inline_preconnects_1608,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1609,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1610,
+    styles: JSCompiler_object_inline_styles_1611,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1612,
+    scripts: JSCompiler_object_inline_scripts_1613,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1614,
+    preloads: JSCompiler_object_inline_preloads_1615,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -2719,6 +2720,7 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
+  REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
@@ -2761,10 +2763,17 @@ function getComponentNameFromType(type) {
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
-      case REACT_CONTEXT_TYPE:
-        return (type.displayName || "Context") + ".Consumer";
       case REACT_PROVIDER_TYPE:
-        return (type._context.displayName || "Context") + ".Provider";
+        if (enableRenderableContext) break;
+        else return (type._context.displayName || "Context") + ".Provider";
+      case REACT_CONTEXT_TYPE:
+        return enableRenderableContext
+          ? (type.displayName || "Context") + ".Provider"
+          : (type.displayName || "Context") + ".Consumer";
+      case REACT_CONSUMER_TYPE:
+        if (enableRenderableContext)
+          return (type._context.displayName || "Context") + ".Consumer";
+        break;
       case REACT_FORWARD_REF_TYPE:
         var innerType = type.render;
         type = type.displayName;
@@ -3741,6 +3750,38 @@ function resolveDefaultProps(Component, baseProps) {
   }
   return baseProps;
 }
+function renderContextConsumer(request, task, keyPath, context, props) {
+  props = props.children;
+  context = props(context._currentValue2);
+  props = task.keyPath;
+  task.keyPath = keyPath;
+  renderNodeDestructive(request, task, context, -1);
+  task.keyPath = props;
+}
+function renderContextProvider(request, task, keyPath, context, props) {
+  var value = props.value,
+    children = props.children;
+  props = task.keyPath;
+  var prevValue = context._currentValue2;
+  context._currentValue2 = value;
+  var prevNode = currentActiveSnapshot;
+  currentActiveSnapshot = context = {
+    parent: prevNode,
+    depth: null === prevNode ? 0 : prevNode.depth + 1,
+    context: context,
+    parentValue: prevValue,
+    value: value
+  };
+  task.context = context;
+  task.keyPath = keyPath;
+  renderNodeDestructive(request, task, children, -1);
+  request = currentActiveSnapshot;
+  if (null === request) throw Error(formatProdErrorMessage(403));
+  request.context._currentValue2 = request.parentValue;
+  request = currentActiveSnapshot = request.parent;
+  task.context = request;
+  task.keyPath = props;
+}
 function renderElement(request, task, keyPath, type, props, ref) {
   if ("function" === typeof type)
     if (type.prototype && type.prototype.isReactComponent) {
@@ -4155,38 +4196,20 @@ function renderElement(request, task, keyPath, type, props, ref) {
           renderElement(request, task, keyPath, type, props, ref);
           return;
         case REACT_PROVIDER_TYPE:
-          ref = props.children;
-          contextKey = task.keyPath;
-          type = type._context;
-          props = props.value;
-          JSCompiler_inline_result = type._currentValue2;
-          type._currentValue2 = props;
-          maskedContext = currentActiveSnapshot;
-          currentActiveSnapshot = props = {
-            parent: maskedContext,
-            depth: null === maskedContext ? 0 : maskedContext.depth + 1,
-            context: type,
-            parentValue: JSCompiler_inline_result,
-            value: props
-          };
-          task.context = props;
-          task.keyPath = keyPath;
-          renderNodeDestructive(request, task, ref, -1);
-          request = currentActiveSnapshot;
-          if (null === request) throw Error(formatProdErrorMessage(403));
-          request.context._currentValue2 = request.parentValue;
-          request = currentActiveSnapshot = request.parent;
-          task.context = request;
-          task.keyPath = contextKey;
-          return;
+          if (!enableRenderableContext) {
+            renderContextProvider(request, task, keyPath, type._context, props);
+            return;
+          }
         case REACT_CONTEXT_TYPE:
-          props = props.children;
-          props = props(type._currentValue2);
-          type = task.keyPath;
-          task.keyPath = keyPath;
-          renderNodeDestructive(request, task, props, -1);
-          task.keyPath = type;
+          enableRenderableContext
+            ? renderContextProvider(request, task, keyPath, type, props)
+            : renderContextConsumer(request, task, keyPath, type, props);
           return;
+        case REACT_CONSUMER_TYPE:
+          if (enableRenderableContext) {
+            renderContextConsumer(request, task, keyPath, type._context, props);
+            return;
+          }
         case REACT_LAZY_TYPE:
           contextKey = task.componentStack;
           task.componentStack = createBuiltInComponentStack(task, "Lazy");
@@ -4629,15 +4652,15 @@ function renderNode(request, task, node, childIndex) {
       chunkLength = segment.chunks.length;
     try {
       return renderNodeDestructive(request, task, node, childIndex);
-    } catch (thrownValue$40) {
+    } catch (thrownValue$43) {
       if (
         (resetHooksState(),
         (segment.children.length = childrenLength),
         (segment.chunks.length = chunkLength),
         (node =
-          thrownValue$40 === SuspenseException
+          thrownValue$43 === SuspenseException
             ? getSuspendedThenable()
-            : thrownValue$40),
+            : thrownValue$43),
         "object" === typeof node &&
           null !== node &&
           "function" === typeof node.then)
@@ -5480,11 +5503,11 @@ function flushCompletedQueues(request, destination) {
     completedBoundaries.splice(0, i);
     var partialBoundaries = request.partialBoundaries;
     for (i = 0; i < partialBoundaries.length; i++) {
-      var boundary$44 = partialBoundaries[i];
+      var boundary$47 = partialBoundaries[i];
       a: {
         clientRenderedBoundaries = request;
         boundary = destination;
-        var completedSegments = boundary$44.completedSegments;
+        var completedSegments = boundary$47.completedSegments;
         for (
           resumableState$jscomp$0 = 0;
           resumableState$jscomp$0 < completedSegments.length;
@@ -5494,7 +5517,7 @@ function flushCompletedQueues(request, destination) {
             !flushPartiallyCompletedSegment(
               clientRenderedBoundaries,
               boundary,
-              boundary$44,
+              boundary$47,
               completedSegments[resumableState$jscomp$0]
             )
           ) {
@@ -5506,7 +5529,7 @@ function flushCompletedQueues(request, destination) {
         completedSegments.splice(0, resumableState$jscomp$0);
         JSCompiler_inline_result = writeHoistablesForBoundary(
           boundary,
-          boundary$44.contentState,
+          boundary$47.contentState,
           clientRenderedBoundaries.renderState
         );
       }
@@ -5580,8 +5603,8 @@ function abort(request, reason) {
     }
     null !== request.destination &&
       flushCompletedQueues(request, request.destination);
-  } catch (error$46) {
-    logRecoverableError(request, error$46, {}), fatalError(request, error$46);
+  } catch (error$49) {
+    logRecoverableError(request, error$49, {}), fatalError(request, error$49);
   }
 }
 function onError() {}
@@ -5655,4 +5678,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-classic-12067544";
+exports.version = "18.3.0-www-classic-a2a229aa";

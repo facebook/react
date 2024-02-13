@@ -80,6 +80,17 @@ if (__DEV__) {
       }
     }
 
+    // Re-export dynamic flags from the www version.
+    var dynamicFeatureFlags = require("ReactFeatureFlags");
+
+    var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+      enableFormActions = dynamicFeatureFlags.enableFormActions,
+      enableUseDeferredValueInitialArg =
+        dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
+    var enableFloat = true;
+
     // A pure JS implementation of a string hashing function. We do not use it for
     // security or obfuscation purposes, only to create compact hashes. So we
     // prioritize speed over collision avoidance. For example, we use this to hash
@@ -338,17 +349,6 @@ if (__DEV__) {
         }
       }
     }
-
-    // Re-export dynamic flags from the www version.
-    var dynamicFeatureFlags = require("ReactFeatureFlags");
-
-    var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
-      enableFormActions = dynamicFeatureFlags.enableFormActions,
-      enableUseDeferredValueInitialArg =
-        dynamicFeatureFlags.enableUseDeferredValueInitialArg;
-    // On WWW, true is used for a new modern build.
-    var enableFloat = true;
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -8045,7 +8045,9 @@ if (__DEV__) {
     var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
     var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
     var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-    var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
+    var REACT_PROVIDER_TYPE = Symbol.for("react.provider"); // TODO: Delete with enableRenderableContext
+
+    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
     var REACT_CONTEXT_TYPE = Symbol.for("react.context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
@@ -8157,13 +8159,30 @@ if (__DEV__) {
         }
 
         switch (type.$$typeof) {
+          case REACT_PROVIDER_TYPE:
+            if (enableRenderableContext) {
+              return null;
+            } else {
+              var provider = type;
+              return getContextName(provider._context) + ".Provider";
+            }
+
           case REACT_CONTEXT_TYPE:
             var context = type;
-            return getContextName(context) + ".Consumer";
 
-          case REACT_PROVIDER_TYPE:
-            var provider = type;
-            return getContextName(provider._context) + ".Provider";
+            if (enableRenderableContext) {
+              return getContextName(context) + ".Provider";
+            } else {
+              return getContextName(context) + ".Consumer";
+            }
+
+          case REACT_CONSUMER_TYPE:
+            if (enableRenderableContext) {
+              var consumer = type;
+              return getContextName(consumer._context) + ".Consumer";
+            } else {
+              return null;
+            }
 
           case REACT_FORWARD_REF_TYPE:
             return getWrappedName(type, type.render, "ForwardRef");
@@ -8982,8 +9001,7 @@ if (__DEV__) {
           var isValid = // Allow null for conditional declaration
             contextType === null ||
             (contextType !== undefined &&
-              contextType.$$typeof === REACT_CONTEXT_TYPE &&
-              contextType._context === undefined); // Not a <Context.Consumer>
+              contextType.$$typeof === REACT_CONTEXT_TYPE);
 
           if (!isValid && !didWarnAboutInvalidateContextType.has(ctor)) {
             didWarnAboutInvalidateContextType.add(ctor);
@@ -8997,11 +9015,7 @@ if (__DEV__) {
                 "try moving the createContext() call to a separate file.";
             } else if (typeof contextType !== "object") {
               addendum = " However, it is set to a " + typeof contextType + ".";
-            } else if (contextType.$$typeof === REACT_PROVIDER_TYPE) {
-              addendum =
-                " Did you accidentally pass the Context.Provider instead?";
-            } else if (contextType._context !== undefined) {
-              // <Context.Consumer>
+            } else if (contextType.$$typeof === REACT_CONSUMER_TYPE) {
               addendum =
                 " Did you accidentally pass the Context.Consumer instead?";
             } else {
@@ -11406,8 +11420,7 @@ if (__DEV__) {
     var didWarnAboutReassigningProps = false;
     var didWarnAboutDefaultPropsOnFunctionComponent = {};
     var didWarnAboutGenerators = false;
-    var didWarnAboutMaps = false;
-    var hasWarnedAboutUsingContextAsConsumer = false; // This would typically be a function component but we still support module pattern
+    var didWarnAboutMaps = false; // This would typically be a function component but we still support module pattern
     // components for some reason.
 
     function renderIndeterminateComponent(
@@ -11691,33 +11704,6 @@ if (__DEV__) {
     }
 
     function renderContextConsumer(request, task, keyPath, context, props) {
-      // The logic below for Context differs depending on PROD or DEV mode. In
-      // DEV mode, we create a separate object for Context.Consumer that acts
-      // like a proxy to Context. This proxy object adds unnecessary code in PROD
-      // so we use the old behaviour (Context.Consumer references Context) to
-      // reduce size and overhead. The separate object references context via
-      // a property called "_context", which also gives us the ability to check
-      // in DEV mode if this property exists or not and warn if it does not.
-      {
-        if (context._context === undefined) {
-          // This may be because it's a Context (rather than a Consumer).
-          // Or it may be because it's older React where they're the same thing.
-          // We only want to warn if we're sure it's a new React.
-          if (context !== context.Consumer) {
-            if (!hasWarnedAboutUsingContextAsConsumer) {
-              hasWarnedAboutUsingContextAsConsumer = true;
-
-              error(
-                "Rendering <Context> directly is not supported and will be removed in " +
-                  "a future major release. Did you mean to render <Context.Consumer> instead?"
-              );
-            }
-          }
-        } else {
-          context = context._context;
-        }
-      }
-
       var render = props.children;
 
       {
@@ -11739,8 +11725,7 @@ if (__DEV__) {
       task.keyPath = prevKeyPath;
     }
 
-    function renderContextProvider(request, task, keyPath, type, props) {
-      var context = type._context;
+    function renderContextProvider(request, task, keyPath, context, props) {
       var value = props.value;
       var children = props.children;
       var prevSnapshot;
@@ -11887,13 +11872,38 @@ if (__DEV__) {
           }
 
           case REACT_PROVIDER_TYPE: {
-            renderContextProvider(request, task, keyPath, type, props);
-            return;
+            if (!enableRenderableContext) {
+              var context = type._context;
+              renderContextProvider(request, task, keyPath, context, props);
+              return;
+            } // Fall through
           }
 
           case REACT_CONTEXT_TYPE: {
-            renderContextConsumer(request, task, keyPath, type, props);
-            return;
+            if (enableRenderableContext) {
+              var _context = type;
+              renderContextProvider(request, task, keyPath, _context, props);
+              return;
+            } else {
+              var _context2 = type;
+
+              {
+                if (_context2._context !== undefined) {
+                  _context2 = _context2._context;
+                }
+              }
+
+              renderContextConsumer(request, task, keyPath, _context2, props);
+              return;
+            }
+          }
+
+          case REACT_CONSUMER_TYPE: {
+            if (enableRenderableContext) {
+              var _context3 = type._context;
+              renderContextConsumer(request, task, keyPath, _context3, props);
+              return;
+            } // Fall through
           }
 
           case REACT_LAZY_TYPE: {

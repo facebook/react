@@ -131,7 +131,8 @@ if (__DEV__) {
       transitionLaneExpirationMs =
         dynamicFeatureFlags.transitionLaneExpirationMs,
       enableInfiniteRenderLoopDetection =
-        dynamicFeatureFlags.enableInfiniteRenderLoopDetection; // On WWW, true is used for a new modern build.
+        dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
@@ -258,7 +259,9 @@ if (__DEV__) {
     var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
     var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
     var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-    var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
+    var REACT_PROVIDER_TYPE = Symbol.for("react.provider"); // TODO: Delete with enableRenderableContext
+
+    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
     var REACT_CONTEXT_TYPE = Symbol.for("react.context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
@@ -3610,13 +3613,30 @@ if (__DEV__) {
         }
 
         switch (type.$$typeof) {
+          case REACT_PROVIDER_TYPE:
+            if (enableRenderableContext) {
+              return null;
+            } else {
+              var provider = type;
+              return getContextName$1(provider._context) + ".Provider";
+            }
+
           case REACT_CONTEXT_TYPE:
             var context = type;
-            return getContextName$1(context) + ".Consumer";
 
-          case REACT_PROVIDER_TYPE:
-            var provider = type;
-            return getContextName$1(provider._context) + ".Provider";
+            if (enableRenderableContext) {
+              return getContextName$1(context) + ".Provider";
+            } else {
+              return getContextName$1(context) + ".Consumer";
+            }
+
+          case REACT_CONSUMER_TYPE:
+            if (enableRenderableContext) {
+              var consumer = type;
+              return getContextName$1(consumer._context) + ".Consumer";
+            } else {
+              return null;
+            }
 
           case REACT_FORWARD_REF_TYPE:
             return getWrappedName$1(type, type.render, "ForwardRef");
@@ -3670,12 +3690,22 @@ if (__DEV__) {
           return "Cache";
 
         case ContextConsumer:
-          var context = type;
-          return getContextName(context) + ".Consumer";
+          if (enableRenderableContext) {
+            var consumer = type;
+            return getContextName(consumer._context) + ".Consumer";
+          } else {
+            var context = type;
+            return getContextName(context) + ".Consumer";
+          }
 
         case ContextProvider:
-          var provider = type;
-          return getContextName(provider._context) + ".Provider";
+          if (enableRenderableContext) {
+            var _context = type;
+            return getContextName(_context) + ".Provider";
+          } else {
+            var provider = type;
+            return getContextName(provider._context) + ".Provider";
+          }
 
         case DehydratedFragment:
           return "DehydratedFragment";
@@ -18066,8 +18096,7 @@ if (__DEV__) {
           var isValid = // Allow null for conditional declaration
             contextType === null ||
             (contextType !== undefined &&
-              contextType.$$typeof === REACT_CONTEXT_TYPE &&
-              contextType._context === undefined); // Not a <Context.Consumer>
+              contextType.$$typeof === REACT_CONTEXT_TYPE);
 
           if (!isValid && !didWarnAboutInvalidateContextType.has(ctor)) {
             didWarnAboutInvalidateContextType.add(ctor);
@@ -18081,11 +18110,7 @@ if (__DEV__) {
                 "try moving the createContext() call to a separate file.";
             } else if (typeof contextType !== "object") {
               addendum = " However, it is set to a " + typeof contextType + ".";
-            } else if (contextType.$$typeof === REACT_PROVIDER_TYPE) {
-              addendum =
-                " Did you accidentally pass the Context.Provider instead?";
-            } else if (contextType._context !== undefined) {
-              // <Context.Consumer>
+            } else if (contextType.$$typeof === REACT_CONSUMER_TYPE) {
               addendum =
                 " Did you accidentally pass the Context.Consumer instead?";
             } else {
@@ -22705,8 +22730,14 @@ if (__DEV__) {
     var hasWarnedAboutUsingNoValuePropOnContextProvider = false;
 
     function updateContextProvider(current, workInProgress, renderLanes) {
-      var providerType = workInProgress.type;
-      var context = providerType._context;
+      var context;
+
+      if (enableRenderableContext) {
+        context = workInProgress.type;
+      } else {
+        context = workInProgress.type._context;
+      }
+
       var newProps = workInProgress.pendingProps;
       var oldProps = workInProgress.memoizedProps;
       var newValue = newProps.value;
@@ -22766,34 +22797,19 @@ if (__DEV__) {
       return workInProgress.child;
     }
 
-    var hasWarnedAboutUsingContextAsConsumer = false;
-
     function updateContextConsumer(current, workInProgress, renderLanes) {
-      var context = workInProgress.type; // The logic below for Context differs depending on PROD or DEV mode. In
-      // DEV mode, we create a separate object for Context.Consumer that acts
-      // like a proxy to Context. This proxy object adds unnecessary code in PROD
-      // so we use the old behaviour (Context.Consumer references Context) to
-      // reduce size and overhead. The separate object references context via
-      // a property called "_context", which also gives us the ability to check
-      // in DEV mode if this property exists or not and warn if it does not.
+      var context;
 
-      {
-        if (context._context === undefined) {
-          // This may be because it's a Context (rather than a Consumer).
-          // Or it may be because it's older React where they're the same thing.
-          // We only want to warn if we're sure it's a new React.
-          if (context !== context.Consumer) {
-            if (!hasWarnedAboutUsingContextAsConsumer) {
-              hasWarnedAboutUsingContextAsConsumer = true;
+      if (enableRenderableContext) {
+        var consumerType = workInProgress.type;
+        context = consumerType._context;
+      } else {
+        context = workInProgress.type;
 
-              error(
-                "Rendering <Context> directly is not supported and will be removed in " +
-                  "a future major release. Did you mean to render <Context.Consumer> instead?"
-              );
-            }
+        {
+          if (context._context !== undefined) {
+            context = context._context;
           }
-        } else {
-          context = context._context;
         }
       }
 
@@ -23033,7 +23049,14 @@ if (__DEV__) {
 
         case ContextProvider: {
           var newValue = workInProgress.memoizedProps.value;
-          var context = workInProgress.type._context;
+          var context;
+
+          if (enableRenderableContext) {
+            context = workInProgress.type;
+          } else {
+            context = workInProgress.type._context;
+          }
+
           pushProvider(workInProgress, context, newValue);
           break;
         }
@@ -24035,8 +24058,14 @@ if (__DEV__) {
           var oldProps = currentParent.memoizedProps;
 
           if (oldProps !== null) {
-            var providerType = parent.type;
-            var context = providerType._context;
+            var context = void 0;
+
+            if (enableRenderableContext) {
+              context = parent.type;
+            } else {
+              context = parent.type._context;
+            }
+
             var newProps = parent.pendingProps;
             var newValue = newProps.value;
             var oldValue = oldProps.value;
@@ -24577,7 +24606,10 @@ if (__DEV__) {
     }
 
     function collectNearestContextValues(node, context, childContextValues) {
-      if (node.tag === ContextProvider && node.type._context === context) {
+      if (
+        node.tag === ContextProvider &&
+        (enableRenderableContext ? node.type : node.type._context) === context
+      ) {
         var contextValue = node.memoizedProps.value;
         childContextValues.push(contextValue);
       } else {
@@ -25647,7 +25679,14 @@ if (__DEV__) {
 
         case ContextProvider:
           // Pop provider fiber
-          var context = workInProgress.type._context;
+          var context;
+
+          if (enableRenderableContext) {
+            context = workInProgress.type;
+          } else {
+            context = workInProgress.type._context;
+          }
+
           popProvider(context, workInProgress);
           bubbleProperties(workInProgress);
           return null;
@@ -26123,7 +26162,14 @@ if (__DEV__) {
           return null;
 
         case ContextProvider:
-          var context = workInProgress.type._context;
+          var context;
+
+          if (enableRenderableContext) {
+            context = workInProgress.type;
+          } else {
+            context = workInProgress.type._context;
+          }
+
           popProvider(context, workInProgress);
           return null;
 
@@ -26214,7 +26260,14 @@ if (__DEV__) {
           break;
 
         case ContextProvider:
-          var context = interruptedWork.type._context;
+          var context;
+
+          if (enableRenderableContext) {
+            context = interruptedWork.type;
+          } else {
+            context = interruptedWork.type._context;
+          }
+
           popProvider(context, interruptedWork);
           break;
 
@@ -36015,13 +36068,29 @@ if (__DEV__) {
             if (typeof type === "object" && type !== null) {
               switch (type.$$typeof) {
                 case REACT_PROVIDER_TYPE:
-                  fiberTag = ContextProvider;
-                  break getTag;
+                  if (!enableRenderableContext) {
+                    fiberTag = ContextProvider;
+                    break getTag;
+                  }
+
+                // Fall through
 
                 case REACT_CONTEXT_TYPE:
-                  // This is a consumer
-                  fiberTag = ContextConsumer;
-                  break getTag;
+                  if (enableRenderableContext) {
+                    fiberTag = ContextProvider;
+                    break getTag;
+                  } else {
+                    fiberTag = ContextConsumer;
+                    break getTag;
+                  }
+
+                case REACT_CONSUMER_TYPE:
+                  if (enableRenderableContext) {
+                    fiberTag = ContextConsumer;
+                    break getTag;
+                  }
+
+                // Fall through
 
                 case REACT_FORWARD_REF_TYPE:
                   fiberTag = ForwardRef;
@@ -36452,7 +36521,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-5c26b48f";
+    var ReactVersion = "18.3.0-www-modern-f9a58904";
 
     function createPortal$1(
       children,

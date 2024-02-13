@@ -17,6 +17,7 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
+  REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
@@ -83,6 +84,7 @@ var isArrayImpl = Array.isArray,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner$1 = { current: null };
 function ReactElement$1(type, key, ref, owner, props) {
@@ -431,11 +433,18 @@ exports.createContext = function (defaultValue) {
     Provider: null,
     Consumer: null
   };
-  defaultValue.Provider = {
-    $$typeof: REACT_PROVIDER_TYPE,
-    _context: defaultValue
-  };
-  return (defaultValue.Consumer = defaultValue);
+  enableRenderableContext
+    ? ((defaultValue.Provider = defaultValue),
+      (defaultValue.Consumer = {
+        $$typeof: REACT_CONSUMER_TYPE,
+        _context: defaultValue
+      }))
+    : ((defaultValue.Provider = {
+        $$typeof: REACT_PROVIDER_TYPE,
+        _context: defaultValue
+      }),
+      (defaultValue.Consumer = defaultValue));
+  return defaultValue;
 };
 exports.createElement = function (type, config, children) {
   var propName,
@@ -609,4 +618,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-369264d7";
+exports.version = "18.3.0-www-modern-04e2d939";

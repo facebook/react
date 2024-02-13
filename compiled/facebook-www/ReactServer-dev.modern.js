@@ -84,8 +84,8 @@ if (__DEV__) {
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableAsyncActions = dynamicFeatureFlags.enableAsyncActions;
-    // On WWW, true is used for a new modern build.
+      enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
 
     /**
      * Keeps track of the current Cache dispatcher.
@@ -177,7 +177,9 @@ if (__DEV__) {
     var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
     var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
     var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-    var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
+    var REACT_PROVIDER_TYPE = Symbol.for("react.provider"); // TODO: Delete with enableRenderableContext
+
+    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
     var REACT_CONTEXT_TYPE = Symbol.for("react.context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
@@ -362,13 +364,30 @@ if (__DEV__) {
         }
 
         switch (type.$$typeof) {
+          case REACT_PROVIDER_TYPE:
+            if (enableRenderableContext) {
+              return null;
+            } else {
+              var provider = type;
+              return getContextName(provider._context) + ".Provider";
+            }
+
           case REACT_CONTEXT_TYPE:
             var context = type;
-            return getContextName(context) + ".Consumer";
 
-          case REACT_PROVIDER_TYPE:
-            var provider = type;
-            return getContextName(provider._context) + ".Provider";
+            if (enableRenderableContext) {
+              return getContextName(context) + ".Provider";
+            } else {
+              return getContextName(context) + ".Consumer";
+            }
+
+          case REACT_CONSUMER_TYPE:
+            if (enableRenderableContext) {
+              var consumer = type;
+              return getContextName(consumer._context) + ".Consumer";
+            } else {
+              return null;
+            }
 
           case REACT_FORWARD_REF_TYPE:
             return getWrappedName(type, type.render, "ForwardRef");
@@ -814,8 +833,9 @@ if (__DEV__) {
         if (
           type.$$typeof === REACT_LAZY_TYPE ||
           type.$$typeof === REACT_MEMO_TYPE ||
-          type.$$typeof === REACT_PROVIDER_TYPE ||
           type.$$typeof === REACT_CONTEXT_TYPE ||
+          (!enableRenderableContext && type.$$typeof === REACT_PROVIDER_TYPE) ||
+          (enableRenderableContext && type.$$typeof === REACT_CONSUMER_TYPE) ||
           type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used
@@ -2652,7 +2672,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-20165ed1";
+    var ReactVersion = "18.3.0-www-modern-23ad9558";
 
     // Patch fetch
     var Children = {
