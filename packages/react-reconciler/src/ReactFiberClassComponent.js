@@ -32,7 +32,7 @@ import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFrom
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';
-import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
+import {REACT_CONTEXT_TYPE, REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent';
 import {
@@ -596,8 +596,7 @@ function constructClassInstance(
         // Allow null for conditional declaration
         contextType === null ||
         (contextType !== undefined &&
-          contextType.$$typeof === REACT_CONTEXT_TYPE &&
-          contextType._context === undefined); // Not a <Context.Consumer>
+          contextType.$$typeof === REACT_CONTEXT_TYPE);
 
       if (!isValid && !didWarnAboutInvalidateContextType.has(ctor)) {
         didWarnAboutInvalidateContextType.add(ctor);
@@ -611,10 +610,7 @@ function constructClassInstance(
             'try moving the createContext() call to a separate file.';
         } else if (typeof contextType !== 'object') {
           addendum = ' However, it is set to a ' + typeof contextType + '.';
-        } else if (contextType.$$typeof === REACT_PROVIDER_TYPE) {
-          addendum = ' Did you accidentally pass the Context.Provider instead?';
-        } else if (contextType._context !== undefined) {
-          // <Context.Consumer>
+        } else if (contextType.$$typeof === REACT_CONSUMER_TYPE) {
           addendum = ' Did you accidentally pass the Context.Consumer instead?';
         } else {
           addendum =

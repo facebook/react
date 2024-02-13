@@ -15,7 +15,7 @@ import type {
 import type {
   ReactNodeList,
   ReactContext,
-  ReactProviderType,
+  ReactConsumerType,
   OffscreenMode,
   Wakeable,
   Thenable,
@@ -32,6 +32,7 @@ import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
+import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 
 import {
   scheduleWork,
@@ -129,6 +130,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_CONSUMER_TYPE,
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_POSTPONE_TYPE,
@@ -1393,7 +1395,6 @@ let didWarnAboutReassigningProps = false;
 const didWarnAboutDefaultPropsOnFunctionComponent: {[string]: boolean} = {};
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
-let hasWarnedAboutUsingContextAsConsumer = false;
 
 // This would typically be a function component but we still support module pattern
 // components for some reason.
@@ -1703,31 +1704,6 @@ function renderContextConsumer(
   context: ReactContext<any>,
   props: Object,
 ): void {
-  // The logic below for Context differs depending on PROD or DEV mode. In
-  // DEV mode, we create a separate object for Context.Consumer that acts
-  // like a proxy to Context. This proxy object adds unnecessary code in PROD
-  // so we use the old behaviour (Context.Consumer references Context) to
-  // reduce size and overhead. The separate object references context via
-  // a property called "_context", which also gives us the ability to check
-  // in DEV mode if this property exists or not and warn if it does not.
-  if (__DEV__) {
-    if ((context: any)._context === undefined) {
-      // This may be because it's a Context (rather than a Consumer).
-      // Or it may be because it's older React where they're the same thing.
-      // We only want to warn if we're sure it's a new React.
-      if (context !== context.Consumer) {
-        if (!hasWarnedAboutUsingContextAsConsumer) {
-          hasWarnedAboutUsingContextAsConsumer = true;
-          console.error(
-            'Rendering <Context> directly is not supported and will be removed in ' +
-              'a future major release. Did you mean to render <Context.Consumer> instead?',
-          );
-        }
-      }
-    } else {
-      context = (context: any)._context;
-    }
-  }
   const render = props.children;
 
   if (__DEV__) {
@@ -1754,10 +1730,9 @@ function renderContextProvider(
   request: Request,
   task: Task,
   keyPath: KeyNode,
-  type: ReactProviderType<any>,
+  context: ReactContext<any>,
   props: Object,
 ): void {
-  const context = type._context;
   const value = props.value;
   const children = props.children;
   let prevSnapshot;
@@ -1909,12 +1884,37 @@ function renderElement(
         return;
       }
       case REACT_PROVIDER_TYPE: {
-        renderContextProvider(request, task, keyPath, type, props);
-        return;
+        if (!enableRenderableContext) {
+          const context: ReactContext<any> = (type: any)._context;
+          renderContextProvider(request, task, keyPath, context, props);
+          return;
+        }
+        // Fall through
       }
       case REACT_CONTEXT_TYPE: {
-        renderContextConsumer(request, task, keyPath, type, props);
-        return;
+        if (enableRenderableContext) {
+          const context = type;
+          renderContextProvider(request, task, keyPath, context, props);
+          return;
+        } else {
+          let context: ReactContext<any> = (type: any);
+          if (__DEV__) {
+            if ((context: any)._context !== undefined) {
+              context = (context: any)._context;
+            }
+          }
+          renderContextConsumer(request, task, keyPath, context, props);
+          return;
+        }
+      }
+      case REACT_CONSUMER_TYPE: {
+        if (enableRenderableContext) {
+          const context: ReactContext<any> = (type: ReactConsumerType<any>)
+            ._context;
+          renderContextConsumer(request, task, keyPath, context, props);
+          return;
+        }
+        // Fall through
       }
       case REACT_LAZY_TYPE: {
         renderLazyComponent(request, task, keyPath, type, props);

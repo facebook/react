@@ -121,6 +121,8 @@ export const passChildrenWhenCloningPersistedNodes = false;
 
 export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
+export const enableRenderableContext = false;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */

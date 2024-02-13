@@ -1000,18 +1000,11 @@ describe('ReactDOMServer', () => {
     ]);
   });
 
+  // @gate enableRenderableContext || !__DEV__
   it('should warn if an invalid contextType is defined', () => {
     const Context = React.createContext();
-
     class ComponentA extends React.Component {
-      // It should warn for both Context.Consumer and Context.Provider
       static contextType = Context.Consumer;
-      render() {
-        return <div />;
-      }
-    }
-    class ComponentB extends React.Component {
-      static contextType = Context.Provider;
       render() {
         return <div />;
       }
@@ -1028,13 +1021,14 @@ describe('ReactDOMServer', () => {
     // Warnings should be deduped by component type
     ReactDOMServer.renderToString(<ComponentA />);
 
-    expect(() => {
-      ReactDOMServer.renderToString(<ComponentB />);
-    }).toErrorDev(
-      'Warning: ComponentB defines an invalid contextType. ' +
-        'contextType should point to the Context object returned by React.createContext(). ' +
-        'Did you accidentally pass the Context.Provider instead?',
-    );
+    class ComponentB extends React.Component {
+      static contextType = Context.Provider;
+      render() {
+        return <div />;
+      }
+    }
+    // Does not warn because Context === Context.Provider.
+    ReactDOMServer.renderToString(<ComponentB />);
   });
 
   it('should not warn when class contextType is null', () => {

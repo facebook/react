@@ -38,6 +38,7 @@ import {
   enableDebugTracing,
   enableFloat,
   enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -96,6 +97,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_CONSUMER_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
@@ -580,12 +582,25 @@ export function createFiberFromTypeAndProps(
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              fiberTag = ContextProvider;
-              break getTag;
+              if (!enableRenderableContext) {
+                fiberTag = ContextProvider;
+                break getTag;
+              }
+            // Fall through
             case REACT_CONTEXT_TYPE:
-              // This is a consumer
-              fiberTag = ContextConsumer;
-              break getTag;
+              if (enableRenderableContext) {
+                fiberTag = ContextProvider;
+                break getTag;
+              } else {
+                fiberTag = ContextConsumer;
+                break getTag;
+              }
+            case REACT_CONSUMER_TYPE:
+              if (enableRenderableContext) {
+                fiberTag = ContextConsumer;
+                break getTag;
+              }
+            // Fall through
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
               if (__DEV__) {

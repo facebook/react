@@ -564,18 +564,11 @@ describe('ReactContextValidator', () => {
     );
   });
 
+  // @gate enableRenderableContext || !__DEV__
   it('should warn if an invalid contextType is defined', () => {
     const Context = React.createContext();
-    // This tests that both Context.Consumer and Context.Provider
-    // warn about invalid contextType.
     class ComponentA extends React.Component {
       static contextType = Context.Consumer;
-      render() {
-        return <div />;
-      }
-    }
-    class ComponentB extends React.Component {
-      static contextType = Context.Provider;
       render() {
         return <div />;
       }
@@ -592,13 +585,14 @@ describe('ReactContextValidator', () => {
     // Warnings should be deduped by component type
     ReactTestUtils.renderIntoDocument(<ComponentA />);
 
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<ComponentB />);
-    }).toErrorDev(
-      'Warning: ComponentB defines an invalid contextType. ' +
-        'contextType should point to the Context object returned by React.createContext(). ' +
-        'Did you accidentally pass the Context.Provider instead?',
-    );
+    class ComponentB extends React.Component {
+      static contextType = Context.Provider;
+      render() {
+        return <div />;
+      }
+    }
+    // This doesn't warn since Context.Provider === Context now.
+    ReactTestUtils.renderIntoDocument(<ComponentB />);
   });
 
   it('should not warn when class contextType is null', () => {
@@ -722,20 +716,5 @@ describe('ReactContextValidator', () => {
       'Warning: Failed prop type: The prop `dontPassToSeeErrorStack` is marked as required in `Validator`, but its value is `undefined`.\n' +
         '    in Validator (at **)',
     );
-  });
-
-  it('warns if displayName is set on the consumer type', () => {
-    const Context = React.createContext(null);
-
-    expect(() => {
-      Context.Consumer.displayName = 'IgnoredName';
-    }).toWarnDev(
-      'Warning: Setting `displayName` on Context.Consumer has no effect. ' +
-        "You should set it directly on the context with Context.displayName = 'IgnoredName'.",
-      {withoutStack: true},
-    );
-
-    // warning is deduped by Context so subsequent setting is fine
-    Context.Consumer.displayName = 'ADifferentName';
   });
 });

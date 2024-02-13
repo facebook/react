@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/ReactTypes';
 import type {
   Fiber,
   ContextDependency,
@@ -46,6 +46,7 @@ import {
   enableLazyContextPropagation,
   enableFormActions,
   enableAsyncActions,
+  enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
 import {
   getHostTransitionProvider,
@@ -561,8 +562,12 @@ function propagateParentContextChanges(
 
       const oldProps = currentParent.memoizedProps;
       if (oldProps !== null) {
-        const providerType: ReactProviderType<any> = parent.type;
-        const context: ReactContext<any> = providerType._context;
+        let context: ReactContext<any>;
+        if (enableRenderableContext) {
+          context = parent.type;
+        } else {
+          context = parent.type._context;
+        }
 
         const newProps = parent.pendingProps;
         const newValue = newProps.value;
