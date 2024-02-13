@@ -18,6 +18,8 @@ let ErrorBoundary;
 
 describe('useMemoCache()', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     act = require('internal-test-utils').act;

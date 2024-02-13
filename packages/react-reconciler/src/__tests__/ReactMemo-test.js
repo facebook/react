@@ -23,6 +23,8 @@ let assertLog;
 
 describe('memo', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');

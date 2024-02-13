@@ -14,6 +14,7 @@ let ReactDOM = require('react-dom');
 
 describe('root level refs with legacy APIs', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
   });

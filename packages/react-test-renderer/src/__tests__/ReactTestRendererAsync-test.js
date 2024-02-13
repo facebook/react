@@ -18,6 +18,8 @@ let waitFor;
 
 describe('ReactTestRendererAsync', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');

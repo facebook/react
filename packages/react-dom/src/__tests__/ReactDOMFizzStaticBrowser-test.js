@@ -29,6 +29,7 @@ let container;
 
 describe('ReactDOMFizzStaticBrowser', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFizzServer = require('react-dom/server.browser');

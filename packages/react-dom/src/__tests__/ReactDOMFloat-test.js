@@ -40,6 +40,7 @@ let streamingContainer;
 
 describe('ReactDOMFloat', () => {
   beforeEach(() => {
+    jest.resetModules();
     JSDOM = require('jsdom').JSDOM;
 
     const jsdom = new JSDOM(

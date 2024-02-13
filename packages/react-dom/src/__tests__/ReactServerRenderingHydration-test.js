@@ -22,6 +22,7 @@ let act;
 // If a test only needs ReactDOMServer, put it in ReactServerRendering-test instead.
 describe('ReactDOMServerHydration', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');

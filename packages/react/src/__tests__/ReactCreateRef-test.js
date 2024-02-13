@@ -14,6 +14,8 @@ let ReactTestRenderer;
 
 describe('ReactCreateRef', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
   });

@@ -16,6 +16,7 @@ let Suspense;
 
 describe('ReactDOMFizzStaticNode', () => {
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     if (__EXPERIMENTAL__) {
       ReactDOMFizzStatic = require('react-dom/static');

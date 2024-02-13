@@ -24,6 +24,8 @@ let act;
 
 describe('ReactContextValidator', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOMClient = require('react-dom/client');

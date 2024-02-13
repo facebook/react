@@ -6,6 +6,7 @@ let log;
 
 describe('Activity StrictMode', () => {
   beforeEach(() => {
+    jest.resetModules();
     log = [];
 
     React = require('react');

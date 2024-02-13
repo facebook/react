@@ -17,6 +17,8 @@ let seededCache;
 
 describe('ReactSuspenseWithNoopRenderer', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     Fragment = React.Fragment;
     ReactNoop = require('react-noop-renderer');

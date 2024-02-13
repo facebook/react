@@ -15,6 +15,8 @@ let ReactNoopServer;
 
 describe('ReactServer', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     React = require('react');
     ReactNoopServer = require('react-noop-renderer/server');
   });

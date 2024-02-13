@@ -11,6 +11,8 @@ let flushFakeMicrotasks;
 
 describe('ReactFlushSync (AggregateError not available)', () => {
   beforeEach(() => {
+    jest.resetModules();
+
     global.AggregateError = undefined;
 
     // When AggregateError is not available, the errors are rethrown in a
