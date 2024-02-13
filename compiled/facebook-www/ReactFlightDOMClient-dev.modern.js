@@ -218,7 +218,7 @@ if (__DEV__) {
 
     var knownServerReferences = new WeakMap(); // Serializable values
 
-    function registerServerReference(proxy, reference) {
+    function registerServerReference(proxy, reference, encodeFormAction) {
       knownServerReferences.set(proxy, reference);
     } // $FlowFixMe[method-unbinding]
 
@@ -862,12 +862,19 @@ if (__DEV__) {
       );
     }
 
-    function createResponse(bundlerConfig, moduleLoading, callServer, nonce) {
+    function createResponse(
+      bundlerConfig,
+      moduleLoading,
+      callServer,
+      encodeFormAction,
+      nonce
+    ) {
       var chunks = new Map();
       var response = {
         _bundlerConfig: bundlerConfig,
         _moduleLoading: moduleLoading,
         _callServer: callServer !== undefined ? callServer : missingCall,
+        _encodeFormAction: encodeFormAction,
         _nonce: nonce,
         _chunks: chunks,
         _stringDecoder: createStringDecoder(),

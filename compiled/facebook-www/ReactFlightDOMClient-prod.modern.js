@@ -560,6 +560,7 @@ exports.createFromReadableStream = function (stream, options) {
     _bundlerConfig: options,
     _moduleLoading: null,
     _callServer: missingCall,
+    _encodeFormAction: void 0,
     _nonce: void 0,
     _chunks: chunks,
     _stringDecoder: new TextDecoder(),
