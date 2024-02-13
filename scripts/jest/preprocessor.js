@@ -19,6 +19,9 @@ const pathToBabel = path.join(
 const pathToBabelPluginReplaceConsoleCalls = require.resolve(
   '../babel/transform-replace-console-calls'
 );
+const pathToBabelPluginResetRequires = require.resolve(
+  '../babel/transform-reset-requires'
+);
 const pathToTransformInfiniteLoops = require.resolve(
   '../babel/transform-prevent-infinite-loops'
 );
@@ -73,7 +76,25 @@ module.exports = {
       const isInDevToolsPackages = !!filePath.match(
         /\/packages\/react-devtools.*\//
       );
-      const testOnlyPlugins = [];
+      const testOnlyPlugins = [
+        [
+          pathToBabelPluginResetRequires,
+          {
+            moduleNames: [
+              'react',
+              'react-dom',
+              'react-dom/client',
+              'internal-test-utils',
+              'scheduler',
+              'react-noop-renderer',
+              'scheduler/unstable_mock',
+              'react-dom/test-utils',
+              'shared/ReactFeatureFlags',
+              'react-test-renderer',
+            ],
+          },
+        ],
+      ];
       const sourceOnlyPlugins = [];
       if (process.env.NODE_ENV === 'development' && !isInDevToolsPackages) {
         sourceOnlyPlugins.push(pathToBabelPluginReplaceConsoleCalls);
@@ -104,7 +125,7 @@ module.exports = {
       }
 
       let sourceAst = hermesParser.parse(src, {babel: true});
-      return {
+      const result = {
         code: babel.transformFromAstSync(
           sourceAst,
           src,
@@ -120,6 +141,11 @@ module.exports = {
           )
         ).code,
       };
+      if (isTestFile) {
+        // console.log('test23', result.code);
+      }
+
+      return result;
     }
     return {code: src};
   },

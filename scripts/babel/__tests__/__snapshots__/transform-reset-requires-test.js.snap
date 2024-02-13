@@ -1,0 +1,163 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`transformPlugin inserts before each at top 1`] = `
+"### Before
+
+const React = require('react');
+describe('test', () => {
+
+});
+
+
+### After
+let React;
+beforeEach(() => {
+  React = require("react");
+});
+describe('test', () => {});"
+`;
+
+exports[`transformPlugin transforms act correctly 1`] = `
+"### Before
+const act = require('internal-test-utils').act;
+
+### After
+let act;
+beforeEach(() => {
+  act = require("internal-test-utils").act;
+});"
+`;
+
+exports[`transformPlugin transforms all imports correctly 1`] = `
+"### Before
+
+const React = require('react');
+const ReactDOM = require('react-dom');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
+
+
+### After
+let act;
+let ReactDOMClient;
+let ReactDOM;
+let React;
+beforeEach(() => {
+  React = require("react");
+  ReactDOM = require("react-dom");
+  ReactDOMClient = require("react-dom/client");
+  act = require("internal-test-utils").act;
+});"
+`;
+
+exports[`transformPlugin transforms babel output correctly 1`] = `
+"### Before
+
+var React = require('react');var _React = React,
+startTransition = _React.startTransition,useDeferredValue = _React.useDeferredValue;
+var ReactNoop = require('react-noop-renderer');var _require = require('internal-test-utils'),waitFor = _require.waitFor,waitForAll = _require.waitForAll,waitForPaint = _require.waitForPaint,waitForThrow = _require.waitForThrow,assertLog = _require.assertLog;
+var act = require('internal-test-utils').act;
+
+
+### After
+let assertLog;
+let waitForThrow;
+let waitForPaint;
+let waitForAll;
+let waitFor;
+let useDeferredValue;
+let startTransition;
+let act;
+
+let _React;
+
+let _require;
+
+let ReactNoop;
+let React;
+beforeEach(() => {
+  React = require("react");
+  ReactNoop = require("react-noop-renderer");
+  _require = require("internal-test-utils");
+  _React = React;
+  act = require("internal-test-utils").act;
+  startTransition = _React.startTransition;
+  useDeferredValue = _React.useDeferredValue;
+  waitFor = _require.waitFor;
+  waitForAll = _require.waitForAll;
+  waitForPaint = _require.waitForPaint;
+  waitForThrow = _require.waitForThrow;
+  assertLog = _require.assertLog;
+});"
+`;
+
+exports[`transformPlugin transforms destructured imports correctly 1`] = `
+"### Before
+
+const React = require('react');
+const {startTransition, useDeferredValue} = React;
+const {
+  waitFor,
+  waitForAll,
+  waitForPaint,
+  waitForThrow,
+  assertLog,
+  act,
+} = require('internal-test-utils');
+
+
+### After
+let act;
+let assertLog;
+let waitForThrow;
+let waitForPaint;
+let waitForAll;
+let waitFor;
+let useDeferredValue;
+let startTransition;
+let React;
+beforeEach(() => {
+  React = require("react");
+  startTransition = React.startTransition;
+  useDeferredValue = React.useDeferredValue;
+  waitFor = require("internal-test-utils").waitFor;
+  waitForAll = require("internal-test-utils").waitForAll;
+  waitForPaint = require("internal-test-utils").waitForPaint;
+  waitForThrow = require("internal-test-utils").waitForThrow;
+  assertLog = require("internal-test-utils").assertLog;
+  act = require("internal-test-utils").act;
+});"
+`;
+
+exports[`transformPlugin transforms require('react') correctly 1`] = `
+"### Before
+const React = require('react');
+
+### After
+let React;
+beforeEach(() => {
+  React = require("react");
+});"
+`;
+
+exports[`transformPlugin transforms require('react-dom') correctly 1`] = `
+"### Before
+const ReactDOM = require('react-dom');
+
+### After
+let ReactDOM;
+beforeEach(() => {
+  ReactDOM = require("react-dom");
+});"
+`;
+
+exports[`transformPlugin transforms require('react-dom/client') correctly 1`] = `
+"### Before
+const ReactDOMClient = require('react-dom/client');
+
+### After
+let ReactDOMClient;
+beforeEach(() => {
+  ReactDOMClient = require("react-dom/client");
+});"
+`;

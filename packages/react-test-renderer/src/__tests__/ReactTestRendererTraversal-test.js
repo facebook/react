@@ -18,54 +18,59 @@ const RCTView = 'RCTView';
 const View = props => <RCTView {...props} />;
 
 describe('ReactTestRendererTraversal', () => {
+  let Example;
+  let ExampleSpread;
+  let ExampleFn;
+  let ExampleNull;
+  let ExampleForwardRef;
   beforeEach(() => {
     ReactTestRenderer = require('react-test-renderer');
     Context = React.createContext(null);
-  });
 
-  class Example extends React.Component {
-    render() {
-      return (
-        <View>
-          <View foo="foo">
-            <View bar="bar" />
-            <View bar="bar" baz="baz" itself="itself" />
-            <View />
-            <ExampleSpread bar="bar" />
-            <ExampleFn bar="bar" bing="bing" />
-            <ExampleNull bar="bar" />
-            <ExampleNull null="null">
-              <View void="void" />
-              <View void="void" />
-            </ExampleNull>
-            <React.Profiler id="test" onRender={() => {}}>
-              <ExampleForwardRef qux="qux" />
-            </React.Profiler>
-            <>
+    Example = class extends React.Component {
+      render() {
+        return (
+          <View>
+            <View foo="foo">
+              <View bar="bar" />
+              <View bar="bar" baz="baz" itself="itself" />
+              <View />
+              <ExampleSpread bar="bar" />
+              <ExampleFn bar="bar" bing="bing" />
+              <ExampleNull bar="bar" />
+              <ExampleNull null="null">
+                <View void="void" />
+                <View void="void" />
+              </ExampleNull>
+              <React.Profiler id="test" onRender={() => {}}>
+                <ExampleForwardRef qux="qux" />
+              </React.Profiler>
               <>
-                <Context.Provider value={null}>
-                  <Context.Consumer>
-                    {() => <View nested={true} />}
-                  </Context.Consumer>
-                </Context.Provider>
+                <>
+                  <Context.Provider value={null}>
+                    <Context.Consumer>
+                      {() => <View nested={true} />}
+                    </Context.Consumer>
+                  </Context.Provider>
+                </>
+                <View nested={true} />
+                <View nested={true} />
               </>
-              <View nested={true} />
-              <View nested={true} />
-            </>
+            </View>
           </View>
-        </View>
-      );
-    }
-  }
-  class ExampleSpread extends React.Component {
-    render = () => <View {...this.props} />;
-  }
-  const ExampleFn = props => <View baz="baz" />;
-  const ExampleNull = props => null;
+        );
+      }
+    };
+    ExampleSpread = class extends React.Component {
+      render = () => <View {...this.props} />;
+    };
+    ExampleFn = props => <View baz="baz" />;
+    ExampleNull = props => null;
 
-  const ExampleForwardRef = React.forwardRef((props, ref) => (
-    <View {...props} ref={ref} />
-  ));
+    ExampleForwardRef = React.forwardRef((props, ref) => (
+      <View {...props} ref={ref} />
+    ));
+  });
 
   it('initializes', () => {
     const render = ReactTestRenderer.create(<Example />);

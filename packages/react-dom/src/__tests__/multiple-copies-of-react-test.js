@@ -9,19 +9,26 @@
 
 'use strict';
 
-let React = require('react');
-const ReactDOMClient = require('react-dom/client');
-const act = require('internal-test-utils').act;
+let React;
+let ReactDOMClient;
+let act;
 
-class TextWithStringRef extends React.Component {
-  render() {
-    jest.resetModules();
-    React = require('react');
-    return <span ref="foo">Hello world!</span>;
-  }
-}
+let TextWithStringRef;
 
 describe('when different React version is used with string ref', () => {
+  beforeEach(() => {
+    React = require('react');
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
+
+    TextWithStringRef = class extends React.Component {
+      render() {
+        jest.resetModules();
+        React = require('react');
+        return <span ref="foo">Hello world!</span>;
+      }
+    };
+  });
   it('throws the "Refs must have owner" warning', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);

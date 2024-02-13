@@ -15,34 +15,38 @@ if (global.window) {
   throw new Error('This test must run in a Node environment.');
 }
 
-// The issue only reproduced when React was loaded before JSDOM.
-const React = require('react');
-const ReactDOMClient = require('react-dom/client');
-const act = require('internal-test-utils').act;
-
-// Initialize JSDOM separately.
-// We don't use our normal JSDOM setup because we want to load React first.
-const {JSDOM} = require('jsdom');
-global.requestAnimationFrame = setTimeout;
-global.cancelAnimationFrame = clearTimeout;
-const jsdom = new JSDOM(`<div id="app-root"></div>`);
-global.window = jsdom.window;
-global.document = jsdom.window.document;
-global.navigator = jsdom.window.navigator;
-
-class Bad extends React.Component {
-  componentDidUpdate() {
-    throw new Error('no');
-  }
-  render() {
-    return null;
-  }
-}
+let React;
+let ReactDOMClient;
+let act;
+let Bad;
 
 describe('ReactErrorLoggingRecovery', () => {
   const originalConsoleError = console.error;
 
   beforeEach(() => {
+    // The issue only reproduced when React was loaded before JSDOM.
+    React = require('react');
+    ReactDOMClient = require('react-dom/client');
+    act = require('internal-test-utils').act;
+
+    // Initialize JSDOM separately.
+    // We don't use our normal JSDOM setup because we want to load React first.
+    const {JSDOM} = require('jsdom');
+    global.requestAnimationFrame = setTimeout;
+    global.cancelAnimationFrame = clearTimeout;
+    const jsdom = new JSDOM(`<div id="app-root"></div>`);
+    global.window = jsdom.window;
+    global.document = jsdom.window.document;
+    global.navigator = jsdom.window.navigator;
+
+    Bad = class extends React.Component {
+      componentDidUpdate() {
+        throw new Error('no');
+      }
+      render() {
+        return null;
+      }
+    };
     console.error = error => {
       throw new Error('Buggy console.error');
     };
