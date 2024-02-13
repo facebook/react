@@ -94,6 +94,17 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       if (typeof Dispatcher.useFormState === 'function') {
         // This type check is for Flow only.
         Dispatcher.useFormState((s: mixed, p: mixed) => s, null);
+        try {
+          // $FlowFixMe[not-a-function]: Already checked above.
+          Dispatcher.useFormState(
+            (s: mixed, p: mixed) => s,
+            // This isn't actually a valid call.
+            // We just simulate a pending promise here to exhaust all cases in the stackframe cache.
+            ({
+              then() {},
+            }: any),
+          );
+        } catch (x) {}
       }
       if (typeof Dispatcher.use === 'function') {
         // This type check is for Flow only.
