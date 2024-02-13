@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<99069a73679761ba23b9ab688e792429>>
+ * @generated SignedSource<<50de4881bc1e7323607d21cae81406f7>>
  */
 
 "use strict";
@@ -25,7 +25,9 @@ if (__DEV__) {
     var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
     var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
     var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-    var REACT_PROVIDER_TYPE = Symbol.for("react.provider");
+    var REACT_PROVIDER_TYPE = Symbol.for("react.provider"); // TODO: Delete with enableRenderableContext
+
+    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
     var REACT_CONTEXT_TYPE = Symbol.for("react.context");
     var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
     var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
@@ -38,6 +40,7 @@ if (__DEV__) {
     // NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
     var enableDebugTracing = false;
     var enableScopeAPI = false;
+    var enableRenderableContext = false;
     var enableLegacyHidden = false;
     var enableTransitionTracing = false;
 
@@ -67,8 +70,9 @@ if (__DEV__) {
         if (
           type.$$typeof === REACT_LAZY_TYPE ||
           type.$$typeof === REACT_MEMO_TYPE ||
-          type.$$typeof === REACT_PROVIDER_TYPE ||
           type.$$typeof === REACT_CONTEXT_TYPE ||
+          type.$$typeof === REACT_PROVIDER_TYPE ||
+          enableRenderableContext ||
           type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
           // types supported by any Flight configuration anywhere since
           // we don't know which Flight build this will end up being used
@@ -107,8 +111,17 @@ if (__DEV__) {
                   case REACT_FORWARD_REF_TYPE:
                   case REACT_LAZY_TYPE:
                   case REACT_MEMO_TYPE:
-                  case REACT_PROVIDER_TYPE:
                     return $$typeofType;
+
+                  case REACT_CONSUMER_TYPE:
+
+                  // Fall through
+
+                  case REACT_PROVIDER_TYPE: {
+                    return $$typeofType;
+                  }
+
+                  // Fall through
 
                   default:
                     return $$typeof;
@@ -135,10 +148,14 @@ if (__DEV__) {
     var Suspense = REACT_SUSPENSE_TYPE;
     var SuspenseList = REACT_SUSPENSE_LIST_TYPE;
     function isContextConsumer(object) {
-      return typeOf(object) === REACT_CONTEXT_TYPE;
+      {
+        return typeOf(object) === REACT_CONTEXT_TYPE;
+      }
     }
     function isContextProvider(object) {
-      return typeOf(object) === REACT_PROVIDER_TYPE;
+      {
+        return typeOf(object) === REACT_PROVIDER_TYPE;
+      }
     }
     function isElement(object) {
       return (

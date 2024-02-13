@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<41fcb3aed2a769fa81ed6b7a5c498689>>
+ * @generated SignedSource<<db70fee50d49f5366bc39dfb803ccafb>>
  */
 
 "use strict";
@@ -17,6 +17,7 @@ var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
+  REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
@@ -44,6 +45,8 @@ function typeOf(object) {
               case REACT_FORWARD_REF_TYPE:
               case REACT_LAZY_TYPE:
               case REACT_MEMO_TYPE:
+                return object;
+              case REACT_CONSUMER_TYPE:
               case REACT_PROVIDER_TYPE:
                 return object;
               default:
@@ -121,8 +124,8 @@ exports.isValidElementType = function (type) {
       null !== type &&
       (type.$$typeof === REACT_LAZY_TYPE ||
         type.$$typeof === REACT_MEMO_TYPE ||
-        type.$$typeof === REACT_PROVIDER_TYPE ||
         type.$$typeof === REACT_CONTEXT_TYPE ||
+        type.$$typeof === REACT_PROVIDER_TYPE ||
         type.$$typeof === REACT_FORWARD_REF_TYPE ||
         type.$$typeof === REACT_CLIENT_REFERENCE ||
         void 0 !== type.getModuleId))

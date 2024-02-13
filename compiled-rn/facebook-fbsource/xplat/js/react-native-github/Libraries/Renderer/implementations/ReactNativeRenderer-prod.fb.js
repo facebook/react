@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<ed38f80af49bb83d5c99bd7add1018a6>>
+ * @generated SignedSource<<ca5b07aaf483e5fe1921f225cc80cfa8>>
  */
 
 "use strict";
@@ -1169,6 +1169,7 @@ var ReactSharedInternals =
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
   REACT_PROFILER_TYPE = Symbol.for("react.profiler"),
   REACT_PROVIDER_TYPE = Symbol.for("react.provider"),
+  REACT_CONSUMER_TYPE = Symbol.for("react.consumer"),
   REACT_CONTEXT_TYPE = Symbol.for("react.context"),
   REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"),
   REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"),
@@ -1214,10 +1215,10 @@ function getComponentNameFromType(type) {
   }
   if ("object" === typeof type)
     switch (type.$$typeof) {
-      case REACT_CONTEXT_TYPE:
-        return (type.displayName || "Context") + ".Consumer";
       case REACT_PROVIDER_TYPE:
         return (type._context.displayName || "Context") + ".Provider";
+      case REACT_CONTEXT_TYPE:
+        return (type.displayName || "Context") + ".Consumer";
       case REACT_FORWARD_REF_TYPE:
         var innerType = type.render;
         type = type.displayName;
@@ -5896,15 +5897,15 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
       break;
     case 10:
-      var context = workInProgress.type._context,
-        nextValue = workInProgress.memoizedProps.value;
+      var newValue = workInProgress.memoizedProps.value,
+        context = workInProgress.type._context;
       push(valueCursor, context._currentValue);
-      context._currentValue = nextValue;
+      context._currentValue = newValue;
       break;
     case 13:
-      context = workInProgress.memoizedState;
-      if (null !== context) {
-        if (null !== context.dehydrated)
+      newValue = workInProgress.memoizedState;
+      if (null !== newValue) {
+        if (null !== newValue.dehydrated)
           return (
             pushPrimaryTreeSuspenseHandler(workInProgress),
             (workInProgress.flags |= 128),
@@ -5923,9 +5924,9 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
       pushPrimaryTreeSuspenseHandler(workInProgress);
       break;
     case 19:
-      context = 0 !== (renderLanes & workInProgress.childLanes);
+      newValue = 0 !== (renderLanes & workInProgress.childLanes);
       if (0 !== (current.flags & 128)) {
-        if (context)
+        if (newValue)
           return updateSuspenseListComponent(
             current,
             workInProgress,
@@ -5933,13 +5934,13 @@ function attemptEarlyBailoutIfNoScheduledUpdate(
           );
         workInProgress.flags |= 128;
       }
-      nextValue = workInProgress.memoizedState;
-      null !== nextValue &&
-        ((nextValue.rendering = null),
-        (nextValue.tail = null),
-        (nextValue.lastEffect = null));
+      context = workInProgress.memoizedState;
+      null !== context &&
+        ((context.rendering = null),
+        (context.tail = null),
+        (context.lastEffect = null));
       push(suspenseStackCursor, suspenseStackCursor.current);
-      if (context) break;
+      if (newValue) break;
       else return null;
     case 22:
     case 23:
@@ -9388,6 +9389,7 @@ function createFiberFromTypeAndProps(
             case REACT_CONTEXT_TYPE:
               fiberTag = 9;
               break a;
+            case REACT_CONSUMER_TYPE:
             case REACT_FORWARD_REF_TYPE:
               fiberTag = 11;
               break a;
@@ -9745,10 +9747,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1141 = {
+  devToolsConfig$jscomp$inline_1140 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-79b023d7",
+    version: "18.3.0-canary-346d2262",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9764,11 +9766,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1380 = {
-  bundleType: devToolsConfig$jscomp$inline_1141.bundleType,
-  version: devToolsConfig$jscomp$inline_1141.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1141.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1141.rendererConfig,
+var internals$jscomp$inline_1379 = {
+  bundleType: devToolsConfig$jscomp$inline_1140.bundleType,
+  version: devToolsConfig$jscomp$inline_1140.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1140.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1140.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9784,26 +9786,26 @@ var internals$jscomp$inline_1380 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1141.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1140.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-79b023d7"
+  reconcilerVersion: "18.3.0-canary-346d2262"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1381 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1380 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1381.isDisabled &&
-    hook$jscomp$inline_1381.supportsFiber
+    !hook$jscomp$inline_1380.isDisabled &&
+    hook$jscomp$inline_1380.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1381.inject(
-        internals$jscomp$inline_1380
+      (rendererID = hook$jscomp$inline_1380.inject(
+        internals$jscomp$inline_1379
       )),
-        (injectedHook = hook$jscomp$inline_1381);
+        (injectedHook = hook$jscomp$inline_1380);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
