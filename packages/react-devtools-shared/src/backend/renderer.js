@@ -3252,7 +3252,6 @@ export function attach(
         hooks = inspectHooksOfFiber(
           fiber,
           (renderer.currentDispatcherRef: any),
-          true, // Include source location info for hooks
         );
       } finally {
         // Restore original console functionality.
