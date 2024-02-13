@@ -87,8 +87,10 @@ let didWarnFormActionType = false;
 let didWarnFormActionName = false;
 let didWarnFormActionTarget = false;
 let didWarnFormActionMethod = false;
+let didWarnForNewBooleanPropsWithEmptyValue: {[string]: boolean};
 let canDiffStyleForHydrationWarning;
 if (__DEV__) {
+  didWarnForNewBooleanPropsWithEmptyValue = {};
   // IE 11 parses & normalizes the style attribute as opposed to other
   // browsers. It adds spaces and sorts the properties in some
   // non-alphabetical order. Handling that would require sorting CSS
@@ -717,6 +719,19 @@ function setProp(
       if (!enableNewBooleanProps) {
         setValueForAttribute(domElement, key, value);
         break;
+      } else {
+        if (__DEV__) {
+          if (value === '' && !didWarnForNewBooleanPropsWithEmptyValue[key]) {
+            didWarnForNewBooleanPropsWithEmptyValue[key] = true;
+            console.error(
+              'Received an empty string for a boolean attribute `%s`. ' +
+                'This will treat the attribute as if it were false. ' +
+                'Either pass `false` to silence this warning, or ' +
+                'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+              key,
+            );
+          }
+        }
       }
     // fallthrough for new boolean props without the flag on
     case 'allowFullScreen':
@@ -2672,6 +2687,21 @@ function diffHydratedGenericElement(
         continue;
       case 'inert':
         if (enableNewBooleanProps) {
+          if (__DEV__) {
+            if (
+              value === '' &&
+              !didWarnForNewBooleanPropsWithEmptyValue[propKey]
+            ) {
+              didWarnForNewBooleanPropsWithEmptyValue[propKey] = true;
+              console.error(
+                'Received an empty string for a boolean attribute `%s`. ' +
+                  'This will treat the attribute as if it were false. ' +
+                  'Either pass `false` to silence this warning, or ' +
+                  'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+                propKey,
+              );
+            }
+          }
           hydrateBooleanAttribute(
             domElement,
             propKey,

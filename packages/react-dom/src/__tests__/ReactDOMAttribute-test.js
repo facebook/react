@@ -109,6 +109,35 @@ describe('ReactDOM unknown attribute', () => {
       );
     });
 
+    it('warns once for empty strings in new boolean props', async () => {
+      const el = document.createElement('div');
+      const root = ReactDOMClient.createRoot(el);
+
+      await expect(async () => {
+        await act(() => {
+          root.render(<div inert="" />);
+        });
+      }).toErrorDev(
+        ReactFeatureFlags.enableNewBooleanProps
+          ? [
+              'Warning: Received an empty string for a boolean attribute `inert`. ' +
+                'This will treat the attribute as if it were false. ' +
+                'Either pass `false` to silence this warning, or ' +
+                'pass `true` if you used an empty string in earlier versions of React to indicate this attribute is true.',
+            ]
+          : [],
+      );
+
+      expect(el.firstChild.getAttribute('inert')).toBe(
+        ReactFeatureFlags.enableNewBooleanProps ? null : '',
+      );
+
+      // The warning is only printed once.
+      await act(() => {
+        root.render(<div inert="" />);
+      });
+    });
+
     it('passes through strings', async () => {
       await testUnknownAttributeAssignment('a string', 'a string');
     });

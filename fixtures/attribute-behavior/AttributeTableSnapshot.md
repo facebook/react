@@ -5427,7 +5427,7 @@
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `inert=(string)`| (changed)| `<boolean: true>` |
-| `inert=(empty string)`| (initial)| `<boolean: false>` |
+| `inert=(empty string)`| (initial, warning)| `<boolean: false>` |
 | `inert=(array with string)`| (changed)| `<boolean: true>` |
 | `inert=(empty array)`| (changed)| `<boolean: true>` |
 | `inert=(object)`| (changed)| `<boolean: true>` |
