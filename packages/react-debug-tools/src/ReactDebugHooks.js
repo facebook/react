@@ -530,7 +530,7 @@ function useFormState<S, P>(
           // If this was an uncached Promise we have to abandon this attempt
           // but we can still emit anything up until this point.
           hookLog.push({
-            primitive: 'Unresolved',
+            primitive: 'FormState',
             stackError: new Error(),
             value: thenable,
             debugInfo:
