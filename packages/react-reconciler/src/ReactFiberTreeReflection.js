@@ -13,7 +13,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import {
   ClassComponent,
   HostComponent,

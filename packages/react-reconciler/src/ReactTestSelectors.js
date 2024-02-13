@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberConfig';
 
 import {
@@ -15,7 +15,7 @@ import {
   HostHoistable,
   HostSingleton,
   HostText,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {
   findFiberRoot,

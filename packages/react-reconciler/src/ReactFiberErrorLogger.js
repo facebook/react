@@ -11,9 +11,8 @@ import type {Fiber} from './ReactInternalTypes';
 import type {CapturedValue} from './ReactCapturedValue';
 
 import {showErrorDialog} from './ReactFiberErrorDialog';
-import {ClassComponent} from './ReactWorkTags';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
-import {HostRoot} from 'react-reconciler/src/ReactWorkTags';
+import {ClassComponent, HostRoot} from './ReactWorkTags';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 
 export function logCapturedError(
   boundary: Fiber,

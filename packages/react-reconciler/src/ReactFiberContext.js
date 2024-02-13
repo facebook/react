@@ -13,7 +13,7 @@ import type {StackCursor} from './ReactFiberStack';
 import {isFiberMounted} from './ReactFiberTreeReflection';
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {ClassComponent, HostRoot} from './ReactWorkTags';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import checkPropTypes from 'shared/checkPropTypes';
 
 import {createCursor, push, pop} from './ReactFiberStack';

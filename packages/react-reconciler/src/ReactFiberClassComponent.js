@@ -28,7 +28,7 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings';
 import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import assign from 'shared/assign';
 import isArray from 'shared/isArray';

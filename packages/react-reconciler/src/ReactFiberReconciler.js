@@ -37,7 +37,7 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromFiber from './getComponentNameFromFiber';
 import isArray from 'shared/isArray';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
