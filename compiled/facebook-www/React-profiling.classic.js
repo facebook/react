@@ -88,7 +88,6 @@ pureComponentPrototype.isPureReactComponent = !0;
 var isArrayImpl = Array.isArray,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner$1 = { current: null };
@@ -522,27 +521,20 @@ exports.startTransition = function (scope, options) {
     void 0 !== options.name &&
     ((ReactCurrentBatchConfig.transition.name = options.name),
     (ReactCurrentBatchConfig.transition.startTime = -1));
-  if (enableAsyncActions)
-    try {
-      var returnValue = scope();
-      "object" === typeof returnValue &&
-        null !== returnValue &&
-        "function" === typeof returnValue.then &&
-        (callbacks.forEach(function (callback) {
-          return callback(currentTransition, returnValue);
-        }),
-        returnValue.then(noop, onError));
-    } catch (error) {
-      onError(error);
-    } finally {
-      ReactCurrentBatchConfig.transition = prevTransition;
-    }
-  else
-    try {
-      scope();
-    } finally {
-      ReactCurrentBatchConfig.transition = prevTransition;
-    }
+  try {
+    var returnValue = scope();
+    "object" === typeof returnValue &&
+      null !== returnValue &&
+      "function" === typeof returnValue.then &&
+      (callbacks.forEach(function (callback) {
+        return callback(currentTransition, returnValue);
+      }),
+      returnValue.then(noop, onError));
+  } catch (error) {
+    onError(error);
+  } finally {
+    ReactCurrentBatchConfig.transition = prevTransition;
+  }
 };
 exports.unstable_Activity = REACT_OFFSCREEN_TYPE;
 exports.unstable_Cache = REACT_CACHE_TYPE;
@@ -630,7 +622,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-classic-0c80b4ef";
+exports.version = "18.3.0-www-classic-49d2df34";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

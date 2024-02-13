@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-05406ad7";
+    var ReactVersion = "18.3.0-www-modern-47a5392e";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -86,8 +86,6 @@ if (__DEV__) {
     var dynamicFeatureFlags = require("ReactFeatureFlags");
 
     var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
-      enableFormActions = dynamicFeatureFlags.enableFormActions,
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
@@ -1358,7 +1356,7 @@ if (__DEV__) {
           return true;
         }
 
-        if (enableFormActions) {
+        {
           // Actions are special because unlike events they can have other value types.
           if (typeof value === "function") {
             if (tagName === "form" && name === "action") {
@@ -2833,7 +2831,7 @@ if (__DEV__) {
     ) {
       var formData = null;
 
-      if (enableFormActions && typeof formAction === "function") {
+      if (typeof formAction === "function") {
         // Function form actions cannot control the form properties
         {
           if (name !== null && !didWarnFormActionName) {
@@ -3669,7 +3667,7 @@ if (__DEV__) {
       var formData = null;
       var formActionName = null;
 
-      if (enableFormActions && typeof formAction === "function") {
+      if (typeof formAction === "function") {
         // Function form actions cannot control the form properties
         {
           if (
@@ -10662,11 +10660,11 @@ if (__DEV__) {
       HooksDispatcher.useMemoCache = useMemoCache;
     }
 
-    if (enableFormActions && enableAsyncActions) {
+    {
       HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus;
     }
 
-    if (enableAsyncActions) {
+    {
       HooksDispatcher.useOptimistic = useOptimistic;
       HooksDispatcher.useFormState = useFormState;
     }

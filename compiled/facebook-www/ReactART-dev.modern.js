@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-6bdcbf17";
+    var ReactVersion = "18.3.0-www-modern-57608326";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -174,8 +174,6 @@ if (__DEV__) {
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableDeferRootSchedulingToMicrotask =
         dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-      enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
-      enableFormActions = dynamicFeatureFlags.enableFormActions,
       alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
       enableDO_NOT_USE_disableStrictPassiveEffect =
         dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -195,6 +193,7 @@ if (__DEV__) {
     var enableProfilerNestedUpdatePhase = true;
     var enableProfilerNestedUpdateScheduledHook =
       dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook;
+    var enableAsyncActions = true; // Logs additional User Timing API marks for use with an experimental profiling tool.
 
     var enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler;
 
@@ -3890,7 +3889,7 @@ if (__DEV__) {
     }
 
     function pushHostContext(fiber) {
-      if (enableFormActions && enableAsyncActions) {
+      {
         var stateHook = fiber.memoizedState;
 
         if (stateHook !== null) {
@@ -3919,7 +3918,7 @@ if (__DEV__) {
         pop(contextFiberStackCursor, fiber);
       }
 
-      if (enableFormActions && enableAsyncActions) {
+      {
         if (hostTransitionProviderCursor.current === fiber) {
           // Do not pop unless this Fiber provided the current context. This is mostly
           // a performance optimization, but conveniently it also prevents a potential
@@ -8692,10 +8691,6 @@ if (__DEV__) {
       workInProgress,
       lanes
     ) {
-      if (!(enableFormActions && enableAsyncActions)) {
-        throw new Error("Not implemented.");
-      }
-
       return renderWithHooks(
         current,
         workInProgress,
@@ -8706,10 +8701,6 @@ if (__DEV__) {
       );
     }
     function TransitionAwareHostComponent() {
-      if (!(enableFormActions && enableAsyncActions)) {
-        throw new Error("Not implemented.");
-      }
-
       var dispatcher = ReactCurrentDispatcher$1.current;
 
       var _dispatcher$useState = dispatcher.useState(),
@@ -9163,7 +9154,7 @@ if (__DEV__) {
             // Check if this is an optimistic update.
             var revertLane = update.revertLane;
 
-            if (!enableAsyncActions || revertLane === NoLane) {
+            if (revertLane === NoLane) {
               // This is not an optimistic update, and we're going to apply it now.
               // But, if there were earlier updates that were skipped, we need to
               // leave this update in the queue so it can be rebased later.
@@ -10474,7 +10465,7 @@ if (__DEV__) {
         _callbacks: new Set()
       };
 
-      if (enableAsyncActions) {
+      {
         // We don't really need to use an optimistic update here, because we
         // schedule a second "revert" update below (which we use to suspend the
         // transition until the async action scope has finished). But we'll use an
@@ -10483,10 +10474,6 @@ if (__DEV__) {
         // share the same lane.
         ReactCurrentBatchConfig$2.transition = currentTransition;
         dispatchOptimisticSetState(fiber, false, queue, pendingState);
-      } else {
-        ReactCurrentBatchConfig$2.transition = null;
-        dispatchSetState(fiber, queue, pendingState);
-        ReactCurrentBatchConfig$2.transition = currentTransition;
       }
 
       if (enableTransitionTracing) {
@@ -10528,13 +10515,9 @@ if (__DEV__) {
           } else {
             dispatchSetState(fiber, queue, finishedState);
           }
-        } else {
-          // Async actions are not enabled.
-          dispatchSetState(fiber, queue, finishedState);
-          callback();
         }
       } catch (error) {
-        if (enableAsyncActions) {
+        {
           // This is a trick to get the `useTransition` hook to rethrow the error.
           // When it unwraps the thenable with the `use` algorithm, the error
           // will be thrown.
@@ -10544,10 +10527,6 @@ if (__DEV__) {
             reason: error
           };
           dispatchSetState(fiber, queue, rejectedThenable);
-        } else {
-          // The error rethrowing behavior is only enabled when the async actions
-          // feature is on, even for sync actions.
-          throw error;
         }
       } finally {
         setCurrentUpdatePriority(previousPriority);
@@ -10613,10 +10592,6 @@ if (__DEV__) {
     }
 
     function useHostTransitionStatus() {
-      if (!(enableFormActions && enableAsyncActions)) {
-        throw new Error("Not implemented.");
-      }
-
       var status = readContext(HostTransitionContext);
       return status !== null ? status : NotPendingTransition;
     }
@@ -11005,12 +10980,12 @@ if (__DEV__) {
       ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
     }
 
-    if (enableFormActions && enableAsyncActions) {
+    {
       ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
       ContextOnlyDispatcher.useFormState = throwInvalidHookError;
     }
 
-    if (enableAsyncActions) {
+    {
       ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
     }
 
@@ -11180,7 +11155,7 @@ if (__DEV__) {
         };
       }
 
-      if (enableFormActions && enableAsyncActions) {
+      {
         HooksDispatcherOnMountInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -11195,7 +11170,7 @@ if (__DEV__) {
         };
       }
 
-      if (enableAsyncActions) {
+      {
         HooksDispatcherOnMountInDEV.useOptimistic = function useOptimistic(
           passthrough,
           reducer
@@ -11338,7 +11313,7 @@ if (__DEV__) {
           };
       }
 
-      if (enableFormActions && enableAsyncActions) {
+      {
         HooksDispatcherOnMountWithHookTypesInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -11350,7 +11325,7 @@ if (__DEV__) {
           };
       }
 
-      if (enableAsyncActions) {
+      {
         HooksDispatcherOnMountWithHookTypesInDEV.useOptimistic =
           function useOptimistic(passthrough, reducer) {
             currentHookNameInDev = "useOptimistic";
@@ -11492,7 +11467,7 @@ if (__DEV__) {
         };
       }
 
-      if (enableFormActions && enableAsyncActions) {
+      {
         HooksDispatcherOnUpdateInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -11507,7 +11482,7 @@ if (__DEV__) {
         };
       }
 
-      if (enableAsyncActions) {
+      {
         HooksDispatcherOnUpdateInDEV.useOptimistic = function useOptimistic(
           passthrough,
           reducer
@@ -11651,7 +11626,7 @@ if (__DEV__) {
         };
       }
 
-      if (enableFormActions && enableAsyncActions) {
+      {
         HooksDispatcherOnRerenderInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -11666,7 +11641,7 @@ if (__DEV__) {
         };
       }
 
-      if (enableAsyncActions) {
+      {
         HooksDispatcherOnRerenderInDEV.useOptimistic = function useOptimistic(
           passthrough,
           reducer
@@ -11834,7 +11809,7 @@ if (__DEV__) {
           };
       }
 
-      if (enableFormActions && enableAsyncActions) {
+      {
         InvalidNestedHooksDispatcherOnMountInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -11847,7 +11822,7 @@ if (__DEV__) {
           };
       }
 
-      if (enableAsyncActions) {
+      {
         InvalidNestedHooksDispatcherOnMountInDEV.useOptimistic =
           function useOptimistic(passthrough, reducer) {
             currentHookNameInDev = "useOptimistic";
@@ -12014,7 +11989,7 @@ if (__DEV__) {
           };
       }
 
-      if (enableFormActions && enableAsyncActions) {
+      {
         InvalidNestedHooksDispatcherOnUpdateInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -12027,7 +12002,7 @@ if (__DEV__) {
           };
       }
 
-      if (enableAsyncActions) {
+      {
         InvalidNestedHooksDispatcherOnUpdateInDEV.useOptimistic =
           function useOptimistic(passthrough, reducer) {
             currentHookNameInDev = "useOptimistic";
@@ -12194,7 +12169,7 @@ if (__DEV__) {
           };
       }
 
-      if (enableFormActions && enableAsyncActions) {
+      {
         InvalidNestedHooksDispatcherOnRerenderInDEV.useHostTransitionStatus =
           useHostTransitionStatus;
 
@@ -12207,7 +12182,7 @@ if (__DEV__) {
           };
       }
 
-      if (enableAsyncActions) {
+      {
         InvalidNestedHooksDispatcherOnRerenderInDEV.useOptimistic =
           function useOptimistic(passthrough, reducer) {
             currentHookNameInDev = "useOptimistic";
@@ -15563,7 +15538,7 @@ if (__DEV__) {
         workInProgress.flags |= ContentReset;
       }
 
-      if (enableFormActions && enableAsyncActions) {
+      {
         var memoizedState = workInProgress.memoizedState;
 
         if (memoizedState !== null) {
@@ -18587,11 +18562,7 @@ if (__DEV__) {
               }
             }
           }
-        } else if (
-          enableFormActions &&
-          enableAsyncActions &&
-          parent === getHostTransitionProvider()
-        ) {
+        } else if (parent === getHostTransitionProvider()) {
           // During a host transition, a host component can act like a context
           // provider. E.g. in React DOM, this would be a <form />.
           var _currentParent = parent.alternate;
@@ -18869,7 +18840,7 @@ if (__DEV__) {
     }
 
     function handleAsyncAction(transition, thenable) {
-      if (enableAsyncActions) {
+      {
         // This is an async action.
         entangleAsyncAction(transition, thenable);
       }

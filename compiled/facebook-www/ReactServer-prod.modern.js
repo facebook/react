@@ -12,9 +12,8 @@
 
 "use strict";
 var assign = Object.assign,
-  dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
+  enableTransitionTracing =
+    require("ReactFeatureFlags").enableTransitionTracing,
   ReactCurrentCache = { current: null },
   ReactCurrentDispatcher = { current: null },
   ReactCurrentOwner$1 = { current: null },
@@ -480,27 +479,20 @@ exports.startTransition = function (scope, options) {
     void 0 !== options.name &&
     ((ReactCurrentBatchConfig.transition.name = options.name),
     (ReactCurrentBatchConfig.transition.startTime = -1));
-  if (enableAsyncActions)
-    try {
-      var returnValue = scope();
-      "object" === typeof returnValue &&
-        null !== returnValue &&
-        "function" === typeof returnValue.then &&
-        (callbacks.forEach(function (callback) {
-          return callback(currentTransition, returnValue);
-        }),
-        returnValue.then(noop, onError));
-    } catch (error) {
-      onError(error);
-    } finally {
-      ReactCurrentBatchConfig.transition = prevTransition;
-    }
-  else
-    try {
-      scope();
-    } finally {
-      ReactCurrentBatchConfig.transition = prevTransition;
-    }
+  try {
+    var returnValue = scope();
+    "object" === typeof returnValue &&
+      null !== returnValue &&
+      "function" === typeof returnValue.then &&
+      (callbacks.forEach(function (callback) {
+        return callback(currentTransition, returnValue);
+      }),
+      returnValue.then(noop, onError));
+  } catch (error) {
+    onError(error);
+  } finally {
+    ReactCurrentBatchConfig.transition = prevTransition;
+  }
 };
 exports.use = function (usable) {
   return ReactCurrentDispatcher.current.use(usable);
@@ -515,4 +507,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-9683324c";
+exports.version = "18.3.0-www-modern-62f9c233";

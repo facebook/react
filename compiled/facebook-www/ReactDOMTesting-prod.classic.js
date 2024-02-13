@@ -50,8 +50,6 @@ var ReactSharedInternals =
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableDeferRootSchedulingToMicrotask =
     dynamicFeatureFlags.enableDeferRootSchedulingToMicrotask,
-  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
-  enableFormActions = dynamicFeatureFlags.enableFormActions,
   alwaysThrottleRetries = dynamicFeatureFlags.alwaysThrottleRetries,
   enableDO_NOT_USE_disableStrictPassiveEffect =
     dynamicFeatureFlags.enableDO_NOT_USE_disableStrictPassiveEffect,
@@ -427,10 +425,7 @@ function popHostContainer() {
   pop(rootInstanceStackCursor);
 }
 function pushHostContext(fiber) {
-  enableFormActions &&
-    enableAsyncActions &&
-    null !== fiber.memoizedState &&
-    push(hostTransitionProviderCursor, fiber);
+  null !== fiber.memoizedState && push(hostTransitionProviderCursor, fiber);
   var context = contextStackCursor$1.current;
   var JSCompiler_inline_result = getChildHostContextProd(context, fiber.type);
   context !== JSCompiler_inline_result &&
@@ -440,9 +435,7 @@ function pushHostContext(fiber) {
 function popHostContext(fiber) {
   contextFiberStackCursor.current === fiber &&
     (pop(contextStackCursor$1), pop(contextFiberStackCursor));
-  enableFormActions &&
-    enableAsyncActions &&
-    hostTransitionProviderCursor.current === fiber &&
+  hostTransitionProviderCursor.current === fiber &&
     (pop(hostTransitionProviderCursor),
     (HostTransitionContext._currentValue = null));
 }
@@ -1886,10 +1879,8 @@ function popHydrationState(fiber) {
     if ((JSCompiler_temp = 5 === fiber.tag))
       (JSCompiler_temp = fiber.type),
         (JSCompiler_temp =
-          !(
-            !enableFormActions ||
-            ("form" !== JSCompiler_temp && "button" !== JSCompiler_temp)
-          ) || shouldSetTextContent(fiber.type, fiber.memoizedProps));
+          !("form" !== JSCompiler_temp && "button" !== JSCompiler_temp) ||
+          shouldSetTextContent(fiber.type, fiber.memoizedProps));
     JSCompiler_temp = !JSCompiler_temp;
   }
   JSCompiler_temp && (shouldClear = !0);
@@ -3550,8 +3541,6 @@ function renderWithHooksAgain(workInProgress, Component, props, secondArg) {
   return children;
 }
 function TransitionAwareHostComponent() {
-  if (!enableFormActions || !enableAsyncActions)
-    throw Error(formatProdErrorMessage(248));
   var maybeThenable = ReactCurrentDispatcher$1.current.useState()[0];
   return "function" === typeof maybeThenable.then
     ? useThenable(maybeThenable)
@@ -3728,28 +3717,7 @@ function updateReducerImpl(hook, current, reducer) {
           : (renderLanes & updateLane) === updateLane
       ) {
         var revertLane = update.revertLane;
-        if (enableAsyncActions && 0 !== revertLane)
-          if ((renderLanes & revertLane) === revertLane) {
-            update = update.next;
-            revertLane === currentEntangledLane &&
-              (didReadFromEntangledAsyncAction$53 = !0);
-            continue;
-          } else
-            (updateLane = {
-              lane: 0,
-              revertLane: update.revertLane,
-              action: update.action,
-              hasEagerState: update.hasEagerState,
-              eagerState: update.eagerState,
-              next: null
-            }),
-              null === newBaseQueueLast
-                ? ((newBaseQueueFirst = newBaseQueueLast = updateLane),
-                  (baseFirst = pendingQueue))
-                : (newBaseQueueLast = newBaseQueueLast.next = updateLane),
-              (currentlyRenderingFiber$1.lanes |= revertLane),
-              (workInProgressRootSkippedLanes |= revertLane);
-        else
+        if (0 === revertLane)
           null !== newBaseQueueLast &&
             (newBaseQueueLast = newBaseQueueLast.next =
               {
@@ -3762,6 +3730,26 @@ function updateReducerImpl(hook, current, reducer) {
               }),
             updateLane === currentEntangledLane &&
               (didReadFromEntangledAsyncAction$53 = !0);
+        else if ((renderLanes & revertLane) === revertLane) {
+          update = update.next;
+          revertLane === currentEntangledLane &&
+            (didReadFromEntangledAsyncAction$53 = !0);
+          continue;
+        } else
+          (updateLane = {
+            lane: 0,
+            revertLane: update.revertLane,
+            action: update.action,
+            hasEagerState: update.hasEagerState,
+            eagerState: update.eagerState,
+            next: null
+          }),
+            null === newBaseQueueLast
+              ? ((newBaseQueueFirst = newBaseQueueLast = updateLane),
+                (baseFirst = pendingQueue))
+              : (newBaseQueueLast = newBaseQueueLast.next = updateLane),
+            (currentlyRenderingFiber$1.lanes |= revertLane),
+            (workInProgressRootSkippedLanes |= revertLane);
         updateLane = update.action;
         shouldDoubleInvokeUserFnsInHooksDEV &&
           reducer(pendingQueue, updateLane);
@@ -3924,30 +3912,6 @@ function mountStateImpl(initialState) {
   };
   return hook;
 }
-function mountOptimistic(passthrough) {
-  var hook = mountWorkInProgressHook();
-  hook.memoizedState = hook.baseState = passthrough;
-  var queue = {
-    pending: null,
-    lanes: 0,
-    dispatch: null,
-    lastRenderedReducer: null,
-    lastRenderedState: null
-  };
-  hook.queue = queue;
-  hook = dispatchOptimisticSetState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    !0,
-    queue
-  );
-  queue.dispatch = hook;
-  return [passthrough, hook];
-}
-function updateOptimistic(passthrough, reducer) {
-  var hook = updateWorkInProgressHook();
-  return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
-}
 function updateOptimisticImpl(hook, current, passthrough, reducer) {
   hook.baseState = passthrough;
   return updateReducerImpl(
@@ -3955,13 +3919,6 @@ function updateOptimisticImpl(hook, current, passthrough, reducer) {
     currentHook,
     "function" === typeof reducer ? reducer : basicStateReducer
   );
-}
-function rerenderOptimistic(passthrough, reducer) {
-  var hook = updateWorkInProgressHook();
-  if (null !== currentHook)
-    return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
-  hook.baseState = passthrough;
-  return [passthrough, hook.queue.dispatch];
 }
 function dispatchFormState(fiber, actionQueue, setState, payload) {
   if (isRenderPhaseUpdate(fiber)) throw Error(formatProdErrorMessage(485));
@@ -4019,91 +3976,6 @@ function finishRunningFormStateAction(actionQueue, setState) {
 function formStateReducer(oldState, newState) {
   return newState;
 }
-function mountFormState(action, initialStateProp) {
-  if (isHydrating) {
-    var ssrFormState = workInProgressRoot.formState;
-    if (null !== ssrFormState) {
-      a: {
-        if (isHydrating) {
-          if (nextHydratableInstance) {
-            b: {
-              var JSCompiler_inline_result = nextHydratableInstance;
-              for (
-                var inRootOrSingleton = rootOrSingletonContext;
-                8 !== JSCompiler_inline_result.nodeType;
-
-              ) {
-                if (!inRootOrSingleton) {
-                  JSCompiler_inline_result = null;
-                  break b;
-                }
-                JSCompiler_inline_result = getNextHydratableSibling(
-                  JSCompiler_inline_result
-                );
-                if (null === JSCompiler_inline_result) {
-                  JSCompiler_inline_result = null;
-                  break b;
-                }
-              }
-              inRootOrSingleton = JSCompiler_inline_result.data;
-              JSCompiler_inline_result =
-                "F!" === inRootOrSingleton || "F" === inRootOrSingleton
-                  ? JSCompiler_inline_result
-                  : null;
-            }
-            if (JSCompiler_inline_result) {
-              nextHydratableInstance = getNextHydratableSibling(
-                JSCompiler_inline_result
-              );
-              JSCompiler_inline_result = "F!" === JSCompiler_inline_result.data;
-              break a;
-            }
-          }
-          throwOnHydrationMismatch();
-        }
-        JSCompiler_inline_result = !1;
-      }
-      JSCompiler_inline_result && (initialStateProp = ssrFormState[0]);
-    }
-  }
-  ssrFormState = mountWorkInProgressHook();
-  ssrFormState.memoizedState = ssrFormState.baseState = initialStateProp;
-  JSCompiler_inline_result = {
-    pending: null,
-    lanes: 0,
-    dispatch: null,
-    lastRenderedReducer: formStateReducer,
-    lastRenderedState: initialStateProp
-  };
-  ssrFormState.queue = JSCompiler_inline_result;
-  ssrFormState = dispatchSetState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    JSCompiler_inline_result
-  );
-  JSCompiler_inline_result.dispatch = ssrFormState;
-  JSCompiler_inline_result = mountWorkInProgressHook();
-  inRootOrSingleton = {
-    state: initialStateProp,
-    dispatch: null,
-    action: action,
-    pending: null
-  };
-  JSCompiler_inline_result.queue = inRootOrSingleton;
-  ssrFormState = dispatchFormState.bind(
-    null,
-    currentlyRenderingFiber$1,
-    inRootOrSingleton,
-    ssrFormState
-  );
-  inRootOrSingleton.dispatch = ssrFormState;
-  JSCompiler_inline_result.memoizedState = action;
-  return [initialStateProp, ssrFormState];
-}
-function updateFormState(action) {
-  var stateHook = updateWorkInProgressHook();
-  return updateFormStateImpl(stateHook, currentHook, action);
-}
 function updateFormStateImpl(stateHook, currentStateHook, action) {
   stateHook = updateReducerImpl(
     stateHook,
@@ -4131,17 +4003,6 @@ function updateFormStateImpl(stateHook, currentStateHook, action) {
 }
 function formStateActionEffect(actionQueue, action) {
   actionQueue.action = action;
-}
-function rerenderFormState(action) {
-  var stateHook = updateWorkInProgressHook(),
-    currentStateHook = currentHook;
-  if (null !== currentStateHook)
-    return updateFormStateImpl(stateHook, currentStateHook, action);
-  stateHook = stateHook.memoizedState;
-  currentStateHook = updateWorkInProgressHook();
-  var dispatch = currentStateHook.queue.dispatch;
-  currentStateHook.memoizedState = action;
-  return [stateHook, dispatch];
 }
 function pushEffect(tag, create, inst, deps) {
   tag = { tag: tag, create: create, inst: inst, deps: deps, next: null };
@@ -4302,84 +4163,71 @@ function startTransition(
     0 !== previousPriority && 8 > previousPriority ? previousPriority : 8;
   var prevTransition = ReactCurrentBatchConfig$3.transition,
     currentTransition = { _callbacks: new Set() };
-  enableAsyncActions
-    ? ((ReactCurrentBatchConfig$3.transition = currentTransition),
-      dispatchOptimisticSetState(fiber, !1, queue, pendingState))
-    : ((ReactCurrentBatchConfig$3.transition = null),
-      dispatchSetState(fiber, queue, pendingState),
-      (ReactCurrentBatchConfig$3.transition = currentTransition));
+  ReactCurrentBatchConfig$3.transition = currentTransition;
+  dispatchOptimisticSetState(fiber, !1, queue, pendingState);
   enableTransitionTracing &&
     void 0 !== options &&
     void 0 !== options.name &&
     ((ReactCurrentBatchConfig$3.transition.name = options.name),
     (ReactCurrentBatchConfig$3.transition.startTime = now()));
   try {
-    if (enableAsyncActions) {
-      var returnValue = callback();
-      if (
-        null !== returnValue &&
-        "object" === typeof returnValue &&
-        "function" === typeof returnValue.then
-      ) {
-        notifyTransitionCallbacks(currentTransition, returnValue);
-        var thenableForFinishedState = chainThenableValue(
-          returnValue,
-          finishedState
-        );
-        dispatchSetState(fiber, queue, thenableForFinishedState);
-      } else dispatchSetState(fiber, queue, finishedState);
-    } else dispatchSetState(fiber, queue, finishedState), callback();
+    var returnValue = callback();
+    if (
+      null !== returnValue &&
+      "object" === typeof returnValue &&
+      "function" === typeof returnValue.then
+    ) {
+      notifyTransitionCallbacks(currentTransition, returnValue);
+      var thenableForFinishedState = chainThenableValue(
+        returnValue,
+        finishedState
+      );
+      dispatchSetState(fiber, queue, thenableForFinishedState);
+    } else dispatchSetState(fiber, queue, finishedState);
   } catch (error) {
-    if (enableAsyncActions)
-      dispatchSetState(fiber, queue, {
-        then: function () {},
-        status: "rejected",
-        reason: error
-      });
-    else throw error;
+    dispatchSetState(fiber, queue, {
+      then: function () {},
+      status: "rejected",
+      reason: error
+    });
   } finally {
     (currentUpdatePriority = previousPriority),
       (ReactCurrentBatchConfig$3.transition = prevTransition);
   }
 }
 function startHostTransition(formFiber, pendingState, callback, formData) {
-  if (enableFormActions)
-    if (enableAsyncActions) {
-      if (5 !== formFiber.tag) throw Error(formatProdErrorMessage(476));
-      if (null === formFiber.memoizedState) {
-        var newQueue = {
-          pending: null,
-          lanes: 0,
-          dispatch: null,
-          lastRenderedReducer: basicStateReducer,
-          lastRenderedState: sharedNotPendingObject
-        };
-        var queue = newQueue;
-        newQueue = {
-          memoizedState: sharedNotPendingObject,
-          baseState: sharedNotPendingObject,
-          baseQueue: null,
-          queue: newQueue,
-          next: null
-        };
-        formFiber.memoizedState = newQueue;
-        var alternate = formFiber.alternate;
-        null !== alternate && (alternate.memoizedState = newQueue);
-      } else queue = formFiber.memoizedState.queue;
-      startTransition(
-        formFiber,
-        queue,
-        pendingState,
-        sharedNotPendingObject,
-        function () {
-          return callback(formData);
-        }
-      );
-    } else callback(formData);
+  if (5 !== formFiber.tag) throw Error(formatProdErrorMessage(476));
+  if (null === formFiber.memoizedState) {
+    var newQueue = {
+      pending: null,
+      lanes: 0,
+      dispatch: null,
+      lastRenderedReducer: basicStateReducer,
+      lastRenderedState: sharedNotPendingObject
+    };
+    var queue = newQueue;
+    newQueue = {
+      memoizedState: sharedNotPendingObject,
+      baseState: sharedNotPendingObject,
+      baseQueue: null,
+      queue: newQueue,
+      next: null
+    };
+    formFiber.memoizedState = newQueue;
+    var alternate = formFiber.alternate;
+    null !== alternate && (alternate.memoizedState = newQueue);
+  } else queue = formFiber.memoizedState.queue;
+  startTransition(
+    formFiber,
+    queue,
+    pendingState,
+    sharedNotPendingObject,
+    function () {
+      return callback(formData);
+    }
+  );
 }
 function useHostTransitionStatus() {
-  if (!enableFormActions || !enableAsyncActions)
-    throw Error(formatProdErrorMessage(248));
   var status = readContext(HostTransitionContext);
   return null !== status ? status : sharedNotPendingObject;
 }
@@ -4534,12 +4382,9 @@ var ContextOnlyDispatcher = {
 ContextOnlyDispatcher.useCacheRefresh = throwInvalidHookError;
 ContextOnlyDispatcher.useMemoCache = throwInvalidHookError;
 ContextOnlyDispatcher.useEffectEvent = throwInvalidHookError;
-enableFormActions &&
-  enableAsyncActions &&
-  ((ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError),
-  (ContextOnlyDispatcher.useFormState = throwInvalidHookError));
-enableAsyncActions &&
-  (ContextOnlyDispatcher.useOptimistic = throwInvalidHookError);
+ContextOnlyDispatcher.useHostTransitionStatus = throwInvalidHookError;
+ContextOnlyDispatcher.useFormState = throwInvalidHookError;
+ContextOnlyDispatcher.useOptimistic = throwInvalidHookError;
 var HooksDispatcherOnMount = {
   readContext: readContext,
   use: use,
@@ -4715,11 +4560,108 @@ HooksDispatcherOnMount.useEffectEvent = function (callback) {
     return ref.impl.apply(void 0, arguments);
   };
 };
-enableFormActions &&
-  enableAsyncActions &&
-  ((HooksDispatcherOnMount.useHostTransitionStatus = useHostTransitionStatus),
-  (HooksDispatcherOnMount.useFormState = mountFormState));
-enableAsyncActions && (HooksDispatcherOnMount.useOptimistic = mountOptimistic);
+HooksDispatcherOnMount.useHostTransitionStatus = useHostTransitionStatus;
+HooksDispatcherOnMount.useFormState = function (action, initialStateProp) {
+  if (isHydrating) {
+    var ssrFormState = workInProgressRoot.formState;
+    if (null !== ssrFormState) {
+      a: {
+        if (isHydrating) {
+          if (nextHydratableInstance) {
+            b: {
+              var JSCompiler_inline_result = nextHydratableInstance;
+              for (
+                var inRootOrSingleton = rootOrSingletonContext;
+                8 !== JSCompiler_inline_result.nodeType;
+
+              ) {
+                if (!inRootOrSingleton) {
+                  JSCompiler_inline_result = null;
+                  break b;
+                }
+                JSCompiler_inline_result = getNextHydratableSibling(
+                  JSCompiler_inline_result
+                );
+                if (null === JSCompiler_inline_result) {
+                  JSCompiler_inline_result = null;
+                  break b;
+                }
+              }
+              inRootOrSingleton = JSCompiler_inline_result.data;
+              JSCompiler_inline_result =
+                "F!" === inRootOrSingleton || "F" === inRootOrSingleton
+                  ? JSCompiler_inline_result
+                  : null;
+            }
+            if (JSCompiler_inline_result) {
+              nextHydratableInstance = getNextHydratableSibling(
+                JSCompiler_inline_result
+              );
+              JSCompiler_inline_result = "F!" === JSCompiler_inline_result.data;
+              break a;
+            }
+          }
+          throwOnHydrationMismatch();
+        }
+        JSCompiler_inline_result = !1;
+      }
+      JSCompiler_inline_result && (initialStateProp = ssrFormState[0]);
+    }
+  }
+  ssrFormState = mountWorkInProgressHook();
+  ssrFormState.memoizedState = ssrFormState.baseState = initialStateProp;
+  JSCompiler_inline_result = {
+    pending: null,
+    lanes: 0,
+    dispatch: null,
+    lastRenderedReducer: formStateReducer,
+    lastRenderedState: initialStateProp
+  };
+  ssrFormState.queue = JSCompiler_inline_result;
+  ssrFormState = dispatchSetState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    JSCompiler_inline_result
+  );
+  JSCompiler_inline_result.dispatch = ssrFormState;
+  JSCompiler_inline_result = mountWorkInProgressHook();
+  inRootOrSingleton = {
+    state: initialStateProp,
+    dispatch: null,
+    action: action,
+    pending: null
+  };
+  JSCompiler_inline_result.queue = inRootOrSingleton;
+  ssrFormState = dispatchFormState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    inRootOrSingleton,
+    ssrFormState
+  );
+  inRootOrSingleton.dispatch = ssrFormState;
+  JSCompiler_inline_result.memoizedState = action;
+  return [initialStateProp, ssrFormState];
+};
+HooksDispatcherOnMount.useOptimistic = function (passthrough) {
+  var hook = mountWorkInProgressHook();
+  hook.memoizedState = hook.baseState = passthrough;
+  var queue = {
+    pending: null,
+    lanes: 0,
+    dispatch: null,
+    lastRenderedReducer: null,
+    lastRenderedState: null
+  };
+  hook.queue = queue;
+  hook = dispatchOptimisticSetState.bind(
+    null,
+    currentlyRenderingFiber$1,
+    !0,
+    queue
+  );
+  queue.dispatch = hook;
+  return [passthrough, hook];
+};
 var HooksDispatcherOnUpdate = {
   readContext: readContext,
   use: use,
@@ -4761,12 +4703,15 @@ var HooksDispatcherOnUpdate = {
 HooksDispatcherOnUpdate.useCacheRefresh = updateRefresh;
 HooksDispatcherOnUpdate.useMemoCache = useMemoCache;
 HooksDispatcherOnUpdate.useEffectEvent = updateEvent;
-enableFormActions &&
-  enableAsyncActions &&
-  ((HooksDispatcherOnUpdate.useHostTransitionStatus = useHostTransitionStatus),
-  (HooksDispatcherOnUpdate.useFormState = updateFormState));
-enableAsyncActions &&
-  (HooksDispatcherOnUpdate.useOptimistic = updateOptimistic);
+HooksDispatcherOnUpdate.useHostTransitionStatus = useHostTransitionStatus;
+HooksDispatcherOnUpdate.useFormState = function (action) {
+  var stateHook = updateWorkInProgressHook();
+  return updateFormStateImpl(stateHook, currentHook, action);
+};
+HooksDispatcherOnUpdate.useOptimistic = function (passthrough, reducer) {
+  var hook = updateWorkInProgressHook();
+  return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+};
 var HooksDispatcherOnRerender = {
   readContext: readContext,
   use: use,
@@ -4810,13 +4755,25 @@ var HooksDispatcherOnRerender = {
 HooksDispatcherOnRerender.useCacheRefresh = updateRefresh;
 HooksDispatcherOnRerender.useMemoCache = useMemoCache;
 HooksDispatcherOnRerender.useEffectEvent = updateEvent;
-enableFormActions &&
-  enableAsyncActions &&
-  ((HooksDispatcherOnRerender.useHostTransitionStatus =
-    useHostTransitionStatus),
-  (HooksDispatcherOnRerender.useFormState = rerenderFormState));
-enableAsyncActions &&
-  (HooksDispatcherOnRerender.useOptimistic = rerenderOptimistic);
+HooksDispatcherOnRerender.useHostTransitionStatus = useHostTransitionStatus;
+HooksDispatcherOnRerender.useFormState = function (action) {
+  var stateHook = updateWorkInProgressHook(),
+    currentStateHook = currentHook;
+  if (null !== currentStateHook)
+    return updateFormStateImpl(stateHook, currentStateHook, action);
+  stateHook = stateHook.memoizedState;
+  currentStateHook = updateWorkInProgressHook();
+  var dispatch = currentStateHook.queue.dispatch;
+  currentStateHook.memoizedState = action;
+  return [stateHook, dispatch];
+};
+HooksDispatcherOnRerender.useOptimistic = function (passthrough, reducer) {
+  var hook = updateWorkInProgressHook();
+  if (null !== currentHook)
+    return updateOptimisticImpl(hook, currentHook, passthrough, reducer);
+  hook.baseState = passthrough;
+  return [passthrough, hook.queue.dispatch];
+};
 function resolveDefaultProps(Component, baseProps) {
   if (Component && Component.defaultProps) {
     baseProps = assign({}, baseProps);
@@ -6899,11 +6856,7 @@ function propagateParentContextChanges(
           objectIs(parent.pendingProps.value, currentParent.value) ||
             (null !== current ? current.push(context) : (current = [context]));
         }
-      } else if (
-        enableFormActions &&
-        enableAsyncActions &&
-        parent === hostTransitionProviderCursor.current
-      ) {
+      } else if (parent === hostTransitionProviderCursor.current) {
         currentParent = parent.alternate;
         if (null === currentParent) throw Error(formatProdErrorMessage(387));
         currentParent.memoizedState.memoizedState !==
@@ -7024,7 +6977,7 @@ function requestCurrentTransition() {
   return transition;
 }
 function handleAsyncAction(transition, thenable) {
-  enableAsyncActions && entangleAsyncAction(transition, thenable);
+  entangleAsyncAction(transition, thenable);
 }
 function notifyTransitionCallbacks(transition, returnValue) {
   transition._callbacks.forEach(function (callback) {
@@ -11981,69 +11934,64 @@ beginWork = function (current, workInProgress, renderLanes) {
         workInProgress.child
       );
     case 5:
-      pushHostContext(workInProgress);
-      null === current &&
-        isHydrating &&
-        (((context = Component = nextHydratableInstance), context)
-          ? tryHydrateInstance(workInProgress, context) ||
-            (shouldClientRenderOnMismatch(workInProgress) &&
-              throwOnHydrationMismatch(),
-            (nextHydratableInstance = getNextHydratableSibling(context)),
-            (prevState = hydrationParentFiber),
-            nextHydratableInstance &&
-            tryHydrateInstance(workInProgress, nextHydratableInstance)
-              ? deleteHydratableInstance(prevState, context)
-              : (insertNonHydratedInstance(
-                  hydrationParentFiber,
-                  workInProgress
-                ),
-                (isHydrating = !1),
-                (hydrationParentFiber = workInProgress),
-                (nextHydratableInstance = Component)))
-          : (shouldClientRenderOnMismatch(workInProgress) &&
-              throwOnHydrationMismatch(),
-            insertNonHydratedInstance(hydrationParentFiber, workInProgress),
-            (isHydrating = !1),
-            (hydrationParentFiber = workInProgress),
-            (nextHydratableInstance = Component)));
-      context = workInProgress.type;
-      prevState = workInProgress.pendingProps;
-      nextState = null !== current ? current.memoizedProps : null;
-      Component = prevState.children;
-      shouldSetTextContent(context, prevState)
-        ? (Component = null)
-        : null !== nextState &&
-          shouldSetTextContent(context, nextState) &&
-          (workInProgress.flags |= 32);
-      if (
-        enableFormActions &&
-        enableAsyncActions &&
-        null !== workInProgress.memoizedState
-      ) {
-        if (!enableFormActions || !enableAsyncActions)
-          throw Error(formatProdErrorMessage(248));
-        context = renderWithHooks(
-          current,
-          workInProgress,
-          TransitionAwareHostComponent,
-          null,
-          null,
-          renderLanes
-        );
-        HostTransitionContext._currentValue = context;
-        enableLazyContextPropagation ||
-          (didReceiveUpdate &&
-            null !== current &&
-            current.memoizedState.memoizedState !== context &&
-            propagateContextChange(
-              workInProgress,
-              HostTransitionContext,
-              renderLanes
-            ));
-      }
-      markRef$1(current, workInProgress);
-      reconcileChildren(current, workInProgress, Component, renderLanes);
-      return workInProgress.child;
+      return (
+        pushHostContext(workInProgress),
+        null === current &&
+          isHydrating &&
+          (((context = Component = nextHydratableInstance), context)
+            ? tryHydrateInstance(workInProgress, context) ||
+              (shouldClientRenderOnMismatch(workInProgress) &&
+                throwOnHydrationMismatch(),
+              (nextHydratableInstance = getNextHydratableSibling(context)),
+              (prevState = hydrationParentFiber),
+              nextHydratableInstance &&
+              tryHydrateInstance(workInProgress, nextHydratableInstance)
+                ? deleteHydratableInstance(prevState, context)
+                : (insertNonHydratedInstance(
+                    hydrationParentFiber,
+                    workInProgress
+                  ),
+                  (isHydrating = !1),
+                  (hydrationParentFiber = workInProgress),
+                  (nextHydratableInstance = Component)))
+            : (shouldClientRenderOnMismatch(workInProgress) &&
+                throwOnHydrationMismatch(),
+              insertNonHydratedInstance(hydrationParentFiber, workInProgress),
+              (isHydrating = !1),
+              (hydrationParentFiber = workInProgress),
+              (nextHydratableInstance = Component))),
+        (context = workInProgress.type),
+        (prevState = workInProgress.pendingProps),
+        (nextState = null !== current ? current.memoizedProps : null),
+        (Component = prevState.children),
+        shouldSetTextContent(context, prevState)
+          ? (Component = null)
+          : null !== nextState &&
+            shouldSetTextContent(context, nextState) &&
+            (workInProgress.flags |= 32),
+        null !== workInProgress.memoizedState &&
+          ((context = renderWithHooks(
+            current,
+            workInProgress,
+            TransitionAwareHostComponent,
+            null,
+            null,
+            renderLanes
+          )),
+          (HostTransitionContext._currentValue = context),
+          enableLazyContextPropagation ||
+            (didReceiveUpdate &&
+              null !== current &&
+              current.memoizedState.memoizedState !== context &&
+              propagateContextChange(
+                workInProgress,
+                HostTransitionContext,
+                renderLanes
+              ))),
+        markRef$1(current, workInProgress),
+        reconcileChildren(current, workInProgress, Component, renderLanes),
+        workInProgress.child
+      );
     case 6:
       return (
         null === current &&
@@ -14484,14 +14432,13 @@ function dispatchEventForPluginEventSystem(
               listeners: eventType
             }),
             (handleEventFunc.data = fallbackData));
-      enableFormActions &&
-        extractEvents$1(
-          dispatchQueue,
-          domEventName,
-          targetInst,
-          nativeEvent,
-          nativeEventTarget
-        );
+      extractEvents$1(
+        dispatchQueue,
+        domEventName,
+        targetInst,
+        nativeEvent,
+        nativeEventTarget
+      );
     }
     processDispatchQueue(dispatchQueue, eventSystemFlags);
   });
@@ -14713,55 +14660,46 @@ function setProp(domElement, tag, key, value, props, prevValue) {
       break;
     case "action":
     case "formAction":
-      if (enableFormActions)
-        if ("function" === typeof value) {
-          domElement.setAttribute(
-            key,
-            "javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"
-          );
-          break;
-        } else
-          "function" === typeof prevValue &&
-            ("formAction" === key
-              ? ("input" !== tag &&
-                  setProp(domElement, tag, "name", props.name, props, null),
-                setProp(
-                  domElement,
-                  tag,
-                  "formEncType",
-                  props.formEncType,
-                  props,
-                  null
-                ),
-                setProp(
-                  domElement,
-                  tag,
-                  "formMethod",
-                  props.formMethod,
-                  props,
-                  null
-                ),
-                setProp(
-                  domElement,
-                  tag,
-                  "formTarget",
-                  props.formTarget,
-                  props,
-                  null
-                ))
-              : (setProp(
-                  domElement,
-                  tag,
-                  "encType",
-                  props.encType,
-                  props,
-                  null
-                ),
-                setProp(domElement, tag, "method", props.method, props, null),
-                setProp(domElement, tag, "target", props.target, props, null)));
+      if ("function" === typeof value) {
+        domElement.setAttribute(
+          key,
+          "javascript:throw new Error('A React form was unexpectedly submitted. If you called form.submit() manually, consider using form.requestSubmit() instead. If you\\'re trying to use event.stopPropagation() in a submit event handler, consider also calling event.preventDefault().')"
+        );
+        break;
+      } else
+        "function" === typeof prevValue &&
+          ("formAction" === key
+            ? ("input" !== tag &&
+                setProp(domElement, tag, "name", props.name, props, null),
+              setProp(
+                domElement,
+                tag,
+                "formEncType",
+                props.formEncType,
+                props,
+                null
+              ),
+              setProp(
+                domElement,
+                tag,
+                "formMethod",
+                props.formMethod,
+                props,
+                null
+              ),
+              setProp(
+                domElement,
+                tag,
+                "formTarget",
+                props.formTarget,
+                props,
+                null
+              ))
+            : (setProp(domElement, tag, "encType", props.encType, props, null),
+              setProp(domElement, tag, "method", props.method, props, null),
+              setProp(domElement, tag, "target", props.target, props, null)));
       if (
         null == value ||
-        (!enableFormActions && "function" === typeof value) ||
         "symbol" === typeof value ||
         "boolean" === typeof value
       ) {
@@ -15750,16 +15688,12 @@ function canHydrateInstance(instance, type, props, inRootOrSingleton) {
     var anyProps = props;
     if (instance.nodeName.toLowerCase() !== type.toLowerCase()) {
       if (
-        !(
-          inRootOrSingleton ||
-          (enableFormActions &&
-            "INPUT" === instance.nodeName &&
-            "hidden" === instance.type)
-        )
+        !inRootOrSingleton &&
+        ("INPUT" !== instance.nodeName || "hidden" !== instance.type)
       )
         break;
     } else if (!inRootOrSingleton)
-      if (enableFormActions && "input" === type && "hidden" === instance.type) {
+      if ("input" === type && "hidden" === instance.type) {
         var name = null == anyProps.name ? null : "" + anyProps.name;
         if (
           "hidden" === anyProps.type &&
@@ -15816,13 +15750,10 @@ function canHydrateTextInstance(instance, text, inRootOrSingleton) {
   if ("" === text) return null;
   for (; 3 !== instance.nodeType; ) {
     if (
-      !(
-        (enableFormActions &&
-          1 === instance.nodeType &&
-          "INPUT" === instance.nodeName &&
-          "hidden" === instance.type) ||
-        inRootOrSingleton
-      )
+      (1 !== instance.nodeType ||
+        "INPUT" !== instance.nodeName ||
+        "hidden" !== instance.type) &&
+      !inRootOrSingleton
     )
       return null;
     instance = getNextHydratableSibling(instance);
@@ -15840,9 +15771,8 @@ function getNextHydratable(node) {
         "$" === nodeType ||
         "$!" === nodeType ||
         "$?" === nodeType ||
-        (enableFormActions &&
-          enableAsyncActions &&
-          ("F!" === nodeType || "F" === nodeType))
+        "F!" === nodeType ||
+        "F" === nodeType
       )
         break;
       if ("/$" === nodeType) return null;
@@ -17102,10 +17032,8 @@ function retryIfBlockedOn(unblocked) {
   )
     attemptExplicitHydrationTarget(i),
       null === i.blockedOn && queuedExplicitHydrationTargets.shift();
-  if (
-    enableFormActions &&
-    ((i = unblocked.getRootNode().$$reactFormReplay), null != i)
-  )
+  i = unblocked.getRootNode().$$reactFormReplay;
+  if (null != i)
     for (queuedTarget = 0; queuedTarget < i.length; queuedTarget += 3) {
       var form = i[queuedTarget],
         submitterOrAction = i[queuedTarget + 1],
@@ -17575,10 +17503,10 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1830 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-0c80b4ef",
+  version: "18.3.0-www-classic-49d2df34",
   rendererPackageName: "react-dom"
 };
-var internals$jscomp$inline_2202 = {
+var internals$jscomp$inline_2197 = {
   bundleType: devToolsConfig$jscomp$inline_1830.bundleType,
   version: devToolsConfig$jscomp$inline_1830.version,
   rendererPackageName: devToolsConfig$jscomp$inline_1830.rendererPackageName,
@@ -17605,19 +17533,19 @@ var internals$jscomp$inline_2202 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-0c80b4ef"
+  reconcilerVersion: "18.3.0-www-classic-49d2df34"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_2203 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_2198 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_2203.isDisabled &&
-    hook$jscomp$inline_2203.supportsFiber
+    !hook$jscomp$inline_2198.isDisabled &&
+    hook$jscomp$inline_2198.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_2203.inject(
-        internals$jscomp$inline_2202
+      (rendererID = hook$jscomp$inline_2198.inject(
+        internals$jscomp$inline_2197
       )),
-        (injectedHook = hook$jscomp$inline_2203);
+        (injectedHook = hook$jscomp$inline_2198);
     } catch (err) {}
 }
 assign(Internals, {
@@ -17853,10 +17781,7 @@ exports.hydrateRoot = function (container, children, options) {
       (onRecoverableError = options.onRecoverableError),
     void 0 !== options.unstable_transitionCallbacks &&
       (transitionCallbacks = options.unstable_transitionCallbacks),
-    enableAsyncActions &&
-      enableFormActions &&
-      void 0 !== options.formState &&
-      (formState = options.formState));
+    void 0 !== options.formState && (formState = options.formState));
   children = createHydrationContainer(
     children,
     null,
@@ -18093,17 +18018,13 @@ exports.unstable_renderSubtreeIntoContainer = function (
 };
 exports.unstable_runWithPriority = runWithPriority;
 exports.useFormState = function (action, initialState, permalink) {
-  if (enableFormActions && enableAsyncActions)
-    return ReactCurrentDispatcher$2.current.useFormState(
-      action,
-      initialState,
-      permalink
-    );
-  throw Error(formatProdErrorMessage(248));
+  return ReactCurrentDispatcher$2.current.useFormState(
+    action,
+    initialState,
+    permalink
+  );
 };
 exports.useFormStatus = function () {
-  if (enableFormActions && enableAsyncActions)
-    return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
-  throw Error(formatProdErrorMessage(248));
+  return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-0c80b4ef";
+exports.version = "18.3.0-www-classic-49d2df34";

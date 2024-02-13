@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-f32f96e5";
+    var ReactVersion = "18.3.0-www-modern-5d2c8ee0";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -475,7 +475,6 @@ if (__DEV__) {
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
 
     function getWrappedName(outerType, innerType, wrapperName) {
@@ -2989,7 +2988,7 @@ if (__DEV__) {
         }
       }
 
-      if (enableAsyncActions) {
+      {
         try {
           var returnValue = scope();
 
@@ -3005,15 +3004,6 @@ if (__DEV__) {
           }
         } catch (error) {
           onError(error);
-        } finally {
-          warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-          ReactCurrentBatchConfig.transition = prevTransition;
-        }
-      } else {
-        // When async actions are not enabled, startTransition does not
-        // capture errors.
-        try {
-          scope();
         } finally {
           warnAboutTransitionSubscriptions(prevTransition, currentTransition);
           ReactCurrentBatchConfig.transition = prevTransition;

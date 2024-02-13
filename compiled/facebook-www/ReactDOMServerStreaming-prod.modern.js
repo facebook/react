@@ -39,8 +39,6 @@ var React = require("react"),
   ReactDOM = require("react-dom"),
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
-  enableFormActions = dynamicFeatureFlags.enableFormActions,
   enableUseDeferredValueInitialArg =
     dynamicFeatureFlags.enableUseDeferredValueInitialArg,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
@@ -411,8 +409,7 @@ function pushFormActionAttribute(
   name
 ) {
   var formData = null;
-  enableFormActions &&
-    "function" === typeof formAction &&
+  "function" === typeof formAction &&
     ("function" === typeof formAction.$$FORM_ACTION
       ? ((formEncType = makeFormFieldPrefix(resumableState)),
         (resumableState = formAction.$$FORM_ACTION(formEncType)),
@@ -1136,7 +1133,7 @@ function pushStartInstance(
         }
       var formData$jscomp$1 = null,
         formActionName = null;
-      if (enableFormActions && "function" === typeof formAction$jscomp$1)
+      if ("function" === typeof formAction$jscomp$1)
         if ("function" === typeof formAction$jscomp$1.$$FORM_ACTION) {
           var prefix$9 = makeFormFieldPrefix(resumableState),
             customFields = formAction$jscomp$1.$$FORM_ACTION(prefix$9);
@@ -3124,77 +3121,8 @@ function throwOnUseEffectEventCall() {
 function unsupportedStartTransition() {
   throw Error("startTransition cannot be called during server rendering.");
 }
-function useHostTransitionStatus() {
-  resolveCurrentlyRenderingComponent();
-  return sharedNotPendingObject;
-}
 function unsupportedSetOptimisticState() {
   throw Error("Cannot update optimistic state while rendering.");
-}
-function useOptimistic(passthrough) {
-  resolveCurrentlyRenderingComponent();
-  return [passthrough, unsupportedSetOptimisticState];
-}
-function useFormState(action, initialState, permalink) {
-  resolveCurrentlyRenderingComponent();
-  var formStateHookIndex = formStateCounter++,
-    request = currentlyRenderingRequest;
-  if ("function" === typeof action.$$FORM_ACTION) {
-    var nextPostbackStateKey = null,
-      componentKeyPath = currentlyRenderingKeyPath;
-    request = request.formState;
-    var isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
-    if (null !== request && "function" === typeof isSignatureEqual) {
-      var postbackKey = request[1];
-      isSignatureEqual.call(action, request[2], request[3]) &&
-        ((nextPostbackStateKey =
-          void 0 !== permalink
-            ? "p" + permalink
-            : "k" +
-              murmurhash3_32_gc(
-                JSON.stringify([componentKeyPath, null, formStateHookIndex]),
-                0
-              )),
-        postbackKey === nextPostbackStateKey &&
-          ((formStateMatchingIndex = formStateHookIndex),
-          (initialState = request[0])));
-    }
-    var boundAction = action.bind(null, initialState);
-    action = function (payload) {
-      boundAction(payload);
-    };
-    "function" === typeof boundAction.$$FORM_ACTION &&
-      (action.$$FORM_ACTION = function (prefix) {
-        prefix = boundAction.$$FORM_ACTION(prefix);
-        void 0 !== permalink &&
-          ((permalink += ""), (prefix.action = permalink));
-        var formData = prefix.data;
-        formData &&
-          (null === nextPostbackStateKey &&
-            (nextPostbackStateKey =
-              void 0 !== permalink
-                ? "p" + permalink
-                : "k" +
-                  murmurhash3_32_gc(
-                    JSON.stringify([
-                      componentKeyPath,
-                      null,
-                      formStateHookIndex
-                    ]),
-                    0
-                  )),
-          formData.append("$ACTION_KEY", nextPostbackStateKey));
-        return prefix;
-      });
-    return [initialState, action];
-  }
-  var boundAction$25 = action.bind(null, initialState);
-  return [
-    initialState,
-    function (payload) {
-      boundAction$25(payload);
-    }
-  ];
 }
 function unwrapThenable(thenable) {
   var index = thenableIndexCounter;
@@ -3207,102 +3135,169 @@ function unsupportedRefresh() {
 }
 function noop$1() {}
 var HooksDispatcher = {
-  readContext: function (context) {
-    return context._currentValue;
-  },
-  use: function (usable) {
-    if (null !== usable && "object" === typeof usable) {
-      if ("function" === typeof usable.then) return unwrapThenable(usable);
-      if (usable.$$typeof === REACT_CONTEXT_TYPE) return usable._currentValue;
+    readContext: function (context) {
+      return context._currentValue;
+    },
+    use: function (usable) {
+      if (null !== usable && "object" === typeof usable) {
+        if ("function" === typeof usable.then) return unwrapThenable(usable);
+        if (usable.$$typeof === REACT_CONTEXT_TYPE) return usable._currentValue;
+      }
+      throw Error("An unsupported type was passed to use(): " + String(usable));
+    },
+    useContext: function (context) {
+      resolveCurrentlyRenderingComponent();
+      return context._currentValue;
+    },
+    useMemo: useMemo,
+    useReducer: useReducer,
+    useRef: function (initialValue) {
+      currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
+      workInProgressHook = createWorkInProgressHook();
+      var previousRef = workInProgressHook.memoizedState;
+      return null === previousRef
+        ? ((initialValue = { current: initialValue }),
+          (workInProgressHook.memoizedState = initialValue))
+        : previousRef;
+    },
+    useState: function (initialState) {
+      return useReducer(basicStateReducer, initialState);
+    },
+    useInsertionEffect: noop$1,
+    useLayoutEffect: noop$1,
+    useCallback: function (callback, deps) {
+      return useMemo(function () {
+        return callback;
+      }, deps);
+    },
+    useImperativeHandle: noop$1,
+    useEffect: noop$1,
+    useDebugValue: noop$1,
+    useDeferredValue: function (value, initialValue) {
+      resolveCurrentlyRenderingComponent();
+      return enableUseDeferredValueInitialArg
+        ? void 0 !== initialValue
+          ? initialValue
+          : value
+        : value;
+    },
+    useTransition: function () {
+      resolveCurrentlyRenderingComponent();
+      return [!1, unsupportedStartTransition];
+    },
+    useId: function () {
+      var JSCompiler_inline_result = currentlyRenderingTask.treeContext;
+      var overflow = JSCompiler_inline_result.overflow;
+      JSCompiler_inline_result = JSCompiler_inline_result.id;
+      JSCompiler_inline_result =
+        (
+          JSCompiler_inline_result &
+          ~(1 << (32 - clz32(JSCompiler_inline_result) - 1))
+        ).toString(32) + overflow;
+      var resumableState = currentResumableState;
+      if (null === resumableState)
+        throw Error(
+          "Invalid hook call. Hooks can only be called inside of the body of a function component."
+        );
+      overflow = localIdCounter++;
+      JSCompiler_inline_result =
+        ":" + resumableState.idPrefix + "R" + JSCompiler_inline_result;
+      0 < overflow && (JSCompiler_inline_result += "H" + overflow.toString(32));
+      return JSCompiler_inline_result + ":";
+    },
+    useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
+      if (void 0 === getServerSnapshot)
+        throw Error(
+          "Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering."
+        );
+      return getServerSnapshot();
+    },
+    useCacheRefresh: function () {
+      return unsupportedRefresh;
+    },
+    useEffectEvent: function () {
+      return throwOnUseEffectEventCall;
+    },
+    useMemoCache: function (size) {
+      for (var data = Array(size), i = 0; i < size; i++)
+        data[i] = REACT_MEMO_CACHE_SENTINEL;
+      return data;
+    },
+    useHostTransitionStatus: function () {
+      resolveCurrentlyRenderingComponent();
+      return sharedNotPendingObject;
+    },
+    useOptimistic: function (passthrough) {
+      resolveCurrentlyRenderingComponent();
+      return [passthrough, unsupportedSetOptimisticState];
+    },
+    useFormState: function (action, initialState, permalink) {
+      resolveCurrentlyRenderingComponent();
+      var formStateHookIndex = formStateCounter++,
+        request = currentlyRenderingRequest;
+      if ("function" === typeof action.$$FORM_ACTION) {
+        var nextPostbackStateKey = null,
+          componentKeyPath = currentlyRenderingKeyPath;
+        request = request.formState;
+        var isSignatureEqual = action.$$IS_SIGNATURE_EQUAL;
+        if (null !== request && "function" === typeof isSignatureEqual) {
+          var postbackKey = request[1];
+          isSignatureEqual.call(action, request[2], request[3]) &&
+            ((nextPostbackStateKey =
+              void 0 !== permalink
+                ? "p" + permalink
+                : "k" +
+                  murmurhash3_32_gc(
+                    JSON.stringify([
+                      componentKeyPath,
+                      null,
+                      formStateHookIndex
+                    ]),
+                    0
+                  )),
+            postbackKey === nextPostbackStateKey &&
+              ((formStateMatchingIndex = formStateHookIndex),
+              (initialState = request[0])));
+        }
+        var boundAction = action.bind(null, initialState);
+        action = function (payload) {
+          boundAction(payload);
+        };
+        "function" === typeof boundAction.$$FORM_ACTION &&
+          (action.$$FORM_ACTION = function (prefix) {
+            prefix = boundAction.$$FORM_ACTION(prefix);
+            void 0 !== permalink &&
+              ((permalink += ""), (prefix.action = permalink));
+            var formData = prefix.data;
+            formData &&
+              (null === nextPostbackStateKey &&
+                (nextPostbackStateKey =
+                  void 0 !== permalink
+                    ? "p" + permalink
+                    : "k" +
+                      murmurhash3_32_gc(
+                        JSON.stringify([
+                          componentKeyPath,
+                          null,
+                          formStateHookIndex
+                        ]),
+                        0
+                      )),
+              formData.append("$ACTION_KEY", nextPostbackStateKey));
+            return prefix;
+          });
+        return [initialState, action];
+      }
+      var boundAction$25 = action.bind(null, initialState);
+      return [
+        initialState,
+        function (payload) {
+          boundAction$25(payload);
+        }
+      ];
     }
-    throw Error("An unsupported type was passed to use(): " + String(usable));
   },
-  useContext: function (context) {
-    resolveCurrentlyRenderingComponent();
-    return context._currentValue;
-  },
-  useMemo: useMemo,
-  useReducer: useReducer,
-  useRef: function (initialValue) {
-    currentlyRenderingComponent = resolveCurrentlyRenderingComponent();
-    workInProgressHook = createWorkInProgressHook();
-    var previousRef = workInProgressHook.memoizedState;
-    return null === previousRef
-      ? ((initialValue = { current: initialValue }),
-        (workInProgressHook.memoizedState = initialValue))
-      : previousRef;
-  },
-  useState: function (initialState) {
-    return useReducer(basicStateReducer, initialState);
-  },
-  useInsertionEffect: noop$1,
-  useLayoutEffect: noop$1,
-  useCallback: function (callback, deps) {
-    return useMemo(function () {
-      return callback;
-    }, deps);
-  },
-  useImperativeHandle: noop$1,
-  useEffect: noop$1,
-  useDebugValue: noop$1,
-  useDeferredValue: function (value, initialValue) {
-    resolveCurrentlyRenderingComponent();
-    return enableUseDeferredValueInitialArg
-      ? void 0 !== initialValue
-        ? initialValue
-        : value
-      : value;
-  },
-  useTransition: function () {
-    resolveCurrentlyRenderingComponent();
-    return [!1, unsupportedStartTransition];
-  },
-  useId: function () {
-    var JSCompiler_inline_result = currentlyRenderingTask.treeContext;
-    var overflow = JSCompiler_inline_result.overflow;
-    JSCompiler_inline_result = JSCompiler_inline_result.id;
-    JSCompiler_inline_result =
-      (
-        JSCompiler_inline_result &
-        ~(1 << (32 - clz32(JSCompiler_inline_result) - 1))
-      ).toString(32) + overflow;
-    var resumableState = currentResumableState;
-    if (null === resumableState)
-      throw Error(
-        "Invalid hook call. Hooks can only be called inside of the body of a function component."
-      );
-    overflow = localIdCounter++;
-    JSCompiler_inline_result =
-      ":" + resumableState.idPrefix + "R" + JSCompiler_inline_result;
-    0 < overflow && (JSCompiler_inline_result += "H" + overflow.toString(32));
-    return JSCompiler_inline_result + ":";
-  },
-  useSyncExternalStore: function (subscribe, getSnapshot, getServerSnapshot) {
-    if (void 0 === getServerSnapshot)
-      throw Error(
-        "Missing getServerSnapshot, which is required for server-rendered content. Will revert to client rendering."
-      );
-    return getServerSnapshot();
-  },
-  useCacheRefresh: function () {
-    return unsupportedRefresh;
-  },
-  useEffectEvent: function () {
-    return throwOnUseEffectEventCall;
-  },
-  useMemoCache: function (size) {
-    for (var data = Array(size), i = 0; i < size; i++)
-      data[i] = REACT_MEMO_CACHE_SENTINEL;
-    return data;
-  }
-};
-enableFormActions &&
-  enableAsyncActions &&
-  (HooksDispatcher.useHostTransitionStatus = useHostTransitionStatus);
-enableAsyncActions &&
-  ((HooksDispatcher.useOptimistic = useOptimistic),
-  (HooksDispatcher.useFormState = useFormState));
-var currentResumableState = null,
+  currentResumableState = null,
   DefaultCacheDispatcher = {
     getCacheSignal: function () {
       throw Error("Not implemented.");

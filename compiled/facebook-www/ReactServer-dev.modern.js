@@ -84,7 +84,6 @@ if (__DEV__) {
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableAsyncActions = dynamicFeatureFlags.enableAsyncActions,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
 
     /**
@@ -2606,7 +2605,7 @@ if (__DEV__) {
         }
       }
 
-      if (enableAsyncActions) {
+      {
         try {
           var returnValue = scope();
 
@@ -2622,15 +2621,6 @@ if (__DEV__) {
           }
         } catch (error) {
           onError(error);
-        } finally {
-          warnAboutTransitionSubscriptions(prevTransition, currentTransition);
-          ReactCurrentBatchConfig.transition = prevTransition;
-        }
-      } else {
-        // When async actions are not enabled, startTransition does not
-        // capture errors.
-        try {
-          scope();
         } finally {
           warnAboutTransitionSubscriptions(prevTransition, currentTransition);
           ReactCurrentBatchConfig.transition = prevTransition;
@@ -2672,7 +2662,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-23ad9558";
+    var ReactVersion = "18.3.0-www-modern-5d89467b";
 
     // Patch fetch
     var Children = {
