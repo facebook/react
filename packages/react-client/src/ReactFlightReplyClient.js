@@ -47,6 +47,11 @@ export opaque type ServerReference<T> = T;
 
 export type CallServerCallback = <A, T>(id: any, args: A) => Promise<T>;
 
+export type EncodeFormActionCallback = <A>(
+  id: any,
+  args: Promise<A>,
+) => ReactCustomFormAction;
+
 export type ServerReferenceId = any;
 
 const knownServerReferences: WeakMap<
@@ -454,7 +459,7 @@ function encodeFormData(reference: any): Thenable<FormData> {
   return thenable;
 }
 
-export function encodeFormAction(
+function defaultEncodeFormAction(
   this: any => Promise<any>,
   identifierPrefix: string,
 ): ReactCustomFormAction {
@@ -501,6 +506,25 @@ export function encodeFormAction(
     encType: 'multipart/form-data',
     data: data,
   };
+}
+
+function customEncodeFormAction(
+  proxy: any => Promise<any>,
+  identifierPrefix: string,
+  encodeFormAction: EncodeFormActionCallback,
+): ReactCustomFormAction {
+  const reference = knownServerReferences.get(proxy);
+  if (!reference) {
+    throw new Error(
+      'Tried to encode a Server Action from a different instance than the encoder is from. ' +
+        'This is a bug in React.',
+    );
+  }
+  let boundPromise: Promise<Array<any>> = (reference.bound: any);
+  if (boundPromise === null) {
+    boundPromise = Promise.resolve([]);
+  }
+  return encodeFormAction(reference.id, boundPromise);
 }
 
 function isSignatureEqual(
@@ -569,13 +593,27 @@ function isSignatureEqual(
 export function registerServerReference(
   proxy: any,
   reference: {id: ServerReferenceId, bound: null | Thenable<Array<any>>},
+  encodeFormAction: void | EncodeFormActionCallback,
 ) {
   // Expose encoder for use by SSR, as well as a special bind that can be used to
   // keep server capabilities.
   if (usedWithSSR) {
     // Only expose this in builds that would actually use it. Not needed on the client.
+    const $$FORM_ACTION =
+      encodeFormAction === undefined
+        ? defaultEncodeFormAction
+        : function (
+            this: any => Promise<any>,
+            identifierPrefix: string,
+          ): ReactCustomFormAction {
+            return customEncodeFormAction(
+              this,
+              identifierPrefix,
+              encodeFormAction,
+            );
+          };
     Object.defineProperties((proxy: any), {
-      $$FORM_ACTION: {value: encodeFormAction},
+      $$FORM_ACTION: {value: $$FORM_ACTION},
       $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
       bind: {value: bind},
     });
@@ -587,7 +625,7 @@ export function registerServerReference(
 const FunctionBind = Function.prototype.bind;
 // $FlowFixMe[method-unbinding]
 const ArraySlice = Array.prototype.slice;
-function bind(this: Function) {
+function bind(this: Function): Function {
   // $FlowFixMe[unsupported-syntax]
   const newFn = FunctionBind.apply(this, arguments);
   const reference = knownServerReferences.get(this);
@@ -601,7 +639,17 @@ function bind(this: Function) {
     } else {
       boundPromise = Promise.resolve(args);
     }
-    registerServerReference(newFn, {id: reference.id, bound: boundPromise});
+    // Expose encoder for use by SSR, as well as a special bind that can be used to
+    // keep server capabilities.
+    if (usedWithSSR) {
+      // Only expose this in builds that would actually use it. Not needed on the client.
+      Object.defineProperties((newFn: any), {
+        $$FORM_ACTION: {value: this.$$FORM_ACTION},
+        $$IS_SIGNATURE_EQUAL: {value: isSignatureEqual},
+        bind: {value: bind},
+      });
+    }
+    knownServerReferences.set(newFn, {id: reference.id, bound: boundPromise});
   }
   return newFn;
 }
@@ -609,12 +657,13 @@ function bind(this: Function) {
 export function createServerReference<A: Iterable<any>, T>(
   id: ServerReferenceId,
   callServer: CallServerCallback,
+  encodeFormAction?: EncodeFormActionCallback,
 ): (...A) => Promise<T> {
   const proxy = function (): Promise<T> {
     // $FlowFixMe[method-unbinding]
     const args = Array.prototype.slice.call(arguments);
     return callServer(id, args);
   };
-  registerServerReference(proxy, {id, bound: null});
+  registerServerReference(proxy, {id, bound: null}, encodeFormAction);
   return proxy;
 }
