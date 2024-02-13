@@ -1599,7 +1599,8 @@ function emitErrorChunk(
         message = String(error.message);
         // eslint-disable-next-line react-internal/safe-string-coercion
         stack = String(error.stack);
-      } else if (typeof error === "object") {
+      } else if (typeof error === 'object' && error !== null) {
+        // eslint-disable-next-line react-internal/safe-string-coercion
         message = String(error.message);
       } else {
         message = 'Error: ' + (error: any);
