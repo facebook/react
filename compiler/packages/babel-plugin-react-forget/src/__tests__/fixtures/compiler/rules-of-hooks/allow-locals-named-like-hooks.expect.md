@@ -13,11 +13,11 @@ function Component(props) {
   let y = useFeature;
   let z = useFeature.useProperty;
   return (
-    <div onClick={useFeature}>
+    <Stringify val={useFeature}>
       {x}
       {y}
       {z}
-    </div>
+    </Stringify>
   );
 }
 
@@ -54,11 +54,11 @@ function Component(props) {
   let t1;
   if ($[1] === Symbol.for("react.memo_cache_sentinel")) {
     t1 = (
-      <div onClick={useFeature}>
+      <Stringify val={useFeature}>
         {x}
         {y}
         {z}
-      </div>
+      </Stringify>
     );
     $[1] = t1;
   } else {
@@ -75,11 +75,10 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) Objects are not valid as a React child (found: object with keys {a, b, c}). If you meant to render a collection of children, use an array instead.
-logs: ['The above error occurred in the <div> component:\n' +
+(kind: exception) Stringify is not defined
+logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
   '\n' +
-  '    at div\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:55:26)\n' +
+  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:54:26)\n' +
   '\n' +
   'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
   'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']

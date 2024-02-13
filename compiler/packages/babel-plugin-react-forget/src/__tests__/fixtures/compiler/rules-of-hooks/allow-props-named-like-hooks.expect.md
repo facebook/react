@@ -2,6 +2,8 @@
 ## Input
 
 ```javascript
+import { Stringify } from "shared-runtime";
+
 function Component({ useFeature }) {
   let x;
   if (useFeature) {
@@ -10,17 +12,17 @@ function Component({ useFeature }) {
   let y = useFeature;
   let z = useFeature.useProperty;
   return (
-    <div onClick={useFeature}>
+    <Stringify val={useFeature}>
       {x}
       {y}
       {z}
-    </div>
+    </Stringify>
   );
 }
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{}],
+  params: [{ useFeature: { useProperty: true } }],
 };
 
 ```
@@ -29,9 +31,11 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
-function Component(t28) {
+import { Stringify } from "shared-runtime";
+
+function Component(t29) {
   const $ = useMemoCache(8);
-  const { useFeature } = t28;
+  const { useFeature } = t29;
   let x;
   if (useFeature) {
     const t0 = useFeature + useFeature;
@@ -52,11 +56,11 @@ function Component(t28) {
   let t2;
   if ($[3] !== useFeature || $[4] !== x || $[5] !== y || $[6] !== z) {
     t2 = (
-      <div onClick={useFeature}>
+      <Stringify val={useFeature}>
         {x}
         {y}
         {z}
-      </div>
+      </Stringify>
     );
     $[3] = useFeature;
     $[4] = x;
@@ -71,16 +75,10 @@ function Component(t28) {
 
 export const FIXTURE_ENTRYPOINT = {
   fn: Component,
-  params: [{}],
+  params: [{ useFeature: { useProperty: true } }],
 };
 
 ```
       
 ### Eval output
-(kind: exception) Cannot read properties of undefined (reading 'useProperty')
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:55:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) <div>{"val":{"useProperty":true},"children":[2,"[[ cyclic ref *1 ]]",true]}</div>

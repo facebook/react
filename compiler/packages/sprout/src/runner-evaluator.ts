@@ -24,7 +24,6 @@ const React = require("react");
 const { window: testWindow } = new JSDOM(undefined);
 (globalThis as any).document = testWindow.document;
 (globalThis as any).window = testWindow.window;
-(globalThis as any).navigator = testWindow.navigator;
 (globalThis as any).React = React;
 (globalThis as any).render = render;
 initFbt();

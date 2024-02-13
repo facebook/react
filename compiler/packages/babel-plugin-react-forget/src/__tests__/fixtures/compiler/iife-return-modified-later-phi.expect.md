@@ -10,7 +10,7 @@ function Component(props) {
       return null;
     }
   })();
-  items.push(props.a);
+  items?.push(props.a);
   return items;
 }
 
@@ -26,9 +26,9 @@ export const FIXTURE_ENTRYPOINT = {
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
 function Component(props) {
-  const $ = useMemoCache(3);
+  const $ = useMemoCache(2);
   let items;
-  if ($[0] !== props.cond || $[1] !== props.a) {
+  if ($[0] !== props) {
     let t9;
     if (props.cond) {
       t9 = [];
@@ -37,12 +37,11 @@ function Component(props) {
     }
     items = t9;
 
-    items.push(props.a);
-    $[0] = props.cond;
-    $[1] = props.a;
-    $[2] = items;
+    items?.push(props.a);
+    $[0] = props;
+    $[1] = items;
   } else {
-    items = $[2];
+    items = $[1];
   }
   return items;
 }
@@ -55,10 +54,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) Cannot read properties of null (reading 'push')
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:55:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) null

@@ -2,17 +2,21 @@
 ## Input
 
 ```javascript
+import { Stringify } from "shared-runtime";
+
 function hoisting() {
-  function onClick(x) {
-    return x + bar["baz"];
+  function onClick() {
+    return bar["baz"];
   }
-  function onClick2(x) {
-    return x + bar[baz];
+  function onClick2() {
+    return bar[baz];
   }
   const baz = "baz";
   const bar = { baz: 1 };
 
-  return <Button onClick={onClick} onClick2={onClick2} />;
+  return (
+    <Stringify onClick={onClick} onClick2={onClick2} shouldInvokeFns={true} />
+  );
 }
 
 export const FIXTURE_ENTRYPOINT = {
@@ -26,17 +30,19 @@ export const FIXTURE_ENTRYPOINT = {
 
 ```javascript
 import { unstable_useMemoCache as useMemoCache } from "react";
+import { Stringify } from "shared-runtime";
+
 function hoisting() {
   const $ = useMemoCache(3);
   let onClick;
   let onClick2;
   if ($[0] === Symbol.for("react.memo_cache_sentinel")) {
-    onClick = function onClick(x) {
-      return x + bar.baz;
+    onClick = function onClick() {
+      return bar.baz;
     };
 
-    onClick2 = function onClick2(x_0) {
-      return x_0 + bar[baz];
+    onClick2 = function onClick2() {
+      return bar[baz];
     };
 
     const baz = "baz";
@@ -49,7 +55,9 @@ function hoisting() {
   }
   let t0;
   if ($[2] === Symbol.for("react.memo_cache_sentinel")) {
-    t0 = <Button onClick={onClick} onClick2={onClick2} />;
+    t0 = (
+      <Stringify onClick={onClick} onClick2={onClick2} shouldInvokeFns={true} />
+    );
     $[2] = t0;
   } else {
     t0 = $[2];
@@ -65,10 +73,4 @@ export const FIXTURE_ENTRYPOINT = {
 ```
       
 ### Eval output
-(kind: exception) Button is not defined
-logs: ['The above error occurred in the <WrapperTestComponent> component:\n' +
-  '\n' +
-  '    at WrapperTestComponent (<project_root>/packages/sprout/dist/runner-evaluator.js:55:26)\n' +
-  '\n' +
-  'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-  'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.']
+(kind: ok) <div>{"onClick":{"kind":"Function","result":1},"onClick2":{"kind":"Function","result":1},"shouldInvokeFns":true}</div>

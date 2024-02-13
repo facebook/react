@@ -6,7 +6,7 @@ function Component(props) {
       return null;
     }
   })();
-  items.push(props.a);
+  items?.push(props.a);
   return items;
 }
 

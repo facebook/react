@@ -1,14 +1,18 @@
+import { Stringify } from "shared-runtime";
+
 function hoisting() {
-  function onClick(x) {
-    return x + bar["baz"];
+  function onClick() {
+    return bar["baz"];
   }
-  function onClick2(x) {
-    return x + bar[baz];
+  function onClick2() {
+    return bar[baz];
   }
   const baz = "baz";
   const bar = { baz: 1 };
 
-  return <Button onClick={onClick} onClick2={onClick2} />;
+  return (
+    <Stringify onClick={onClick} onClick2={onClick2} shouldInvokeFns={true} />
+  );
 }
 
 export const FIXTURE_ENTRYPOINT = {

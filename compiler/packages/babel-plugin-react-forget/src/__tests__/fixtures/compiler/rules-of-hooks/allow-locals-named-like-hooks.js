@@ -9,11 +9,11 @@ function Component(props) {
   let y = useFeature;
   let z = useFeature.useProperty;
   return (
-    <div onClick={useFeature}>
+    <Stringify val={useFeature}>
       {x}
       {y}
       {z}
-    </div>
+    </Stringify>
   );
 }
 
