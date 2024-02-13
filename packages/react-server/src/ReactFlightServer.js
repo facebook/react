@@ -1600,7 +1600,7 @@ function emitErrorChunk(
         // eslint-disable-next-line react-internal/safe-string-coercion
         stack = String(error.stack);
       } else if (typeof error === "object") {
-        message = 'Error: ' + stringify(error);
+        message = String(error.message);
       } else {
         message = 'Error: ' + (error: any);
       }
