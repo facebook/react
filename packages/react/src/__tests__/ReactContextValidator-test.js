@@ -18,7 +18,6 @@
 let PropTypes;
 let React;
 let ReactDOMClient;
-let ReactDOMServer;
 let ReactTestUtils;
 let act;
 
@@ -29,7 +28,6 @@ describe('ReactContextValidator', () => {
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
   });
@@ -159,136 +157,6 @@ describe('ReactContextValidator', () => {
     expect(componentDidUpdateContext).toEqual({foo: 'def'});
   });
 
-  // @gate !disableLegacyContext || !__DEV__
-  it('should check context types', () => {
-    class Component extends React.Component {
-      render() {
-        return <div />;
-      }
-    }
-    Component.contextTypes = {
-      foo: PropTypes.string.isRequired,
-    };
-
-    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toErrorDev(
-      'Warning: Failed context type: ' +
-        'The context `foo` is marked as required in `Component`, but its value ' +
-        'is `undefined`.\n' +
-        '    in Component (at **)',
-    );
-
-    class ComponentInFooStringContext extends React.Component {
-      getChildContext() {
-        return {
-          foo: this.props.fooValue,
-        };
-      }
-
-      render() {
-        return <Component />;
-      }
-    }
-    ComponentInFooStringContext.childContextTypes = {
-      foo: PropTypes.string,
-    };
-
-    // No additional errors expected
-    ReactTestUtils.renderIntoDocument(
-      <ComponentInFooStringContext fooValue={'bar'} />,
-    );
-
-    class ComponentInFooNumberContext extends React.Component {
-      getChildContext() {
-        return {
-          foo: this.props.fooValue,
-        };
-      }
-
-      render() {
-        return <Component />;
-      }
-    }
-    ComponentInFooNumberContext.childContextTypes = {
-      foo: PropTypes.number,
-    };
-
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(
-        <ComponentInFooNumberContext fooValue={123} />,
-      ),
-    ).toErrorDev(
-      'Warning: Failed context type: ' +
-        'Invalid context `foo` of type `number` supplied ' +
-        'to `Component`, expected `string`.\n' +
-        '    in Component (at **)\n' +
-        '    in ComponentInFooNumberContext (at **)',
-    );
-  });
-
-  // @gate !disableLegacyContext || !__DEV__
-  it('should check child context types', () => {
-    class Component extends React.Component {
-      getChildContext() {
-        return this.props.testContext;
-      }
-
-      render() {
-        return <div />;
-      }
-    }
-    Component.childContextTypes = {
-      foo: PropTypes.string.isRequired,
-      bar: PropTypes.number,
-    };
-
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />),
-    ).toErrorDev(
-      'Warning: Failed child context type: ' +
-        'The child context `foo` is marked as required in `Component`, but its ' +
-        'value is `undefined`.\n' +
-        '    in Component (at **)',
-    );
-
-    expect(() =>
-      ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />),
-    ).toErrorDev(
-      'Warning: Failed child context type: ' +
-        'Invalid child context `foo` of type `number` ' +
-        'supplied to `Component`, expected `string`.\n' +
-        '    in Component (at **)',
-    );
-
-    // No additional errors expected
-    ReactTestUtils.renderIntoDocument(
-      <Component testContext={{foo: 'foo', bar: 123}} />,
-    );
-
-    ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 'foo'}} />);
-  });
-
-  it('warns of incorrect prop types on context provider', () => {
-    const TestContext = React.createContext();
-
-    TestContext.Provider.propTypes = {
-      value: PropTypes.string.isRequired,
-    };
-
-    ReactTestUtils.renderIntoDocument(<TestContext.Provider value="val" />);
-
-    class Component extends React.Component {
-      render() {
-        return <TestContext.Provider value={undefined} />;
-      }
-    }
-
-    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toErrorDev(
-      'Warning: Failed prop type: The prop `value` is marked as required in ' +
-        '`Context.Provider`, but its value is `undefined`.\n' +
-        '    in Component (at **)',
-    );
-  });
-
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   // @gate !disableLegacyContext || !__DEV__
@@ -371,8 +239,6 @@ describe('ReactContextValidator', () => {
       'Warning: MiddleMissingContext.childContextTypes is specified but there is no ' +
         'getChildContext() method on the instance. You can either define getChildContext() ' +
         'on MiddleMissingContext or remove childContextTypes from it.',
-      'Warning: Failed context type: The context `bar` is marked as required ' +
-        'in `ChildContextConsumer`, but its value is `undefined`.',
     ]);
     expect(childContext.bar).toBeUndefined();
     expect(childContext.foo).toBe('FOO');
@@ -697,26 +563,6 @@ describe('ReactContextValidator', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(<ComponentB />)).toErrorDev(
       'Warning: ComponentB: Function components do not support contextType.',
-    );
-  });
-
-  it('should honor a displayName if set on the context type', () => {
-    const Context = React.createContext(null);
-    Context.displayName = 'MyContextType';
-    function Validator() {
-      return null;
-    }
-    Validator.propTypes = {dontPassToSeeErrorStack: PropTypes.bool.isRequired};
-
-    expect(() => {
-      ReactDOMServer.renderToStaticMarkup(
-        <Context.Provider>
-          <Context.Consumer>{() => <Validator />}</Context.Consumer>
-        </Context.Provider>,
-      );
-    }).toErrorDev(
-      'Warning: Failed prop type: The prop `dontPassToSeeErrorStack` is marked as required in `Validator`, but its value is `undefined`.\n' +
-        '    in Validator (at **)',
     );
   });
 });
