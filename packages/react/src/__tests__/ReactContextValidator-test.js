@@ -519,7 +519,7 @@ describe('ReactContextValidator', () => {
       await act(() => {
         root.render(<Foo />);
       });
-    }).rejects.toThrow("Cannot read property 'world' of undefined");
+    }).rejects.toThrow("Cannot read properties of undefined (reading 'world')");
   });
 
   it('should warn when class contextType is undefined', async () => {
@@ -539,7 +539,9 @@ describe('ReactContextValidator', () => {
         await act(() => {
           root.render(<Foo />);
         });
-      }).rejects.toThrow("Cannot read property 'world' of undefined");
+      }).rejects.toThrow(
+        "Cannot read properties of undefined (reading 'world')",
+      );
     }).toErrorDev(
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
@@ -569,7 +571,9 @@ describe('ReactContextValidator', () => {
         await act(() => {
           root.render(<Foo />);
         });
-      }).rejects.toThrow("Cannot read property 'hello' of undefined");
+      }).rejects.toThrow(
+        "Cannot read properties of undefined (reading 'hello')",
+      );
     }).toErrorDev(
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
@@ -592,7 +596,9 @@ describe('ReactContextValidator', () => {
         await act(() => {
           root.render(<Foo />);
         });
-      }).rejects.toThrow("Cannot read property 'world' of undefined");
+      }).rejects.toThrow(
+        "Cannot read properties of undefined (reading 'world')",
+      );
     }).toErrorDev(
       'Foo defines an invalid contextType. ' +
         'contextType should point to the Context object returned by React.createContext(). ' +
