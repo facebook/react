@@ -172,14 +172,6 @@ const EnvironmentConfigSchema = z.object({
   // Validate that ref values (`ref.current`) are not accessed during render.
   validateRefAccessDuringRender: z.boolean().default(false),
 
-  /**
-   * Extension of validateRefAccessDuringRender that validates that refs are not accessed during
-   * render indirectly by calling function expressions which access the ref.
-   *
-   * This validation has known issues and is not yet recommended
-   */
-  validateRefAccessDuringRenderFunctionExpressions: z.boolean().default(false),
-
   /*
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
