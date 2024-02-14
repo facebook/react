@@ -74,11 +74,39 @@ export type CodegenFunction = {
 export function codegenFunction(
   fn: ReactiveFunction
 ): Result<CodegenFunction, CompilerError> {
-  const compileResult = codegenReactiveFunction(fn);
+  const cx = new Context(fn.env, fn.id ?? "[[ anonymous ]]", null);
+  const compileResult = codegenReactiveFunction(cx, fn);
   if (compileResult.isErr()) {
     return compileResult;
   }
   const compiled = compileResult.unwrap();
+
+  const hookGuard = fn.env.config.enableEmitHookGuards;
+  if (hookGuard != null) {
+    compiled.body = t.blockStatement([
+      createHookGuard(
+        hookGuard,
+        compiled.body.body,
+        GuardKind.PushHookGuard,
+        GuardKind.PopHookGuard
+      ),
+    ]);
+  }
+
+  const cacheCount = compiled.memoSlotsUsed;
+  if (cacheCount !== 0) {
+    // The import declaration for `useMemoCache` is inserted in the Babel plugin
+    compiled.body.body.unshift(
+      t.variableDeclaration("const", [
+        t.variableDeclarator(
+          t.identifier("$"),
+          t.callExpression(t.identifier("useMemoCache"), [
+            t.numericLiteral(cacheCount),
+          ])
+        ),
+      ])
+    );
+  }
 
   const emitInstrumentForget = fn.env.config.enableEmitInstrumentForget;
   if (emitInstrumentForget != null && fn.id != null) {
@@ -98,29 +126,13 @@ export function codegenFunction(
     compiled.body.body.unshift(test);
   }
 
-  const hookGuard = fn.env.config.enableEmitHookGuards;
-  if (hookGuard != null) {
-    compiled.body = t.blockStatement([
-      createHookGuard(
-        hookGuard,
-        compiled.body.body,
-        GuardKind.PushHookGuard,
-        GuardKind.PopHookGuard
-      ),
-    ]);
-  }
   return compileResult;
 }
 
-export function codegenReactiveFunction(
-  fn: ReactiveFunction,
-  parentContext: Context | null = null
+function codegenReactiveFunction(
+  cx: Context,
+  fn: ReactiveFunction
 ): Result<CodegenFunction, CompilerError> {
-  const cx = new Context(
-    fn.env,
-    fn.id ?? "[[ anonymous ]]",
-    parentContext?.temp ?? null
-  );
   for (const param of fn.params) {
     if (param.kind === "Identifier") {
       cx.temp.set(param.identifier.id, null);
@@ -130,27 +142,13 @@ export function codegenReactiveFunction(
   }
 
   const params = fn.params.map((param) => convertParameter(param));
-  const body = codegenBlock(cx, fn.body);
+  const body: t.BlockStatement = codegenBlock(cx, fn.body);
   const statements = body.body;
   if (statements.length !== 0) {
     const last = statements[statements.length - 1];
     if (last.type === "ReturnStatement" && last.argument == null) {
       statements.pop();
     }
-  }
-  const cacheCount = cx.nextCacheIndex;
-  if (cacheCount !== 0) {
-    // The import declaration for `useMemoCache` is inserted in the Babel plugin
-    statements.unshift(
-      t.variableDeclaration("const", [
-        t.variableDeclarator(
-          t.identifier("$"),
-          t.callExpression(t.identifier("useMemoCache"), [
-            t.numericLiteral(cacheCount),
-          ])
-        ),
-      ])
-    );
   }
 
   if (cx.errors.hasErrors()) {
@@ -168,7 +166,7 @@ export function codegenReactiveFunction(
     body,
     generator: fn.generator,
     async: fn.async,
-    memoSlotsUsed: cacheCount,
+    memoSlotsUsed: cx.nextCacheIndex,
     memoBlocks: countMemoBlockVisitor.count,
   });
 }
@@ -1321,7 +1319,14 @@ function codegenInstructionValue(
               pruneUnusedLabels(reactiveFunction);
               pruneUnusedLValues(reactiveFunction);
               renameVariables(reactiveFunction);
-              const fn = codegenReactiveFunction(reactiveFunction).unwrap();
+              const fn = codegenReactiveFunction(
+                new Context(
+                  cx.env,
+                  reactiveFunction.id ?? "[[ anonymous ]]",
+                  cx.temp
+                ),
+                reactiveFunction
+              ).unwrap();
 
               /*
                * ObjectMethod builder must be backwards compatible with older versions of babel.
@@ -1520,7 +1525,10 @@ function codegenInstructionValue(
       pruneUnusedLValues(reactiveFunction);
       renameVariables(reactiveFunction);
       pruneHoistedContexts(reactiveFunction);
-      const fn = codegenReactiveFunction(reactiveFunction, cx).unwrap();
+      const fn = codegenReactiveFunction(
+        new Context(cx.env, reactiveFunction.id ?? "[[ anonymous ]]", cx.temp),
+        reactiveFunction
+      ).unwrap();
       if (instrValue.expr.type === "ArrowFunctionExpression") {
         let body: t.BlockStatement | t.Expression = fn.body;
         if (body.body.length === 1) {

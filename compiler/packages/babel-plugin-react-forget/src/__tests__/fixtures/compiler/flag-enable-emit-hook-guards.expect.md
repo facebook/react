@@ -54,9 +54,9 @@ import {
 
 const MyContext = createContext("my context value");
 function Component(t47) {
+  const $ = useMemoCache(4);
   try {
     $dispatcherGuard(0);
-    const $ = useMemoCache(4);
     const { value } = t47;
     print(identity(CONST_STRING0));
     let t0;
