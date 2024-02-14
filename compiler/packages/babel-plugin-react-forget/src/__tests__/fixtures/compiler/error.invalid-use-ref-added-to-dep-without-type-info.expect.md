@@ -22,7 +22,7 @@ function Foo({ a }) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Ref values may not be passed to functions because they could read the ref value (`current` property) during render. (https://react.dev/reference/react/useRef). Cannot access ref object at capture $29:TObject<BuiltInUseRefId> (5:5)
+[ReactForget] InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value at capture $29:TObject<BuiltInUseRefId> (5:5)
 ```
           
       
