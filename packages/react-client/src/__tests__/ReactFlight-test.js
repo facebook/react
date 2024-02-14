@@ -83,7 +83,16 @@ describe('ReactFlight', () => {
               ' builds to avoid leaking sensitive details. A digest property is included on this error instance which' +
               ' may provide additional details about the nature of the error.',
           );
-          expect(this.state.error.digest).toContain(this.props.expectedMessage);
+          let expectedDigest = this.props.expectedMessage;
+          if (
+            expectedDigest.startsWith('Error: {') ||
+            expectedDigest.startsWith('Error: <')
+          ) {
+            expectedDigest = '{}';
+          } else if (expectedDigest.startsWith('Error: [')) {
+            expectedDigest = '[]';
+          }
+          expect(this.state.error.digest).toContain(expectedDigest);
           expect(this.state.error.stack).toBe(
             'Error: ' + this.state.error.message,
           );
@@ -772,6 +781,106 @@ describe('ReactFlight', () => {
             </ErrorBoundary>
           </>,
         );
+      });
+    });
+  });
+
+  it('should emit descriptions of errors in dev', async () => {
+    const ClientErrorBoundary = clientReference(ErrorBoundary);
+
+    function Throw({value}) {
+      throw value;
+    }
+
+    const testCases = (
+      <>
+        <ClientErrorBoundary expectedMessage="This is a real Error.">
+          <div>
+            <Throw value={new TypeError('This is a real Error.')} />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary expectedMessage="Error: This is a string error.">
+          <div>
+            <Throw value="This is a string error." />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary expectedMessage="Error: {message: ..., extra: ..., nested: ...}">
+          <div>
+            <Throw
+              value={{
+                message: 'This is a long message',
+                extra: 'properties',
+                nested: {more: 'prop'},
+              }}
+            />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary
+          expectedMessage={
+            'Error: {message: "Short", extra: ..., nested: ...}'
+          }>
+          <div>
+            <Throw
+              value={{
+                message: 'Short',
+                extra: 'properties',
+                nested: {more: 'prop'},
+              }}
+            />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary expectedMessage="Error: Symbol(hello)">
+          <div>
+            <Throw value={Symbol('hello')} />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary expectedMessage="Error: 123">
+          <div>
+            <Throw value={123} />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary expectedMessage="Error: undefined">
+          <div>
+            <Throw value={undefined} />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary expectedMessage="Error: <div/>">
+          <div>
+            <Throw value={<div />} />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary expectedMessage="Error: function Foo() {}">
+          <div>
+            <Throw value={function Foo() {}} />
+          </div>
+        </ClientErrorBoundary>
+        <ClientErrorBoundary expectedMessage={'Error: ["array"]'}>
+          <div>
+            <Throw value={['array']} />
+          </div>
+        </ClientErrorBoundary>
+      </>
+    );
+
+    const transport = ReactNoopFlightServer.render(testCases, {
+      onError(x) {
+        if (__DEV__) {
+          return 'a dev digest';
+        }
+        if (x instanceof Error) {
+          return `digest("${x.message}")`;
+        } else if (Array.isArray(x)) {
+          return `digest([])`;
+        } else if (typeof x === 'object' && x !== null) {
+          return `digest({})`;
+        }
+        return `digest(Error: ${String(x)})`;
+      },
+    });
+
+    await act(() => {
+      startTransition(() => {
+        ReactNoop.render(ReactNoopFlightClient.read(transport));
       });
     });
   });
