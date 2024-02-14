@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<8f7c91d2c5c341803806e7a3db730537>>
+ * @generated SignedSource<<8821185e02d8d740fe422499ac3829aa>>
  */
 
 "use strict";
@@ -2199,214 +2199,6 @@ if (__DEV__) {
     }
     var NotPendingTransition = null;
 
-    function describeBuiltInComponentFrame(name, ownerFn) {
-      {
-        var ownerName = null;
-
-        if (ownerFn) {
-          ownerName = ownerFn.displayName || ownerFn.name || null;
-        }
-
-        return describeComponentFrame(name, ownerName);
-      }
-    }
-
-    {
-      var PossiblyWeakMap$1 = typeof WeakMap === "function" ? WeakMap : Map;
-      new PossiblyWeakMap$1();
-    }
-
-    function describeComponentFrame(name, ownerName) {
-      var sourceInfo = "";
-
-      if (ownerName) {
-        sourceInfo = " (created by " + ownerName + ")";
-      }
-
-      return "\n    in " + (name || "Unknown") + sourceInfo;
-    }
-
-    function describeClassComponentFrame(ctor, ownerFn) {
-      {
-        return describeFunctionComponentFrame(ctor, ownerFn);
-      }
-    }
-    function describeFunctionComponentFrame(fn, ownerFn) {
-      {
-        if (!fn) {
-          return "";
-        }
-
-        var name = fn.displayName || fn.name || null;
-        var ownerName = null;
-
-        if (ownerFn) {
-          ownerName = ownerFn.displayName || ownerFn.name || null;
-        }
-
-        return describeComponentFrame(name, ownerName);
-      }
-    }
-
-    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
-      if (type == null) {
-        return "";
-      }
-
-      if (typeof type === "function") {
-        {
-          return describeFunctionComponentFrame(type, ownerFn);
-        }
-      }
-
-      if (typeof type === "string") {
-        return describeBuiltInComponentFrame(type, ownerFn);
-      }
-
-      switch (type) {
-        case REACT_SUSPENSE_TYPE:
-          return describeBuiltInComponentFrame("Suspense", ownerFn);
-
-        case REACT_SUSPENSE_LIST_TYPE:
-          return describeBuiltInComponentFrame("SuspenseList", ownerFn);
-      }
-
-      if (typeof type === "object") {
-        switch (type.$$typeof) {
-          case REACT_FORWARD_REF_TYPE:
-            return describeFunctionComponentFrame(type.render, ownerFn);
-
-          case REACT_MEMO_TYPE:
-            // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
-
-          case REACT_LAZY_TYPE: {
-            var lazyComponent = type;
-            var payload = lazyComponent._payload;
-            var init = lazyComponent._init;
-
-            try {
-              // Lazy may contain any component type so we recursively resolve it.
-              return describeUnknownElementTypeFrameInDEV(
-                init(payload),
-                ownerFn
-              );
-            } catch (x) {}
-          }
-        }
-      }
-
-      return "";
-    }
-
-    // $FlowFixMe[method-unbinding]
-    var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-    var loggedTypeFailures = {};
-    var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
-
-    function setCurrentlyValidatingElement(element) {
-      {
-        if (element) {
-          var owner = element._owner;
-          var stack = describeUnknownElementTypeFrameInDEV(
-            element.type,
-            owner ? owner.type : null
-          );
-          ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
-        } else {
-          ReactDebugCurrentFrame$1.setExtraStackFrame(null);
-        }
-      }
-    }
-
-    function checkPropTypes(
-      typeSpecs,
-      values,
-      location,
-      componentName,
-      element
-    ) {
-      {
-        // $FlowFixMe[incompatible-use] This is okay but Flow doesn't know it.
-        var has = Function.call.bind(hasOwnProperty);
-
-        for (var typeSpecName in typeSpecs) {
-          if (has(typeSpecs, typeSpecName)) {
-            var error$1 = void 0; // Prop type validation may throw. In case they do, we don't want to
-            // fail the render phase where it didn't fail before. So we log it.
-            // After these have been cleaned up, we'll let them throw.
-
-            try {
-              // This is intentionally an invariant that gets caught. It's the same
-              // behavior as without this statement except with a better message.
-              if (typeof typeSpecs[typeSpecName] !== "function") {
-                // eslint-disable-next-line react-internal/prod-error-codes
-                var err = Error(
-                  (componentName || "React class") +
-                    ": " +
-                    location +
-                    " type `" +
-                    typeSpecName +
-                    "` is invalid; " +
-                    "it must be a function, usually from the `prop-types` package, but received `" +
-                    typeof typeSpecs[typeSpecName] +
-                    "`." +
-                    "This often happens because of typos such as `PropTypes.function` instead of `PropTypes.func`."
-                );
-                err.name = "Invariant Violation";
-                throw err;
-              }
-
-              error$1 = typeSpecs[typeSpecName](
-                values,
-                typeSpecName,
-                componentName,
-                location,
-                null,
-                "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED"
-              );
-            } catch (ex) {
-              error$1 = ex;
-            }
-
-            if (error$1 && !(error$1 instanceof Error)) {
-              setCurrentlyValidatingElement(element);
-
-              error(
-                "%s: type specification of %s" +
-                  " `%s` is invalid; the type checker " +
-                  "function must return `null` or an `Error` but returned a %s. " +
-                  "You may have forgotten to pass an argument to the type checker " +
-                  "creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and " +
-                  "shape all require an argument).",
-                componentName || "React class",
-                location,
-                typeSpecName,
-                typeof error$1
-              );
-
-              setCurrentlyValidatingElement(null);
-            }
-
-            if (
-              error$1 instanceof Error &&
-              !(error$1.message in loggedTypeFailures)
-            ) {
-              // Only monitor this failure once because there tends to be a lot of the
-              // same error.
-              loggedTypeFailures[error$1.message] = true;
-              setCurrentlyValidatingElement(element);
-
-              error("Failed %s type: %s", location, error$1.message);
-
-              setCurrentlyValidatingElement(null);
-            }
-          }
-        }
-      }
-    }
-
     var valueStack = [];
     var fiberStack;
 
@@ -2529,11 +2321,6 @@ if (__DEV__) {
 
         for (var key in contextTypes) {
           context[key] = unmaskedContext[key];
-        }
-
-        {
-          var name = getComponentNameFromFiber(workInProgress) || "Unknown";
-          checkPropTypes(contextTypes, context, "context", name);
         } // Cache unmasked context so we can avoid recreating masked context unless necessary.
         // Context is created before the class component is instantiated so check for instance.
 
@@ -2623,16 +2410,6 @@ if (__DEV__) {
                 '" is not defined in childContextTypes.'
             );
           }
-        }
-
-        {
-          var name = getComponentNameFromFiber(fiber) || "Unknown";
-          checkPropTypes(
-            childContextTypes,
-            childContext,
-            "child context",
-            name
-          );
         }
 
         return assign({}, parentContext, childContext);
@@ -4276,6 +4053,214 @@ if (__DEV__) {
         for (var i = 0; i < callbacks.length; i++) {
           var callback = callbacks[i];
           callCallback(callback, context);
+        }
+      }
+    }
+
+    function describeBuiltInComponentFrame(name, ownerFn) {
+      {
+        var ownerName = null;
+
+        if (ownerFn) {
+          ownerName = ownerFn.displayName || ownerFn.name || null;
+        }
+
+        return describeComponentFrame(name, ownerName);
+      }
+    }
+
+    {
+      var PossiblyWeakMap$1 = typeof WeakMap === "function" ? WeakMap : Map;
+      new PossiblyWeakMap$1();
+    }
+
+    function describeComponentFrame(name, ownerName) {
+      var sourceInfo = "";
+
+      if (ownerName) {
+        sourceInfo = " (created by " + ownerName + ")";
+      }
+
+      return "\n    in " + (name || "Unknown") + sourceInfo;
+    }
+
+    function describeClassComponentFrame(ctor, ownerFn) {
+      {
+        return describeFunctionComponentFrame(ctor, ownerFn);
+      }
+    }
+    function describeFunctionComponentFrame(fn, ownerFn) {
+      {
+        if (!fn) {
+          return "";
+        }
+
+        var name = fn.displayName || fn.name || null;
+        var ownerName = null;
+
+        if (ownerFn) {
+          ownerName = ownerFn.displayName || ownerFn.name || null;
+        }
+
+        return describeComponentFrame(name, ownerName);
+      }
+    }
+
+    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
+      if (type == null) {
+        return "";
+      }
+
+      if (typeof type === "function") {
+        {
+          return describeFunctionComponentFrame(type, ownerFn);
+        }
+      }
+
+      if (typeof type === "string") {
+        return describeBuiltInComponentFrame(type, ownerFn);
+      }
+
+      switch (type) {
+        case REACT_SUSPENSE_TYPE:
+          return describeBuiltInComponentFrame("Suspense", ownerFn);
+
+        case REACT_SUSPENSE_LIST_TYPE:
+          return describeBuiltInComponentFrame("SuspenseList", ownerFn);
+      }
+
+      if (typeof type === "object") {
+        switch (type.$$typeof) {
+          case REACT_FORWARD_REF_TYPE:
+            return describeFunctionComponentFrame(type.render, ownerFn);
+
+          case REACT_MEMO_TYPE:
+            // Memo may contain any component type so we recursively resolve it.
+            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
+
+          case REACT_LAZY_TYPE: {
+            var lazyComponent = type;
+            var payload = lazyComponent._payload;
+            var init = lazyComponent._init;
+
+            try {
+              // Lazy may contain any component type so we recursively resolve it.
+              return describeUnknownElementTypeFrameInDEV(
+                init(payload),
+                ownerFn
+              );
+            } catch (x) {}
+          }
+        }
+      }
+
+      return "";
+    }
+
+    // $FlowFixMe[method-unbinding]
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+    var loggedTypeFailures = {};
+    var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
+
+    function setCurrentlyValidatingElement(element) {
+      {
+        if (element) {
+          var owner = element._owner;
+          var stack = describeUnknownElementTypeFrameInDEV(
+            element.type,
+            owner ? owner.type : null
+          );
+          ReactDebugCurrentFrame$1.setExtraStackFrame(stack);
+        } else {
+          ReactDebugCurrentFrame$1.setExtraStackFrame(null);
+        }
+      }
+    }
+
+    function checkPropTypes(
+      typeSpecs,
+      values,
+      location,
+      componentName,
+      element
+    ) {
+      {
+        // $FlowFixMe[incompatible-use] This is okay but Flow doesn't know it.
+        var has = Function.call.bind(hasOwnProperty);
+
+        for (var typeSpecName in typeSpecs) {
+          if (has(typeSpecs, typeSpecName)) {
+            var error$1 = void 0; // Prop type validation may throw. In case they do, we don't want to
+            // fail the render phase where it didn't fail before. So we log it.
+            // After these have been cleaned up, we'll let them throw.
+
+            try {
+              // This is intentionally an invariant that gets caught. It's the same
+              // behavior as without this statement except with a better message.
+              if (typeof typeSpecs[typeSpecName] !== "function") {
+                // eslint-disable-next-line react-internal/prod-error-codes
+                var err = Error(
+                  (componentName || "React class") +
+                    ": " +
+                    location +
+                    " type `" +
+                    typeSpecName +
+                    "` is invalid; " +
+                    "it must be a function, usually from the `prop-types` package, but received `" +
+                    typeof typeSpecs[typeSpecName] +
+                    "`." +
+                    "This often happens because of typos such as `PropTypes.function` instead of `PropTypes.func`."
+                );
+                err.name = "Invariant Violation";
+                throw err;
+              }
+
+              error$1 = typeSpecs[typeSpecName](
+                values,
+                typeSpecName,
+                componentName,
+                location,
+                null,
+                "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED"
+              );
+            } catch (ex) {
+              error$1 = ex;
+            }
+
+            if (error$1 && !(error$1 instanceof Error)) {
+              setCurrentlyValidatingElement(element);
+
+              error(
+                "%s: type specification of %s" +
+                  " `%s` is invalid; the type checker " +
+                  "function must return `null` or an `Error` but returned a %s. " +
+                  "You may have forgotten to pass an argument to the type checker " +
+                  "creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and " +
+                  "shape all require an argument).",
+                componentName || "React class",
+                location,
+                typeSpecName,
+                typeof error$1
+              );
+
+              setCurrentlyValidatingElement(null);
+            }
+
+            if (
+              error$1 instanceof Error &&
+              !(error$1.message in loggedTypeFailures)
+            ) {
+              // Only monitor this failure once because there tends to be a lot of the
+              // same error.
+              loggedTypeFailures[error$1.message] = true;
+              setCurrentlyValidatingElement(element);
+
+              error("Failed %s type: %s", location, error$1.message);
+
+              setCurrentlyValidatingElement(null);
+            }
+          }
         }
       }
     }
@@ -25937,7 +25922,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-f0e808e5b-20240214";
+    var ReactVersion = "18.3.0-canary-64e755d73-20240214";
 
     // Might add PROFILE later.
 

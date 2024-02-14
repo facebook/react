@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<53445ac6c4327c37439b862407e7ee6b>>
+ * @generated SignedSource<<d4c6ab1969fddc55c59e6aad376735c3>>
  */
 
 "use strict";
@@ -2104,18 +2104,7 @@ function getPublicInstance(instance) {
     : instance;
 }
 var scheduleTimeout = setTimeout,
-  cancelTimeout = clearTimeout;
-function describeComponentFrame(name, ownerName) {
-  var sourceInfo = "";
-  ownerName && (sourceInfo = " (created by " + ownerName + ")");
-  return "\n    in " + (name || "Unknown") + sourceInfo;
-}
-function describeFunctionComponentFrame(fn) {
-  return fn
-    ? describeComponentFrame(fn.displayName || fn.name || null, null)
-    : "";
-}
-var hasOwnProperty = Object.prototype.hasOwnProperty,
+  cancelTimeout = clearTimeout,
   valueStack = [],
   index = -1;
 function createCursor(defaultValue) {
@@ -2777,6 +2766,17 @@ function commitCallbacks(updateQueue, context) {
     )
       callCallback(callbacks[updateQueue], context);
 }
+function describeComponentFrame(name, ownerName) {
+  var sourceInfo = "";
+  ownerName && (sourceInfo = " (created by " + ownerName + ")");
+  return "\n    in " + (name || "Unknown") + sourceInfo;
+}
+function describeFunctionComponentFrame(fn) {
+  return fn
+    ? describeComponentFrame(fn.displayName || fn.name || null, null)
+    : "";
+}
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 function shallowEqual(objA, objB) {
   if (objectIs(objA, objB)) return !0;
   if (
@@ -10448,7 +10448,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1218 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-d51a9f8a",
+    version: "18.3.0-canary-06e6bc95",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10504,7 +10504,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-d51a9f8a"
+  reconcilerVersion: "18.3.0-canary-06e6bc95"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {
