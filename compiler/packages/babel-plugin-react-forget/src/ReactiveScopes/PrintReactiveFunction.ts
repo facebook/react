@@ -132,6 +132,9 @@ function writeReactiveInstruction(
       break;
     }
     case "terminal": {
+      if (instr.label !== null) {
+        writer.write(`bb${instr.label}: `);
+      }
       writeTerminal(writer, instr.terminal);
       break;
     }

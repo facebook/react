@@ -45,7 +45,17 @@ class Transform extends ReactiveFunctionTransform<Labels> {
     const isReachableLabel = stmt.label !== null && state.has(stmt.label);
     if (stmt.terminal.kind === "label" && !isReachableLabel) {
       // Flatten labeled terminals where the label isn't necessary
-      return { kind: "replace-many", value: stmt.terminal.block };
+      const block = [...stmt.terminal.block];
+      const last = block.at(-1);
+      if (
+        last !== undefined &&
+        last.kind === "terminal" &&
+        last.terminal.kind === "break" &&
+        last.terminal.label === null
+      ) {
+        block.pop();
+      }
+      return { kind: "replace-many", value: block };
     } else {
       if (!isReachableLabel) {
         stmt.label = null;
