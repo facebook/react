@@ -12,15 +12,12 @@ import assign from 'shared/assign';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
-  REACT_FORWARD_REF_TYPE,
-  REACT_MEMO_TYPE,
   REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isValidElementType from 'shared/isValidElementType';
 import isArray from 'shared/isArray';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
-import checkPropTypes from 'shared/checkPropTypes';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -505,8 +502,6 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
 
     if (type === REACT_FRAGMENT_TYPE) {
       validateFragmentProps(element);
-    } else {
-      validatePropTypes(element);
     }
 
     return element;
@@ -678,8 +673,6 @@ export function createElement(type, config, children) {
 
   if (type === REACT_FRAGMENT_TYPE) {
     validateFragmentProps(element);
-  } else {
-    validatePropTypes(element);
   }
 
   return element;
@@ -833,7 +826,6 @@ export function cloneElement(element, config, children) {
   for (let i = 2; i < arguments.length; i++) {
     validateChildKeys(arguments[i], clonedElement.type);
   }
-  validatePropTypes(clonedElement);
 
   return clonedElement;
 }
@@ -1036,62 +1028,6 @@ function validateFragmentProps(fragment) {
       setCurrentlyValidatingElement(fragment);
       console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
       setCurrentlyValidatingElement(null);
-    }
-  }
-}
-
-let propTypesMisspellWarningShown = false;
-
-/**
- * Given an element, validate that its props follow the propTypes definition,
- * provided by the type.
- *
- * @param {ReactElement} element
- */
-function validatePropTypes(element) {
-  if (__DEV__) {
-    const type = element.type;
-    if (type === null || type === undefined || typeof type === 'string') {
-      return;
-    }
-    if (type.$$typeof === REACT_CLIENT_REFERENCE) {
-      return;
-    }
-    let propTypes;
-    if (typeof type === 'function') {
-      propTypes = type.propTypes;
-    } else if (
-      typeof type === 'object' &&
-      (type.$$typeof === REACT_FORWARD_REF_TYPE ||
-        // Note: Memo only checks outer props here.
-        // Inner props are checked in the reconciler.
-        type.$$typeof === REACT_MEMO_TYPE)
-    ) {
-      propTypes = type.propTypes;
-    } else {
-      return;
-    }
-    if (propTypes) {
-      // Intentionally inside to avoid triggering lazy initializers:
-      const name = getComponentNameFromType(type);
-      checkPropTypes(propTypes, element.props, 'prop', name, element);
-    } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
-      propTypesMisspellWarningShown = true;
-      // Intentionally inside to avoid triggering lazy initializers:
-      const name = getComponentNameFromType(type);
-      console.error(
-        'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
-        name || 'Unknown',
-      );
-    }
-    if (
-      typeof type.getDefaultProps === 'function' &&
-      !type.getDefaultProps.isReactClassApproved
-    ) {
-      console.error(
-        'getDefaultProps is only used on classic React.createClass ' +
-          'definitions. Use a static property named `defaultProps` instead.',
-      );
     }
   }
 }
