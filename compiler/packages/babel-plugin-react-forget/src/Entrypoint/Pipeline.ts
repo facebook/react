@@ -184,12 +184,7 @@ function* runWithEnvironment(
   }
 
   if (env.config.validateNoSetStateInRender) {
-    const noSetStateInRenderResult = validateNoSetStateInRender(hir).unwrap();
-    yield log({
-      kind: "debug",
-      name: "ValidateNoSetStateInRender",
-      value: noSetStateInRenderResult.debug(),
-    });
+    validateNoSetStateInRender(hir).unwrap();
   }
 
   inferReactivePlaces(hir);

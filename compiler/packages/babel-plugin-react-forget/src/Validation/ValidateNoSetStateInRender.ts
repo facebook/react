@@ -6,15 +6,8 @@
  */
 
 import { CompilerError, ErrorSeverity } from "../CompilerError";
-import {
-  BlockId,
-  HIRFunction,
-  IdentifierId,
-  Place,
-  computePostDominatorTree,
-  isSetStateType,
-} from "../HIR";
-import { PostDominator } from "../HIR/Dominator";
+import { HIRFunction, IdentifierId, Place, isSetStateType } from "../HIR";
+import { computeUnconditionalBlocks } from "../HIR/ComputeUnconditionalBlocks";
 import { eachInstructionValueOperand } from "../HIR/visitors";
 import { Err, Ok, Result } from "../Utils/Result";
 
@@ -48,7 +41,7 @@ import { Err, Ok, Result } from "../Utils/Result";
  */
 export function validateNoSetStateInRender(
   fn: HIRFunction
-): Result<PostDominator<BlockId>, CompilerError> {
+): Result<void, CompilerError> {
   const unconditionalSetStateFunctions: Set<IdentifierId> = new Set();
   return validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions);
 }
@@ -56,25 +49,8 @@ export function validateNoSetStateInRender(
 function validateNoSetStateInRenderImpl(
   fn: HIRFunction,
   unconditionalSetStateFunctions: Set<IdentifierId>
-): Result<PostDominator<BlockId>, CompilerError> {
-  // Construct the set of blocks that is always reachable from the entry block.
-  const unconditionalBlocks = new Set<BlockId>();
-  const dominators = computePostDominatorTree(fn, {
-    includeThrowsAsExitNode: false,
-  });
-  const exit = dominators.exit;
-  let current: BlockId | null = fn.body.entry;
-  while (current !== null && current !== exit) {
-    CompilerError.invariant(!unconditionalBlocks.has(current), {
-      reason:
-        "Internal error: non-terminating loop in ValidateNoSetStateInRender",
-      loc: null,
-      suggestions: null,
-      description: null,
-    });
-    unconditionalBlocks.add(current);
-    current = dominators.get(current);
-  }
+): Result<void, CompilerError> {
+  const unconditionalBlocks = computeUnconditionalBlocks(fn);
 
   const errors = new CompilerError();
   for (const [, block] of fn.body.blocks) {
@@ -140,7 +116,7 @@ function validateNoSetStateInRenderImpl(
   if (errors.hasErrors()) {
     return Err(errors);
   } else {
-    return Ok(dominators);
+    return Ok(undefined);
   }
 }
 

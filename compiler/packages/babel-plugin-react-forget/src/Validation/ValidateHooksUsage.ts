@@ -10,10 +10,9 @@ import {
   CompilerErrorDetail,
   ErrorSeverity,
 } from "../CompilerError";
-import { computePostDominatorTree } from "../HIR";
+import { computeUnconditionalBlocks } from "../HIR/ComputeUnconditionalBlocks";
 import { isHookName } from "../HIR/Environment";
 import {
-  BlockId,
   HIRFunction,
   IdentifierId,
   Place,
@@ -88,27 +87,7 @@ function joinKinds(a: Kind, b: Kind): Kind {
  *   See the note for Kind.PotentialHook for sources of potential hooks
  */
 export function validateHooksUsage(fn: HIRFunction): void {
-  // Construct the set of blocks that is always reachable from the entry block.
-  const unconditionalBlocks = new Set<BlockId>();
-  const dominators = computePostDominatorTree(fn, {
-    /*
-     * Hooks must only be in a consistent order for executions that return normally,
-     * so we opt-in to viewing throw as a non-exit node.
-     */
-    includeThrowsAsExitNode: false,
-  });
-  const exit = dominators.exit;
-  let current: BlockId | null = fn.body.entry;
-  while (current !== null && current !== exit) {
-    CompilerError.invariant(!unconditionalBlocks.has(current), {
-      reason:
-        "Internal error: non-terminating loop in ValidateUnconditionalHooks",
-      loc: null,
-      suggestions: null,
-    });
-    unconditionalBlocks.add(current);
-    current = dominators.get(current);
-  }
+  const unconditionalBlocks = computeUnconditionalBlocks(fn);
 
   const errorsByPlace = new Map<SourceLocation, CompilerErrorDetail>();
   function recordConditionalHookError(place: Place): void {
