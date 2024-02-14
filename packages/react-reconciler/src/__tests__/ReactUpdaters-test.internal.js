@@ -303,10 +303,11 @@ describe('updaters', () => {
       }
     };
 
+    const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      ReactDOM.render(<Parent />, document.createElement('div'));
-      assertLog(['onCommitRoot']);
+      root.render(<Parent />);
     });
+    assertLog(['onCommitRoot']);
     expect(setShouldSuspend).not.toBeNull();
     expect(allSchedulerTypes).toEqual([[null]]);
 
@@ -322,7 +323,7 @@ describe('updaters', () => {
       return promise;
     });
     assertLog(['onCommitRoot']);
-    expect(allSchedulerTypes).toEqual([[null], [Suspender], [Suspender]]);
+    expect(allSchedulerTypes).toEqual([[null], [Suspender], []]);
 
     // Verify no outstanding flushes
     await waitForAll([]);
