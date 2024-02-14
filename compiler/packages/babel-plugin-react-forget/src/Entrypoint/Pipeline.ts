@@ -70,7 +70,6 @@ import {
 import { assertExhaustive } from "../Utils/utils";
 import {
   validateContextVariableLValues,
-  validateFrozenLambdas,
   validateHooksUsage,
   validateMemoizedEffectDependencies,
   validateNoRefAccessInRender,
@@ -160,10 +159,6 @@ function* runWithEnvironment(
 
   inferReferenceEffects(hir);
   yield log({ kind: "hir", name: "InferReferenceEffects", value: hir });
-
-  if (env.config.validateFrozenLambdas) {
-    validateFrozenLambdas(hir);
-  }
 
   // Note: Has to come after infer reference effects because "dead" code may still affect inference
   deadCodeElimination(hir);

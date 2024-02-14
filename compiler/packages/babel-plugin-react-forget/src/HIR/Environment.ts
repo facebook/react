@@ -181,12 +181,6 @@ const EnvironmentConfigSchema = z.object({
   validateRefAccessDuringRenderFunctionExpressions: z.boolean().default(false),
 
   /*
-   * Validate that mutable lambdas are not passed where a frozen value is expected, since mutable
-   * lambdas cannot be frozen. The only mutation allowed inside a frozen lambda is of ref values.
-   */
-  validateFrozenLambdas: z.boolean().default(false),
-
-  /*
    * Validates that setState is not unconditionally called during render, as it can lead to
    * infinite loops.
    */

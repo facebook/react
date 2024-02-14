@@ -14,16 +14,16 @@ describe("parseConfigPragma()", () => {
     // Validate defaults first to make sure that the parser is getting the value from the pragma,
     // and not just missing it and getting the default value
     expect(defaultConfig.enableForest).toBe(false);
-    expect(defaultConfig.validateFrozenLambdas).toBe(false);
+    expect(defaultConfig.validateRefAccessDuringRender).toBe(false);
     expect(defaultConfig.memoizeJsxElements).toBe(true);
 
     const config = parseConfigPragma(
-      "@enableForest @validateFrozenLambdas:true @memoizeJsxElements:false"
+      "@enableForest @validateRefAccessDuringRender:true @memoizeJsxElements:false"
     );
     expect(config).toEqual({
       ...defaultConfig,
       enableForest: true,
-      validateFrozenLambdas: true,
+      validateRefAccessDuringRender: true,
       memoizeJsxElements: false,
     });
   });

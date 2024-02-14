@@ -6,7 +6,6 @@
  */
 
 export { validateContextVariableLValues } from "./ValidateContextVariableLValues";
-export { validateFrozenLambdas } from "./ValidateFrozenLambdas";
 export { validateHooksUsage } from "./ValidateHooksUsage";
 export { validateMemoizedEffectDependencies } from "./ValidateMemoizedEffectDependencies";
 export { validateNoRefAccessInRender } from "./ValidateNoRefAccesInRender";
