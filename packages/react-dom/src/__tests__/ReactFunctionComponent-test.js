@@ -232,6 +232,7 @@ describe('ReactFunctionComponent', () => {
         '    in ParentUsingStringRef (at **)',
     );
 
+    // No additional warnings should be logged
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -239,21 +240,17 @@ describe('ReactFunctionComponent', () => {
     });
   });
 
-  it('should warn when given a function ref', async () => {
+  it('should warn when given a function ref and ignore them', async () => {
     function Indirection(props) {
       return <div>{props.children}</div>;
     }
 
+    const ref = jest.fn();
     class ParentUsingFunctionRef extends React.Component {
       render() {
         return (
           <Indirection>
-            <FunctionComponent
-              name="A"
-              ref={arg => {
-                expect(arg).toBe(null);
-              }}
-            />
+            <FunctionComponent name="A" ref={ref} />
           </Indirection>
         );
       }
@@ -276,7 +273,9 @@ describe('ReactFunctionComponent', () => {
         '    in Indirection (at **)\n' +
         '    in ParentUsingFunctionRef (at **)',
     );
+    expect(ref).not.toHaveBeenCalled();
 
+    // No additional warnings should be logged
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -306,9 +305,9 @@ describe('ReactFunctionComponent', () => {
     }).toErrorDev('Warning: Function components cannot be given refs.');
     // Should be deduped (offending element is on the same line):
     instance1.forceUpdate();
+    // Should also be deduped (offending element is on the same line):
     let container = document.createElement('div');
     let root = ReactDOMClient.createRoot(container);
-
     await act(() => {
       root.render(<AnonymousParentUsingJSX />);
     });
@@ -335,6 +334,7 @@ describe('ReactFunctionComponent', () => {
     }).toErrorDev('Warning: Function components cannot be given refs.');
     // Should be deduped (same internal instance, no additional warnings)
     instance2.forceUpdate();
+    // Could not be differentiated (since owner is anonymous and no source location)
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
@@ -362,6 +362,7 @@ describe('ReactFunctionComponent', () => {
     }).toErrorDev('Warning: Function components cannot be given refs.');
     // Should be deduped (same owner name, no additional warnings):
     instance3.forceUpdate();
+    // Should also be deduped (same owner name, no additional warnings):
     container = document.createElement('div');
     root = ReactDOMClient.createRoot(container);
     await act(() => {
