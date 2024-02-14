@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Stringify } from "shared-runtime";
 
-// @enableMergeConsecutiveScopes
 // This is a translation of the original merge-consecutive-scopes which uses plain objects
 // to describe the UI instead of JSX. The JSXText elements in that fixture happen to
 // prevent scome scopes from merging, which concealed a bug with the merging logic.

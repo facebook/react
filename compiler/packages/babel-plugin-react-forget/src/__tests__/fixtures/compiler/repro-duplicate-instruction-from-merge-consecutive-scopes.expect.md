@@ -2,7 +2,6 @@
 ## Input
 
 ```javascript
-// @enableMergeConsecutiveScopes
 import { Stringify } from "shared-runtime";
 
 function Component({ id }) {
@@ -26,7 +25,7 @@ export const FIXTURE_ENTRYPOINT = {
 ## Code
 
 ```javascript
-import { unstable_useMemoCache as useMemoCache } from "react"; // @enableMergeConsecutiveScopes
+import { unstable_useMemoCache as useMemoCache } from "react";
 import { Stringify } from "shared-runtime";
 
 function Component(t23) {

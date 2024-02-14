@@ -1,4 +1,3 @@
-// @enableMergeConsecutiveScopes
 import { Stringify } from "shared-runtime";
 
 function Component({ id }) {

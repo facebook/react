@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Stringify } from "shared-runtime";
 
-// @enableMergeConsecutiveScopes
 function Component() {
   let [state, setState] = useState(0);
   return (

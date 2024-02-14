@@ -305,14 +305,12 @@ function* runWithEnvironment(
     value: reactiveFunction,
   });
 
-  if (env.config.enableMergeConsecutiveScopes) {
-    mergeReactiveScopesThatInvalidateTogether(reactiveFunction);
-    yield log({
-      kind: "reactive",
-      name: "MergeReactiveScopesThatInvalidateTogether",
-      value: reactiveFunction,
-    });
-  }
+  mergeReactiveScopesThatInvalidateTogether(reactiveFunction);
+  yield log({
+    kind: "reactive",
+    name: "MergeReactiveScopesThatInvalidateTogether",
+    value: reactiveFunction,
+  });
 
   promoteUsedTemporaries(reactiveFunction);
   yield log({

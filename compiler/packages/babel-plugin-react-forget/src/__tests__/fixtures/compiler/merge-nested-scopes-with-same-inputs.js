@@ -1,4 +1,3 @@
-// @enableMergeConsecutiveScopes
 import { setProperty } from "shared-runtime";
 
 function Component(props) {

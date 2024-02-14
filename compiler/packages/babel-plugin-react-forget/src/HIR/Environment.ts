@@ -271,9 +271,6 @@ const EnvironmentConfigSchema = z.object({
    */
   enableEmitInstrumentForget: ExternalFunctionSchema.nullish(),
 
-  // Enable merging consecutive scopes that invalidate together.
-  enableMergeConsecutiveScopes: z.boolean().default(true),
-
   /**
    * Enable support for reactive scopes that contain an early return.
    * This is relatively infrequent, as reactive scopes generally span
