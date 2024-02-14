@@ -23,6 +23,22 @@ import { Err, Ok, Result } from "../Utils/Result";
 /**
  * Validates that a function does not access a ref value during render. This includes a partial check
  * for ref values which are accessed indirectly via function expressions.
+ *
+ * ```javascript
+ * // ERROR
+ * const ref = useRef();
+ * ref.current;
+ *
+ * const ref = useRef();
+ * foo(ref); // may access .current
+ *
+ * // ALLOWED
+ * const ref = useHookThatReturnsRef();
+ * ref.current;
+ * ```
+ *
+ * In the future we may reject more cases, based on either object names (`fooRef.current` is likely a ref)
+ * or based on property name alone (`foo.current` might be a ref).
  */
 export function validateNoRefAccessInRender(fn: HIRFunction): void {
   const refAccessingFunctions: Set<IdentifierId> = new Set();

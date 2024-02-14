@@ -23,7 +23,7 @@ export function computeUnconditionalBlocks(fn: HIRFunction): Set<BlockId> {
   while (current !== null && current !== exit) {
     CompilerError.invariant(!unconditionalBlocks.has(current), {
       reason:
-        "Internal error: non-terminating loop in ValidateUnconditionalHooks",
+        "Internal error: non-terminating loop in ComputeUnconditionalBlocks",
       loc: null,
       suggestions: null,
     });
