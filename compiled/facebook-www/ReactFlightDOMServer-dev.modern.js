@@ -2335,8 +2335,11 @@ if (__DEV__) {
             message = String(error.message); // eslint-disable-next-line react-internal/safe-string-coercion
 
             stack = String(error.stack);
+          } else if (typeof error === "object" && error !== null) {
+            message = "Error: " + describeObjectForErrorMessage(error);
           } else {
-            message = "Error: " + error;
+            // eslint-disable-next-line react-internal/safe-string-coercion
+            message = "Error: " + String(error);
           }
         } catch (x) {
           message =
