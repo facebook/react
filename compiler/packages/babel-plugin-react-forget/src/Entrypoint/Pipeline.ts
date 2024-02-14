@@ -175,11 +175,11 @@ function* runWithEnvironment(
   }
 
   if (env.config.validateRefAccessDuringRender) {
-    validateNoRefAccessInRender(hir).unwrap();
+    validateNoRefAccessInRender(hir);
   }
 
   if (env.config.validateNoSetStateInRender) {
-    validateNoSetStateInRender(hir).unwrap();
+    validateNoSetStateInRender(hir);
   }
 
   inferReactivePlaces(hir);

@@ -24,11 +24,9 @@ import { Err, Ok, Result } from "../Utils/Result";
  * Validates that a function does not access a ref value during render. This includes a partial check
  * for ref values which are accessed indirectly via function expressions.
  */
-export function validateNoRefAccessInRender(
-  fn: HIRFunction
-): Result<void, CompilerError> {
+export function validateNoRefAccessInRender(fn: HIRFunction): void {
   const refAccessingFunctions: Set<IdentifierId> = new Set();
-  return validateNoRefAccessInRenderImpl(fn, refAccessingFunctions);
+  validateNoRefAccessInRenderImpl(fn, refAccessingFunctions).unwrap();
 }
 
 function validateNoRefAccessInRenderImpl(

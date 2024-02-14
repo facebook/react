@@ -39,11 +39,9 @@ import { Err, Ok, Result } from "../Utils/Result";
  * y();
  * ```
  */
-export function validateNoSetStateInRender(
-  fn: HIRFunction
-): Result<void, CompilerError> {
+export function validateNoSetStateInRender(fn: HIRFunction): void {
   const unconditionalSetStateFunctions: Set<IdentifierId> = new Set();
-  return validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions);
+  validateNoSetStateInRenderImpl(fn, unconditionalSetStateFunctions).unwrap();
 }
 
 function validateNoSetStateInRenderImpl(
