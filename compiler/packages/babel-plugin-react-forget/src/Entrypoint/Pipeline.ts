@@ -72,6 +72,7 @@ import {
   validateContextVariableLValues,
   validateHooksUsage,
   validateMemoizedEffectDependencies,
+  validateNoCapitalizedCalls,
   validateNoRefAccessInRender,
   validateNoSetStateInRender,
   validatePreservedManualMemoization,
@@ -152,6 +153,10 @@ function* runWithEnvironment(
 
   if (env.config.validateHooksUsage) {
     validateHooksUsage(hir);
+  }
+
+  if (env.config.validateNoCapitalizedCalls) {
+    validateNoCapitalizedCalls(hir);
   }
 
   analyseFunctions(hir);

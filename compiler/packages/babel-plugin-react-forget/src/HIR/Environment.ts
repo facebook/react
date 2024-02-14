@@ -188,6 +188,18 @@ const EnvironmentConfigSchema = z.object({
    */
   validateMemoizedEffectDependencies: z.boolean().default(false),
 
+  /**
+   * Validates that there are no capitalized calls other than those allowed by the allowlist.
+   * Calls to capitalized functions are often functions that used to be components and may
+   * have lingering hook calls, which makes those calls risky to memoize.
+   *
+   * You can specify a list of capitalized calls to allowlist using this option. React Compiler
+   * always includes its known global functions, including common functions like Boolean and String,
+   * in this allowlist. You can enable this validation with no additional allowlisted calls by setting
+   * this option to the empty array.
+   */
+  validateNoCapitalizedCalls: z.nullable(z.array(z.string())).default(null),
+
   /*
    * When enabled, the compiler assumes that hooks follow the Rules of React:
    * - Hooks may memoize computation based on any of their parameters, thus
@@ -358,6 +370,12 @@ export function parseConfigPragma(pragma: string): EnvironmentConfig {
     }
     const keyVal = token.slice(1);
     let [key, val]: any = keyVal.split(":");
+
+    if (key === "validateNoCapitalizedCalls") {
+      maybeConfig[key] = [];
+      continue;
+    }
+
     if (typeof defaultConfig[key as keyof EnvironmentConfig] !== "boolean") {
       // skip parsing non-boolean properties
       continue;
