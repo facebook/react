@@ -204,144 +204,98 @@ describe('forwardRef', () => {
     );
   });
 
-  it('should fall back to showing something meaningful if no displayName or name are present', () => {
-    const Component = props => <div {...props} />;
-
-    const RefForwardingComponent = React.forwardRef((props, ref) => (
-      <Component {...props} forwardedRef={ref} />
-    ));
-
-    RefForwardingComponent.propTypes = {
-      optional: PropTypes.string,
-      required: PropTypes.string.isRequired,
-    };
-
-    RefForwardingComponent.defaultProps = {
-      optional: 'default',
-    };
-
-    const ref = React.createRef();
-
-    expect(() =>
-      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
-    ).toErrorDev(
-      'Warning: Failed prop type: The prop `required` is marked as required in ' +
-        '`ForwardRef`, but its value is `undefined`.',
-      // There's no component stack in this warning because the inner function is anonymous.
-      // If we wanted to support this (for the Error frames / source location)
-      // we could do this by updating ReactComponentStackFrame.
-      {withoutStack: true},
-    );
-  });
-
-  it('should honor a displayName if set on the forwardRef wrapper in warnings', () => {
-    const Component = props => <div {...props} />;
-
-    const RefForwardingComponent = React.forwardRef(function Inner(props, ref) {
-      <Component {...props} forwardedRef={ref} />;
+  it('should skip forwardRef in the stack if neither displayName nor name are present', async () => {
+    const RefForwardingComponent = React.forwardRef(function (props, ref) {
+      return [<span />];
     });
-    RefForwardingComponent.displayName = 'Custom';
-
-    RefForwardingComponent.propTypes = {
-      optional: PropTypes.string,
-      required: PropTypes.string.isRequired,
-    };
-
-    RefForwardingComponent.defaultProps = {
-      optional: 'default',
-    };
-
-    const ref = React.createRef();
-
-    expect(() =>
-      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
-    ).toErrorDev(
-      'Warning: Failed prop type: The prop `required` is marked as required in ' +
-        '`Custom`, but its value is `undefined`.\n' +
-        '    in Inner (at **)',
+    ReactNoop.render(
+      <p>
+        <RefForwardingComponent />
+      </p>,
+    );
+    await expect(async () => {
+      await waitForAll([]);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+        '    in p (at **)',
     );
   });
 
-  it('should pass displayName to an anonymous inner component so it shows up in component stacks', () => {
-    const Component = props => <div {...props} />;
-
-    const RefForwardingComponent = React.forwardRef((props, ref) => (
-      <Component {...props} forwardedRef={ref} />
-    ));
-    RefForwardingComponent.displayName = 'Custom';
-
-    RefForwardingComponent.propTypes = {
-      optional: PropTypes.string,
-      required: PropTypes.string.isRequired,
-    };
-
-    RefForwardingComponent.defaultProps = {
-      optional: 'default',
-    };
-
-    const ref = React.createRef();
-
-    expect(() =>
-      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
-    ).toErrorDev(
-      'Warning: Failed prop type: The prop `required` is marked as required in ' +
-        '`Custom`, but its value is `undefined`.\n' +
-        '    in Custom (at **)',
+  it('should use the inner function name for the stack', async () => {
+    const RefForwardingComponent = React.forwardRef(function Inner(props, ref) {
+      return [<span />];
+    });
+    ReactNoop.render(
+      <p>
+        <RefForwardingComponent />
+      </p>,
+    );
+    await expect(async () => {
+      await waitForAll([]);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+        '    in Inner (at **)\n' +
+        '    in p (at **)',
     );
   });
 
-  it('should honor a displayName in stacks if set on the inner function', () => {
-    const Component = props => <div {...props} />;
-
-    const inner = (props, ref) => <Component {...props} forwardedRef={ref} />;
-    inner.displayName = 'Inner';
-    const RefForwardingComponent = React.forwardRef(inner);
-
-    RefForwardingComponent.propTypes = {
-      optional: PropTypes.string,
-      required: PropTypes.string.isRequired,
+  it('should use the inner displayName in the stack', async () => {
+    const fn = (props, ref) => {
+      return [<span />];
     };
-
-    RefForwardingComponent.defaultProps = {
-      optional: 'default',
-    };
-
-    const ref = React.createRef();
-
-    expect(() =>
-      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
-    ).toErrorDev(
-      'Warning: Failed prop type: The prop `required` is marked as required in ' +
-        '`ForwardRef(Inner)`, but its value is `undefined`.\n' +
-        '    in Inner (at **)',
+    fn.displayName = 'Inner';
+    const RefForwardingComponent = React.forwardRef(fn);
+    ReactNoop.render(
+      <p>
+        <RefForwardingComponent />
+      </p>,
+    );
+    await expect(async () => {
+      await waitForAll([]);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+        '    in Inner (at **)\n' +
+        '    in p (at **)',
     );
   });
 
-  it('should honor a outer displayName when wrapped component and memo component set displayName at the same time.', () => {
-    const Component = props => <div {...props} />;
-
-    const inner = (props, ref) => <Component {...props} forwardedRef={ref} />;
-    inner.displayName = 'Inner';
-    const RefForwardingComponent = React.forwardRef(inner);
+  it('can use the outer displayName in the stack', async () => {
+    const RefForwardingComponent = React.forwardRef((props, ref) => {
+      return [<span />];
+    });
     RefForwardingComponent.displayName = 'Outer';
+    ReactNoop.render(
+      <p>
+        <RefForwardingComponent />
+      </p>,
+    );
+    await expect(async () => {
+      await waitForAll([]);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+        '    in Outer (at **)\n' +
+        '    in p (at **)',
+    );
+  });
 
-    RefForwardingComponent.propTypes = {
-      optional: PropTypes.string,
-      required: PropTypes.string.isRequired,
+  it('should prefer the inner to the outer displayName in the stack', async () => {
+    const fn = (props, ref) => {
+      return [<span />];
     };
-
-    RefForwardingComponent.defaultProps = {
-      optional: 'default',
-    };
-
-    const ref = React.createRef();
-
-    expect(() =>
-      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
-    ).toErrorDev(
-      'Warning: Failed prop type: The prop `required` is marked as required in ' +
-        '`Outer`, but its value is `undefined`.\n' +
-        '    in Inner (at **)',
+    fn.displayName = 'Inner';
+    const RefForwardingComponent = React.forwardRef(fn);
+    RefForwardingComponent.displayName = 'Outer';
+    ReactNoop.render(
+      <p>
+        <RefForwardingComponent />
+      </p>,
+    );
+    await expect(async () => {
+      await waitForAll([]);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
+        '    in Inner (at **)\n' +
+        '    in p (at **)',
     );
   });
 
