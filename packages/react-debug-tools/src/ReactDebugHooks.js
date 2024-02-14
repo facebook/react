@@ -569,7 +569,7 @@ export type HooksNode = {
   value: mixed,
   subHooks: Array<HooksNode>,
   debugInfo: null | ReactDebugInfo,
-  hookSource?: HookSource,
+  hookSource: null | HookSource,
 };
 export type HooksTree = Array<HooksNode>;
 
@@ -716,7 +716,6 @@ function parseCustomHookName(functionName: void | string): string {
 function buildTree(
   rootStack: any,
   readHookLog: Array<HookLogEntry>,
-  includeHooksSource: boolean,
 ): HooksTree {
   const rootChildren: Array<HooksNode> = [];
   let prevStack = null;
@@ -760,16 +759,13 @@ function buildTree(
           value: undefined,
           subHooks: children,
           debugInfo: null,
-        };
-
-        if (includeHooksSource) {
-          levelChild.hookSource = {
+          hookSource: {
             lineNumber: stackFrame.lineNumber,
             columnNumber: stackFrame.columnNumber,
             functionName: stackFrame.functionName,
             fileName: stackFrame.fileName,
-          };
-        }
+          },
+        };
 
         levelChildren.push(levelChild);
         stackOfChildren.push(levelChildren);
@@ -800,25 +796,24 @@ function buildTree(
       value: hook.value,
       subHooks: [],
       debugInfo: debugInfo,
+      hookSource: null,
     };
 
-    if (includeHooksSource) {
-      const hookSource: HookSource = {
-        lineNumber: null,
-        functionName: null,
-        fileName: null,
-        columnNumber: null,
-      };
-      if (stack && stack.length >= 1) {
-        const stackFrame = stack[0];
-        hookSource.lineNumber = stackFrame.lineNumber;
-        hookSource.functionName = stackFrame.functionName;
-        hookSource.fileName = stackFrame.fileName;
-        hookSource.columnNumber = stackFrame.columnNumber;
-      }
-
-      levelChild.hookSource = hookSource;
+    const hookSource: HookSource = {
+      lineNumber: null,
+      functionName: null,
+      fileName: null,
+      columnNumber: null,
+    };
+    if (stack && stack.length >= 1) {
+      const stackFrame = stack[0];
+      hookSource.lineNumber = stackFrame.lineNumber;
+      hookSource.functionName = stackFrame.functionName;
+      hookSource.fileName = stackFrame.fileName;
+      hookSource.columnNumber = stackFrame.columnNumber;
     }
+
+    levelChild.hookSource = hookSource;
 
     levelChildren.push(levelChild);
   }
@@ -897,7 +892,6 @@ export function inspectHooks<Props>(
   renderFunction: Props => React$Node,
   props: Props,
   currentDispatcher: ?CurrentDispatcherRef,
-  includeHooksSource: boolean = false,
 ): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -923,7 +917,7 @@ export function inspectHooks<Props>(
     currentDispatcher.current = previousDispatcher;
   }
   const rootStack = ErrorStackParser.parse(ancestorStackError);
-  return buildTree(rootStack, readHookLog, includeHooksSource);
+  return buildTree(rootStack, readHookLog);
 }
 
 function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
@@ -955,7 +949,6 @@ function inspectHooksOfForwardRef<Props, Ref>(
   props: Props,
   ref: Ref,
   currentDispatcher: CurrentDispatcherRef,
-  includeHooksSource: boolean,
 ): HooksTree {
   const previousDispatcher = currentDispatcher.current;
   let readHookLog;
@@ -972,7 +965,7 @@ function inspectHooksOfForwardRef<Props, Ref>(
     currentDispatcher.current = previousDispatcher;
   }
   const rootStack = ErrorStackParser.parse(ancestorStackError);
-  return buildTree(rootStack, readHookLog, includeHooksSource);
+  return buildTree(rootStack, readHookLog);
 }
 
 function resolveDefaultProps(Component: any, baseProps: any) {
@@ -993,7 +986,6 @@ function resolveDefaultProps(Component: any, baseProps: any) {
 export function inspectHooksOfFiber(
   fiber: Fiber,
   currentDispatcher: ?CurrentDispatcherRef,
-  includeHooksSource: boolean = false,
 ): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -1035,11 +1027,10 @@ export function inspectHooksOfFiber(
         props,
         fiber.ref,
         currentDispatcher,
-        includeHooksSource,
       );
     }
 
-    return inspectHooks(type, props, currentDispatcher, includeHooksSource);
+    return inspectHooks(type, props, currentDispatcher);
   } finally {
     currentFiber = null;
     currentHook = null;
