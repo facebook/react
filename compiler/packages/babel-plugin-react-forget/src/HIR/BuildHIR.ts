@@ -134,7 +134,8 @@ export function lower(
         param.node.loc ?? GeneratedSource,
         InstructionKind.Let,
         param,
-        place
+        place,
+        "Assignment"
       );
     } else if (param.isRestElement()) {
       const place: Place = {
@@ -153,7 +154,8 @@ export function lower(
         param.node.loc ?? GeneratedSource,
         InstructionKind.Let,
         param.get("argument"),
-        place
+        place,
+        "Assignment"
       );
     } else {
       builder.errors.push({
@@ -816,7 +818,10 @@ function lowerStatement(
             stmt.node.loc ?? GeneratedSource,
             kind,
             id,
-            value
+            value,
+            id.isObjectPattern() || id.isArrayPattern()
+              ? "Destructure"
+              : "Assignment"
           );
         } else if (id.isIdentifier()) {
           const identifier = builder.resolveIdentifier(id);
@@ -978,7 +983,8 @@ function lowerStatement(
         stmt.node.loc ?? GeneratedSource,
         InstructionKind.Let,
         id,
-        fn
+        fn,
+        "Assignment"
       );
 
       return;
@@ -1043,7 +1049,8 @@ function lowerStatement(
           leftLoc,
           InstructionKind.Let,
           id,
-          nextIterableOf
+          nextIterableOf,
+          "Assignment"
         );
         test = lowerValueToTemporary(builder, assign);
       } else {
@@ -1128,7 +1135,8 @@ function lowerStatement(
           leftLoc,
           InstructionKind.Let,
           id,
-          nextIterableOf
+          nextIterableOf,
+          "Assignment"
         );
         test = lowerValueToTemporary(builder, assign);
       } else {
@@ -1229,7 +1237,8 @@ function lowerStatement(
             handlerBinding.path.node.loc ?? GeneratedSource,
             InstructionKind.Catch,
             handlerBinding.path,
-            { ...handlerBinding.place }
+            { ...handlerBinding.place },
+            "Assignment"
           );
         }
         lowerStatement(builder, handlerPath.get("body"));
@@ -1814,7 +1823,10 @@ function lowerExpression(
           left.node.loc ?? GeneratedSource,
           InstructionKind.Reassign,
           left,
-          lowerExpressionToTemporary(builder, expr.get("right"))
+          lowerExpressionToTemporary(builder, expr.get("right")),
+          left.isArrayPattern() || left.isObjectPattern()
+            ? "Destructure"
+            : "Assignment"
         );
       }
 
@@ -3238,7 +3250,8 @@ function lowerAssignment(
   loc: SourceLocation,
   kind: InstructionKind,
   lvaluePath: NodePath<t.LVal>,
-  value: Place
+  value: Place,
+  assignmentKind: "Destructure" | "Assignment"
 ): InstructionValue {
   const lvalueNode = lvaluePath.node;
   switch (lvalueNode.type) {
@@ -3382,7 +3395,12 @@ function lowerAssignment(
         }
         if (element.isRestElement()) {
           const argument = element.get("argument");
-          if (argument.isIdentifier() && !forceTemporaries) {
+          if (
+            argument.isIdentifier() &&
+            !forceTemporaries &&
+            (assignmentKind === "Assignment" ||
+              getStoreKind(builder, argument) === "StoreLocal")
+          ) {
             const identifier = lowerIdentifierForAssignment(
               builder,
               element.node.loc ?? GeneratedSource,
@@ -3407,7 +3425,12 @@ function lowerAssignment(
             });
             followups.push({ place: temp, path: argument as NodePath<t.LVal> }); // TODO remove type cast
           }
-        } else if (element.isIdentifier() && !forceTemporaries) {
+        } else if (
+          element.isIdentifier() &&
+          !forceTemporaries &&
+          (assignmentKind === "Assignment" ||
+            getStoreKind(builder, element) === "StoreLocal")
+        ) {
           const identifier = lowerIdentifierForAssignment(
             builder,
             element.node.loc ?? GeneratedSource,
@@ -3440,7 +3463,14 @@ function lowerAssignment(
         loc,
       });
       for (const { place, path } of followups) {
-        lowerAssignment(builder, path.node.loc ?? loc, kind, path, place);
+        lowerAssignment(
+          builder,
+          path.node.loc ?? loc,
+          kind,
+          path,
+          place,
+          assignmentKind
+        );
       }
       return { kind: "LoadLocal", place: temporary, loc: value.loc };
     }
@@ -3478,7 +3508,10 @@ function lowerAssignment(
             });
             continue;
           }
-          if (forceTemporaries) {
+          if (
+            forceTemporaries ||
+            getStoreKind(builder, argument) === "StoreContext"
+          ) {
             const temp = buildTemporaryPlace(
               builder,
               property.node.loc ?? GeneratedSource
@@ -3537,7 +3570,12 @@ function lowerAssignment(
             });
             continue;
           }
-          if (element.isIdentifier() && !forceTemporaries) {
+          if (
+            element.isIdentifier() &&
+            !forceTemporaries &&
+            (assignmentKind === "Assignment" ||
+              getStoreKind(builder, element) === "StoreLocal")
+          ) {
             const identifier = lowerIdentifierForAssignment(
               builder,
               element.node.loc ?? GeneratedSource,
@@ -3581,7 +3619,14 @@ function lowerAssignment(
         loc,
       });
       for (const { place, path } of followups) {
-        lowerAssignment(builder, path.node.loc ?? loc, kind, path, place);
+        lowerAssignment(
+          builder,
+          path.node.loc ?? loc,
+          kind,
+          path,
+          place,
+          assignmentKind
+        );
       }
       return { kind: "LoadLocal", place: temporary, loc: value.loc };
     }
@@ -3668,7 +3713,14 @@ function lowerAssignment(
         continuationBlock
       );
 
-      return lowerAssignment(builder, loc, kind, lvalue.get("left"), temp);
+      return lowerAssignment(
+        builder,
+        loc,
+        kind,
+        lvalue.get("left"),
+        temp,
+        assignmentKind
+      );
     }
     default: {
       builder.errors.push({
