@@ -10,6 +10,9 @@
     "react-scripts": "1.0.11",
     "react-virtualized": "^9.9.0"
   },
+  "optionalDependencies": {
+    "fsevents": "1.2.13"
+  },
   "resolutions": {
     "fsevents": "1.2.13"
   },
