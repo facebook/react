@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+"use no forget";
+
 import invariant from "invariant";
 import * as React from "react";
 
@@ -24,7 +26,6 @@ const $empty = Symbol.for("react.memo_cache_sentinel");
  * DANGER: this hook is NEVER meant to be called directly!
  **/
 export function unstable_useMemoCache(size: number) {
-  "use no forget";
   return React.useState(() => {
     const $ = new Array(size);
     for (let ii = 0; ii < size; ii++) {
