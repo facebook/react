@@ -384,6 +384,7 @@ const skipFilter = new Set([
   "useMemo-named-function",
   "useMemo-return-empty",
   "useMemo-simple",
+  "use-no-forget-module-level",
   // defines multiple functions
   "alias-while",
   "babel-existing-react-import",

@@ -188,6 +188,11 @@ export function compileProgram(
   program: NodePath<t.Program>,
   pass: CompilerPass
 ): void {
+  // Top level "use no forget", skip this file entirely
+  if (findUseNoForgetDirective(program.node.directives) != null) {
+    return;
+  }
+
   const options = parsePluginOptions(pass.opts);
   const environment = parseEnvironmentConfig(pass.opts.environment ?? {});
 
