@@ -1078,6 +1078,58 @@ describe('ReactFlightDOMBrowser', () => {
     }
   });
 
+  it('can use the same function twice as a server action', async () => {
+    let actionProxy1;
+    let actionProxy2;
+
+    function Client({action1, action2}) {
+      actionProxy1 = action1;
+      actionProxy2 = action2;
+      return 'Click Me';
+    }
+
+    function greet(text) {
+      return 'Hello ' + text;
+    }
+
+    const ServerModule = serverExports({
+      greet,
+      greet2: greet,
+    });
+    const ClientRef = clientExports(Client);
+
+    const stream = ReactServerDOMServer.renderToReadableStream(
+      <ClientRef action1={ServerModule.greet} action2={ServerModule.greet2} />,
+      webpackMap,
+    );
+
+    const response = ReactServerDOMClient.createFromReadableStream(stream, {
+      async callServer(ref, args) {
+        const body = await ReactServerDOMClient.encodeReply(args);
+        return callServer(ref, body);
+      },
+    });
+
+    function App() {
+      return use(response);
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<App />);
+    });
+    expect(container.innerHTML).toBe('Click Me');
+    expect(typeof actionProxy1).toBe('function');
+    expect(actionProxy1).not.toBe(greet);
+
+    // TODO: Ideally flight would be encoding this the same.
+    expect(actionProxy1).not.toBe(actionProxy2);
+
+    const result = await actionProxy1('world');
+    expect(result).toBe('Hello world');
+  });
+
   it('supports Float hints before the first await in server components in Fiber', async () => {
     function Component() {
       return <p>hello world</p>;
