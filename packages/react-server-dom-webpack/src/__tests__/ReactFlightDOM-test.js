@@ -919,9 +919,7 @@ describe('ReactFlightDOM', () => {
       abort('for reasons');
     });
     if (__DEV__) {
-      expect(container.innerHTML).toBe(
-        '<p>Error: for reasons + a dev digest</p>',
-      );
+      expect(container.innerHTML).toBe('<p>for reasons + a dev digest</p>');
     } else {
       expect(container.innerHTML).toBe('<p>digest("for reasons")</p>');
     }
