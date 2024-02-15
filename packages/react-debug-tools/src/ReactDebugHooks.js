@@ -494,8 +494,10 @@ function useFormState<S, P>(
   const hook = nextHook(); // FormState
   nextHook(); // ActionQueue
   const stackError = new Error();
-  let state;
+  let value;
   let debugInfo = null;
+  let error = null;
+
   if (hook !== null) {
     const actionResult = hook.memoizedState;
     if (
@@ -507,39 +509,45 @@ function useFormState<S, P>(
       const thenable: Thenable<Awaited<S>> = (actionResult: any);
       switch (thenable.status) {
         case 'fulfilled': {
-          state = thenable.value;
+          value = thenable.value;
           debugInfo =
             thenable._debugInfo === undefined ? null : thenable._debugInfo;
           break;
         }
         case 'rejected': {
           const rejectedError = thenable.reason;
-          throw rejectedError;
+          error = rejectedError;
+          break;
         }
         default:
           // If this was an uncached Promise we have to abandon this attempt
           // but we can still emit anything up until this point.
-          hookLog.push({
-            primitive: 'FormState',
-            stackError: stackError,
-            value: thenable,
-            debugInfo:
-              thenable._debugInfo === undefined ? null : thenable._debugInfo,
-          });
-          throw SuspenseException;
+          error = SuspenseException;
+          debugInfo =
+            thenable._debugInfo === undefined ? null : thenable._debugInfo;
+          value = thenable;
       }
     } else {
-      state = (actionResult: any);
+      value = (actionResult: any);
     }
   } else {
-    state = initialState;
+    value = initialState;
   }
+
   hookLog.push({
     primitive: 'FormState',
     stackError: stackError,
-    value: state,
+    value: value,
     debugInfo: debugInfo,
   });
+
+  if (error !== null) {
+    throw error;
+  }
+
+  // value being a Thenable is equivalent to error being not null
+  // i.e. we only reach this point with Awaited<S>
+  const state = ((value: any): Awaited<S>);
   return [state, (payload: P) => {}];
 }
 
