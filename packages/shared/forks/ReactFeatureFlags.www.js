@@ -40,7 +40,7 @@ export const {
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
-// It's not used anywhere in production yet..
+// It's not used anywhere in production yet.
 
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 export const enableProfilerTimer = __PROFILE__;
