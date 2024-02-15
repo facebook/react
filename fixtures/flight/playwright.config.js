@@ -1,6 +1,6 @@
 import {defineConfig, devices} from '@playwright/test';
 
-const isCI = process.env.CI === '1';
+const isCI = Boolean(process.env.CI);
 
 export default defineConfig({
   // relative to this configuration file.
