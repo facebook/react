@@ -193,7 +193,7 @@ describe('ReactContextValidator', () => {
         'getChildContext() on ComponentA or remove childContextTypes from it.',
     );
 
-    // Warnings should be deduped by component typ
+    // Warnings should be deduped by component type
     let container = document.createElement('div');
     let root = ReactDOMClient.createRoot(container);
     await act(() => {
