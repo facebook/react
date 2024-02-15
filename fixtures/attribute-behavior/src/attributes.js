@@ -2380,4 +2380,4 @@ attributes.forEach(attr => {
   attr.read = attr.read || getProperty(attr.name);
 });
 
-export default attributes.slice(0, 1);
+export default attributes;
