@@ -36,6 +36,7 @@ export const {
   transitionLaneExpirationMs,
   enableInfiniteRenderLoopDetection,
   enableRenderableContext,
+  useModernStrictMode,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -103,7 +104,6 @@ export const allowConcurrentByDefault = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = true;
 
-export const useModernStrictMode = false;
 export const enableFizzExternalRuntime = true;
 
 export const forceConcurrentByDefaultForTesting = false;
