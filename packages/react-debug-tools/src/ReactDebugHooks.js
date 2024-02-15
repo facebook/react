@@ -94,17 +94,6 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       if (typeof Dispatcher.useFormState === 'function') {
         // This type check is for Flow only.
         Dispatcher.useFormState((s: mixed, p: mixed) => s, null);
-        try {
-          // $FlowFixMe[not-a-function]: Already checked above.
-          Dispatcher.useFormState(
-            (s: mixed, p: mixed) => s,
-            // This isn't actually a valid call.
-            // We just simulate a pending promise here to exhaust all cases in the stackframe cache.
-            ({
-              then() {},
-            }: any),
-          );
-        } catch (x) {}
       }
       if (typeof Dispatcher.use === 'function') {
         // This type check is for Flow only.
@@ -504,6 +493,7 @@ function useFormState<S, P>(
 ): [Awaited<S>, (P) => void] {
   const hook = nextHook(); // FormState
   nextHook(); // ActionQueue
+  const stackError = new Error();
   let state;
   let debugInfo = null;
   if (hook !== null) {
@@ -531,7 +521,7 @@ function useFormState<S, P>(
           // but we can still emit anything up until this point.
           hookLog.push({
             primitive: 'FormState',
-            stackError: new Error(),
+            stackError: stackError,
             value: thenable,
             debugInfo:
               thenable._debugInfo === undefined ? null : thenable._debugInfo,
@@ -546,7 +536,7 @@ function useFormState<S, P>(
   }
   hookLog.push({
     primitive: 'FormState',
-    stackError: new Error(),
+    stackError: stackError,
     value: state,
     debugInfo: debugInfo,
   });
