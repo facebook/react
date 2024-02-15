@@ -33,6 +33,7 @@ import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
 import {enableRenderableContext} from 'shared/ReactFeatureFlags';
+import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 import {
   scheduleWork,
@@ -816,18 +817,19 @@ function encodeErrorForBoundary(
 ) {
   boundary.errorDigest = digest;
   if (__DEV__) {
+    let message;
     // In dev we additionally encode the error message and component stack on the boundary
-    let errorMessage;
-    if (typeof error === 'string') {
-      errorMessage = error;
-    } else if (error && typeof error.message === 'string') {
-      errorMessage = error.message;
+    if (error instanceof Error) {
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      message = String(error.message);
+    } else if (typeof error === 'object' && error !== null) {
+      message = describeObjectForErrorMessage(error);
     } else {
       // eslint-disable-next-line react-internal/safe-string-coercion
-      errorMessage = String(error);
+      message = String(error);
     }
 
-    boundary.errorMessage = errorMessage;
+    boundary.errorMessage = message;
     boundary.errorComponentStack = thrownInfo.componentStack;
   }
 }

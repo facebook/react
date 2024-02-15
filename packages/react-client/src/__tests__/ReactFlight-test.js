@@ -85,11 +85,11 @@ describe('ReactFlight', () => {
           );
           let expectedDigest = this.props.expectedMessage;
           if (
-            expectedDigest.startsWith('Error: {') ||
-            expectedDigest.startsWith('Error: <')
+            expectedDigest.startsWith('{') ||
+            expectedDigest.startsWith('<')
           ) {
             expectedDigest = '{}';
-          } else if (expectedDigest.startsWith('Error: [')) {
+          } else if (expectedDigest.startsWith('[')) {
             expectedDigest = '[]';
           }
           expect(this.state.error.digest).toContain(expectedDigest);
@@ -799,12 +799,12 @@ describe('ReactFlight', () => {
             <Throw value={new TypeError('This is a real Error.')} />
           </div>
         </ClientErrorBoundary>
-        <ClientErrorBoundary expectedMessage="Error: This is a string error.">
+        <ClientErrorBoundary expectedMessage="This is a string error.">
           <div>
             <Throw value="This is a string error." />
           </div>
         </ClientErrorBoundary>
-        <ClientErrorBoundary expectedMessage="Error: {message: ..., extra: ..., nested: ...}">
+        <ClientErrorBoundary expectedMessage="{message: ..., extra: ..., nested: ...}">
           <div>
             <Throw
               value={{
@@ -816,9 +816,7 @@ describe('ReactFlight', () => {
           </div>
         </ClientErrorBoundary>
         <ClientErrorBoundary
-          expectedMessage={
-            'Error: {message: "Short", extra: ..., nested: ...}'
-          }>
+          expectedMessage={'{message: "Short", extra: ..., nested: ...}'}>
           <div>
             <Throw
               value={{
@@ -829,32 +827,32 @@ describe('ReactFlight', () => {
             />
           </div>
         </ClientErrorBoundary>
-        <ClientErrorBoundary expectedMessage="Error: Symbol(hello)">
+        <ClientErrorBoundary expectedMessage="Symbol(hello)">
           <div>
             <Throw value={Symbol('hello')} />
           </div>
         </ClientErrorBoundary>
-        <ClientErrorBoundary expectedMessage="Error: 123">
+        <ClientErrorBoundary expectedMessage="123">
           <div>
             <Throw value={123} />
           </div>
         </ClientErrorBoundary>
-        <ClientErrorBoundary expectedMessage="Error: undefined">
+        <ClientErrorBoundary expectedMessage="undefined">
           <div>
             <Throw value={undefined} />
           </div>
         </ClientErrorBoundary>
-        <ClientErrorBoundary expectedMessage="Error: <div/>">
+        <ClientErrorBoundary expectedMessage="<div/>">
           <div>
             <Throw value={<div />} />
           </div>
         </ClientErrorBoundary>
-        <ClientErrorBoundary expectedMessage="Error: function Foo() {}">
+        <ClientErrorBoundary expectedMessage="function Foo() {}">
           <div>
             <Throw value={function Foo() {}} />
           </div>
         </ClientErrorBoundary>
-        <ClientErrorBoundary expectedMessage={'Error: ["array"]'}>
+        <ClientErrorBoundary expectedMessage={'["array"]'}>
           <div>
             <Throw value={['array']} />
           </div>
@@ -874,7 +872,7 @@ describe('ReactFlight', () => {
         } else if (typeof x === 'object' && x !== null) {
           return `digest({})`;
         }
-        return `digest(Error: ${String(x)})`;
+        return `digest(${String(x)})`;
       },
     });
 

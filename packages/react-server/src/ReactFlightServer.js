@@ -1678,10 +1678,10 @@ function emitErrorChunk(
         // eslint-disable-next-line react-internal/safe-string-coercion
         stack = String(error.stack);
       } else if (typeof error === 'object' && error !== null) {
-        message = 'Error: ' + describeObjectForErrorMessage(error);
+        message = describeObjectForErrorMessage(error);
       } else {
         // eslint-disable-next-line react-internal/safe-string-coercion
-        message = 'Error: ' + String(error);
+        message = String(error);
       }
     } catch (x) {
       message = 'An error occurred but serializing the error message failed.';

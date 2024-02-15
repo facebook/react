@@ -583,7 +583,7 @@ describe('ReactFlightDOMBrowser', () => {
       controller.abort('for reasons');
     });
     const expectedValue = __DEV__
-      ? '<p>Error: for reasons + a dev digest</p>'
+      ? '<p>for reasons + a dev digest</p>'
       : '<p>digest("for reasons")</p>';
     expect(container.innerHTML).toBe(expectedValue);
 
