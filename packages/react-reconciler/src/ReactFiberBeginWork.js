@@ -110,6 +110,7 @@ import {
   enableAsyncActions,
   enablePostpone,
   enableRenderableContext,
+  enableRefAsProp,
 } from 'shared/ReactFeatureFlags';
 import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
@@ -403,6 +404,24 @@ function updateForwardRef(
   const render = Component.render;
   const ref = workInProgress.ref;
 
+  let propsWithoutRef;
+  if (enableRefAsProp && 'ref' in nextProps) {
+    // `ref` is just a prop now, but `forwardRef` expects it to not appear in
+    // the props object. This used to happen in the JSX runtime, but now we do
+    // it here.
+    propsWithoutRef = ({}: {[string]: any});
+    for (const key in nextProps) {
+      // Since `ref` should only appear in props via the JSX transform, we can
+      // assume that this is a plain object. So we don't need a
+      // hasOwnProperty check.
+      if (key !== 'ref') {
+        propsWithoutRef[key] = nextProps[key];
+      }
+    }
+  } else {
+    propsWithoutRef = nextProps;
+  }
+
   // The rest is a fork of updateFunctionComponent
   let nextChildren;
   let hasId;
@@ -417,7 +436,7 @@ function updateForwardRef(
       current,
       workInProgress,
       render,
-      nextProps,
+      propsWithoutRef,
       ref,
       renderLanes,
     );
@@ -428,7 +447,7 @@ function updateForwardRef(
       current,
       workInProgress,
       render,
-      nextProps,
+      propsWithoutRef,
       ref,
       renderLanes,
     );
@@ -1980,7 +1999,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
         );
       }
     }
-    if (workInProgress.ref !== null) {
+    if (!enableRefAsProp && workInProgress.ref !== null) {
       let info = '';
       const componentName = getComponentNameFromType(Component) || 'Unknown';
       const ownerName = getCurrentFiberOwnerNameInDevOrNull();

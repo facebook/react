@@ -109,6 +109,7 @@ describe('ReactDeprecationWarnings', () => {
     await waitForAll([]);
   });
 
+  // @gate !enableRefAsProp || !__DEV__
   it('should warn when owner and self are different for string refs', async () => {
     class RefComponent extends React.Component {
       render() {
@@ -140,6 +141,7 @@ describe('ReactDeprecationWarnings', () => {
   });
 
   if (__DEV__) {
+    // @gate !enableRefAsProp
     it('should warn when owner and self are different for string refs', async () => {
       class RefComponent extends React.Component {
         render() {

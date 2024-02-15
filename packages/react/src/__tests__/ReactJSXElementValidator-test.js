@@ -389,9 +389,15 @@ describe('ReactJSXElementValidator', () => {
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toErrorDev(
-      'Invalid attribute `ref` supplied to `React.Fragment`.',
-    );
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toErrorDev(
+        'Invalid prop `ref` supplied to `React.Fragment`.',
+      );
+    } else {
+      expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toErrorDev(
+        'Invalid attribute `ref` supplied to `React.Fragment`.',
+      );
+    }
   });
 
   it('does not warn for fragments of multiple elements without keys', () => {

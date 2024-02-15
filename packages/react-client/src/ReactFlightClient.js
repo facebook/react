@@ -35,7 +35,11 @@ import type {
 
 import type {Postpone} from 'react/src/ReactPostpone';
 
-import {enableBinaryFlight, enablePostpone} from 'shared/ReactFeatureFlags';
+import {
+  enableBinaryFlight,
+  enablePostpone,
+  enableRefAsProp,
+} from 'shared/ReactFeatureFlags';
 
 import {
   resolveClientReference,
@@ -468,19 +472,31 @@ function createElement(
   key: mixed,
   props: mixed,
 ): React$Element<any> {
-  const element: any = {
-    // This tag allows us to uniquely identify this as a React Element
-    $$typeof: REACT_ELEMENT_TYPE,
+  const element: any = enableRefAsProp
+    ? {
+        // This tag allows us to uniquely identify this as a React Element
+        $$typeof: REACT_ELEMENT_TYPE,
 
-    // Built-in properties that belong on the element
-    type: type,
-    key: key,
-    ref: null,
-    props: props,
+        // Built-in properties that belong on the element
+        type,
+        key,
+        props,
 
-    // Record the component responsible for creating this element.
-    _owner: null,
-  };
+        // Record the component responsible for creating this element.
+        _owner: null,
+      }
+    : {
+        // Old behavior. When enableRefAsProp is off, `ref` is an extra field.
+        ref: null,
+
+        // Everything else is the same.
+        $$typeof: REACT_ELEMENT_TYPE,
+        type,
+        key,
+        props,
+        _owner: null,
+      };
+
   if (__DEV__) {
     // We don't really need to add any of these but keeping them for good measure.
     // Unfortunately, _store is enumerable in jest matchers so for equality to

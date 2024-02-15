@@ -42,6 +42,7 @@ import {
 } from './ReactWorkTags';
 import isArray from 'shared/isArray';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
+import {enableRefAsProp} from 'shared/ReactFeatureFlags';
 
 import {
   createWorkInProgress,
@@ -153,7 +154,19 @@ function coerceRef(
   current: Fiber | null,
   element: ReactElement,
 ) {
-  const mixedRef = element.ref;
+  let mixedRef;
+  if (enableRefAsProp) {
+    // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
+    // we should resolve the `ref` prop during the begin phase of the component
+    // it's attached to (HostComponent, ClassComponent, etc).
+
+    const refProp = element.props.ref;
+    mixedRef = refProp !== undefined ? refProp : null;
+  } else {
+    // Old behavior.
+    mixedRef = element.ref;
+  }
+
   if (
     mixedRef !== null &&
     typeof mixedRef !== 'function' &&

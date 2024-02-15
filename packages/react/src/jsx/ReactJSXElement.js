@@ -21,6 +21,7 @@ import isValidElementType from 'shared/isValidElementType';
 import isArray from 'shared/isArray';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import checkPropTypes from 'shared/checkPropTypes';
+import {enableRefAsProp} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -36,15 +37,17 @@ if (__DEV__) {
 }
 
 function hasValidRef(config) {
-  if (__DEV__) {
-    if (hasOwnProperty.call(config, 'ref')) {
-      const getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
-      if (getter && getter.isReactWarning) {
-        return false;
+  if (!enableRefAsProp) {
+    if (__DEV__) {
+      if (hasOwnProperty.call(config, 'ref')) {
+        const getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
+        if (getter && getter.isReactWarning) {
+          return false;
+        }
       }
     }
+    return config.ref !== undefined;
   }
-  return config.ref !== undefined;
 }
 
 function hasValidKey(config) {
@@ -111,24 +114,26 @@ function defineKeyPropWarningGetter(props, displayName) {
 }
 
 function defineRefPropWarningGetter(props, displayName) {
-  if (__DEV__) {
-    const warnAboutAccessingRef = function () {
-      if (!specialPropRefWarningShown) {
-        specialPropRefWarningShown = true;
-        console.error(
-          '%s: `ref` is not a prop. Trying to access it will result ' +
-            'in `undefined` being returned. If you need to access the same ' +
-            'value within the child component, you should pass it as a different ' +
-            'prop. (https://reactjs.org/link/special-props)',
-          displayName,
-        );
-      }
-    };
-    warnAboutAccessingRef.isReactWarning = true;
-    Object.defineProperty(props, 'ref', {
-      get: warnAboutAccessingRef,
-      configurable: true,
-    });
+  if (!enableRefAsProp) {
+    if (__DEV__) {
+      const warnAboutAccessingRef = function () {
+        if (!specialPropRefWarningShown) {
+          specialPropRefWarningShown = true;
+          console.error(
+            '%s: `ref` is not a prop. Trying to access it will result ' +
+              'in `undefined` being returned. If you need to access the same ' +
+              'value within the child component, you should pass it as a different ' +
+              'prop. (https://reactjs.org/link/special-props)',
+            displayName,
+          );
+        }
+      };
+      warnAboutAccessingRef.isReactWarning = true;
+      Object.defineProperty(props, 'ref', {
+        get: warnAboutAccessingRef,
+        configurable: true,
+      });
+    }
   }
 }
 
@@ -153,19 +158,30 @@ function defineRefPropWarningGetter(props, displayName) {
  * @internal
  */
 function ReactElement(type, key, ref, self, source, owner, props) {
-  const element = {
-    // This tag allows us to uniquely identify this as a React Element
-    $$typeof: REACT_ELEMENT_TYPE,
+  const element = enableRefAsProp
+    ? {
+        // This tag allows us to uniquely identify this as a React Element
+        $$typeof: REACT_ELEMENT_TYPE,
 
-    // Built-in properties that belong on the element
-    type,
-    key,
-    ref,
-    props,
+        // Built-in properties that belong on the element
+        type,
+        key,
+        props,
 
-    // Record the component responsible for creating this element.
-    _owner: owner,
-  };
+        // Record the component responsible for creating this element.
+        _owner: owner,
+      }
+    : {
+        // Old behavior. When enableRefAsProp is off, `ref` is an extra field.
+        ref,
+
+        // Everything else is the same.
+        $$typeof: REACT_ELEMENT_TYPE,
+        type,
+        key,
+        props,
+        _owner: owner,
+      };
 
   if (__DEV__) {
     // The validation flag is currently mutative. We put it on
@@ -235,7 +251,7 @@ export function jsxProd(type, config, maybeKey) {
     key = '' + config.key;
   }
 
-  if (hasValidRef(config)) {
+  if (!enableRefAsProp && hasValidRef(config)) {
     ref = config.ref;
   }
 
@@ -245,8 +261,7 @@ export function jsxProd(type, config, maybeKey) {
       hasOwnProperty.call(config, propName) &&
       // Skip over reserved prop names
       propName !== 'key' &&
-      // TODO: `ref` will no longer be reserved in the next major
-      propName !== 'ref'
+      (enableRefAsProp || propName !== 'ref')
     ) {
       props[propName] = config[propName];
     }
@@ -452,7 +467,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       key = '' + config.key;
     }
 
-    if (hasValidRef(config)) {
+    if (!enableRefAsProp && hasValidRef(config)) {
       ref = config.ref;
       warnIfStringRefCannotBeAutoConverted(config, self);
     }
@@ -463,8 +478,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
         hasOwnProperty.call(config, propName) &&
         // Skip over reserved prop names
         propName !== 'key' &&
-        // TODO: `ref` will no longer be reserved in the next major
-        propName !== 'ref'
+        (enableRefAsProp || propName !== 'ref')
       ) {
         props[propName] = config[propName];
       }
@@ -480,7 +494,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       }
     }
 
-    if (key || ref) {
+    if (key || (!enableRefAsProp && ref)) {
       const displayName =
         typeof type === 'function'
           ? type.displayName || type.name || 'Unknown'
@@ -488,7 +502,7 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       if (key) {
         defineKeyPropWarningGetter(props, displayName);
       }
-      if (ref) {
+      if (!enableRefAsProp && ref) {
         defineRefPropWarningGetter(props, displayName);
       }
     }
@@ -588,7 +602,7 @@ export function createElement(type, config, children) {
   let ref = null;
 
   if (config != null) {
-    if (hasValidRef(config)) {
+    if (!enableRefAsProp && hasValidRef(config)) {
       ref = config.ref;
 
       if (__DEV__) {
@@ -608,14 +622,11 @@ export function createElement(type, config, children) {
         hasOwnProperty.call(config, propName) &&
         // Skip over reserved prop names
         propName !== 'key' &&
-        // TODO: `ref` will no longer be reserved in the next major
-        propName !== 'ref' &&
-        // ...and maybe these, too, though we currently rely on them for
-        // warnings and debug information in dev. Need to decide if we're OK
-        // with dropping them. In the jsx() runtime it's not an issue because
-        // the data gets passed as separate arguments instead of props, but
-        // it would be nice to stop relying on them entirely so we can drop
-        // them from the internal Fiber field.
+        (enableRefAsProp || propName !== 'ref') &&
+        // Even though we don't use these anymore in the runtime, we don't want
+        // them to appear as props, so in createElement we filter them out.
+        // We don't have to do this in the jsx() runtime because the jsx()
+        // transform never passed these as props; it used separate arguments.
         propName !== '__self' &&
         propName !== '__source'
       ) {
@@ -652,7 +663,7 @@ export function createElement(type, config, children) {
     }
   }
   if (__DEV__) {
-    if (key || ref) {
+    if (key || (!enableRefAsProp && ref)) {
       const displayName =
         typeof type === 'function'
           ? type.displayName || type.name || 'Unknown'
@@ -660,7 +671,7 @@ export function createElement(type, config, children) {
       if (key) {
         defineKeyPropWarningGetter(props, displayName);
       }
-      if (ref) {
+      if (!enableRefAsProp && ref) {
         defineRefPropWarningGetter(props, displayName);
       }
     }
@@ -764,7 +775,7 @@ export function cloneElement(element, config, children) {
   let owner = element._owner;
 
   if (config != null) {
-    if (hasValidRef(config)) {
+    if (!enableRefAsProp && hasValidRef(config)) {
       // Silently steal the ref from the parent.
       ref = config.ref;
       owner = ReactCurrentOwner.current;
@@ -786,8 +797,7 @@ export function cloneElement(element, config, children) {
         hasOwnProperty.call(config, propName) &&
         // Skip over reserved prop names
         propName !== 'key' &&
-        // TODO: `ref` will no longer be reserved in the next major
-        propName !== 'ref' &&
+        (enableRefAsProp || propName !== 'ref') &&
         // ...and maybe these, too, though we currently rely on them for
         // warnings and debug information in dev. Need to decide if we're OK
         // with dropping them. In the jsx() runtime it's not an issue because
@@ -795,7 +805,11 @@ export function cloneElement(element, config, children) {
         // it would be nice to stop relying on them entirely so we can drop
         // them from the internal Fiber field.
         propName !== '__self' &&
-        propName !== '__source'
+        propName !== '__source' &&
+        // Undefined `ref` is ignored by cloneElement. We treat it the same as
+        // if the property were missing. This is mostly for
+        // backwards compatibility.
+        !(enableRefAsProp && propName === 'ref' && config.ref === undefined)
       ) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props
@@ -1016,6 +1030,7 @@ function getCurrentComponentErrorInfo(parentType) {
  * @param {ReactElement} fragment
  */
 function validateFragmentProps(fragment) {
+  // TODO: Move this to render phase instead of at element creation.
   if (__DEV__) {
     const keys = Object.keys(fragment.props);
     for (let i = 0; i < keys.length; i++) {
@@ -1032,7 +1047,7 @@ function validateFragmentProps(fragment) {
       }
     }
 
-    if (fragment.ref !== null) {
+    if (!enableRefAsProp && fragment.ref !== null) {
       setCurrentlyValidatingElement(fragment);
       console.error('Invalid attribute `ref` supplied to `React.Fragment`.');
       setCurrentlyValidatingElement(null);

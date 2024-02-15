@@ -414,30 +414,21 @@ describe('ref swapping', () => {
     }).rejects.toThrow(
       'Expected ref to be a function, a string, an object returned by React.createRef(), or null.',
     );
+  });
 
-    await act(() => {
-      root.render(<div ref={undefined} />);
-    });
-
-    await act(() => {
-      root.render({
-        $$typeof: Symbol.for('react.element'),
-        type: 'div',
-        props: {},
-        key: null,
-        ref: null,
-      });
-    });
-
-    // But this doesn't
+  // @gate !enableRefAsProp
+  it('undefined ref on manually inlined React element triggers error', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
     await expect(async () => {
       await act(() => {
         root.render({
           $$typeof: Symbol.for('react.element'),
           type: 'div',
-          props: {},
+          props: {
+            ref: undefined,
+          },
           key: null,
-          ref: undefined,
         });
       });
     }).rejects.toThrow(
