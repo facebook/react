@@ -42,6 +42,7 @@ import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
 import {
   gt,
   gte,
+  parseSourceFromComponentStack,
   serializeToString,
 } from 'react-devtools-shared/src/backend/utils';
 import {
@@ -124,6 +125,8 @@ import type {
   ElementType,
   Plugins,
 } from 'react-devtools-shared/src/frontend/types';
+import type {Source} from 'react-devtools-shared/src/shared/types';
+import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => symbol | number;
@@ -585,6 +588,8 @@ const fiberToIDMap: Map<Fiber, number> = new Map();
 // operations that should be the same whether the current and work-in-progress Fiber is used.
 const idToArbitraryFiberMap: Map<number, Fiber> = new Map();
 
+const fiberToComponentStackMap: WeakMap<Fiber, string> = new WeakMap();
+
 export function attach(
   hook: DevToolsHook,
   rendererID: number,
@@ -1029,15 +1034,21 @@ export function attach(
       }
     }
 
-    // TODO: Figure out a way to filter by path in the new model which has no debug info.
-    // if (hideElementsWithPaths.size > 0) {
-    //  const {fileName} = ...;
-    //  for (const pathRegExp of hideElementsWithPaths) {
-    //    if (pathRegExp.test(fileName)) {
-    //      return true;
-    //    }
-    //  }
-    // }
+    /* DISABLED: https://github.com/facebook/react/pull/28417
+    if (hideElementsWithPaths.size > 0) {
+      const source = getSourceForFiber(fiber);
+
+      if (source != null) {
+        const {fileName} = source;
+        // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+        for (const pathRegExp of hideElementsWithPaths) {
+          if (pathRegExp.test(fileName)) {
+            return true;
+          }
+        }
+      }
+    }
+    */
 
     return false;
   }
@@ -1246,10 +1257,12 @@ export function attach(
       }
 
       fiberToIDMap.delete(fiber);
+      fiberToComponentStackMap.delete(fiber);
 
       const {alternate} = fiber;
       if (alternate !== null) {
         fiberToIDMap.delete(alternate);
+        fiberToComponentStackMap.delete(alternate);
       }
 
       if (forceErrorForFiberIDs.has(fiberID)) {
@@ -3361,6 +3374,11 @@ export function attach(
       }
     }
 
+    let source = null;
+    if (canViewSource) {
+      source = getSourceForFiber(fiber);
+    }
+
     return {
       id,
 
@@ -3393,6 +3411,7 @@ export function attach(
 
       // Can view component source location.
       canViewSource,
+      source,
 
       // Does the component have legacy context attached to it.
       hasLegacyContext,
@@ -4520,6 +4539,34 @@ export function attach(
     return idToArbitraryFiberMap.has(id);
   }
 
+  function getComponentStackForFiber(fiber: Fiber): string | null {
+    let componentStack = fiberToComponentStackMap.get(fiber);
+    if (componentStack == null) {
+      const dispatcherRef = renderer.currentDispatcherRef;
+      if (dispatcherRef == null) {
+        return null;
+      }
+
+      componentStack = getStackByFiberInDevAndProd(
+        ReactTypeOfWork,
+        fiber,
+        dispatcherRef,
+      );
+      fiberToComponentStackMap.set(fiber, componentStack);
+    }
+
+    return componentStack;
+  }
+
+  function getSourceForFiber(fiber: Fiber): Source | null {
+    const componentStack = getComponentStackForFiber(fiber);
+    if (componentStack == null) {
+      return null;
+    }
+
+    return parseSourceFromComponentStack(componentStack);
+  }
+
   return {
     cleanup,
     clearErrorsAndWarnings,
@@ -4530,6 +4577,8 @@ export function attach(
     findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
+    getComponentStackForFiber,
+    getSourceForFiber,
     getDisplayNameForFiberID,
     getFiberForNative,
     getFiberIDForNative,

@@ -92,15 +92,14 @@ test.describe('Components', () => {
           ? valueElement.value
           : valueElement.innerText;
 
-        return [name, value, source ? source.innerText : null];
+        return [name, value, source.innerText];
       },
       {name: isEditableName, value: isEditableValue}
     );
 
     expect(propName).toBe('label');
     expect(propValue).toBe('"one"');
-    expect(sourceText).toBe(null);
-    // TODO: expect(sourceText).toMatch(/ListApp[a-zA-Z]*\.js/);
+    expect(sourceText).toMatch(/e2e-app[a-zA-Z]*\.js/);
   });
 
   test('should allow props to be edited', async () => {

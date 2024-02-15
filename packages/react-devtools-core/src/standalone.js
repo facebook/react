@@ -144,7 +144,7 @@ function canViewElementSourceFunction(
 
   const {source} = inspectedElement;
 
-  return doesFilePathExist(source.fileName, projectRoots);
+  return doesFilePathExist(source.sourceURL, projectRoots);
 }
 
 function viewElementSourceFunction(
@@ -153,7 +153,7 @@ function viewElementSourceFunction(
 ): void {
   const {source} = inspectedElement;
   if (source !== null) {
-    launchEditor(source.fileName, source.lineNumber, projectRoots);
+    launchEditor(source.sourceURL, source.line, projectRoots);
   } else {
     log.error('Cannot inspect element', id);
   }
