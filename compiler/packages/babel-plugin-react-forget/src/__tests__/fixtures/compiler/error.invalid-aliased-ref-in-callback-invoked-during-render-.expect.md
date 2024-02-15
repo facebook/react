@@ -19,7 +19,12 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value at mutate? $64[13:15] (9:9)
+   7 |     return <Foo item={item} current={current} />;
+   8 |   };
+>  9 |   return <Items>{props.items.map((item) => renderItem(item))}</Items>;
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^ [ReactForget] InvalidReact: Ref values (the `current` property) may not be accessed during render. (https://react.dev/reference/react/useRef). Cannot access ref value at mutate? $64[13:15] (9:9)
+  10 | }
+  11 |
 ```
           
       

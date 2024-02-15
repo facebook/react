@@ -15,7 +15,12 @@ function Component() {
 ## Error
 
 ```
-[ReactForget] Todo: Unsupported declaration type for hoisting. variable "get2" declared with FunctionDeclaration (2:2)
+  1 | function Component() {
+> 2 |   return get2();
+    |          ^^^^^^ [ReactForget] Todo: Unsupported declaration type for hoisting. variable "get2" declared with FunctionDeclaration (2:2)
+  3 |   function get2() {
+  4 |     return 2;
+  5 |   }
 ```
           
       

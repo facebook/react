@@ -28,7 +28,13 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (16:16)
+  14 |     bar();
+  15 |   };
+> 16 |   baz();
+     |   ^^^ [ReactForget] InvalidReact: This is an unconditional set state during render, which will trigger an infinite loop. (https://react.dev/reference/react/useState) (16:16)
+  17 |
+  18 |   return [x];
+  19 | }
 ```
           
       

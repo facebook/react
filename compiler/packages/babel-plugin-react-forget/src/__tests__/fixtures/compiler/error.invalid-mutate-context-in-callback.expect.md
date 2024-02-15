@@ -24,7 +24,13 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Mutating a value returned from 'useContext()', which should not be mutated. (12:12)
+  10 |   // independently
+  11 |   const onClick = () => {
+> 12 |     FooContext.current = true;
+     |     ^^^^^^^^^^^^^^^^^^ [ReactForget] InvalidReact: Mutating a value returned from 'useContext()', which should not be mutated. (12:12)
+  13 |   };
+  14 |   return <div onClick={onClick} />;
+  15 | }
 ```
           
       

@@ -16,7 +16,13 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX. (5:5)
+  3 |   // freeze
+  4 |   <div>{x}</div>;
+> 5 |   delete x[y];
+    |          ^ [ReactForget] InvalidReact: Updating a value used previously in JSX is not allowed. Consider moving the mutation before the JSX. (5:5)
+  6 |   return x;
+  7 | }
+  8 |
 ```
           
       

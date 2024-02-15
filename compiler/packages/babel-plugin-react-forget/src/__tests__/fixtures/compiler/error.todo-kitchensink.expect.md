@@ -79,7 +79,10 @@ let moduleLocal = false;
 ## Error
 
 ```
-[ReactForget] Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)
+  1 | function foo([a, b], { c, d, e = "e" }, f = "f", ...args) {
+  2 |   let i = 0;
+> 3 |   var x = [];
+    |   ^^^^^^^^^^^ [ReactForget] Todo: (BuildHIR::lowerStatement) Handle var kinds in VariableDeclaration (3:3)
 
 [ReactForget] Todo: (BuildHIR::lowerStatement) Handle ClassDeclaration statements (5:10)
 
@@ -108,6 +111,9 @@ let moduleLocal = false;
 [ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'MemberExpression' cannot be safely reordered (57:57)
 
 [ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'BinaryExpression' cannot be safely reordered (53:53)
+  4 |
+  5 |   class Bar {
+  6 |     #secretSauce = 42;
 ```
           
       

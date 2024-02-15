@@ -19,7 +19,13 @@ React.unknownFunction((foo, bar) => {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (8:8)
+   6 | React.unknownFunction((foo, bar) => {
+   7 |   if (foo) {
+>  8 |     useNotAHook(bar);
+     |     ^^^^^^^^^^^ [ReactForget] InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (8:8)
+   9 |   }
+  10 | });
+  11 |
 ```
           
       

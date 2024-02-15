@@ -20,9 +20,15 @@ function useHookInLoops() {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (7:7)
+   5 | function useHookInLoops() {
+   6 |   while (a) {
+>  7 |     useHook1();
+     |     ^^^^^^^^ [ReactForget] InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (7:7)
 
 [ReactForget] InvalidReact: Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning) (9:9)
+   8 |     if (b) continue;
+   9 |     useHook2();
+  10 |   }
 ```
           
       

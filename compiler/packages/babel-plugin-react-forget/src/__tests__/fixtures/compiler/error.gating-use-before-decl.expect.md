@@ -14,7 +14,11 @@ function Foo() {}
 ## Error
 
 ```
-[ReactForget] Invariant: Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting. Rewrite the reference to Foo to not rely on hoisting to fix this issue (5:5)
+  3 |
+  4 | export default memo(Foo);
+> 5 | function Foo() {}
+    |          ^^^ [ReactForget] Invariant: Encountered a function used before its declaration, which breaks Forget's gating codegen due to hoisting. Rewrite the reference to Foo to not rely on hoisting to fix this issue (5:5)
+  6 |
 ```
           
       

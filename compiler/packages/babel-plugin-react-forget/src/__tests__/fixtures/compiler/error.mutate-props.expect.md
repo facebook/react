@@ -13,7 +13,12 @@ function Foo(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Mutating props or hook arguments is not allowed. Consider using a local variable instead. (2:2)
+  1 | function Foo(props) {
+> 2 |   props.test = 1;
+    |   ^^^^^ [ReactForget] InvalidReact: Mutating props or hook arguments is not allowed. Consider using a local variable instead. (2:2)
+  3 |   return null;
+  4 | }
+  5 |
 ```
           
       

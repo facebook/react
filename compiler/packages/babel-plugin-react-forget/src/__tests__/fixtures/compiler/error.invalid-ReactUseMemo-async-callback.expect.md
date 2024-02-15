@@ -15,7 +15,16 @@ function component(a, b) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: useMemo callbacks may not be async or generator functions (2:4)
+  1 | function component(a, b) {
+> 2 |   let x = React.useMemo(async () => {
+    |                         ^^^^^^^^^^^^^
+> 3 |     await a;
+    | ^^^^^^^^^^^^
+> 4 |   }, []);
+    | ^^^^ [ReactForget] InvalidReact: useMemo callbacks may not be async or generator functions (2:4)
+  5 |   return x;
+  6 | }
+  7 |
 ```
           
       

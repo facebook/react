@@ -14,7 +14,13 @@ function Component(props) {
 ## Error
 
 ```
-[ReactForget] InvalidReact: Mutating a value returned from 'useContext()', which should not be mutated. (3:3)
+  1 | function Component(props) {
+  2 |   const context = useContext(FooContext);
+> 3 |   context.value = props.value;
+    |   ^^^^^^^ [ReactForget] InvalidReact: Mutating a value returned from 'useContext()', which should not be mutated. (3:3)
+  4 |   return context.value;
+  5 | }
+  6 |
 ```
           
       

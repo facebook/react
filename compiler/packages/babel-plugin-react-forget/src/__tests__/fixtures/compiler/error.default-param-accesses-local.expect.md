@@ -22,7 +22,17 @@ export const FIXTURE_ENTRYPOINT = {
 ## Error
 
 ```
-[ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'ArrowFunctionExpression' cannot be safely reordered (3:5)
+  1 | function Component(
+  2 |   x,
+> 3 |   y = () => {
+    |       ^^^^^^^
+> 4 |     return x;
+    | ^^^^^^^^^^^^^
+> 5 |   }
+    | ^^^^ [ReactForget] Todo: (BuildHIR::node.lowerReorderableExpression) Expression type 'ArrowFunctionExpression' cannot be safely reordered (3:5)
+  6 | ) {
+  7 |   return y();
+  8 | }
 ```
           
       
