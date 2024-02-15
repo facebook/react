@@ -89,6 +89,320 @@ if (__DEV__) {
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
     var enableFloat = true;
 
+    // ATTENTION
+    // When adding new symbols to this file,
+    // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
+    // The Symbol used to tag the ReactElement-like types.
+    var REACT_ELEMENT_TYPE = Symbol.for("react.element");
+    var REACT_PORTAL_TYPE = Symbol.for("react.portal");
+    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
+    var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
+    var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
+    var REACT_PROVIDER_TYPE = Symbol.for("react.provider"); // TODO: Delete with enableRenderableContext
+
+    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
+    var REACT_CONTEXT_TYPE = Symbol.for("react.context");
+    var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
+    var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
+    var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
+    var REACT_MEMO_TYPE = Symbol.for("react.memo");
+    var REACT_LAZY_TYPE = Symbol.for("react.lazy");
+    var REACT_SCOPE_TYPE = Symbol.for("react.scope");
+    var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
+    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
+    var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
+    var REACT_CACHE_TYPE = Symbol.for("react.cache");
+    var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
+    var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
+    var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
+    var FAUX_ITERATOR_SYMBOL = "@@iterator";
+    function getIteratorFn(maybeIterable) {
+      if (maybeIterable === null || typeof maybeIterable !== "object") {
+        return null;
+      }
+
+      var maybeIterator =
+        (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
+        maybeIterable[FAUX_ITERATOR_SYMBOL];
+
+      if (typeof maybeIterator === "function") {
+        return maybeIterator;
+      }
+
+      return null;
+    }
+
+    var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
+
+    function isArray(a) {
+      return isArrayImpl(a);
+    }
+
+    // in case they error.
+
+    var jsxPropsParents = new WeakMap();
+    var jsxChildrenParents = new WeakMap();
+    function objectName(object) {
+      // $FlowFixMe[method-unbinding]
+      var name = Object.prototype.toString.call(object);
+      return name.replace(/^\[object (.*)\]$/, function (m, p0) {
+        return p0;
+      });
+    }
+
+    function describeKeyForErrorMessage(key) {
+      var encodedKey = JSON.stringify(key);
+      return '"' + key + '"' === encodedKey ? key : encodedKey;
+    }
+
+    function describeValueForErrorMessage(value) {
+      switch (typeof value) {
+        case "string": {
+          return JSON.stringify(
+            value.length <= 10 ? value : value.slice(0, 10) + "..."
+          );
+        }
+
+        case "object": {
+          if (isArray(value)) {
+            return "[...]";
+          }
+
+          var name = objectName(value);
+
+          if (name === "Object") {
+            return "{...}";
+          }
+
+          return name;
+        }
+
+        case "function":
+          return "function";
+
+        default:
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          return String(value);
+      }
+    }
+
+    function describeElementType(type) {
+      if (typeof type === "string") {
+        return type;
+      }
+
+      switch (type) {
+        case REACT_SUSPENSE_TYPE:
+          return "Suspense";
+
+        case REACT_SUSPENSE_LIST_TYPE:
+          return "SuspenseList";
+      }
+
+      if (typeof type === "object") {
+        switch (type.$$typeof) {
+          case REACT_FORWARD_REF_TYPE:
+            return describeElementType(type.render);
+
+          case REACT_MEMO_TYPE:
+            return describeElementType(type.type);
+
+          case REACT_LAZY_TYPE: {
+            var lazyComponent = type;
+            var payload = lazyComponent._payload;
+            var init = lazyComponent._init;
+
+            try {
+              // Lazy may contain any component type so we recursively resolve it.
+              return describeElementType(init(payload));
+            } catch (x) {}
+          }
+        }
+      }
+
+      return "";
+    }
+
+    function describeObjectForErrorMessage(objectOrArray, expandedName) {
+      var objKind = objectName(objectOrArray);
+
+      if (objKind !== "Object" && objKind !== "Array") {
+        return objKind;
+      }
+
+      var str = "";
+      var start = -1;
+      var length = 0;
+
+      if (isArray(objectOrArray)) {
+        if (jsxChildrenParents.has(objectOrArray)) {
+          // Print JSX Children
+          var type = jsxChildrenParents.get(objectOrArray);
+          str = "<" + describeElementType(type) + ">";
+          var array = objectOrArray;
+
+          for (var i = 0; i < array.length; i++) {
+            var value = array[i];
+            var substr = void 0;
+
+            if (typeof value === "string") {
+              substr = value;
+            } else if (typeof value === "object" && value !== null) {
+              substr = "{" + describeObjectForErrorMessage(value) + "}";
+            } else {
+              substr = "{" + describeValueForErrorMessage(value) + "}";
+            }
+
+            if ("" + i === expandedName) {
+              start = str.length;
+              length = substr.length;
+              str += substr;
+            } else if (substr.length < 15 && str.length + substr.length < 40) {
+              str += substr;
+            } else {
+              str += "{...}";
+            }
+          }
+
+          str += "</" + describeElementType(type) + ">";
+        } else {
+          // Print Array
+          str = "[";
+          var _array = objectOrArray;
+
+          for (var _i = 0; _i < _array.length; _i++) {
+            if (_i > 0) {
+              str += ", ";
+            }
+
+            var _value = _array[_i];
+
+            var _substr = void 0;
+
+            if (typeof _value === "object" && _value !== null) {
+              _substr = describeObjectForErrorMessage(_value);
+            } else {
+              _substr = describeValueForErrorMessage(_value);
+            }
+
+            if ("" + _i === expandedName) {
+              start = str.length;
+              length = _substr.length;
+              str += _substr;
+            } else if (
+              _substr.length < 10 &&
+              str.length + _substr.length < 40
+            ) {
+              str += _substr;
+            } else {
+              str += "...";
+            }
+          }
+
+          str += "]";
+        }
+      } else {
+        if (objectOrArray.$$typeof === REACT_ELEMENT_TYPE) {
+          str = "<" + describeElementType(objectOrArray.type) + "/>";
+        } else if (jsxPropsParents.has(objectOrArray)) {
+          // Print JSX
+          var _type = jsxPropsParents.get(objectOrArray);
+
+          str = "<" + (describeElementType(_type) || "...");
+          var object = objectOrArray;
+          var names = Object.keys(object);
+
+          for (var _i2 = 0; _i2 < names.length; _i2++) {
+            str += " ";
+            var name = names[_i2];
+            str += describeKeyForErrorMessage(name) + "=";
+            var _value2 = object[name];
+
+            var _substr2 = void 0;
+
+            if (
+              name === expandedName &&
+              typeof _value2 === "object" &&
+              _value2 !== null
+            ) {
+              _substr2 = describeObjectForErrorMessage(_value2);
+            } else {
+              _substr2 = describeValueForErrorMessage(_value2);
+            }
+
+            if (typeof _value2 !== "string") {
+              _substr2 = "{" + _substr2 + "}";
+            }
+
+            if (name === expandedName) {
+              start = str.length;
+              length = _substr2.length;
+              str += _substr2;
+            } else if (
+              _substr2.length < 10 &&
+              str.length + _substr2.length < 40
+            ) {
+              str += _substr2;
+            } else {
+              str += "...";
+            }
+          }
+
+          str += ">";
+        } else {
+          // Print Object
+          str = "{";
+          var _object = objectOrArray;
+
+          var _names = Object.keys(_object);
+
+          for (var _i3 = 0; _i3 < _names.length; _i3++) {
+            if (_i3 > 0) {
+              str += ", ";
+            }
+
+            var _name = _names[_i3];
+            str += describeKeyForErrorMessage(_name) + ": ";
+            var _value3 = _object[_name];
+
+            var _substr3 = void 0;
+
+            if (typeof _value3 === "object" && _value3 !== null) {
+              _substr3 = describeObjectForErrorMessage(_value3);
+            } else {
+              _substr3 = describeValueForErrorMessage(_value3);
+            }
+
+            if (_name === expandedName) {
+              start = str.length;
+              length = _substr3.length;
+              str += _substr3;
+            } else if (
+              _substr3.length < 10 &&
+              str.length + _substr3.length < 40
+            ) {
+              str += _substr3;
+            } else {
+              str += "...";
+            }
+          }
+
+          str += "}";
+        }
+      }
+
+      if (expandedName === undefined) {
+        return str;
+      }
+
+      if (start > -1 && length > 0) {
+        var highlight = " ".repeat(start) + "^".repeat(length);
+        return "\n  " + str + "\n  " + highlight;
+      }
+
+      return "\n  " + str;
+    }
+
     // A pure JS implementation of a string hashing function. We do not use it for
     // security or obfuscation purposes, only to create compact hashes. So we
     // prioritize speed over collision avoidance. For example, we use this to hash
@@ -1990,12 +2304,6 @@ if (__DEV__) {
       }
 
       return url;
-    }
-
-    var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
-
-    function isArray(a) {
-      return isArrayImpl(a);
     }
 
     // The build script is at scripts/rollup/generate-inline-fizz-runtime.js.
@@ -8034,49 +8342,6 @@ if (__DEV__) {
     }
     var NotPendingTransition = NotPending;
 
-    // ATTENTION
-    // When adding new symbols to this file,
-    // Please consider also adding to 'react-devtools-shared/src/backend/ReactSymbols'
-    // The Symbol used to tag the ReactElement-like types.
-    var REACT_ELEMENT_TYPE = Symbol.for("react.element");
-    var REACT_PORTAL_TYPE = Symbol.for("react.portal");
-    var REACT_FRAGMENT_TYPE = Symbol.for("react.fragment");
-    var REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode");
-    var REACT_PROFILER_TYPE = Symbol.for("react.profiler");
-    var REACT_PROVIDER_TYPE = Symbol.for("react.provider"); // TODO: Delete with enableRenderableContext
-
-    var REACT_CONSUMER_TYPE = Symbol.for("react.consumer");
-    var REACT_CONTEXT_TYPE = Symbol.for("react.context");
-    var REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref");
-    var REACT_SUSPENSE_TYPE = Symbol.for("react.suspense");
-    var REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list");
-    var REACT_MEMO_TYPE = Symbol.for("react.memo");
-    var REACT_LAZY_TYPE = Symbol.for("react.lazy");
-    var REACT_SCOPE_TYPE = Symbol.for("react.scope");
-    var REACT_DEBUG_TRACING_MODE_TYPE = Symbol.for("react.debug_trace_mode");
-    var REACT_OFFSCREEN_TYPE = Symbol.for("react.offscreen");
-    var REACT_LEGACY_HIDDEN_TYPE = Symbol.for("react.legacy_hidden");
-    var REACT_CACHE_TYPE = Symbol.for("react.cache");
-    var REACT_TRACING_MARKER_TYPE = Symbol.for("react.tracing_marker");
-    var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
-    var MAYBE_ITERATOR_SYMBOL = Symbol.iterator;
-    var FAUX_ITERATOR_SYMBOL = "@@iterator";
-    function getIteratorFn(maybeIterable) {
-      if (maybeIterable === null || typeof maybeIterable !== "object") {
-        return null;
-      }
-
-      var maybeIterator =
-        (MAYBE_ITERATOR_SYMBOL && maybeIterable[MAYBE_ITERATOR_SYMBOL]) ||
-        maybeIterable[FAUX_ITERATOR_SYMBOL];
-
-      if (typeof maybeIterator === "function") {
-        return maybeIterator;
-      }
-
-      return null;
-    }
-
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
 
@@ -10939,19 +11204,19 @@ if (__DEV__) {
       boundary.errorDigest = digest;
 
       {
-        // In dev we additionally encode the error message and component stack on the boundary
-        var errorMessage;
+        var message; // In dev we additionally encode the error message and component stack on the boundary
 
-        if (typeof error === "string") {
-          errorMessage = error;
-        } else if (error && typeof error.message === "string") {
-          errorMessage = error.message;
+        if (error instanceof Error) {
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          message = String(error.message);
+        } else if (typeof error === "object" && error !== null) {
+          message = describeObjectForErrorMessage(error);
         } else {
           // eslint-disable-next-line react-internal/safe-string-coercion
-          errorMessage = String(error);
+          message = String(error);
         }
 
-        boundary.errorMessage = errorMessage;
+        boundary.errorMessage = message;
         boundary.errorComponentStack = thrownInfo.componentStack;
       }
     }
