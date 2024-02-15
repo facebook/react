@@ -783,6 +783,37 @@ describe('ReactLazy', () => {
     );
   });
 
+  it('throws with a useful error when rendering a context Provider', async () => {
+    const ctx = React.createContext(null);
+    const Provider = <ctx.Provider value={{}} />;
+    const BadLazy = lazy(() => fakeImport(Provider));
+
+    const root = ReactTestRenderer.create(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+
+    await waitForAll(['Loading...']);
+
+    await resolveFakeImport(Provider);
+    root.update(
+      <Suspense fallback={<Text text="Loading..." />}>
+        <BadLazy />
+      </Suspense>,
+    );
+    await waitForThrow(
+      'Element type is invalid. Received a promise that resolves to: [object Object]. ' +
+        'Lazy element type must resolve to a class or function.' +
+        (__DEV__
+          ? ' Context Providers cannot be lazily rendered without being wrapped in a component.'
+          : ''),
+    );
+  });
+
   it('warns about defining propTypes on the outer wrapper', () => {
     const LazyText = lazy(() => fakeImport(Text));
     expect(() => {
