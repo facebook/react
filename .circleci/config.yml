@@ -272,7 +272,7 @@ jobs:
       - run:
           name: Run tests
           working_directory: fixtures/flight
-          command: yarn test
+          command: yarn dev
       - store_artifacts:
           path: fixtures/flight/playwright-report
       - store_artifacts:
