@@ -61,7 +61,7 @@ describe('ReactTestRenderer', () => {
     expect(() => {
       ReactTestRenderer.create(<div />);
     }).toWarnDev(
-      'Warning: Support for ReactTestRenderer will be removed in a future release. Please use @testing-library/react instead.',
+      'Warning: react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
       {withoutStack: true},
     );
   });
