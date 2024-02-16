@@ -102,6 +102,7 @@ export type ReactiveFunctionValue = {
   kind: "ReactiveFunctionValue";
   fn: ReactiveFunction;
   dependencies: Array<Place>;
+  returnType: t.FlowType | t.TSType | null;
   loc: SourceLocation;
 };
 
