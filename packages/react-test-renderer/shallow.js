@@ -9,19 +9,23 @@
 import ReactShallowRenderer from 'react-shallow-renderer';
 import {enableReactTestRendererWarning} from 'shared/ReactFeatureFlags';
 
-const emptyObject = {};
+let Renderer = ReactShallowRenderer;
 
-export default class ReactShallowRendererWithWarning extends ReactShallowRenderer {
-  render(element, context = emptyObject) {
-    if (__DEV__) {
-      if (enableReactTestRendererWarning === true) {
+if (enableReactTestRendererWarning === true) {
+  const emptyObject = {};
+  Renderer = class ReactShallowRendererWithWarning extends (
+    ReactShallowRenderer
+  ) {
+    render(element, context = emptyObject) {
+      if (__DEV__) {
         console.warn(
-          "React's Shallow Renderer export will be removed in a future release. " +
-            'Please use @testing-library/react instead.',
+          'react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
         );
       }
-    }
 
-    return super.render(element, context);
-  }
+      return super.render(element, context);
+    }
+  };
 }
+
+export default Renderer;

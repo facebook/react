@@ -477,8 +477,7 @@ function create(
   if (__DEV__) {
     if (enableReactTestRendererWarning === true) {
       console.warn(
-        'Support for ReactTestRenderer will be removed in a future release. ' +
-          'Please use @testing-library/react instead.',
+        'react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
       );
     }
   }
