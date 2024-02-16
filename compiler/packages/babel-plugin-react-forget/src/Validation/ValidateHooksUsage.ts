@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import * as t from "@babel/types";
 import {
   CompilerError,
   CompilerErrorDetail,
@@ -89,21 +90,35 @@ function joinKinds(a: Kind, b: Kind): Kind {
 export function validateHooksUsage(fn: HIRFunction): void {
   const unconditionalBlocks = computeUnconditionalBlocks(fn);
 
-  const errorsByPlace = new Map<SourceLocation, CompilerErrorDetail>();
+  const errors = new CompilerError();
+  const errorsByPlace = new Map<t.SourceLocation, CompilerErrorDetail>();
+
+  function recordError(
+    loc: SourceLocation,
+    errorDetail: CompilerErrorDetail
+  ): void {
+    if (typeof loc === "symbol") {
+      errors.pushErrorDetail(errorDetail);
+    } else {
+      errorsByPlace.set(loc, errorDetail);
+    }
+  }
+
   function recordConditionalHookError(place: Place): void {
     // Once a particular hook has a conditional call error, don't report any further issues for this hook
     setKind(place, Kind.Error);
 
     const reason =
       "Hooks must always be called in a consistent order, and may not be called conditionally. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)";
-    const previousError = errorsByPlace.get(place.loc);
+    const previousError =
+      typeof place.loc !== "symbol" ? errorsByPlace.get(place.loc) : undefined;
 
     /*
      * In some circumstances such as optional calls, we may first encounter a "hook may not be referenced as normal values" error.
      * If that same place is also used as a conditional call, upgrade the error to a conditonal hook error
      */
     if (previousError === undefined || previousError.reason !== reason) {
-      errorsByPlace.set(
+      recordError(
         place.loc,
         new CompilerErrorDetail({
           description: null,
@@ -117,8 +132,10 @@ export function validateHooksUsage(fn: HIRFunction): void {
     }
   }
   function recordInvalidHookUsageError(place: Place): void {
-    if (!errorsByPlace.has(place.loc)) {
-      errorsByPlace.set(
+    const previousError =
+      typeof place.loc !== "symbol" ? errorsByPlace.get(place.loc) : undefined;
+    if (previousError === undefined) {
+      recordError(
         place.loc,
         new CompilerErrorDetail({
           description: null,
@@ -348,6 +365,11 @@ export function validateHooksUsage(fn: HIRFunction): void {
           }
           break;
         }
+        case "ObjectMethod":
+        case "FunctionExpression": {
+          visitFunctionExpression(errors, instr.value.loweredFunc.func);
+          break;
+        }
         default: {
           /*
            * Else check usages of operands, but do *not* flow properties
@@ -369,11 +391,44 @@ export function validateHooksUsage(fn: HIRFunction): void {
     }
   }
 
-  const errors = new CompilerError();
   for (const [, error] of errorsByPlace) {
     errors.push(error);
   }
   if (errors.hasErrors()) {
     throw errors;
+  }
+}
+
+function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
+  for (const [, block] of fn.body.blocks) {
+    for (const instr of block.instructions) {
+      switch (instr.value.kind) {
+        case "FunctionExpression": {
+          visitFunctionExpression(errors, instr.value.loweredFunc.func);
+          break;
+        }
+        case "MethodCall":
+        case "CallExpression": {
+          const callee =
+            instr.value.kind === "CallExpression"
+              ? instr.value.callee
+              : instr.value.property;
+          const hookKind = getHookKind(fn.env, callee.identifier);
+          if (hookKind != null) {
+            errors.pushErrorDetail(
+              new CompilerErrorDetail({
+                severity: ErrorSeverity.InvalidReact,
+                reason:
+                  "Hooks must be called at the top level in the body of a function component or custom hook, and may not be called within function expressions. See the Rules of Hooks (https://react.dev/warnings/invalid-hook-call-warning)",
+                loc: callee.loc,
+                description: `Cannot call ${hookKind} within a function component`,
+                suggestions: null,
+              })
+            );
+          }
+          break;
+        }
+      }
+    }
   }
 }
