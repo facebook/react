@@ -224,7 +224,7 @@ function getReference(target: Function, name: string): $FlowFixMe {
             `only be rendered as a Component or passed to props of a Client Component.`,
         );
       }: any),
-      target.$$id + '#' + name,
+      target.$$id + '#' + String(name),
       target.$$async,
     );
     Object.defineProperty((reference: any), 'name', {value: name});
