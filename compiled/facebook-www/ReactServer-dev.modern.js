@@ -84,7 +84,8 @@ if (__DEV__) {
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
+    // On WWW, true is used for a new modern build.
 
     /**
      * Keeps track of the current Cache dispatcher.
@@ -2662,7 +2663,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-508518a5";
+    var ReactVersion = "18.3.0-www-modern-a192cdd2";
 
     // Patch fetch
     var Children = {

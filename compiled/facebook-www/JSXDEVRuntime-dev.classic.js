@@ -109,7 +109,8 @@ if (__DEV__) {
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, false is used for a new modern build.
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
+    // On WWW, false is used for a new modern build.
 
     var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
     function isValidElementType(type) {

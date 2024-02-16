@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-modern-0bb55f38";
+    var ReactVersion = "18.3.0-www-modern-d64ea480";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -475,7 +475,8 @@ if (__DEV__) {
 
     var enableDebugTracing = dynamicFeatureFlags.enableDebugTracing,
       enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
+    // On WWW, true is used for a new modern build.
 
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;

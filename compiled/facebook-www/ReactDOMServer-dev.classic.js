@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-1211dccf";
+    var ReactVersion = "18.3.0-www-classic-593936b0";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -88,7 +88,8 @@ if (__DEV__) {
     var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, false is used for a new modern build.
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
+    // On WWW, false is used for a new modern build.
     var enableFloat = true;
 
     // ATTENTION

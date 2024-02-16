@@ -130,7 +130,8 @@ if (__DEV__) {
         dynamicFeatureFlags.transitionLaneExpirationMs,
       enableInfiniteRenderLoopDetection =
         dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+      useModernStrictMode = dynamicFeatureFlags.useModernStrictMode; // On WWW, true is used for a new modern build.
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
@@ -34442,9 +34443,121 @@ if (__DEV__) {
       }
     }
 
+    function recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+      root,
+      parentFiber,
+      isInStrictMode
+    ) {
+      if (
+        (parentFiber.subtreeFlags & (PlacementDEV | Visibility)) ===
+        NoFlags$1
+      ) {
+        // Parent's descendants have already had effects double invoked.
+        // Early exit to avoid unnecessary tree traversal.
+        return;
+      }
+
+      var child = parentFiber.child;
+
+      while (child !== null) {
+        doubleInvokeEffectsInDEVIfNecessary(root, child, isInStrictMode);
+        child = child.sibling;
+      }
+    } // Unconditionally disconnects and connects passive and layout effects.
+
+    function doubleInvokeEffectsOnFiber(root, fiber) {
+      var shouldDoubleInvokePassiveEffects =
+        arguments.length > 2 && arguments[2] !== undefined
+          ? arguments[2]
+          : true;
+      disappearLayoutEffects(fiber);
+
+      if (shouldDoubleInvokePassiveEffects) {
+        disconnectPassiveEffect(fiber);
+      }
+
+      reappearLayoutEffects(root, fiber.alternate, fiber, false);
+
+      if (shouldDoubleInvokePassiveEffects) {
+        reconnectPassiveEffects(root, fiber, NoLanes, null, false);
+      }
+    }
+
+    function doubleInvokeEffectsInDEVIfNecessary(
+      root,
+      fiber,
+      parentIsInStrictMode
+    ) {
+      var isStrictModeFiber = fiber.type === REACT_STRICT_MODE_TYPE;
+      var isInStrictMode = parentIsInStrictMode || isStrictModeFiber; // First case: the fiber **is not** of type OffscreenComponent. No
+      // special rules apply to double invoking effects.
+
+      if (fiber.tag !== OffscreenComponent) {
+        if (fiber.flags & PlacementDEV) {
+          setCurrentFiber(fiber);
+
+          if (isInStrictMode) {
+            doubleInvokeEffectsOnFiber(
+              root,
+              fiber,
+              (fiber.mode & NoStrictPassiveEffectsMode) === NoMode
+            );
+          }
+
+          resetCurrentFiber();
+        } else {
+          recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+            root,
+            fiber,
+            isInStrictMode
+          );
+        }
+
+        return;
+      } // Second case: the fiber **is** of type OffscreenComponent.
+      // This branch contains cases specific to Offscreen.
+
+      if (fiber.memoizedState === null) {
+        // Only consider Offscreen that is visible.
+        // TODO (Offscreen) Handle manual mode.
+        setCurrentFiber(fiber);
+
+        if (isInStrictMode && fiber.flags & Visibility) {
+          // Double invoke effects on Offscreen's subtree only
+          // if it is visible and its visibility has changed.
+          doubleInvokeEffectsOnFiber(root, fiber);
+        } else if (fiber.subtreeFlags & PlacementDEV) {
+          // Something in the subtree could have been suspended.
+          // We need to continue traversal and find newly inserted fibers.
+          recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+            root,
+            fiber,
+            isInStrictMode
+          );
+        }
+
+        resetCurrentFiber();
+      }
+    }
+
     function commitDoubleInvokeEffectsInDEV(root, hasPassiveEffects) {
       {
-        {
+        if (useModernStrictMode && root.tag !== LegacyRoot) {
+          var doubleInvokeEffects = true;
+
+          if (
+            root.tag === ConcurrentRoot &&
+            !(root.current.mode & (StrictLegacyMode | StrictEffectsMode))
+          ) {
+            doubleInvokeEffects = false;
+          }
+
+          recursivelyTraverseAndDoubleInvokeEffectsInDEV(
+            root,
+            root.current,
+            doubleInvokeEffects
+          );
+        } else {
           legacyCommitDoubleInvokeEffectsInDEV(root.current, hasPassiveEffects);
         }
       }
@@ -36183,7 +36296,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-modern-b7104184";
+    var ReactVersion = "18.3.0-www-modern-617357dc";
 
     function createPortal$1(
       children,

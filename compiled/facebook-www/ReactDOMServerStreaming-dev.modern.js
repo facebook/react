@@ -86,7 +86,8 @@ if (__DEV__) {
     var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext; // On WWW, true is used for a new modern build.
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
+    // On WWW, true is used for a new modern build.
     var enableFloat = true;
 
     // ATTENTION
