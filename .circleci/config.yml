@@ -272,7 +272,7 @@ jobs:
             sudo npx playwright install-deps
       - run:
           working_directory: fixtures/flight
-          command: cp -r ../../build/oss-experimental/* ./node_modules/
+          command: yarn build
       - run:
           name: Run tests
           working_directory: fixtures/flight
