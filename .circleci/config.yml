@@ -272,7 +272,10 @@ jobs:
       - run:
           name: Run tests
           working_directory: fixtures/flight
-          command: yarn dev
+          command: yarn test
+          environment:
+          # Otherwise the webserver is a blackbox
+            DEBUG: pw:webserver
       - store_artifacts:
           path: fixtures/flight/playwright-report
       - store_artifacts:
