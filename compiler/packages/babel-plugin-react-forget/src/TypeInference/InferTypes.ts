@@ -69,7 +69,10 @@ function apply(func: HIRFunction, unifier: Unifier): void {
       const { lvalue, value } = instr;
       lvalue.identifier.type = unifier.get(lvalue.identifier.type);
 
-      if (value.kind === "FunctionExpression") {
+      if (
+        value.kind === "FunctionExpression" ||
+        value.kind === "ObjectMethod"
+      ) {
         apply(value.loweredFunc.func, unifier);
       }
     }
@@ -300,6 +303,7 @@ function* generateInstructionTypes(
     }
 
     case "ObjectMethod": {
+      yield* generate(value.loweredFunc.func);
       yield equation(left, { kind: "ObjectMethod" });
       break;
     }

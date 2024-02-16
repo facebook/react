@@ -403,6 +403,7 @@ function visitFunctionExpression(errors: CompilerError, fn: HIRFunction): void {
   for (const [, block] of fn.body.blocks) {
     for (const instr of block.instructions) {
       switch (instr.value.kind) {
+        case "ObjectMethod":
         case "FunctionExpression": {
           visitFunctionExpression(errors, instr.value.loweredFunc.func);
           break;
