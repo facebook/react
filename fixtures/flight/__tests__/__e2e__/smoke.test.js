@@ -13,6 +13,7 @@ test('smoke test', async ({page}) => {
     pageErrors.push(error.stack);
   });
   await page.goto('/');
+  await expect(page.locator('h1')).toHaveText('Hello World');
 
   await expect(consoleErrors).toEqual([]);
   await expect(pageErrors).toEqual([]);
