@@ -371,7 +371,7 @@ export default [
   "dispatchCommand was called with a ref that isn't a native component. Use React.forwardRef to get access to the underlying native component",
   "flushSync was called from inside a lifecycle method. React cannot flush when React is already rendering. Consider moving this call to a scheduler task or micro task.",
   "forwardRef render functions accept exactly two parameters: props and ref. %s",
-  "forwardRef render functions do not support propTypes or defaultProps. Did you accidentally pass a React component?",
+  "forwardRef render functions do not support defaultProps. Did you accidentally pass a React component?",
   "forwardRef requires a render function but received a `memo` component. Instead of forwardRef(memo(...)), use memo(forwardRef(...)).",
   "forwardRef requires a render function but was given %s.",
   "getDefaultProps is only used on classic React.createClass definitions. Use a static property named `defaultProps` instead.",

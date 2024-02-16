@@ -2231,9 +2231,9 @@ if (__DEV__) {
         }
 
         if (render != null) {
-          if (render.defaultProps != null || render.propTypes != null) {
+          if (render.defaultProps != null) {
             error(
-              "forwardRef render functions do not support propTypes or defaultProps. " +
+              "forwardRef render functions do not support defaultProps. " +
                 "Did you accidentally pass a React component?"
             );
           }
@@ -2662,7 +2662,7 @@ if (__DEV__) {
             console["error"](error);
           };
 
-    var ReactVersion = "18.3.0-www-modern-5d89467b";
+    var ReactVersion = "18.3.0-www-modern-508518a5";
 
     // Patch fetch
     var Children = {

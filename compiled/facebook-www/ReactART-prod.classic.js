@@ -1556,6 +1556,29 @@ function commitCallbacks(updateQueue, context) {
     )
       callCallback(callbacks[updateQueue], context);
 }
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+function shallowEqual(objA, objB) {
+  if (objectIs(objA, objB)) return !0;
+  if (
+    "object" !== typeof objA ||
+    null === objA ||
+    "object" !== typeof objB ||
+    null === objB
+  )
+    return !1;
+  var keysA = Object.keys(objA),
+    keysB = Object.keys(objB);
+  if (keysA.length !== keysB.length) return !1;
+  for (keysB = 0; keysB < keysA.length; keysB++) {
+    var currentKey = keysA[keysB];
+    if (
+      !hasOwnProperty.call(objB, currentKey) ||
+      !objectIs(objA[currentKey], objB[currentKey])
+    )
+      return !1;
+  }
+  return !0;
+}
 var prefix;
 function describeBuiltInComponentFrame(name) {
   if (void 0 === prefix)
@@ -1698,29 +1721,6 @@ function describeNativeComponentFrame(fn, construct) {
   return (previousPrepareStackTrace = fn ? fn.displayName || fn.name : "")
     ? describeBuiltInComponentFrame(previousPrepareStackTrace)
     : "";
-}
-var hasOwnProperty = Object.prototype.hasOwnProperty;
-function shallowEqual(objA, objB) {
-  if (objectIs(objA, objB)) return !0;
-  if (
-    "object" !== typeof objA ||
-    null === objA ||
-    "object" !== typeof objB ||
-    null === objB
-  )
-    return !1;
-  var keysA = Object.keys(objA),
-    keysB = Object.keys(objB);
-  if (keysA.length !== keysB.length) return !1;
-  for (keysB = 0; keysB < keysA.length; keysB++) {
-    var currentKey = keysA[keysB];
-    if (
-      !hasOwnProperty.call(objB, currentKey) ||
-      !objectIs(objA[currentKey], objB[currentKey])
-    )
-      return !1;
-  }
-  return !0;
 }
 function describeFiber(fiber) {
   switch (fiber.tag) {
@@ -10587,7 +10587,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-82c2613b",
+    version: "18.3.0-www-classic-84c34a04",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1323 = {
@@ -10618,7 +10618,7 @@ var internals$jscomp$inline_1323 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-82c2613b"
+  reconcilerVersion: "18.3.0-www-classic-84c34a04"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1324 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

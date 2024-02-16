@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-www-classic-77190284";
+    var ReactVersion = "18.3.0-www-classic-77843590";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -2741,9 +2741,9 @@ if (__DEV__) {
         }
 
         if (render != null) {
-          if (render.defaultProps != null || render.propTypes != null) {
+          if (render.defaultProps != null) {
             error(
-              "forwardRef render functions do not support propTypes or defaultProps. " +
+              "forwardRef render functions do not support defaultProps. " +
                 "Did you accidentally pass a React component?"
             );
           }

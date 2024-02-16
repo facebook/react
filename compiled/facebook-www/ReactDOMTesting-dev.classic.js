@@ -3834,62 +3834,6 @@ if (__DEV__) {
       }
     }
 
-    function shouldConstruct$1(Component) {
-      var prototype = Component.prototype;
-      return !!(prototype && prototype.isReactComponent);
-    }
-
-    function describeUnknownElementTypeFrameInDEV(type, ownerFn) {
-      if (type == null) {
-        return "";
-      }
-
-      if (typeof type === "function") {
-        {
-          return describeNativeComponentFrame(type, shouldConstruct$1(type));
-        }
-      }
-
-      if (typeof type === "string") {
-        return describeBuiltInComponentFrame(type);
-      }
-
-      switch (type) {
-        case REACT_SUSPENSE_TYPE:
-          return describeBuiltInComponentFrame("Suspense");
-
-        case REACT_SUSPENSE_LIST_TYPE:
-          return describeBuiltInComponentFrame("SuspenseList");
-      }
-
-      if (typeof type === "object") {
-        switch (type.$$typeof) {
-          case REACT_FORWARD_REF_TYPE:
-            return describeFunctionComponentFrame(type.render);
-
-          case REACT_MEMO_TYPE:
-            // Memo may contain any component type so we recursively resolve it.
-            return describeUnknownElementTypeFrameInDEV(type.type, ownerFn);
-
-          case REACT_LAZY_TYPE: {
-            var lazyComponent = type;
-            var payload = lazyComponent._payload;
-            var init = lazyComponent._init;
-
-            try {
-              // Lazy may contain any component type so we recursively resolve it.
-              return describeUnknownElementTypeFrameInDEV(
-                init(payload),
-                ownerFn
-              );
-            } catch (x) {}
-          }
-        }
-      }
-
-      return "";
-    }
-
     function describeFiber(fiber) {
       switch (fiber.tag) {
         case HostHoistable:
@@ -3939,7 +3883,7 @@ if (__DEV__) {
       }
     }
 
-    var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
+    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     var current = null;
     var isRendering = false;
     function getCurrentFiberOwnerNameInDevOrNull() {
@@ -3971,14 +3915,14 @@ if (__DEV__) {
 
     function resetCurrentFiber() {
       {
-        ReactDebugCurrentFrame$1.getCurrentStack = null;
+        ReactDebugCurrentFrame.getCurrentStack = null;
         current = null;
         isRendering = false;
       }
     }
     function setCurrentFiber(fiber) {
       {
-        ReactDebugCurrentFrame$1.getCurrentStack =
+        ReactDebugCurrentFrame.getCurrentStack =
           fiber === null ? null : getCurrentFiberStackInDev;
         current = fiber;
         isRendering = false;
@@ -10431,111 +10375,6 @@ if (__DEV__) {
         for (var i = 0; i < callbacks.length; i++) {
           var callback = callbacks[i];
           callCallback(callback, context);
-        }
-      }
-    }
-
-    var loggedTypeFailures = {};
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-
-    function setCurrentlyValidatingElement(element) {
-      {
-        if (element) {
-          var owner = element._owner;
-          var stack = describeUnknownElementTypeFrameInDEV(
-            element.type,
-            owner ? owner.type : null
-          );
-          ReactDebugCurrentFrame.setExtraStackFrame(stack);
-        } else {
-          ReactDebugCurrentFrame.setExtraStackFrame(null);
-        }
-      }
-    }
-
-    function checkPropTypes(
-      typeSpecs,
-      values,
-      location,
-      componentName,
-      element
-    ) {
-      {
-        // $FlowFixMe[incompatible-use] This is okay but Flow doesn't know it.
-        var has = Function.call.bind(hasOwnProperty);
-
-        for (var typeSpecName in typeSpecs) {
-          if (has(typeSpecs, typeSpecName)) {
-            var error$1 = void 0; // Prop type validation may throw. In case they do, we don't want to
-            // fail the render phase where it didn't fail before. So we log it.
-            // After these have been cleaned up, we'll let them throw.
-
-            try {
-              // This is intentionally an invariant that gets caught. It's the same
-              // behavior as without this statement except with a better message.
-              if (typeof typeSpecs[typeSpecName] !== "function") {
-                // eslint-disable-next-line react-internal/prod-error-codes
-                var err = Error(
-                  (componentName || "React class") +
-                    ": " +
-                    location +
-                    " type `" +
-                    typeSpecName +
-                    "` is invalid; " +
-                    "it must be a function, usually from the `prop-types` package, but received `" +
-                    typeof typeSpecs[typeSpecName] +
-                    "`." +
-                    "This often happens because of typos such as `PropTypes.function` instead of `PropTypes.func`."
-                );
-                err.name = "Invariant Violation";
-                throw err;
-              }
-
-              error$1 = typeSpecs[typeSpecName](
-                values,
-                typeSpecName,
-                componentName,
-                location,
-                null,
-                "SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED"
-              );
-            } catch (ex) {
-              error$1 = ex;
-            }
-
-            if (error$1 && !(error$1 instanceof Error)) {
-              setCurrentlyValidatingElement(element);
-
-              error(
-                "%s: type specification of %s" +
-                  " `%s` is invalid; the type checker " +
-                  "function must return `null` or an `Error` but returned a %s. " +
-                  "You may have forgotten to pass an argument to the type checker " +
-                  "creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and " +
-                  "shape all require an argument).",
-                componentName || "React class",
-                location,
-                typeSpecName,
-                typeof error$1
-              );
-
-              setCurrentlyValidatingElement(null);
-            }
-
-            if (
-              error$1 instanceof Error &&
-              !(error$1.message in loggedTypeFailures)
-            ) {
-              // Only monitor this failure once because there tends to be a lot of the
-              // same error.
-              loggedTypeFailures[error$1.message] = true;
-              setCurrentlyValidatingElement(element);
-
-              error("Failed %s type: %s", location, error$1.message);
-
-              setCurrentlyValidatingElement(null);
-            }
-          }
         }
       }
     }
@@ -19743,23 +19582,6 @@ if (__DEV__) {
       // TODO: current can be non-null here even if the component
       // hasn't yet mounted. This happens after the first render suspends.
       // We'll need to figure out if this is fine or can cause issues.
-      {
-        if (workInProgress.type !== workInProgress.elementType) {
-          // Lazy component props can't be validated in createElement
-          // because they're only guaranteed to be resolved here.
-          var innerPropTypes = Component.propTypes;
-
-          if (innerPropTypes) {
-            checkPropTypes(
-              innerPropTypes,
-              nextProps, // Resolved props
-              "prop",
-              getComponentNameFromType(Component)
-            );
-          }
-        }
-      }
-
       var render = Component.render;
       var ref = workInProgress.ref; // The rest is a fork of updateFunctionComponent
 
@@ -19848,19 +19670,6 @@ if (__DEV__) {
         }
 
         {
-          var innerPropTypes = type.propTypes;
-
-          if (innerPropTypes) {
-            // Inner memo component props aren't currently validated in createElement.
-            // We could move it there, but we'd still need this for lazy code path.
-            checkPropTypes(
-              innerPropTypes,
-              nextProps, // Resolved props
-              "prop",
-              getComponentNameFromType(type)
-            );
-          }
-
           if (Component.defaultProps !== undefined) {
             var componentName = getComponentNameFromType(type) || "Unknown";
 
@@ -19888,22 +19697,6 @@ if (__DEV__) {
         child.return = workInProgress;
         workInProgress.child = child;
         return child;
-      }
-
-      {
-        var _type = Component.type;
-        var _innerPropTypes = _type.propTypes;
-
-        if (_innerPropTypes) {
-          // Inner memo component props aren't currently validated in createElement.
-          // We could move it there, but we'd still need this for lazy code path.
-          checkPropTypes(
-            _innerPropTypes,
-            nextProps, // Resolved props
-            "prop",
-            getComponentNameFromType(_type)
-          );
-        }
       }
 
       var currentChild = current.child; // This is always exactly one child
@@ -19951,40 +19744,6 @@ if (__DEV__) {
       // TODO: current can be non-null here even if the component
       // hasn't yet mounted. This happens when the inner render suspends.
       // We'll need to figure out if this is fine or can cause issues.
-      {
-        if (workInProgress.type !== workInProgress.elementType) {
-          // Lazy component props can't be validated in createElement
-          // because they're only guaranteed to be resolved here.
-          var outerMemoType = workInProgress.elementType;
-
-          if (outerMemoType.$$typeof === REACT_LAZY_TYPE) {
-            // We warn when you define propTypes on lazy()
-            // so let's just skip over it to find memo() outer wrapper.
-            // Inner props for memo are validated later.
-            var lazyComponent = outerMemoType;
-            var payload = lazyComponent._payload;
-            var init = lazyComponent._init;
-
-            try {
-              outerMemoType = init(payload);
-            } catch (x) {
-              outerMemoType = null;
-            } // Inner propTypes will be validated in the function component path.
-
-            var outerPropTypes = outerMemoType && outerMemoType.propTypes;
-
-            if (outerPropTypes) {
-              checkPropTypes(
-                outerPropTypes,
-                nextProps, // Resolved (SimpleMemoComponent has no defaultProps)
-                "prop",
-                getComponentNameFromType(outerMemoType)
-              );
-            }
-          }
-        }
-      }
-
       if (current !== null) {
         var prevProps = current.memoizedProps;
 
@@ -20435,23 +20194,6 @@ if (__DEV__) {
       nextProps,
       renderLanes
     ) {
-      {
-        if (workInProgress.type !== workInProgress.elementType) {
-          // Lazy component props can't be validated in createElement
-          // because they're only guaranteed to be resolved here.
-          var innerPropTypes = Component.propTypes;
-
-          if (innerPropTypes) {
-            checkPropTypes(
-              innerPropTypes,
-              nextProps, // Resolved props
-              "prop",
-              getComponentNameFromType(Component)
-            );
-          }
-        }
-      }
-
       var context;
 
       {
@@ -20597,21 +20339,6 @@ if (__DEV__) {
             );
             enqueueCapturedUpdate(workInProgress, update);
             break;
-          }
-        }
-
-        if (workInProgress.type !== workInProgress.elementType) {
-          // Lazy component props can't be validated in createElement
-          // because they're only guaranteed to be resolved here.
-          var innerPropTypes = Component.propTypes;
-
-          if (innerPropTypes) {
-            checkPropTypes(
-              innerPropTypes,
-              nextProps, // Resolved props
-              "prop",
-              getComponentNameFromType(Component)
-            );
           }
         }
       } // Push context providers early to prevent context stack mismatches.
@@ -21158,21 +20885,6 @@ if (__DEV__) {
         }
 
         case MemoComponent: {
-          {
-            if (workInProgress.type !== workInProgress.elementType) {
-              var outerPropTypes = Component.propTypes;
-
-              if (outerPropTypes) {
-                checkPropTypes(
-                  outerPropTypes,
-                  resolvedProps, // Resolved for outer only
-                  "prop",
-                  getComponentNameFromType(Component)
-                );
-              }
-            }
-          }
-
           child = updateMemoComponent(
             null,
             workInProgress,
@@ -22832,17 +22544,6 @@ if (__DEV__) {
             );
           }
         }
-
-        var providerPropTypes = workInProgress.type.propTypes;
-
-        if (providerPropTypes) {
-          checkPropTypes(
-            providerPropTypes,
-            newProps,
-            "prop",
-            "Context.Provider"
-          );
-        }
       }
 
       pushProvider(workInProgress, context, newValue);
@@ -23543,31 +23244,16 @@ if (__DEV__) {
           return updateContextConsumer(current, workInProgress, renderLanes);
 
         case MemoComponent: {
-          var _type2 = workInProgress.type;
+          var _type = workInProgress.type;
           var _unresolvedProps3 = workInProgress.pendingProps; // Resolve outer props first, then resolve inner props.
 
-          var _resolvedProps3 = resolveDefaultProps(_type2, _unresolvedProps3);
+          var _resolvedProps3 = resolveDefaultProps(_type, _unresolvedProps3);
 
-          {
-            if (workInProgress.type !== workInProgress.elementType) {
-              var outerPropTypes = _type2.propTypes;
-
-              if (outerPropTypes) {
-                checkPropTypes(
-                  outerPropTypes,
-                  _resolvedProps3, // Resolved for outer only
-                  "prop",
-                  getComponentNameFromType(_type2)
-                );
-              }
-            }
-          }
-
-          _resolvedProps3 = resolveDefaultProps(_type2.type, _resolvedProps3);
+          _resolvedProps3 = resolveDefaultProps(_type.type, _resolvedProps3);
           return updateMemoComponent(
             current,
             workInProgress,
-            _type2,
+            _type,
             _resolvedProps3,
             renderLanes
           );
@@ -36641,7 +36327,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-e7aae6cc";
+    var ReactVersion = "18.3.0-www-classic-22e81a9f";
 
     function createPortal$1(
       children,
