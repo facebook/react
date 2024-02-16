@@ -237,7 +237,8 @@ jobs:
           command: ./scripts/circleci/run_devtools_e2e_tests.js
 
   run_fixtures_flight_tests:
-    docker: *docker
+    docker:
+      - image: cimg/openjdk:20.0-node
     environment: *environment
     steps:
       - checkout
