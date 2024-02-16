@@ -573,6 +573,14 @@ class PropagationVisitor extends ReactiveFunctionVisitor<Context> {
         }
         break;
       }
+      case "ReactiveFunctionValue": {
+        CompilerError.invariant(false, {
+          reason: `Unexpected ReactiveFunctionValue`,
+          loc: value.loc,
+          description: null,
+          suggestions: null,
+        });
+      }
       default: {
         for (const operand of eachInstructionValueOperand(value)) {
           context.visitOperand(operand);

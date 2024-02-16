@@ -6,6 +6,7 @@
  */
 
 import generate from "@babel/generator";
+import { printReactiveFunction } from "..";
 import { CompilerError } from "../CompilerError";
 import DisjointSet from "../Utils/DisjointSet";
 import { assertExhaustive } from "../Utils/utils";
@@ -598,6 +599,10 @@ export function printInstructionValue(instrValue: ReactiveValue): string {
     }
     case "Memoize": {
       value = `Memoize ${printPlace(instrValue.value)}`;
+      break;
+    }
+    case "ReactiveFunctionValue": {
+      value = `FunctionValue ${printReactiveFunction(instrValue.fn)}`;
       break;
     }
     default: {

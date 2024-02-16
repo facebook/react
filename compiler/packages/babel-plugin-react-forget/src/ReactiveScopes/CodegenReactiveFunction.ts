@@ -1678,6 +1678,7 @@ function codegenInstructionValue(
       );
       break;
     }
+    case "ReactiveFunctionValue":
     case "Memoize":
     case "Debugger":
     case "DeclareLocal":

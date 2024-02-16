@@ -95,7 +95,15 @@ export type ReactiveValue =
   | ReactiveLogicalValue
   | ReactiveSequenceValue
   | ReactiveTernaryValue
-  | ReactiveOptionalCallValue;
+  | ReactiveOptionalCallValue
+  | ReactiveFunctionValue;
+
+export type ReactiveFunctionValue = {
+  kind: "ReactiveFunctionValue";
+  fn: ReactiveFunction;
+  dependencies: Array<Place>;
+  loc: SourceLocation;
+};
 
 export type ReactiveLogicalValue = {
   kind: "LogicalExpression";
