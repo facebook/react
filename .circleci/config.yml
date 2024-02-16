@@ -243,12 +243,16 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
+      # Fixture copies some built packages from the workroot after install.
+      # That means dependencies of the built packages are not installed.
+      # We need to install dependencies of the workroot to fulfill all dependency constraints
+      - setup_node_modules
       - restore_cache:
-          name: Restore yarn cache
+          name: Restore yarn cache of fixture
           keys:
             - v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
       - run:
-          name: Install dependencies
+          name: Install fixture dependencies
           working_directory: fixtures/flight
           command: |
             yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -256,7 +260,7 @@ jobs:
               yarn install --frozen-lockfile --cache-folder ~/.cache/yarn
             fi
       - save_cache:
-          name: Save yarn cache
+          name: Save yarn cache of fixture
           key: v2-yarn_cache_fixtures_flight-{{ arch }}-{{ checksum "yarn.lock" }}
           paths:
             - ~/.cache/yarn
