@@ -12,7 +12,6 @@
 
 'use strict';
 
-let PropTypes;
 let React;
 let ReactNoop;
 let Suspense;
@@ -25,7 +24,6 @@ describe('memo', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    PropTypes = require('prop-types');
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
@@ -483,108 +481,39 @@ describe('memo', () => {
         );
       });
 
-      it('validates propTypes declared on the inner component', async () => {
-        function FnInner(props) {
-          return props.inner;
-        }
-        FnInner.propTypes = {inner: PropTypes.number.isRequired};
-        const Fn = React.memo(FnInner);
-
-        // Mount
-        await expect(async () => {
-          ReactNoop.render(<Fn inner="2" />);
-          await waitForAll([]);
-        }).toErrorDev(
-          'Invalid prop `inner` of type `string` supplied to `FnInner`, expected `number`.',
-        );
-
-        // Update
-        await expect(async () => {
-          ReactNoop.render(<Fn inner={false} />);
-          await waitForAll([]);
-        }).toErrorDev(
-          'Invalid prop `inner` of type `boolean` supplied to `FnInner`, expected `number`.',
-        );
-      });
-
-      it('validates propTypes declared on the outer component', async () => {
-        function FnInner(props) {
-          return props.outer;
-        }
-        const Fn = React.memo(FnInner);
-        Fn.propTypes = {outer: PropTypes.number.isRequired};
-
-        // Mount
-        await expect(async () => {
-          ReactNoop.render(<Fn outer="3" />);
-          await waitForAll([]);
-        }).toErrorDev(
-          // Outer props are checked in createElement
-          'Invalid prop `outer` of type `string` supplied to `FnInner`, expected `number`.',
-        );
-
-        // Update
-        await expect(async () => {
-          ReactNoop.render(<Fn outer={false} />);
-          await waitForAll([]);
-        }).toErrorDev(
-          // Outer props are checked in createElement
-          'Invalid prop `outer` of type `boolean` supplied to `FnInner`, expected `number`.',
-        );
-      });
-
-      it('validates nested propTypes declarations', async () => {
+      it('handles nested defaultProps declarations', async () => {
         function Inner(props) {
           return props.inner + props.middle + props.outer;
         }
-        Inner.propTypes = {inner: PropTypes.number.isRequired};
-        Inner.defaultProps = {inner: 0};
+        Inner.defaultProps = {inner: 1};
         const Middle = React.memo(Inner);
-        Middle.propTypes = {middle: PropTypes.number.isRequired};
-        Middle.defaultProps = {middle: 0};
+        Middle.defaultProps = {middle: 10};
         const Outer = React.memo(Middle);
-        Outer.propTypes = {outer: PropTypes.number.isRequired};
-        Outer.defaultProps = {outer: 0};
+        Outer.defaultProps = {outer: 100};
 
-        // No warning expected because defaultProps satisfy both.
-        ReactNoop.render(
-          <div>
-            <Outer />
-          </div>,
-        );
+        const root = ReactNoop.createRoot();
         await expect(async () => {
-          await waitForAll([]);
+          await act(() => {
+            root.render(
+              <div>
+                <Outer />
+              </div>,
+            );
+          });
         }).toErrorDev([
-          'Inner: Support for defaultProps will be removed from memo components in a future major release. Use JavaScript default parameters instead.',
+          'Support for defaultProps will be removed from memo component',
         ]);
+        expect(root).toMatchRenderedOutput(<div>111</div>);
 
-        // Mount
-        await expect(async () => {
-          ReactNoop.render(
+        await act(async () => {
+          root.render(
             <div>
               <Outer inner="2" middle="3" outer="4" />
             </div>,
           );
           await waitForAll([]);
-        }).toErrorDev([
-          'Invalid prop `outer` of type `string` supplied to `Inner`, expected `number`.',
-          'Invalid prop `middle` of type `string` supplied to `Inner`, expected `number`.',
-          'Invalid prop `inner` of type `string` supplied to `Inner`, expected `number`.',
-        ]);
-
-        // Update
-        await expect(async () => {
-          ReactNoop.render(
-            <div>
-              <Outer inner={false} middle={false} outer={false} />
-            </div>,
-          );
-          await waitForAll([]);
-        }).toErrorDev([
-          'Invalid prop `outer` of type `boolean` supplied to `Inner`, expected `number`.',
-          'Invalid prop `middle` of type `boolean` supplied to `Inner`, expected `number`.',
-          'Invalid prop `inner` of type `boolean` supplied to `Inner`, expected `number`.',
-        ]);
+        });
+        expect(root).toMatchRenderedOutput(<div>234</div>);
       });
 
       it('does not drop lower priority state updates when bailing out at higher pri (simple)', async () => {
