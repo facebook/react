@@ -54,7 +54,7 @@
     "style-loader": "^3.3.1",
     "tailwindcss": "^3.0.2",
     "terser-webpack-plugin": "^5.2.5",
-    "undici": "^5.20.0",
+    "undici": "^5.28.3",
     "webpack": "^5.64.4",
     "webpack-dev-middleware": "^5.3.1",
     "webpack-hot-middleware": "^2.25.3",
