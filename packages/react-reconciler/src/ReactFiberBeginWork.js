@@ -264,7 +264,7 @@ import {
 import {enqueueConcurrentRenderForLane} from './ReactFiberConcurrentUpdates';
 import {pushCacheProvider, CacheContext} from './ReactFiberCacheComponent';
 import {
-  createCapturedValue,
+  createCapturedValueFromError,
   createCapturedValueAtFiber,
   type CapturedValue,
 } from './ReactCapturedValue';
@@ -2804,7 +2804,7 @@ function updateDehydratedSuspenseComponent(
           );
         }
         (error: any).digest = digest;
-        capturedValue = createCapturedValue<mixed>(error, digest, stack);
+        capturedValue = createCapturedValueFromError(error, digest, stack);
       }
       return retrySuspenseComponentWithoutHydrating(
         current,
@@ -2941,7 +2941,7 @@ function updateDehydratedSuspenseComponent(
       pushPrimaryTreeSuspenseHandler(workInProgress);
 
       workInProgress.flags &= ~ForceClientRender;
-      const capturedValue = createCapturedValue<mixed>(
+      const capturedValue = createCapturedValueFromError(
         new Error(
           'There was an error while hydrating this Suspense boundary. ' +
             'Switched to client rendering.',
