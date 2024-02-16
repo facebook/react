@@ -271,9 +271,6 @@ jobs:
             npx playwright install
             sudo npx playwright install-deps
       - run:
-          working_directory: fixtures/attribute-behavior
-          command: cp ../../build/oss-experimental/react/umd/react.development.js public/ && cp ../../build/oss-experimental/react-dom/umd/react-dom.development.js public/ && cp ../../build/oss-experimental/react-dom/umd/react-dom-server.browser.development.js public/
-      - run:
           name: Run tests
           working_directory: fixtures/attribute-behavior
           command: yarn test
