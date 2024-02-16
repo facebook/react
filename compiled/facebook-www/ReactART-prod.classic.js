@@ -1748,6 +1748,18 @@ function describeFiber(fiber) {
       return "";
   }
 }
+function getStackByFiberInDevAndProd(workInProgress) {
+  try {
+    var info = "";
+    do
+      (info += describeFiber(workInProgress)),
+        (workInProgress = workInProgress.return);
+    while (workInProgress);
+    return info;
+  } catch (x) {
+    return "\nError generating stack: " + x.message + "\n" + x.stack;
+  }
+}
 var SuspenseException = Error(formatProdErrorMessage(460)),
   SuspenseyCommitException = Error(formatProdErrorMessage(474)),
   noopSuspenseyCommitThenable = { then: function () {} };
@@ -3978,25 +3990,18 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   "function" === typeof instance.componentDidMount &&
     (workInProgress.flags |= 4194308);
 }
+var CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
-  try {
-    var info = "",
-      node = source;
-    do (info += describeFiber(node)), (node = node.return);
-    while (node);
-    var JSCompiler_inline_result = info;
-  } catch (x) {
-    JSCompiler_inline_result =
-      "\nError generating stack: " + x.message + "\n" + x.stack;
-  }
-  return {
-    value: value,
-    source: source,
-    stack: JSCompiler_inline_result,
-    digest: null
-  };
+  if ("object" === typeof value && null !== value) {
+    var stack = CapturedStacks.get(value);
+    "string" !== typeof stack &&
+      ((stack = getStackByFiberInDevAndProd(source)),
+      CapturedStacks.set(value, stack));
+  } else stack = getStackByFiberInDevAndProd(source);
+  return { value: value, source: source, stack: stack, digest: null };
 }
-function createCapturedValue(value, digest, stack) {
+function createCapturedValueFromError(value, digest, stack) {
+  "string" === typeof stack && CapturedStacks.set(value, stack);
   return {
     value: value,
     source: null,
@@ -5178,7 +5183,7 @@ function updateDehydratedSuspenseComponent(
       return (
         pushPrimaryTreeSuspenseHandler(workInProgress),
         (workInProgress.flags &= -257),
-        (didPrimaryChildrenDefer = createCapturedValue(
+        (didPrimaryChildrenDefer = createCapturedValueFromError(
           Error(formatProdErrorMessage(422))
         )),
         retrySuspenseComponentWithoutHydrating(
@@ -5240,7 +5245,7 @@ function updateDehydratedSuspenseComponent(
       (didPrimaryChildrenDefer = shim$2().digest),
       (suspenseState = Error(formatProdErrorMessage(419))),
       (suspenseState.digest = didPrimaryChildrenDefer),
-      (didPrimaryChildrenDefer = createCapturedValue(
+      (didPrimaryChildrenDefer = createCapturedValueFromError(
         suspenseState,
         didPrimaryChildrenDefer,
         void 0
@@ -10582,19 +10587,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1154 = {
+  devToolsConfig$jscomp$inline_1148 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-84c34a04",
+    version: "18.3.0-www-classic-7ccd01b3",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1323 = {
-  bundleType: devToolsConfig$jscomp$inline_1154.bundleType,
-  version: devToolsConfig$jscomp$inline_1154.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1154.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1154.rendererConfig,
+var internals$jscomp$inline_1317 = {
+  bundleType: devToolsConfig$jscomp$inline_1148.bundleType,
+  version: devToolsConfig$jscomp$inline_1148.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1148.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1148.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10611,26 +10616,26 @@ var internals$jscomp$inline_1323 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1154.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1148.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-84c34a04"
+  reconcilerVersion: "18.3.0-www-classic-7ccd01b3"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1324 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1318 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1324.isDisabled &&
-    hook$jscomp$inline_1324.supportsFiber
+    !hook$jscomp$inline_1318.isDisabled &&
+    hook$jscomp$inline_1318.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1324.inject(
-        internals$jscomp$inline_1323
+      (rendererID = hook$jscomp$inline_1318.inject(
+        internals$jscomp$inline_1317
       )),
-        (injectedHook = hook$jscomp$inline_1324);
+        (injectedHook = hook$jscomp$inline_1318);
     } catch (err) {}
 }
 var Path = Mode$1.Path;
