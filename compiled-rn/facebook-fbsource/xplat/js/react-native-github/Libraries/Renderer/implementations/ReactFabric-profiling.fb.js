@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<49743a2bdd3298b20d8d9b455175a0ad>>
+ * @generated SignedSource<<7ac950cf4db25db8a235124e199f62d3>>
  */
 
 "use strict";
@@ -2702,16 +2702,6 @@ function commitCallbacks(updateQueue, context) {
     )
       callCallback(callbacks[updateQueue], context);
 }
-function describeComponentFrame(name, ownerName) {
-  var sourceInfo = "";
-  ownerName && (sourceInfo = " (created by " + ownerName + ")");
-  return "\n    in " + (name || "Unknown") + sourceInfo;
-}
-function describeFunctionComponentFrame(fn) {
-  return fn
-    ? describeComponentFrame(fn.displayName || fn.name || null, null)
-    : "";
-}
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 function shallowEqual(objA, objB) {
   if (objectIs(objA, objB)) return !0;
@@ -2734,6 +2724,16 @@ function shallowEqual(objA, objB) {
       return !1;
   }
   return !0;
+}
+function describeComponentFrame(name, ownerName) {
+  var sourceInfo = "";
+  ownerName && (sourceInfo = " (created by " + ownerName + ")");
+  return "\n    in " + (name || "Unknown") + sourceInfo;
+}
+function describeFunctionComponentFrame(fn) {
+  return fn
+    ? describeComponentFrame(fn.displayName || fn.name || null, null)
+    : "";
 }
 function describeFiber(fiber) {
   switch (fiber.tag) {
@@ -10228,7 +10228,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1149 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-4cbf911c",
+    version: "18.3.0-canary-6091903d",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10284,7 +10284,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-4cbf911c"
+  reconcilerVersion: "18.3.0-canary-6091903d"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

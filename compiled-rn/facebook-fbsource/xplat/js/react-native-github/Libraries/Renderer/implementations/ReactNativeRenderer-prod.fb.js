@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d1115b0761a02c0db21251883a23ba16>>
+ * @generated SignedSource<<3211cd1fbaae6ce4edc1706d0eabd286>>
  */
 
 "use strict";
@@ -2642,16 +2642,6 @@ function commitCallbacks(updateQueue, context) {
     )
       callCallback(callbacks[updateQueue], context);
 }
-function describeComponentFrame(name, ownerName) {
-  var sourceInfo = "";
-  ownerName && (sourceInfo = " (created by " + ownerName + ")");
-  return "\n    in " + (name || "Unknown") + sourceInfo;
-}
-function describeFunctionComponentFrame(fn) {
-  return fn
-    ? describeComponentFrame(fn.displayName || fn.name || null, null)
-    : "";
-}
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 function shallowEqual(objA, objB) {
   if (objectIs(objA, objB)) return !0;
@@ -2674,6 +2664,16 @@ function shallowEqual(objA, objB) {
       return !1;
   }
   return !0;
+}
+function describeComponentFrame(name, ownerName) {
+  var sourceInfo = "";
+  ownerName && (sourceInfo = " (created by " + ownerName + ")");
+  return "\n    in " + (name || "Unknown") + sourceInfo;
+}
+function describeFunctionComponentFrame(fn) {
+  return fn
+    ? describeComponentFrame(fn.displayName || fn.name || null, null)
+    : "";
 }
 function describeFiber(fiber) {
   switch (fiber.tag) {
@@ -9750,7 +9750,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1140 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-eacb92cd",
+    version: "18.3.0-canary-8adfe207",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9793,7 +9793,7 @@ var internals$jscomp$inline_1379 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-eacb92cd"
+  reconcilerVersion: "18.3.0-canary-8adfe207"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1380 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<d4c6ab1969fddc55c59e6aad376735c3>>
+ * @generated SignedSource<<a417adc89c5f5bd5f76f02ad3bb02e4b>>
  */
 
 "use strict";
@@ -2766,16 +2766,6 @@ function commitCallbacks(updateQueue, context) {
     )
       callCallback(callbacks[updateQueue], context);
 }
-function describeComponentFrame(name, ownerName) {
-  var sourceInfo = "";
-  ownerName && (sourceInfo = " (created by " + ownerName + ")");
-  return "\n    in " + (name || "Unknown") + sourceInfo;
-}
-function describeFunctionComponentFrame(fn) {
-  return fn
-    ? describeComponentFrame(fn.displayName || fn.name || null, null)
-    : "";
-}
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 function shallowEqual(objA, objB) {
   if (objectIs(objA, objB)) return !0;
@@ -2798,6 +2788,16 @@ function shallowEqual(objA, objB) {
       return !1;
   }
   return !0;
+}
+function describeComponentFrame(name, ownerName) {
+  var sourceInfo = "";
+  ownerName && (sourceInfo = " (created by " + ownerName + ")");
+  return "\n    in " + (name || "Unknown") + sourceInfo;
+}
+function describeFunctionComponentFrame(fn) {
+  return fn
+    ? describeComponentFrame(fn.displayName || fn.name || null, null)
+    : "";
 }
 function describeFiber(fiber) {
   switch (fiber.tag) {
@@ -10448,7 +10448,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1218 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-06e6bc95",
+    version: "18.3.0-canary-14b7ed0a",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10504,7 +10504,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-06e6bc95"
+  reconcilerVersion: "18.3.0-canary-14b7ed0a"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
   computeComponentStackForErrorReporting: function (reactTag) {

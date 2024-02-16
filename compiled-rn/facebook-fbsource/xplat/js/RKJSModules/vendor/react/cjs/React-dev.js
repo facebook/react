@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<806315279789ef4578d807b4942ca089>>
+ * @generated SignedSource<<280bd11efcac132c9cef51a618bf34ce>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-92686722c-20240215";
+    var ReactVersion = "18.3.0-canary-fea900e45-20240216";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -2383,9 +2383,9 @@ if (__DEV__) {
         }
 
         if (render != null) {
-          if (render.defaultProps != null || render.propTypes != null) {
+          if (render.defaultProps != null) {
             error(
-              "forwardRef render functions do not support propTypes or defaultProps. " +
+              "forwardRef render functions do not support defaultProps. " +
                 "Did you accidentally pass a React component?"
             );
           }
