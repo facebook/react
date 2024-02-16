@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<319dc1150d695a3c1932887c45a69d77>>
+ * @generated SignedSource<<2bd76364e49975f7447df4d717144b25>>
  */
 
 "use strict";
@@ -11931,17 +11931,37 @@ if (__DEV__) {
       return shouldUpdate;
     }
 
+    var CapturedStacks = new WeakMap();
     function createCapturedValueAtFiber(value, source) {
       // If the value is an error, call this function immediately after it is thrown
       // so the stack is accurate.
+      var stack;
+
+      if (typeof value === "object" && value !== null) {
+        var capturedStack = CapturedStacks.get(value);
+
+        if (typeof capturedStack === "string") {
+          stack = capturedStack;
+        } else {
+          stack = getStackByFiberInDevAndProd(source);
+          CapturedStacks.set(value, stack);
+        }
+      } else {
+        stack = getStackByFiberInDevAndProd(source);
+      }
+
       return {
         value: value,
         source: source,
-        stack: getStackByFiberInDevAndProd(source),
+        stack: stack,
         digest: null
       };
     }
-    function createCapturedValue(value, digest, stack) {
+    function createCapturedValueFromError(value, digest, stack) {
+      if (typeof stack === "string") {
+        CapturedStacks.set(value, stack);
+      }
+
       return {
         value: value,
         source: null,
@@ -14493,7 +14513,7 @@ if (__DEV__) {
             }
 
             error.digest = digest;
-            capturedValue = createCapturedValue(error, digest, stack);
+            capturedValue = createCapturedValueFromError(error, digest, stack);
           }
 
           return retrySuspenseComponentWithoutHydrating(
@@ -14603,7 +14623,7 @@ if (__DEV__) {
           pushPrimaryTreeSuspenseHandler(workInProgress);
           workInProgress.flags &= ~ForceClientRender;
 
-          var _capturedValue = createCapturedValue(
+          var _capturedValue = createCapturedValueFromError(
             new Error(
               "There was an error while hydrating this Suspense boundary. " +
                 "Switched to client rendering."
@@ -25613,7 +25633,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-2ba1b7856-20240215";
+    var ReactVersion = "18.3.0-canary-a9cc32511-20240215";
 
     // Might add PROFILE later.
 

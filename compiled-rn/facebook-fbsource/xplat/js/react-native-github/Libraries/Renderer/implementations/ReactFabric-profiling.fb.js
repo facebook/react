@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7ac950cf4db25db8a235124e199f62d3>>
+ * @generated SignedSource<<11bbeb7ca3cf648d381cd7e5c3e700fa>>
  */
 
 "use strict";
@@ -4760,12 +4760,23 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   "function" === typeof instance.componentDidMount &&
     (workInProgress.flags |= 4194308);
 }
+var CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
+  if ("object" === typeof value && null !== value) {
+    var stack = CapturedStacks.get(value);
+    "string" !== typeof stack &&
+      ((stack = getStackByFiberInDevAndProd(source)),
+      CapturedStacks.set(value, stack));
+  } else stack = getStackByFiberInDevAndProd(source);
+  return { value: value, source: source, stack: stack, digest: null };
+}
+function createCapturedValueFromError(value, digest, stack) {
+  "string" === typeof stack && CapturedStacks.set(value, stack);
   return {
     value: value,
-    source: source,
-    stack: getStackByFiberInDevAndProd(source),
-    digest: null
+    source: null,
+    stack: null != stack ? stack : null,
+    digest: null != digest ? digest : null
   };
 }
 if (
@@ -5728,18 +5739,16 @@ function updateDehydratedSuspenseComponent(
       return (
         pushPrimaryTreeSuspenseHandler(workInProgress),
         (workInProgress.flags &= -257),
+        (didPrimaryChildrenDefer = createCapturedValueFromError(
+          Error(
+            "There was an error while hydrating this Suspense boundary. Switched to client rendering."
+          )
+        )),
         retrySuspenseComponentWithoutHydrating(
           current,
           workInProgress,
           renderLanes,
-          {
-            value: Error(
-              "There was an error while hydrating this Suspense boundary. Switched to client rendering."
-            ),
-            source: null,
-            stack: null,
-            digest: null
-          }
+          didPrimaryChildrenDefer
         )
       );
     if (null !== workInProgress.memoizedState)
@@ -5796,17 +5805,16 @@ function updateDehydratedSuspenseComponent(
         "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering."
       )),
       (suspenseState.digest = didPrimaryChildrenDefer),
+      (didPrimaryChildrenDefer = createCapturedValueFromError(
+        suspenseState,
+        didPrimaryChildrenDefer,
+        void 0
+      )),
       retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        {
-          value: suspenseState,
-          source: null,
-          stack: null,
-          digest:
-            null != didPrimaryChildrenDefer ? didPrimaryChildrenDefer : null
-        }
+        didPrimaryChildrenDefer
       )
     );
   didPrimaryChildrenDefer = 0 !== (renderLanes & current.childLanes);
@@ -10228,7 +10236,7 @@ var roots = new Map(),
   devToolsConfig$jscomp$inline_1149 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-6091903d",
+    version: "18.3.0-canary-258577a6",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -10284,7 +10292,7 @@ var roots = new Map(),
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-6091903d"
+  reconcilerVersion: "18.3.0-canary-258577a6"
 });
 exports.createPortal = function (children, containerTag) {
   return createPortal$1(

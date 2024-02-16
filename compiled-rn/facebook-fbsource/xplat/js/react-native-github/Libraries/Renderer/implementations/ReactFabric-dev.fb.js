@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<c759b4e698fb35536b69948f3442d8be>>
+ * @generated SignedSource<<eafe6f8c93c68ef414c9c5d3e0c8f7dd>>
  */
 
 "use strict";
@@ -14925,17 +14925,37 @@ to return true:wantsResponderID|                            |
       return shouldUpdate;
     }
 
+    var CapturedStacks = new WeakMap();
     function createCapturedValueAtFiber(value, source) {
       // If the value is an error, call this function immediately after it is thrown
       // so the stack is accurate.
+      var stack;
+
+      if (typeof value === "object" && value !== null) {
+        var capturedStack = CapturedStacks.get(value);
+
+        if (typeof capturedStack === "string") {
+          stack = capturedStack;
+        } else {
+          stack = getStackByFiberInDevAndProd(source);
+          CapturedStacks.set(value, stack);
+        }
+      } else {
+        stack = getStackByFiberInDevAndProd(source);
+      }
+
       return {
         value: value,
         source: source,
-        stack: getStackByFiberInDevAndProd(source),
+        stack: stack,
         digest: null
       };
     }
-    function createCapturedValue(value, digest, stack) {
+    function createCapturedValueFromError(value, digest, stack) {
+      if (typeof stack === "string") {
+        CapturedStacks.set(value, stack);
+      }
+
       return {
         value: value,
         source: null,
@@ -17340,7 +17360,7 @@ to return true:wantsResponderID|                            |
             }
 
             error.digest = digest;
-            capturedValue = createCapturedValue(error, digest, stack);
+            capturedValue = createCapturedValueFromError(error, digest, stack);
           }
 
           return retrySuspenseComponentWithoutHydrating(
@@ -17450,7 +17470,7 @@ to return true:wantsResponderID|                            |
           pushPrimaryTreeSuspenseHandler(workInProgress);
           workInProgress.flags &= ~ForceClientRender;
 
-          var _capturedValue = createCapturedValue(
+          var _capturedValue = createCapturedValueFromError(
             new Error(
               "There was an error while hydrating this Suspense boundary. " +
                 "Switched to client rendering."
@@ -27652,7 +27672,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-e601a9d1";
+    var ReactVersion = "18.3.0-canary-f6a619c0";
 
     function createPortal$1(
       children,

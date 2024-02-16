@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<501d042940fc957565aae93779730b8e>>
+ * @generated SignedSource<<30e0621a9f535ff1cd2b36a9447e4f81>>
  */
 
 "use strict";
@@ -1369,6 +1369,18 @@ function describeFiber(fiber) {
       return (fiber = describeFunctionComponentFrame(fiber.type)), fiber;
     default:
       return "";
+  }
+}
+function getStackByFiberInDevAndProd(workInProgress) {
+  try {
+    var info = "";
+    do
+      (info += describeFiber(workInProgress)),
+        (workInProgress = workInProgress.return);
+    while (workInProgress);
+    return info;
+  } catch (x) {
+    return "\nError generating stack: " + x.message + "\n" + x.stack;
   }
 }
 var SuspenseException = Error(
@@ -3639,22 +3651,23 @@ function mountClassInstance(workInProgress, ctor, newProps, renderLanes) {
   "function" === typeof instance.componentDidMount &&
     (workInProgress.flags |= 4194308);
 }
+var CapturedStacks = new WeakMap();
 function createCapturedValueAtFiber(value, source) {
-  try {
-    var info = "",
-      node = source;
-    do (info += describeFiber(node)), (node = node.return);
-    while (node);
-    var JSCompiler_inline_result = info;
-  } catch (x) {
-    JSCompiler_inline_result =
-      "\nError generating stack: " + x.message + "\n" + x.stack;
-  }
+  if ("object" === typeof value && null !== value) {
+    var stack = CapturedStacks.get(value);
+    "string" !== typeof stack &&
+      ((stack = getStackByFiberInDevAndProd(source)),
+      CapturedStacks.set(value, stack));
+  } else stack = getStackByFiberInDevAndProd(source);
+  return { value: value, source: source, stack: stack, digest: null };
+}
+function createCapturedValueFromError(value, digest, stack) {
+  "string" === typeof stack && CapturedStacks.set(value, stack);
   return {
     value: value,
-    source: source,
-    stack: JSCompiler_inline_result,
-    digest: null
+    source: null,
+    stack: null != stack ? stack : null,
+    digest: null != digest ? digest : null
   };
 }
 function logCapturedError(boundary, errorInfo) {
@@ -4590,18 +4603,16 @@ function updateDehydratedSuspenseComponent(
       return (
         pushPrimaryTreeSuspenseHandler(workInProgress),
         (workInProgress.flags &= -257),
+        (didPrimaryChildrenDefer = createCapturedValueFromError(
+          Error(
+            "There was an error while hydrating this Suspense boundary. Switched to client rendering."
+          )
+        )),
         retrySuspenseComponentWithoutHydrating(
           current,
           workInProgress,
           renderLanes,
-          {
-            value: Error(
-              "There was an error while hydrating this Suspense boundary. Switched to client rendering."
-            ),
-            source: null,
-            stack: null,
-            digest: null
-          }
+          didPrimaryChildrenDefer
         )
       );
     if (null !== workInProgress.memoizedState)
@@ -4658,17 +4669,16 @@ function updateDehydratedSuspenseComponent(
         "The server could not finish this Suspense boundary, likely due to an error during server rendering. Switched to client rendering."
       )),
       (suspenseState.digest = didPrimaryChildrenDefer),
+      (didPrimaryChildrenDefer = createCapturedValueFromError(
+        suspenseState,
+        didPrimaryChildrenDefer,
+        void 0
+      )),
       retrySuspenseComponentWithoutHydrating(
         current,
         workInProgress,
         renderLanes,
-        {
-          value: suspenseState,
-          source: null,
-          stack: null,
-          digest:
-            null != didPrimaryChildrenDefer ? didPrimaryChildrenDefer : null
-        }
+        didPrimaryChildrenDefer
       )
     );
   didPrimaryChildrenDefer = 0 !== (renderLanes & current.childLanes);
@@ -9592,19 +9602,19 @@ function wrapFiber(fiber) {
     fiberToWrapper.set(fiber, wrapper));
   return wrapper;
 }
-var devToolsConfig$jscomp$inline_1066 = {
+var devToolsConfig$jscomp$inline_1060 = {
   findFiberByHostInstance: function () {
     throw Error("TestRenderer does not support findFiberByHostInstance()");
   },
   bundleType: 0,
-  version: "18.3.0-canary-2ba1b7856-20240215",
+  version: "18.3.0-canary-a9cc32511-20240215",
   rendererPackageName: "react-test-renderer"
 };
-var internals$jscomp$inline_1246 = {
-  bundleType: devToolsConfig$jscomp$inline_1066.bundleType,
-  version: devToolsConfig$jscomp$inline_1066.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1066.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1066.rendererConfig,
+var internals$jscomp$inline_1240 = {
+  bundleType: devToolsConfig$jscomp$inline_1060.bundleType,
+  version: devToolsConfig$jscomp$inline_1060.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1060.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1060.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9621,26 +9631,26 @@ var internals$jscomp$inline_1246 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1066.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1060.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-2ba1b7856-20240215"
+  reconcilerVersion: "18.3.0-canary-a9cc32511-20240215"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1247 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1241 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1247.isDisabled &&
-    hook$jscomp$inline_1247.supportsFiber
+    !hook$jscomp$inline_1241.isDisabled &&
+    hook$jscomp$inline_1241.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1247.inject(
-        internals$jscomp$inline_1246
+      (rendererID = hook$jscomp$inline_1241.inject(
+        internals$jscomp$inline_1240
       )),
-        (injectedHook = hook$jscomp$inline_1247);
+        (injectedHook = hook$jscomp$inline_1241);
     } catch (err) {}
 }
 exports._Scheduler = Scheduler;
