@@ -11068,6 +11068,7 @@ if (__DEV__) {
     var didWarnAboutStringRefs;
     var ownerHasKeyUseWarning;
     var ownerHasFunctionTypeWarning;
+    var ownerHasSymbolTypeWarning;
 
     var warnForMissingKey = function (child, returnFiber) {};
 
@@ -11083,6 +11084,7 @@ if (__DEV__) {
 
       ownerHasKeyUseWarning = {};
       ownerHasFunctionTypeWarning = {};
+      ownerHasSymbolTypeWarning = {};
 
       warnForMissingKey = function (child, returnFiber) {
         if (child === null || typeof child !== "object") {
@@ -11265,22 +11267,68 @@ if (__DEV__) {
       );
     }
 
-    function warnOnFunctionType(returnFiber) {
+    function warnOnFunctionType(returnFiber, invalidChild) {
       {
-        var componentName =
-          getComponentNameFromFiber(returnFiber) || "Component";
+        var parentName = getComponentNameFromFiber(returnFiber) || "Component";
 
-        if (ownerHasFunctionTypeWarning[componentName]) {
+        if (ownerHasFunctionTypeWarning[parentName]) {
           return;
         }
 
-        ownerHasFunctionTypeWarning[componentName] = true;
+        ownerHasFunctionTypeWarning[parentName] = true;
+        var name = invalidChild.displayName || invalidChild.name || "Component";
 
-        error(
-          "Functions are not valid as a React child. This may happen if " +
-            "you return a Component instead of <Component /> from render. " +
-            "Or maybe you meant to call this function rather than return it."
-        );
+        if (returnFiber.tag === HostRoot) {
+          error(
+            "Functions are not valid as a React child. This may happen if " +
+              "you return %s instead of <%s /> from render. " +
+              "Or maybe you meant to call this function rather than return it.\n" +
+              "  root.render(%s)",
+            name,
+            name,
+            name
+          );
+        } else {
+          error(
+            "Functions are not valid as a React child. This may happen if " +
+              "you return %s instead of <%s /> from render. " +
+              "Or maybe you meant to call this function rather than return it.\n" +
+              "  <%s>{%s}</%s>",
+            name,
+            name,
+            parentName,
+            name,
+            parentName
+          );
+        }
+      }
+    }
+
+    function warnOnSymbolType(returnFiber, invalidChild) {
+      {
+        var parentName = getComponentNameFromFiber(returnFiber) || "Component";
+
+        if (ownerHasSymbolTypeWarning[parentName]) {
+          return;
+        }
+
+        ownerHasSymbolTypeWarning[parentName] = true; // eslint-disable-next-line react-internal/safe-string-coercion
+
+        var name = String(invalidChild);
+
+        if (returnFiber.tag === HostRoot) {
+          error(
+            "Symbols are not valid as a React child.\n" + "  root.render(%s)",
+            name
+          );
+        } else {
+          error(
+            "Symbols are not valid as a React child.\n" + "  <%s>%s</%s>",
+            parentName,
+            name,
+            parentName
+          );
+        }
       }
     }
 
@@ -11665,7 +11713,11 @@ if (__DEV__) {
 
         {
           if (typeof newChild === "function") {
-            warnOnFunctionType(returnFiber);
+            warnOnFunctionType(returnFiber, newChild);
+          }
+
+          if (typeof newChild === "symbol") {
+            warnOnSymbolType(returnFiber, newChild);
           }
         }
 
@@ -11783,7 +11835,11 @@ if (__DEV__) {
 
         {
           if (typeof newChild === "function") {
-            warnOnFunctionType(returnFiber);
+            warnOnFunctionType(returnFiber, newChild);
+          }
+
+          if (typeof newChild === "symbol") {
+            warnOnSymbolType(returnFiber, newChild);
           }
         }
 
@@ -11903,7 +11959,11 @@ if (__DEV__) {
 
         {
           if (typeof newChild === "function") {
-            warnOnFunctionType(returnFiber);
+            warnOnFunctionType(returnFiber, newChild);
+          }
+
+          if (typeof newChild === "symbol") {
+            warnOnSymbolType(returnFiber, newChild);
           }
         }
 
@@ -12688,7 +12748,11 @@ if (__DEV__) {
 
         {
           if (typeof newChild === "function") {
-            warnOnFunctionType(returnFiber);
+            warnOnFunctionType(returnFiber, newChild);
+          }
+
+          if (typeof newChild === "symbol") {
+            warnOnSymbolType(returnFiber, newChild);
           }
         } // Remaining cases are all treated as empty.
 
@@ -36460,7 +36524,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-863536b2";
+    var ReactVersion = "18.3.0-www-classic-3c4221fd";
 
     function createPortal$1(
       children,

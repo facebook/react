@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-593936b0";
+    var ReactVersion = "18.3.0-www-classic-d7b5bc9a";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -12606,6 +12606,29 @@ if (__DEV__) {
           didWarnAboutMaps = true;
         }
       }
+    }
+
+    function warnOnFunctionType(invalidChild) {
+      {
+        var name = invalidChild.displayName || invalidChild.name || "Component";
+
+        error(
+          "Functions are not valid as a React child. This may happen if " +
+            "you return %s instead of <%s /> from render. " +
+            "Or maybe you meant to call this function rather than return it.",
+          name,
+          name
+        );
+      }
+    }
+
+    function warnOnSymbolType(invalidChild) {
+      {
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        var name = String(invalidChild);
+
+        error("Symbols are not valid as a React child.\n" + "  %s", name);
+      }
     } // This function by it self renders a node and consumes the task by mutating it
     // to update the current execution state.
 
@@ -12798,11 +12821,11 @@ if (__DEV__) {
 
       {
         if (typeof node === "function") {
-          error(
-            "Functions are not valid as a React child. This may happen if " +
-              "you return a Component instead of <Component /> from render. " +
-              "Or maybe you meant to call this function rather than return it."
-          );
+          warnOnFunctionType(node);
+        }
+
+        if (typeof node === "symbol") {
+          warnOnSymbolType(node);
         }
       }
     }
