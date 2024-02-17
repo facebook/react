@@ -2137,6 +2137,27 @@ function validateIterable(iterable, iteratorFn: Function): void {
   }
 }
 
+function warnOnFunctionType(invalidChild: Function) {
+  if (__DEV__) {
+    const name = invalidChild.displayName || invalidChild.name || 'Component';
+    console.error(
+      'Functions are not valid as a React child. This may happen if ' +
+        'you return %s instead of <%s /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.',
+      name,
+      name,
+    );
+  }
+}
+
+function warnOnSymbolType(invalidChild: symbol) {
+  if (__DEV__) {
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const name = String(invalidChild);
+    console.error('Symbols are not valid as a React child.\n' + '  %s', name);
+  }
+}
+
 // This function by it self renders a node and consumes the task by mutating it
 // to update the current execution state.
 function renderNodeDestructive(
@@ -2329,11 +2350,10 @@ function renderNodeDestructive(
 
   if (__DEV__) {
     if (typeof node === 'function') {
-      console.error(
-        'Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
-          'Or maybe you meant to call this function rather than return it.',
-      );
+      warnOnFunctionType(node);
+    }
+    if (typeof node === 'symbol') {
+      warnOnSymbolType(node);
     }
   }
 }

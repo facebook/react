@@ -33,7 +33,13 @@ import {
   REACT_LAZY_TYPE,
   REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
-import {ClassComponent, HostText, HostPortal, Fragment} from './ReactWorkTags';
+import {
+  ClassComponent,
+  HostRoot,
+  HostText,
+  HostPortal,
+  Fragment,
+} from './ReactWorkTags';
 import isArray from 'shared/isArray';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 
@@ -79,6 +85,7 @@ let didWarnAboutGenerators;
 let didWarnAboutStringRefs;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
+let ownerHasSymbolTypeWarning;
 let warnForMissingKey = (child: mixed, returnFiber: Fiber) => {};
 
 if (__DEV__) {
@@ -93,6 +100,7 @@ if (__DEV__) {
    */
   ownerHasKeyUseWarning = ({}: {[string]: boolean});
   ownerHasFunctionTypeWarning = ({}: {[string]: boolean});
+  ownerHasSymbolTypeWarning = ({}: {[string]: boolean});
 
   warnForMissingKey = (child: mixed, returnFiber: Fiber) => {
     if (child === null || typeof child !== 'object') {
@@ -267,20 +275,68 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   );
 }
 
-function warnOnFunctionType(returnFiber: Fiber) {
+function warnOnFunctionType(returnFiber: Fiber, invalidChild: Function) {
   if (__DEV__) {
-    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
+    const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
-    if (ownerHasFunctionTypeWarning[componentName]) {
+    if (ownerHasFunctionTypeWarning[parentName]) {
       return;
     }
-    ownerHasFunctionTypeWarning[componentName] = true;
+    ownerHasFunctionTypeWarning[parentName] = true;
 
-    console.error(
-      'Functions are not valid as a React child. This may happen if ' +
-        'you return a Component instead of <Component /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
-    );
+    const name = invalidChild.displayName || invalidChild.name || 'Component';
+
+    if (returnFiber.tag === HostRoot) {
+      console.error(
+        'Functions are not valid as a React child. This may happen if ' +
+          'you return %s instead of <%s /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  root.render(%s)',
+        name,
+        name,
+        name,
+      );
+    } else {
+      console.error(
+        'Functions are not valid as a React child. This may happen if ' +
+          'you return %s instead of <%s /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '  <%s>{%s}</%s>',
+        name,
+        name,
+        parentName,
+        name,
+        parentName,
+      );
+    }
+  }
+}
+
+function warnOnSymbolType(returnFiber: Fiber, invalidChild: symbol) {
+  if (__DEV__) {
+    const parentName = getComponentNameFromFiber(returnFiber) || 'Component';
+
+    if (ownerHasSymbolTypeWarning[parentName]) {
+      return;
+    }
+    ownerHasSymbolTypeWarning[parentName] = true;
+
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const name = String(invalidChild);
+
+    if (returnFiber.tag === HostRoot) {
+      console.error(
+        'Symbols are not valid as a React child.\n' + '  root.render(%s)',
+        name,
+      );
+    } else {
+      console.error(
+        'Symbols are not valid as a React child.\n' + '  <%s>%s</%s>',
+        parentName,
+        name,
+        parentName,
+      );
+    }
   }
 }
 
@@ -656,7 +712,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -778,7 +837,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -894,7 +956,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
@@ -1621,7 +1686,10 @@ function createChildReconciler(
 
     if (__DEV__) {
       if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
+        warnOnFunctionType(returnFiber, newChild);
+      }
+      if (typeof newChild === 'symbol') {
+        warnOnSymbolType(returnFiber, newChild);
       }
     }
 
