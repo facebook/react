@@ -18,6 +18,8 @@ describe('ReactElementClone', () => {
   let ComponentClass;
 
   beforeEach(() => {
+    jest.resetModules();
+
     act = require('internal-test-utils').act;
 
     PropTypes = require('prop-types');
@@ -373,7 +375,7 @@ describe('ReactElementClone', () => {
     const elementB = React.cloneElement(elementA, elementA.props);
     expect(elementB.key).toBe(null);
     if (gate(flags => flags.enableRefAsProp)) {
-      expect(elementB.ref).toBe(undefined);
+      expect(elementB.ref).toBe(null);
     } else {
       expect(elementB.ref).toBe(null);
     }
@@ -395,6 +397,10 @@ describe('ReactElementClone', () => {
     expect(clone.key).toBe('12');
     if (gate(flags => flags.enableRefAsProp)) {
       expect(clone.props.ref).toBe('34');
+      expect(() => expect(clone.ref).toBe('34')).toErrorDev(
+        'Accessing element.ref is no longer supported',
+        {withoutStack: true},
+      );
       expect(clone.props).toEqual({foo: 'ef', ref: '34'});
     } else {
       expect(clone.ref).toBe('34');
@@ -421,8 +427,7 @@ describe('ReactElementClone', () => {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('null');
     if (gate(flags => flags.enableRefAsProp)) {
-      // TODO: Remove `ref` field from the element entirely.
-      expect(clone.ref).toBe(undefined);
+      expect(clone.ref).toBe(null);
       expect(clone.props).toEqual({foo: 'ef', ref: null});
     } else {
       expect(clone.ref).toBe(null);

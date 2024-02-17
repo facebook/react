@@ -38,7 +38,7 @@ describe('ReactCreateElement', () => {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     if (gate(flags => flags.enableRefAsProp)) {
-      expect(element.ref).toBe(undefined);
+      expect(element.ref).toBe(null);
     } else {
       expect(element.ref).toBe(null);
     }
@@ -125,7 +125,7 @@ describe('ReactCreateElement', () => {
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     if (gate(flags => flags.enableRefAsProp)) {
-      expect(element.ref).toBe(undefined);
+      expect(element.ref).toBe(null);
     } else {
       expect(element.ref).toBe(null);
     }
@@ -180,7 +180,10 @@ describe('ReactCreateElement', () => {
     });
     expect(element.type).toBe(ComponentClass);
     if (gate(flags => flags.enableRefAsProp)) {
-      expect(element.ref).toBe(undefined);
+      expect(() => expect(element.ref).toBe(ref)).toErrorDev(
+        'Accessing element.ref is no longer supported',
+        {withoutStack: true},
+      );
       const expectation = {foo: '56', ref};
       Object.freeze(expectation);
       expect(element.props).toEqual(expectation);
@@ -216,7 +219,7 @@ describe('ReactCreateElement', () => {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     if (gate(flags => flags.enableRefAsProp)) {
-      expect(element.ref).toBe(undefined);
+      expect(element.ref).toBe(null);
     } else {
       expect(element.ref).toBe(null);
     }
@@ -232,7 +235,7 @@ describe('ReactCreateElement', () => {
     const elementB = React.createElement('div', elementA.props);
     expect(elementB.key).toBe(null);
     if (gate(flags => flags.enableRefAsProp)) {
-      expect(elementB.ref).toBe(undefined);
+      expect(elementB.ref).toBe(null);
     } else {
       expect(elementB.ref).toBe(null);
     }
@@ -246,7 +249,7 @@ describe('ReactCreateElement', () => {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
     if (gate(flags => flags.enableRefAsProp)) {
-      expect(element.ref).toBe(undefined);
+      expect(element.ref).toBe(null);
     } else {
       expect(element.ref).toBe(null);
     }

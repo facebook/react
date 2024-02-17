@@ -467,35 +467,45 @@ export function reportGlobalError(response: Response, error: Error): void {
   });
 }
 
+function nullRefGetter() {
+  if (__DEV__) {
+    return null;
+  }
+}
+
 function createElement(
   type: mixed,
   key: mixed,
   props: mixed,
 ): React$Element<any> {
-  const element: any = enableRefAsProp
-    ? {
-        // This tag allows us to uniquely identify this as a React Element
-        $$typeof: REACT_ELEMENT_TYPE,
+  let element: any;
+  if (__DEV__ && enableRefAsProp) {
+    // `ref` is non-enumerable in dev
+    element = ({
+      $$typeof: REACT_ELEMENT_TYPE,
+      type,
+      key,
+      props,
+      _owner: null,
+    }: any);
+    Object.defineProperty(element, 'ref', {
+      enumerable: false,
+      get: nullRefGetter,
+    });
+  } else {
+    element = ({
+      // This tag allows us to uniquely identify this as a React Element
+      $$typeof: REACT_ELEMENT_TYPE,
 
-        // Built-in properties that belong on the element
-        type,
-        key,
-        props,
+      type,
+      key,
+      ref: null,
+      props,
 
-        // Record the component responsible for creating this element.
-        _owner: null,
-      }
-    : {
-        // Old behavior. When enableRefAsProp is off, `ref` is an extra field.
-        ref: null,
-
-        // Everything else is the same.
-        $$typeof: REACT_ELEMENT_TYPE,
-        type,
-        key,
-        props,
-        _owner: null,
-      };
+      // Record the component responsible for creating this element.
+      _owner: null,
+    }: any);
+  }
 
   if (__DEV__) {
     // We don't really need to add any of these but keeping them for good measure.

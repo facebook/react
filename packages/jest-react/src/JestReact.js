@@ -40,8 +40,8 @@ function assertYieldsWereCleared(root) {
 }
 
 function createJSXElementForTestComparison(type, props) {
-  if (enableRefAsProp) {
-    return {
+  if (__DEV__ && enableRefAsProp) {
+    const element = {
       $$typeof: REACT_ELEMENT_TYPE,
       type: type,
       key: null,
@@ -49,6 +49,11 @@ function createJSXElementForTestComparison(type, props) {
       _owner: null,
       _store: __DEV__ ? {} : undefined,
     };
+    Object.defineProperty(element, 'ref', {
+      enumerable: false,
+      value: null,
+    });
+    return element;
   } else {
     return {
       $$typeof: REACT_ELEMENT_TYPE,

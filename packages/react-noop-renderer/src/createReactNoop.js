@@ -783,15 +783,20 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   let currentEventPriority = DefaultEventPriority;
 
   function createJSXElementForTestComparison(type, props) {
-    if (enableRefAsProp) {
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
+    if (__DEV__ && enableRefAsProp) {
+      const element = {
         type: type,
+        $$typeof: REACT_ELEMENT_TYPE,
         key: null,
         props: props,
         _owner: null,
         _store: __DEV__ ? {} : undefined,
       };
+      Object.defineProperty(element, 'ref', {
+        enumerable: false,
+        value: null,
+      });
+      return element;
     } else {
       return {
         $$typeof: REACT_ELEMENT_TYPE,
