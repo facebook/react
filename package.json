@@ -90,7 +90,7 @@
     "rollup": "^3.17.1",
     "rollup-plugin-prettier": "^4.1.1",
     "rollup-plugin-strip-banner": "^3.0.0",
-    "semver": "^7.5.2",
+    "semver": "^7.5.3",
     "shelljs": "^0.8.5",
     "signedsource": "^2.0.0",
     "targz": "^1.0.1",
