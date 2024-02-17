@@ -635,8 +635,9 @@ describe('ReactComponent', () => {
         });
       }).toErrorDev(
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <Foo>{Foo}</Foo>\n' +
           '    in Foo (at **)',
       );
     });
@@ -656,8 +657,9 @@ describe('ReactComponent', () => {
         });
       }).toErrorDev(
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <Foo>{Foo}</Foo>\n' +
           '    in Foo (at **)',
       );
     });
@@ -678,8 +680,9 @@ describe('ReactComponent', () => {
         });
       }).toErrorDev(
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
           '    in div (at **)\n' +
           '    in Foo (at **)',
@@ -730,13 +733,15 @@ describe('ReactComponent', () => {
         });
       }).toErrorDev([
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <div>{Foo}</div>\n' +
           '    in div (at **)\n' +
           '    in Foo (at **)',
         'Warning: Functions are not valid as a React child. This may happen if ' +
-          'you return a Component instead of <Component /> from render. ' +
+          'you return Foo instead of <Foo /> from render. ' +
           'Or maybe you meant to call this function rather than return it.\n' +
+          '  <span>{Foo}</span>\n' +
           '    in span (at **)\n' +
           '    in div (at **)\n' +
           '    in Foo (at **)',
