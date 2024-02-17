@@ -318,11 +318,15 @@ for (const flag of allFlagsUniqueFlags) {
 let sorted = table;
 if (isDiff || argv.sort) {
   const sortChannel = argToHeader(isDiff ? argv.diff[0] : argv.sort);
-  sorted = Object.fromEntries(
-    Object.entries(table).sort(([, rowA], [, rowB]) =>
-      rowB[sortChannel].toString().localeCompare(rowA[sortChannel])
-    )
-  );
+  const sortBy =
+    sortChannel === 'flag'
+      ? ([flagA], [flagB]) => {
+          return flagA.localeCompare(flagB);
+        }
+      : ([, rowA], [, rowB]) => {
+          return rowB[sortChannel].toString().localeCompare(rowA[sortChannel]);
+        };
+  sorted = Object.fromEntries(Object.entries(table).sort(sortBy));
 }
 
 if (argv.csv) {
