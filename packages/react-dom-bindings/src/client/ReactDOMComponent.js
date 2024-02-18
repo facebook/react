@@ -66,6 +66,7 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 import sanitizeURL from '../shared/sanitizeURL';
 
 import {
+  enableBigIntSupport,
   enableCustomElementPropertySupport,
   enableClientRenderFallbackOnTextMismatch,
   enableFormActions,
@@ -397,7 +398,10 @@ function setProp(
         if (canSetTextContent) {
           setTextContent(domElement, value);
         }
-      } else if (typeof value === 'number' || typeof value === 'bigint') {
+      } else if (
+        typeof value === 'number' ||
+        (enableBigIntSupport && typeof value === 'bigint')
+      ) {
         if (__DEV__) {
           // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
           validateTextNesting('' + value, tag);
@@ -957,7 +961,10 @@ function setPropOnCustomElement(
     case 'children': {
       if (typeof value === 'string') {
         setTextContent(domElement, value);
-      } else if (typeof value === 'number' || typeof value === 'bigint') {
+      } else if (
+        typeof value === 'number' ||
+        (enableBigIntSupport && typeof value === 'bigint')
+      ) {
         // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
         setTextContent(domElement, '' + value);
       }
@@ -2823,7 +2830,7 @@ export function diffHydratedProperties(
   if (
     typeof children === 'string' ||
     typeof children === 'number' ||
-    typeof children === 'bigint'
+    (enableBigIntSupport && typeof children === 'bigint')
   ) {
     // $FlowFixMe[unsafe-addition] Flow doesn't want us to use `+` operator with string and bigint
     if (domElement.textContent !== '' + children) {

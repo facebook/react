@@ -39,6 +39,7 @@
  */
 
 import {checkHtmlStringCoercion} from 'shared/CheckStringCoercion';
+import {enableBigIntSupport} from 'shared/ReactFeatureFlags';
 
 const matchHtmlRegExp = /["'&<>]/;
 
@@ -109,7 +110,7 @@ function escapeTextForBrowser(text: string | number | boolean): string {
   if (
     typeof text === 'boolean' ||
     typeof text === 'number' ||
-    typeof text === 'bigint'
+    (enableBigIntSupport && typeof text === 'bigint')
   ) {
     // this shortcircuit helps perf for types that we know will never have
     // special characters, especially given that this function is used often

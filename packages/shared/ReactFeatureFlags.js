@@ -102,6 +102,8 @@ export const enableCPUSuspense = __EXPERIMENTAL__;
 
 export const enableFloat = true;
 
+export const enableBigIntSupport = __EXPERIMENTAL__;
+
 // Enables unstable_useMemoCache hook, intended as a compilation target for
 // auto-memoization.
 export const enableUseMemoCacheHook = __EXPERIMENTAL__;

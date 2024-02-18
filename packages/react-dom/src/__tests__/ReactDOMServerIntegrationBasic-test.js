@@ -74,8 +74,12 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('a bigint', async render => {
       const e = await render(42n);
-      expect(e.nodeType).toBe(3);
-      expect(e.nodeValue).toMatch('42');
+      if (gate(flags => flags.enableBigIntSupport)) {
+        expect(e.nodeType).toBe(3);
+        expect(e.nodeValue).toMatch('42');
+      } else {
+        expect(e).toBe(null);
+      }
     });
 
     itRenders('an array with one child', async render => {

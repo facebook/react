@@ -90,7 +90,6 @@ describe('ReactMultiChildText', () => {
         true, [],
         0, '0',
         1.2, '1.2',
-        10n, '10',
         '', [],
         'foo', 'foo',
 
@@ -101,7 +100,6 @@ describe('ReactMultiChildText', () => {
         [true], [],
         [0], ['0'],
         [1.2], ['1.2'],
-        [10n], ['10'],
         [''], [],
         ['foo'], ['foo'],
         [<div />], [<div />],
@@ -173,6 +171,15 @@ describe('ReactMultiChildText', () => {
     }).toErrorDev([
       'Warning: Each child in a list should have a unique "key" prop.',
       'Warning: Each child in a list should have a unique "key" prop.',
+    ]);
+  });
+
+  // @gate enableBigIntSupport
+  it('should correctly handle bigint children for render and update', async () => {
+    // prettier-ignore
+    await testAllPermutations([
+      10n, '10',
+      [10n], ['10']
     ]);
   });
 

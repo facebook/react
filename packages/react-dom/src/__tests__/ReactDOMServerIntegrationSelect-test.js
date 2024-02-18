@@ -224,7 +224,9 @@ describe('ReactDOMServerIntegrationSelect', () => {
       </select>,
     );
     const option = e.options[0];
-    expect(option.textContent).toBe('A B 5');
+    expect(option.textContent).toBe(
+      gate(flags => flags.enableBigIntSupport) ? 'A B 5' : 'A B ',
+    );
     expect(option.value).toBe('bar');
     expect(option.selected).toBe(true);
   });

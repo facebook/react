@@ -89,6 +89,7 @@ import {
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
+  enableBigIntSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableFloat,
@@ -548,7 +549,7 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
     type === 'noscript' ||
     typeof props.children === 'string' ||
     typeof props.children === 'number' ||
-    typeof props.children === 'bigint' ||
+    (enableBigIntSupport && typeof props.children === 'bigint') ||
     (typeof props.dangerouslySetInnerHTML === 'object' &&
       props.dangerouslySetInnerHTML !== null &&
       props.dangerouslySetInnerHTML.__html != null)

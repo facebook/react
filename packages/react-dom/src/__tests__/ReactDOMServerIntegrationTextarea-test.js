@@ -30,7 +30,8 @@ function initModules() {
   };
 }
 
-const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders, serverRender, streamRender} =
+  ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegrationTextarea', () => {
   beforeEach(() => {
@@ -50,7 +51,13 @@ describe('ReactDOMServerIntegrationTextarea', () => {
   itRenders('a textarea with a bigint value and an onChange', async render => {
     const e = await render(<textarea value={5n} onChange={() => {}} />);
     expect(e.getAttribute('value')).toBe(null);
-    expect(e.value).toBe('5');
+    expect(e.value).toBe(
+      gate(flags => flags.enableBigIntSupport) ||
+        render === serverRender ||
+        render === streamRender
+        ? '5'
+        : '',
+    );
   });
 
   itRenders('a textarea with a value of undefined', async render => {
