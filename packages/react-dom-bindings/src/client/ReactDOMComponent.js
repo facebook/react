@@ -796,6 +796,11 @@ function setProp(
       }
       break;
     }
+    case 'popover':
+      listenToNonDelegatedEvent('beforetoggle', domElement);
+      listenToNonDelegatedEvent('toggle', domElement);
+      setValueForAttribute(domElement, 'popover', value);
+      break;
     case 'xlinkActuate':
       setValueForNamespacedAttribute(
         domElement,
@@ -2833,6 +2838,13 @@ export function diffHydratedProperties(
         }
       }
     }
+  }
+
+  if (props.popover != null) {
+    // We listen to this event in case to ensure emulated bubble
+    // listeners still fire for the toggle event.
+    listenToNonDelegatedEvent('beforetoggle', domElement);
+    listenToNonDelegatedEvent('toggle', domElement);
   }
 
   if (props.onScroll != null) {

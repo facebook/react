@@ -220,6 +220,7 @@ export const mediaEventTypes: Array<DOMEventName> = [
 // set them on the actual target element itself. This is primarily
 // because these events do not consistently bubble in the DOM.
 export const nonDelegatedEvents: Set<DOMEventName> = new Set([
+  'beforetoggle',
   'cancel',
   'close',
   'invalid',
