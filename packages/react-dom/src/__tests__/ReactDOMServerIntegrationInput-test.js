@@ -46,6 +46,11 @@ desc('ReactDOMServerIntegrationInput', () => {
     expect(e.value).toBe('foo');
   });
 
+  itRenders('an input with a bigint value and an onChange', async render => {
+    const e = await render(<input value={5n} onChange={() => {}} />);
+    expect(e.value).toBe('5');
+  });
+
   itRenders('an input with a value and readOnly', async render => {
     const e = await render(<input value="foo" readOnly={true} />);
     expect(e.value).toBe('foo');
