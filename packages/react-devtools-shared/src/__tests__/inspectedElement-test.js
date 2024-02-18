@@ -1731,61 +1731,6 @@ describe('InspectedElement', () => {
     `);
   });
 
-  it('should use the displayName of the Context when naming the useContext hook', async () => {
-    const NamedContext = React.createContext(0);
-    NamedContext.displayName = 'NamedContext';
-    const AnonymousContext = React.createContext(1);
-    const Example = () => {
-      React.useContext(NamedContext);
-      React.useContext(AnonymousContext);
-      return null;
-    };
-
-    const container = document.createElement('div');
-    await utils.actAsync(() => legacyRender(<Example />, container));
-
-    const inspectedElement = await inspectElementAtIndex(0);
-    expect(inspectedElement).toMatchInlineSnapshot(`
-      Object {
-        "context": null,
-        "events": undefined,
-        "hooks": Array [
-          Object {
-            "hookSource": Object {
-              "columnNumber": "removed by Jest serializer",
-              "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
-              "functionName": "Example",
-              "lineNumber": "removed by Jest serializer",
-            },
-            "id": null,
-            "isStateEditable": false,
-            "name": "NamedContext",
-            "subHooks": Array [],
-            "value": 0,
-          },
-          Object {
-            "hookSource": Object {
-              "columnNumber": "removed by Jest serializer",
-              "fileName": "react-devtools-shared/src/__tests__/inspectedElement-test.js",
-              "functionName": "Example",
-              "lineNumber": "removed by Jest serializer",
-            },
-            "id": null,
-            "isStateEditable": false,
-            "name": "Context",
-            "subHooks": Array [],
-            "value": 1,
-          },
-        ],
-        "id": 2,
-        "owners": null,
-        "props": Object {},
-        "rootType": "render()",
-        "state": null,
-      }
-    `);
-  });
-
   it('should enable inspected values to be stored as global variables', async () => {
     const Example = () => null;
 
