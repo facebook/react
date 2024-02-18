@@ -5680,7 +5680,6 @@ describe('ReactDOMFizzServer', () => {
       expect(getVisibleChildren(document.head)).toEqual(<title>4</title>);
     });
 
-    // @gate enableBigIntSupport
     it('should accept a single bigint child', async () => {
       // a Single number child
       function App() {
