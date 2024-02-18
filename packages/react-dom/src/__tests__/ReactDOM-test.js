@@ -13,7 +13,6 @@ let React;
 let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 
 let act;
 
@@ -24,7 +23,6 @@ describe('ReactDOM', () => {
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
 
     act = require('internal-test-utils').act;
   });
@@ -68,23 +66,37 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('allows a DOM element to be used with a string', () => {
+  it('allows a DOM element to be used with a string', async () => {
     const element = React.createElement('div', {className: 'foo'});
-    const node = ReactTestUtils.renderIntoDocument(element);
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(element);
+    });
+
+    const node = container.firstChild;
     expect(node.tagName).toBe('DIV');
   });
 
-  it('should allow children to be passed as an argument', () => {
-    const argNode = ReactTestUtils.renderIntoDocument(
-      React.createElement('div', null, 'child'),
-    );
+  it('should allow children to be passed as an argument', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(React.createElement('div', null, 'child'));
+    });
+
+    const argNode = container.firstChild;
     expect(argNode.innerHTML).toBe('child');
   });
 
-  it('should overwrite props.children with children argument', () => {
-    const conflictNode = ReactTestUtils.renderIntoDocument(
-      React.createElement('div', {children: 'fakechild'}, 'child'),
-    );
+  it('should overwrite props.children with children argument', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(React.createElement('div', {children: 'fakechild'}, 'child'));
+    });
+
+    const conflictNode = container.firstChild;
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -92,45 +104,67 @@ describe('ReactDOM', () => {
    * We need to make sure that updates occur to the actual node that's in the
    * DOM, instead of a stale cache.
    */
-  it('should purge the DOM cache when removing nodes', () => {
-    let myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theDog" className="dog" />,
-        <div key="theBird" className="bird" />
-      </div>,
-    );
+  it('should purge the DOM cache when removing nodes', async () => {
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theDog" className="dog" />,
+          <div key="theBird" className="bird" />
+        </div>,
+      );
+    });
     // Warm the cache with theDog
-    myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theDog" className="dogbeforedelete" />,
-        <div key="theBird" className="bird" />,
-      </div>,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theDog" className="dogbeforedelete" />,
+          <div key="theBird" className="bird" />,
+        </div>,
+      );
+    });
     // Remove theDog - this should purge the cache
-    myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theBird" className="bird" />,
-      </div>,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theBird" className="bird" />,
+        </div>,
+      );
+    });
     // Now, put theDog back. It's now a different DOM node.
-    myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theDog" className="dog" />,
-        <div key="theBird" className="bird" />,
-      </div>,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theDog" className="dog" />,
+          <div key="theBird" className="bird" />,
+        </div>,
+      );
+    });
     // Change the className of theDog. It will use the same element
-    myDiv = ReactTestUtils.renderIntoDocument(
-      <div>
-        <div key="theDog" className="bigdog" />,
-        <div key="theBird" className="bird" />,
-      </div>,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(
+        <div>
+          <div key="theDog" className="bigdog" />,
+          <div key="theBird" className="bird" />,
+        </div>,
+      );
+    });
+
+    const myDiv = container.firstChild;
     const dog = myDiv.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });
 
-  it('throws in render() if the mount callback is not a function', () => {
+  it('throws in render() if the mount callback in legacy roots is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -182,7 +216,7 @@ describe('ReactDOM', () => {
     );
   });
 
-  it('throws in render() if the update callback is not a function', () => {
+  it('throws in render() if the update callback in legacy roots is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -411,21 +445,26 @@ describe('ReactDOM', () => {
   });
 
   it('should not crash calling findDOMNode inside a function component', async () => {
-    const root = ReactDOMClient.createRoot(document.createElement('div'));
-
     class Component extends React.Component {
       render() {
         return <div />;
       }
     }
 
-    const instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    let instance;
+    await act(() => {
+      root.render(<Component ref={current => (instance = current)} />);
+    });
+
     const App = () => {
       ReactDOM.findDOMNode(instance);
       return <div />;
     };
 
     if (__DEV__) {
+      root = ReactDOMClient.createRoot(document.createElement('div'));
       await act(() => {
         root.render(<App />);
       });
