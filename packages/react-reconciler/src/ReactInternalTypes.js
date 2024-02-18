@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
   ReactContext,
@@ -16,6 +15,7 @@ import type {
   Usable,
   ReactFormState,
   Awaited,
+  ReactDebugInfo,
 } from 'shared/ReactTypes';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
@@ -200,7 +200,7 @@ export type Fiber = {
   // to be the same as work in progress.
   // __DEV__ only
 
-  _debugSource?: Source | null,
+  _debugInfo?: ReactDebugInfo | null,
   _debugOwner?: Fiber | null,
   _debugIsCurrentlyTiming?: boolean,
   _debugNeedsRemount?: boolean,

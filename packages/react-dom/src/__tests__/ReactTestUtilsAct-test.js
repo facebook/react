@@ -8,7 +8,6 @@
  */
 
 let React;
-let ReactDOM;
 let ReactDOMClient;
 let ReactTestUtils;
 let Scheduler;
@@ -33,64 +32,37 @@ describe('ReactTestUtils.act()', () => {
     jest.restoreAllMocks();
   });
 
-  // first we run all the tests with concurrent mode
-  if (__EXPERIMENTAL__) {
-    let concurrentRoot = null;
-    const renderConcurrent = (el, dom) => {
-      concurrentRoot = ReactDOMClient.createRoot(dom);
-      if (__DEV__) {
-        act(() => concurrentRoot.render(el));
-      } else {
-        concurrentRoot.render(el);
-      }
-    };
+  let root = null;
+  const renderConcurrent = (el, dom) => {
+    root = ReactDOMClient.createRoot(dom);
+    if (__DEV__) {
+      act(() => root.render(el));
+    } else {
+      root.render(el);
+    }
+  };
 
-    const unmountConcurrent = _dom => {
-      if (__DEV__) {
-        act(() => {
-          if (concurrentRoot !== null) {
-            concurrentRoot.unmount();
-            concurrentRoot = null;
-          }
-        });
-      } else {
-        if (concurrentRoot !== null) {
-          concurrentRoot.unmount();
-          concurrentRoot = null;
+  const unmountConcurrent = _dom => {
+    if (__DEV__) {
+      act(() => {
+        if (root !== null) {
+          root.unmount();
+          root = null;
         }
+      });
+    } else {
+      if (root !== null) {
+        root.unmount();
+        root = null;
       }
-    };
+    }
+  };
 
-    const rerenderConcurrent = el => {
-      act(() => concurrentRoot.render(el));
-    };
+  const rerenderConcurrent = el => {
+    act(() => root.render(el));
+  };
 
-    runActTests(
-      'concurrent mode',
-      renderConcurrent,
-      unmountConcurrent,
-      rerenderConcurrent,
-    );
-  }
-
-  // and then in legacy mode
-
-  let legacyDom = null;
-  function renderLegacy(el, dom) {
-    legacyDom = dom;
-    ReactDOM.render(el, dom);
-  }
-
-  function unmountLegacy(dom) {
-    legacyDom = null;
-    ReactDOM.unmountComponentAtNode(dom);
-  }
-
-  function rerenderLegacy(el) {
-    ReactDOM.render(el, legacyDom);
-  }
-
-  runActTests('legacy mode', renderLegacy, unmountLegacy, rerenderLegacy);
+  runActTests(renderConcurrent, unmountConcurrent, rerenderConcurrent);
 
   describe('unacted effects', () => {
     function App() {
@@ -98,26 +70,19 @@ describe('ReactTestUtils.act()', () => {
       return null;
     }
 
-    it('does not warn in legacy mode', () => {
-      expect(() => {
-        ReactDOM.render(<App />, document.createElement('div'));
-      }).toErrorDev([]);
-    });
-
     // @gate __DEV__
-    it('does not warn in concurrent mode', () => {
-      const root = ReactDOMClient.createRoot(document.createElement('div'));
+    it('does not warn', () => {
+      root = ReactDOMClient.createRoot(document.createElement('div'));
       act(() => root.render(<App />));
     });
   });
 });
 
-function runActTests(label, render, unmount, rerender) {
-  describe(label, () => {
+function runActTests(render, unmount, rerender) {
+  describe('concurrent render', () => {
     beforeEach(() => {
       jest.resetModules();
       React = require('react');
-      ReactDOM = require('react-dom');
       ReactDOMClient = require('react-dom/client');
       ReactTestUtils = require('react-dom/test-utils');
       Scheduler = require('scheduler');
@@ -703,14 +668,6 @@ function runActTests(label, render, unmount, rerender) {
 
         // @gate __DEV__
         it('triggers fallbacks if available', async () => {
-          if (label !== 'legacy mode') {
-            // FIXME: Support for Concurrent Root intentionally removed
-            // from the public version of `act`. It will be added back in
-            // a future major version, before the Concurrent Root is released.
-            // Consider skipping all non-Legacy tests in this suite until then.
-            return;
-          }
-
           let resolved = false;
           let resolve;
           const promise = new Promise(_resolve => {
@@ -759,16 +716,8 @@ function runActTests(label, render, unmount, rerender) {
             });
           });
 
-          if (label === 'concurrent mode') {
-            // In Concurrent Mode, refresh transitions delay indefinitely.
-            expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
-          } else {
-            // In Legacy Mode, all fallbacks are forced to display,
-            // even during a refresh transition.
-            expect(
-              document.querySelector('[data-test-id=spinner]'),
-            ).not.toBeNull();
-          }
+          // In Concurrent Mode, refresh transitions delay indefinitely.
+          expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
 
           // resolve the promise
           await act(async () => {

@@ -11,7 +11,6 @@
 
 const React = require('react');
 const ReactDOMClient = require('react-dom/client');
-const ReactTestUtils = require('react-dom/test-utils');
 const act = require('internal-test-utils').act;
 
 // Helpers
@@ -174,46 +173,67 @@ describe('ReactMultiChildText', () => {
     ]);
   });
 
-  it('should throw if rendering both HTML and children', () => {
-    expect(function () {
-      ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
-      );
-    }).toThrow();
+  it('should throw if rendering both HTML and children', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(
+          <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
+        );
+      }),
+    ).rejects.toThrow();
   });
 
-  it('should render between nested components and inline children', () => {
-    ReactTestUtils.renderIntoDocument(
-      <div>
-        <h1>
-          <span />
-          <span />
-        </h1>
-      </div>,
-    );
+  it('should render between nested components and inline children', async () => {
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
 
-    expect(function () {
-      ReactTestUtils.renderIntoDocument(
+    await act(() => {
+      root.render(
         <div>
-          <h1>A</h1>
+          <h1>
+            <span />
+            <span />
+          </h1>
         </div>,
       );
-    }).not.toThrow();
+    });
 
-    expect(function () {
-      ReactTestUtils.renderIntoDocument(
-        <div>
-          <h1>{['A']}</h1>
-        </div>,
-      );
-    }).not.toThrow();
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(
+          <div>
+            <h1>A</h1>
+          </div>,
+        );
+      }),
+    ).resolves.not.toThrow();
 
-    expect(function () {
-      ReactTestUtils.renderIntoDocument(
-        <div>
-          <h1>{['A', 'B']}</h1>
-        </div>,
-      );
-    }).not.toThrow();
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(
+          <div>
+            <h1>{['A']}</h1>
+          </div>,
+        );
+      }),
+    ).resolves.not.toThrow();
+
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(
+          <div>
+            <h1>{['A', 'B']}</h1>
+          </div>,
+        );
+      }),
+    ).resolves.not.toThrow();
   });
 });

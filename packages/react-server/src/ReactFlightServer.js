@@ -15,7 +15,7 @@ import {
   enableBinaryFlight,
   enablePostpone,
   enableTaint,
-  enableServerContext,
+  enableServerComponentKeys,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -45,17 +45,16 @@ import type {
   HintCode,
   HintModel,
 } from './ReactFlightServerConfig';
-import type {ContextSnapshot} from './ReactFlightNewContext';
 import type {ThenableState} from './ReactFlightThenable';
 import type {
-  ReactProviderType,
-  ServerContextJSONValue,
   Wakeable,
   Thenable,
   PendingThenable,
   FulfilledThenable,
   RejectedThenable,
-  ReactServerContext,
+  ReactDebugInfo,
+  ReactComponentInfo,
+  ReactAsyncInfo,
 } from 'shared/ReactTypes';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
@@ -81,13 +80,6 @@ import {
   resetHooksForRequest,
 } from './ReactFlightHooks';
 import {DefaultCacheDispatcher} from './flight/ReactFlightServerCache';
-import {
-  pushProvider,
-  popProvider,
-  switchContext,
-  getActiveContext,
-  rootContextSnapshot,
-} from './ReactFlightNewContext';
 
 import {
   getIteratorFn,
@@ -97,7 +89,6 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
   REACT_POSTPONE_TYPE,
-  REACT_PROVIDER_TYPE,
 } from 'shared/ReactSymbols';
 
 import {
@@ -109,7 +100,6 @@ import {
   objectName,
 } from 'shared/ReactSerializationErrors';
 
-import {getOrCreateServerContext} from 'shared/ReactServerContextRegistry';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import ReactServerSharedInternals from './ReactServerSharedInternals';
 import isArray from 'shared/isArray';
@@ -137,7 +127,7 @@ type ReactJSONValue =
   | boolean
   | number
   | null
-  | $ReadOnlyArray<ReactJSONValue>
+  | $ReadOnlyArray<ReactClientValue>
   | ReactClientObject;
 
 // Serializable values
@@ -152,7 +142,6 @@ export type ReactClientValue =
   // subtype, so the receiver can only accept once of these.
   | React$Element<string>
   | React$Element<ClientReference<any> & any>
-  | ReactServerContext<any>
   | string
   | boolean
   | number
@@ -180,7 +169,9 @@ type Task = {
   status: 0 | 1 | 3 | 4,
   model: ReactClientValue,
   ping: () => void,
-  context: ContextSnapshot,
+  toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
+  keyPath: null | string, // parent server component keys
+  implicitSlot: boolean, // true if the root server component of this sequence had a null key
   thenableState: ThenableState | null,
 };
 
@@ -205,14 +196,14 @@ export type Request = {
   writtenSymbols: Map<symbol, number>,
   writtenClientReferences: Map<ClientReferenceKey, number>,
   writtenServerReferences: Map<ServerReference<any>, number>,
-  writtenProviders: Map<string, number>,
   writtenObjects: WeakMap<Reference, number>, // -1 means "seen" but not outlined.
   identifierPrefix: string,
   identifierCount: number,
   taintCleanupQueue: Array<string | bigint>,
   onError: (error: mixed) => ?string,
   onPostpone: (reason: string) => void,
-  toJSON: (key: string, value: ReactClientValue) => ReactJSONValue,
+  // DEV-only
+  environmentName: string,
 };
 
 const {
@@ -263,9 +254,9 @@ export function createRequest(
   model: ReactClientValue,
   bundlerConfig: ClientManifest,
   onError: void | ((error: mixed) => ?string),
-  context?: Array<[string, ServerContextJSONValue]>,
   identifierPrefix?: string,
   onPostpone: void | ((reason: string) => void),
+  environmentName: void | string,
 ): Request {
   if (
     ReactCurrentCache.current !== null &&
@@ -285,7 +276,7 @@ export function createRequest(
     TaintRegistryPendingRequests.add(cleanupQueue);
   }
   const hints = createHints();
-  const request: Request = {
+  const request: Request = ({
     status: OPEN,
     flushScheduled: false,
     fatalError: null,
@@ -304,21 +295,18 @@ export function createRequest(
     writtenSymbols: new Map(),
     writtenClientReferences: new Map(),
     writtenServerReferences: new Map(),
-    writtenProviders: new Map(),
     writtenObjects: new WeakMap(),
     identifierPrefix: identifierPrefix || '',
     identifierCount: 1,
     taintCleanupQueue: cleanupQueue,
     onError: onError === undefined ? defaultErrorHandler : onError,
     onPostpone: onPostpone === undefined ? defaultPostponeHandler : onPostpone,
-    // $FlowFixMe[missing-this-annot]
-    toJSON: function (key: string, value: ReactClientValue): ReactJSONValue {
-      return resolveModelToJSON(request, this, key, value);
-    },
-  };
-  request.pendingChunks++;
-  const rootContext = createRootContext(context);
-  const rootTask = createTask(request, model, rootContext, abortSet);
+  }: any);
+  if (__DEV__) {
+    request.environmentName =
+      environmentName === undefined ? 'server' : environmentName;
+  }
+  const rootTask = createTask(request, model, null, false, abortSet);
   pingedTasks.push(rootTask);
   return request;
 }
@@ -334,22 +322,26 @@ export function resolveRequest(): null | Request {
   return null;
 }
 
-function createRootContext(
-  reqContext?: Array<[string, ServerContextJSONValue]>,
-) {
-  return importServerContexts(reqContext);
-}
-
-const POP = {};
-
-function serializeThenable(request: Request, thenable: Thenable<any>): number {
-  request.pendingChunks++;
+function serializeThenable(
+  request: Request,
+  task: Task,
+  thenable: Thenable<any>,
+): number {
   const newTask = createTask(
     request,
     null,
-    getActiveContext(),
+    task.keyPath, // the server component sequence continues through Promise-as-a-child.
+    task.implicitSlot,
     request.abortableTasks,
   );
+
+  if (__DEV__) {
+    // If this came from Flight, forward any debug info into this new row.
+    const debugInfo: ?ReactDebugInfo = (thenable: any)._debugInfo;
+    if (debugInfo) {
+      forwardDebugInfo(request, newTask.id, debugInfo);
+    }
+  }
 
   switch (thenable.status) {
     case 'fulfilled': {
@@ -501,17 +493,207 @@ function createLazyWrapperAroundWakeable(wakeable: Wakeable) {
     _payload: thenable,
     _init: readThenable,
   };
+  if (__DEV__) {
+    // If this came from React, transfer the debug info.
+    lazyType._debugInfo = (thenable: any)._debugInfo || [];
+  }
   return lazyType;
 }
 
-function attemptResolveElement(
+function renderFunctionComponent<Props>(
   request: Request,
+  task: Task,
+  key: null | string,
+  Component: (p: Props, arg: void) => any,
+  props: Props,
+): ReactJSONValue {
+  // Reset the task's thenable state before continuing, so that if a later
+  // component suspends we can reuse the same task object. If the same
+  // component suspends again, the thenable state will be restored.
+  const prevThenableState = task.thenableState;
+  task.thenableState = null;
+
+  if (__DEV__) {
+    if (debugID === null) {
+      // We don't have a chunk to assign debug info. We need to outline this
+      // component to assign it an ID.
+      return outlineTask(request, task);
+    } else if (prevThenableState !== null) {
+      // This is a replay and we've already emitted the debug info of this component
+      // in the first pass. We skip emitting a duplicate line.
+    } else {
+      // This is a new component in the same task so we can emit more debug info.
+      const componentName =
+        (Component: any).displayName || Component.name || '';
+      request.pendingChunks++;
+      emitDebugChunk(request, debugID, {
+        name: componentName,
+        env: request.environmentName,
+      });
+    }
+  }
+
+  prepareToUseHooksForComponent(prevThenableState);
+  // The secondArg is always undefined in Server Components since refs error early.
+  const secondArg = undefined;
+  let result = Component(props, secondArg);
+  if (
+    typeof result === 'object' &&
+    result !== null &&
+    typeof result.then === 'function'
+  ) {
+    // When the return value is in children position we can resolve it immediately,
+    // to its value without a wrapper if it's synchronously available.
+    const thenable: Thenable<any> = result;
+    if (thenable.status === 'fulfilled') {
+      return thenable.value;
+    }
+    // TODO: Once we accept Promises as children on the client, we can just return
+    // the thenable here.
+    result = createLazyWrapperAroundWakeable(result);
+  }
+  // Track this element's key on the Server Component on the keyPath context..
+  const prevKeyPath = task.keyPath;
+  const prevImplicitSlot = task.implicitSlot;
+  if (key !== null) {
+    // Append the key to the path. Technically a null key should really add the child
+    // index. We don't do that to hold the payload small and implementation simple.
+    task.keyPath = prevKeyPath === null ? key : prevKeyPath + ',' + key;
+  } else if (prevKeyPath === null) {
+    // This sequence of Server Components has no keys. This means that it was rendered
+    // in a slot that needs to assign an implicit key. Even if children below have
+    // explicit keys, they should not be used for the outer most key since it might
+    // collide with other slots in that set.
+    task.implicitSlot = true;
+  }
+  const json = renderModelDestructive(request, task, emptyRoot, '', result);
+  task.keyPath = prevKeyPath;
+  task.implicitSlot = prevImplicitSlot;
+  return json;
+}
+
+function renderFragment(
+  request: Request,
+  task: Task,
+  children: $ReadOnlyArray<ReactClientValue>,
+): ReactJSONValue {
+  if (__DEV__) {
+    const debugInfo: ?ReactDebugInfo = (children: any)._debugInfo;
+    if (debugInfo) {
+      // If this came from Flight, forward any debug info into this new row.
+      if (debugID === null) {
+        // We don't have a chunk to assign debug info. We need to outline this
+        // component to assign it an ID.
+        return outlineTask(request, task);
+      } else {
+        // Forward any debug info we have the first time we see it.
+        // We do this after init so that we have received all the debug info
+        // from the server by the time we emit it.
+        forwardDebugInfo(request, debugID, debugInfo);
+      }
+    }
+  }
+  if (!enableServerComponentKeys) {
+    return children;
+  }
+  if (task.keyPath !== null) {
+    // We have a Server Component that specifies a key but we're now splitting
+    // the tree using a fragment.
+    const fragment = [
+      REACT_ELEMENT_TYPE,
+      REACT_FRAGMENT_TYPE,
+      task.keyPath,
+      {children},
+    ];
+    if (!task.implicitSlot) {
+      // If this was keyed inside a set. I.e. the outer Server Component was keyed
+      // then we need to handle reorders of the whole set. To do this we need to wrap
+      // this array in a keyed Fragment.
+      return fragment;
+    }
+    // If the outer Server Component was implicit but then an inner one had a key
+    // we don't actually need to be able to move the whole set around. It'll always be
+    // in an implicit slot. The key only exists to be able to reset the state of the
+    // children. We could achieve the same effect by passing on the keyPath to the next
+    // set of components inside the fragment. This would also allow a keyless fragment
+    // reconcile against a single child.
+    // Unfortunately because of JSON.stringify, we can't call the recursive loop for
+    // each child within this context because we can't return a set with already resolved
+    // values. E.g. a string would get double encoded. Returning would pop the context.
+    // So instead, we wrap it with an unkeyed fragment and inner keyed fragment.
+    return [fragment];
+  }
+  // Since we're yielding here, that implicitly resets the keyPath context on the
+  // way up. Which is what we want since we've consumed it. If this changes to
+  // be recursive serialization, we need to reset the keyPath and implicitSlot,
+  // before recursing here.
+  return children;
+}
+
+function renderClientElement(
+  task: Task,
   type: any,
-  key: null | React$Key,
+  key: null | string,
+  props: any,
+): ReactJSONValue {
+  if (!enableServerComponentKeys) {
+    return [REACT_ELEMENT_TYPE, type, key, props];
+  }
+  // We prepend the terminal client element that actually gets serialized with
+  // the keys of any Server Components which are not serialized.
+  const keyPath = task.keyPath;
+  if (key === null) {
+    key = keyPath;
+  } else if (keyPath !== null) {
+    key = keyPath + ',' + key;
+  }
+  const element = [REACT_ELEMENT_TYPE, type, key, props];
+  if (task.implicitSlot && key !== null) {
+    // The root Server Component had no key so it was in an implicit slot.
+    // If we had a key lower, it would end up in that slot with an explicit key.
+    // We wrap the element in a fragment to give it an implicit key slot with
+    // an inner explicit key.
+    return [element];
+  }
+  // Since we're yielding here, that implicitly resets the keyPath context on the
+  // way up. Which is what we want since we've consumed it. If this changes to
+  // be recursive serialization, we need to reset the keyPath and implicitSlot,
+  // before recursing here. We also need to reset it once we render into an array
+  // or anything else too which we also get implicitly.
+  return element;
+}
+
+// The chunk ID we're currently rendering that we can assign debug data to.
+let debugID: null | number = null;
+
+function outlineTask(request: Request, task: Task): ReactJSONValue {
+  const newTask = createTask(
+    request,
+    task.model, // the currently rendering element
+    task.keyPath, // unlike outlineModel this one carries along context
+    task.implicitSlot,
+    request.abortableTasks,
+  );
+
+  retryTask(request, newTask);
+  if (newTask.status === COMPLETED) {
+    // We completed synchronously so we can refer to this by reference. This
+    // makes it behaves the same as prod during deserialization.
+    return serializeByValueID(newTask.id);
+  }
+  // This didn't complete synchronously so it wouldn't have even if we didn't
+  // outline it, so this would reduce to a lazy reference even in prod.
+  return serializeLazyID(newTask.id);
+}
+
+function renderElement(
+  request: Request,
+  task: Task,
+  type: any,
+  key: null | string,
   ref: mixed,
   props: any,
-  prevThenableState: ThenableState | null,
-): ReactClientValue {
+): ReactJSONValue {
   if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
@@ -529,101 +711,51 @@ function attemptResolveElement(
   if (typeof type === 'function') {
     if (isClientReference(type)) {
       // This is a reference to a Client Component.
-      return [REACT_ELEMENT_TYPE, type, key, props];
+      return renderClientElement(task, type, key, props);
     }
-    // This is a server-side component.
-    prepareToUseHooksForComponent(prevThenableState);
-    const result = type(props);
-    if (
-      typeof result === 'object' &&
-      result !== null &&
-      typeof result.then === 'function'
-    ) {
-      // When the return value is in children position we can resolve it immediately,
-      // to its value without a wrapper if it's synchronously available.
-      const thenable: Thenable<any> = result;
-      if (thenable.status === 'fulfilled') {
-        return thenable.value;
-      }
-      // TODO: Once we accept Promises as children on the client, we can just return
-      // the thenable here.
-      return createLazyWrapperAroundWakeable(result);
-    }
-    return result;
+    // This is a Server Component.
+    return renderFunctionComponent(request, task, key, type, props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
-    return [REACT_ELEMENT_TYPE, type, key, props];
+    return renderClientElement(task, type, key, props);
   } else if (typeof type === 'symbol') {
-    if (type === REACT_FRAGMENT_TYPE) {
+    if (type === REACT_FRAGMENT_TYPE && key === null) {
       // For key-less fragments, we add a small optimization to avoid serializing
       // it as a wrapper.
-      // TODO: If a key is specified, we should propagate its key to any children.
-      // Same as if a Server Component has a key.
-      return props.children;
+      const prevImplicitSlot = task.implicitSlot;
+      if (task.keyPath === null) {
+        task.implicitSlot = true;
+      }
+      const json = renderModelDestructive(
+        request,
+        task,
+        emptyRoot,
+        '',
+        props.children,
+      );
+      task.implicitSlot = prevImplicitSlot;
+      return json;
     }
     // This might be a built-in React component. We'll let the client decide.
     // Any built-in works as long as its props are serializable.
-    return [REACT_ELEMENT_TYPE, type, key, props];
+    return renderClientElement(task, type, key, props);
   } else if (type != null && typeof type === 'object') {
     if (isClientReference(type)) {
       // This is a reference to a Client Component.
-      return [REACT_ELEMENT_TYPE, type, key, props];
+      return renderClientElement(task, type, key, props);
     }
     switch (type.$$typeof) {
       case REACT_LAZY_TYPE: {
         const payload = type._payload;
         const init = type._init;
         const wrappedType = init(payload);
-        return attemptResolveElement(
-          request,
-          wrappedType,
-          key,
-          ref,
-          props,
-          prevThenableState,
-        );
+        return renderElement(request, task, wrappedType, key, ref, props);
       }
       case REACT_FORWARD_REF_TYPE: {
-        const render = type.render;
-        prepareToUseHooksForComponent(prevThenableState);
-        return render(props, undefined);
+        return renderFunctionComponent(request, task, key, type.render, props);
       }
       case REACT_MEMO_TYPE: {
-        return attemptResolveElement(
-          request,
-          type.type,
-          key,
-          ref,
-          props,
-          prevThenableState,
-        );
-      }
-      case REACT_PROVIDER_TYPE: {
-        if (enableServerContext) {
-          pushProvider(type._context, props.value);
-          if (__DEV__) {
-            const extraKeys = Object.keys(props).filter(value => {
-              if (value === 'children' || value === 'value') {
-                return false;
-              }
-              return true;
-            });
-            if (extraKeys.length !== 0) {
-              console.error(
-                'ServerContext can only have a value prop and children. Found: %s',
-                JSON.stringify(extraKeys),
-              );
-            }
-          }
-          return [
-            REACT_ELEMENT_TYPE,
-            type,
-            key,
-            // Rely on __popProvider being serialized last to pop the provider.
-            {value: props.value, children: props.children, __pop: POP},
-          ];
-        }
-        // Fallthrough
+        return renderElement(request, task, type.type, key, ref, props);
       }
     }
   }
@@ -644,16 +776,74 @@ function pingTask(request: Request, task: Task): void {
 function createTask(
   request: Request,
   model: ReactClientValue,
-  context: ContextSnapshot,
+  keyPath: null | string,
+  implicitSlot: boolean,
   abortSet: Set<Task>,
 ): Task {
+  request.pendingChunks++;
   const id = request.nextChunkId++;
+  if (typeof model === 'object' && model !== null) {
+    // If we're about to write this into a new task we can assign it an ID early so that
+    // any other references can refer to the value we're about to write.
+    if (enableServerComponentKeys && (keyPath !== null || implicitSlot)) {
+      // If we're in some kind of context we can't necessarily reuse this object depending
+      // what parent components are used.
+    } else {
+      request.writtenObjects.set(model, id);
+    }
+  }
   const task: Task = {
     id,
     status: PENDING,
     model,
-    context,
+    keyPath,
+    implicitSlot,
     ping: () => pingTask(request, task),
+    toJSON: function (
+      this:
+        | {+[key: string | number]: ReactClientValue}
+        | $ReadOnlyArray<ReactClientValue>,
+      parentPropertyName: string,
+      value: ReactClientValue,
+    ): ReactJSONValue {
+      const parent = this;
+      // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
+      if (__DEV__) {
+        // $FlowFixMe[incompatible-use]
+        const originalValue = parent[parentPropertyName];
+        if (
+          typeof originalValue === 'object' &&
+          originalValue !== value &&
+          !(originalValue instanceof Date)
+        ) {
+          if (objectName(originalValue) !== 'Object') {
+            const jsxParentType = jsxChildrenParents.get(parent);
+            if (typeof jsxParentType === 'string') {
+              console.error(
+                '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
+                objectName(originalValue),
+                describeObjectForErrorMessage(parent, parentPropertyName),
+              );
+            } else {
+              console.error(
+                'Only plain objects can be passed to Client Components from Server Components. ' +
+                  '%s objects are not supported.%s',
+                objectName(originalValue),
+                describeObjectForErrorMessage(parent, parentPropertyName),
+              );
+            }
+          } else {
+            console.error(
+              'Only plain objects can be passed to Client Components from Server Components. ' +
+                'Objects with toJSON methods are not supported. Convert it manually ' +
+                'to a simple value before passing it to props.%s',
+              describeObjectForErrorMessage(parent, parentPropertyName),
+            );
+          }
+        }
+      }
+      return renderModel(request, task, parent, parentPropertyName, value);
+    },
     thenableState: null,
   };
   abortSet.add(task);
@@ -678,10 +868,6 @@ function serializeServerReferenceID(id: number): string {
 
 function serializeSymbolReference(name: string): string {
   return '$S' + name;
-}
-
-function serializeProviderReference(name: string): string {
-  return '$P' + name;
 }
 
 function serializeNumber(number: number): string | number {
@@ -733,9 +919,9 @@ function encodeReferenceChunk(
 function serializeClientReference(
   request: Request,
   parent:
-    | {+[key: string | number]: ReactClientValue}
+    | {+[propertyName: string | number]: ReactClientValue}
     | $ReadOnlyArray<ReactClientValue>,
-  key: string,
+  parentPropertyName: string,
   clientReference: ClientReference<any>,
 ): string {
   const clientReferenceKey: ClientReferenceKey =
@@ -743,7 +929,7 @@ function serializeClientReference(
   const writtenClientReferences = request.writtenClientReferences;
   const existingId = writtenClientReferences.get(clientReferenceKey);
   if (existingId !== undefined) {
-    if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
+    if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
       // If we're encoding the "type" of an element, we can refer
       // to that by a lazy reference instead of directly since React
       // knows how to deal with lazy values. This lets us suspend
@@ -760,7 +946,7 @@ function serializeClientReference(
     const importId = request.nextChunkId++;
     emitImportChunk(request, importId, clientReferenceMetadata);
     writtenClientReferences.set(clientReferenceKey, importId);
-    if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
+    if (parent[0] === REACT_ELEMENT_TYPE && parentPropertyName === '1') {
       // If we're encoding the "type" of an element, we can refer
       // to that by a lazy reference instead of directly since React
       // knows how to deal with lazy values. This lets us suspend
@@ -778,12 +964,12 @@ function serializeClientReference(
   }
 }
 
-function outlineModel(request: Request, value: any): number {
-  request.pendingChunks++;
+function outlineModel(request: Request, value: ReactClientValue): number {
   const newTask = createTask(
     request,
     value,
-    getActiveContext(),
+    null, // The way we use outlining is for reusing an object.
+    false, // It makes no sense for that use case to be contextual.
     request.abortableTasks,
   );
   retryTask(request, newTask);
@@ -792,10 +978,6 @@ function outlineModel(request: Request, value: any): number {
 
 function serializeServerReference(
   request: Request,
-  parent:
-    | {+[key: string | number]: ReactClientValue}
-    | $ReadOnlyArray<ReactClientValue>,
-  key: string,
   serverReference: ServerReference<any>,
 ): string {
   const writtenServerReferences = request.writtenServerReferences;
@@ -907,170 +1089,90 @@ function escapeStringValue(value: string): string {
   }
 }
 
-let insideContextProps = null;
-let isInsideContextValue = false;
 let modelRoot: null | ReactClientValue = false;
 
-function resolveModelToJSON(
+function renderModel(
   request: Request,
+  task: Task,
   parent:
     | {+[key: string | number]: ReactClientValue}
     | $ReadOnlyArray<ReactClientValue>,
   key: string,
   value: ReactClientValue,
 ): ReactJSONValue {
-  // Make sure that `parent[key]` wasn't JSONified before `value` was passed to us
-  if (__DEV__) {
-    // $FlowFixMe[incompatible-use]
-    const originalValue = parent[key];
-    if (
-      typeof originalValue === 'object' &&
-      originalValue !== value &&
-      !(originalValue instanceof Date)
-    ) {
-      if (objectName(originalValue) !== 'Object') {
-        const jsxParentType = jsxChildrenParents.get(parent);
-        if (typeof jsxParentType === 'string') {
-          console.error(
-            '%s objects cannot be rendered as text children. Try formatting it using toString().%s',
-            objectName(originalValue),
-            describeObjectForErrorMessage(parent, key),
-          );
-        } else {
-          console.error(
-            'Only plain objects can be passed to Client Components from Server Components. ' +
-              '%s objects are not supported.%s',
-            objectName(originalValue),
-            describeObjectForErrorMessage(parent, key),
-          );
-        }
-      } else {
-        console.error(
-          'Only plain objects can be passed to Client Components from Server Components. ' +
-            'Objects with toJSON methods are not supported. Convert it manually ' +
-            'to a simple value before passing it to props.%s',
-          describeObjectForErrorMessage(parent, key),
+  const prevKeyPath = task.keyPath;
+  const prevImplicitSlot = task.implicitSlot;
+  try {
+    return renderModelDestructive(request, task, parent, key, value);
+  } catch (thrownValue) {
+    const x =
+      thrownValue === SuspenseException
+        ? // This is a special type of exception used for Suspense. For historical
+          // reasons, the rest of the Suspense implementation expects the thrown
+          // value to be a thenable, because before `use` existed that was the
+          // (unstable) API for suspending. This implementation detail can change
+          // later, once we deprecate the old API in favor of `use`.
+          getSuspendedThenable()
+        : thrownValue;
+    // If the suspended/errored value was an element or lazy it can be reduced
+    // to a lazy reference, so that it doesn't error the parent.
+    const model = task.model;
+    const wasReactNode =
+      typeof model === 'object' &&
+      model !== null &&
+      ((model: any).$$typeof === REACT_ELEMENT_TYPE ||
+        (model: any).$$typeof === REACT_LAZY_TYPE);
+    if (typeof x === 'object' && x !== null) {
+      // $FlowFixMe[method-unbinding]
+      if (typeof x.then === 'function') {
+        // Something suspended, we'll need to create a new task and resolve it later.
+        const newTask = createTask(
+          request,
+          task.model,
+          task.keyPath,
+          task.implicitSlot,
+          request.abortableTasks,
         );
-      }
-    }
-  }
+        const ping = newTask.ping;
+        (x: any).then(ping, ping);
+        newTask.thenableState = getThenableStateAfterSuspending();
 
-  // Special Symbols
-  switch (value) {
-    case REACT_ELEMENT_TYPE:
-      return '$';
-  }
+        // Restore the context. We assume that this will be restored by the inner
+        // functions in case nothing throws so we don't use "finally" here.
+        task.keyPath = prevKeyPath;
+        task.implicitSlot = prevImplicitSlot;
 
-  if (__DEV__) {
-    if (
-      enableServerContext &&
-      parent[0] === REACT_ELEMENT_TYPE &&
-      parent[1] &&
-      (parent[1]: any).$$typeof === REACT_PROVIDER_TYPE &&
-      key === '3'
-    ) {
-      insideContextProps = value;
-    } else if (insideContextProps === parent && key === 'value') {
-      isInsideContextValue = true;
-    } else if (insideContextProps === parent && key === 'children') {
-      isInsideContextValue = false;
-    }
-  }
-
-  // Resolve Server Components.
-  while (
-    typeof value === 'object' &&
-    value !== null &&
-    ((value: any).$$typeof === REACT_ELEMENT_TYPE ||
-      (value: any).$$typeof === REACT_LAZY_TYPE)
-  ) {
-    if (__DEV__) {
-      if (enableServerContext && isInsideContextValue) {
-        console.error('React elements are not allowed in ServerContext');
-      }
-    }
-
-    try {
-      switch ((value: any).$$typeof) {
-        case REACT_ELEMENT_TYPE: {
-          const writtenObjects = request.writtenObjects;
-          const existingId = writtenObjects.get(value);
-          if (existingId !== undefined) {
-            if (existingId === -1) {
-              // Seen but not yet outlined.
-              const newId = outlineModel(request, value);
-              return serializeByValueID(newId);
-            } else if (modelRoot === value) {
-              // This is the ID we're currently emitting so we need to write it
-              // once but if we discover it again, we refer to it by id.
-              modelRoot = null;
-            } else {
-              // We've already emitted this as an outlined object, so we can
-              // just refer to that by its existing ID.
-              return serializeByValueID(existingId);
-            }
-          } else {
-            // This is the first time we've seen this object. We may never see it again
-            // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
-            writtenObjects.set(value, -1);
-          }
-
-          // TODO: Concatenate keys of parents onto children.
-          const element: React$Element<any> = (value: any);
-          // Attempt to render the Server Component.
-          value = attemptResolveElement(
-            request,
-            element.type,
-            element.key,
-            element.ref,
-            element.props,
-            null,
-          );
-          break;
-        }
-        case REACT_LAZY_TYPE: {
-          const payload = (value: any)._payload;
-          const init = (value: any)._init;
-          value = init(payload);
-          break;
-        }
-      }
-    } catch (thrownValue) {
-      const x =
-        thrownValue === SuspenseException
-          ? // This is a special type of exception used for Suspense. For historical
-            // reasons, the rest of the Suspense implementation expects the thrown
-            // value to be a thenable, because before `use` existed that was the
-            // (unstable) API for suspending. This implementation detail can change
-            // later, once we deprecate the old API in favor of `use`.
-            getSuspendedThenable()
-          : thrownValue;
-      if (typeof x === 'object' && x !== null) {
-        // $FlowFixMe[method-unbinding]
-        if (typeof x.then === 'function') {
-          // Something suspended, we'll need to create a new task and resolve it later.
-          request.pendingChunks++;
-          const newTask = createTask(
-            request,
-            value,
-            getActiveContext(),
-            request.abortableTasks,
-          );
-          const ping = newTask.ping;
-          x.then(ping, ping);
-          newTask.thenableState = getThenableStateAfterSuspending();
+        if (wasReactNode) {
           return serializeLazyID(newTask.id);
-        } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
-          // Something postponed. We'll still send everything we have up until this point.
-          // We'll replace this element with a lazy reference that postpones on the client.
-          const postponeInstance: Postpone = (x: any);
-          request.pendingChunks++;
-          const postponeId = request.nextChunkId++;
-          logPostpone(request, postponeInstance.message);
-          emitPostponeChunk(request, postponeId, postponeInstance);
+        }
+        return serializeByValueID(newTask.id);
+      } else if (enablePostpone && x.$$typeof === REACT_POSTPONE_TYPE) {
+        // Something postponed. We'll still send everything we have up until this point.
+        // We'll replace this element with a lazy reference that postpones on the client.
+        const postponeInstance: Postpone = (x: any);
+        request.pendingChunks++;
+        const postponeId = request.nextChunkId++;
+        logPostpone(request, postponeInstance.message);
+        emitPostponeChunk(request, postponeId, postponeInstance);
+
+        // Restore the context. We assume that this will be restored by the inner
+        // functions in case nothing throws so we don't use "finally" here.
+        task.keyPath = prevKeyPath;
+        task.implicitSlot = prevImplicitSlot;
+
+        if (wasReactNode) {
           return serializeLazyID(postponeId);
         }
+        return serializeByValueID(postponeId);
       }
+    }
+
+    // Restore the context. We assume that this will be restored by the inner
+    // functions in case nothing throws so we don't use "finally" here.
+    task.keyPath = prevKeyPath;
+    task.implicitSlot = prevImplicitSlot;
+
+    if (wasReactNode) {
       // Something errored. We'll still send everything we have up until this point.
       // We'll replace this element with a lazy reference that throws on the client
       // once it gets rendered.
@@ -1080,6 +1182,28 @@ function resolveModelToJSON(
       emitErrorChunk(request, errorId, digest, x);
       return serializeLazyID(errorId);
     }
+    // Something errored but it was not in a React Node. There's no need to serialize
+    // it by value because it'll just error the whole parent row anyway so we can
+    // just stop any siblings and error the whole parent row.
+    throw x;
+  }
+}
+
+function renderModelDestructive(
+  request: Request,
+  task: Task,
+  parent:
+    | {+[propertyName: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
+  parentPropertyName: string,
+  value: ReactClientValue,
+): ReactJSONValue {
+  // Set the currently rendering model
+  task.model = value;
+
+  // Special Symbol, that's very common.
+  if (value === REACT_ELEMENT_TYPE) {
+    return '$';
   }
 
   if (value === null) {
@@ -1087,14 +1211,122 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'object') {
+    switch ((value: any).$$typeof) {
+      case REACT_ELEMENT_TYPE: {
+        const writtenObjects = request.writtenObjects;
+        const existingId = writtenObjects.get(value);
+        if (existingId !== undefined) {
+          if (
+            enableServerComponentKeys &&
+            (task.keyPath !== null || task.implicitSlot)
+          ) {
+            // If we're in some kind of context we can't reuse the result of this render or
+            // previous renders of this element. We only reuse elements if they're not wrapped
+            // by another Server Component.
+          } else if (modelRoot === value) {
+            // This is the ID we're currently emitting so we need to write it
+            // once but if we discover it again, we refer to it by id.
+            modelRoot = null;
+          } else if (existingId === -1) {
+            // Seen but not yet outlined.
+            // TODO: If we throw here we can treat this as suspending which causes an outline
+            // but that is able to reuse the same task if we're already in one but then that
+            // will be a lazy future value rather than guaranteed to exist but maybe that's good.
+            const newId = outlineModel(request, (value: any));
+            return serializeByValueID(newId);
+          } else {
+            // We've already emitted this as an outlined object, so we can refer to that by its
+            // existing ID. TODO: We should use a lazy reference since, unlike plain objects,
+            // elements might suspend so it might not have emitted yet even if we have the ID for
+            // it. However, this creates an extra wrapper when it's not needed. We should really
+            // detect whether this already was emitted and synchronously available. In that
+            // case we can refer to it synchronously and only make it lazy otherwise.
+            // We currently don't have a data structure that lets us see that though.
+            return serializeByValueID(existingId);
+          }
+        } else {
+          // This is the first time we've seen this object. We may never see it again
+          // so we'll inline it. Mark it as seen. If we see it again, we'll outline.
+          writtenObjects.set(value, -1);
+        }
+
+        const element: React$Element<any> = (value: any);
+
+        if (__DEV__) {
+          const debugInfo: ?ReactDebugInfo = (value: any)._debugInfo;
+          if (debugInfo) {
+            // If this came from Flight, forward any debug info into this new row.
+            if (debugID === null) {
+              // We don't have a chunk to assign debug info. We need to outline this
+              // component to assign it an ID.
+              return outlineTask(request, task);
+            } else {
+              // Forward any debug info we have the first time we see it.
+              forwardDebugInfo(request, debugID, debugInfo);
+            }
+          }
+        }
+
+        // Attempt to render the Server Component.
+        return renderElement(
+          request,
+          task,
+          element.type,
+          // $FlowFixMe[incompatible-call] the key of an element is null | string
+          element.key,
+          element.ref,
+          element.props,
+        );
+      }
+      case REACT_LAZY_TYPE: {
+        // Reset the task's thenable state before continuing. If there was one, it was
+        // from suspending the lazy before.
+        task.thenableState = null;
+
+        const lazy: LazyComponent<any, any> = (value: any);
+        const payload = lazy._payload;
+        const init = lazy._init;
+        const resolvedModel = init(payload);
+        if (__DEV__) {
+          const debugInfo: ?ReactDebugInfo = lazy._debugInfo;
+          if (debugInfo) {
+            // If this came from Flight, forward any debug info into this new row.
+            if (debugID === null) {
+              // We don't have a chunk to assign debug info. We need to outline this
+              // component to assign it an ID.
+              return outlineTask(request, task);
+            } else {
+              // Forward any debug info we have the first time we see it.
+              // We do this after init so that we have received all the debug info
+              // from the server by the time we emit it.
+              forwardDebugInfo(request, debugID, debugInfo);
+            }
+          }
+        }
+        return renderModelDestructive(
+          request,
+          task,
+          emptyRoot,
+          '',
+          resolvedModel,
+        );
+      }
+    }
+
+    if (isClientReference(value)) {
+      return serializeClientReference(
+        request,
+        parent,
+        parentPropertyName,
+        (value: any),
+      );
+    }
+
     if (enableTaint) {
       const tainted = TaintRegistryObjects.get(value);
       if (tainted !== undefined) {
         throwTaintViolation(tainted);
       }
-    }
-    if (isClientReference(value)) {
-      return serializeClientReference(request, parent, key, (value: any));
     }
 
     const writtenObjects = request.writtenObjects;
@@ -1102,7 +1334,16 @@ function resolveModelToJSON(
     // $FlowFixMe[method-unbinding]
     if (typeof value.then === 'function') {
       if (existingId !== undefined) {
-        if (modelRoot === value) {
+        if (
+          enableServerComponentKeys &&
+          (task.keyPath !== null || task.implicitSlot)
+        ) {
+          // If we're in some kind of context we can't reuse the result of this render or
+          // previous renders of this element. We only reuse Promises if they're not wrapped
+          // by another Server Component.
+          const promiseId = serializeThenable(request, task, (value: any));
+          return serializePromiseID(promiseId);
+        } else if (modelRoot === value) {
           // This is the ID we're currently emitting so we need to write it
           // once but if we discover it again, we refer to it by id.
           modelRoot = null;
@@ -1113,43 +1354,20 @@ function resolveModelToJSON(
       }
       // We assume that any object with a .then property is a "Thenable" type,
       // or a Promise type. Either of which can be represented by a Promise.
-      const promiseId = serializeThenable(request, (value: any));
+      const promiseId = serializeThenable(request, task, (value: any));
       writtenObjects.set(value, promiseId);
       return serializePromiseID(promiseId);
     }
 
-    if (enableServerContext) {
-      if ((value: any).$$typeof === REACT_PROVIDER_TYPE) {
-        const providerKey = ((value: any): ReactProviderType<any>)._context
-          ._globalName;
-        const writtenProviders = request.writtenProviders;
-        let providerId = writtenProviders.get(key);
-        if (providerId === undefined) {
-          request.pendingChunks++;
-          providerId = request.nextChunkId++;
-          writtenProviders.set(providerKey, providerId);
-          emitProviderChunk(request, providerId, providerKey);
-        }
-        return serializeByValueID(providerId);
-      } else if (value === POP) {
-        popProvider();
-        if (__DEV__) {
-          insideContextProps = null;
-          isInsideContextValue = false;
-        }
-        return (undefined: any);
-      }
-    }
-
     if (existingId !== undefined) {
-      if (existingId === -1) {
-        // Seen but not yet outlined.
-        const newId = outlineModel(request, value);
-        return serializeByValueID(newId);
-      } else if (modelRoot === value) {
+      if (modelRoot === value) {
         // This is the ID we're currently emitting so we need to write it
         // once but if we discover it again, we refer to it by id.
         modelRoot = null;
+      } else if (existingId === -1) {
+        // Seen but not yet outlined.
+        const newId = outlineModel(request, (value: any));
+        return serializeByValueID(newId);
       } else {
         // We've already emitted this as an outlined object, so we can
         // just refer to that by its existing ID.
@@ -1162,8 +1380,7 @@ function resolveModelToJSON(
     }
 
     if (isArray(value)) {
-      // $FlowFixMe[incompatible-return]
-      return value;
+      return renderFragment(request, task, value);
     }
 
     if (value instanceof Map) {
@@ -1211,7 +1428,7 @@ function resolveModelToJSON(
       }
       if (value instanceof Float64Array) {
         // double
-        return serializeTypedArray(request, 'D', value);
+        return serializeTypedArray(request, 'd', value);
       }
       if (value instanceof BigInt64Array) {
         // number
@@ -1229,7 +1446,7 @@ function resolveModelToJSON(
 
     const iteratorFn = getIteratorFn(value);
     if (iteratorFn) {
-      return Array.from((value: any));
+      return renderFragment(request, task, Array.from((value: any)));
     }
 
     // Verify that this is a simple plain object.
@@ -1249,13 +1466,13 @@ function resolveModelToJSON(
           'Only plain objects can be passed to Client Components from Server Components. ' +
             '%s objects are not supported.%s',
           objectName(value),
-          describeObjectForErrorMessage(parent, key),
+          describeObjectForErrorMessage(parent, parentPropertyName),
         );
       } else if (!isSimpleObject(value)) {
         console.error(
           'Only plain objects can be passed to Client Components from Server Components. ' +
             'Classes or other objects with methods are not supported.%s',
-          describeObjectForErrorMessage(parent, key),
+          describeObjectForErrorMessage(parent, parentPropertyName),
         );
       } else if (Object.getOwnPropertySymbols) {
         const symbols = Object.getOwnPropertySymbols(value);
@@ -1264,7 +1481,7 @@ function resolveModelToJSON(
             'Only plain objects can be passed to Client Components from Server Components. ' +
               'Objects with symbol properties like %s are not supported.%s',
             symbols[0].description,
-            describeObjectForErrorMessage(parent, key),
+            describeObjectForErrorMessage(parent, parentPropertyName),
           );
         }
       }
@@ -1285,7 +1502,7 @@ function resolveModelToJSON(
     if (value[value.length - 1] === 'Z') {
       // Possibly a Date, whose toJSON automatically calls toISOString
       // $FlowFixMe[incompatible-use]
-      const originalValue = parent[key];
+      const originalValue = parent[parentPropertyName];
       if (originalValue instanceof Date) {
         return serializeDateFromDateJSON(value);
       }
@@ -1312,29 +1529,36 @@ function resolveModelToJSON(
   }
 
   if (typeof value === 'function') {
+    if (isClientReference(value)) {
+      return serializeClientReference(
+        request,
+        parent,
+        parentPropertyName,
+        (value: any),
+      );
+    }
+    if (isServerReference(value)) {
+      return serializeServerReference(request, (value: any));
+    }
+
     if (enableTaint) {
       const tainted = TaintRegistryObjects.get(value);
       if (tainted !== undefined) {
         throwTaintViolation(tainted);
       }
     }
-    if (isClientReference(value)) {
-      return serializeClientReference(request, parent, key, (value: any));
-    }
-    if (isServerReference(value)) {
-      return serializeServerReference(request, parent, key, (value: any));
-    }
-    if (/^on[A-Z]/.test(key)) {
+
+    if (/^on[A-Z]/.test(parentPropertyName)) {
       throw new Error(
         'Event handlers cannot be passed to Client Component props.' +
-          describeObjectForErrorMessage(parent, key) +
+          describeObjectForErrorMessage(parent, parentPropertyName) +
           '\nIf you need interactivity, consider converting part of this to a Client Component.',
       );
     } else {
       throw new Error(
         'Functions cannot be passed directly to Client Components ' +
           'unless you explicitly expose it by marking it with "use server".' +
-          describeObjectForErrorMessage(parent, key),
+          describeObjectForErrorMessage(parent, parentPropertyName),
       );
     }
   }
@@ -1355,7 +1579,7 @@ function resolveModelToJSON(
             // $FlowFixMe[incompatible-type] `description` might be undefined
             value.description
           }) cannot be found among global symbols.` +
-          describeObjectForErrorMessage(parent, key),
+          describeObjectForErrorMessage(parent, parentPropertyName),
       );
     }
 
@@ -1378,7 +1602,7 @@ function resolveModelToJSON(
 
   throw new Error(
     `Type ${typeof value} is not supported in Client Component props.` +
-      describeObjectForErrorMessage(parent, key),
+      describeObjectForErrorMessage(parent, parentPropertyName),
   );
 }
 
@@ -1453,8 +1677,11 @@ function emitErrorChunk(
         message = String(error.message);
         // eslint-disable-next-line react-internal/safe-string-coercion
         stack = String(error.stack);
+      } else if (typeof error === 'object' && error !== null) {
+        message = describeObjectForErrorMessage(error);
       } else {
-        message = 'Error: ' + (error: any);
+        // eslint-disable-next-line react-internal/safe-string-coercion
+        message = String(error);
       }
     } catch (x) {
       message = 'An error occurred but serializing the error message failed.';
@@ -1498,31 +1725,43 @@ function emitSymbolChunk(request: Request, id: number, name: string): void {
   request.completedImportChunks.push(processedChunk);
 }
 
-function emitProviderChunk(
-  request: Request,
-  id: number,
-  contextName: string,
-): void {
-  const contextReference = serializeProviderReference(contextName);
-  const processedChunk = encodeReferenceChunk(request, id, contextReference);
-  request.completedRegularChunks.push(processedChunk);
-}
-
-function emitModelChunk(
-  request: Request,
-  id: number,
-  model: ReactClientValue,
-): void {
-  // Track the root so we know that we have to emit this object even though it
-  // already has an ID. This is needed because we might see this object twice
-  // in the same toJSON if it is cyclic.
-  modelRoot = model;
-  // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(model, request.toJSON);
+function emitModelChunk(request: Request, id: number, json: string): void {
   const row = id.toString(16) + ':' + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
 }
+
+function emitDebugChunk(
+  request: Request,
+  id: number,
+  debugInfo: ReactComponentInfo | ReactAsyncInfo,
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'emitDebugChunk should never be called in production mode. This is a bug in React.',
+    );
+  }
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(debugInfo);
+  const row = serializeRowHeader('D', id) + json + '\n';
+  const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+}
+
+function forwardDebugInfo(
+  request: Request,
+  id: number,
+  debugInfo: ReactDebugInfo,
+) {
+  for (let i = 0; i < debugInfo.length; i++) {
+    request.pendingChunks++;
+    emitDebugChunk(request, id, debugInfo[i]);
+  }
+}
+
+const emptyRoot = {};
 
 function retryTask(request: Request, task: Task): void {
   if (task.status !== PENDING) {
@@ -1530,69 +1769,56 @@ function retryTask(request: Request, task: Task): void {
     return;
   }
 
-  switchContext(task.context);
+  const prevDebugID = debugID;
+
   try {
-    let value = task.model;
-    if (
-      typeof value === 'object' &&
-      value !== null &&
-      (value: any).$$typeof === REACT_ELEMENT_TYPE
-    ) {
-      request.writtenObjects.set(value, task.id);
+    // Track the root so we know that we have to emit this object even though it
+    // already has an ID. This is needed because we might see this object twice
+    // in the same toJSON if it is cyclic.
+    modelRoot = task.model;
 
-      // TODO: Concatenate keys of parents onto children.
-      const element: React$Element<any> = (value: any);
-
-      // When retrying a component, reuse the thenableState from the
-      // previous attempt.
-      const prevThenableState = task.thenableState;
-
-      // Attempt to render the Server Component.
-      // Doing this here lets us reuse this same task if the next component
-      // also suspends.
-      task.model = value;
-      value = attemptResolveElement(
-        request,
-        element.type,
-        element.key,
-        element.ref,
-        element.props,
-        prevThenableState,
-      );
-
-      // Successfully finished this component. We're going to keep rendering
-      // using the same task, but we reset its thenable state before continuing.
-      task.thenableState = null;
-
-      // Keep rendering and reuse the same task. This inner loop is separate
-      // from the render above because we don't need to reset the thenable state
-      // until the next time something suspends and retries.
-      while (
-        typeof value === 'object' &&
-        value !== null &&
-        (value: any).$$typeof === REACT_ELEMENT_TYPE
-      ) {
-        request.writtenObjects.set(value, task.id);
-        // TODO: Concatenate keys of parents onto children.
-        const nextElement: React$Element<any> = (value: any);
-        task.model = value;
-        value = attemptResolveElement(
-          request,
-          nextElement.type,
-          nextElement.key,
-          nextElement.ref,
-          nextElement.props,
-          null,
-        );
-      }
+    if (__DEV__) {
+      // Track the ID of the current task so we can assign debug info to this id.
+      debugID = task.id;
     }
 
-    // Track that this object is outlined and has an id.
-    if (typeof value === 'object' && value !== null) {
-      request.writtenObjects.set(value, task.id);
+    // We call the destructive form that mutates this task. That way if something
+    // suspends again, we can reuse the same task instead of spawning a new one.
+    const resolvedModel = renderModelDestructive(
+      request,
+      task,
+      emptyRoot,
+      '',
+      task.model,
+    );
+
+    if (__DEV__) {
+      // We're now past rendering this task and future renders will spawn new tasks for their
+      // debug info.
+      debugID = null;
     }
 
-    emitModelChunk(request, task.id, value);
+    // Track the root again for the resolved object.
+    modelRoot = resolvedModel;
+
+    // The keyPath resets at any terminal child node.
+    task.keyPath = null;
+    task.implicitSlot = false;
+
+    let json: string;
+    if (typeof resolvedModel === 'object' && resolvedModel !== null) {
+      // Object might contain unresolved values like additional elements.
+      // This is simulating what the JSON loop would do if this was part of it.
+      // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+      json = stringify(resolvedModel, task.toJSON);
+    } else {
+      // If the value is a string, it means it's a terminal value and we already escaped it
+      // We don't need to escape it again so it's not passed the toJSON replacer.
+      // $FlowFixMe[incompatible-type] stringify can return null for undefined but we never do
+      json = stringify(resolvedModel);
+    }
+    emitModelChunk(request, task.id, json);
+
     request.abortableTasks.delete(task);
     task.status = COMPLETED;
   } catch (thrownValue) {
@@ -1626,6 +1852,10 @@ function retryTask(request: Request, task: Task): void {
     task.status = ERRORED;
     const digest = logRecoverableError(request, x);
     emitErrorChunk(request, task.id, digest, x);
+  } finally {
+    if (__DEV__) {
+      debugID = prevDebugID;
+    }
   }
 }
 
@@ -1834,22 +2064,4 @@ export function abort(request: Request, reason: mixed): void {
     logRecoverableError(request, error);
     fatalError(request, error);
   }
-}
-
-function importServerContexts(
-  contexts?: Array<[string, ServerContextJSONValue]>,
-) {
-  if (enableServerContext && contexts) {
-    const prevContext = getActiveContext();
-    switchContext(rootContextSnapshot);
-    for (let i = 0; i < contexts.length; i++) {
-      const [name, value] = contexts[i];
-      const context = getOrCreateServerContext(name);
-      pushProvider(context, value);
-    }
-    const importedContext = getActiveContext();
-    switchContext(prevContext);
-    return importedContext;
-  }
-  return rootContextSnapshot;
 }

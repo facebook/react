@@ -13,13 +13,6 @@ import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
-const RESERVED_PROPS = {
-  key: true,
-  ref: true,
-  __self: true,
-  __source: true,
-};
-
 let specialPropKeyWarningShown;
 let specialPropRefWarningShown;
 let didWarnAboutStringRefs;
@@ -177,20 +170,12 @@ function ReactElement(type, key, ref, self, source, owner, props) {
       writable: true,
       value: false,
     });
-    // self and source are DEV only properties.
-    Object.defineProperty(element, '_self', {
+    // debugInfo contains Server Component debug information.
+    Object.defineProperty(element, '_debugInfo', {
       configurable: false,
       enumerable: false,
-      writable: false,
-      value: self,
-    });
-    // Two elements created in two different places should be considered
-    // equal for testing purposes and therefore we hide it from enumeration.
-    Object.defineProperty(element, '_source', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: source,
+      writable: true,
+      value: null,
     });
     if (Object.freeze) {
       Object.freeze(element.props);
@@ -244,7 +229,10 @@ export function jsx(type, config, maybeKey) {
   for (propName in config) {
     if (
       hasOwnProperty.call(config, propName) &&
-      !RESERVED_PROPS.hasOwnProperty(propName)
+      // Skip over reserved prop names
+      propName !== 'key' &&
+      // TODO: `ref` will no longer be reserved in the next major
+      propName !== 'ref'
     ) {
       props[propName] = config[propName];
     }
@@ -316,7 +304,10 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
-        !RESERVED_PROPS.hasOwnProperty(propName)
+        // Skip over reserved prop names
+        propName !== 'key' &&
+        // TODO: `ref` will no longer be reserved in the next major
+        propName !== 'ref'
       ) {
         props[propName] = config[propName];
       }

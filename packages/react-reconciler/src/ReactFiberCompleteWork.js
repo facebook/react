@@ -39,6 +39,7 @@ import {
   enableCache,
   enableTransitionTracing,
   enableFloat,
+  enableRenderableContext,
   passChildrenWhenCloningPersistedNodes,
 } from 'shared/ReactFeatureFlags';
 
@@ -1505,7 +1506,12 @@ function completeWork(
       return null;
     case ContextProvider:
       // Pop provider fiber
-      const context: ReactContext<any> = workInProgress.type._context;
+      let context: ReactContext<any>;
+      if (enableRenderableContext) {
+        context = workInProgress.type;
+      } else {
+        context = workInProgress.type._context;
+      }
       popProvider(context, workInProgress);
       bubbleProperties(workInProgress);
       return null;

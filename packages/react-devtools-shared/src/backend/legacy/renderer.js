@@ -773,12 +773,10 @@ export function attach(
     let owners = null;
     let props = null;
     let state = null;
-    let source = null;
 
     const element = internalInstance._currentElement;
     if (element !== null) {
       props = element.props;
-      source = element._source != null ? element._source : null;
 
       let owner = element._owner;
       if (owner) {
@@ -850,9 +848,6 @@ export function attach(
 
       // List of owners
       owners,
-
-      // Location of component in source code.
-      source,
 
       rootType: null,
       rendererPackageName: null,

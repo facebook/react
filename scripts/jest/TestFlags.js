@@ -50,9 +50,6 @@ const environmentFlags = {
   FIXME: false,
   TODO: false,
 
-  // Turn these flags back on (or delete) once the effect list is removed in
-  // favor of a depth-first traversal using `subtreeTags`.
-  dfsEffectsRefactor: true,
   enableUseJSStackToTrackPassiveDurations: false,
 };
 

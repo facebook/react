@@ -54,7 +54,7 @@ import {getPublicInstance} from './ReactFiberConfigTestHost';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {allowConcurrentByDefault} from 'shared/ReactFeatureFlags';
 
-const act = React.unstable_act;
+const act = React.act;
 
 // TODO: Remove from public bundle
 

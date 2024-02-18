@@ -36,7 +36,7 @@ describe('ReactFlightDOMBrowser', () => {
     jest.resetModules();
 
     // Simulate the condition resolution
-    jest.mock('react', () => require('react/react.shared-subset'));
+    jest.mock('react', () => require('react/react.react-server'));
     jest.mock('react-server-dom-webpack/server', () =>
       require('react-server-dom-webpack/server.browser'),
     );
@@ -583,11 +583,34 @@ describe('ReactFlightDOMBrowser', () => {
       controller.abort('for reasons');
     });
     const expectedValue = __DEV__
-      ? '<p>Error: for reasons + a dev digest</p>'
+      ? '<p>for reasons + a dev digest</p>'
       : '<p>digest("for reasons")</p>';
     expect(container.innerHTML).toBe(expectedValue);
 
     expect(reportedErrors).toEqual(['for reasons']);
+  });
+
+  it('should warn in DEV a child is missing keys', async () => {
+    function ParentClient({children}) {
+      return children;
+    }
+    const Parent = clientExports(ParentClient);
+    const ParentModule = clientExports({Parent: ParentClient});
+    await expect(async () => {
+      const stream = ReactServerDOMServer.renderToReadableStream(
+        <>
+          <Parent>{Array(6).fill(<div>no key</div>)}</Parent>
+          <ParentModule.Parent>
+            {Array(6).fill(<div>no key</div>)}
+          </ParentModule.Parent>
+        </>,
+        webpackMap,
+      );
+      await ReactServerDOMClient.createFromReadableStream(stream);
+    }).toErrorDev(
+      'Each child in a list should have a unique "key" prop. ' +
+        'See https://reactjs.org/link/warning-keys for more information.',
+    );
   });
 
   it('basic use(promise)', async () => {
@@ -616,54 +639,6 @@ describe('ReactFlightDOMBrowser', () => {
       );
     });
     expect(container.innerHTML).toBe('ABC');
-  });
-
-  // @gate enableServerContext
-  it('basic use(context)', async () => {
-    let ContextA;
-    let ContextB;
-    expect(() => {
-      ContextA = React.createServerContext('ContextA', '');
-      ContextB = React.createServerContext('ContextB', 'B');
-    }).toErrorDev(
-      [
-        'Server Context is deprecated and will soon be removed. ' +
-          'It was never documented and we have found it not to be useful ' +
-          'enough to warrant the downside it imposes on all apps.',
-        'Server Context is deprecated and will soon be removed. ' +
-          'It was never documented and we have found it not to be useful ' +
-          'enough to warrant the downside it imposes on all apps.',
-      ],
-      {withoutStack: true},
-    );
-
-    function ServerComponent() {
-      return ReactServer.use(ContextA) + ReactServer.use(ContextB);
-    }
-    function Server() {
-      return (
-        <ContextA.Provider value="A">
-          <ServerComponent />
-        </ContextA.Provider>
-      );
-    }
-    const stream = ReactServerDOMServer.renderToReadableStream(<Server />);
-    const response = ReactServerDOMClient.createFromReadableStream(stream);
-
-    function Client() {
-      return use(response);
-    }
-
-    const container = document.createElement('div');
-    const root = ReactDOMClient.createRoot(container);
-    await act(() => {
-      // Client uses a different renderer.
-      // We reset _currentRenderer here to not trigger a warning about multiple
-      // renderers concurrently using this context
-      ContextA._currentRenderer = null;
-      root.render(<Client />);
-    });
-    expect(container.innerHTML).toBe('AB');
   });
 
   it('use(promise) in multiple components', async () => {

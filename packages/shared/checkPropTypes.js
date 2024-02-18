@@ -22,7 +22,6 @@ function setCurrentlyValidatingElement(element: any) {
       const owner = element._owner;
       const stack = describeUnknownElementTypeFrameInDEV(
         element.type,
-        element._source,
         owner ? owner.type : null,
       );
       ReactDebugCurrentFrame.setExtraStackFrame(stack);

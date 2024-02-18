@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactElement, Source} from 'shared/ReactElementType';
+import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
@@ -28,7 +28,6 @@ import {
   isHostSingletonType,
 } from './ReactFiberConfig';
 import {
-  createRootStrictEffectsByDefault,
   enableCache,
   enableProfilerTimer,
   enableScopeAPI,
@@ -39,6 +38,7 @@ import {
   enableDebugTracing,
   enableFloat,
   enableDO_NOT_USE_disableStrictPassiveEffect,
+  enableRenderableContext,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot} from './ReactRootTags';
@@ -97,6 +97,7 @@ import {
   REACT_PROFILER_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_CONSUMER_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
@@ -202,8 +203,7 @@ function FiberNode(
 
   if (__DEV__) {
     // This isn't directly used but is handy for debugging internals:
-
-    this._debugSource = null;
+    this._debugInfo = null;
     this._debugOwner = null;
     this._debugNeedsRemount = false;
     this._debugHookTypes = null;
@@ -286,7 +286,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     if (__DEV__) {
       // DEV-only fields
 
-      workInProgress._debugSource = current._debugSource;
       workInProgress._debugOwner = current._debugOwner;
       workInProgress._debugHookTypes = current._debugHookTypes;
     }
@@ -350,6 +349,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   }
 
   if (__DEV__) {
+    workInProgress._debugInfo = current._debugInfo;
     workInProgress._debugNeedsRemount = current._debugNeedsRemount;
     switch (workInProgress.tag) {
       case IndeterminateComponent:
@@ -456,7 +456,7 @@ export function createHostRootFiber(
   let mode;
   if (tag === ConcurrentRoot) {
     mode = ConcurrentMode;
-    if (isStrictMode === true || createRootStrictEffectsByDefault) {
+    if (isStrictMode === true) {
       mode |= StrictLegacyMode | StrictEffectsMode;
     }
     if (
@@ -489,7 +489,6 @@ export function createFiberFromTypeAndProps(
   type: any, // React$ElementType
   key: null | string,
   pendingProps: any,
-  source: null | Source,
   owner: null | Fiber,
   mode: TypeOfMode,
   lanes: Lanes,
@@ -583,12 +582,25 @@ export function createFiberFromTypeAndProps(
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              fiberTag = ContextProvider;
-              break getTag;
+              if (!enableRenderableContext) {
+                fiberTag = ContextProvider;
+                break getTag;
+              }
+            // Fall through
             case REACT_CONTEXT_TYPE:
-              // This is a consumer
-              fiberTag = ContextConsumer;
-              break getTag;
+              if (enableRenderableContext) {
+                fiberTag = ContextProvider;
+                break getTag;
+              } else {
+                fiberTag = ContextConsumer;
+                break getTag;
+              }
+            case REACT_CONSUMER_TYPE:
+              if (enableRenderableContext) {
+                fiberTag = ContextConsumer;
+                break getTag;
+              }
+            // Fall through
             case REACT_FORWARD_REF_TYPE:
               fiberTag = ForwardRef;
               if (__DEV__) {
@@ -638,7 +650,6 @@ export function createFiberFromTypeAndProps(
   fiber.lanes = lanes;
 
   if (__DEV__) {
-    fiber._debugSource = source;
     fiber._debugOwner = owner;
   }
 
@@ -650,10 +661,8 @@ export function createFiberFromElement(
   mode: TypeOfMode,
   lanes: Lanes,
 ): Fiber {
-  let source = null;
   let owner = null;
   if (__DEV__) {
-    source = element._source;
     owner = element._owner;
   }
   const type = element.type;
@@ -663,13 +672,11 @@ export function createFiberFromElement(
     type,
     key,
     pendingProps,
-    source,
     owner,
     mode,
     lanes,
   );
   if (__DEV__) {
-    fiber._debugSource = element._source;
     fiber._debugOwner = element._owner;
   }
   return fiber;
@@ -920,7 +927,7 @@ export function assignFiberPropertiesInDEV(
     target.treeBaseDuration = source.treeBaseDuration;
   }
 
-  target._debugSource = source._debugSource;
+  target._debugInfo = source._debugInfo;
   target._debugOwner = source._debugOwner;
   target._debugNeedsRemount = source._debugNeedsRemount;
   target._debugHookTypes = source._debugHookTypes;

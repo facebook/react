@@ -76,8 +76,8 @@ function bind(this: ServerReference<any>): any {
   return newFn;
 }
 
-export function registerServerReference<T>(
-  reference: ServerReference<T>,
+export function registerServerReference<T: Function>(
+  reference: T,
   id: string,
   exportName: null | string,
 ): ServerReference<T> {

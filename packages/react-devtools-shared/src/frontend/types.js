@@ -14,7 +14,6 @@
  * Be mindful of backwards compatibility when making changes.
  */
 
-import type {Source} from 'shared/ReactElementType';
 import type {
   Dehydrated,
   Unserializable,
@@ -220,7 +219,7 @@ export type InspectedElement = {
   owners: Array<SerializedElement> | null,
 
   // Location of component in source code.
-  source: Source | null,
+  source: null, // TODO: Reinstate a way to load this lazily.
 
   type: ElementType,
 

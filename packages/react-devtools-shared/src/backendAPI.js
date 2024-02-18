@@ -226,7 +226,6 @@ export function convertInspectedElementBackendToFrontend(
     canViewSource,
     hasLegacyContext,
     id,
-    source,
     type,
     owners,
     context,
@@ -261,7 +260,7 @@ export function convertInspectedElementBackendToFrontend(
     rendererPackageName,
     rendererVersion,
     rootType,
-    source,
+    source: null, // TODO: Load source location lazily.
     type,
     owners:
       owners === null

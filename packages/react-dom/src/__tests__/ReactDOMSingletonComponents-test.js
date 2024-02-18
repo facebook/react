@@ -996,17 +996,17 @@ describe('ReactDOM HostSingleton', () => {
   });
 
   // https://github.com/facebook/react/issues/26128
-  it('(#26128) does not throw when rendering at body', async () => {
+  it('(#26128) does not throw when rendering at body in legacy mode', async () => {
     ReactDOM.render(<div />, document.body);
   });
 
   // https://github.com/facebook/react/issues/26128
-  it('(#26128) does not throw when rendering at <html>', async () => {
+  it('(#26128) does not throw when rendering at <html> in legacy mode', async () => {
     ReactDOM.render(<body />, document.documentElement);
   });
 
   // https://github.com/facebook/react/issues/26128
-  it('(#26128) does not throw when rendering at document', async () => {
+  it('(#26128) does not throw when rendering at document in legacy mode', async () => {
     ReactDOM.render(<html />, document);
   });
 });

@@ -7,13 +7,12 @@
  * @flow
  */
 
-import {normalizeCodeLocInfo} from './utils';
+import {getVersionedRenderImplementation, normalizeCodeLocInfo} from './utils';
 
 let React;
 let ReactDOMClient;
 let act;
 let fakeConsole;
-let legacyRender;
 let mockError;
 let mockInfo;
 let mockGroup;
@@ -67,8 +66,9 @@ describe('console', () => {
 
     const utils = require('./utils');
     act = utils.act;
-    legacyRender = utils.legacyRender;
   });
+
+  const {render} = getVersionedRenderImplementation();
 
   // @reactVersion >=18.0
   it('should not patch console methods that are not explicitly overridden', () => {
@@ -185,7 +185,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Child />, document.createElement('div')));
+    act(() => render(<Child />));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
@@ -215,7 +215,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Parent />, document.createElement('div')));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -256,7 +256,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Parent />, document.createElement('div')));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -313,9 +313,8 @@ describe('console', () => {
       }
     }
 
-    const container = document.createElement('div');
-    act(() => legacyRender(<Parent />, container));
-    act(() => legacyRender(<Parent />, container));
+    act(() => render(<Parent />));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(2);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -367,7 +366,7 @@ describe('console', () => {
       }
     }
 
-    act(() => legacyRender(<Parent />, document.createElement('div')));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -396,7 +395,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Child />, document.createElement('div')));
+    act(() => render(<Child />));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0]).toHaveLength(1);
@@ -410,7 +409,7 @@ describe('console', () => {
       breakOnConsoleErrors: false,
       showInlineWarningsAndErrors: false,
     });
-    act(() => legacyRender(<Child />, document.createElement('div')));
+    act(() => render(<Child />));
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
@@ -457,7 +456,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Parent />, document.createElement('div')));
+    act(() => render(<Parent />));
 
     expect(mockLog).toHaveBeenCalledTimes(1);
     expect(mockLog.mock.calls[0]).toHaveLength(1);
@@ -483,7 +482,7 @@ describe('console', () => {
       return null;
     };
 
-    act(() => legacyRender(<Component />, document.createElement('div')));
+    act(() => render(<Component />));
 
     expect(mockWarn).toHaveBeenCalledTimes(1);
     expect(mockWarn.mock.calls[0][0]).toBe('Symbol:');
@@ -590,6 +589,147 @@ describe('console', () => {
       fakeConsole.info('info');
       fakeConsole.group('group');
       fakeConsole.groupCollapsed('groupCollapsed');
+      return <div />;
+    }
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+
+    expect(mockInfo).toHaveBeenCalledTimes(1);
+    expect(mockInfo.mock.calls[0]).toHaveLength(1);
+    expect(mockInfo.mock.calls[0][0]).toBe('info');
+
+    expect(mockGroup).toHaveBeenCalledTimes(1);
+    expect(mockGroup.mock.calls[0]).toHaveLength(1);
+    expect(mockGroup.mock.calls[0][0]).toBe('group');
+
+    expect(mockGroupCollapsed).toHaveBeenCalledTimes(1);
+    expect(mockGroupCollapsed.mock.calls[0]).toHaveLength(1);
+    expect(mockGroupCollapsed.mock.calls[0][0]).toBe('groupCollapsed');
+  });
+
+  it('should double log from useMemo if hideConsoleLogsInStrictMode is disabled in Strict mode', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = false;
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      React.useMemo(() => {
+        fakeConsole.log('log');
+        fakeConsole.warn('warn');
+        fakeConsole.error('error');
+        fakeConsole.info('info');
+        fakeConsole.group('group');
+        fakeConsole.groupCollapsed('groupCollapsed');
+      }, []);
+      return <div />;
+    }
+
+    act(() =>
+      root.render(
+        <React.StrictMode>
+          <App />
+        </React.StrictMode>,
+      ),
+    );
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+    expect(mockLog.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      'log',
+    ]);
+
+    expect(mockWarn).toHaveBeenCalledTimes(2);
+    expect(mockWarn.mock.calls[0]).toHaveLength(1);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+    expect(mockWarn.mock.calls[1]).toHaveLength(3);
+    expect(mockWarn.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_WARNING_COLOR}`,
+      'warn',
+    ]);
+
+    expect(mockError).toHaveBeenCalledTimes(2);
+    expect(mockError.mock.calls[0]).toHaveLength(1);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(mockError.mock.calls[1]).toHaveLength(3);
+    expect(mockError.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_ERROR_COLOR}`,
+      'error',
+    ]);
+
+    expect(mockInfo).toHaveBeenCalledTimes(2);
+    expect(mockInfo.mock.calls[0]).toHaveLength(1);
+    expect(mockInfo.mock.calls[0][0]).toBe('info');
+    expect(mockInfo.mock.calls[1]).toHaveLength(3);
+    expect(mockInfo.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      'info',
+    ]);
+
+    expect(mockGroup).toHaveBeenCalledTimes(2);
+    expect(mockGroup.mock.calls[0]).toHaveLength(1);
+    expect(mockGroup.mock.calls[0][0]).toBe('group');
+    expect(mockGroup.mock.calls[1]).toHaveLength(3);
+    expect(mockGroup.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      'group',
+    ]);
+
+    expect(mockGroupCollapsed).toHaveBeenCalledTimes(2);
+    expect(mockGroupCollapsed.mock.calls[0]).toHaveLength(1);
+    expect(mockGroupCollapsed.mock.calls[0][0]).toBe('groupCollapsed');
+    expect(mockGroupCollapsed.mock.calls[1]).toHaveLength(3);
+    expect(mockGroupCollapsed.mock.calls[1]).toEqual([
+      '%c%s',
+      `color: ${process.env.DARK_MODE_DIMMED_LOG_COLOR}`,
+      'groupCollapsed',
+    ]);
+  });
+
+  it('should not double log from useMemo fns if hideConsoleLogsInStrictMode is enabled in Strict mode', () => {
+    global.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = false;
+    global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__ = true;
+
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+
+    function App() {
+      React.useMemo(() => {
+        console.log(
+          'CALL',
+          global.__REACT_DEVTOOLS_HIDE_CONSOLE_LOGS_IN_STRICT_MODE__,
+        );
+        fakeConsole.log('log');
+        fakeConsole.warn('warn');
+        fakeConsole.error('error');
+        fakeConsole.info('info');
+        fakeConsole.group('group');
+        fakeConsole.groupCollapsed('groupCollapsed');
+      }, []);
       return <div />;
     }
 
@@ -824,7 +964,6 @@ describe('console error', () => {
 
     const utils = require('./utils');
     act = utils.act;
-    legacyRender = utils.legacyRender;
   });
 
   // @reactVersion >=18.0

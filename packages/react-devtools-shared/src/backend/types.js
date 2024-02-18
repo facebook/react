@@ -15,7 +15,6 @@
  */
 
 import type {ReactContext, Wakeable} from 'shared/ReactTypes';
-import type {Source} from 'shared/ReactElementType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ComponentFilter,
@@ -279,9 +278,6 @@ export type InspectedElement = {
 
   // List of owners
   owners: Array<SerializedElement> | null,
-
-  // Location of component in source code.
-  source: Source | null,
 
   type: ElementType,
 

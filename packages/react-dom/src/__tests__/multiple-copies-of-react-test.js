@@ -10,7 +10,8 @@
 'use strict';
 
 let React = require('react');
-const ReactTestUtils = require('react-dom/test-utils');
+const ReactDOMClient = require('react-dom/client');
+const act = require('internal-test-utils').act;
 
 class TextWithStringRef extends React.Component {
   render() {
@@ -21,10 +22,14 @@ class TextWithStringRef extends React.Component {
 }
 
 describe('when different React version is used with string ref', () => {
-  it('throws the "Refs must have owner" warning', () => {
-    expect(() => {
-      ReactTestUtils.renderIntoDocument(<TextWithStringRef />);
-    }).toThrow(
+  it('throws the "Refs must have owner" warning', async () => {
+    const container = document.createElement('div');
+    const root = ReactDOMClient.createRoot(container);
+    await expect(
+      act(() => {
+        root.render(<TextWithStringRef />);
+      }),
+    ).rejects.toThrow(
       'Element ref was specified as a string (foo) but no owner was set. This could happen for one of' +
         ' the following reasons:\n' +
         '1. You may be adding a ref to a function component\n' +
