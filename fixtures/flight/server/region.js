@@ -103,13 +103,8 @@ app.get('/', async function (req, res) {
 });
 
 app.post('/', bodyParser.text(), async function (req, res) {
-  const {
-    renderToPipeableStream,
-    decodeReply,
-    decodeReplyFromBusboy,
-    decodeAction,
-    decodeFormState,
-  } = await import('react-server-dom-webpack/server');
+  const {decodeReply, decodeReplyFromBusboy, decodeAction, decodeFormState} =
+    await import('react-server-dom-webpack/server');
   const serverReference = req.get('rsc-action');
   if (serverReference) {
     // This is the client-side case
