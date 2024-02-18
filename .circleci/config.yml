@@ -272,13 +272,6 @@ jobs:
             npx playwright install
             sudo npx playwright install-deps
       - run:
-          working_directory: fixtures/flight
-          name: yarn build
-          command: |
-            yarn build
-            # Need to build twice for unknown reasons
-            yarn build
-      - run:
           name: Run tests
           working_directory: fixtures/flight
           command: yarn test
