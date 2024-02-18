@@ -84,7 +84,9 @@
     "./unstable_testing": "./unstable_testing.js",
     "./unstable_server-external-runtime": "./unstable_server-external-runtime.js",
     "./src/*": "./src/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./cjs/*": "./cjs/*",
+    "./umd/*": "./umd/*"
   },
   "browser": {
     "./server.js": "./server.browser.js",
