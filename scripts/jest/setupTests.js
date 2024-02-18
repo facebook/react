@@ -241,7 +241,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.Error = ErrorProxy;
   }
 
-  const expectTestToFail = async (callback, errorMsg) => {
+  const expectTestToFail = async (callback, error) => {
     if (callback.length > 0) {
       throw Error(
         'Gated test helpers do not support the `done` callback. Return a ' +
@@ -261,12 +261,12 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       // `afterEach` like we normally do. `afterEach` is too late because if it
       // throws, we won't have captured it.
       flushAllUnexpectedConsoleCalls();
-    } catch (error) {
+    } catch (testError) {
       // Failed as expected
       resetAllUnexpectedConsoleCalls();
       return;
     }
-    throw Error(errorMsg);
+    throw error;
   };
 
   const gatedErrorMessage = 'Gated test was expected to fail, but it passed.';
@@ -284,8 +284,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     if (shouldPass) {
       test(testName, callback);
     } else {
+      const error = new Error(gatedErrorMessage);
+      Error.captureStackTrace(error, global._test_gate);
       test(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, gatedErrorMessage));
+        expectTestToFail(callback, error));
     }
   };
   global._test_gate_focus = (gateFn, testName, callback) => {
@@ -302,8 +304,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     if (shouldPass) {
       test.only(testName, callback);
     } else {
+      const error = new Error(gatedErrorMessage);
+      Error.captureStackTrace(error, global._test_gate_focus);
       test.only(`[GATED, SHOULD FAIL] ${testName}`, () =>
-        expectTestToFail(callback, gatedErrorMessage));
+        expectTestToFail(callback, error));
     }
   };
 
