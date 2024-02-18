@@ -2,7 +2,7 @@ version: 2.1
 
 aliases:
   - &docker
-    - image: cimg/node:18.18.2-browsers
+    - image: cimg/node:18.19-browsers
 
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
