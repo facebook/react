@@ -420,6 +420,7 @@ const skipFilter = new Set([
 
   // TODO: we should be able to support these
   "component-declaration-basic.flow",
+  "hook-declaration-basic.flow",
   "nested-function-with-param-as-captured-dep",
   "readonly-object-method-calls",
   "readonly-object-method-calls-mutable-lambda",

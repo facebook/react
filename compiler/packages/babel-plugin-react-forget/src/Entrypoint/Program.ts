@@ -19,6 +19,7 @@ import {
 } from "../HIR/Environment";
 import { CodegenFunction } from "../ReactiveScopes";
 import { isComponentDeclaration } from "../Utils/ComponentDeclaration";
+import { isHookDeclaration } from "../Utils/HookDeclaration";
 import { assertExhaustive } from "../Utils/utils";
 import { insertGatedFunctionDeclaration } from "./Gating";
 import { addImportsToProgram, updateUseMemoCacheImport } from "./Imports";
@@ -408,8 +409,9 @@ export function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
     case "infer": {
       const hookPattern = pass.opts.environment?.hookPattern ?? null;
       return (
-        // Component declarations are known components
-        (fn.isFunctionDeclaration() && isComponentDeclaration(fn.node)) ||
+        // Component and hook declarations are known components/hooks
+        (fn.isFunctionDeclaration() &&
+          (isComponentDeclaration(fn.node) || isHookDeclaration(fn.node))) ||
         // Otherwise check if this is a component or hook-like function
         isComponentOrHookLike(fn, hookPattern)
       );

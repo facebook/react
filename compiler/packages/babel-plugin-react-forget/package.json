@@ -55,7 +55,7 @@
     "babel-plugin-syntax-hermes-parser": "^0.15.1",
     "eslint": "8.27.0",
     "glob": "^7.1.6",
-    "hermes-parser": "^0.18.2",
+    "hermes-parser": "^0.19.1",
     "jest": "^29.0.3",
     "jest-environment-jsdom": "^29.0.3",
     "prettier": "2.8.8",
