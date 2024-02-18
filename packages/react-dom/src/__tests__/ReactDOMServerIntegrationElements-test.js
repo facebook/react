@@ -19,7 +19,6 @@ let ReactDOM;
 let ReactDOMClient;
 let ReactDOMServer;
 let ReactFeatureFlags;
-let ReactTestUtils;
 
 function initModules() {
   jest.resetModules();
@@ -28,13 +27,11 @@ function initModules() {
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
