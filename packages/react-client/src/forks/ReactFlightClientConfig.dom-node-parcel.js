@@ -9,7 +9,5 @@
 
 export * from 'react-client/src/ReactFlightClientConfigNode';
 export * from 'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcel';
-export * from 'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcelServer';
-export * from 'react-server-dom-parcel/src/ReactFlightClientConfigTargetParcelServer';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
 export const usedWithSSR = true;

@@ -185,7 +185,6 @@ module.exports = [
       'react-server-dom-parcel/server.node',
       'react-server-dom-parcel/src/ReactFlightDOMServerNode.js', // react-server-dom-parcel/server.node
       'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcel.js',
-      'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcelServer.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -324,7 +323,6 @@ module.exports = [
       'react-server-dom-parcel/src/ReactFlightDOMClientBrowser.js', // react-server-dom-parcel/client.browser
       'react-server-dom-parcel/src/ReactFlightDOMServerBrowser.js', // react-server-dom-parcel/server.browser
       'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcel.js',
-      'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcelBrowser.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',
@@ -428,7 +426,6 @@ module.exports = [
       'react-server-dom-parcel/src/ReactFlightDOMClientEdge.js', // react-server-dom-parcel/client.edge
       'react-server-dom-parcel/src/ReactFlightDOMServerEdge.js', // react-server-dom-parcel/server.edge
       'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcel.js',
-      'react-server-dom-parcel/src/ReactFlightClientConfigBundlerParcelServer.js',
       'react-devtools',
       'react-devtools-core',
       'react-devtools-shell',

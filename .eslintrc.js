@@ -441,7 +441,6 @@ module.exports = {
       files: ['packages/react-server-dom-parcel/**/*.js'],
       globals: {
         parcelRequire: 'readonly',
-        __parcel__import__: 'readonly',
       },
     },
     {

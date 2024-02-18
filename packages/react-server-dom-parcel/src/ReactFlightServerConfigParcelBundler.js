@@ -21,7 +21,9 @@ import type {
 export type {ClientReference, ServerReference};
 
 export type ClientManifest = {
-  [id: string]: ClientReferenceManifestEntry,
+  [filePath: string]: {
+    [name: string]: ImportManifestEntry,
+  },
 };
 
 export type ServerReferenceId = string;
@@ -39,43 +41,15 @@ export {
 export function getClientReferenceKey(
   reference: ClientReference<any>,
 ): ClientReferenceKey {
-  return reference.$$async ? reference.$$id + '#async' : reference.$$id;
+  return reference.id + '#' + reference.name;
 }
 
 export function resolveClientReferenceMetadata<T>(
   config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  const modulePath = clientReference.$$id;
-  let name = '';
-  let resolvedModuleData = config[modulePath];
-  if (resolvedModuleData) {
-    // The potentially aliased name.
-    name = resolvedModuleData.name;
-  } else {
-    // We didn't find this specific export name but we might have the * export
-    // which contains this name as well.
-    // TODO: It's unfortunate that we now have to parse this string. We should
-    // probably go back to encoding path and name separately on the client reference.
-    const idx = modulePath.lastIndexOf('#');
-    if (idx !== -1) {
-      name = modulePath.slice(idx + 1);
-      resolvedModuleData = config[modulePath.slice(0, idx)];
-    }
-    if (!resolvedModuleData) {
-      throw new Error(
-        'Could not find the module "' +
-          modulePath +
-          '" in the React Client Manifest. ' +
-          'This is probably a bug in the React Server Components bundler.',
-      );
-    }
-  }
-  if (clientReference.$$async === true) {
-    return [resolvedModuleData.id, resolvedModuleData.chunks, name, 1];
-  } else {
-    return [resolvedModuleData.id, resolvedModuleData.chunks, name];
-  }
+  const resolvedModuleData = config[clientReference.id][clientReference.name];
+  return [resolvedModuleData.id, resolvedModuleData.name];
 }
 
 export function getServerReferenceId<T>(

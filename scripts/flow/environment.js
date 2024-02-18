@@ -98,7 +98,6 @@ declare var __turbopack_require__: ((id: string) => any) & {
   u: string => string,
 };
 
-declare function __parcel__import__(id: string): Promise<mixed>;
 declare function parcelRequire(id: string): any;
 
 declare module 'fs/promises' {

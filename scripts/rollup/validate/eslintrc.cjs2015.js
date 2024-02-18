@@ -64,7 +64,6 @@ module.exports = {
 
     // Flight Parcel
     parcelRequire: 'readonly',
-    __parcel__import__: 'readonly',
 
     // jest
     expect: 'readonly',

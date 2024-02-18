@@ -18,8 +18,8 @@ export type ServerReference<T: Function> = T & {
 // eslint-disable-next-line no-unused-vars
 export type ClientReference<T> = {
   $$typeof: symbol,
-  $$id: string,
-  $$async: boolean,
+  id: string,
+  name: string,
 };
 
 const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');

@@ -7,40 +7,24 @@
  * @flow
  */
 
-import type {
-  Thenable,
-  FulfilledThenable,
-  RejectedThenable,
-} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/ReactTypes';
 
 import type {
   ImportMetadata,
   ImportManifestEntry,
 } from './shared/ReactFlightImportMetadata';
-import type {ModuleLoading} from 'react-client/src/ReactFlightClientConfig';
 
-import {
-  ID,
-  CHUNKS,
-  NAME,
-  isAsyncImport,
-} from './shared/ReactFlightImportMetadata';
+import {ID, NAME} from './shared/ReactFlightImportMetadata';
 
-import {prepareDestinationWithChunks} from 'react-client/src/ReactFlightClientConfig';
-
-import {loadChunk} from 'react-client/src/ReactFlightClientConfig';
-
-export type SSRModuleMap = null | {
-  [clientId: string]: {
-    [clientExportName: string]: ClientReferenceManifestEntry,
+export type ServerManifest = {
+  [filePath: string]: {
+    [name: string]: ImportManifestEntry,
   },
 };
 
-export type ServerManifest = {
-  [id: string]: ImportManifestEntry,
-};
-
-export type ServerReferenceId = string;
+export type SSRModuleMap = null;
+export type ModuleLoading = null;
+export type ServerReferenceId = ImportManifestEntry;
 
 export opaque type ClientReferenceManifestEntry = ImportManifestEntry;
 export opaque type ClientReferenceMetadata = ImportMetadata;
@@ -49,170 +33,39 @@ export opaque type ClientReferenceMetadata = ImportMetadata;
 export opaque type ClientReference<T> = ClientReferenceMetadata;
 
 export function prepareDestinationForModule(
-  moduleLoading: ModuleLoading,
+  moduleLoading: null,
   nonce: ?string,
   metadata: ClientReferenceMetadata,
 ) {
-  prepareDestinationWithChunks(moduleLoading, metadata[CHUNKS], nonce);
+  return;
 }
 
 export function resolveClientReference<T>(
-  bundlerConfig: SSRModuleMap,
+  bundlerConfig: null,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
-  if (bundlerConfig) {
-    const moduleExports = bundlerConfig[metadata[ID]];
-    let resolvedModuleData = moduleExports[metadata[NAME]];
-    let name;
-    if (resolvedModuleData) {
-      // The potentially aliased name.
-      name = resolvedModuleData.name;
-    } else {
-      // If we don't have this specific name, we might have the full module.
-      resolvedModuleData = moduleExports['*'];
-      if (!resolvedModuleData) {
-        throw new Error(
-          'Could not find the module "' +
-            metadata[ID] +
-            '" in the React SSR Manifest. ' +
-            'This is probably a bug in the React Server Components bundler.',
-        );
-      }
-      name = metadata[NAME];
-    }
-    if (isAsyncImport(metadata)) {
-      return [
-        resolvedModuleData.id,
-        resolvedModuleData.chunks,
-        name,
-        1 /* async */,
-      ];
-    } else {
-      return [resolvedModuleData.id, resolvedModuleData.chunks, name];
-    }
-  }
   return metadata;
 }
 
 export function resolveServerReference<T>(
   bundlerConfig: ServerManifest,
-  id: ServerReferenceId,
+  ref: ServerReferenceId,
 ): ClientReference<T> {
-  let name = '';
-  let resolvedModuleData = bundlerConfig[id];
-  if (resolvedModuleData) {
-    // The potentially aliased name.
-    name = resolvedModuleData.name;
-  } else {
-    // We didn't find this specific export name but we might have the * export
-    // which contains this name as well.
-    // TODO: It's unfortunate that we now have to parse this string. We should
-    // probably go back to encoding path and name separately on the client reference.
-    const idx = id.lastIndexOf('#');
-    if (idx !== -1) {
-      name = id.slice(idx + 1);
-      resolvedModuleData = bundlerConfig[id.slice(0, idx)];
-    }
-    if (!resolvedModuleData) {
-      throw new Error(
-        'Could not find the module "' +
-          id +
-          '" in the React Server Manifest. ' +
-          'This is probably a bug in the React Server Components bundler.',
-      );
-    }
-  }
-  // TODO: This needs to return async: true if it's an async module.
-  return [resolvedModuleData.id, resolvedModuleData.chunks, name];
+  const resolvedModuleData = bundlerConfig[ref.id][ref.name];
+  return [resolvedModuleData.id, resolvedModuleData.name];
 }
 
-// The chunk cache contains all the chunks we've preloaded so far.
-// If they're still pending they're a thenable. This map also exists
-// in Webpack but unfortunately it's not exposed so we have to
-// replicate it in user space. null means that it has already loaded.
-const chunkCache: Map<string, null | Promise<any>> = new Map();
-
-function requireAsyncModule(id: string): null | Thenable<any> {
-  // We've already loaded all the chunks. We can require the module.
-  const promise = parcelRequire(id);
-  if (typeof promise.then !== 'function') {
-    // This wasn't a promise after all.
-    return null;
-  } else if (promise.status === 'fulfilled') {
-    // This module was already resolved earlier.
-    return null;
-  } else {
-    // Instrument the Promise to stash the result.
-    promise.then(
-      value => {
-        const fulfilledThenable: FulfilledThenable<mixed> = (promise: any);
-        fulfilledThenable.status = 'fulfilled';
-        fulfilledThenable.value = value;
-      },
-      reason => {
-        const rejectedThenable: RejectedThenable<mixed> = (promise: any);
-        rejectedThenable.status = 'rejected';
-        rejectedThenable.reason = reason;
-      },
-    );
-    return promise;
-  }
-}
-
-function ignoreReject() {
-  // We rely on rejected promises to be handled by another listener.
-}
-// Start preloading the modules since we might need them soon.
-// This function doesn't suspend.
 export function preloadModule<T>(
   metadata: ClientReference<T>,
 ): null | Thenable<any> {
-  const chunks = metadata[CHUNKS];
-  const promises = [];
-  let i = 0;
-  while (i < chunks.length) {
-    const chunkUrl = chunks[i++];
-    const entry = chunkCache.get(chunkUrl);
-    if (entry === undefined) {
-      const thenable = loadChunk(chunkUrl);
-      promises.push(thenable);
-      // $FlowFixMe[method-unbinding]
-      const resolve = chunkCache.set.bind(chunkCache, chunkUrl, null);
-      thenable.then(resolve, ignoreReject);
-      chunkCache.set(chunkUrl, thenable);
-    } else if (entry !== null) {
-      promises.push(entry);
-    }
-  }
-  if (isAsyncImport(metadata)) {
-    if (promises.length === 0) {
-      return requireAsyncModule(metadata[ID]);
-    } else {
-      return Promise.all(promises).then(() => {
-        return requireAsyncModule(metadata[ID]);
-      });
-    }
-  } else if (promises.length > 0) {
-    return Promise.all(promises);
-  } else {
-    return null;
-  }
+  // Module should already be loaded due to <script> injected into RSC stream.
+  return null;
 }
 
 // Actually require the module or suspend if it's not yet ready.
 // Increase priority if necessary.
 export function requireModule<T>(metadata: ClientReference<T>): T {
-  let moduleExports = parcelRequire(metadata[ID]);
-  if (isAsyncImport(metadata)) {
-    if (typeof moduleExports.then !== 'function') {
-      // This wasn't a promise after all.
-    } else if (moduleExports.status === 'fulfilled') {
-      // This Promise should've been instrumented by preloadModule.
-      moduleExports = moduleExports.value;
-    } else {
-      throw moduleExports.reason;
-    }
-  }
+  const moduleExports = parcelRequire(metadata[ID]);
   if (metadata[NAME] === '*') {
     // This is a placeholder value that represents that the caller imported this
     // as a CommonJS module as is.
