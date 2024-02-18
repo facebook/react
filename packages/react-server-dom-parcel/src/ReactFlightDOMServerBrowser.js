@@ -9,8 +9,6 @@
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
-import type {ClientManifest} from './ReactFlightServerConfigParcelBundler';
-import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 
 import {
   createRequest,
@@ -41,12 +39,11 @@ type Options = {
 
 function renderToReadableStream(
   model: ReactClientValue,
-  manifest: ClientManifest,
   options?: Options,
 ): ReadableStream {
   const request = createRequest(
     model,
-    manifest,
+    null,
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
@@ -84,16 +81,13 @@ function renderToReadableStream(
   return stream;
 }
 
-function decodeReply<T>(
-  body: string | FormData,
-  manifest: ServerManifest,
-): Thenable<T> {
+function decodeReply<T>(body: string | FormData): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
     form.append('0', body);
     body = form;
   }
-  const response = createResponse(manifest, '', body);
+  const response = createResponse(null, '', body);
   const root = getRoot<T>(response);
   close(response);
   return root;

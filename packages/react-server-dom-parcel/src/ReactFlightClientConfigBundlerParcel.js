@@ -9,31 +9,22 @@
 
 import type {Thenable} from 'shared/ReactTypes';
 
-import type {
-  ImportMetadata,
-  ImportManifestEntry,
-} from './shared/ReactFlightImportMetadata';
+import type {ImportMetadata} from './shared/ReactFlightImportMetadata';
 
 import {ID, NAME} from './shared/ReactFlightImportMetadata';
 
-export type ServerManifest = {
-  [filePath: string]: {
-    [name: string]: ImportManifestEntry,
-  },
-};
-
+export type ServerManifest = null;
 export type SSRModuleMap = null;
 export type ModuleLoading = null;
-export type ServerReferenceId = ImportManifestEntry;
+export type ServerReferenceId = ImportMetadata;
 
-export opaque type ClientReferenceManifestEntry = ImportManifestEntry;
 export opaque type ClientReferenceMetadata = ImportMetadata;
 
 // eslint-disable-next-line no-unused-vars
 export opaque type ClientReference<T> = ClientReferenceMetadata;
 
 export function prepareDestinationForModule(
-  moduleLoading: null,
+  moduleLoading: ModuleLoading,
   nonce: ?string,
   metadata: ClientReferenceMetadata,
 ) {
@@ -44,6 +35,7 @@ export function resolveClientReference<T>(
   bundlerConfig: null,
   metadata: ClientReferenceMetadata,
 ): ClientReference<T> {
+  // Reference is already resolved during the build.
   return metadata;
 }
 
@@ -51,8 +43,7 @@ export function resolveServerReference<T>(
   bundlerConfig: ServerManifest,
   ref: ServerReferenceId,
 ): ClientReference<T> {
-  const resolvedModuleData = bundlerConfig[ref.id][ref.name];
-  return [resolvedModuleData.id, resolvedModuleData.name];
+  return ref;
 }
 
 export function preloadModule<T>(

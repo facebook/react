@@ -8,10 +8,7 @@
  */
 
 import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
-import type {
-  ImportMetadata,
-  ImportManifestEntry,
-} from './shared/ReactFlightImportMetadata';
+import type {ImportMetadata} from './shared/ReactFlightImportMetadata';
 
 import type {
   ClientReference,
@@ -20,17 +17,9 @@ import type {
 
 export type {ClientReference, ServerReference};
 
-export type ClientManifest = {
-  [filePath: string]: {
-    [name: string]: ImportManifestEntry,
-  },
-};
-
+export type ClientManifest = null;
 export type ServerReferenceId = string;
-
 export type ClientReferenceMetadata = ImportMetadata;
-export opaque type ClientReferenceManifestEntry = ImportManifestEntry;
-
 export type ClientReferenceKey = string;
 
 export {
@@ -48,8 +37,7 @@ export function resolveClientReferenceMetadata<T>(
   config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  const resolvedModuleData = config[clientReference.id][clientReference.name];
-  return [resolvedModuleData.id, resolvedModuleData.name];
+  return [clientReference.id, clientReference.name];
 }
 
 export function getServerReferenceId<T>(

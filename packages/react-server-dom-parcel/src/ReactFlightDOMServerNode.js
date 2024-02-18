@@ -12,8 +12,6 @@ import type {
   ReactClientValue,
 } from 'react-server/src/ReactFlightServer';
 import type {Destination} from 'react-server/src/ReactServerStreamConfigNode';
-import type {ClientManifest} from './ReactFlightServerConfigParcelBundler';
-import type {ServerManifest} from 'react-client/src/ReactFlightClientConfig';
 import type {Busboy} from 'busboy';
 import type {Writable} from 'stream';
 import type {ServerContextJSONValue, Thenable} from 'shared/ReactTypes';
@@ -68,12 +66,11 @@ type PipeableStream = {
 
 function renderToPipeableStream(
   model: ReactClientValue,
-  manifest: ClientManifest,
   options?: Options,
 ): PipeableStream {
   const request = createRequest(
     model,
-    manifest,
+    null,
     options ? options.onError : undefined,
     options ? options.context : undefined,
     options ? options.identifierPrefix : undefined,
@@ -110,11 +107,8 @@ function renderToPipeableStream(
   };
 }
 
-function decodeReplyFromBusboy<T>(
-  busboyStream: Busboy,
-  manifest: ServerManifest,
-): Thenable<T> {
-  const response = createResponse(manifest, '');
+function decodeReplyFromBusboy<T>(busboyStream: Busboy): Thenable<T> {
+  const response = createResponse(null, '');
   let pendingFiles = 0;
   const queuedFields: Array<string> = [];
   busboyStream.on('field', (name, value) => {
@@ -165,16 +159,13 @@ function decodeReplyFromBusboy<T>(
   return getRoot(response);
 }
 
-function decodeReply<T>(
-  body: string | FormData,
-  manifest: ServerManifest,
-): Thenable<T> {
+function decodeReply<T>(body: string | FormData): Thenable<T> {
   if (typeof body === 'string') {
     const form = new FormData();
     form.append('0', body);
     body = form;
   }
-  const response = createResponse(manifest, '', body);
+  const response = createResponse(null, '', body);
   const root = getRoot<T>(response);
   close(response);
   return root;
