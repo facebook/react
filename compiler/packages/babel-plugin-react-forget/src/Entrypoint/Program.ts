@@ -374,7 +374,7 @@ export function compileProgram(
   }
 }
 
-export function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
+function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
   if (hasUseMemoCacheCall(fn)) {
     return false;
   }

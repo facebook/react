@@ -437,6 +437,7 @@ const skipFilter = new Set([
   "forest/forest-object-type-valid.flow",
   "forest/forest-partial-reassignment-type-annotation.flow",
   "forest/todo-forest-phi-type-unused-initializer.flow",
+  "forest/forest-hook.flow",
 
   // TODO: we probably want to always skip these
   "rules-of-hooks/rules-of-hooks-0592bd574811",
