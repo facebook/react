@@ -107,11 +107,13 @@ export function describeValueForErrorMessage(value: mixed): string {
       }
       return name;
     }
-    case 'function':
+    case 'function': {
       if ((value: any).$$typeof === CLIENT_REFERENCE_TAG) {
         return describeClientReference(value);
       }
-      return 'function';
+      const name = (value: any).displayName || value.name;
+      return name ? 'function ' + name : 'function';
+    }
     default:
       // eslint-disable-next-line react-internal/safe-string-coercion
       return String(value);

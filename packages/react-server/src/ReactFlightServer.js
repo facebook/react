@@ -1554,10 +1554,27 @@ function renderModelDestructive(
           describeObjectForErrorMessage(parent, parentPropertyName) +
           '\nIf you need interactivity, consider converting part of this to a Client Component.',
       );
+    } else if (
+      __DEV__ &&
+      (jsxChildrenParents.has(parent) ||
+        (jsxPropsParents.has(parent) && parentPropertyName === 'children'))
+    ) {
+      const componentName = value.displayName || value.name || 'Component';
+      throw new Error(
+        'Functions are not valid as a child of Client Components. This may happen if ' +
+          'you return ' +
+          componentName +
+          ' instead of <' +
+          componentName +
+          ' /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.' +
+          describeObjectForErrorMessage(parent, parentPropertyName),
+      );
     } else {
       throw new Error(
         'Functions cannot be passed directly to Client Components ' +
-          'unless you explicitly expose it by marking it with "use server".' +
+          'unless you explicitly expose it by marking it with "use server". ' +
+          'Or maybe you meant to call this function rather than return it.' +
           describeObjectForErrorMessage(parent, parentPropertyName),
       );
     }
