@@ -361,7 +361,7 @@
   "372": "Cannot call unstable_createEventHandle with \"%s\", as it is not an event known to React.",
   "373": "This Hook is not supported in Server Components.",
   "374": "Event handlers cannot be passed to Client Component props.%s\nIf you need interactivity, consider converting part of this to a Client Component.",
-  "375": "Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with \"use server\".%s",
+  "375": "Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with \"use server\". Or maybe you meant to call this function rather than return it.%s",
   "376": "Only global symbols received from Symbol.for(...) can be passed to Client Components. The symbol Symbol.for(%s) cannot be found among global symbols.%s",
   "377": "BigInt (%s) is not yet supported in Client Component props.%s",
   "378": "Type %s is not supported in Client Component props.%s",
@@ -490,5 +490,6 @@
   "502": "Cannot read a Client Context from a Server Component.",
   "503": "Cannot use() an already resolved Client Reference.",
   "504": "Failed to read a RSC payload created by a development version of React on the server while using a production version on the client. Always use matching versions on the server and the client.",
-  "505": "Cannot render an Async Component, Promise or React.Lazy inside React.Children. We recommend not iterating over children and just rendering them plain."
+  "505": "Cannot render an Async Component, Promise or React.Lazy inside React.Children. We recommend not iterating over children and just rendering them plain.",
+  "506": "Functions are not valid as a child of Client Components. This may happen if you return %s instead of <%s /> from render. Or maybe you meant to call this function rather than return it.%s"
 }
