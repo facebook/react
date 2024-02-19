@@ -568,6 +568,32 @@ describe('ReactFlightDOM', () => {
     );
   });
 
+  it('throws when accessing a symbol prop from client exports', () => {
+    const symbol = Symbol('test');
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    function read() {
+      return ClientModule[symbol];
+    }
+    expect(read).toThrowError(
+      'Cannot read Symbol exports. ' +
+        'Only named exports are supported on a client module imported on the server.',
+    );
+  });
+
+  it('does not throw when toString:ing client exports', () => {
+    const ClientModule = clientExports({
+      Component: {deep: 'thing'},
+    });
+    expect(Object.prototype.toString.call(ClientModule)).toBe(
+      '[object Object]',
+    );
+    expect(Object.prototype.toString.call(ClientModule.Component)).toBe(
+      '[object Function]',
+    );
+  });
+
   it('does not throw when React inspects any deep props', () => {
     const ClientModule = clientExports({
       Component: function () {},
@@ -1654,5 +1680,46 @@ describe('ReactFlightDOM', () => {
 
     await collectHints(readable);
     expect(hintRows.length).toEqual(6);
+  });
+
+  it('should be able to include a client reference in printed errors', async () => {
+    const reportedErrors = [];
+
+    const ClientComponent = clientExports(function ({prop}) {
+      return 'This should never render';
+    });
+
+    const ClientReference = clientExports({});
+
+    class InvalidValue {}
+
+    const {writable} = getTestStream();
+    const {pipe} = ReactServerDOMServer.renderToPipeableStream(
+      <div>
+        <ClientComponent prop={ClientReference} invalid={InvalidValue} />
+      </div>,
+      webpackMap,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
+    );
+    pipe(writable);
+
+    expect(reportedErrors.length).toBe(1);
+    if (__DEV__) {
+      expect(reportedErrors[0].message).toEqual(
+        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".\n' +
+          '  <... prop={client} invalid={function}>\n' +
+          '                             ^^^^^^^^^^',
+      );
+    } else {
+      expect(reportedErrors[0].message).toEqual(
+        'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".\n' +
+          '  {prop: client, invalid: function}\n' +
+          '                          ^^^^^^^^',
+      );
+    }
   });
 });

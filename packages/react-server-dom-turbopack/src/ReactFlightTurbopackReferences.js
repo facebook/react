@@ -92,7 +92,11 @@ export function registerServerReference<T: Function>(
 const PROMISE_PROTOTYPE = Promise.prototype;
 
 const deepProxyHandlers = {
-  get: function (target: Function, name: string, receiver: Proxy<Function>) {
+  get: function (
+    target: Function,
+    name: string | symbol,
+    receiver: Proxy<Function>,
+  ) {
     switch (name) {
       // These names are read by the Flight runtime if you end up using the exports object.
       case '$$typeof':
@@ -117,6 +121,9 @@ const deepProxyHandlers = {
       case Symbol.toPrimitive:
         // $FlowFixMe[prop-missing]
         return Object.prototype[Symbol.toPrimitive];
+      case Symbol.toStringTag:
+        // $FlowFixMe[prop-missing]
+        return Object.prototype[Symbol.toStringTag];
       case 'Provider':
         throw new Error(
           `Cannot render a Client Context Provider on the Server. ` +
@@ -137,105 +144,134 @@ const deepProxyHandlers = {
   },
 };
 
+function getReference(target: Function, name: string | symbol): $FlowFixMe {
+  switch (name) {
+    // These names are read by the Flight runtime if you end up using the exports object.
+    case '$$typeof':
+      return target.$$typeof;
+    case '$$id':
+      return target.$$id;
+    case '$$async':
+      return target.$$async;
+    case 'name':
+      return target.name;
+    // We need to special case this because createElement reads it if we pass this
+    // reference.
+    case 'defaultProps':
+      return undefined;
+    // Avoid this attempting to be serialized.
+    case 'toJSON':
+      return undefined;
+    case Symbol.toPrimitive:
+      // $FlowFixMe[prop-missing]
+      return Object.prototype[Symbol.toPrimitive];
+    case Symbol.toStringTag:
+      // $FlowFixMe[prop-missing]
+      return Object.prototype[Symbol.toStringTag];
+    case '__esModule':
+      // Something is conditionally checking which export to use. We'll pretend to be
+      // an ESM compat module but then we'll check again on the client.
+      const moduleId = target.$$id;
+      target.default = registerClientReferenceImpl(
+        (function () {
+          throw new Error(
+            `Attempted to call the default export of ${moduleId} from the server ` +
+              `but it's on the client. It's not possible to invoke a client function from ` +
+              `the server, it can only be rendered as a Component or passed to props of a ` +
+              `Client Component.`,
+          );
+        }: any),
+        target.$$id + '#',
+        target.$$async,
+      );
+      return true;
+    case 'then':
+      if (target.then) {
+        // Use a cached value
+        return target.then;
+      }
+      if (!target.$$async) {
+        // If this module is expected to return a Promise (such as an AsyncModule) then
+        // we should resolve that with a client reference that unwraps the Promise on
+        // the client.
+
+        const clientReference: ClientReference<any> =
+          registerClientReferenceImpl(({}: any), target.$$id, true);
+        const proxy = new Proxy(clientReference, proxyHandlers);
+
+        // Treat this as a resolved Promise for React's use()
+        target.status = 'fulfilled';
+        target.value = proxy;
+
+        const then = (target.then = registerClientReferenceImpl(
+          (function then(resolve, reject: any) {
+            // Expose to React.
+            return Promise.resolve(resolve(proxy));
+          }: any),
+          // If this is not used as a Promise but is treated as a reference to a `.then`
+          // export then we should treat it as a reference to that name.
+          target.$$id + '#then',
+          false,
+        ));
+        return then;
+      } else {
+        // Since typeof .then === 'function' is a feature test we'd continue recursing
+        // indefinitely if we return a function. Instead, we return an object reference
+        // if we check further.
+        return undefined;
+      }
+  }
+  if (typeof name === 'symbol') {
+    throw new Error(
+      'Cannot read Symbol exports. Only named exports are supported on a client module ' +
+        'imported on the server.',
+    );
+  }
+  let cachedReference = target[name];
+  if (!cachedReference) {
+    const reference: ClientReference<any> = registerClientReferenceImpl(
+      (function () {
+        throw new Error(
+          // eslint-disable-next-line react-internal/safe-string-coercion
+          `Attempted to call ${String(name)}() from the server but ${String(
+            name,
+          )} is on the client. ` +
+            `It's not possible to invoke a client function from the server, it can ` +
+            `only be rendered as a Component or passed to props of a Client Component.`,
+        );
+      }: any),
+      target.$$id + '#' + name,
+      target.$$async,
+    );
+    Object.defineProperty((reference: any), 'name', {value: name});
+    cachedReference = target[name] = new Proxy(reference, deepProxyHandlers);
+  }
+  return cachedReference;
+}
+
 const proxyHandlers = {
   get: function (
     target: Function,
-    name: string,
+    name: string | symbol,
     receiver: Proxy<Function>,
   ): $FlowFixMe {
-    switch (name) {
-      // These names are read by the Flight runtime if you end up using the exports object.
-      case '$$typeof':
-        return target.$$typeof;
-      case '$$id':
-        return target.$$id;
-      case '$$async':
-        return target.$$async;
-      case 'name':
-        return target.name;
-      // We need to special case this because createElement reads it if we pass this
-      // reference.
-      case 'defaultProps':
-        return undefined;
-      // Avoid this attempting to be serialized.
-      case 'toJSON':
-        return undefined;
-      case Symbol.toPrimitive:
-        // $FlowFixMe[prop-missing]
-        return Object.prototype[Symbol.toPrimitive];
-      case '__esModule':
-        // Something is conditionally checking which export to use. We'll pretend to be
-        // an ESM compat module but then we'll check again on the client.
-        const moduleId = target.$$id;
-        target.default = registerClientReferenceImpl(
-          (function () {
-            throw new Error(
-              `Attempted to call the default export of ${moduleId} from the server ` +
-                `but it's on the client. It's not possible to invoke a client function from ` +
-                `the server, it can only be rendered as a Component or passed to props of a ` +
-                `Client Component.`,
-            );
-          }: any),
-          target.$$id + '#',
-          target.$$async,
-        );
-        return true;
-      case 'then':
-        if (target.then) {
-          // Use a cached value
-          return target.then;
-        }
-        if (!target.$$async) {
-          // If this module is expected to return a Promise (such as an AsyncModule) then
-          // we should resolve that with a client reference that unwraps the Promise on
-          // the client.
-
-          const clientReference: ClientReference<any> =
-            registerClientReferenceImpl(({}: any), target.$$id, true);
-          const proxy = new Proxy(clientReference, proxyHandlers);
-
-          // Treat this as a resolved Promise for React's use()
-          target.status = 'fulfilled';
-          target.value = proxy;
-
-          const then = (target.then = registerClientReferenceImpl(
-            (function then(resolve, reject: any) {
-              // Expose to React.
-              return Promise.resolve(resolve(proxy));
-            }: any),
-            // If this is not used as a Promise but is treated as a reference to a `.then`
-            // export then we should treat it as a reference to that name.
-            target.$$id + '#then',
-            false,
-          ));
-          return then;
-        } else {
-          // Since typeof .then === 'function' is a feature test we'd continue recursing
-          // indefinitely if we return a function. Instead, we return an object reference
-          // if we check further.
-          return undefined;
-        }
+    return getReference(target, name);
+  },
+  getOwnPropertyDescriptor: function (
+    target: Function,
+    name: string | symbol,
+  ): $FlowFixMe {
+    let descriptor = Object.getOwnPropertyDescriptor(target, name);
+    if (!descriptor) {
+      descriptor = {
+        value: getReference(target, name),
+        writable: false,
+        configurable: false,
+        enumerable: false,
+      };
+      Object.defineProperty(target, name, descriptor);
     }
-    let cachedReference = target[name];
-    if (!cachedReference) {
-      const reference: ClientReference<any> = registerClientReferenceImpl(
-        (function () {
-          throw new Error(
-            // eslint-disable-next-line react-internal/safe-string-coercion
-            `Attempted to call ${String(name)}() from the server but ${String(
-              name,
-            )} is on the client. ` +
-              `It's not possible to invoke a client function from the server, it can ` +
-              `only be rendered as a Component or passed to props of a Client Component.`,
-          );
-        }: any),
-        target.$$id + '#' + name,
-        target.$$async,
-      );
-      Object.defineProperty((reference: any), 'name', {value: name});
-      cachedReference = target[name] = new Proxy(reference, deepProxyHandlers);
-    }
-    return cachedReference;
+    return descriptor;
   },
   getPrototypeOf(target: Function): Object {
     // Pretend to be a Promise in case anyone asks.
