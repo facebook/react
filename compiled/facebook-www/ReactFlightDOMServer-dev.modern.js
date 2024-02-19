@@ -829,6 +829,10 @@ if (__DEV__) {
             return "[...]";
           }
 
+          if (value !== null && value.$$typeof === CLIENT_REFERENCE_TAG) {
+            return describeClientReference();
+          }
+
           var name = objectName(value);
 
           if (name === "Object") {
@@ -839,6 +843,10 @@ if (__DEV__) {
         }
 
         case "function":
+          if (value.$$typeof === CLIENT_REFERENCE_TAG) {
+            return describeClientReference();
+          }
+
           return "function";
 
         default:
@@ -882,6 +890,12 @@ if (__DEV__) {
       }
 
       return "";
+    }
+
+    var CLIENT_REFERENCE_TAG = Symbol.for("react.client.reference");
+
+    function describeClientReference(ref) {
+      return "client";
     }
 
     function describeObjectForErrorMessage(objectOrArray, expandedName) {
@@ -965,6 +979,8 @@ if (__DEV__) {
       } else {
         if (objectOrArray.$$typeof === REACT_ELEMENT_TYPE) {
           str = "<" + describeElementType(objectOrArray.type) + "/>";
+        } else if (objectOrArray.$$typeof === CLIENT_REFERENCE_TAG) {
+          return describeClientReference();
         } else if (jsxPropsParents.has(objectOrArray)) {
           // Print JSX
           var _type = jsxPropsParents.get(objectOrArray);

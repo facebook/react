@@ -346,10 +346,12 @@ function describeValueForErrorMessage(value) {
       );
     case "object":
       if (isArrayImpl(value)) return "[...]";
+      if (null !== value && value.$$typeof === CLIENT_REFERENCE_TAG)
+        return "client";
       value = objectName(value);
       return "Object" === value ? "{...}" : value;
     case "function":
-      return "function";
+      return value.$$typeof === CLIENT_REFERENCE_TAG ? "client" : "function";
     default:
       return String(value);
   }
@@ -377,6 +379,7 @@ function describeElementType(type) {
     }
   return "";
 }
+var CLIENT_REFERENCE_TAG = Symbol.for("react.client.reference");
 function describeObjectForErrorMessage(objectOrArray, expandedName) {
   var objKind = objectName(objectOrArray);
   if ("Object" !== objKind && "Array" !== objKind) return objKind;
@@ -402,6 +405,7 @@ function describeObjectForErrorMessage(objectOrArray, expandedName) {
   } else if (objectOrArray.$$typeof === REACT_ELEMENT_TYPE)
     str = "<" + describeElementType(objectOrArray.type) + "/>";
   else {
+    if (objectOrArray.$$typeof === CLIENT_REFERENCE_TAG) return "client";
     str = "{";
     i = Object.keys(objectOrArray);
     for (value = 0; value < i.length; value++) {
