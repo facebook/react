@@ -1065,7 +1065,7 @@ function resolveDebugInfo(
 
 function resolveConsoleEntry(
   response: Response,
-  payload: [string /*methodName */, ...any],
+  payload: [string /*methodName */, string /* stackTrace */, ...any],
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1075,9 +1075,11 @@ function resolveConsoleEntry(
     );
   }
   const methodName = payload[0];
-  const args = payload.slice(1);
-    // eslint-disable-next-line react-internal/no-production-logging
-    console[methodName].apply(console, args);
+  // TODO: Restore the fake stack before logging.
+  // const stackTrace = payload[1];
+  const args = payload.slice(2);
+  // eslint-disable-next-line react-internal/no-production-logging
+  console[methodName].apply(console, args);
 }
 
 function mergeBuffer(

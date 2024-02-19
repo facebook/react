@@ -121,15 +121,34 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
   ) {
     const originalMethod = descriptor.value;
     // $FlowFixMe[incompatible-call]: We should be able to get descriptors from any function.
-    const originalName = Object.getOwnPropertyDescriptor(originalMethod, 'name');
+    const originalName = Object.getOwnPropertyDescriptor(
+      originalMethod,
+      'name',
+    );
     const wrapperMethod = function (this: typeof console) {
       const request = resolveRequest();
-      if (request !== null) {
+      if (methodName === 'assert' && arguments[0]) {
+        // assert doesn't emit anything unless first argument is falsy so we can skip it.
+      } else if (request !== null) {
+        // Extract the stack. Not all console logs print the full stack but they have at
+        // least the line it was called from. We could optimize transfer by keeping just
+        // one stack frame but keeping it simple for now and include all frames.
+        let stack = new Error().stack;
+        if (stack.startsWith('Error: \n')) {
+          stack = stack.slice(8);
+        }
+        const firstLine = stack.indexOf('\n');
+        if (firstLine === -1) {
+          stack = '';
+        } else {
+          // Skip the console wrapper itself.
+          stack = stack.slice(firstLine + 1);
+        }
         request.pendingChunks++;
         // We don't currently use this id for anything but we emit it so that we can later
         // refer to previous logs in debug info to associate them with a component.
         const id = request.nextChunkId++;
-        emitConsoleChunk(request, id, methodName, arguments);
+        emitConsoleChunk(request, id, methodName, stack, arguments);
       }
       // $FlowFixMe[prop-missing]
       return originalMethod.apply(this, arguments);
@@ -1845,7 +1864,8 @@ function emitConsoleChunk(
   request: Request,
   id: number,
   methodName: string,
-  args: Array<any>
+  stackTrace: string,
+  args: Array<any>,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1854,7 +1874,7 @@ function emitConsoleChunk(
       'emitConsoleChunk should never be called in production mode. This is a bug in React.',
     );
   }
-  const payload = [methodName];
+  const payload = [methodName, stackTrace];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
   // $FlowFixMe[incompatible-type] stringify can return null
