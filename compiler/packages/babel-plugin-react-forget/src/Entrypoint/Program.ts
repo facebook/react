@@ -36,20 +36,27 @@ export type CompilerPass = {
   comments: (t.CommentBlock | t.CommentLine)[];
 };
 
-function findUseForgetDirective(directives: t.Directive[]): t.Directive | null {
+function findDirectiveEnablingMemoization(
+  directives: t.Directive[]
+): t.Directive | null {
   for (const directive of directives) {
-    if (directive.value.value === "use forget") {
+    const directiveValue = directive.value.value;
+    if (directiveValue === "use forget" || directiveValue === "use memo") {
       return directive;
     }
   }
   return null;
 }
 
-function findUseNoForgetDirective(
+function findDirectiveDisablingMemoization(
   directives: t.Directive[]
 ): t.Directive | null {
   for (const directive of directives) {
-    if (directive.value.value === "use no forget") {
+    const directiveValue = directive.value.value;
+    if (
+      directiveValue === "use no forget" ||
+      directiveValue === "use no memo"
+    ) {
       return directive;
     }
   }
@@ -189,7 +196,7 @@ export function compileProgram(
   pass: CompilerPass
 ): void {
   // Top level "use no forget", skip this file entirely
-  if (findUseNoForgetDirective(program.node.directives) != null) {
+  if (findDirectiveDisablingMemoization(program.node.directives) != null) {
     return;
   }
 
@@ -372,7 +379,9 @@ export function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
   }
   if (fn.node.body.type === "BlockStatement") {
     // Opt-outs disable compilation regardless of mode
-    const useNoForget = findUseNoForgetDirective(fn.node.body.directives);
+    const useNoForget = findDirectiveDisablingMemoization(
+      fn.node.body.directives
+    );
     if (useNoForget != null) {
       pass.opts.logger?.logEvent(pass.filename, {
         kind: "CompileError",
@@ -387,7 +396,7 @@ export function shouldVisitNode(fn: BabelFn, pass: CompilerPass): boolean {
       return false;
     }
     // Otherwise opt-ins enable compilation regardless of mode
-    if (findUseForgetDirective(fn.node.body.directives) != null) {
+    if (findDirectiveEnablingMemoization(fn.node.body.directives) != null) {
       return true;
     }
   }
