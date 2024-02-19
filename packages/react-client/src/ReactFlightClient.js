@@ -1063,6 +1063,23 @@ function resolveDebugInfo(
   chunkDebugInfo.push(debugInfo);
 }
 
+function resolveConsoleEntry(
+  response: Response,
+  payload: [string /*methodName */, ...any],
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'resolveConsoleEntry should never be called in production mode. This is a bug in React.',
+    );
+  }
+  const methodName = payload[0];
+  const args = payload.slice(1);
+    // eslint-disable-next-line react-internal/no-production-logging
+    console[methodName].apply(console, args);
+}
+
 function mergeBuffer(
   buffer: Array<Uint8Array>,
   lastChunk: Uint8Array,
@@ -1210,6 +1227,14 @@ function processFullRow(
       if (__DEV__) {
         const debugInfo = JSON.parse(row);
         resolveDebugInfo(response, id, debugInfo);
+        return;
+      }
+      // Fallthrough to share the error with Console entries.
+    }
+    case 87 /* "W" */: {
+      if (__DEV__) {
+        const payload = JSON.parse(row);
+        resolveConsoleEntry(response, payload);
         return;
       }
       throw new Error(

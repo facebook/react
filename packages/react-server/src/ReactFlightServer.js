@@ -17,6 +17,7 @@ import {
   enableTaint,
   enableServerComponentKeys,
   enableRefAsProp,
+  enableServerComponentLogs,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -110,6 +111,64 @@ import binaryToComparableString from 'shared/binaryToComparableString';
 import {SuspenseException, getSuspendedThenable} from './ReactFlightThenable';
 
 initAsyncDebugInfo();
+
+function patchConsole(consoleInst: typeof console, methodName: string) {
+  const descriptor = Object.getOwnPropertyDescriptor(consoleInst, methodName);
+  if (
+    descriptor &&
+    (descriptor.configurable || descriptor.writable) &&
+    typeof descriptor.value === 'function'
+  ) {
+    const originalMethod = descriptor.value;
+    // $FlowFixMe[incompatible-call]: We should be able to get descriptors from any function.
+    const originalName = Object.getOwnPropertyDescriptor(originalMethod, 'name');
+    const wrapperMethod = function (this: typeof console) {
+      const request = resolveRequest();
+      if (request !== null) {
+        request.pendingChunks++;
+        // We don't currently use this id for anything but we emit it so that we can later
+        // refer to previous logs in debug info to associate them with a component.
+        const id = request.nextChunkId++;
+        emitConsoleChunk(request, id, methodName, arguments);
+      }
+      // $FlowFixMe[prop-missing]
+      return originalMethod.apply(this, arguments);
+    };
+    if (originalName) {
+      Object.defineProperty(
+        wrapperMethod,
+        // $FlowFixMe[cannot-write] yes it is
+        'name',
+        originalName,
+      );
+    }
+    Object.defineProperty(consoleInst, methodName, {
+      value: wrapperMethod,
+    });
+  }
+}
+
+if (
+  enableServerComponentLogs &&
+  __DEV__ &&
+  typeof console === 'object' &&
+  console !== null
+) {
+  // Instrument console to capture logs for replaying on the client.
+  patchConsole(console, 'assert');
+  patchConsole(console, 'debug');
+  patchConsole(console, 'dir');
+  patchConsole(console, 'dirxml');
+  patchConsole(console, 'error');
+  patchConsole(console, 'group');
+  patchConsole(console, 'groupCollapsed');
+  patchConsole(console, 'groupEnd');
+  patchConsole(console, 'info');
+  patchConsole(console, 'log');
+  patchConsole(console, 'table');
+  patchConsole(console, 'trace');
+  patchConsole(console, 'warn');
+}
 
 const ObjectPrototype = Object.prototype;
 
@@ -1780,6 +1839,32 @@ function emitDebugChunk(
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
+}
+
+function emitConsoleChunk(
+  request: Request,
+  id: number,
+  methodName: string,
+  args: Array<any>
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'emitConsoleChunk should never be called in production mode. This is a bug in React.',
+    );
+  }
+  const payload = [methodName];
+  // $FlowFixMe[method-unbinding]
+  payload.push.apply(payload, args);
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(payload);
+  const row = serializeRowHeader('W', id) + json + '\n';
+  const processedChunk = stringToChunk(row);
+  // Add it to import chunks since this has the highest priority it ensures that
+  // the log comes before in the timeline any consequence that happens after.
+  // Ensuring ordering.
+  request.completedImportChunks.push(processedChunk);
 }
 
 function forwardDebugInfo(
