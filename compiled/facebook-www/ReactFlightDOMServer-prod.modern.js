@@ -351,7 +351,11 @@ function describeValueForErrorMessage(value) {
       value = objectName(value);
       return "Object" === value ? "{...}" : value;
     case "function":
-      return value.$$typeof === CLIENT_REFERENCE_TAG ? "client" : "function";
+      return value.$$typeof === CLIENT_REFERENCE_TAG
+        ? "client"
+        : (value = value.displayName || value.name)
+        ? "function " + value
+        : "function";
     default:
       return String(value);
   }
@@ -920,10 +924,10 @@ function renderModelDestructive(
   }
   if ("symbol" === typeof value) {
     task = request.writtenSymbols;
-    var existingId$8 = task.get(value);
-    if (void 0 !== existingId$8) return serializeByValueID(existingId$8);
-    existingId$8 = value.description;
-    if (Symbol.for(existingId$8) !== value)
+    var existingId$9 = task.get(value);
+    if (void 0 !== existingId$9) return serializeByValueID(existingId$9);
+    existingId$9 = value.description;
+    if (Symbol.for(existingId$9) !== value)
       throw Error(
         "Only global symbols received from Symbol.for(...) can be passed to Client Components. The symbol Symbol.for(" +
           (value.description + ") cannot be found among global symbols.") +
@@ -931,7 +935,7 @@ function renderModelDestructive(
       );
     request.pendingChunks++;
     parent = request.nextChunkId++;
-    parentPropertyName = stringify("$S" + existingId$8);
+    parentPropertyName = stringify("$S" + existingId$9);
     parentPropertyName = parent.toString(16) + ":" + parentPropertyName + "\n";
     request.completedImportChunks.push(parentPropertyName);
     task.set(value, parent);

@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-2b72b29d";
+    var ReactVersion = "18.3.0-www-modern-06e02b7d";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -184,12 +184,15 @@ if (__DEV__) {
           return name;
         }
 
-        case "function":
+        case "function": {
           if (value.$$typeof === CLIENT_REFERENCE_TAG) {
             return describeClientReference();
           }
 
-          return "function";
+          var _name = value.displayName || value.name;
+
+          return _name ? "function " + _name : "function";
+        }
 
         default:
           // eslint-disable-next-line react-internal/safe-string-coercion
@@ -380,9 +383,9 @@ if (__DEV__) {
               str += ", ";
             }
 
-            var _name = _names[_i3];
-            str += describeKeyForErrorMessage(_name) + ": ";
-            var _value3 = _object[_name];
+            var _name2 = _names[_i3];
+            str += describeKeyForErrorMessage(_name2) + ": ";
+            var _value3 = _object[_name2];
 
             var _substr3 = void 0;
 
@@ -392,7 +395,7 @@ if (__DEV__) {
               _substr3 = describeValueForErrorMessage(_value3);
             }
 
-            if (_name === expandedName) {
+            if (_name2 === expandedName) {
               start = str.length;
               length = _substr3.length;
               str += _substr3;

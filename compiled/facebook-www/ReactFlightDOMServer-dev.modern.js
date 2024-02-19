@@ -842,12 +842,15 @@ if (__DEV__) {
           return name;
         }
 
-        case "function":
+        case "function": {
           if (value.$$typeof === CLIENT_REFERENCE_TAG) {
             return describeClientReference();
           }
 
-          return "function";
+          var _name = value.displayName || value.name;
+
+          return _name ? "function " + _name : "function";
+        }
 
         default:
           // eslint-disable-next-line react-internal/safe-string-coercion
@@ -1038,9 +1041,9 @@ if (__DEV__) {
               str += ", ";
             }
 
-            var _name = _names[_i3];
-            str += describeKeyForErrorMessage(_name) + ": ";
-            var _value3 = _object[_name];
+            var _name2 = _names[_i3];
+            str += describeKeyForErrorMessage(_name2) + ": ";
+            var _value3 = _object[_name2];
 
             var _substr3 = void 0;
 
@@ -1050,7 +1053,7 @@ if (__DEV__) {
               _substr3 = describeValueForErrorMessage(_value3);
             }
 
-            if (_name === expandedName) {
+            if (_name2 === expandedName) {
               start = str.length;
               length = _substr3.length;
               str += _substr3;
@@ -2263,10 +2266,26 @@ if (__DEV__) {
               describeObjectForErrorMessage(parent, parentPropertyName) +
               "\nIf you need interactivity, consider converting part of this to a Client Component."
           );
+        } else if (
+          jsxChildrenParents.has(parent) ||
+          (jsxPropsParents.has(parent) && parentPropertyName === "children")
+        ) {
+          var componentName = value.displayName || value.name || "Component";
+          throw new Error(
+            "Functions are not valid as a child of Client Components. This may happen if " +
+              "you return " +
+              componentName +
+              " instead of <" +
+              componentName +
+              " /> from render. " +
+              "Or maybe you meant to call this function rather than return it." +
+              describeObjectForErrorMessage(parent, parentPropertyName)
+          );
         } else {
           throw new Error(
             "Functions cannot be passed directly to Client Components " +
-              'unless you explicitly expose it by marking it with "use server".' +
+              'unless you explicitly expose it by marking it with "use server". ' +
+              "Or maybe you meant to call this function rather than return it." +
               describeObjectForErrorMessage(parent, parentPropertyName)
           );
         }
