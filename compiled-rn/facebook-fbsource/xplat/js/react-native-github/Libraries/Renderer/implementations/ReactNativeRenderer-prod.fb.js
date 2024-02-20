@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4ab98123eefb86214c2e00d10a6369be>>
+ * @generated SignedSource<<dc7cb5896d2b21899295b8fcd87ea9a8>>
  */
 
 "use strict";
@@ -4993,7 +4993,7 @@ function updateOffscreenComponent(current, workInProgress, renderLanes) {
     nextChildren = nextProps.children,
     nextIsDetached = 0 !== (workInProgress.stateNode._pendingVisibility & 2),
     prevState = null !== current ? current.memoizedState : null;
-  markRef$1(current, workInProgress);
+  markRef(current, workInProgress);
   if ("hidden" === nextProps.mode || nextIsDetached) {
     if (0 !== (workInProgress.flags & 128)) {
       renderLanes =
@@ -5047,7 +5047,7 @@ function deferHiddenOffscreenComponent(current, workInProgress, nextBaseLanes) {
   pushOffscreenSuspenseHandler(workInProgress);
   return null;
 }
-function markRef$1(current, workInProgress) {
+function markRef(current, workInProgress) {
   var ref = workInProgress.ref;
   if (
     (null === current && null !== ref) ||
@@ -5316,7 +5316,7 @@ function finishClassComponent(
   hasContext,
   renderLanes
 ) {
-  markRef$1(current, workInProgress);
+  markRef(current, workInProgress);
   var didCaptureError = 0 !== (workInProgress.flags & 128);
   if (!shouldUpdate && !didCaptureError)
     return (
@@ -6123,9 +6123,7 @@ function completeWork(current, workInProgress, renderLanes) {
       popHostContext(workInProgress);
       var type = workInProgress.type;
       if (null !== current && null != workInProgress.stateNode)
-        current.memoizedProps !== newProps && (workInProgress.flags |= 4),
-          current.ref !== workInProgress.ref &&
-            (workInProgress.flags |= 2097664);
+        current.memoizedProps !== newProps && (workInProgress.flags |= 4);
       else {
         if (!newProps) {
           if (null === workInProgress.stateNode)
@@ -6179,7 +6177,6 @@ function completeWork(current, workInProgress, renderLanes) {
         }
         workInProgress.stateNode = current;
         finalizeInitialChildren(current) && (workInProgress.flags |= 4);
-        null !== workInProgress.ref && (workInProgress.flags |= 2097664);
       }
       bubbleProperties(workInProgress);
       workInProgress.flags &= -16777217;
@@ -8983,7 +8980,7 @@ beginWork = function (current, workInProgress, renderLanes) {
       return (
         pushHostContext(workInProgress),
         (Component = workInProgress.pendingProps.children),
-        markRef$1(current, workInProgress),
+        markRef(current, workInProgress),
         reconcileChildren(current, workInProgress, Component, renderLanes),
         workInProgress.child
       );
@@ -9755,10 +9752,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1140 = {
+  devToolsConfig$jscomp$inline_1136 = {
     findFiberByHostInstance: getInstanceFromTag,
     bundleType: 0,
-    version: "18.3.0-canary-eb3a3b11",
+    version: "18.3.0-canary-26523433",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9774,11 +9771,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1379 = {
-  bundleType: devToolsConfig$jscomp$inline_1140.bundleType,
-  version: devToolsConfig$jscomp$inline_1140.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1140.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1140.rendererConfig,
+var internals$jscomp$inline_1375 = {
+  bundleType: devToolsConfig$jscomp$inline_1136.bundleType,
+  version: devToolsConfig$jscomp$inline_1136.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1136.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1136.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9794,26 +9791,26 @@ var internals$jscomp$inline_1379 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1140.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1136.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-eb3a3b11"
+  reconcilerVersion: "18.3.0-canary-26523433"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1380 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1376 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1380.isDisabled &&
-    hook$jscomp$inline_1380.supportsFiber
+    !hook$jscomp$inline_1376.isDisabled &&
+    hook$jscomp$inline_1376.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1380.inject(
-        internals$jscomp$inline_1379
+      (rendererID = hook$jscomp$inline_1376.inject(
+        internals$jscomp$inline_1375
       )),
-        (injectedHook = hook$jscomp$inline_1380);
+        (injectedHook = hook$jscomp$inline_1376);
     } catch (err) {}
 }
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<e35fcd9ae95927cef47f7bb2f68249cf>>
+ * @generated SignedSource<<7f468c0b121f290e67f1fba4e2a73c8e>>
  */
 
 "use strict";
@@ -16208,7 +16208,7 @@ to return true:wantsResponderID|                            |
       var nextIsDetached =
         (workInProgress.stateNode._pendingVisibility & OffscreenDetached) !== 0;
       var prevState = current !== null ? current.memoizedState : null;
-      markRef$1(current, workInProgress);
+      markRef(current, workInProgress);
 
       if (nextProps.mode === "hidden" || enableLegacyHidden || nextIsDetached) {
         // Rendering a hidden tree.
@@ -16373,7 +16373,9 @@ to return true:wantsResponderID|                            |
       return workInProgress.child;
     }
 
-    function markRef$1(current, workInProgress) {
+    function markRef(current, workInProgress) {
+      // TODO: This is also where we should check the type of the ref and error if
+      // an invalid one is passed, instead of during child reconcilation.
       var ref = workInProgress.ref;
 
       if (
@@ -16607,7 +16609,7 @@ to return true:wantsResponderID|                            |
       renderLanes
     ) {
       // Refs should update even if shouldComponentUpdate returns false
-      markRef$1(current, workInProgress);
+      markRef(current, workInProgress);
       var didCaptureError = (workInProgress.flags & DidCapture) !== NoFlags$1;
 
       if (!shouldUpdate && !didCaptureError) {
@@ -16761,7 +16763,7 @@ to return true:wantsResponderID|                            |
         workInProgress.flags |= ContentReset;
       }
 
-      markRef$1(current, workInProgress);
+      markRef(current, workInProgress);
       reconcileChildren(current, workInProgress, nextChildren, renderLanes);
       return workInProgress.child;
     }
@@ -19361,10 +19363,6 @@ to return true:wantsResponderID|                            |
       workInProgress.flags |= Update;
     }
 
-    function markRef(workInProgress) {
-      workInProgress.flags |= Ref | RefStatic;
-    }
-
     function appendAllChildren(
       parent,
       workInProgress,
@@ -19839,10 +19837,6 @@ to return true:wantsResponderID|                            |
 
           if (current !== null && workInProgress.stateNode != null) {
             updateHostComponent(current, workInProgress, _type2, newProps);
-
-            if (current.ref !== workInProgress.ref) {
-              markRef(workInProgress);
-            }
           } else {
             if (!newProps) {
               if (workInProgress.stateNode === null) {
@@ -19887,11 +19881,6 @@ to return true:wantsResponderID|                            |
               if (finalizeInitialChildren(_instance3)) {
                 markUpdate(workInProgress);
               }
-            }
-
-            if (workInProgress.ref !== null) {
-              // If there is a ref on a host node we need to schedule a callback
-              markRef(workInProgress);
             }
           }
 
@@ -28177,7 +28166,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-602d6f04";
+    var ReactVersion = "18.3.0-canary-9ee917a0";
 
     function createPortal$1(
       children,
