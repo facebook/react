@@ -252,6 +252,8 @@ if (__DEV__) {
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;
 
+    var assign = Object.assign;
+
     /*
      * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
      * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
@@ -374,8 +376,6 @@ if (__DEV__) {
     function isArray(a) {
       return isArrayImpl(a);
     }
-
-    var assign = Object.assign;
 
     // Helpers to patch console.logs to avoid logging during side-effect free
     // replaying on render function. This currently only patches the object
@@ -1389,13 +1389,11 @@ if (__DEV__) {
      */
 
     function isValidElement(object) {
-      {
-        return (
-          typeof object === "object" &&
-          object !== null &&
-          object.$$typeof === REACT_ELEMENT_TYPE
-        );
-      }
+      return (
+        typeof object === "object" &&
+        object !== null &&
+        object.$$typeof === REACT_ELEMENT_TYPE
+      );
     }
     var ownerHasKeyUseWarning = {};
     /**

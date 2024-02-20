@@ -84,9 +84,18 @@ var isArrayImpl = Array.isArray,
   dynamicFeatureFlags = require("ReactFeatureFlags"),
   enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+  ReactCurrentDispatcher = { current: null },
+  ReactCurrentCache = { current: null },
+  ReactCurrentBatchConfig = { transition: null },
+  ReactSharedInternals = {
+    ReactCurrentDispatcher: ReactCurrentDispatcher,
+    ReactCurrentCache: ReactCurrentCache,
+    ReactCurrentBatchConfig: ReactCurrentBatchConfig,
+    ReactCurrentOwner: { current: null }
+  },
   hasOwnProperty = Object.prototype.hasOwnProperty,
-  ReactCurrentOwner$1 = { current: null };
-function ReactElement$1(type, key, ref, owner, props) {
+  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+function ReactElement(type, key, ref, self, source, owner, props) {
   return {
     $$typeof: REACT_ELEMENT_TYPE,
     type: type,
@@ -96,11 +105,39 @@ function ReactElement$1(type, key, ref, owner, props) {
     _owner: owner
   };
 }
+function jsxProd(type, config, maybeKey) {
+  var propName,
+    props = {},
+    key = null,
+    ref = null;
+  void 0 !== maybeKey && (key = "" + maybeKey);
+  void 0 !== config.key && (key = "" + config.key);
+  void 0 !== config.ref && (ref = config.ref);
+  for (propName in config)
+    hasOwnProperty.call(config, propName) &&
+      "key" !== propName &&
+      "ref" !== propName &&
+      (props[propName] = config[propName]);
+  if (type && type.defaultProps)
+    for (propName in ((config = type.defaultProps), config))
+      void 0 === props[propName] && (props[propName] = config[propName]);
+  return ReactElement(
+    type,
+    key,
+    ref,
+    void 0,
+    void 0,
+    ReactCurrentOwner.current,
+    props
+  );
+}
 function cloneAndReplaceKey(oldElement, newKey) {
-  return ReactElement$1(
+  return ReactElement(
     oldElement.type,
     newKey,
     oldElement.ref,
+    void 0,
+    void 0,
     oldElement._owner,
     oldElement.props
   );
@@ -112,15 +149,6 @@ function isValidElement(object) {
     object.$$typeof === REACT_ELEMENT_TYPE
   );
 }
-var ReactCurrentDispatcher = { current: null },
-  ReactCurrentCache = { current: null },
-  ReactCurrentBatchConfig = { transition: null },
-  ReactSharedInternals = {
-    ReactCurrentDispatcher: ReactCurrentDispatcher,
-    ReactCurrentCache: ReactCurrentCache,
-    ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-    ReactCurrentOwner: ReactCurrentOwner$1
-  };
 function escape(key) {
   var escaperLookup = { "=": "=0", ":": "=2" };
   return (
@@ -306,37 +334,11 @@ function lazyInitializer(payload) {
 }
 function noop() {}
 var onError =
-    "function" === typeof reportError
-      ? reportError
-      : function (error) {
-          console.error(error);
-        },
-  ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-function jsxProd(type, config, maybeKey) {
-  var propName,
-    props = {},
-    key = null,
-    ref = null;
-  void 0 !== maybeKey && (key = "" + maybeKey);
-  void 0 !== config.key && (key = "" + config.key);
-  void 0 !== config.ref && (ref = config.ref);
-  for (propName in config)
-    hasOwnProperty.call(config, propName) &&
-      "key" !== propName &&
-      "ref" !== propName &&
-      (props[propName] = config[propName]);
-  if (type && type.defaultProps)
-    for (propName in ((config = type.defaultProps), config))
-      void 0 === props[propName] && (props[propName] = config[propName]);
-  return {
-    $$typeof: REACT_ELEMENT_TYPE,
-    type: type,
-    key: key,
-    ref: ref,
-    props: props,
-    _owner: ReactCurrentOwner.current
-  };
-}
+  "function" === typeof reportError
+    ? reportError
+    : function (error) {
+        console.error(error);
+      };
 exports.Children = {
   map: mapChildren,
   forEach: function (children, forEachFunc, forEachContext) {
@@ -399,7 +401,7 @@ exports.cloneElement = function (element, config, children) {
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      ((ref = config.ref), (owner = ReactCurrentOwner$1.current));
+      ((ref = config.ref), (owner = ReactCurrentOwner.current));
     void 0 !== config.key && (key = "" + config.key);
     if (element.type && element.type.defaultProps)
       var defaultProps = element.type.defaultProps;
@@ -421,7 +423,7 @@ exports.cloneElement = function (element, config, children) {
     for (var i = 0; i < propName; i++) defaultProps[i] = arguments[i + 2];
     props.children = defaultProps;
   }
-  return ReactElement$1(element.type, key, ref, owner, props);
+  return ReactElement(element.type, key, ref, void 0, void 0, owner, props);
 };
 exports.createContext = function (defaultValue) {
   defaultValue = {
@@ -471,7 +473,15 @@ exports.createElement = function (type, config, children) {
     for (propName in ((childrenLength = type.defaultProps), childrenLength))
       void 0 === props[propName] &&
         (props[propName] = childrenLength[propName]);
-  return ReactElement$1(type, key, ref, ReactCurrentOwner$1.current, props);
+  return ReactElement(
+    type,
+    key,
+    ref,
+    void 0,
+    void 0,
+    ReactCurrentOwner.current,
+    props
+  );
 };
 exports.createRef = function () {
   return { current: null };
@@ -610,4 +620,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-a03dc08d";
+exports.version = "18.3.0-www-modern-b44b3fe9";
