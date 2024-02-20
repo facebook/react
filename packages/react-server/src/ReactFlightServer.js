@@ -120,8 +120,8 @@ function patchConsole(consoleInst: typeof console, methodName: string) {
     typeof descriptor.value === 'function'
   ) {
     const originalMethod = descriptor.value;
-    // $FlowFixMe[incompatible-call]: We should be able to get descriptors from any function.
     const originalName = Object.getOwnPropertyDescriptor(
+      // $FlowFixMe[incompatible-call]: We should be able to get descriptors from any function.
       originalMethod,
       'name',
     );
@@ -937,6 +937,10 @@ function serializeByValueID(id: number): string {
 
 function serializeLazyID(id: number): string {
   return '$L' + id.toString(16);
+}
+
+function serializeInfinitePromise(): string {
+  return '$@';
 }
 
 function serializePromiseID(id: number): string {
@@ -1853,11 +1857,301 @@ function emitDebugChunk(
       'emitDebugChunk should never be called in production mode. This is a bug in React.',
     );
   }
+
   // $FlowFixMe[incompatible-type] stringify can return null
   const json: string = stringify(debugInfo);
   const row = serializeRowHeader('D', id) + json + '\n';
   const processedChunk = stringToChunk(row);
   request.completedRegularChunks.push(processedChunk);
+}
+
+function serializeEval(source: string): string {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'serializeEval should never be called in production mode. This is a bug in React.',
+    );
+  }
+  return '$E' + source;
+}
+
+// This is a forked version of renderModel which should never error, never suspend and is limited
+// in the depth it can encode.
+function renderConsoleValue(
+  request: Request,
+  counter: {objectCount: number},
+  parent:
+    | {+[propertyName: string | number]: ReactClientValue}
+    | $ReadOnlyArray<ReactClientValue>,
+  parentPropertyName: string,
+  value: ReactClientValue,
+): ReactJSONValue {
+  // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
+  // $FlowFixMe[incompatible-use]
+  const originalValue = parent[parentPropertyName];
+  if (
+    typeof originalValue === 'object' &&
+    originalValue !== value &&
+    !(originalValue instanceof Date)
+  ) {
+  }
+
+  if (value === null) {
+    return null;
+  }
+
+  if (typeof value === 'object') {
+    if (isClientReference(value)) {
+      // We actually have this value on the client so we could import it.
+      // This might be confusing though because on the Server it won't actually
+      // be this value, so if you're debugging client references maybe you'd be
+      // better with a place holder.
+      return serializeClientReference(
+        request,
+        parent,
+        parentPropertyName,
+        (value: any),
+      );
+    }
+
+    if (counter.objectCount > 20) {
+      // We've reached our max number of objects to serialize across the wire so we serialize this
+      // object but no properties inside of it, as a place holder.
+      return Array.isArray(value) ? [] : {};
+    }
+
+    counter.objectCount++;
+
+    const writtenObjects = request.writtenObjects;
+    const existingId = writtenObjects.get(value);
+    // $FlowFixMe[method-unbinding]
+    if (typeof value.then === 'function') {
+      if (existingId !== undefined) {
+        // We've seen this promise before, so we can just refer to the same result.
+        return serializePromiseID(existingId);
+      }
+
+      const thenable: Thenable<any> = (value: any);
+      switch (thenable.status) {
+        case 'fulfilled': {
+          return serializePromiseID(
+            outlineConsoleValue(request, counter, thenable.value),
+          );
+        }
+        case 'rejected': {
+          const x = thenable.reason;
+          request.pendingChunks++;
+          const errorId = request.nextChunkId++;
+          if (
+            enablePostpone &&
+            typeof x === 'object' &&
+            x !== null &&
+            (x: any).$$typeof === REACT_POSTPONE_TYPE
+          ) {
+            const postponeInstance: Postpone = (x: any);
+            // We don't log this postpone.
+            emitPostponeChunk(request, errorId, postponeInstance);
+          } else {
+            // We don't log these errors since they didn't actually throw into Flight.
+            const digest = '';
+            emitErrorChunk(request, errorId, digest, x);
+          }
+          return serializePromiseID(errorId);
+        }
+      }
+      // If it hasn't already resolved (and been instrumented) we just encode an infinite
+      // promise that will never resolve.
+      return serializeInfinitePromise();
+    }
+
+    if (existingId !== undefined && existingId !== -1) {
+      // We've already emitted this as a real object, so we can
+      // just refer to that by its existing ID.
+      return serializeByValueID(existingId);
+    }
+
+    if (isArray(value)) {
+      return value;
+    }
+
+    if (value instanceof Map) {
+      return serializeMap(request, value);
+    }
+    if (value instanceof Set) {
+      return serializeSet(request, value);
+    }
+
+    if (enableBinaryFlight) {
+      if (value instanceof ArrayBuffer) {
+        return serializeTypedArray(request, 'A', new Uint8Array(value));
+      }
+      if (value instanceof Int8Array) {
+        // char
+        return serializeTypedArray(request, 'C', value);
+      }
+      if (value instanceof Uint8Array) {
+        // unsigned char
+        return serializeTypedArray(request, 'c', value);
+      }
+      if (value instanceof Uint8ClampedArray) {
+        // unsigned clamped char
+        return serializeTypedArray(request, 'U', value);
+      }
+      if (value instanceof Int16Array) {
+        // sort
+        return serializeTypedArray(request, 'S', value);
+      }
+      if (value instanceof Uint16Array) {
+        // unsigned short
+        return serializeTypedArray(request, 's', value);
+      }
+      if (value instanceof Int32Array) {
+        // long
+        return serializeTypedArray(request, 'L', value);
+      }
+      if (value instanceof Uint32Array) {
+        // unsigned long
+        return serializeTypedArray(request, 'l', value);
+      }
+      if (value instanceof Float32Array) {
+        // float
+        return serializeTypedArray(request, 'F', value);
+      }
+      if (value instanceof Float64Array) {
+        // double
+        return serializeTypedArray(request, 'd', value);
+      }
+      if (value instanceof BigInt64Array) {
+        // number
+        return serializeTypedArray(request, 'N', value);
+      }
+      if (value instanceof BigUint64Array) {
+        // unsigned number
+        // We use "m" instead of "n" since JSON can start with "null"
+        return serializeTypedArray(request, 'm', value);
+      }
+      if (value instanceof DataView) {
+        return serializeTypedArray(request, 'V', value);
+      }
+    }
+
+    const iteratorFn = getIteratorFn(value);
+    if (iteratorFn) {
+      return Array.from((value: any));
+    }
+
+    // $FlowFixMe[incompatible-return]
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    if (value[value.length - 1] === 'Z') {
+      // Possibly a Date, whose toJSON automatically calls toISOString
+      if (originalValue instanceof Date) {
+        return serializeDateFromDateJSON(value);
+      }
+    }
+    if (value.length >= 1024) {
+      // For large strings, we encode them outside the JSON payload so that we
+      // don't have to double encode and double parse the strings. This can also
+      // be more compact in case the string has a lot of escaped characters.
+      return serializeLargeTextString(request, value);
+    }
+    return escapeStringValue(value);
+  }
+
+  if (typeof value === 'boolean') {
+    return value;
+  }
+
+  if (typeof value === 'number') {
+    return serializeNumber(value);
+  }
+
+  if (typeof value === 'undefined') {
+    return serializeUndefined();
+  }
+
+  if (typeof value === 'function') {
+    if (isClientReference(value)) {
+      return serializeClientReference(
+        request,
+        parent,
+        parentPropertyName,
+        (value: any),
+      );
+    }
+
+    // Serialize the body of the function as an eval so it can be printed.
+    // $FlowFixMe[method-unbinding]
+    return serializeEval('(' + Function.prototype.toString.call(value) + ')');
+  }
+
+  if (typeof value === 'symbol') {
+    const writtenSymbols = request.writtenSymbols;
+    const existingId = writtenSymbols.get(value);
+    if (existingId !== undefined) {
+      return serializeByValueID(existingId);
+    }
+    // $FlowFixMe[incompatible-type] `description` might be undefined
+    const name: string = value.description;
+    // We use the Symbol.for version if it's not a global symbol. Close enough.
+    request.pendingChunks++;
+    const symbolId = request.nextChunkId++;
+    emitSymbolChunk(request, symbolId, name);
+    return serializeByValueID(symbolId);
+  }
+
+  if (typeof value === 'bigint') {
+    return serializeBigInt(value);
+  }
+
+  return 'unknown type ' + typeof value;
+}
+
+function outlineConsoleValue(
+  request: Request,
+  counter: {objectCount: number},
+  model: ReactClientValue,
+): number {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'outlineConsoleValue should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  function replacer(
+    this:
+      | {+[key: string | number]: ReactClientValue}
+      | $ReadOnlyArray<ReactClientValue>,
+    parentPropertyName: string,
+    value: ReactClientValue,
+  ): ReactJSONValue {
+    try {
+      return renderConsoleValue(
+        request,
+        counter,
+        this,
+        parentPropertyName,
+        value,
+      );
+    } catch (x) {
+      return 'unknown value';
+    }
+  }
+
+  // $FlowFixMe[incompatible-type] stringify can return null
+  const json: string = stringify(model, replacer);
+
+  request.pendingChunks++;
+  const id = request.nextChunkId++;
+  const row = id.toString(16) + ':' + json + '\n';
+  const processedChunk = stringToChunk(row);
+  request.completedRegularChunks.push(processedChunk);
+  return id;
 }
 
 function emitConsoleChunk(
@@ -1874,17 +2168,36 @@ function emitConsoleChunk(
       'emitConsoleChunk should never be called in production mode. This is a bug in React.',
     );
   }
+
+  const counter = {objectCount: 0};
+  function replacer(
+    this:
+      | {+[key: string | number]: ReactClientValue}
+      | $ReadOnlyArray<ReactClientValue>,
+    parentPropertyName: string,
+    value: ReactClientValue,
+  ): ReactJSONValue {
+    try {
+      return renderConsoleValue(
+        request,
+        counter,
+        this,
+        parentPropertyName,
+        value,
+      );
+    } catch (x) {
+      return 'unknown value';
+    }
+  }
+
   const payload = [methodName, stackTrace];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
   // $FlowFixMe[incompatible-type] stringify can return null
-  const json: string = stringify(payload);
+  const json: string = stringify(payload, replacer);
   const row = serializeRowHeader('W', id) + json + '\n';
   const processedChunk = stringToChunk(row);
-  // Add it to import chunks since this has the highest priority it ensures that
-  // the log comes before in the timeline any consequence that happens after.
-  // Ensuring ordering.
-  request.completedImportChunks.push(processedChunk);
+  request.completedRegularChunks.push(processedChunk);
 }
 
 function forwardDebugInfo(

@@ -670,6 +670,10 @@ function parseModelString(
       }
       case '@': {
         // Promise
+        if (value.length === 2) {
+          // Infinite promise that never resolves.
+          return new Promise(() => {});
+        }
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         return chunk;
@@ -724,6 +728,21 @@ function parseModelString(
       case 'n': {
         // BigInt
         return BigInt(value.slice(2));
+      }
+      case 'E': {
+        if (__DEV__) {
+          // In DEV mode we allow indirect eval to produce functions for logging.
+          // This should not compile to eval() because then it has local scope access.
+          try {
+            // eslint-disable-next-line no-eval
+            return (0, eval)(value.slice(2));
+          } catch (x) {
+            // We currently use this to express functions so we fail parsing it,
+            // let's just return a blank function as a place holder.
+            return function () {};
+          }
+        }
+        // Fallthrough
       }
       default: {
         // We assume that anything else is a reference ID.
@@ -1065,7 +1084,7 @@ function resolveDebugInfo(
 
 function resolveConsoleEntry(
   response: Response,
-  payload: [string /*methodName */, string /* stackTrace */, ...any],
+  value: UninitializedModel,
 ): void {
   if (!__DEV__) {
     // These errors should never make it into a build so we don't need to encode them in codes.json
@@ -1074,6 +1093,8 @@ function resolveConsoleEntry(
       'resolveConsoleEntry should never be called in production mode. This is a bug in React.',
     );
   }
+
+  const payload: [string, string, mixed] = parseModel(response, value);
   const methodName = payload[0];
   // TODO: Restore the fake stack before logging.
   // const stackTrace = payload[1];
@@ -1235,8 +1256,7 @@ function processFullRow(
     }
     case 87 /* "W" */: {
       if (__DEV__) {
-        const payload = JSON.parse(row);
-        resolveConsoleEntry(response, payload);
+        resolveConsoleEntry(response, row);
         return;
       }
       throw new Error(
