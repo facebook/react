@@ -8,6 +8,7 @@
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import assign from 'shared/assign';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -512,6 +513,331 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
   }
 }
 
+/**
+ * Create and return a new ReactElement of the given type.
+ * See https://reactjs.org/docs/react-api.html#createelement
+ */
+export function createElement(type, config, children) {
+  if (__DEV__) {
+    if (!isValidElementType(type)) {
+      // This is an invalid element type.
+      //
+      // We warn in this case but don't throw. We expect the element creation to
+      // succeed and there will likely be errors in render.
+      let info = '';
+      if (
+        type === undefined ||
+        (typeof type === 'object' &&
+          type !== null &&
+          Object.keys(type).length === 0)
+      ) {
+        info +=
+          ' You likely forgot to export your component from the file ' +
+          "it's defined in, or you might have mixed up default and named imports.";
+      }
+
+      const sourceInfo = getSourceInfoErrorAddendumForProps(config);
+      if (sourceInfo) {
+        info += sourceInfo;
+      } else {
+        info += getDeclarationErrorAddendum();
+      }
+
+      let typeString;
+      if (type === null) {
+        typeString = 'null';
+      } else if (isArray(type)) {
+        typeString = 'array';
+      } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
+        typeString = `<${getComponentNameFromType(type.type) || 'Unknown'} />`;
+        info =
+          ' Did you accidentally export a JSX literal instead of a component?';
+      } else {
+        typeString = typeof type;
+      }
+
+      console.error(
+        'React.createElement: type is invalid -- expected a string (for ' +
+          'built-in components) or a class/function (for composite ' +
+          'components) but got: %s.%s',
+        typeString,
+        info,
+      );
+    } else {
+      // This is a valid element type.
+
+      // Skip key warning if the type isn't valid since our key validation logic
+      // doesn't expect a non-string/function type and can throw confusing
+      // errors. We don't want exception behavior to differ between dev and
+      // prod. (Rendering will throw with a helpful message and as soon as the
+      // type is fixed, the key warnings will appear.)
+      for (let i = 2; i < arguments.length; i++) {
+        validateChildKeys(arguments[i], type);
+      }
+    }
+
+    // Unlike the jsx() runtime, createElement() doesn't warn about key spread.
+  }
+
+  let propName;
+
+  // Reserved names are extracted
+  const props = {};
+
+  let key = null;
+  let ref = null;
+
+  if (config != null) {
+    if (hasValidRef(config)) {
+      ref = config.ref;
+
+      if (__DEV__) {
+        warnIfStringRefCannotBeAutoConverted(config, config.__self);
+      }
+    }
+    if (hasValidKey(config)) {
+      if (__DEV__) {
+        checkKeyStringCoercion(config.key);
+      }
+      key = '' + config.key;
+    }
+
+    // Remaining properties are added to a new props object
+    for (propName in config) {
+      if (
+        hasOwnProperty.call(config, propName) &&
+        // Skip over reserved prop names
+        propName !== 'key' &&
+        // TODO: `ref` will no longer be reserved in the next major
+        propName !== 'ref' &&
+        // ...and maybe these, too, though we currently rely on them for
+        // warnings and debug information in dev. Need to decide if we're OK
+        // with dropping them. In the jsx() runtime it's not an issue because
+        // the data gets passed as separate arguments instead of props, but
+        // it would be nice to stop relying on them entirely so we can drop
+        // them from the internal Fiber field.
+        propName !== '__self' &&
+        propName !== '__source'
+      ) {
+        props[propName] = config[propName];
+      }
+    }
+  }
+
+  // Children can be more than one argument, and those are transferred onto
+  // the newly allocated props object.
+  const childrenLength = arguments.length - 2;
+  if (childrenLength === 1) {
+    props.children = children;
+  } else if (childrenLength > 1) {
+    const childArray = Array(childrenLength);
+    for (let i = 0; i < childrenLength; i++) {
+      childArray[i] = arguments[i + 2];
+    }
+    if (__DEV__) {
+      if (Object.freeze) {
+        Object.freeze(childArray);
+      }
+    }
+    props.children = childArray;
+  }
+
+  // Resolve default props
+  if (type && type.defaultProps) {
+    const defaultProps = type.defaultProps;
+    for (propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+  }
+  if (__DEV__) {
+    if (key || ref) {
+      const displayName =
+        typeof type === 'function'
+          ? type.displayName || type.name || 'Unknown'
+          : type;
+      if (key) {
+        defineKeyPropWarningGetter(props, displayName);
+      }
+      if (ref) {
+        defineRefPropWarningGetter(props, displayName);
+      }
+    }
+  }
+
+  const element = ReactElement(
+    type,
+    key,
+    ref,
+    undefined,
+    undefined,
+    ReactCurrentOwner.current,
+    props,
+  );
+
+  if (type === REACT_FRAGMENT_TYPE) {
+    validateFragmentProps(element);
+  } else {
+    validatePropTypes(element);
+  }
+
+  return element;
+}
+
+let didWarnAboutDeprecatedCreateFactory = false;
+
+/**
+ * Return a function that produces ReactElements of a given type.
+ * See https://reactjs.org/docs/react-api.html#createfactory
+ */
+export function createFactory(type) {
+  const factory = createElement.bind(null, type);
+  // Expose the type on the factory and the prototype so that it can be
+  // easily accessed on elements. E.g. `<Foo />.type === Foo`.
+  // This should not be named `constructor` since this may not be the function
+  // that created the element, and it may not even be a constructor.
+  // Legacy hook: remove it
+  factory.type = type;
+
+  if (__DEV__) {
+    if (!didWarnAboutDeprecatedCreateFactory) {
+      didWarnAboutDeprecatedCreateFactory = true;
+      console.warn(
+        'React.createFactory() is deprecated and will be removed in ' +
+          'a future major release. Consider using JSX ' +
+          'or use React.createElement() directly instead.',
+      );
+    }
+    // Legacy hook: remove it
+    Object.defineProperty(factory, 'type', {
+      enumerable: false,
+      get: function () {
+        console.warn(
+          'Factory.type is deprecated. Access the class directly ' +
+            'before passing it to createFactory.',
+        );
+        Object.defineProperty(this, 'type', {
+          value: type,
+        });
+        return type;
+      },
+    });
+  }
+
+  return factory;
+}
+
+export function cloneAndReplaceKey(oldElement, newKey) {
+  return ReactElement(
+    oldElement.type,
+    newKey,
+    oldElement.ref,
+    undefined,
+    undefined,
+    oldElement._owner,
+    oldElement.props,
+  );
+}
+
+/**
+ * Clone and return a new ReactElement using element as the starting point.
+ * See https://reactjs.org/docs/react-api.html#cloneelement
+ */
+export function cloneElement(element, config, children) {
+  if (element === null || element === undefined) {
+    throw new Error(
+      `React.cloneElement(...): The argument must be a React element, but you passed ${element}.`,
+    );
+  }
+
+  let propName;
+
+  // Original props are copied
+  const props = assign({}, element.props);
+
+  // Reserved names are extracted
+  let key = element.key;
+  let ref = element.ref;
+
+  // Owner will be preserved, unless ref is overridden
+  let owner = element._owner;
+
+  if (config != null) {
+    if (hasValidRef(config)) {
+      // Silently steal the ref from the parent.
+      ref = config.ref;
+      owner = ReactCurrentOwner.current;
+    }
+    if (hasValidKey(config)) {
+      if (__DEV__) {
+        checkKeyStringCoercion(config.key);
+      }
+      key = '' + config.key;
+    }
+
+    // Remaining properties override existing props
+    let defaultProps;
+    if (element.type && element.type.defaultProps) {
+      defaultProps = element.type.defaultProps;
+    }
+    for (propName in config) {
+      if (
+        hasOwnProperty.call(config, propName) &&
+        // Skip over reserved prop names
+        propName !== 'key' &&
+        // TODO: `ref` will no longer be reserved in the next major
+        propName !== 'ref' &&
+        // ...and maybe these, too, though we currently rely on them for
+        // warnings and debug information in dev. Need to decide if we're OK
+        // with dropping them. In the jsx() runtime it's not an issue because
+        // the data gets passed as separate arguments instead of props, but
+        // it would be nice to stop relying on them entirely so we can drop
+        // them from the internal Fiber field.
+        propName !== '__self' &&
+        propName !== '__source'
+      ) {
+        if (config[propName] === undefined && defaultProps !== undefined) {
+          // Resolve default props
+          props[propName] = defaultProps[propName];
+        } else {
+          props[propName] = config[propName];
+        }
+      }
+    }
+  }
+
+  // Children can be more than one argument, and those are transferred onto
+  // the newly allocated props object.
+  const childrenLength = arguments.length - 2;
+  if (childrenLength === 1) {
+    props.children = children;
+  } else if (childrenLength > 1) {
+    const childArray = Array(childrenLength);
+    for (let i = 0; i < childrenLength; i++) {
+      childArray[i] = arguments[i + 2];
+    }
+    props.children = childArray;
+  }
+
+  const clonedElement = ReactElement(
+    element.type,
+    key,
+    ref,
+    undefined,
+    undefined,
+    owner,
+    props,
+  );
+
+  for (let i = 2; i < arguments.length; i++) {
+    validateChildKeys(arguments[i], clonedElement.type);
+  }
+  validatePropTypes(clonedElement);
+
+  return clonedElement;
+}
+
 function getDeclarationErrorAddendum() {
   if (__DEV__) {
     if (ReactCurrentOwner.current) {
@@ -522,6 +848,13 @@ function getDeclarationErrorAddendum() {
     }
     return '';
   }
+}
+
+function getSourceInfoErrorAddendumForProps(elementProps) {
+  if (elementProps !== null && elementProps !== undefined) {
+    return getSourceInfoErrorAddendum(elementProps.__source);
+  }
+  return '';
 }
 
 function getSourceInfoErrorAddendum(source) {
@@ -590,13 +923,11 @@ function validateChildKeys(node, parentType) {
  * @final
  */
 export function isValidElement(object) {
-  if (__DEV__) {
-    return (
-      typeof object === 'object' &&
-      object !== null &&
-      object.$$typeof === REACT_ELEMENT_TYPE
-    );
-  }
+  return (
+    typeof object === 'object' &&
+    object !== null &&
+    object.$$typeof === REACT_ELEMENT_TYPE
+  );
 }
 
 const ownerHasKeyUseWarning = {};

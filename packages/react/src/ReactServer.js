@@ -21,7 +21,11 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
 } from 'shared/ReactSymbols';
-import {cloneElement, createElement, isValidElement} from './ReactElement';
+import {
+  cloneElement,
+  createElement,
+  isValidElement,
+} from './jsx/ReactJSXElement';
 import {createRef} from './ReactCreateRef';
 import {use, useId, useCallback, useDebugValue, useMemo} from './ReactHooks';
 import {forwardRef} from './ReactForwardRef';
