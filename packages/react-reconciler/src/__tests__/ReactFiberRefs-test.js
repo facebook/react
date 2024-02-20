@@ -86,6 +86,7 @@ describe('ReactFiberRefs', () => {
   });
 
   // @gate enableRefAsProp
+  // @gate !disableStringRefs
   test('string ref props are converted to function refs', async () => {
     let refProp;
     function Child({ref}) {
@@ -111,5 +112,26 @@ describe('ReactFiberRefs', () => {
     // migrating their codebase.
     expect(typeof refProp === 'function').toBe(true);
     expect(owner.refs.child.type).toBe('div');
+  });
+
+  // @gate disableStringRefs
+  test('log an error in dev if a string ref is passed to a ref-receiving component', async () => {
+    let refProp;
+    function Child({ref}) {
+      refProp = ref;
+      return <div ref={ref} />;
+    }
+
+    class Owner extends React.Component {
+      render() {
+        return <Child ref="child" />;
+      }
+    }
+
+    const root = ReactNoop.createRoot();
+    await expect(async () => {
+      await expect(act(() => root.render(<Owner />))).rejects.toThrow();
+    }).toErrorDev('String refs are no longer supported');
+    expect(refProp).toBe('child');
   });
 });

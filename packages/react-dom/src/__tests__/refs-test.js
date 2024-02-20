@@ -164,6 +164,7 @@ describe('reactiverefs', () => {
    * Ensure that for every click log there is a corresponding ref (from the
    * perspective of the injected ClickCounter component.
    */
+  // @gate !disableStringRefs
   it('Should increase refs with an increase in divs', async () => {
     const testRefsComponent = await renderTestRefsComponent();
     const clickIncrementer =
@@ -366,6 +367,7 @@ describe('ref swapping', () => {
     expect(refCalled).toBe(1);
   });
 
+  // @gate !disableStringRefs
   it('coerces numbers to strings', async () => {
     class A extends React.Component {
       render() {
@@ -390,6 +392,7 @@ describe('ref swapping', () => {
     expect(a.refs[1].nodeName).toBe('DIV');
   });
 
+  // @gate !disableStringRefs
   it('provides an error for invalid refs', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);
@@ -547,6 +550,7 @@ describe('creating element with string ref in constructor', () => {
     }
   }
 
+  // @gate !disableStringRefs
   it('throws an error', async () => {
     await expect(async function () {
       const container = document.createElement('div');
@@ -567,6 +571,7 @@ describe('creating element with string ref in constructor', () => {
 });
 
 describe('strings refs across renderers', () => {
+  // @gate !disableStringRefs
   it('does not break', async () => {
     class Parent extends React.Component {
       render() {

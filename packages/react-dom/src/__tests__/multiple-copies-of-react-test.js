@@ -22,6 +22,7 @@ class TextWithStringRef extends React.Component {
 }
 
 describe('when different React version is used with string ref', () => {
+  // @gate !disableStringRefs
   it('throws the "Refs must have owner" warning', async () => {
     const container = document.createElement('div');
     const root = ReactDOMClient.createRoot(container);

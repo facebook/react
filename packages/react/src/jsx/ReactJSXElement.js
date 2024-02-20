@@ -18,7 +18,7 @@ import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 import isValidElementType from 'shared/isValidElementType';
 import isArray from 'shared/isArray';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
-import {enableRefAsProp} from 'shared/ReactFeatureFlags';
+import {enableRefAsProp, disableStringRefs} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -62,6 +62,7 @@ function hasValidKey(config) {
 function warnIfStringRefCannotBeAutoConverted(config, self) {
   if (__DEV__) {
     if (
+      !disableStringRefs &&
       typeof config.ref === 'string' &&
       ReactCurrentOwner.current &&
       self &&
@@ -536,7 +537,9 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
       if (!enableRefAsProp) {
         ref = config.ref;
       }
-      warnIfStringRefCannotBeAutoConverted(config, self);
+      if (!disableStringRefs) {
+        warnIfStringRefCannotBeAutoConverted(config, self);
+      }
     }
 
     // Remaining properties are added to a new props object
@@ -665,7 +668,7 @@ export function createElement(type, config, children) {
         ref = config.ref;
       }
 
-      if (__DEV__) {
+      if (__DEV__ && !disableStringRefs) {
         warnIfStringRefCannotBeAutoConverted(config, config.__self);
       }
     }
