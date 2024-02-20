@@ -4273,7 +4273,7 @@ function updateOffscreenComponent(current, workInProgress, renderLanes) {
     nextChildren = nextProps.children,
     nextIsDetached = 0 !== (workInProgress.stateNode._pendingVisibility & 2),
     prevState = null !== current ? current.memoizedState : null;
-  markRef$1(current, workInProgress);
+  markRef(current, workInProgress);
   if (
     "hidden" === nextProps.mode ||
     "unstable-defer-without-hiding" === nextProps.mode ||
@@ -4366,7 +4366,7 @@ function deferHiddenOffscreenComponent(
     propagateParentContextChanges(current, workInProgress, renderLanes, !0);
   return null;
 }
-function markRef$1(current, workInProgress) {
+function markRef(current, workInProgress) {
   var ref = workInProgress.ref;
   if (
     (null === current && null !== ref) ||
@@ -4628,7 +4628,7 @@ function finishClassComponent(
   hasContext,
   renderLanes
 ) {
-  markRef$1(current, workInProgress);
+  markRef(current, workInProgress);
   hasContext = 0 !== (workInProgress.flags & 128);
   if (!shouldUpdate && !hasContext)
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
@@ -5905,9 +5905,7 @@ function completeWork(current, workInProgress, renderLanes) {
       popHostContext(workInProgress);
       renderLanes = workInProgress.type;
       if (null !== current && null != workInProgress.stateNode)
-        current.memoizedProps !== newProps && (workInProgress.flags |= 4),
-          current.ref !== workInProgress.ref &&
-            (workInProgress.flags |= 2097664);
+        current.memoizedProps !== newProps && (workInProgress.flags |= 4);
       else {
         if (!newProps) {
           if (null === workInProgress.stateNode)
@@ -5965,7 +5963,6 @@ function completeWork(current, workInProgress, renderLanes) {
           renderLanes = renderLanes.sibling;
         }
         workInProgress.stateNode = current;
-        null !== workInProgress.ref && (workInProgress.flags |= 2097664);
       }
       bubbleProperties(workInProgress);
       workInProgress.flags &= -16777217;
@@ -6133,19 +6130,15 @@ function completeWork(current, workInProgress, renderLanes) {
       return null;
     case 21:
       return (
-        null === current
-          ? ((workInProgress.stateNode = {
-              DO_NOT_USE_queryAllNodes: DO_NOT_USE_queryAllNodes,
-              DO_NOT_USE_queryFirstNode: DO_NOT_USE_queryFirstNode,
-              containsNode: containsNode,
-              getChildContextValues: getChildContextValues
-            }),
-            shim$1(),
-            null !== workInProgress.ref &&
-              ((workInProgress.flags |= 2097664), (workInProgress.flags |= 4)))
-          : (null !== workInProgress.ref && (workInProgress.flags |= 4),
-            current.ref !== workInProgress.ref &&
-              (workInProgress.flags |= 2097664)),
+        null === current &&
+          ((workInProgress.stateNode = {
+            DO_NOT_USE_queryAllNodes: DO_NOT_USE_queryAllNodes,
+            DO_NOT_USE_queryFirstNode: DO_NOT_USE_queryFirstNode,
+            containsNode: containsNode,
+            getChildContextValues: getChildContextValues
+          }),
+          shim$1()),
+        null !== workInProgress.ref && (workInProgress.flags |= 4),
         bubbleProperties(workInProgress),
         null
       );
@@ -9511,7 +9504,7 @@ beginWork = function (current, workInProgress, renderLanes) {
                 HostTransitionContext,
                 renderLanes
               ))),
-        markRef$1(current, workInProgress),
+        markRef(current, workInProgress),
         reconcileChildren(current, workInProgress, Component, renderLanes),
         workInProgress.child
       );
@@ -9660,12 +9653,9 @@ beginWork = function (current, workInProgress, renderLanes) {
       return updateSuspenseListComponent(current, workInProgress, renderLanes);
     case 21:
       return (
-        reconcileChildren(
-          current,
-          workInProgress,
-          workInProgress.pendingProps.children,
-          renderLanes
-        ),
+        (Component = workInProgress.pendingProps.children),
+        markRef(current, workInProgress),
+        reconcileChildren(current, workInProgress, Component, renderLanes),
         workInProgress.child
       );
     case 22:
@@ -10242,19 +10232,19 @@ var slice = Array.prototype.slice,
     };
     return Text;
   })(React.Component),
-  devToolsConfig$jscomp$inline_1128 = {
+  devToolsConfig$jscomp$inline_1120 = {
     findFiberByHostInstance: function () {
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-modern-a161c109",
+    version: "18.3.0-www-modern-3921cd31",
     rendererPackageName: "react-art"
   };
-var internals$jscomp$inline_1297 = {
-  bundleType: devToolsConfig$jscomp$inline_1128.bundleType,
-  version: devToolsConfig$jscomp$inline_1128.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1128.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1128.rendererConfig,
+var internals$jscomp$inline_1300 = {
+  bundleType: devToolsConfig$jscomp$inline_1120.bundleType,
+  version: devToolsConfig$jscomp$inline_1120.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1120.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1120.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -10271,26 +10261,26 @@ var internals$jscomp$inline_1297 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1128.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1120.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-a161c109"
+  reconcilerVersion: "18.3.0-www-modern-3921cd31"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1298 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1301 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1298.isDisabled &&
-    hook$jscomp$inline_1298.supportsFiber
+    !hook$jscomp$inline_1301.isDisabled &&
+    hook$jscomp$inline_1301.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1298.inject(
-        internals$jscomp$inline_1297
+      (rendererID = hook$jscomp$inline_1301.inject(
+        internals$jscomp$inline_1300
       )),
-        (injectedHook = hook$jscomp$inline_1298);
+        (injectedHook = hook$jscomp$inline_1301);
     } catch (err) {}
 }
 var Path = Mode$1.Path;

@@ -5270,7 +5270,7 @@ function updateOffscreenComponent(current, workInProgress, renderLanes) {
     nextChildren = nextProps.children,
     nextIsDetached = 0 !== (workInProgress.stateNode._pendingVisibility & 2),
     prevState = null !== current ? current.memoizedState : null;
-  markRef$1(current, workInProgress);
+  markRef(current, workInProgress);
   if (
     "hidden" === nextProps.mode ||
     "unstable-defer-without-hiding" === nextProps.mode ||
@@ -5363,7 +5363,7 @@ function deferHiddenOffscreenComponent(
     propagateParentContextChanges(current, workInProgress, renderLanes, !0);
   return null;
 }
-function markRef$1(current, workInProgress) {
+function markRef(current, workInProgress) {
   var ref = workInProgress.ref;
   if (
     (null === current && null !== ref) ||
@@ -5629,7 +5629,7 @@ function finishClassComponent(
   hasContext,
   renderLanes
 ) {
-  markRef$1(current, workInProgress);
+  markRef(current, workInProgress);
   hasContext = 0 !== (workInProgress.flags & 128);
   if (!shouldUpdate && !hasContext)
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
@@ -6876,9 +6876,6 @@ function getChildContextValues(context) {
 function markUpdate(workInProgress) {
   workInProgress.flags |= 4;
 }
-function markRef(workInProgress) {
-  workInProgress.flags |= 2097664;
-}
 function preloadResourceAndSuspendIfNeeded(workInProgress, resource) {
   if ("stylesheet" !== resource.type || 0 !== (resource.state.loading & 4))
     workInProgress.flags &= -16777217;
@@ -7009,7 +7006,6 @@ function completeWork(current, workInProgress, renderLanes) {
       renderLanes = workInProgress.memoizedState;
       if (null === current)
         markUpdate(workInProgress),
-          null !== workInProgress.ref && markRef(workInProgress),
           null !== renderLanes
             ? (bubbleProperties(workInProgress),
               preloadResourceAndSuspendIfNeeded(workInProgress, renderLanes))
@@ -7018,7 +7014,6 @@ function completeWork(current, workInProgress, renderLanes) {
       else {
         var currentResource = current.memoizedState;
         renderLanes !== currentResource && markUpdate(workInProgress);
-        current.ref !== workInProgress.ref && markRef(workInProgress);
         null !== renderLanes
           ? (bubbleProperties(workInProgress),
             renderLanes === currentResource
@@ -7034,8 +7029,7 @@ function completeWork(current, workInProgress, renderLanes) {
       renderLanes = rootInstanceStackCursor.current;
       currentResource = workInProgress.type;
       if (null !== current && null != workInProgress.stateNode)
-        current.memoizedProps !== newProps && markUpdate(workInProgress),
-          current.ref !== workInProgress.ref && markRef(workInProgress);
+        current.memoizedProps !== newProps && markUpdate(workInProgress);
       else {
         if (!newProps) {
           if (null === workInProgress.stateNode)
@@ -7059,7 +7053,6 @@ function completeWork(current, workInProgress, renderLanes) {
             )),
             (workInProgress.stateNode = current),
             markUpdate(workInProgress));
-        null !== workInProgress.ref && markRef(workInProgress);
       }
       bubbleProperties(workInProgress);
       return null;
@@ -7067,8 +7060,7 @@ function completeWork(current, workInProgress, renderLanes) {
       popHostContext(workInProgress);
       renderLanes = workInProgress.type;
       if (null !== current && null != workInProgress.stateNode)
-        current.memoizedProps !== newProps && markUpdate(workInProgress),
-          current.ref !== workInProgress.ref && markRef(workInProgress);
+        current.memoizedProps !== newProps && markUpdate(workInProgress);
       else {
         if (!newProps) {
           if (null === workInProgress.stateNode)
@@ -7189,7 +7181,6 @@ function completeWork(current, workInProgress, renderLanes) {
           }
           current && markUpdate(workInProgress);
         }
-        null !== workInProgress.ref && markRef(workInProgress);
       }
       bubbleProperties(workInProgress);
       workInProgress.flags &= -16777217;
@@ -7414,19 +7405,16 @@ function completeWork(current, workInProgress, renderLanes) {
       return null;
     case 21:
       return (
-        null === current
-          ? ((current = {
-              DO_NOT_USE_queryAllNodes: DO_NOT_USE_queryAllNodes,
-              DO_NOT_USE_queryFirstNode: DO_NOT_USE_queryFirstNode,
-              containsNode: containsNode$1,
-              getChildContextValues: getChildContextValues
-            }),
-            (workInProgress.stateNode = current),
-            (current[internalInstanceKey] = workInProgress),
-            null !== workInProgress.ref &&
-              (markRef(workInProgress), markUpdate(workInProgress)))
-          : (null !== workInProgress.ref && markUpdate(workInProgress),
-            current.ref !== workInProgress.ref && markRef(workInProgress)),
+        null === current &&
+          ((current = {
+            DO_NOT_USE_queryAllNodes: DO_NOT_USE_queryAllNodes,
+            DO_NOT_USE_queryFirstNode: DO_NOT_USE_queryFirstNode,
+            containsNode: containsNode$1,
+            getChildContextValues: getChildContextValues
+          }),
+          (workInProgress.stateNode = current),
+          (current[internalInstanceKey] = workInProgress)),
+        null !== workInProgress.ref && markUpdate(workInProgress),
         bubbleProperties(workInProgress),
         null
       );
@@ -11436,7 +11424,7 @@ beginWork = function (current, workInProgress, renderLanes) {
       return workInProgress;
     case 26:
       return (
-        markRef$1(current, workInProgress),
+        markRef(current, workInProgress),
         (renderLanes = workInProgress.memoizedState =
           getResource(
             workInProgress.type,
@@ -11481,7 +11469,7 @@ beginWork = function (current, workInProgress, renderLanes) {
               Component,
               renderLanes
             )),
-        markRef$1(current, workInProgress),
+        markRef(current, workInProgress),
         workInProgress.child
       );
     case 5:
@@ -11539,7 +11527,7 @@ beginWork = function (current, workInProgress, renderLanes) {
                 HostTransitionContext,
                 renderLanes
               ))),
-        markRef$1(current, workInProgress),
+        markRef(current, workInProgress),
         reconcileChildren(current, workInProgress, Component, renderLanes),
         workInProgress.child
       );
@@ -11716,12 +11704,9 @@ beginWork = function (current, workInProgress, renderLanes) {
       return updateSuspenseListComponent(current, workInProgress, renderLanes);
     case 21:
       return (
-        reconcileChildren(
-          current,
-          workInProgress,
-          workInProgress.pendingProps.children,
-          renderLanes
-        ),
+        (Component = workInProgress.pendingProps.children),
+        markRef(current, workInProgress),
+        reconcileChildren(current, workInProgress, Component, renderLanes),
         workInProgress.child
       );
     case 22:
@@ -16695,7 +16680,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1778 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-611b775e",
+  version: "18.3.0-www-modern-475df715",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2143 = {
@@ -16726,7 +16711,7 @@ var internals$jscomp$inline_2143 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-611b775e"
+  reconcilerVersion: "18.3.0-www-modern-475df715"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2144 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16997,4 +16982,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-611b775e";
+exports.version = "18.3.0-www-modern-475df715";

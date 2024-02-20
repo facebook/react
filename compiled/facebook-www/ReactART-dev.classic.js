@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-2901d413";
+    var ReactVersion = "18.3.0-www-classic-88364efd";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -14886,7 +14886,7 @@ if (__DEV__) {
       var nextIsDetached =
         (workInProgress.stateNode._pendingVisibility & OffscreenDetached) !== 0;
       var prevState = current !== null ? current.memoizedState : null;
-      markRef$1(current, workInProgress);
+      markRef(current, workInProgress);
 
       if (
         nextProps.mode === "hidden" ||
@@ -15244,7 +15244,9 @@ if (__DEV__) {
       return workInProgress.child;
     }
 
-    function markRef$1(current, workInProgress) {
+    function markRef(current, workInProgress) {
+      // TODO: This is also where we should check the type of the ref and error if
+      // an invalid one is passed, instead of during child reconcilation.
       var ref = workInProgress.ref;
 
       if (
@@ -15478,7 +15480,7 @@ if (__DEV__) {
       renderLanes
     ) {
       // Refs should update even if shouldComponentUpdate returns false
-      markRef$1(current, workInProgress);
+      markRef(current, workInProgress);
       var didCaptureError = (workInProgress.flags & DidCapture) !== NoFlags$1;
 
       if (!shouldUpdate && !didCaptureError) {
@@ -15708,7 +15710,7 @@ if (__DEV__) {
         }
       }
 
-      markRef$1(current, workInProgress);
+      markRef(current, workInProgress);
       reconcileChildren(current, workInProgress, nextChildren, renderLanes);
       return workInProgress.child;
     }
@@ -17451,6 +17453,7 @@ if (__DEV__) {
     function updateScopeComponent(current, workInProgress, renderLanes) {
       var nextProps = workInProgress.pendingProps;
       var nextChildren = nextProps.children;
+      markRef(current, workInProgress);
       reconcileChildren(current, workInProgress, nextChildren, renderLanes);
       return workInProgress.child;
     }
@@ -19283,10 +19286,6 @@ if (__DEV__) {
       workInProgress.flags |= Update;
     }
 
-    function markRef(workInProgress) {
-      workInProgress.flags |= Ref | RefStatic;
-    }
-
     function appendAllChildren(
       parent,
       workInProgress,
@@ -19803,10 +19802,6 @@ if (__DEV__) {
 
           if (current !== null && workInProgress.stateNode != null) {
             updateHostComponent(current, workInProgress, _type2, newProps);
-
-            if (current.ref !== workInProgress.ref) {
-              markRef(workInProgress);
-            }
           } else {
             if (!newProps) {
               if (workInProgress.stateNode === null) {
@@ -19839,11 +19834,6 @@ if (__DEV__) {
 
               appendAllChildren(_instance3, workInProgress);
               workInProgress.stateNode = _instance3; // Certain renderers require commit-time effects for initial mount.
-            }
-
-            if (workInProgress.ref !== null) {
-              // If there is a ref on a host node we need to schedule a callback
-              markRef(workInProgress);
             }
           }
 
@@ -20273,16 +20263,15 @@ if (__DEV__) {
               prepareScopeUpdate();
 
               if (workInProgress.ref !== null) {
-                markRef(workInProgress);
+                // Scope components always do work in the commit phase if there's a
+                // ref attached.
                 markUpdate(workInProgress);
               }
             } else {
               if (workInProgress.ref !== null) {
+                // Scope components always do work in the commit phase if there's a
+                // ref attached.
                 markUpdate(workInProgress);
-              }
-
-              if (current.ref !== workInProgress.ref) {
-                markRef(workInProgress);
               }
             }
 
