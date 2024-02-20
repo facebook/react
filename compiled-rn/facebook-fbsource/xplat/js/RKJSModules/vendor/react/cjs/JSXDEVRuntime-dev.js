@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<4af61d0bbe18ef4b8cb7cac5218a2e3c>>
+ * @generated SignedSource<<dcd2c20e1a26861ff0f60d651a2f6e93>>
  */
 
 "use strict";
@@ -109,49 +109,6 @@ if (__DEV__) {
     var enableLegacyHidden = false;
     var enableTransitionTracing = false;
 
-    var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference");
-    function isValidElementType(type) {
-      if (typeof type === "string" || typeof type === "function") {
-        return true;
-      } // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
-
-      if (
-        type === REACT_FRAGMENT_TYPE ||
-        type === REACT_PROFILER_TYPE ||
-        enableDebugTracing ||
-        type === REACT_STRICT_MODE_TYPE ||
-        type === REACT_SUSPENSE_TYPE ||
-        type === REACT_SUSPENSE_LIST_TYPE ||
-        enableLegacyHidden ||
-        type === REACT_OFFSCREEN_TYPE ||
-        enableScopeAPI ||
-        type === REACT_CACHE_TYPE ||
-        enableTransitionTracing
-      ) {
-        return true;
-      }
-
-      if (typeof type === "object" && type !== null) {
-        if (
-          type.$$typeof === REACT_LAZY_TYPE ||
-          type.$$typeof === REACT_MEMO_TYPE ||
-          type.$$typeof === REACT_CONTEXT_TYPE ||
-          type.$$typeof === REACT_PROVIDER_TYPE ||
-          enableRenderableContext ||
-          type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
-          // types supported by any Flight configuration anywhere since
-          // we don't know which Flight build this will end up being used
-          // with.
-          type.$$typeof === REACT_CLIENT_REFERENCE$2 ||
-          type.getModuleId !== undefined
-        ) {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
 
@@ -169,7 +126,7 @@ if (__DEV__) {
       return type.displayName || "Context";
     }
 
-    var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference"); // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
+    var REACT_CLIENT_REFERENCE$2 = Symbol.for("react.client.reference"); // Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
 
     function getComponentNameFromType(type) {
       if (type == null) {
@@ -178,7 +135,7 @@ if (__DEV__) {
       }
 
       if (typeof type === "function") {
-        if (type.$$typeof === REACT_CLIENT_REFERENCE$1) {
+        if (type.$$typeof === REACT_CLIENT_REFERENCE$2) {
           // TODO: Create a convention for naming client references with debug info.
           return null;
         }
@@ -264,6 +221,132 @@ if (__DEV__) {
       }
 
       return null;
+    }
+
+    // $FlowFixMe[method-unbinding]
+    var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+    /*
+     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
+     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
+     *
+     * The functions in this module will throw an easier-to-understand,
+     * easier-to-debug exception with a clear errors message message explaining the
+     * problem. (Instead of a confusing exception thrown inside the implementation
+     * of the `value` object).
+     */
+    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+    function typeName(value) {
+      {
+        // toStringTag is needed for namespaced types like Temporal.Instant
+        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
+        var type =
+          (hasToStringTag && value[Symbol.toStringTag]) ||
+          value.constructor.name ||
+          "Object"; // $FlowFixMe[incompatible-return]
+
+        return type;
+      }
+    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
+
+    function willCoercionThrow(value) {
+      {
+        try {
+          testStringCoercion(value);
+          return false;
+        } catch (e) {
+          return true;
+        }
+      }
+    }
+
+    function testStringCoercion(value) {
+      // If you ended up here by following an exception call stack, here's what's
+      // happened: you supplied an object or symbol value to React (as a prop, key,
+      // DOM attribute, CSS property, string ref, etc.) and when React tried to
+      // coerce it to a string using `'' + value`, an exception was thrown.
+      //
+      // The most common types that will cause this exception are `Symbol` instances
+      // and Temporal objects like `Temporal.Instant`. But any object that has a
+      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
+      // exception. (Library authors do this to prevent users from using built-in
+      // numeric operators like `+` or comparison operators like `>=` because custom
+      // methods are needed to perform accurate arithmetic or comparison.)
+      //
+      // To fix the problem, coerce this object or symbol value to a string before
+      // passing it to React. The most reliable way is usually `String(value)`.
+      //
+      // To find which value is throwing, check the browser or debugger console.
+      // Before this exception was thrown, there should be `console.error` output
+      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
+      // problem and how that type was used: key, atrribute, input value prop, etc.
+      // In most cases, this console output also shows the component and its
+      // ancestor components where the exception happened.
+      //
+      // eslint-disable-next-line react-internal/safe-string-coercion
+      return "" + value;
+    }
+    function checkKeyStringCoercion(value) {
+      {
+        if (willCoercionThrow(value)) {
+          error(
+            "The provided key is an unsupported type %s." +
+              " This value must be coerced to a string before using it here.",
+            typeName(value)
+          );
+
+          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
+        }
+      }
+    }
+
+    var REACT_CLIENT_REFERENCE$1 = Symbol.for("react.client.reference");
+    function isValidElementType(type) {
+      if (typeof type === "string" || typeof type === "function") {
+        return true;
+      } // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
+
+      if (
+        type === REACT_FRAGMENT_TYPE ||
+        type === REACT_PROFILER_TYPE ||
+        enableDebugTracing ||
+        type === REACT_STRICT_MODE_TYPE ||
+        type === REACT_SUSPENSE_TYPE ||
+        type === REACT_SUSPENSE_LIST_TYPE ||
+        enableLegacyHidden ||
+        type === REACT_OFFSCREEN_TYPE ||
+        enableScopeAPI ||
+        type === REACT_CACHE_TYPE ||
+        enableTransitionTracing
+      ) {
+        return true;
+      }
+
+      if (typeof type === "object" && type !== null) {
+        if (
+          type.$$typeof === REACT_LAZY_TYPE ||
+          type.$$typeof === REACT_MEMO_TYPE ||
+          type.$$typeof === REACT_CONTEXT_TYPE ||
+          type.$$typeof === REACT_PROVIDER_TYPE ||
+          enableRenderableContext ||
+          type.$$typeof === REACT_FORWARD_REF_TYPE || // This needs to include all possible module reference object
+          // types supported by any Flight configuration anywhere since
+          // we don't know which Flight build this will end up being used
+          // with.
+          type.$$typeof === REACT_CLIENT_REFERENCE$1 ||
+          type.getModuleId !== undefined
+        ) {
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
+
+    function isArray(a) {
+      return isArrayImpl(a);
     }
 
     function describeBuiltInComponentFrame(name, ownerFn) {
@@ -359,9 +442,6 @@ if (__DEV__) {
 
       return "";
     }
-
-    // $FlowFixMe[method-unbinding]
-    var hasOwnProperty = Object.prototype.hasOwnProperty;
 
     var loggedTypeFailures = {};
     var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
@@ -468,87 +548,9 @@ if (__DEV__) {
       }
     }
 
-    var isArrayImpl = Array.isArray; // eslint-disable-next-line no-redeclare
-
-    function isArray(a) {
-      return isArrayImpl(a);
-    }
-
-    /*
-     * The `'' + value` pattern (used in perf-sensitive code) throws for Symbol
-     * and Temporal.* types. See https://github.com/facebook/react/pull/22064.
-     *
-     * The functions in this module will throw an easier-to-understand,
-     * easier-to-debug exception with a clear errors message message explaining the
-     * problem. (Instead of a confusing exception thrown inside the implementation
-     * of the `value` object).
-     */
-    // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-    function typeName(value) {
-      {
-        // toStringTag is needed for namespaced types like Temporal.Instant
-        var hasToStringTag = typeof Symbol === "function" && Symbol.toStringTag;
-        var type =
-          (hasToStringTag && value[Symbol.toStringTag]) ||
-          value.constructor.name ||
-          "Object"; // $FlowFixMe[incompatible-return]
-
-        return type;
-      }
-    } // $FlowFixMe[incompatible-return] only called in DEV, so void return is not possible.
-
-    function willCoercionThrow(value) {
-      {
-        try {
-          testStringCoercion(value);
-          return false;
-        } catch (e) {
-          return true;
-        }
-      }
-    }
-
-    function testStringCoercion(value) {
-      // If you ended up here by following an exception call stack, here's what's
-      // happened: you supplied an object or symbol value to React (as a prop, key,
-      // DOM attribute, CSS property, string ref, etc.) and when React tried to
-      // coerce it to a string using `'' + value`, an exception was thrown.
-      //
-      // The most common types that will cause this exception are `Symbol` instances
-      // and Temporal objects like `Temporal.Instant`. But any object that has a
-      // `valueOf` or `[Symbol.toPrimitive]` method that throws will also cause this
-      // exception. (Library authors do this to prevent users from using built-in
-      // numeric operators like `+` or comparison operators like `>=` because custom
-      // methods are needed to perform accurate arithmetic or comparison.)
-      //
-      // To fix the problem, coerce this object or symbol value to a string before
-      // passing it to React. The most reliable way is usually `String(value)`.
-      //
-      // To find which value is throwing, check the browser or debugger console.
-      // Before this exception was thrown, there should be `console.error` output
-      // that shows the type (Symbol, Temporal.PlainDate, etc.) that caused the
-      // problem and how that type was used: key, atrribute, input value prop, etc.
-      // In most cases, this console output also shows the component and its
-      // ancestor components where the exception happened.
-      //
-      // eslint-disable-next-line react-internal/safe-string-coercion
-      return "" + value;
-    }
-    function checkKeyStringCoercion(value) {
-      {
-        if (willCoercionThrow(value)) {
-          error(
-            "The provided key is an unsupported type %s." +
-              " This value must be coerced to a string before using it here.",
-            typeName(value)
-          );
-
-          return testStringCoercion(value); // throw (to help callers find troubleshooting comments)
-        }
-      }
-    }
-
-    var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
+    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+    var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
     var specialPropKeyWarningShown;
     var specialPropRefWarningShown;
     var didWarnAboutStringRefs;
@@ -589,12 +591,12 @@ if (__DEV__) {
       {
         if (
           typeof config.ref === "string" &&
-          ReactCurrentOwner$1.current &&
+          ReactCurrentOwner.current &&
           self &&
-          ReactCurrentOwner$1.current.stateNode !== self
+          ReactCurrentOwner.current.stateNode !== self
         ) {
           var componentName = getComponentNameFromType(
-            ReactCurrentOwner$1.current.type
+            ReactCurrentOwner.current.type
           );
 
           if (!didWarnAboutStringRefs[componentName]) {
@@ -605,7 +607,7 @@ if (__DEV__) {
                 "We ask you to manually fix this case by using useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
                 "https://reactjs.org/link/strict-mode-string-ref",
-              getComponentNameFromType(ReactCurrentOwner$1.current.type),
+              getComponentNameFromType(ReactCurrentOwner.current.type),
               config.ref
             );
 
@@ -728,6 +730,7 @@ if (__DEV__) {
 
       return element;
     }
+    var didWarnAboutKeySpread = {};
     /**
      * https://github.com/reactjs/rfcs/pull/107
      * @param {*} type
@@ -735,8 +738,122 @@ if (__DEV__) {
      * @param {string} key
      */
 
-    function jsxDEV$1(type, config, maybeKey, source, self) {
+    function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
       {
+        if (!isValidElementType(type)) {
+          // This is an invalid element type.
+          //
+          // We warn in this case but don't throw. We expect the element creation to
+          // succeed and there will likely be errors in render.
+          var info = "";
+
+          if (
+            type === undefined ||
+            (typeof type === "object" &&
+              type !== null &&
+              Object.keys(type).length === 0)
+          ) {
+            info +=
+              " You likely forgot to export your component from the file " +
+              "it's defined in, or you might have mixed up default and named imports.";
+          }
+
+          var sourceInfo = getSourceInfoErrorAddendum(source);
+
+          if (sourceInfo) {
+            info += sourceInfo;
+          } else {
+            info += getDeclarationErrorAddendum();
+          }
+
+          var typeString;
+
+          if (type === null) {
+            typeString = "null";
+          } else if (isArray(type)) {
+            typeString = "array";
+          } else if (
+            type !== undefined &&
+            type.$$typeof === REACT_ELEMENT_TYPE
+          ) {
+            typeString =
+              "<" + (getComponentNameFromType(type.type) || "Unknown") + " />";
+            info =
+              " Did you accidentally export a JSX literal instead of a component?";
+          } else {
+            typeString = typeof type;
+          }
+
+          error(
+            "React.jsx: type is invalid -- expected a string (for " +
+              "built-in components) or a class/function (for composite " +
+              "components) but got: %s.%s",
+            typeString,
+            info
+          );
+        } else {
+          // This is a valid element type.
+          // Skip key warning if the type isn't valid since our key validation logic
+          // doesn't expect a non-string/function type and can throw confusing
+          // errors. We don't want exception behavior to differ between dev and
+          // prod. (Rendering will throw with a helpful message and as soon as the
+          // type is fixed, the key warnings will appear.)
+          var children = config.children;
+
+          if (children !== undefined) {
+            if (isStaticChildren) {
+              if (isArray(children)) {
+                for (var i = 0; i < children.length; i++) {
+                  validateChildKeys(children[i], type);
+                }
+
+                if (Object.freeze) {
+                  Object.freeze(children);
+                }
+              } else {
+                error(
+                  "React.jsx: Static children should always be an array. " +
+                    "You are likely explicitly calling React.jsxs or React.jsxDEV. " +
+                    "Use the Babel transform instead."
+                );
+              }
+            } else {
+              validateChildKeys(children, type);
+            }
+          }
+        } // Warn about key spread regardless of whether the type is valid.
+
+        if (hasOwnProperty.call(config, "key")) {
+          var componentName = getComponentNameFromType(type);
+          var keys = Object.keys(config).filter(function (k) {
+            return k !== "key";
+          });
+          var beforeExample =
+            keys.length > 0
+              ? "{key: someKey, " + keys.join(": ..., ") + ": ...}"
+              : "{key: someKey}";
+
+          if (!didWarnAboutKeySpread[componentName + beforeExample]) {
+            var afterExample =
+              keys.length > 0 ? "{" + keys.join(": ..., ") + ": ...}" : "{}";
+
+            error(
+              'A props object containing a "key" prop is being spread into JSX:\n' +
+                "  let props = %s;\n" +
+                "  <%s {...props} />\n" +
+                "React keys must be passed directly to JSX without using spread:\n" +
+                "  let props = %s;\n" +
+                "  <%s key={someKey} {...props} />",
+              beforeExample,
+              componentName,
+              afterExample,
+              componentName
+            );
+
+            didWarnAboutKeySpread[componentName + beforeExample] = true;
+          }
+        }
+
         var propName; // Reserved names are extracted
 
         var props = {};
@@ -804,57 +921,23 @@ if (__DEV__) {
           }
         }
 
-        return ReactElement(
+        var element = ReactElement(
           type,
           key,
           ref,
           self,
           source,
-          ReactCurrentOwner$1.current,
+          ReactCurrentOwner.current,
           props
         );
-      }
-    }
 
-    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-    var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
-
-    function setCurrentlyValidatingElement(element) {
-      {
-        if (element) {
-          var owner = element._owner;
-          var stack = describeUnknownElementTypeFrameInDEV(
-            element.type,
-            owner ? owner.type : null
-          );
-          ReactDebugCurrentFrame.setExtraStackFrame(stack);
+        if (type === REACT_FRAGMENT_TYPE) {
+          validateFragmentProps(element);
         } else {
-          ReactDebugCurrentFrame.setExtraStackFrame(null);
+          validatePropTypes(element);
         }
-      }
-    }
 
-    var propTypesMisspellWarningShown;
-
-    {
-      propTypesMisspellWarningShown = false;
-    }
-    /**
-     * Verifies the object is a ReactElement.
-     * See https://reactjs.org/docs/react-api.html#isvalidelement
-     * @param {?object} object
-     * @return {boolean} True if `object` is a ReactElement.
-     * @final
-     */
-
-    function isValidElement(object) {
-      {
-        return (
-          typeof object === "object" &&
-          object !== null &&
-          object.$$typeof === REACT_ELEMENT_TYPE
-        );
+        return element;
       }
     }
 
@@ -884,29 +967,73 @@ if (__DEV__) {
       }
     }
     /**
-     * Warn if there's no key explicitly set on dynamic arrays of children or
-     * object keys are not valid. This allows us to keep track of children between
-     * updates.
+     * Ensure that every element either is passed in a static location, in an
+     * array with an explicit keys property defined, or in an object literal
+     * with valid key property.
+     *
+     * @internal
+     * @param {ReactNode} node Statically passed child of any type.
+     * @param {*} parentType node's parent's type.
      */
 
-    var ownerHasKeyUseWarning = {};
-
-    function getCurrentComponentErrorInfo(parentType) {
+    function validateChildKeys(node, parentType) {
       {
-        var info = getDeclarationErrorAddendum();
-
-        if (!info) {
-          var parentName = getComponentNameFromType(parentType);
-
-          if (parentName) {
-            info =
-              "\n\nCheck the top-level render call using <" + parentName + ">.";
-          }
+        if (typeof node !== "object" || !node) {
+          return;
         }
 
-        return info;
+        if (node.$$typeof === REACT_CLIENT_REFERENCE);
+        else if (isArray(node)) {
+          for (var i = 0; i < node.length; i++) {
+            var child = node[i];
+
+            if (isValidElement(child)) {
+              validateExplicitKey(child, parentType);
+            }
+          }
+        } else if (isValidElement(node)) {
+          // This element was passed in a valid location.
+          if (node._store) {
+            node._store.validated = true;
+          }
+        } else {
+          var iteratorFn = getIteratorFn(node);
+
+          if (typeof iteratorFn === "function") {
+            // Entry iterators used to provide implicit keys,
+            // but now we print a separate warning for them later.
+            if (iteratorFn !== node.entries) {
+              var iterator = iteratorFn.call(node);
+              var step;
+
+              while (!(step = iterator.next()).done) {
+                if (isValidElement(step.value)) {
+                  validateExplicitKey(step.value, parentType);
+                }
+              }
+            }
+          }
+        }
       }
     }
+    /**
+     * Verifies the object is a ReactElement.
+     * See https://reactjs.org/docs/react-api.html#isvalidelement
+     * @param {?object} object
+     * @return {boolean} True if `object` is a ReactElement.
+     * @final
+     */
+
+    function isValidElement(object) {
+      {
+        return (
+          typeof object === "object" &&
+          object !== null &&
+          object.$$typeof === REACT_ELEMENT_TYPE
+        );
+      }
+    }
+    var ownerHasKeyUseWarning = {};
     /**
      * Warn if the element doesn't have an explicit key assigned to it.
      * This element is in an array. The array could grow and shrink or be
@@ -967,56 +1094,75 @@ if (__DEV__) {
         setCurrentlyValidatingElement(null);
       }
     }
-    /**
-     * Ensure that every element either is passed in a static location, in an
-     * array with an explicit keys property defined, or in an object literal
-     * with valid key property.
-     *
-     * @internal
-     * @param {ReactNode} node Statically passed child of any type.
-     * @param {*} parentType node's parent's type.
-     */
 
-    function validateChildKeys(node, parentType) {
+    function setCurrentlyValidatingElement(element) {
       {
-        if (typeof node !== "object" || !node) {
-          return;
-        }
-
-        if (node.$$typeof === REACT_CLIENT_REFERENCE);
-        else if (isArray(node)) {
-          for (var i = 0; i < node.length; i++) {
-            var child = node[i];
-
-            if (isValidElement(child)) {
-              validateExplicitKey(child, parentType);
-            }
-          }
-        } else if (isValidElement(node)) {
-          // This element was passed in a valid location.
-          if (node._store) {
-            node._store.validated = true;
-          }
+        if (element) {
+          var owner = element._owner;
+          var stack = describeUnknownElementTypeFrameInDEV(
+            element.type,
+            owner ? owner.type : null
+          );
+          ReactDebugCurrentFrame.setExtraStackFrame(stack);
         } else {
-          var iteratorFn = getIteratorFn(node);
-
-          if (typeof iteratorFn === "function") {
-            // Entry iterators used to provide implicit keys,
-            // but now we print a separate warning for them later.
-            if (iteratorFn !== node.entries) {
-              var iterator = iteratorFn.call(node);
-              var step;
-
-              while (!(step = iterator.next()).done) {
-                if (isValidElement(step.value)) {
-                  validateExplicitKey(step.value, parentType);
-                }
-              }
-            }
-          }
+          ReactDebugCurrentFrame.setExtraStackFrame(null);
         }
       }
     }
+
+    function getCurrentComponentErrorInfo(parentType) {
+      {
+        var info = getDeclarationErrorAddendum();
+
+        if (!info) {
+          var parentName = getComponentNameFromType(parentType);
+
+          if (parentName) {
+            info =
+              "\n\nCheck the top-level render call using <" + parentName + ">.";
+          }
+        }
+
+        return info;
+      }
+    }
+    /**
+     * Given a fragment, validate that it can only be provided with fragment props
+     * @param {ReactElement} fragment
+     */
+
+    function validateFragmentProps(fragment) {
+      {
+        var keys = Object.keys(fragment.props);
+
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+
+          if (key !== "children" && key !== "key") {
+            setCurrentlyValidatingElement(fragment);
+
+            error(
+              "Invalid prop `%s` supplied to `React.Fragment`. " +
+                "React.Fragment can only have `key` and `children` props.",
+              key
+            );
+
+            setCurrentlyValidatingElement(null);
+            break;
+          }
+        }
+
+        if (fragment.ref !== null) {
+          setCurrentlyValidatingElement(fragment);
+
+          error("Invalid attribute `ref` supplied to `React.Fragment`.");
+
+          setCurrentlyValidatingElement(null);
+        }
+      }
+    }
+
+    var propTypesMisspellWarningShown = false;
     /**
      * Given an element, validate that its props follow the propTypes definition,
      * provided by the type.
@@ -1080,183 +1226,8 @@ if (__DEV__) {
         }
       }
     }
-    /**
-     * Given a fragment, validate that it can only be provided with fragment props
-     * @param {ReactElement} fragment
-     */
 
-    function validateFragmentProps(fragment) {
-      {
-        var keys = Object.keys(fragment.props);
-
-        for (var i = 0; i < keys.length; i++) {
-          var key = keys[i];
-
-          if (key !== "children" && key !== "key") {
-            setCurrentlyValidatingElement(fragment);
-
-            error(
-              "Invalid prop `%s` supplied to `React.Fragment`. " +
-                "React.Fragment can only have `key` and `children` props.",
-              key
-            );
-
-            setCurrentlyValidatingElement(null);
-            break;
-          }
-        }
-
-        if (fragment.ref !== null) {
-          setCurrentlyValidatingElement(fragment);
-
-          error("Invalid attribute `ref` supplied to `React.Fragment`.");
-
-          setCurrentlyValidatingElement(null);
-        }
-      }
-    }
-
-    var didWarnAboutKeySpread = {};
-    function jsxWithValidation(
-      type,
-      props,
-      key,
-      isStaticChildren,
-      source,
-      self
-    ) {
-      {
-        var validType = isValidElementType(type); // We warn in this case but don't throw. We expect the element creation to
-        // succeed and there will likely be errors in render.
-
-        if (!validType) {
-          var info = "";
-
-          if (
-            type === undefined ||
-            (typeof type === "object" &&
-              type !== null &&
-              Object.keys(type).length === 0)
-          ) {
-            info +=
-              " You likely forgot to export your component from the file " +
-              "it's defined in, or you might have mixed up default and named imports.";
-          }
-
-          var sourceInfo = getSourceInfoErrorAddendum(source);
-
-          if (sourceInfo) {
-            info += sourceInfo;
-          } else {
-            info += getDeclarationErrorAddendum();
-          }
-
-          var typeString;
-
-          if (type === null) {
-            typeString = "null";
-          } else if (isArray(type)) {
-            typeString = "array";
-          } else if (
-            type !== undefined &&
-            type.$$typeof === REACT_ELEMENT_TYPE
-          ) {
-            typeString =
-              "<" + (getComponentNameFromType(type.type) || "Unknown") + " />";
-            info =
-              " Did you accidentally export a JSX literal instead of a component?";
-          } else {
-            typeString = typeof type;
-          }
-
-          error(
-            "React.jsx: type is invalid -- expected a string (for " +
-              "built-in components) or a class/function (for composite " +
-              "components) but got: %s.%s",
-            typeString,
-            info
-          );
-        }
-
-        var element = jsxDEV$1(type, props, key, source, self); // The result can be nullish if a mock or a custom function is used.
-        // TODO: Drop this when these are no longer allowed as the type argument.
-
-        if (element == null) {
-          return element;
-        } // Skip key warning if the type isn't valid since our key validation logic
-        // doesn't expect a non-string/function type and can throw confusing errors.
-        // We don't want exception behavior to differ between dev and prod.
-        // (Rendering will throw with a helpful message and as soon as the type is
-        // fixed, the key warnings will appear.)
-
-        if (validType) {
-          var children = props.children;
-
-          if (children !== undefined) {
-            if (isStaticChildren) {
-              if (isArray(children)) {
-                for (var i = 0; i < children.length; i++) {
-                  validateChildKeys(children[i], type);
-                }
-
-                if (Object.freeze) {
-                  Object.freeze(children);
-                }
-              } else {
-                error(
-                  "React.jsx: Static children should always be an array. " +
-                    "You are likely explicitly calling React.jsxs or React.jsxDEV. " +
-                    "Use the Babel transform instead."
-                );
-              }
-            } else {
-              validateChildKeys(children, type);
-            }
-          }
-        }
-
-        if (hasOwnProperty.call(props, "key")) {
-          var componentName = getComponentNameFromType(type);
-          var keys = Object.keys(props).filter(function (k) {
-            return k !== "key";
-          });
-          var beforeExample =
-            keys.length > 0
-              ? "{key: someKey, " + keys.join(": ..., ") + ": ...}"
-              : "{key: someKey}";
-
-          if (!didWarnAboutKeySpread[componentName + beforeExample]) {
-            var afterExample =
-              keys.length > 0 ? "{" + keys.join(": ..., ") + ": ...}" : "{}";
-
-            error(
-              'A props object containing a "key" prop is being spread into JSX:\n' +
-                "  let props = %s;\n" +
-                "  <%s {...props} />\n" +
-                "React keys must be passed directly to JSX without using spread:\n" +
-                "  let props = %s;\n" +
-                "  <%s key={someKey} {...props} />",
-              beforeExample,
-              componentName,
-              afterExample,
-              componentName
-            );
-
-            didWarnAboutKeySpread[componentName + beforeExample] = true;
-          }
-        }
-
-        if (type === REACT_FRAGMENT_TYPE) {
-          validateFragmentProps(element);
-        } else {
-          validatePropTypes(element);
-        }
-
-        return element;
-      }
-    } // These two functions exist to still get child warnings in dev
-
-    var jsxDEV = jsxWithValidation;
+    var jsxDEV = jsxDEV$1;
 
     exports.Fragment = REACT_FRAGMENT_TYPE;
     exports.jsxDEV = jsxDEV;

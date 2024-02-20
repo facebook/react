@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<280bd11efcac132c9cef51a618bf34ce>>
+ * @generated SignedSource<<e4bd783435b61cff599323d58cbf8cb5>>
  */
 
 "use strict";
@@ -24,7 +24,7 @@ if (__DEV__) {
     ) {
       __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStart(new Error());
     }
-    var ReactVersion = "18.3.0-canary-c82009771-20240219";
+    var ReactVersion = "18.3.0-canary-ec160f32c-20240219";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -107,7 +107,7 @@ if (__DEV__) {
      * The current owner is the component who should own any components that are
      * currently being constructed.
      */
-    var ReactCurrentOwner$2 = {
+    var ReactCurrentOwner$1 = {
       /**
        * @internal
        * @type {ReactComponent}
@@ -153,7 +153,7 @@ if (__DEV__) {
       ReactCurrentDispatcher: ReactCurrentDispatcher,
       ReactCurrentCache: ReactCurrentCache,
       ReactCurrentBatchConfig: ReactCurrentBatchConfig,
-      ReactCurrentOwner: ReactCurrentOwner$2
+      ReactCurrentOwner: ReactCurrentOwner$1
     };
 
     {
@@ -779,12 +779,12 @@ if (__DEV__) {
       {
         if (
           typeof config.ref === "string" &&
-          ReactCurrentOwner$2.current &&
+          ReactCurrentOwner$1.current &&
           config.__self &&
-          ReactCurrentOwner$2.current.stateNode !== config.__self
+          ReactCurrentOwner$1.current.stateNode !== config.__self
         ) {
           var componentName = getComponentNameFromType(
-            ReactCurrentOwner$2.current.type
+            ReactCurrentOwner$1.current.type
           );
 
           if (!didWarnAboutStringRefs$1[componentName]) {
@@ -965,7 +965,7 @@ if (__DEV__) {
         }
       }
 
-      return ReactElement$1(type, key, ref, ReactCurrentOwner$2.current, props);
+      return ReactElement$1(type, key, ref, ReactCurrentOwner$1.current, props);
     }
     function cloneAndReplaceKey(oldElement, newKey) {
       var newElement = ReactElement$1(
@@ -1004,7 +1004,7 @@ if (__DEV__) {
         if (hasValidRef$1(config)) {
           // Silently steal the ref from the parent.
           ref = config.ref;
-          owner = ReactCurrentOwner$2.current;
+          owner = ReactCurrentOwner$1.current;
         }
 
         if (hasValidKey$1(config)) {
@@ -1343,8 +1343,8 @@ if (__DEV__) {
     }
 
     function getDeclarationErrorAddendum$1() {
-      if (ReactCurrentOwner$2.current) {
-        var name = getComponentNameFromType(ReactCurrentOwner$2.current.type);
+      if (ReactCurrentOwner$1.current) {
+        var name = getComponentNameFromType(ReactCurrentOwner$1.current.type);
 
         if (name) {
           return "\n\nCheck the render method of `" + name + "`.";
@@ -1427,7 +1427,7 @@ if (__DEV__) {
       if (
         element &&
         element._owner &&
-        element._owner !== ReactCurrentOwner$2.current
+        element._owner !== ReactCurrentOwner$1.current
       ) {
         // Give the component that originally created this child.
         childOwner =
@@ -3058,7 +3058,9 @@ if (__DEV__) {
       only: onlyChild
     };
 
-    var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
+    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+    var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
     var specialPropKeyWarningShown;
     var specialPropRefWarningShown;
     var didWarnAboutStringRefs;
@@ -3099,12 +3101,12 @@ if (__DEV__) {
       {
         if (
           typeof config.ref === "string" &&
-          ReactCurrentOwner$1.current &&
+          ReactCurrentOwner.current &&
           self &&
-          ReactCurrentOwner$1.current.stateNode !== self
+          ReactCurrentOwner.current.stateNode !== self
         ) {
           var componentName = getComponentNameFromType(
-            ReactCurrentOwner$1.current.type
+            ReactCurrentOwner.current.type
           );
 
           if (!didWarnAboutStringRefs[componentName]) {
@@ -3115,7 +3117,7 @@ if (__DEV__) {
                 "We ask you to manually fix this case by using useRef() or createRef() instead. " +
                 "Learn more about using refs safely here: " +
                 "https://reactjs.org/link/strict-mode-string-ref",
-              getComponentNameFromType(ReactCurrentOwner$1.current.type),
+              getComponentNameFromType(ReactCurrentOwner.current.type),
               config.ref
             );
 
@@ -3238,6 +3240,43 @@ if (__DEV__) {
 
       return element;
     }
+    // support `jsx` and `jsxs` when running in development. This supports the case
+    // where a third-party dependency ships code that was compiled for production;
+    // we want to still provide warnings in development.
+    //
+    // So these functions are the _dev_ implementations of the _production_
+    // API signatures.
+    //
+    // Since these functions are dev-only, it's ok to add an indirection here. They
+    // only exist to provide different versions of `isStaticChildren`. (We shouldn't
+    // use this pattern for the prod versions, though, because it will add an call
+    // frame.)
+
+    function jsxProdSignatureRunningInDevWithDynamicChildren(
+      type,
+      config,
+      maybeKey,
+      source,
+      self
+    ) {
+      {
+        var isStaticChildren = false;
+        return jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self);
+      }
+    }
+    function jsxProdSignatureRunningInDevWithStaticChildren(
+      type,
+      config,
+      maybeKey,
+      source,
+      self
+    ) {
+      {
+        var isStaticChildren = true;
+        return jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self);
+      }
+    }
+    var didWarnAboutKeySpread = {};
     /**
      * https://github.com/reactjs/rfcs/pull/107
      * @param {*} type
@@ -3245,8 +3284,122 @@ if (__DEV__) {
      * @param {string} key
      */
 
-    function jsxDEV$1(type, config, maybeKey, source, self) {
+    function jsxDEV$1(type, config, maybeKey, isStaticChildren, source, self) {
       {
+        if (!isValidElementType(type)) {
+          // This is an invalid element type.
+          //
+          // We warn in this case but don't throw. We expect the element creation to
+          // succeed and there will likely be errors in render.
+          var info = "";
+
+          if (
+            type === undefined ||
+            (typeof type === "object" &&
+              type !== null &&
+              Object.keys(type).length === 0)
+          ) {
+            info +=
+              " You likely forgot to export your component from the file " +
+              "it's defined in, or you might have mixed up default and named imports.";
+          }
+
+          var sourceInfo = getSourceInfoErrorAddendum(source);
+
+          if (sourceInfo) {
+            info += sourceInfo;
+          } else {
+            info += getDeclarationErrorAddendum();
+          }
+
+          var typeString;
+
+          if (type === null) {
+            typeString = "null";
+          } else if (isArray(type)) {
+            typeString = "array";
+          } else if (
+            type !== undefined &&
+            type.$$typeof === REACT_ELEMENT_TYPE
+          ) {
+            typeString =
+              "<" + (getComponentNameFromType(type.type) || "Unknown") + " />";
+            info =
+              " Did you accidentally export a JSX literal instead of a component?";
+          } else {
+            typeString = typeof type;
+          }
+
+          error(
+            "React.jsx: type is invalid -- expected a string (for " +
+              "built-in components) or a class/function (for composite " +
+              "components) but got: %s.%s",
+            typeString,
+            info
+          );
+        } else {
+          // This is a valid element type.
+          // Skip key warning if the type isn't valid since our key validation logic
+          // doesn't expect a non-string/function type and can throw confusing
+          // errors. We don't want exception behavior to differ between dev and
+          // prod. (Rendering will throw with a helpful message and as soon as the
+          // type is fixed, the key warnings will appear.)
+          var children = config.children;
+
+          if (children !== undefined) {
+            if (isStaticChildren) {
+              if (isArray(children)) {
+                for (var i = 0; i < children.length; i++) {
+                  validateChildKeys(children[i], type);
+                }
+
+                if (Object.freeze) {
+                  Object.freeze(children);
+                }
+              } else {
+                error(
+                  "React.jsx: Static children should always be an array. " +
+                    "You are likely explicitly calling React.jsxs or React.jsxDEV. " +
+                    "Use the Babel transform instead."
+                );
+              }
+            } else {
+              validateChildKeys(children, type);
+            }
+          }
+        } // Warn about key spread regardless of whether the type is valid.
+
+        if (hasOwnProperty.call(config, "key")) {
+          var componentName = getComponentNameFromType(type);
+          var keys = Object.keys(config).filter(function (k) {
+            return k !== "key";
+          });
+          var beforeExample =
+            keys.length > 0
+              ? "{key: someKey, " + keys.join(": ..., ") + ": ...}"
+              : "{key: someKey}";
+
+          if (!didWarnAboutKeySpread[componentName + beforeExample]) {
+            var afterExample =
+              keys.length > 0 ? "{" + keys.join(": ..., ") + ": ...}" : "{}";
+
+            error(
+              'A props object containing a "key" prop is being spread into JSX:\n' +
+                "  let props = %s;\n" +
+                "  <%s {...props} />\n" +
+                "React keys must be passed directly to JSX without using spread:\n" +
+                "  let props = %s;\n" +
+                "  <%s key={someKey} {...props} />",
+              beforeExample,
+              componentName,
+              afterExample,
+              componentName
+            );
+
+            didWarnAboutKeySpread[componentName + beforeExample] = true;
+          }
+        }
+
         var propName; // Reserved names are extracted
 
         var props = {};
@@ -3314,57 +3467,23 @@ if (__DEV__) {
           }
         }
 
-        return ReactElement(
+        var element = ReactElement(
           type,
           key,
           ref,
           self,
           source,
-          ReactCurrentOwner$1.current,
+          ReactCurrentOwner.current,
           props
         );
-      }
-    }
 
-    var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
-    var REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference");
-
-    function setCurrentlyValidatingElement(element) {
-      {
-        if (element) {
-          var owner = element._owner;
-          var stack = describeUnknownElementTypeFrameInDEV(
-            element.type,
-            owner ? owner.type : null
-          );
-          ReactDebugCurrentFrame.setExtraStackFrame(stack);
+        if (type === REACT_FRAGMENT_TYPE) {
+          validateFragmentProps(element);
         } else {
-          ReactDebugCurrentFrame.setExtraStackFrame(null);
+          validatePropTypes(element);
         }
-      }
-    }
 
-    var propTypesMisspellWarningShown;
-
-    {
-      propTypesMisspellWarningShown = false;
-    }
-    /**
-     * Verifies the object is a ReactElement.
-     * See https://reactjs.org/docs/react-api.html#isvalidelement
-     * @param {?object} object
-     * @return {boolean} True if `object` is a ReactElement.
-     * @final
-     */
-
-    function isValidElement(object) {
-      {
-        return (
-          typeof object === "object" &&
-          object !== null &&
-          object.$$typeof === REACT_ELEMENT_TYPE
-        );
+        return element;
       }
     }
 
@@ -3394,29 +3513,73 @@ if (__DEV__) {
       }
     }
     /**
-     * Warn if there's no key explicitly set on dynamic arrays of children or
-     * object keys are not valid. This allows us to keep track of children between
-     * updates.
+     * Ensure that every element either is passed in a static location, in an
+     * array with an explicit keys property defined, or in an object literal
+     * with valid key property.
+     *
+     * @internal
+     * @param {ReactNode} node Statically passed child of any type.
+     * @param {*} parentType node's parent's type.
      */
 
-    var ownerHasKeyUseWarning = {};
-
-    function getCurrentComponentErrorInfo(parentType) {
+    function validateChildKeys(node, parentType) {
       {
-        var info = getDeclarationErrorAddendum();
-
-        if (!info) {
-          var parentName = getComponentNameFromType(parentType);
-
-          if (parentName) {
-            info =
-              "\n\nCheck the top-level render call using <" + parentName + ">.";
-          }
+        if (typeof node !== "object" || !node) {
+          return;
         }
 
-        return info;
+        if (node.$$typeof === REACT_CLIENT_REFERENCE);
+        else if (isArray(node)) {
+          for (var i = 0; i < node.length; i++) {
+            var child = node[i];
+
+            if (isValidElement(child)) {
+              validateExplicitKey(child, parentType);
+            }
+          }
+        } else if (isValidElement(node)) {
+          // This element was passed in a valid location.
+          if (node._store) {
+            node._store.validated = true;
+          }
+        } else {
+          var iteratorFn = getIteratorFn(node);
+
+          if (typeof iteratorFn === "function") {
+            // Entry iterators used to provide implicit keys,
+            // but now we print a separate warning for them later.
+            if (iteratorFn !== node.entries) {
+              var iterator = iteratorFn.call(node);
+              var step;
+
+              while (!(step = iterator.next()).done) {
+                if (isValidElement(step.value)) {
+                  validateExplicitKey(step.value, parentType);
+                }
+              }
+            }
+          }
+        }
       }
     }
+    /**
+     * Verifies the object is a ReactElement.
+     * See https://reactjs.org/docs/react-api.html#isvalidelement
+     * @param {?object} object
+     * @return {boolean} True if `object` is a ReactElement.
+     * @final
+     */
+
+    function isValidElement(object) {
+      {
+        return (
+          typeof object === "object" &&
+          object !== null &&
+          object.$$typeof === REACT_ELEMENT_TYPE
+        );
+      }
+    }
+    var ownerHasKeyUseWarning = {};
     /**
      * Warn if the element doesn't have an explicit key assigned to it.
      * This element is in an array. The array could grow and shrink or be
@@ -3477,56 +3640,75 @@ if (__DEV__) {
         setCurrentlyValidatingElement(null);
       }
     }
-    /**
-     * Ensure that every element either is passed in a static location, in an
-     * array with an explicit keys property defined, or in an object literal
-     * with valid key property.
-     *
-     * @internal
-     * @param {ReactNode} node Statically passed child of any type.
-     * @param {*} parentType node's parent's type.
-     */
 
-    function validateChildKeys(node, parentType) {
+    function setCurrentlyValidatingElement(element) {
       {
-        if (typeof node !== "object" || !node) {
-          return;
-        }
-
-        if (node.$$typeof === REACT_CLIENT_REFERENCE);
-        else if (isArray(node)) {
-          for (var i = 0; i < node.length; i++) {
-            var child = node[i];
-
-            if (isValidElement(child)) {
-              validateExplicitKey(child, parentType);
-            }
-          }
-        } else if (isValidElement(node)) {
-          // This element was passed in a valid location.
-          if (node._store) {
-            node._store.validated = true;
-          }
+        if (element) {
+          var owner = element._owner;
+          var stack = describeUnknownElementTypeFrameInDEV(
+            element.type,
+            owner ? owner.type : null
+          );
+          ReactDebugCurrentFrame.setExtraStackFrame(stack);
         } else {
-          var iteratorFn = getIteratorFn(node);
-
-          if (typeof iteratorFn === "function") {
-            // Entry iterators used to provide implicit keys,
-            // but now we print a separate warning for them later.
-            if (iteratorFn !== node.entries) {
-              var iterator = iteratorFn.call(node);
-              var step;
-
-              while (!(step = iterator.next()).done) {
-                if (isValidElement(step.value)) {
-                  validateExplicitKey(step.value, parentType);
-                }
-              }
-            }
-          }
+          ReactDebugCurrentFrame.setExtraStackFrame(null);
         }
       }
     }
+
+    function getCurrentComponentErrorInfo(parentType) {
+      {
+        var info = getDeclarationErrorAddendum();
+
+        if (!info) {
+          var parentName = getComponentNameFromType(parentType);
+
+          if (parentName) {
+            info =
+              "\n\nCheck the top-level render call using <" + parentName + ">.";
+          }
+        }
+
+        return info;
+      }
+    }
+    /**
+     * Given a fragment, validate that it can only be provided with fragment props
+     * @param {ReactElement} fragment
+     */
+
+    function validateFragmentProps(fragment) {
+      {
+        var keys = Object.keys(fragment.props);
+
+        for (var i = 0; i < keys.length; i++) {
+          var key = keys[i];
+
+          if (key !== "children" && key !== "key") {
+            setCurrentlyValidatingElement(fragment);
+
+            error(
+              "Invalid prop `%s` supplied to `React.Fragment`. " +
+                "React.Fragment can only have `key` and `children` props.",
+              key
+            );
+
+            setCurrentlyValidatingElement(null);
+            break;
+          }
+        }
+
+        if (fragment.ref !== null) {
+          setCurrentlyValidatingElement(fragment);
+
+          error("Invalid attribute `ref` supplied to `React.Fragment`.");
+
+          setCurrentlyValidatingElement(null);
+        }
+      }
+    }
+
+    var propTypesMisspellWarningShown = false;
     /**
      * Given an element, validate that its props follow the propTypes definition,
      * provided by the type.
@@ -3590,201 +3772,12 @@ if (__DEV__) {
         }
       }
     }
-    /**
-     * Given a fragment, validate that it can only be provided with fragment props
-     * @param {ReactElement} fragment
-     */
 
-    function validateFragmentProps(fragment) {
-      {
-        var keys = Object.keys(fragment.props);
-
-        for (var i = 0; i < keys.length; i++) {
-          var key = keys[i];
-
-          if (key !== "children" && key !== "key") {
-            setCurrentlyValidatingElement(fragment);
-
-            error(
-              "Invalid prop `%s` supplied to `React.Fragment`. " +
-                "React.Fragment can only have `key` and `children` props.",
-              key
-            );
-
-            setCurrentlyValidatingElement(null);
-            break;
-          }
-        }
-
-        if (fragment.ref !== null) {
-          setCurrentlyValidatingElement(fragment);
-
-          error("Invalid attribute `ref` supplied to `React.Fragment`.");
-
-          setCurrentlyValidatingElement(null);
-        }
-      }
-    }
-
-    var didWarnAboutKeySpread = {};
-    function jsxWithValidation(
-      type,
-      props,
-      key,
-      isStaticChildren,
-      source,
-      self
-    ) {
-      {
-        var validType = isValidElementType(type); // We warn in this case but don't throw. We expect the element creation to
-        // succeed and there will likely be errors in render.
-
-        if (!validType) {
-          var info = "";
-
-          if (
-            type === undefined ||
-            (typeof type === "object" &&
-              type !== null &&
-              Object.keys(type).length === 0)
-          ) {
-            info +=
-              " You likely forgot to export your component from the file " +
-              "it's defined in, or you might have mixed up default and named imports.";
-          }
-
-          var sourceInfo = getSourceInfoErrorAddendum(source);
-
-          if (sourceInfo) {
-            info += sourceInfo;
-          } else {
-            info += getDeclarationErrorAddendum();
-          }
-
-          var typeString;
-
-          if (type === null) {
-            typeString = "null";
-          } else if (isArray(type)) {
-            typeString = "array";
-          } else if (
-            type !== undefined &&
-            type.$$typeof === REACT_ELEMENT_TYPE
-          ) {
-            typeString =
-              "<" + (getComponentNameFromType(type.type) || "Unknown") + " />";
-            info =
-              " Did you accidentally export a JSX literal instead of a component?";
-          } else {
-            typeString = typeof type;
-          }
-
-          error(
-            "React.jsx: type is invalid -- expected a string (for " +
-              "built-in components) or a class/function (for composite " +
-              "components) but got: %s.%s",
-            typeString,
-            info
-          );
-        }
-
-        var element = jsxDEV$1(type, props, key, source, self); // The result can be nullish if a mock or a custom function is used.
-        // TODO: Drop this when these are no longer allowed as the type argument.
-
-        if (element == null) {
-          return element;
-        } // Skip key warning if the type isn't valid since our key validation logic
-        // doesn't expect a non-string/function type and can throw confusing errors.
-        // We don't want exception behavior to differ between dev and prod.
-        // (Rendering will throw with a helpful message and as soon as the type is
-        // fixed, the key warnings will appear.)
-
-        if (validType) {
-          var children = props.children;
-
-          if (children !== undefined) {
-            if (isStaticChildren) {
-              if (isArray(children)) {
-                for (var i = 0; i < children.length; i++) {
-                  validateChildKeys(children[i], type);
-                }
-
-                if (Object.freeze) {
-                  Object.freeze(children);
-                }
-              } else {
-                error(
-                  "React.jsx: Static children should always be an array. " +
-                    "You are likely explicitly calling React.jsxs or React.jsxDEV. " +
-                    "Use the Babel transform instead."
-                );
-              }
-            } else {
-              validateChildKeys(children, type);
-            }
-          }
-        }
-
-        if (hasOwnProperty.call(props, "key")) {
-          var componentName = getComponentNameFromType(type);
-          var keys = Object.keys(props).filter(function (k) {
-            return k !== "key";
-          });
-          var beforeExample =
-            keys.length > 0
-              ? "{key: someKey, " + keys.join(": ..., ") + ": ...}"
-              : "{key: someKey}";
-
-          if (!didWarnAboutKeySpread[componentName + beforeExample]) {
-            var afterExample =
-              keys.length > 0 ? "{" + keys.join(": ..., ") + ": ...}" : "{}";
-
-            error(
-              'A props object containing a "key" prop is being spread into JSX:\n' +
-                "  let props = %s;\n" +
-                "  <%s {...props} />\n" +
-                "React keys must be passed directly to JSX without using spread:\n" +
-                "  let props = %s;\n" +
-                "  <%s key={someKey} {...props} />",
-              beforeExample,
-              componentName,
-              afterExample,
-              componentName
-            );
-
-            didWarnAboutKeySpread[componentName + beforeExample] = true;
-          }
-        }
-
-        if (type === REACT_FRAGMENT_TYPE) {
-          validateFragmentProps(element);
-        } else {
-          validatePropTypes(element);
-        }
-
-        return element;
-      }
-    } // These two functions exist to still get child warnings in dev
-    // even with the prod transform. This means that jsxDEV is purely
-    // opt-in behavior for better messages but that we won't stop
-    // giving you warnings if you use production apis.
-
-    function jsxWithValidationStatic(type, props, key) {
-      {
-        return jsxWithValidation(type, props, key, true);
-      }
-    }
-    function jsxWithValidationDynamic(type, props, key) {
-      {
-        return jsxWithValidation(type, props, key, false);
-      }
-    }
-
-    var jsx = jsxWithValidationDynamic; // we may want to special case jsxs internally to take advantage of static children.
+    var jsx = jsxProdSignatureRunningInDevWithDynamicChildren; // we may want to special case jsxs internally to take advantage of static children.
     // for now we can ship identical prod functions
 
-    var jsxs = jsxWithValidationStatic;
-    var jsxDEV = jsxWithValidation;
+    var jsxs = jsxProdSignatureRunningInDevWithStaticChildren;
+    var jsxDEV = jsxDEV$1;
 
     exports.Children = Children;
     exports.Component = Component;

@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9119a43311c6e3bbc52baa1c4dfff7c0>>
+ * @generated SignedSource<<aae4d2e3e2cad8ded1a63513bfed3d4a>>
  */
 
 "use strict";
@@ -17,7 +17,7 @@ var React = require("react"),
   hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner =
     React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
-function jsx$1(type, config, maybeKey) {
+function jsxProd(type, config, maybeKey) {
   var propName,
     props = {},
     key = null,
@@ -43,5 +43,5 @@ function jsx$1(type, config, maybeKey) {
   };
 }
 exports.Fragment = REACT_FRAGMENT_TYPE;
-exports.jsx = jsx$1;
-exports.jsxs = jsx$1;
+exports.jsx = jsxProd;
+exports.jsxs = jsxProd;

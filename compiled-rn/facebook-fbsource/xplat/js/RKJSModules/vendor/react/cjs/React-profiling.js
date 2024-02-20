@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<f35a9457ef3a32fa7212af3d759fb90c>>
+ * @generated SignedSource<<ea6ec461fcdf407f84ccacc4c5ef9031>>
  */
 
 "use strict";
@@ -310,7 +310,7 @@ function lazyInitializer(payload) {
       console.error(error);
     };
 var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-function jsx$1(type, config, maybeKey) {
+function jsxProd(type, config, maybeKey) {
   var propName,
     props = {},
     key = null,
@@ -474,9 +474,9 @@ exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
 exports.isValidElement = isValidElement;
-exports.jsx = jsx$1;
+exports.jsx = jsxProd;
 exports.jsxDEV = void 0;
-exports.jsxs = jsx$1;
+exports.jsxs = jsxProd;
 exports.lazy = function (ctor) {
   return {
     $$typeof: REACT_LAZY_TYPE,
@@ -586,7 +586,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-c82009771-20240219";
+exports.version = "18.3.0-canary-ec160f32c-20240219";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
