@@ -41,6 +41,7 @@ import {
   Fragment,
 } from './ReactWorkTags';
 import isArray from 'shared/isArray';
+import assign from 'shared/assign';
 import {checkPropStringCoercion} from 'shared/CheckStringCoercion';
 import {enableRefAsProp} from 'shared/ReactFeatureFlags';
 
@@ -276,13 +277,38 @@ function coerceRef(
       element,
       mixedRef,
     );
+
+    if (enableRefAsProp) {
+      // When enableRefAsProp is on, we should always use the props as the
+      // source of truth for refs. Not a field on the fiber.
+      //
+      // In the case of string refs, this presents a problem, because string
+      // refs are not passed around internally as strings; they are converted to
+      // callback refs. The ref used by the reconciler is not the same as the
+      // one the user provided.
+      //
+      // But since this is a deprecated feature anyway, what we can do is clone
+      // the props object and replace it with the internal callback ref. Then we
+      // can continue to use the props object as the source of truth.
+      //
+      // This means the internal callback ref will leak into userspace. The
+      // receiving component will receive a callback ref even though the parent
+      // passed a string. Which is weird, but again, this is a deprecated
+      // feature, and we're only leaving it around behind a flag so that Meta
+      // can keep using string refs temporarily while they finish migrating
+      // their codebase.
+      const userProvidedProps = workInProgress.pendingProps;
+      const propsWithInternalCallbackRef = assign({}, userProvidedProps);
+      propsWithInternalCallbackRef.ref = coercedRef;
+      workInProgress.pendingProps = propsWithInternalCallbackRef;
+    }
   } else {
     coercedRef = mixedRef;
   }
 
-    // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
-    // should always read the ref from the prop.
-    workInProgress.ref = coercedRef;
+  // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
+  // should always read the ref from the prop.
+  workInProgress.ref = coercedRef;
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
