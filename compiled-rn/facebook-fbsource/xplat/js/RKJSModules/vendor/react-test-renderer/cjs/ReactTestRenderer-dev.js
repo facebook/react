@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<bdf0df21b100941fad1618d2f0f4ea03>>
+ * @generated SignedSource<<1d3d484449a45d9d48c574d191f78a9b>>
  */
 
 "use strict";
@@ -5040,7 +5040,12 @@ if (__DEV__) {
     }
 
     function coerceRef(returnFiber, current, element) {
-      var mixedRef = element.ref;
+      var mixedRef;
+
+      {
+        // Old behavior.
+        mixedRef = element.ref;
+      }
 
       if (
         mixedRef !== null &&
@@ -12692,7 +12697,12 @@ if (__DEV__) {
       // hasn't yet mounted. This happens after the first render suspends.
       // We'll need to figure out if this is fine or can cause issues.
       var render = Component.render;
-      var ref = workInProgress.ref; // The rest is a fork of updateFunctionComponent
+      var ref = workInProgress.ref;
+      var propsWithoutRef;
+
+      {
+        propsWithoutRef = nextProps;
+      } // The rest is a fork of updateFunctionComponent
 
       var nextChildren;
       prepareToReadContext(workInProgress, renderLanes);
@@ -12704,7 +12714,7 @@ if (__DEV__) {
           current,
           workInProgress,
           render,
-          nextProps,
+          propsWithoutRef,
           ref,
           renderLanes
         );
@@ -25686,7 +25696,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-7b196be09-20240220";
+    var ReactVersion = "18.3.0-canary-fa2f82add-20240220";
 
     // Might add PROFILE later.
 

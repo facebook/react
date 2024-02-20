@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<2014363963cd257db2e2ba2e30cd8535>>
+ * @generated SignedSource<<04ca2715fce5363a86317b200bb764c0>>
  */
 
 "use strict";
@@ -95,12 +95,12 @@ var isArrayImpl = Array.isArray,
   },
   hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-function ReactElement(type, key, ref, self, source, owner, props) {
+function ReactElement(type, key, _ref, self, source, owner, props) {
   return {
     $$typeof: REACT_ELEMENT_TYPE,
     type: type,
     key: key,
-    ref: ref,
+    ref: _ref,
     props: props,
     _owner: owner
   };
@@ -596,7 +596,7 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-canary-7b196be09-20240220";
+exports.version = "18.3.0-canary-fa2f82add-20240220";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

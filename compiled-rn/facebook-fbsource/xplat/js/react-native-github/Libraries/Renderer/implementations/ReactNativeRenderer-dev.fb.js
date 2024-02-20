@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<7f468c0b121f290e67f1fba4e2a73c8e>>
+ * @generated SignedSource<<7dd934733eaf5f0f6996f44b50a9a9b4>>
  */
 
 "use strict";
@@ -8951,7 +8951,12 @@ to return true:wantsResponderID|                            |
     }
 
     function coerceRef(returnFiber, current, element) {
-      var mixedRef = element.ref;
+      var mixedRef;
+
+      {
+        // Old behavior.
+        mixedRef = element.ref;
+      }
 
       if (
         mixedRef !== null &&
@@ -15981,7 +15986,12 @@ to return true:wantsResponderID|                            |
       // hasn't yet mounted. This happens after the first render suspends.
       // We'll need to figure out if this is fine or can cause issues.
       var render = Component.render;
-      var ref = workInProgress.ref; // The rest is a fork of updateFunctionComponent
+      var ref = workInProgress.ref;
+      var propsWithoutRef;
+
+      {
+        propsWithoutRef = nextProps;
+      } // The rest is a fork of updateFunctionComponent
 
       var nextChildren;
       prepareToReadContext(workInProgress, renderLanes);
@@ -15997,7 +16007,7 @@ to return true:wantsResponderID|                            |
           current,
           workInProgress,
           render,
-          nextProps,
+          propsWithoutRef,
           ref,
           renderLanes
         );
@@ -28166,7 +28176,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-9ee917a0";
+    var ReactVersion = "18.3.0-canary-7ee8e435";
 
     function createPortal$1(
       children,
