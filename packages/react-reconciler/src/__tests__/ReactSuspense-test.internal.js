@@ -339,12 +339,10 @@ describe('ReactSuspense', () => {
     async () => {
       const root = ReactDOMClient.createRoot(container);
 
-      async function interrupt() {
+      function interrupt() {
         // React has a heuristic to batch all updates that occur within the same
         // event. This is a trick to circumvent that heuristic.
-        await act(() => {
-          root.render('whatever');
-        });
+        ReactDOM.render('whatever', document.createElement('div'));
       }
 
       function App({shouldSuspend, step}) {
@@ -360,32 +358,24 @@ describe('ReactSuspense', () => {
         );
       }
 
-      await act(() => {
-        root.render(null);
-      });
-
       root.render(<App shouldSuspend={false} step={0} />);
       await waitForAll(['A0', 'B0', 'C0']);
       expect(container.textContent).toEqual('A0B0C0');
 
       // This update will suspend.
-      await act(() => {
-        root.render(<App shouldSuspend={true} step={1} />);
-      });
+      root.render(<App shouldSuspend={true} step={1} />);
 
       // Do a bit of work
       await waitFor(['A1']);
 
       // Schedule another update. This will have lower priority because it's
       // a transition.
-      React.startTransition(async () => {
-        await act(() => {
-          root.render(<App shouldSuspend={false} step={2} />);
-        });
+      React.startTransition(() => {
+        root.render(<App shouldSuspend={false} step={2} />);
       });
 
       // Interrupt to trigger a restart.
-      await interrupt();
+      interrupt();
 
       await waitFor([
         // Should have restarted the first update, because of the interruption
