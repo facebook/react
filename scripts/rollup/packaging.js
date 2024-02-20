@@ -191,6 +191,7 @@ for (const bundle of Bundles.bundles) {
 }
 
 function filterOutEntrypoints(name) {
+  console.log('filterOutEntrypoints', name);
   // Remove entry point files that are not built in this configuration.
   let jsonPath = `build/node_modules/${name}/package.json`;
   let packageJSON = JSON.parse(readFileSync(jsonPath));
@@ -201,6 +202,7 @@ function filterOutEntrypoints(name) {
     throw new Error('expected all package.json files to contain a files field');
   }
   let changed = false;
+  console.log('entryPointsToHasBundle', entryPointsToHasBundle);
   for (let i = 0; i < files.length; i++) {
     let filename = files[i];
     let entry =
@@ -213,7 +215,20 @@ function filterOutEntrypoints(name) {
       hasBundle =
         entryPointsToHasBundle.get(entry + '.node') ||
         entryPointsToHasBundle.get(entry + '.browser');
+
+      // The .react-server and .rsc suffixes may not have a bundle representation but
+      // should infer their bundle status from the non-suffixed entry point.
+      if (entry.endsWith('.react-server')) {
+        hasBundle = entryPointsToHasBundle.get(
+          entry.slice(0, '.react-server'.length * -1)
+        );
+      } else if (entry.endsWith('.rsc')) {
+        hasBundle = entryPointsToHasBundle.get(
+          entry.slice(0, '.rsc'.length * -1)
+        );
+      }
     }
+    console.log('entry', entry, hasBundle);
     if (hasBundle === undefined) {
       // This doesn't exist in the bundles. It's an extra file.
     } else if (hasBundle === true) {
@@ -223,7 +238,14 @@ function filterOutEntrypoints(name) {
       // Let's remove it.
       files.splice(i, 1);
       i--;
-      unlinkSync(`build/node_modules/${name}/${filename}`);
+      try {
+        unlinkSync(`build/node_modules/${name}/${filename}`);
+      } catch (err) {
+        // If the file doesn't exist we can just move on. Otherwise throw the halt the build
+        if (err.code !== 'ENOENT') {
+          throw err;
+        }
+      }
       changed = true;
       // Remove it from the exports field too if it exists.
       if (exportsJSON) {

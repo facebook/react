@@ -90,11 +90,13 @@ export type HostDispatcher = {
     precedence: ?string,
     options?: ?PreinitStyleOptions,
   ) => void,
-  preinitScript: (src: string, options?: PreinitScriptOptions) => void,
+  preinitScript: (src: string, options?: ?PreinitScriptOptions) => void,
   preinitModuleScript: (
     src: string,
     options?: ?PreinitModuleScriptOptions,
   ) => void,
+  flushSync: <R>(fn: void | (() => R)) => void | R,
+  nextDispatcher: null | HostDispatcher,
 };
 
 export type ImportMap = {

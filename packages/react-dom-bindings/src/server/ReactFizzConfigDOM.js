@@ -9,6 +9,7 @@
 
 import type {ReactNodeList, ReactCustomFormAction} from 'shared/ReactTypes';
 import type {
+  HostDispatcher,
   CrossOriginEnum,
   PreloadImplOptions,
   PreloadModuleImplOptions,
@@ -89,7 +90,7 @@ import {NotPending} from '../shared/ReactDOMFormActions';
 import ReactDOMSharedInternals from 'shared/ReactDOMSharedInternals';
 const ReactDOMCurrentDispatcher = ReactDOMSharedInternals.Dispatcher;
 
-const ReactDOMServerDispatcher = {
+const ReactDOMServerDispatcher: HostDispatcher = {
   prefetchDNS,
   preconnect,
   preload,
@@ -97,10 +98,27 @@ const ReactDOMServerDispatcher = {
   preinitStyle,
   preinitScript,
   preinitModuleScript,
+  flushSync,
+  nextDispatcher: null,
 };
 
-export function prepareHostDispatcher() {
-  ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
+// We register the HostDispatcher on ReactDOMSharedInternals
+// For server builds we always put the dispatcher at the head of the list
+// This is because the implementations on this dispatcher may not forward
+// call calls to later dispatchers to implement correct semantics. One litmust test
+// for this is can you preload inside renderToString on the client and avoid that
+// leaking into the Document
+if (ReactDOMCurrentDispatcher.current) {
+  ReactDOMServerDispatcher.nextDispatcher = ReactDOMCurrentDispatcher.current;
+}
+ReactDOMCurrentDispatcher.current = ReactDOMServerDispatcher;
+
+function flushSync<R>(fn: void | (() => R)): void | R {
+  if (ReactDOMServerDispatcher.nextDispatcher) {
+    return ReactDOMServerDispatcher.nextDispatcher.flushSync(fn);
+  } else if (fn) {
+    return fn();
+  }
 }
 
 // We make every property of the descriptor optional because it is not a contract that
@@ -5323,6 +5341,9 @@ function prefetchDNS(href: string) {
   }
   const request = resolveRequest();
   if (!request) {
+    if (ReactDOMServerDispatcher.nextDispatcher) {
+      ReactDOMServerDispatcher.nextDispatcher.prefetchDNS(href);
+    }
     // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
     // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
@@ -5378,6 +5399,9 @@ function preconnect(href: string, crossOrigin: ?CrossOriginEnum) {
   }
   const request = resolveRequest();
   if (!request) {
+    if (ReactDOMServerDispatcher.nextDispatcher) {
+      ReactDOMServerDispatcher.nextDispatcher.preconnect(href, crossOrigin);
+    }
     // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
     // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
@@ -5441,6 +5465,9 @@ function preload(href: string, as: string, options?: ?PreloadImplOptions) {
   }
   const request = resolveRequest();
   if (!request) {
+    if (ReactDOMServerDispatcher.nextDispatcher) {
+      ReactDOMServerDispatcher.nextDispatcher.preload(href, as, options);
+    }
     // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
     // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
@@ -5644,6 +5671,9 @@ function preloadModule(
   }
   const request = resolveRequest();
   if (!request) {
+    if (ReactDOMServerDispatcher.nextDispatcher) {
+      ReactDOMServerDispatcher.nextDispatcher.preloadModule(href, options);
+    }
     // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
     // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
@@ -5720,6 +5750,13 @@ function preinitStyle(
   }
   const request = resolveRequest();
   if (!request) {
+    if (ReactDOMServerDispatcher.nextDispatcher) {
+      ReactDOMServerDispatcher.nextDispatcher.preinitStyle(
+        href,
+        precedence,
+        options,
+      );
+    }
     // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
     // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
@@ -5807,6 +5844,9 @@ function preinitScript(src: string, options?: ?PreinitScriptOptions): void {
   }
   const request = resolveRequest();
   if (!request) {
+    if (ReactDOMServerDispatcher.nextDispatcher) {
+      ReactDOMServerDispatcher.nextDispatcher.preinitScript(src, options);
+    }
     // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
     // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning
@@ -5872,6 +5912,9 @@ function preinitModuleScript(
   }
   const request = resolveRequest();
   if (!request) {
+    if (ReactDOMServerDispatcher.nextDispatcher) {
+      ReactDOMServerDispatcher.nextDispatcher.preinitModuleScript(src, options);
+    }
     // In async contexts we can sometimes resolve resources from AsyncLocalStorage. If we can't we can also
     // possibly get them from the stack if we are not in an async context. Since we were not able to resolve
     // the resources for this call in either case we opt to do nothing. We can consider making this a warning

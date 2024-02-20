@@ -28,7 +28,9 @@
     "README.md",
     "index.js",
     "client.js",
+    "client.react-server.js",
     "profiling.js",
+    "profiling.react-server.js",
     "server.js",
     "server.browser.js",
     "server.edge.js",
@@ -38,20 +40,22 @@
     "static.browser.js",
     "static.edge.js",
     "static.node.js",
-    "server-rendering-stub.js",
     "test-utils.js",
     "unstable_testing.js",
+    "unstable_testing.react-server.js",
     "unstable_server-external-runtime.js",
     "react-dom.react-server.js",
-    "cjs/",
-    "umd/"
+    "cjs/"
   ],
   "exports": {
     ".": {
       "react-server": "./react-dom.react-server.js",
       "default": "./index.js"
     },
-    "./client": "./client.js",
+    "./client": {
+      "react-server": "./client.react-server.js",
+      "default": "./client.js"
+    },
     "./server": {
       "workerd": "./server.edge.js",
       "bun": "./server.bun.js",
@@ -78,10 +82,15 @@
     "./static.browser": "./static.browser.js",
     "./static.edge": "./static.edge.js",
     "./static.node": "./static.node.js",
-    "./server-rendering-stub": "./server-rendering-stub.js",
-    "./profiling": "./profiling.js",
+    "./profiling": {
+      "react-server": "./profiling.react-server.js",
+      "default": "./profiling.js"
+    },
     "./test-utils": "./test-utils.js",
-    "./unstable_testing": "./unstable_testing.js",
+    "./unstable_testing": {
+      "react-server": "./unstable_testing.react-server.js",
+      "default": "./unstable_testing.js"
+    },
     "./unstable_server-external-runtime": "./unstable_server-external-runtime.js",
     "./src/*": "./src/*",
     "./package.json": "./package.json"

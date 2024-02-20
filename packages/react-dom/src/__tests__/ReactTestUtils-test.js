@@ -188,7 +188,11 @@ describe('ReactTestUtils', () => {
     const log = [];
     ReactTestUtils.findAllInRenderedTree(tree, function (child) {
       if (ReactTestUtils.isDOMComponent(child)) {
-        log.push(ReactDOM.findDOMNode(child).textContent);
+        log.push(
+          ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+            child,
+          ).textContent,
+        );
       }
     });
 
@@ -400,9 +404,14 @@ describe('ReactTestUtils', () => {
 
       const element = document.createElement('div');
       const instance = ReactDOM.render(<Component />, element);
-      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance), {
-        clientX: CLIENT_X,
-      });
+      ReactTestUtils.Simulate.click(
+        ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+          instance,
+        ),
+        {
+          clientX: CLIENT_X,
+        },
+      );
     });
 
     it('should set the type of the event', () => {
@@ -414,7 +423,10 @@ describe('ReactTestUtils', () => {
 
       const container = document.createElement('div');
       const instance = ReactDOM.render(<div onKeyDown={stub} />, container);
-      const node = ReactDOM.findDOMNode(instance);
+      const node =
+        ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.findDOMNode(
+          instance,
+        );
 
       ReactTestUtils.Simulate.keyDown(node);
 

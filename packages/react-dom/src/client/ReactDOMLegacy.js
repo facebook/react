@@ -22,7 +22,7 @@ import {
   unmarkContainerAsRoot,
 } from 'react-dom-bindings/src/client/ReactDOMComponentTree';
 import {listenToAllSupportedEvents} from 'react-dom-bindings/src/events/DOMPluginEventSystem';
-import {isValidContainerLegacy} from './ReactDOMRoot';
+import {isValidContainerLegacy} from 'react-dom-bindings/src/client/ReactDOMContainer';
 import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
@@ -227,6 +227,8 @@ function legacyRenderSubtreeIntoContainer(
   }
   return getPublicRootInstance(root);
 }
+
+export type FindDOMNodeType = typeof findDOMNode;
 
 export function findDOMNode(
   componentOrElement: Element | ?React$Component<any, any>,
