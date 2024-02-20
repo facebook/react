@@ -312,7 +312,7 @@ var onError =
           console.error(error);
         },
   ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-function jsx$1(type, config, maybeKey) {
+function jsxProd(type, config, maybeKey) {
   var propName,
     props = {},
     key = null,
@@ -483,9 +483,9 @@ exports.forwardRef = function (render) {
   return { $$typeof: REACT_FORWARD_REF_TYPE, render: render };
 };
 exports.isValidElement = isValidElement;
-exports.jsx = jsx$1;
+exports.jsx = jsxProd;
 exports.jsxDEV = void 0;
-exports.jsxs = jsx$1;
+exports.jsxs = jsxProd;
 exports.lazy = function (ctor) {
   return {
     $$typeof: REACT_LAZY_TYPE,
@@ -610,4 +610,4 @@ exports.useSyncExternalStore = function (
 exports.useTransition = function () {
   return ReactCurrentDispatcher.current.useTransition();
 };
-exports.version = "18.3.0-www-modern-cf1f133e";
+exports.version = "18.3.0-www-modern-a03dc08d";
