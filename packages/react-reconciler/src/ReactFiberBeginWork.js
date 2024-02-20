@@ -1007,6 +1007,8 @@ function updateProfiler(
 }
 
 function markRef(current: Fiber | null, workInProgress: Fiber) {
+  // TODO: This is also where we should check the type of the ref and error if
+  // an invalid one is passed, instead of during child reconcilation.
   const ref = workInProgress.ref;
   if (
     (current === null && ref !== null) ||
@@ -3531,7 +3533,7 @@ function updateScopeComponent(
 ) {
   const nextProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
-
+  markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
 }
