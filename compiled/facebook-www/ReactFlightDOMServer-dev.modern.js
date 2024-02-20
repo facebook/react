@@ -1530,6 +1530,8 @@ if (__DEV__) {
         // When the ref moves to the regular props object this will implicitly
         // throw for functions. We could probably relax it to a DEV warning for other
         // cases.
+        // TODO: `ref` is now just a prop when `enableRefAsProp` is on. Should we
+        // do what the above comment says?
         throw new Error(
           "Refs cannot be used in Server Components, nor passed to Client Components."
         );
@@ -2045,6 +2047,13 @@ if (__DEV__) {
                   forwardDebugInfo(request, debugID, debugInfo);
                 }
               }
+            }
+
+            var props = element.props;
+            var ref;
+
+            {
+              ref = element.ref;
             } // Attempt to render the Server Component.
 
             return renderElement(
@@ -2052,8 +2061,8 @@ if (__DEV__) {
               task,
               element.type, // $FlowFixMe[incompatible-call] the key of an element is null | string
               element.key,
-              element.ref,
-              element.props
+              ref,
+              props
             );
           }
 

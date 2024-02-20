@@ -1007,25 +1007,27 @@ if (__DEV__) {
 
     function defineRefPropWarningGetter(props, displayName) {
       {
-        var warnAboutAccessingRef = function () {
-          if (!specialPropRefWarningShown) {
-            specialPropRefWarningShown = true;
+        {
+          var warnAboutAccessingRef = function () {
+            if (!specialPropRefWarningShown) {
+              specialPropRefWarningShown = true;
 
-            error(
-              "%s: `ref` is not a prop. Trying to access it will result " +
-                "in `undefined` being returned. If you need to access the same " +
-                "value within the child component, you should pass it as a different " +
-                "prop. (https://reactjs.org/link/special-props)",
-              displayName
-            );
-          }
-        };
+              error(
+                "%s: `ref` is not a prop. Trying to access it will result " +
+                  "in `undefined` being returned. If you need to access the same " +
+                  "value within the child component, you should pass it as a different " +
+                  "prop. (https://reactjs.org/link/special-props)",
+                displayName
+              );
+            }
+          };
 
-        warnAboutAccessingRef.isReactWarning = true;
-        Object.defineProperty(props, "ref", {
-          get: warnAboutAccessingRef,
-          configurable: true
-        });
+          warnAboutAccessingRef.isReactWarning = true;
+          Object.defineProperty(props, "ref", {
+            get: warnAboutAccessingRef,
+            configurable: true
+          });
+        }
       }
     }
     /**
@@ -1049,18 +1051,30 @@ if (__DEV__) {
      * @internal
      */
 
-    function ReactElement(type, key, ref, self, source, owner, props) {
-      var element = {
-        // This tag allows us to uniquely identify this as a React Element
-        $$typeof: REACT_ELEMENT_TYPE,
-        // Built-in properties that belong on the element
-        type: type,
-        key: key,
-        ref: ref,
-        props: props,
-        // Record the component responsible for creating this element.
-        _owner: owner
-      };
+    function ReactElement(type, key, _ref, self, source, owner, props) {
+      var ref;
+
+      {
+        ref = _ref;
+      }
+
+      var element;
+
+      {
+        // In prod, `ref` is a regular property. It will be removed in a
+        // future release.
+        element = {
+          // This tag allows us to uniquely identify this as a React Element
+          $$typeof: REACT_ELEMENT_TYPE,
+          // Built-in properties that belong on the element
+          type: type,
+          key: key,
+          ref: ref,
+          props: props,
+          // Record the component responsible for creating this element.
+          _owner: owner
+        };
+      }
 
       {
         // The validation flag is currently mutative. We put it on
@@ -1246,14 +1260,17 @@ if (__DEV__) {
         }
 
         if (hasValidRef(config)) {
-          ref = config.ref;
+          {
+            ref = config.ref;
+          }
+
           warnIfStringRefCannotBeAutoConverted(config, self);
         } // Remaining properties are added to a new props object
 
         for (propName in config) {
           if (
             hasOwnProperty.call(config, propName) && // Skip over reserved prop names
-            propName !== "key" && // TODO: `ref` will no longer be reserved in the next major
+            propName !== "key" &&
             propName !== "ref"
           ) {
             props[propName] = config[propName];
@@ -1494,6 +1511,7 @@ if (__DEV__) {
      */
 
     function validateFragmentProps(fragment) {
+      // TODO: Move this to render phase instead of at element creation.
       {
         var keys = Object.keys(fragment.props);
 

@@ -519,17 +519,20 @@ if (__DEV__) {
     }
 
     function createElement(type, key, props) {
-      var element = {
-        // This tag allows us to uniquely identify this as a React Element
-        $$typeof: REACT_ELEMENT_TYPE,
-        // Built-in properties that belong on the element
-        type: type,
-        key: key,
-        ref: null,
-        props: props,
-        // Record the component responsible for creating this element.
-        _owner: null
-      };
+      var element;
+
+      {
+        element = {
+          // This tag allows us to uniquely identify this as a React Element
+          $$typeof: REACT_ELEMENT_TYPE,
+          type: type,
+          key: key,
+          ref: null,
+          props: props,
+          // Record the component responsible for creating this element.
+          _owner: null
+        };
+      }
 
       {
         // We don't really need to add any of these but keeping them for good measure.

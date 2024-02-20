@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-modern-06e02b7d";
+    var ReactVersion = "18.3.0-www-modern-4146d08b";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -81,16 +81,6 @@ if (__DEV__) {
         warningWWW.apply(null, args);
       }
     }
-
-    // Re-export dynamic flags from the www version.
-    var dynamicFeatureFlags = require("ReactFeatureFlags");
-
-    var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-      enableUseDeferredValueInitialArg =
-        dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
-    // On WWW, true is used for a new modern build.
-    var enableFloat = true;
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -684,6 +674,16 @@ if (__DEV__) {
         }
       }
     }
+
+    // Re-export dynamic flags from the www version.
+    var dynamicFeatureFlags = require("ReactFeatureFlags");
+
+    var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+      enableUseDeferredValueInitialArg =
+        dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
+    // On WWW, true is used for a new modern build.
+    var enableFloat = true;
 
     // $FlowFixMe[method-unbinding]
     var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -1849,7 +1849,8 @@ if (__DEV__) {
           case "defaultValue": // Reserved
 
           case "defaultChecked":
-          case "innerHTML": {
+          case "innerHTML":
+          case "ref": {
             return true;
           }
 
@@ -3346,6 +3347,7 @@ if (__DEV__) {
 
         case "suppressContentEditableWarning":
         case "suppressHydrationWarning":
+        case "ref":
           // Ignored. These are built-in to React on the client.
           return;
 
@@ -5527,6 +5529,7 @@ if (__DEV__) {
 
             case "suppressContentEditableWarning":
             case "suppressHydrationWarning":
+            case "ref":
               // Ignored. These are built-in to React on the client.
               break;
 
@@ -7077,6 +7080,7 @@ if (__DEV__) {
         case "suppressContentEditableWarning":
         case "suppressHydrationWarning":
         case "style":
+        case "ref":
           // Ignored
           return;
         // Attribute renames
@@ -7281,6 +7285,7 @@ if (__DEV__) {
         case "suppressContentEditableWarning":
         case "suppressHydrationWarning":
         case "style":
+        case "ref":
           // Ignored
           return;
         // Attribute renames
@@ -12076,12 +12081,18 @@ if (__DEV__) {
     function renderForwardRef(request, task, keyPath, type, props, ref) {
       var previousComponentStack = task.componentStack;
       task.componentStack = createFunctionComponentStack(task, type.render);
+      var propsWithoutRef;
+
+      {
+        propsWithoutRef = props;
+      }
+
       var children = renderWithHooks(
         request,
         task,
         keyPath,
         type.render,
-        props,
+        propsWithoutRef,
         ref
       );
       var hasId = checkDidRenderIdHook();
@@ -12584,7 +12595,12 @@ if (__DEV__) {
             var type = element.type;
             var key = element.key;
             var props = element.props;
-            var ref = element.ref;
+            var ref;
+
+            {
+              ref = element.ref;
+            }
+
             var name = getComponentNameFromType(type);
             var keyOrIndex =
               key == null ? (childIndex === -1 ? 0 : childIndex) : key;

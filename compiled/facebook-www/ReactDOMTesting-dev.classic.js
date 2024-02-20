@@ -7198,7 +7198,8 @@ if (__DEV__) {
           case "defaultValue": // Reserved
 
           case "defaultChecked":
-          case "innerHTML": {
+          case "innerHTML":
+          case "ref": {
             return true;
           }
 
@@ -11136,7 +11137,12 @@ if (__DEV__) {
     }
 
     function coerceRef(returnFiber, current, element) {
-      var mixedRef = element.ref;
+      var mixedRef;
+
+      {
+        // Old behavior.
+        mixedRef = element.ref;
+      }
 
       if (
         mixedRef !== null &&
@@ -19668,7 +19674,12 @@ if (__DEV__) {
       // hasn't yet mounted. This happens after the first render suspends.
       // We'll need to figure out if this is fine or can cause issues.
       var render = Component.render;
-      var ref = workInProgress.ref; // The rest is a fork of updateFunctionComponent
+      var ref = workInProgress.ref;
+      var propsWithoutRef;
+
+      {
+        propsWithoutRef = nextProps;
+      } // The rest is a fork of updateFunctionComponent
 
       var nextChildren;
       var hasId;
@@ -19685,7 +19696,7 @@ if (__DEV__) {
           current,
           workInProgress,
           render,
-          nextProps,
+          propsWithoutRef,
           ref,
           renderLanes
         );
@@ -36496,7 +36507,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-220a174b";
+    var ReactVersion = "18.3.0-www-classic-a3d0776b";
 
     function createPortal$1(
       children,
@@ -41581,7 +41592,9 @@ if (__DEV__) {
         case "defaultValue": // Reserved
 
         case "defaultChecked":
-        case "innerHTML": {
+        case "innerHTML":
+        case "ref": {
+          // TODO: `ref` is pretty common, should we move it up?
           // Noop
           break;
         }
@@ -41983,7 +41996,8 @@ if (__DEV__) {
 
         case "suppressContentEditableWarning":
         case "suppressHydrationWarning":
-        case "innerHTML": {
+        case "innerHTML":
+        case "ref": {
           // Noop
           break;
         }
@@ -43383,6 +43397,7 @@ if (__DEV__) {
           case "defaultValue":
           case "defaultChecked":
           case "innerHTML":
+          case "ref":
             // Noop
             continue;
 
@@ -43514,6 +43529,7 @@ if (__DEV__) {
           case "defaultValue":
           case "defaultChecked":
           case "innerHTML":
+          case "ref":
             // Noop
             continue;
 

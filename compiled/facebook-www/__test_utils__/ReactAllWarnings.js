@@ -92,6 +92,7 @@ export default [
   "A title element received a value that was not a string or number for children. In the browser title Elements can only have Text Nodes as children. If the children being rendered output more than a single text node in aggregate the browser will display markup and comments as text in the title and hydration will likely fail and fall back to client rendering",
   "A title element received an array with more than 1 element as children. In browsers title Elements can only have Text Nodes as children. If the children being rendered output more than a single text node in aggregate the browser will display markup and comments as text in the title and hydration will likely fail and fall back to client rendering",
   "A view is reporting that a touch occurred on tag zero.",
+  "Accessing element.ref is no longer supported. ref is now a regular prop. It will be removed from the JSX Element type in a future release.",
   "An empty string (\"\") was passed to the %s attribute. This may cause the browser to download the whole page again over the network. To fix this, either do not render the element at all or pass null to %s instead of an empty string.",
   "An empty string (\"\") was passed to the %s attribute. To fix this, either do not render the element at all or pass null to %s instead of an empty string.",
   "An error occurred during hydration. The server HTML was replaced with client content in <%s>.",

@@ -14734,6 +14734,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
     case "defaultValue":
     case "defaultChecked":
     case "innerHTML":
+    case "ref":
       break;
     case "autoFocus":
       break;
@@ -14950,6 +14951,7 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
     case "innerHTML":
+    case "ref":
       break;
     case "innerText":
     case "textContent":
@@ -17493,7 +17495,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1824 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-75b632f7",
+  version: "18.3.0-www-classic-3d32b702",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2191 = {
@@ -17523,7 +17525,7 @@ var internals$jscomp$inline_2191 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-75b632f7"
+  reconcilerVersion: "18.3.0-www-classic-3d32b702"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2192 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -18017,4 +18019,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-75b632f7";
+exports.version = "18.3.0-www-classic-3d32b702";

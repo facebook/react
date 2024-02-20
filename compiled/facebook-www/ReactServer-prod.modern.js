@@ -56,12 +56,12 @@ function getIteratorFn(maybeIterable) {
 }
 var hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-function ReactElement(type, key, ref, self, source, owner, props) {
+function ReactElement(type, key, _ref, self, source, owner, props) {
   return {
     $$typeof: REACT_ELEMENT_TYPE,
     type: type,
     key: key,
-    ref: ref,
+    ref: _ref,
     props: props,
     _owner: owner
   };
@@ -517,4 +517,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-b695f079";
+exports.version = "18.3.0-www-modern-207c1f1e";

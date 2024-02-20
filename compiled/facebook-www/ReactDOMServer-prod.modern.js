@@ -52,12 +52,7 @@ function formatProdErrorMessage(code) {
     " for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
   );
 }
-var dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableUseDeferredValueInitialArg =
-    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-  REACT_ELEMENT_TYPE = Symbol.for("react.element"),
+var REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
   REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"),
@@ -133,6 +128,11 @@ function murmurhash3_32_gc(key, seed) {
   return (h1 ^ (h1 >>> 16)) >>> 0;
 }
 var assign = Object.assign,
+  dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableUseDeferredValueInitialArg =
+    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX = RegExp(
     "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
@@ -513,6 +513,7 @@ function pushAttribute(target, name, value) {
     case "innerHTML":
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
+    case "ref":
       break;
     case "autoFocus":
     case "multiple":
@@ -1695,6 +1696,7 @@ function pushStartInstance(
                   break;
                 case "suppressContentEditableWarning":
                 case "suppressHydrationWarning":
+                case "ref":
                   break;
                 case "className":
                   attributeName = "class";
@@ -2043,6 +2045,7 @@ function writeStyleResourceAttributeInJS(destination, name, value) {
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
     case "style":
+    case "ref":
       return;
     case "className":
       attributeName = "class";
@@ -2139,6 +2142,7 @@ function writeStyleResourceAttributeInAttr(destination, name, value) {
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
     case "style":
+    case "ref":
       return;
     case "className":
       attributeName = "class";
@@ -2588,16 +2592,16 @@ function createRenderState(resumableState, generateStaticMarkup) {
       "\x3c/script>"
     );
   bootstrapScriptContent = idPrefix + "P:";
-  var JSCompiler_object_inline_segmentPrefix_1581 = idPrefix + "S:";
+  var JSCompiler_object_inline_segmentPrefix_1582 = idPrefix + "S:";
   idPrefix += "B:";
-  var JSCompiler_object_inline_preconnects_1595 = new Set(),
-    JSCompiler_object_inline_fontPreloads_1596 = new Set(),
-    JSCompiler_object_inline_highImagePreloads_1597 = new Set(),
-    JSCompiler_object_inline_styles_1598 = new Map(),
-    JSCompiler_object_inline_bootstrapScripts_1599 = new Set(),
-    JSCompiler_object_inline_scripts_1600 = new Set(),
-    JSCompiler_object_inline_bulkPreloads_1601 = new Set(),
-    JSCompiler_object_inline_preloads_1602 = {
+  var JSCompiler_object_inline_preconnects_1596 = new Set(),
+    JSCompiler_object_inline_fontPreloads_1597 = new Set(),
+    JSCompiler_object_inline_highImagePreloads_1598 = new Set(),
+    JSCompiler_object_inline_styles_1599 = new Map(),
+    JSCompiler_object_inline_bootstrapScripts_1600 = new Set(),
+    JSCompiler_object_inline_scripts_1601 = new Set(),
+    JSCompiler_object_inline_bulkPreloads_1602 = new Set(),
+    JSCompiler_object_inline_preloads_1603 = {
       images: new Map(),
       stylesheets: new Map(),
       scripts: new Map(),
@@ -2634,7 +2638,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
       scriptConfig.moduleScriptResources[href] = null;
       scriptConfig = [];
       pushLinkImpl(scriptConfig, props);
-      JSCompiler_object_inline_bootstrapScripts_1599.add(scriptConfig);
+      JSCompiler_object_inline_bootstrapScripts_1600.add(scriptConfig);
       bootstrapChunks.push('<script src="', escapeTextForBrowser(src));
       "string" === typeof integrity &&
         bootstrapChunks.push('" integrity="', escapeTextForBrowser(integrity));
@@ -2675,7 +2679,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         (props.moduleScriptResources[scriptConfig] = null),
         (props = []),
         pushLinkImpl(props, integrity),
-        JSCompiler_object_inline_bootstrapScripts_1599.add(props),
+        JSCompiler_object_inline_bootstrapScripts_1600.add(props),
         bootstrapChunks.push(
           '<script type="module" src="',
           escapeTextForBrowser(i)
@@ -2690,7 +2694,7 @@ function createRenderState(resumableState, generateStaticMarkup) {
         bootstrapChunks.push('" async="">\x3c/script>');
   return {
     placeholderPrefix: bootstrapScriptContent,
-    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1581,
+    segmentPrefix: JSCompiler_object_inline_segmentPrefix_1582,
     boundaryPrefix: idPrefix,
     startInlineScript: "<script>",
     htmlChunks: null,
@@ -2710,14 +2714,14 @@ function createRenderState(resumableState, generateStaticMarkup) {
     charsetChunks: [],
     viewportChunks: [],
     hoistableChunks: [],
-    preconnects: JSCompiler_object_inline_preconnects_1595,
-    fontPreloads: JSCompiler_object_inline_fontPreloads_1596,
-    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1597,
-    styles: JSCompiler_object_inline_styles_1598,
-    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1599,
-    scripts: JSCompiler_object_inline_scripts_1600,
-    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1601,
-    preloads: JSCompiler_object_inline_preloads_1602,
+    preconnects: JSCompiler_object_inline_preconnects_1596,
+    fontPreloads: JSCompiler_object_inline_fontPreloads_1597,
+    highImagePreloads: JSCompiler_object_inline_highImagePreloads_1598,
+    styles: JSCompiler_object_inline_styles_1599,
+    bootstrapScripts: JSCompiler_object_inline_bootstrapScripts_1600,
+    scripts: JSCompiler_object_inline_scripts_1601,
+    bulkPreloads: JSCompiler_object_inline_bulkPreloads_1602,
+    preloads: JSCompiler_object_inline_preloads_1603,
     stylesToHoist: !1,
     generateStaticMarkup: generateStaticMarkup
   };
@@ -4221,9 +4225,9 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
         case REACT_ELEMENT_TYPE:
           var type = node$jscomp$0.type,
             key = node$jscomp$0.key,
-            props = node$jscomp$0.props,
-            ref = node$jscomp$0.ref,
-            name = getComponentNameFromType(type),
+            props = node$jscomp$0.props;
+          var ref = node$jscomp$0.ref;
+          var name = getComponentNameFromType(type),
             keyOrIndex =
               null == key ? (-1 === childIndex ? 0 : childIndex) : key;
           key = [task.keyPath, name, keyOrIndex];
@@ -5634,4 +5638,4 @@ exports.renderToString = function (children, options) {
     'The server used "renderToString" which does not support Suspense. If you intended for this Suspense boundary to render the fallback content on the server consider throwing an Error somewhere within the Suspense boundary. If you intended to have the server wait for the suspended component please switch to "renderToReadableStream" which supports Suspense on the server'
   );
 };
-exports.version = "18.3.0-www-modern-96bf6a25";
+exports.version = "18.3.0-www-modern-732c211d";

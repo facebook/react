@@ -15518,6 +15518,7 @@ function setProp(domElement, tag, key, value, props, prevValue) {
     case "defaultValue":
     case "defaultChecked":
     case "innerHTML":
+    case "ref":
       break;
     case "autoFocus":
       break;
@@ -15734,6 +15735,7 @@ function setPropOnCustomElement(domElement, tag, key, value, props, prevValue) {
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
     case "innerHTML":
+    case "ref":
       break;
     case "innerText":
     case "textContent":
@@ -17443,7 +17445,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1863 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-eef60811",
+  version: "18.3.0-www-modern-c07cb883",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17488,7 +17490,7 @@ var devToolsConfig$jscomp$inline_1863 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-eef60811"
+  reconcilerVersion: "18.3.0-www-modern-c07cb883"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17746,7 +17748,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-eef60811";
+exports.version = "18.3.0-www-modern-c07cb883";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&

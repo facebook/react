@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-modern-eef60811";
+    var ReactVersion = "18.3.0-www-modern-c07cb883";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -6118,7 +6118,12 @@ if (__DEV__) {
     }
 
     function coerceRef(returnFiber, current, element) {
-      var mixedRef = element.ref;
+      var mixedRef;
+
+      {
+        // Old behavior.
+        mixedRef = element.ref;
+      }
 
       if (
         mixedRef !== null &&
@@ -14383,7 +14388,12 @@ if (__DEV__) {
       // hasn't yet mounted. This happens after the first render suspends.
       // We'll need to figure out if this is fine or can cause issues.
       var render = Component.render;
-      var ref = workInProgress.ref; // The rest is a fork of updateFunctionComponent
+      var ref = workInProgress.ref;
+      var propsWithoutRef;
+
+      {
+        propsWithoutRef = nextProps;
+      } // The rest is a fork of updateFunctionComponent
 
       var nextChildren;
       prepareToReadContext(workInProgress, renderLanes);
@@ -14399,7 +14409,7 @@ if (__DEV__) {
           current,
           workInProgress,
           render,
-          nextProps,
+          propsWithoutRef,
           ref,
           renderLanes
         );

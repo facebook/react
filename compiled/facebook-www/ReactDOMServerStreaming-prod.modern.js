@@ -37,11 +37,6 @@
 "use strict";
 var React = require("react"),
   ReactDOM = require("react-dom"),
-  dynamicFeatureFlags = require("ReactFeatureFlags"),
-  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
-  enableUseDeferredValueInitialArg =
-    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -125,6 +120,11 @@ function writeChunkAndReturn(destination, chunk) {
   return !0;
 }
 var assign = Object.assign,
+  dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableUseDeferredValueInitialArg =
+    dynamicFeatureFlags.enableUseDeferredValueInitialArg,
+  enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
   hasOwnProperty = Object.prototype.hasOwnProperty,
   VALID_ATTRIBUTE_NAME_REGEX = RegExp(
     "^[:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD][:A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040]*$"
@@ -488,6 +488,7 @@ function pushAttribute(target, name, value) {
     case "innerHTML":
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
+    case "ref":
       break;
     case "autoFocus":
     case "multiple":
@@ -1693,6 +1694,7 @@ function pushStartInstance(
                   break;
                 case "suppressContentEditableWarning":
                 case "suppressHydrationWarning":
+                case "ref":
                   break;
                 case "className":
                   attributeName = "class";
@@ -2054,6 +2056,7 @@ function writeStyleResourceAttributeInJS(destination, name, value) {
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
     case "style":
+    case "ref":
       return;
     case "className":
       attributeName = "class";
@@ -2156,6 +2159,7 @@ function writeStyleResourceAttributeInAttr(destination, name, value) {
     case "suppressContentEditableWarning":
     case "suppressHydrationWarning":
     case "style":
+    case "ref":
       return;
     case "className":
       attributeName = "class";
@@ -4042,9 +4046,9 @@ function renderNodeDestructive(request, task, node$jscomp$0, childIndex) {
         case REACT_ELEMENT_TYPE:
           var type = node$jscomp$0.type,
             key = node$jscomp$0.key,
-            props = node$jscomp$0.props,
-            ref = node$jscomp$0.ref,
-            name = getComponentNameFromType(type),
+            props = node$jscomp$0.props;
+          var ref = node$jscomp$0.ref;
+          var name = getComponentNameFromType(type),
             keyOrIndex =
               null == key ? (-1 === childIndex ? 0 : childIndex) : key;
           key = [task.keyPath, name, keyOrIndex];
