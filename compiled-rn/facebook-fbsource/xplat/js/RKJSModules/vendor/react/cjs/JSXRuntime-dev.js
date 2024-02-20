@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<040e6a4059e2c6d1c22e6d708cbf3b39>>
+ * @generated SignedSource<<8af9696c59d9d4cfa4cc835b5a54e94e>>
  */
 
 "use strict";
@@ -1061,13 +1061,11 @@ if (__DEV__) {
      */
 
     function isValidElement(object) {
-      {
-        return (
-          typeof object === "object" &&
-          object !== null &&
-          object.$$typeof === REACT_ELEMENT_TYPE
-        );
-      }
+      return (
+        typeof object === "object" &&
+        object !== null &&
+        object.$$typeof === REACT_ELEMENT_TYPE
+      );
     }
     var ownerHasKeyUseWarning = {};
     /**
