@@ -163,6 +163,7 @@ export type Fiber = {
   firstEffect: Fiber | null,
   lastEffect: Fiber | null,
 
+  // Priority of this fiber and it's children
   lanes: Lanes,
   childLanes: Lanes,
 
