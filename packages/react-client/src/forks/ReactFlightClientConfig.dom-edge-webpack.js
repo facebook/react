@@ -7,7 +7,7 @@
  * @flow
  */
 
-export * from 'react-client/src/ReactFlightClientConfigBrowser';
+export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
 export * from 'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpack';
 export * from 'react-server-dom-webpack/src/ReactFlightClientConfigBundlerWebpackServer';
 export * from 'react-server-dom-webpack/src/ReactFlightClientConfigTargetWebpackServer';

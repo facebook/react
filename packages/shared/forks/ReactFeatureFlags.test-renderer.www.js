@@ -89,5 +89,7 @@ export const disableClientCache = true;
 export const enableServerComponentKeys = true;
 export const enableInfiniteRenderLoopDetection = false;
 
+export const enableRefAsProp = false;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

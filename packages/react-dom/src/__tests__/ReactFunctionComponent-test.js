@@ -199,6 +199,7 @@ describe('ReactFunctionComponent', () => {
     );
   });
 
+  // @gate !enableRefAsProp || !__DEV__
   it('should warn when given a string ref', async () => {
     function Indirection(props) {
       return <div>{props.children}</div>;
@@ -240,7 +241,8 @@ describe('ReactFunctionComponent', () => {
     });
   });
 
-  it('should warn when given a function ref and ignore them', async () => {
+  // @gate !enableRefAsProp || !__DEV__
+  it('should warn when given a function ref', async () => {
     function Indirection(props) {
       return <div>{props.children}</div>;
     }
@@ -283,6 +285,7 @@ describe('ReactFunctionComponent', () => {
     });
   });
 
+  // @gate !enableRefAsProp || !__DEV__
   it('deduplicates ref warnings based on element or owner', async () => {
     // When owner uses JSX, we can use exact line location to dedupe warnings
     class AnonymousParentUsingJSX extends React.Component {
@@ -373,6 +376,7 @@ describe('ReactFunctionComponent', () => {
   // This guards against a regression caused by clearing the current debug fiber.
   // https://github.com/facebook/react/issues/10831
   // @gate !disableLegacyContext || !__DEV__
+  // @gate !enableRefAsProp || !__DEV__
   it('should warn when giving a function ref with context', async () => {
     function Child() {
       return null;

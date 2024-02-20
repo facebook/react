@@ -640,7 +640,9 @@ function setProp(
     case 'suppressHydrationWarning':
     case 'defaultValue': // Reserved
     case 'defaultChecked':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
+      // TODO: `ref` is pretty common, should we move it up?
       // Noop
       break;
     }
@@ -988,7 +990,8 @@ function setPropOnCustomElement(
     }
     case 'suppressContentEditableWarning':
     case 'suppressHydrationWarning':
-    case 'innerHTML': {
+    case 'innerHTML':
+    case 'ref': {
       // Noop
       break;
     }
@@ -2194,6 +2197,7 @@ function diffHydratedCustomComponent(
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':
@@ -2307,6 +2311,7 @@ function diffHydratedGenericElement(
       case 'defaultValue':
       case 'defaultChecked':
       case 'innerHTML':
+      case 'ref':
         // Noop
         continue;
       case 'dangerouslySetInnerHTML':

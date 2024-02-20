@@ -89,5 +89,14 @@ export const disableClientCache = true;
 export const enableServerComponentKeys = true;
 export const enableInfiniteRenderLoopDetection = false;
 
+// TODO: This must be in sync with the main ReactFeatureFlags file because
+// the Test Renderer's value must be the same as the one used by the
+// react package.
+//
+// We really need to get rid of this whole module. Any test renderer specific
+// flags should be handled by the Fiber config.
+const __NEXT_MAJOR__ = __EXPERIMENTAL__;
+export const enableRefAsProp = __NEXT_MAJOR__;
+
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

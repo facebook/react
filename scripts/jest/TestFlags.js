@@ -78,11 +78,20 @@ function getTestFlags() {
       source: !process.env.IS_BUILD,
       www,
 
-      // This isn't a flag, just a useful alias for tests.
+      // These aren't flags, just a useful aliases for tests.
       enableActivity: releaseChannel === 'experimental' || www,
-      enableUseSyncExternalStoreShim: !__VARIANT__,
       enableSuspenseList: releaseChannel === 'experimental' || www,
       enableLegacyHidden: www,
+
+      // This is used by useSyncExternalStoresShared-test.js to decide whether
+      // to test the shim or the native implementation of useSES.
+      // TODO: It's disabled when enableRefAsProp is on because the JSX
+      // runtime used by our tests is not compatible with older versions of
+      // React. If we want to keep testing this shim after enableRefIsProp is
+      // on everywhere, we'll need to find some other workaround. Maybe by
+      // only using createElement instead of JSX in that test module.
+      enableUseSyncExternalStoreShim:
+        !__VARIANT__ && !featureFlags.enableRefAsProp,
 
       // If there's a naming conflict between scheduler and React feature flags, the
       // React ones take precedence.
