@@ -16,6 +16,7 @@ import {
   enablePostpone,
   enableTaint,
   enableServerComponentKeys,
+  enableRefAsProp,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -698,6 +699,8 @@ function renderElement(
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
     // cases.
+    // TODO: `ref` is now just a prop when `enableRefAsProp` is on. Should we
+    // do what the above comment says?
     throw new Error(
       'Refs cannot be used in Server Components, nor passed to Client Components.',
     );
@@ -1267,6 +1270,18 @@ function renderModelDestructive(
           }
         }
 
+        const props = element.props;
+        let ref;
+        if (enableRefAsProp) {
+          // TODO: This is a temporary, intermediate step. Once the feature
+          // flag is removed, we should get the ref off the props object right
+          // before using it.
+          const refProp = props.ref;
+          ref = refProp !== undefined ? refProp : null;
+        } else {
+          ref = element.ref;
+        }
+
         // Attempt to render the Server Component.
         return renderElement(
           request,
@@ -1274,8 +1289,8 @@ function renderModelDestructive(
           element.type,
           // $FlowFixMe[incompatible-call] the key of an element is null | string
           element.key,
-          element.ref,
-          element.props,
+          ref,
+          props,
         );
       }
       case REACT_LAZY_TYPE: {

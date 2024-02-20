@@ -32,7 +32,6 @@ import type {ContextSnapshot} from './ReactFizzNewContext';
 import type {ComponentStackNode} from './ReactFizzComponentStack';
 import type {TreeContext} from './ReactFizzTreeContext';
 import type {ThenableState} from './ReactFizzThenable';
-import {enableRenderableContext} from 'shared/ReactFeatureFlags';
 import {describeObjectForErrorMessage} from 'shared/ReactSerializationErrors';
 
 import {
@@ -145,6 +144,8 @@ import {
   enableFloat,
   enableCache,
   enablePostpone,
+  enableRenderableContext,
+  enableRefAsProp,
 } from 'shared/ReactFeatureFlags';
 
 import assign from 'shared/assign';
@@ -1663,12 +1664,31 @@ function renderForwardRef(
 ): void {
   const previousComponentStack = task.componentStack;
   task.componentStack = createFunctionComponentStack(task, type.render);
+
+  let propsWithoutRef;
+  if (enableRefAsProp && 'ref' in props) {
+    // `ref` is just a prop now, but `forwardRef` expects it to not appear in
+    // the props object. This used to happen in the JSX runtime, but now we do
+    // it here.
+    propsWithoutRef = ({}: {[string]: any});
+    for (const key in props) {
+      // Since `ref` should only appear in props via the JSX transform, we can
+      // assume that this is a plain object. So we don't need a
+      // hasOwnProperty check.
+      if (key !== 'ref') {
+        propsWithoutRef[key] = props[key];
+      }
+    }
+  } else {
+    propsWithoutRef = props;
+  }
+
   const children = renderWithHooks(
     request,
     task,
     keyPath,
     type.render,
-    props,
+    propsWithoutRef,
     ref,
   );
   const hasId = checkDidRenderIdHook();
@@ -2189,7 +2209,18 @@ function renderNodeDestructive(
         const type = element.type;
         const key = element.key;
         const props = element.props;
-        const ref = element.ref;
+
+        let ref;
+        if (enableRefAsProp) {
+          // TODO: This is a temporary, intermediate step. Once the feature
+          // flag is removed, we should get the ref off the props object right
+          // before using it.
+          const refProp = props.ref;
+          ref = refProp !== undefined ? refProp : null;
+        } else {
+          ref = element.ref;
+        }
+
         const name = getComponentNameFromType(type);
         const keyOrIndex =
           key == null ? (childIndex === -1 ? 0 : childIndex) : key;

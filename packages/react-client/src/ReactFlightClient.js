@@ -35,7 +35,11 @@ import type {
 
 import type {Postpone} from 'react/src/ReactPostpone';
 
-import {enableBinaryFlight, enablePostpone} from 'shared/ReactFeatureFlags';
+import {
+  enableBinaryFlight,
+  enablePostpone,
+  enableRefAsProp,
+} from 'shared/ReactFeatureFlags';
 
 import {
   resolveClientReference,
@@ -463,24 +467,46 @@ export function reportGlobalError(response: Response, error: Error): void {
   });
 }
 
+function nullRefGetter() {
+  if (__DEV__) {
+    return null;
+  }
+}
+
 function createElement(
   type: mixed,
   key: mixed,
   props: mixed,
 ): React$Element<any> {
-  const element: any = {
-    // This tag allows us to uniquely identify this as a React Element
-    $$typeof: REACT_ELEMENT_TYPE,
+  let element: any;
+  if (__DEV__ && enableRefAsProp) {
+    // `ref` is non-enumerable in dev
+    element = ({
+      $$typeof: REACT_ELEMENT_TYPE,
+      type,
+      key,
+      props,
+      _owner: null,
+    }: any);
+    Object.defineProperty(element, 'ref', {
+      enumerable: false,
+      get: nullRefGetter,
+    });
+  } else {
+    element = ({
+      // This tag allows us to uniquely identify this as a React Element
+      $$typeof: REACT_ELEMENT_TYPE,
 
-    // Built-in properties that belong on the element
-    type: type,
-    key: key,
-    ref: null,
-    props: props,
+      type,
+      key,
+      ref: null,
+      props,
 
-    // Record the component responsible for creating this element.
-    _owner: null,
-  };
+      // Record the component responsible for creating this element.
+      _owner: null,
+    }: any);
+  }
+
   if (__DEV__) {
     // We don't really need to add any of these but keeping them for good measure.
     // Unfortunately, _store is enumerable in jest matchers so for equality to

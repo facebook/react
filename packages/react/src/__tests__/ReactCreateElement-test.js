@@ -37,7 +37,11 @@ describe('ReactCreateElement', () => {
     const element = React.createElement(ComponentClass);
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -86,6 +90,7 @@ describe('ReactCreateElement', () => {
     );
   });
 
+  // @gate !enableRefAsProp
   it('should warn when `ref` is being accessed', async () => {
     class Child extends React.Component {
       render() {
@@ -119,7 +124,11 @@ describe('ReactCreateElement', () => {
     const element = React.createElement('div');
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -150,31 +159,49 @@ describe('ReactCreateElement', () => {
     expect(element.props.foo).toBe(1);
   });
 
-  it('extracts key and ref from the config', () => {
+  it('extracts key from the rest of the props', () => {
     const element = React.createElement(ComponentClass, {
       key: '12',
-      ref: '34',
       foo: '56',
     });
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
-    expect(element.ref).toBe('34');
-    if (__DEV__) {
-      expect(Object.isFrozen(element)).toBe(true);
-      expect(Object.isFrozen(element.props)).toBe(true);
-    }
-    expect(element.props).toEqual({foo: '56'});
+    const expectation = {foo: '56'};
+    Object.freeze(expectation);
+    expect(element.props).toEqual(expectation);
   });
 
-  it('extracts null key and ref', () => {
+  it('does not extract ref from the rest of the props', () => {
+    const ref = React.createRef();
+    const element = React.createElement(ComponentClass, {
+      key: '12',
+      ref: ref,
+      foo: '56',
+    });
+    expect(element.type).toBe(ComponentClass);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(() => expect(element.ref).toBe(ref)).toErrorDev(
+        'Accessing element.ref is no longer supported',
+        {withoutStack: true},
+      );
+      const expectation = {foo: '56', ref};
+      Object.freeze(expectation);
+      expect(element.props).toEqual(expectation);
+    } else {
+      const expectation = {foo: '56'};
+      Object.freeze(expectation);
+      expect(element.props).toEqual(expectation);
+      expect(element.ref).toBe(ref);
+    }
+  });
+
+  it('extracts null key', () => {
     const element = React.createElement(ComponentClass, {
       key: null,
-      ref: null,
       foo: '12',
     });
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('null');
-    expect(element.ref).toBe(null);
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -191,7 +218,11 @@ describe('ReactCreateElement', () => {
     const element = React.createElement(ComponentClass, props);
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
@@ -203,7 +234,11 @@ describe('ReactCreateElement', () => {
     const elementA = React.createElement('div');
     const elementB = React.createElement('div', elementA.props);
     expect(elementB.key).toBe(null);
-    expect(elementB.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(elementB.ref).toBe(null);
+    } else {
+      expect(elementB.ref).toBe(null);
+    }
   });
 
   it('coerces the key to a string', () => {
@@ -213,7 +248,11 @@ describe('ReactCreateElement', () => {
     });
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
-    expect(element.ref).toBe(null);
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(element.ref).toBe(null);
+    } else {
+      expect(element.ref).toBe(null);
+    }
     if (__DEV__) {
       expect(Object.isFrozen(element)).toBe(true);
       expect(Object.isFrozen(element.props)).toBe(true);
