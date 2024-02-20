@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOMClient;
-let ReactTestUtils;
 let act;
 
 // TODO: Historically this module was used to confirm that the JSX transform
@@ -30,7 +29,6 @@ describe('ReactJSXTransformIntegration', () => {
 
     React = require('react');
     ReactDOMClient = require('react-dom/client');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
 
     Component = class extends React.Component {
@@ -213,7 +211,7 @@ describe('ReactJSXTransformIntegration', () => {
     expect(instance.props.fruit).toBe('persimmon');
   });
 
-  it('should normalize props with default values', () => {
+  it('should normalize props with default values', async () => {
     class NormalizingComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
@@ -221,14 +219,26 @@ describe('ReactJSXTransformIntegration', () => {
     }
     NormalizingComponent.defaultProps = {prop: 'testKey'};
 
-    const instance = ReactTestUtils.renderIntoDocument(
-      <NormalizingComponent />,
-    );
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    let instance;
+    await act(() => {
+      root.render(
+        <NormalizingComponent ref={current => (instance = current)} />,
+      );
+    });
+
     expect(instance.props.prop).toBe('testKey');
 
-    const inst2 = ReactTestUtils.renderIntoDocument(
-      <NormalizingComponent prop={null} />,
-    );
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    let inst2;
+    await act(() => {
+      root.render(
+        <NormalizingComponent prop={null} ref={current => (inst2 = current)} />,
+      );
+    });
+
     expect(inst2.props.prop).toBe(null);
   });
 });
