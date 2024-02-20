@@ -7,7 +7,7 @@
  * @flow
  */
 
-export * from 'react-client/src/ReactFlightClientConfigBrowser';
+export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
 export * from 'react-server-dom-esm/src/ReactFlightClientConfigBundlerESM';
 export * from 'react-server-dom-esm/src/ReactFlightClientConfigTargetESMBrowser';
 export * from 'react-dom-bindings/src/shared/ReactFlightClientConfigDOM';
