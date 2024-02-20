@@ -75,8 +75,6 @@ import {
 } from './ReactWorkTags';
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
-  Ref,
-  RefStatic,
   Placement,
   Update,
   Visibility,
@@ -184,10 +182,6 @@ import {suspendCommit} from './ReactFiberThenable';
  */
 function markUpdate(workInProgress: Fiber) {
   workInProgress.flags |= Update;
-}
-
-function markRef(workInProgress: Fiber) {
-  workInProgress.flags |= Ref | RefStatic;
 }
 
 /**
@@ -1083,9 +1077,6 @@ function completeWork(
           // @TODO refactor this block to create the instance here in complete
           // phase if we are not hydrating.
           markUpdate(workInProgress);
-          if (workInProgress.ref !== null) {
-            markRef(workInProgress);
-          }
           if (nextResource !== null) {
             // This is a Hoistable Resource
 
@@ -1119,9 +1110,6 @@ function completeWork(
             // We are transitioning to, from, or between Hoistable Resources
             // and require an update
             markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
           }
           if (nextResource !== null) {
             // This is a Hoistable Resource
@@ -1194,10 +1182,6 @@ function completeWork(
               renderLanes,
             );
           }
-
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
-          }
         } else {
           if (!newProps) {
             if (workInProgress.stateNode === null) {
@@ -1232,11 +1216,6 @@ function completeWork(
             workInProgress.stateNode = instance;
             markUpdate(workInProgress);
           }
-
-          if (workInProgress.ref !== null) {
-            // If there is a ref on a host node we need to schedule a callback
-            markRef(workInProgress);
-          }
         }
         bubbleProperties(workInProgress);
         return null;
@@ -1254,10 +1233,6 @@ function completeWork(
           newProps,
           renderLanes,
         );
-
-        if (current.ref !== workInProgress.ref) {
-          markRef(workInProgress);
-        }
       } else {
         if (!newProps) {
           if (workInProgress.stateNode === null) {
@@ -1309,11 +1284,6 @@ function completeWork(
           ) {
             markUpdate(workInProgress);
           }
-        }
-
-        if (workInProgress.ref !== null) {
-          // If there is a ref on a host node we need to schedule a callback
-          markRef(workInProgress);
         }
       }
       bubbleProperties(workInProgress);
@@ -1739,15 +1709,15 @@ function completeWork(
           workInProgress.stateNode = scopeInstance;
           prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
-            markRef(workInProgress);
+            // Scope components always do work in the commit phase if there's a
+            // ref attached.
             markUpdate(workInProgress);
           }
         } else {
           if (workInProgress.ref !== null) {
+            // Scope components always do work in the commit phase if there's a
+            // ref attached.
             markUpdate(workInProgress);
-          }
-          if (current.ref !== workInProgress.ref) {
-            markRef(workInProgress);
           }
         }
         bubbleProperties(workInProgress);

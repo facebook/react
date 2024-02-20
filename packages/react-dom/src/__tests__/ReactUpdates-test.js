@@ -12,7 +12,6 @@
 let React;
 let ReactDOM;
 let ReactDOMClient;
-let ReactTestUtils;
 let act;
 let Scheduler;
 let waitForAll;
@@ -25,7 +24,6 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMClient = require('react-dom/client');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
     Scheduler = require('scheduler');
 
@@ -832,7 +830,7 @@ describe('ReactUpdates', () => {
     expect(updates).toEqual([0, 1, 2, 0, 1, 2]);
   });
 
-  it('should queue nested updates', () => {
+  it('should queue nested updates', async () => {
     // See https://github.com/facebook/react/issues/1147
 
     class X extends React.Component {
@@ -877,11 +875,25 @@ describe('ReactUpdates', () => {
       }
     }
 
-    const x = ReactTestUtils.renderIntoDocument(<X />);
-    const y = ReactTestUtils.renderIntoDocument(<Y />);
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    let x;
+    await act(() => {
+      root.render(<X ref={current => (x = current)} />);
+    });
+
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    let y;
+    await act(() => {
+      root.render(<Y ref={current => (y = current)} />);
+    });
+
     expect(ReactDOM.findDOMNode(x).textContent).toBe('0');
 
-    y.forceUpdate();
+    await act(() => {
+      y.forceUpdate();
+    });
     expect(ReactDOM.findDOMNode(x).textContent).toBe('1');
   });
 
@@ -1004,7 +1016,7 @@ describe('ReactUpdates', () => {
     assertLog([]);
   });
 
-  it('throws in setState if the update callback is not a function', () => {
+  it('throws in setState if the update callback is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -1018,36 +1030,62 @@ describe('ReactUpdates', () => {
       }
     }
 
-    let component = ReactTestUtils.renderIntoDocument(<A />);
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    let component;
+    await act(() => {
+      root.render(<A ref={current => (component = current)} />);
+    });
 
-    expect(() => {
-      expect(() => component.setState({}, 'no')).toErrorDev(
+    await expect(
+      expect(async () => {
+        await act(() => {
+          component.setState({}, 'no');
+        });
+      }).toErrorDev(
         'setState(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
-      );
-    }).toThrowError(
+      ),
+    ).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => {
-      expect(() => component.setState({}, {foo: 'bar'})).toErrorDev(
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<A ref={current => (component = current)} />);
+    });
+
+    await expect(
+      expect(async () => {
+        await act(() => {
+          component.setState({}, {foo: 'bar'});
+        });
+      }).toErrorDev(
         'setState(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
-      );
-    }).toThrowError(
+      ),
+    ).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    // Make sure the warning is deduplicated and doesn't fire again
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => component.setState({}, new Foo())).toThrowError(
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<A ref={current => (component = current)} />);
+    });
+
+    await expect(
+      act(() => {
+        component.setState({}, new Foo());
+      }),
+    ).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
   });
 
-  it('throws in forceUpdate if the update callback is not a function', () => {
+  it('throws in forceUpdate if the update callback is not a function', async () => {
     function Foo() {
       this.a = 1;
       this.b = 2;
@@ -1061,30 +1099,57 @@ describe('ReactUpdates', () => {
       }
     }
 
-    let component = ReactTestUtils.renderIntoDocument(<A />);
+    let container = document.createElement('div');
+    let root = ReactDOMClient.createRoot(container);
+    let component;
+    await act(() => {
+      root.render(<A ref={current => (component = current)} />);
+    });
 
-    expect(() => {
-      expect(() => component.forceUpdate('no')).toErrorDev(
+    await expect(
+      expect(async () => {
+        await act(() => {
+          component.forceUpdate('no');
+        });
+      }).toErrorDev(
         'forceUpdate(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
-      );
-    }).toThrowError(
+      ),
+    ).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => {
-      expect(() => component.forceUpdate({foo: 'bar'})).toErrorDev(
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<A ref={current => (component = current)} />);
+    });
+
+    await expect(
+      expect(async () => {
+        await act(() => {
+          component.forceUpdate({foo: 'bar'});
+        });
+      }).toErrorDev(
         'forceUpdate(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
-      );
-    }).toThrowError(
+      ),
+    ).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
     // Make sure the warning is deduplicated and doesn't fire again
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => component.forceUpdate(new Foo())).toThrowError(
+    container = document.createElement('div');
+    root = ReactDOMClient.createRoot(container);
+    await act(() => {
+      root.render(<A ref={current => (component = current)} />);
+    });
+
+    await expect(
+      act(() => {
+        component.forceUpdate(new Foo());
+      }),
+    ).rejects.toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );

@@ -1707,7 +1707,7 @@ describe('ReactDOMInput', () => {
     assertInputTrackingIsCurrent(container);
   });
 
-  it('should control radio buttons if the tree updates during render', () => {
+  it('should control radio buttons if the tree updates during render in legacy mode', async () => {
     container.remove();
     container = document.createElement('div');
     document.body.appendChild(container);

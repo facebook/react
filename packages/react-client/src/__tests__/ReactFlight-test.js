@@ -689,7 +689,7 @@ describe('ReactFlight', () => {
       );
     }
     function FunctionProp() {
-      return <div>{() => {}}</div>;
+      return <div>{function fn() {}}</div>;
     }
     function SymbolProp() {
       return <div foo={Symbol('foo')} />;
@@ -707,8 +707,11 @@ describe('ReactFlight', () => {
         </Client>
       );
     }
+    function FunctionChildrenClient() {
+      return <Client>{function Component() {}}</Client>;
+    }
     function FunctionPropClient() {
-      return <Client>{() => {}}</Client>;
+      return <Client foo={() => {}} />;
     }
     function SymbolPropClient() {
       return <Client foo={Symbol('foo')} />;
@@ -729,6 +732,10 @@ describe('ReactFlight', () => {
     const refs = ReactNoopFlightServer.render(<RefProp />, options);
     const eventClient = ReactNoopFlightServer.render(
       <EventHandlerPropClient />,
+      options,
+    );
+    const fnChildrenClient = ReactNoopFlightServer.render(
+      <FunctionChildrenClient />,
       options,
     );
     const fnClient = ReactNoopFlightServer.render(
@@ -754,7 +761,9 @@ describe('ReactFlight', () => {
             </ErrorBoundary>
             <ErrorBoundary
               expectedMessage={
-                'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
+                __DEV__
+                  ? 'Functions are not valid as a child of Client Components. This may happen if you return fn instead of <fn /> from render. Or maybe you meant to call this function rather than return it.'
+                  : 'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
               }>
               <Render promise={ReactNoopFlightClient.read(fn)} />
             </ErrorBoundary>
@@ -766,6 +775,14 @@ describe('ReactFlight', () => {
             </ErrorBoundary>
             <ErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
               <Render promise={ReactNoopFlightClient.read(eventClient)} />
+            </ErrorBoundary>
+            <ErrorBoundary
+              expectedMessage={
+                __DEV__
+                  ? 'Functions are not valid as a child of Client Components. This may happen if you return Component instead of <Component /> from render. Or maybe you meant to call this function rather than return it.'
+                  : 'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
+              }>
+              <Render promise={ReactNoopFlightClient.read(fnChildrenClient)} />
             </ErrorBoundary>
             <ErrorBoundary
               expectedMessage={
@@ -945,8 +962,8 @@ describe('ReactFlight', () => {
       'Only plain objects can be passed to Client Components from Server Components. ' +
         'Objects with toJSON methods are not supported. ' +
         'Convert it manually to a simple value before passing it to props.\n' +
-        '  <input value={{toJSON: function}}>\n' +
-        '               ^^^^^^^^^^^^^^^^^^^^',
+        '  <input value={{toJSON: ...}}>\n' +
+        '               ^^^^^^^^^^^^^^^',
       {withoutStack: true},
     );
   });
@@ -1035,8 +1052,8 @@ describe('ReactFlight', () => {
       'Only plain objects can be passed to Client Components from Server Components. ' +
         'Objects with toJSON methods are not supported. ' +
         'Convert it manually to a simple value before passing it to props.\n' +
-        '  <>Current date: {{toJSON: function}}</>\n' +
-        '                  ^^^^^^^^^^^^^^^^^^^^',
+        '  <>Current date: {{toJSON: ...}}</>\n' +
+        '                  ^^^^^^^^^^^^^^^',
       {withoutStack: true},
     );
   });

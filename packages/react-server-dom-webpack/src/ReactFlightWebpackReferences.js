@@ -65,6 +65,14 @@ function bind(this: ServerReference<any>): any {
   // $FlowFixMe[unsupported-syntax]
   const newFn = FunctionBind.apply(this, arguments);
   if (this.$$typeof === SERVER_REFERENCE_TAG) {
+    if (__DEV__) {
+      const thisBind = arguments[0];
+      if (thisBind != null) {
+        console.error(
+          'Cannot bind "this" of a Server Action. Pass null or undefined as the first argument to .bind().',
+        );
+      }
+    }
     const args = ArraySlice.call(arguments, 1);
     return Object.defineProperties((newFn: any), {
       $$typeof: {value: SERVER_REFERENCE_TAG},
@@ -83,16 +91,23 @@ export function registerServerReference<T: Function>(
 ): ServerReference<T> {
   return Object.defineProperties((reference: any), {
     $$typeof: {value: SERVER_REFERENCE_TAG},
-    $$id: {value: exportName === null ? id : id + '#' + exportName},
-    $$bound: {value: null},
-    bind: {value: bind},
+    $$id: {
+      value: exportName === null ? id : id + '#' + exportName,
+      configurable: true,
+    },
+    $$bound: {value: null, configurable: true},
+    bind: {value: bind, configurable: true},
   });
 }
 
 const PROMISE_PROTOTYPE = Promise.prototype;
 
 const deepProxyHandlers = {
-  get: function (target: Function, name: string, receiver: Proxy<Function>) {
+  get: function (
+    target: Function,
+    name: string | symbol,
+    receiver: Proxy<Function>,
+  ) {
     switch (name) {
       // These names are read by the Flight runtime if you end up using the exports object.
       case '$$typeof':
@@ -117,6 +132,9 @@ const deepProxyHandlers = {
       case Symbol.toPrimitive:
         // $FlowFixMe[prop-missing]
         return Object.prototype[Symbol.toPrimitive];
+      case Symbol.toStringTag:
+        // $FlowFixMe[prop-missing]
+        return Object.prototype[Symbol.toStringTag];
       case 'Provider':
         throw new Error(
           `Cannot render a Client Context Provider on the Server. ` +
@@ -137,7 +155,7 @@ const deepProxyHandlers = {
   },
 };
 
-function getReference(target: Function, name: string): $FlowFixMe {
+function getReference(target: Function, name: string | symbol): $FlowFixMe {
   switch (name) {
     // These names are read by the Flight runtime if you end up using the exports object.
     case '$$typeof':
@@ -158,6 +176,9 @@ function getReference(target: Function, name: string): $FlowFixMe {
     case Symbol.toPrimitive:
       // $FlowFixMe[prop-missing]
       return Object.prototype[Symbol.toPrimitive];
+    case Symbol.toStringTag:
+      // $FlowFixMe[prop-missing]
+      return Object.prototype[Symbol.toStringTag];
     case '__esModule':
       // Something is conditionally checking which export to use. We'll pretend to be
       // an ESM compat module but then we'll check again on the client.
@@ -211,6 +232,12 @@ function getReference(target: Function, name: string): $FlowFixMe {
         return undefined;
       }
   }
+  if (typeof name === 'symbol') {
+    throw new Error(
+      'Cannot read Symbol exports. Only named exports are supported on a client module ' +
+        'imported on the server.',
+    );
+  }
   let cachedReference = target[name];
   if (!cachedReference) {
     const reference: ClientReference<any> = registerClientReferenceImpl(
@@ -236,14 +263,14 @@ function getReference(target: Function, name: string): $FlowFixMe {
 const proxyHandlers = {
   get: function (
     target: Function,
-    name: string,
+    name: string | symbol,
     receiver: Proxy<Function>,
   ): $FlowFixMe {
     return getReference(target, name);
   },
   getOwnPropertyDescriptor: function (
     target: Function,
-    name: string,
+    name: string | symbol,
   ): $FlowFixMe {
     let descriptor = Object.getOwnPropertyDescriptor(target, name);
     if (!descriptor) {

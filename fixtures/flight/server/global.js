@@ -174,8 +174,19 @@ app.all('/', async function (req, res, next) {
       const {pipe} = renderToPipeableStream(React.createElement(Root), {
         bootstrapScripts: mainJSChunks,
         formState: formState,
+        onShellReady() {
+          pipe(res);
+        },
+        onShellError(error) {
+          const {pipe: pipeError} = renderToPipeableStream(
+            React.createElement('html', null, React.createElement('body')),
+            {
+              bootstrapScripts: mainJSChunks,
+            }
+          );
+          pipeError(res);
+        },
       });
-      pipe(res);
     } catch (e) {
       console.error(`Failed to SSR: ${e.stack}`);
       res.statusCode = 500;
