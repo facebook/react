@@ -1,7 +1,0 @@
-// Jest Snapshot v1, https://goo.gl/fbAQLP
-
-exports[`ShallowRenderer should render without warnings without enableReactTestRendererWarning 1`] = `
-<h1>
-  Hello, world!
-</h1>
-`;

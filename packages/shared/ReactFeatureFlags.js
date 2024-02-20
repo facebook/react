@@ -185,6 +185,11 @@ export const enableInfiniteRenderLoopDetection = true;
 // during element creation.
 export const enableRefAsProp = __NEXT_MAJOR__;
 
+// Not ready to break experimental yet.
+// Needs more internal cleanup
+// Warn on any usage of ReactTestRenderer
+export const enableReactTestRendererWarning = false;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
@@ -203,9 +208,6 @@ export const enableUnifiedSyncLane = true;
 
 // Adds an opt-in to time slicing for updates that aren't wrapped in startTransition.
 export const allowConcurrentByDefault = false;
-
-// Warn on any usage of ReactTestRenderer
-export const enableReactTestRendererWarning = false;
 
 // -----------------------------------------------------------------------------
 // React DOM Chopping Block
