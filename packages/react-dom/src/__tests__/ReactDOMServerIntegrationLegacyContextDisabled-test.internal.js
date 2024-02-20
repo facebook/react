@@ -16,7 +16,6 @@ let React;
 let ReactDOM;
 let ReactFeatureFlags;
 let ReactDOMServer;
-let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
@@ -24,7 +23,6 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.disableLegacyContext = true;
@@ -33,7 +31,6 @@ function initModules() {
   return {
     ReactDOM,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
