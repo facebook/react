@@ -928,7 +928,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "hookSource": {
             "columnNumber": 0,
             "fileName": "**",
-            "functionName": null,
+            "functionName": "Foo",
             "lineNumber": 0,
           },
           "id": 0,
@@ -986,7 +986,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "hookSource": {
             "columnNumber": 0,
             "fileName": "**",
-            "functionName": null,
+            "functionName": "Foo",
             "lineNumber": 0,
           },
           "id": 0,
@@ -1969,7 +1969,7 @@ describe('ReactHooksInspectionIntegration', () => {
           "hookSource": {
             "columnNumber": 0,
             "fileName": "**",
-            "functionName": null,
+            "functionName": "Foo",
             "lineNumber": 0,
           },
           "id": 0,
