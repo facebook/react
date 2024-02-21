@@ -50,6 +50,7 @@ import {
   readFinalStringChunk,
   createStringDecoder,
   prepareDestinationForModule,
+  printToConsole,
 } from './ReactFlightClientConfig';
 
 import {registerServerReference} from './ReactFlightReplyClient';
@@ -1094,13 +1095,13 @@ function resolveConsoleEntry(
     );
   }
 
-  const payload: [string, string, mixed] = parseModel(response, value);
+  const payload: [string, string, string, mixed] = parseModel(response, value);
   const methodName = payload[0];
   // TODO: Restore the fake stack before logging.
   // const stackTrace = payload[1];
-  const args = payload.slice(2);
-  // eslint-disable-next-line react-internal/no-production-logging
-  console[methodName].apply(console, args);
+  const env = payload[2];
+  const args = payload.slice(3);
+  printToConsole(methodName, args, env);
 }
 
 function mergeBuffer(

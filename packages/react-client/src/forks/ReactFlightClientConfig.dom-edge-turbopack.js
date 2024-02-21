@@ -8,6 +8,7 @@
  */
 
 export * from 'react-client/src/ReactFlightClientStreamConfigWeb';
+export * from 'react-client/src/ReactFlightClientConsoleConfigServer';
 export * from 'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopack';
 export * from 'react-server-dom-turbopack/src/ReactFlightClientConfigBundlerTurbopackServer';
 export * from 'react-server-dom-turbopack/src/ReactFlightClientConfigTargetTurbopackServer';
