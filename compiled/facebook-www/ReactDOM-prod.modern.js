@@ -2448,41 +2448,44 @@ function unwrapThenable(thenable) {
   null === thenableState$1 && (thenableState$1 = []);
   return trackUsedThenable(thenableState$1, thenable, index);
 }
-function coerceRef(returnFiber, current, element) {
-  returnFiber = element.ref;
-  if (
-    null !== returnFiber &&
-    "function" !== typeof returnFiber &&
-    "object" !== typeof returnFiber
-  ) {
-    if (element._owner) {
-      element = element._owner;
-      if (element) {
-        if (1 !== element.tag) throw Error(formatProdErrorMessage(309));
-        var inst = element.stateNode;
-      }
-      if (!inst) throw Error(formatProdErrorMessage(147, returnFiber));
-      var resolvedInst = inst,
-        stringRef = "" + returnFiber;
-      if (
-        null !== current &&
-        null !== current.ref &&
-        "function" === typeof current.ref &&
-        current.ref._stringRef === stringRef
-      )
-        return current.ref;
-      current = function (value) {
-        var refs = resolvedInst.refs;
-        null === value ? delete refs[stringRef] : (refs[stringRef] = value);
-      };
-      current._stringRef = stringRef;
-      return current;
-    }
-    if ("string" !== typeof returnFiber)
-      throw Error(formatProdErrorMessage(284));
-    if (!element._owner) throw Error(formatProdErrorMessage(290, returnFiber));
+function convertStringRefToCallbackRef(
+  returnFiber,
+  current,
+  element,
+  mixedRef
+) {
+  function ref(value) {
+    var refs = inst.refs;
+    null === value ? delete refs[stringRef] : (refs[stringRef] = value);
   }
-  return returnFiber;
+  returnFiber = element._owner;
+  if (!returnFiber) {
+    if ("string" !== typeof mixedRef) throw Error(formatProdErrorMessage(284));
+    throw Error(formatProdErrorMessage(290, mixedRef));
+  }
+  if (1 !== returnFiber.tag) throw Error(formatProdErrorMessage(309));
+  var stringRef = "" + mixedRef,
+    inst = returnFiber.stateNode;
+  if (!inst) throw Error(formatProdErrorMessage(147, stringRef));
+  if (
+    null !== current &&
+    null !== current.ref &&
+    "function" === typeof current.ref &&
+    current.ref._stringRef === stringRef
+  )
+    return current.ref;
+  ref._stringRef = stringRef;
+  return ref;
+}
+function coerceRef(returnFiber, current, workInProgress, element) {
+  var mixedRef = element.ref;
+  returnFiber =
+    null !== mixedRef &&
+    "function" !== typeof mixedRef &&
+    "object" !== typeof mixedRef
+      ? convertStringRefToCallbackRef(returnFiber, current, element, mixedRef)
+      : mixedRef;
+  workInProgress.ref = returnFiber;
 }
 function throwOnInvalidObjectType(returnFiber, newChild) {
   returnFiber = Object.prototype.toString.call(newChild);
@@ -2581,7 +2584,7 @@ function createChildReconciler(shouldTrackSideEffects) {
     )
       return (
         (lanes = useFiber(current, element.props)),
-        (lanes.ref = coerceRef(returnFiber, current, element)),
+        coerceRef(returnFiber, current, lanes, element),
         (lanes.return = returnFiber),
         lanes
       );
@@ -2593,7 +2596,7 @@ function createChildReconciler(shouldTrackSideEffects) {
       returnFiber.mode,
       lanes
     );
-    lanes.ref = coerceRef(returnFiber, current, element);
+    coerceRef(returnFiber, current, lanes, element);
     lanes.return = returnFiber;
     return lanes;
   }
@@ -2655,7 +2658,7 @@ function createChildReconciler(shouldTrackSideEffects) {
               returnFiber.mode,
               lanes
             )),
-            (lanes.ref = coerceRef(returnFiber, null, newChild)),
+            coerceRef(returnFiber, null, lanes, newChild),
             (lanes.return = returnFiber),
             lanes
           );
@@ -3027,11 +3030,7 @@ function createChildReconciler(shouldTrackSideEffects) {
                 ) {
                   deleteRemainingChildren(returnFiber, child.sibling);
                   currentFirstChild = useFiber(child, newChild.props);
-                  currentFirstChild.ref = coerceRef(
-                    returnFiber,
-                    child,
-                    newChild
-                  );
+                  coerceRef(returnFiber, child, currentFirstChild, newChild);
                   currentFirstChild.return = returnFiber;
                   returnFiber = currentFirstChild;
                   break a;
@@ -3058,11 +3057,7 @@ function createChildReconciler(shouldTrackSideEffects) {
                   returnFiber.mode,
                   lanes
                 )),
-                (lanes.ref = coerceRef(
-                  returnFiber,
-                  currentFirstChild,
-                  newChild
-                )),
+                coerceRef(returnFiber, currentFirstChild, lanes, newChild),
                 (lanes.return = returnFiber),
                 (returnFiber = lanes));
           }
@@ -16682,7 +16677,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1778 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-60607a6e",
+  version: "18.3.0-www-modern-5cad22af",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2143 = {
@@ -16713,7 +16708,7 @@ var internals$jscomp$inline_2143 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-60607a6e"
+  reconcilerVersion: "18.3.0-www-modern-5cad22af"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2144 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16984,4 +16979,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-60607a6e";
+exports.version = "18.3.0-www-modern-5cad22af";
