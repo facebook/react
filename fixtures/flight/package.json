@@ -3,6 +3,9 @@
   "type": "module",
   "version": "0.1.0",
   "private": true,
+  "devEngines": {
+    "node": "20.x || 21.x"
+  },
   "dependencies": {
     "@babel/core": "^7.16.0",
     "@babel/plugin-proposal-private-property-in-object": "^7.18.6",
@@ -60,6 +63,9 @@
     "webpack-hot-middleware": "^2.25.3",
     "webpack-manifest-plugin": "^4.0.2"
   },
+  "devDependencies": {
+    "@playwright/test": "^1.41.2"
+  },
   "scripts": {
     "predev": "cp -r ../../build/oss-experimental/* ./node_modules/",
     "prebuild": "cp -r ../../build/oss-experimental/* ./node_modules/",
@@ -70,7 +76,7 @@
     "start:global": "NODE_ENV=production node --experimental-loader ./loader/global.js server/global",
     "start:region": "NODE_ENV=production node --experimental-loader ./loader/region.js --conditions=react-server server/region",
     "build": "node scripts/build.js",
-    "test": "node scripts/test.js --env=jsdom"
+    "test": "playwright test"
   },
   "browserslist": {
     "production": [
