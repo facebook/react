@@ -17,7 +17,6 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 let act;
 
 const EXPECTED_SAFE_URL =
@@ -36,14 +35,12 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
 
     // Make them available to the helpers.
     return {
       ReactDOMClient,
       ReactDOMServer,
-      ReactTestUtils,
     };
   }
 
@@ -204,14 +201,12 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     React = require('react');
     ReactDOMClient = require('react-dom/client');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
     act = require('internal-test-utils').act;
 
     // Make them available to the helpers.
     return {
       ReactDOMClient,
       ReactDOMServer,
-      ReactTestUtils,
     };
   }
 

@@ -15,7 +15,6 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOMClient;
 let ReactDOMServer;
-let ReactTestUtils;
 let forwardRef;
 let memo;
 let yieldedValues;
@@ -28,7 +27,6 @@ function initModules() {
   React = require('react');
   ReactDOMClient = require('react-dom/client');
   ReactDOMServer = require('react-dom/server');
-  ReactTestUtils = require('react-dom/test-utils');
   forwardRef = React.forwardRef;
   memo = React.memo;
 
@@ -46,7 +44,6 @@ function initModules() {
   return {
     ReactDOMClient,
     ReactDOMServer,
-    ReactTestUtils,
   };
 }
 
