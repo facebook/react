@@ -23,6 +23,7 @@
     "local-storage-fallback": "^4.1.1",
     "lodash.throttle": "^4.1.1",
     "memoize-one": "^3.1.1",
-    "react-virtualized-auto-sizer": "^1.0.6"
+    "react-virtualized-auto-sizer": "^1.0.23",
+    "react-window": "^1.8.10"
   }
 }
