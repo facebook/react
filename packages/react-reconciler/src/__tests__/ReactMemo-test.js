@@ -44,6 +44,7 @@ describe('memo', () => {
     return {default: result};
   }
 
+  // @gate !enableRefAsProp || !__DEV__
   it('warns when giving a ref (simple)', async () => {
     // This test lives outside sharedTests because the wrappers don't forward
     // refs properly, and they end up affecting the current owner which is used
@@ -62,6 +63,7 @@ describe('memo', () => {
     ]);
   });
 
+  // @gate !enableRefAsProp || !__DEV__
   it('warns when giving a ref (complex)', async () => {
     // defaultProps means this won't use SimpleMemoComponent (as of this writing)
     // SimpleMemoComponent is unobservable tho, so we can't check :)

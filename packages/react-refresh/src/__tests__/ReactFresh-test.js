@@ -3919,12 +3919,17 @@ describe('ReactFresh', () => {
       ReactFreshRuntime = require('react-refresh/runtime');
       ReactFreshRuntime.injectIntoGlobalHook(global);
 
+      // NOTE: Intentionally using createElement in this test instead of JSX
+      // because old versions of React are incompatible with the JSX transform
+      // used by our test suite.
       const Hello = () => {
-        return <div>Hi!</div>;
+        const [state] = React.useState('Hi!');
+        // Intentionally
+        return React.createElement('div', null, state);
       };
       $RefreshReg$(Hello, 'Hello');
       const Component = Hello;
-      ReactDOM.render(<Component />, container);
+      ReactDOM.render(React.createElement(Component), container);
 
       expect(onCommitFiberRoot).toHaveBeenCalled();
     }

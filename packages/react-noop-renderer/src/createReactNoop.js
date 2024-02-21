@@ -32,6 +32,7 @@ import {
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
+import {enableRefAsProp} from 'shared/ReactFeatureFlags';
 
 type Container = {
   rootID: string,
@@ -781,6 +782,34 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
   let currentEventPriority = DefaultEventPriority;
 
+  function createJSXElementForTestComparison(type, props) {
+    if (__DEV__ && enableRefAsProp) {
+      const element = {
+        type: type,
+        $$typeof: REACT_ELEMENT_TYPE,
+        key: null,
+        props: props,
+        _owner: null,
+        _store: __DEV__ ? {} : undefined,
+      };
+      Object.defineProperty(element, 'ref', {
+        enumerable: false,
+        value: null,
+      });
+      return element;
+    } else {
+      return {
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: type,
+        key: null,
+        ref: null,
+        props: props,
+        _owner: null,
+        _store: __DEV__ ? {} : undefined,
+      };
+    }
+  }
+
   function childToJSX(child, text) {
     if (text !== null) {
       return text;
@@ -818,15 +847,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       if (children !== null) {
         props.children = children;
       }
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type: instance.type,
-        key: null,
-        ref: null,
-        props: props,
-        _owner: null,
-        _store: __DEV__ ? {} : undefined,
-      };
+      return createJSXElementForTestComparison(instance.type, props);
     }
     // This is a text instance
     const textInstance: TextInstance = (child: any);
@@ -858,15 +879,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return null;
     }
     if (isArray(children)) {
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type: REACT_FRAGMENT_TYPE,
-        key: null,
-        ref: null,
-        props: {children},
-        _owner: null,
-        _store: __DEV__ ? {} : undefined,
-      };
+      return createJSXElementForTestComparison(REACT_FRAGMENT_TYPE, {children});
     }
     return children;
   }
@@ -877,15 +890,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       return null;
     }
     if (isArray(children)) {
-      return {
-        $$typeof: REACT_ELEMENT_TYPE,
-        type: REACT_FRAGMENT_TYPE,
-        key: null,
-        ref: null,
-        props: {children},
-        _owner: null,
-        _store: __DEV__ ? {} : undefined,
-      };
+      return createJSXElementForTestComparison(REACT_FRAGMENT_TYPE, {children});
     }
     return children;
   }

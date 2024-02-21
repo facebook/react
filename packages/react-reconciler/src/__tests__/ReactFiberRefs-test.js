@@ -27,7 +27,11 @@ describe('ReactFiberRefs', () => {
 
   test('ref is attached even if there are no other updates (class)', async () => {
     let component;
-    class Component extends React.PureComponent {
+    class Component extends React.Component {
+      shouldComponentUpdate() {
+        // This component's output doesn't depend on any props or state
+        return false;
+      }
       render() {
         Scheduler.log('Render');
         component = this;

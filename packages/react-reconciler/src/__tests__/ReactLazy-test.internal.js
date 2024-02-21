@@ -1174,6 +1174,7 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('2');
   });
 
+  // @gate !enableRefAsProp || !__DEV__
   it('warns about ref on functions for lazy-loaded components', async () => {
     const Foo = props => <div />;
     const LazyFoo = lazy(() => {

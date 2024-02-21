@@ -178,6 +178,13 @@ export const enableServerComponentKeys = __NEXT_MAJOR__;
  */
 export const enableInfiniteRenderLoopDetection = true;
 
+// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
+// as a normal prop instead of stripping it from the props object.
+
+// Passes `ref` as a normal prop instead of stripping it from the props object
+// during element creation.
+export const enableRefAsProp = __NEXT_MAJOR__;
+
 // -----------------------------------------------------------------------------
 // Chopping Block
 //
