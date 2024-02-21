@@ -7,18 +7,17 @@
  * @flow
  */
 
-import normalizeConsoleFormat from 'shared/normalizeConsoleFormat';
-
-const badgeFormat = ' %c%s%c';
+const badgeFormat = '%c%s%c ';
 // Same badge styling as DevTools.
 const badgeStyle =
   // We use a fixed background if light-dark is not supported, otherwise
   // we use a transparent background.
   'background: #e6e6e6;' +
   'background: light-dark(rgba(0,0,0,0.1), rgba(255,255,255,0.25));' +
-  'color: #000000; ' +
-  'color: light-dark(#000000, #ffffff); ' +
+  'color: #000000;' +
+  'color: light-dark(#000000, #ffffff);' +
   'border-radius: 2px';
+const resetStyle = '';
 const pad = ' ';
 
 export function printToConsole(
@@ -26,6 +25,7 @@ export function printToConsole(
   args: Array<any>,
   badgeName: string,
 ): void {
+  let offset = 0;
   switch (methodName) {
     case 'dir':
     case 'dirxml':
@@ -38,33 +38,32 @@ export function printToConsole(
     }
     case 'assert': {
       // assert takes formatting options as the second argument.
-      const newArgs = args.slice(0);
-
-      if (typeof args[1] === 'string') {
-        newArgs[1] = normalizeConsoleFormat(args[1], args, 2) + badgeFormat;
-      } else {
-        newArgs.splice(1, 0, normalizeConsoleFormat('', args, 1) + badgeFormat);
-      }
-
-      newArgs.push(badgeStyle, pad + badgeName + pad, '');
-
-      // eslint-disable-next-line react-internal/no-production-logging
-      console.assert.apply(console, args);
-      return;
-    }
-    default: {
-      const newArgs = args.slice(0);
-      if (typeof args[0] === 'string') {
-        newArgs[0] = normalizeConsoleFormat(args[0], args, 1) + badgeFormat;
-      } else {
-        newArgs.unshift(normalizeConsoleFormat('', args, 0) + badgeFormat);
-      }
-
-      newArgs.push(badgeStyle, pad + badgeName + pad, '');
-
-      // eslint-disable-next-line react-internal/no-production-logging
-      console[methodName].apply(console, args);
-      return;
+      offset = 1;
     }
   }
+
+  const newArgs = args.slice(0);
+  if (typeof newArgs[offset] === 'string') {
+    newArgs.splice(
+      offset,
+      1,
+      badgeFormat + newArgs[offset],
+      badgeStyle,
+      pad + badgeName + pad,
+      resetStyle,
+    );
+  } else {
+    newArgs.splice(
+      offset,
+      0,
+      badgeFormat,
+      badgeStyle,
+      pad + badgeName + pad,
+      resetStyle,
+    );
+  }
+
+  // eslint-disable-next-line react-internal/no-production-logging
+  console[methodName].apply(console, newArgs);
+  return;
 }
