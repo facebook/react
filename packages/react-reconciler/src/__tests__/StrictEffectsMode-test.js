@@ -10,12 +10,10 @@
 'use strict';
 
 let React;
-let ReactDOMClient;
-let ReactDOM;
+let ReactNoop;
 let Scheduler;
 let act;
 let assertLog;
-let container;
 
 describe('StrictEffectsMode', () => {
   beforeEach(() => {
@@ -26,9 +24,7 @@ describe('StrictEffectsMode', () => {
 
     React = require('react');
     Scheduler = require('scheduler');
-    ReactDOMClient = require('react-dom/client');
-    ReactDOM = require('react-dom');
-    container = document.createElement('div');
+    ReactNoop = require('react-noop-renderer');
   });
 
   it('should not double invoke effects in legacy mode', async () => {
@@ -46,12 +42,12 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
+    const root = ReactNoop.createLegacyRoot();
     await act(() => {
-      ReactDOM.render(
+      root.render(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        container,
       );
     });
 
@@ -73,12 +69,12 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -96,10 +92,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -111,7 +108,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      root.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useLayoutEffect unmount', 'useEffect unmount']);
@@ -132,12 +129,12 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -155,10 +152,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -170,7 +168,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      root.unmount(null);
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useEffect One unmount', 'useEffect Two unmount']);
@@ -191,12 +189,12 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -214,10 +212,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -229,7 +228,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      root.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useLayoutEffect One unmount', 'useLayoutEffect Two unmount']);
@@ -248,9 +247,8 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
@@ -269,7 +267,7 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
@@ -279,7 +277,7 @@ describe('StrictEffectsMode', () => {
     assertLog(['useLayoutEffect mount', 'useEffect mount']);
 
     await act(() => {
-      root.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([]);
@@ -309,9 +307,8 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App />
         </React.StrictMode>,
@@ -348,12 +345,12 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -368,17 +365,18 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
     assertLog(['componentDidUpdate']);
 
     await act(() => {
-      root.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['componentWillUnmount']);
@@ -399,12 +397,12 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -415,17 +413,18 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
     assertLog(['componentDidUpdate']);
 
     await act(() => {
-      root.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['componentWillUnmount']);
@@ -450,12 +449,12 @@ describe('StrictEffectsMode', () => {
       }
     }
 
+    const root = ReactNoop.createLegacyRoot();
     await act(() => {
-      ReactDOM.render(
+      root.render(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        container,
       );
     });
 
@@ -482,9 +481,8 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
@@ -550,12 +548,12 @@ describe('StrictEffectsMode', () => {
       return showChild && <Child />;
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -637,12 +635,12 @@ describe('StrictEffectsMode', () => {
       );
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -667,10 +665,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -682,7 +681,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      root.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([
@@ -724,12 +723,12 @@ describe('StrictEffectsMode', () => {
       );
     }
 
-    const root = ReactDOMClient.createRoot(container);
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -748,10 +747,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      root.render(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -763,7 +763,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      root.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([
