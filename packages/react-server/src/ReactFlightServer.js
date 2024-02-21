@@ -2213,7 +2213,9 @@ function emitConsoleChunk(
     }
   }
 
-  const payload = [methodName, stackTrace];
+  // TODO: Don't double badge if this log came from another Flight Client.
+  const env = request.environmentName;
+  const payload = [methodName, stackTrace, env];
   // $FlowFixMe[method-unbinding]
   payload.push.apply(payload, args);
   // $FlowFixMe[incompatible-type] stringify can return null

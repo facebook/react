@@ -7,7 +7,11 @@
  * @flow
  */
 
-export function printToConsole(methodName: string, args: Array<any>): void {
+export function printToConsole(
+  methodName: string,
+  args: Array<any>,
+  badgeName: string,
+): void {
   switch (methodName) {
     case 'dir':
     case 'dirxml':
