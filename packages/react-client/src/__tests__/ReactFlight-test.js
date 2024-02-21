@@ -197,7 +197,7 @@ describe('ReactFlight', () => {
       const rootModel = await ReactNoopFlightClient.read(transport);
       const greeting = rootModel.greeting;
       expect(greeting._debugInfo).toEqual(
-        __DEV__ ? [{name: 'Greeting', env: 'server'}] : undefined,
+        __DEV__ ? [{name: 'Greeting', env: 'Server'}] : undefined,
       );
       ReactNoop.render(greeting);
     });
@@ -224,7 +224,7 @@ describe('ReactFlight', () => {
     await act(async () => {
       const promise = ReactNoopFlightClient.read(transport);
       expect(promise._debugInfo).toEqual(
-        __DEV__ ? [{name: 'Greeting', env: 'server'}] : undefined,
+        __DEV__ ? [{name: 'Greeting', env: 'Server'}] : undefined,
       );
       ReactNoop.render(await promise);
     });
@@ -1970,7 +1970,7 @@ describe('ReactFlight', () => {
     await act(async () => {
       const promise = ReactNoopFlightClient.read(transport);
       expect(promise._debugInfo).toEqual(
-        __DEV__ ? [{name: 'ServerComponent', env: 'server'}] : undefined,
+        __DEV__ ? [{name: 'ServerComponent', env: 'Server'}] : undefined,
       );
       const result = await promise;
       const thirdPartyChildren = await result.props.children[1];
