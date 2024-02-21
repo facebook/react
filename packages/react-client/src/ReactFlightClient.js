@@ -670,6 +670,10 @@ function parseModelString(
       }
       case '@': {
         // Promise
+        if (value.length === 2) {
+          // Infinite promise that never resolves.
+          return new Promise(() => {});
+        }
         const id = parseInt(value.slice(2), 16);
         const chunk = getChunk(response, id);
         return chunk;
@@ -724,6 +728,21 @@ function parseModelString(
       case 'n': {
         // BigInt
         return BigInt(value.slice(2));
+      }
+      case 'E': {
+        if (__DEV__) {
+          // In DEV mode we allow indirect eval to produce functions for logging.
+          // This should not compile to eval() because then it has local scope access.
+          try {
+            // eslint-disable-next-line no-eval
+            return (0, eval)(value.slice(2));
+          } catch (x) {
+            // We currently use this to express functions so we fail parsing it,
+            // let's just return a blank function as a place holder.
+            return function () {};
+          }
+        }
+        // Fallthrough
       }
       default: {
         // We assume that anything else is a reference ID.
@@ -1063,6 +1082,27 @@ function resolveDebugInfo(
   chunkDebugInfo.push(debugInfo);
 }
 
+function resolveConsoleEntry(
+  response: Response,
+  value: UninitializedModel,
+): void {
+  if (!__DEV__) {
+    // These errors should never make it into a build so we don't need to encode them in codes.json
+    // eslint-disable-next-line react-internal/prod-error-codes
+    throw new Error(
+      'resolveConsoleEntry should never be called in production mode. This is a bug in React.',
+    );
+  }
+
+  const payload: [string, string, mixed] = parseModel(response, value);
+  const methodName = payload[0];
+  // TODO: Restore the fake stack before logging.
+  // const stackTrace = payload[1];
+  const args = payload.slice(2);
+  // eslint-disable-next-line react-internal/no-production-logging
+  console[methodName].apply(console, args);
+}
+
 function mergeBuffer(
   buffer: Array<Uint8Array>,
   lastChunk: Uint8Array,
@@ -1210,6 +1250,13 @@ function processFullRow(
       if (__DEV__) {
         const debugInfo = JSON.parse(row);
         resolveDebugInfo(response, id, debugInfo);
+        return;
+      }
+      // Fallthrough to share the error with Console entries.
+    }
+    case 87 /* "W" */: {
+      if (__DEV__) {
+        resolveConsoleEntry(response, row);
         return;
       }
       throw new Error(

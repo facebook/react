@@ -38,7 +38,7 @@ export type {TransitionStatus};
 export const isPrimaryRenderer = false;
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);
 
 export const resetResumableState = $$$config.resetResumableState;
 export const completeResumableState = $$$config.completeResumableState;

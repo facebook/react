@@ -115,6 +115,7 @@ export const enableAsyncDebugInfo = false;
 export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
+export const enableServerComponentLogs = true;
 
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.

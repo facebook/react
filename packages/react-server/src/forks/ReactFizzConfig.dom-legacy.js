@@ -11,4 +11,4 @@ import type {Request} from 'react-server/src/ReactFizzServer';
 export * from 'react-dom-bindings/src/server/ReactFizzConfigDOMLegacy';
 
 export const supportsRequestStorage = false;
-export const requestStorage: AsyncLocalStorage<Request> = (null: any);
+export const requestStorage: AsyncLocalStorage<Request | void> = (null: any);

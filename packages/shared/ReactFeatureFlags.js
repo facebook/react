@@ -123,6 +123,8 @@ export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
 export const enableRenderableContext = false;
 
+export const enableServerComponentLogs = __EXPERIMENTAL__;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */
