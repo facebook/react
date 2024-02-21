@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<383f07630be8104f7153897f592f9079>>
+ * @generated SignedSource<<e86f4a4840c272ed053ac55435196abb>>
  */
 
 "use strict";
@@ -8678,7 +8678,110 @@ to return true:wantsResponderID|                            |
       return trackUsedThenable(thenableState$1, thenable, index);
     }
 
-    function coerceRef(returnFiber, current, element) {
+    function convertStringRefToCallbackRef(
+      returnFiber,
+      current,
+      element,
+      mixedRef
+    ) {
+      var owner = element._owner;
+
+      if (!owner) {
+        if (typeof mixedRef !== "string") {
+          throw new Error(
+            "Expected ref to be a function, a string, an object returned by React.createRef(), or null."
+          );
+        }
+
+        throw new Error(
+          "Element ref was specified as a string (" +
+            mixedRef +
+            ") but no owner was set. This could happen for one of" +
+            " the following reasons:\n" +
+            "1. You may be adding a ref to a function component\n" +
+            "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
+            "3. You have multiple copies of React loaded\n" +
+            "See https://reactjs.org/link/refs-must-have-owner for more information."
+        );
+      }
+
+      if (owner.tag !== ClassComponent) {
+        throw new Error(
+          "Function components cannot have string refs. " +
+            "We recommend using useRef() instead. " +
+            "Learn more about using refs safely here: " +
+            "https://reactjs.org/link/strict-mode-string-ref"
+        );
+      } // At this point, we know the ref isn't an object or function but it could
+      // be a number. Coerce it to a string.
+
+      {
+        checkPropStringCoercion(mixedRef, "ref");
+      }
+
+      var stringRef = "" + mixedRef;
+
+      {
+        if (
+          // Will already warn with "Function components cannot be given refs"
+          !(typeof element.type === "function" && !isReactClass(element.type))
+        ) {
+          var componentName =
+            getComponentNameFromFiber(returnFiber) || "Component";
+
+          if (!didWarnAboutStringRefs[componentName]) {
+            error(
+              'Component "%s" contains the string ref "%s". Support for string refs ' +
+                "will be removed in a future major release. We recommend using " +
+                "useRef() or createRef() instead. " +
+                "Learn more about using refs safely here: " +
+                "https://reactjs.org/link/strict-mode-string-ref",
+              componentName,
+              stringRef
+            );
+
+            didWarnAboutStringRefs[componentName] = true;
+          }
+        }
+      }
+
+      var inst = owner.stateNode;
+
+      if (!inst) {
+        throw new Error(
+          "Missing owner for string ref " +
+            stringRef +
+            ". This error is likely caused by a " +
+            "bug in React. Please file an issue."
+        );
+      } // Check if previous string ref matches new string ref
+
+      if (
+        current !== null &&
+        current.ref !== null &&
+        typeof current.ref === "function" &&
+        current.ref._stringRef === stringRef
+      ) {
+        // Reuse the existing string ref
+        var currentRef = current.ref;
+        return currentRef;
+      } // Create a new string ref
+
+      var ref = function (value) {
+        var refs = inst.refs;
+
+        if (value === null) {
+          delete refs[stringRef];
+        } else {
+          refs[stringRef] = value;
+        }
+      };
+
+      ref._stringRef = stringRef;
+      return ref;
+    }
+
+    function coerceRef(returnFiber, current, workInProgress, element) {
       var mixedRef;
 
       {
@@ -8686,119 +8789,27 @@ to return true:wantsResponderID|                            |
         mixedRef = element.ref;
       }
 
+      var coercedRef;
+
       if (
         mixedRef !== null &&
         typeof mixedRef !== "function" &&
         typeof mixedRef !== "object"
       ) {
-        {
-          if (
-            // Will already throw with "Function components cannot have string refs"
-            !(element._owner && element._owner.tag !== ClassComponent) && // Will already warn with "Function components cannot be given refs"
-            !(
-              typeof element.type === "function" && !isReactClass(element.type)
-            ) && // Will already throw with "Element ref was specified as a string (someStringRef) but no owner was set"
-            element._owner
-          ) {
-            var componentName =
-              getComponentNameFromFiber(returnFiber) || "Component";
+        // Assume this is a string ref. If it's not, then this will throw an error
+        // to the user.
+        coercedRef = convertStringRefToCallbackRef(
+          returnFiber,
+          current,
+          element,
+          mixedRef
+        );
+      } else {
+        coercedRef = mixedRef;
+      } // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
+      // should always read the ref from the prop.
 
-            if (!didWarnAboutStringRefs[componentName]) {
-              error(
-                'Component "%s" contains the string ref "%s". Support for string refs ' +
-                  "will be removed in a future major release. We recommend using " +
-                  "useRef() or createRef() instead. " +
-                  "Learn more about using refs safely here: " +
-                  "https://reactjs.org/link/strict-mode-string-ref",
-                componentName,
-                mixedRef
-              );
-
-              didWarnAboutStringRefs[componentName] = true;
-            }
-          }
-        }
-
-        if (element._owner) {
-          var owner = element._owner;
-          var inst;
-
-          if (owner) {
-            var ownerFiber = owner;
-
-            if (ownerFiber.tag !== ClassComponent) {
-              throw new Error(
-                "Function components cannot have string refs. " +
-                  "We recommend using useRef() instead. " +
-                  "Learn more about using refs safely here: " +
-                  "https://reactjs.org/link/strict-mode-string-ref"
-              );
-            }
-
-            inst = ownerFiber.stateNode;
-          }
-
-          if (!inst) {
-            throw new Error(
-              "Missing owner for string ref " +
-                mixedRef +
-                ". This error is likely caused by a " +
-                "bug in React. Please file an issue."
-            );
-          } // Assigning this to a const so Flow knows it won't change in the closure
-
-          var resolvedInst = inst;
-
-          {
-            checkPropStringCoercion(mixedRef, "ref");
-          }
-
-          var stringRef = "" + mixedRef; // Check if previous string ref matches new string ref
-
-          if (
-            current !== null &&
-            current.ref !== null &&
-            typeof current.ref === "function" &&
-            current.ref._stringRef === stringRef
-          ) {
-            return current.ref;
-          }
-
-          var ref = function (value) {
-            var refs = resolvedInst.refs;
-
-            if (value === null) {
-              delete refs[stringRef];
-            } else {
-              refs[stringRef] = value;
-            }
-          };
-
-          ref._stringRef = stringRef;
-          return ref;
-        } else {
-          if (typeof mixedRef !== "string") {
-            throw new Error(
-              "Expected ref to be a function, a string, an object returned by React.createRef(), or null."
-            );
-          }
-
-          if (!element._owner) {
-            throw new Error(
-              "Element ref was specified as a string (" +
-                mixedRef +
-                ") but no owner was set. This could happen for one of" +
-                " the following reasons:\n" +
-                "1. You may be adding a ref to a function component\n" +
-                "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
-                "3. You have multiple copies of React loaded\n" +
-                "See https://reactjs.org/link/refs-must-have-owner for more information."
-            );
-          }
-        }
-      }
-
-      return mixedRef;
+      workInProgress.ref = coercedRef;
     }
 
     function throwOnInvalidObjectType(returnFiber, newChild) {
@@ -9054,7 +9065,7 @@ to return true:wantsResponderID|                            |
           ) {
             // Move based on index
             var existing = useFiber(current, element.props);
-            existing.ref = coerceRef(returnFiber, current, element);
+            coerceRef(returnFiber, current, existing, element);
             existing.return = returnFiber;
 
             {
@@ -9067,7 +9078,7 @@ to return true:wantsResponderID|                            |
         } // Insert
 
         var created = createFiberFromElement(element, returnFiber.mode, lanes);
-        created.ref = coerceRef(returnFiber, current, element);
+        coerceRef(returnFiber, current, created, element);
         created.return = returnFiber;
 
         {
@@ -9173,7 +9184,7 @@ to return true:wantsResponderID|                            |
                 lanes
               );
 
-              _created.ref = coerceRef(returnFiber, null, newChild);
+              coerceRef(returnFiber, null, _created, newChild);
               _created.return = returnFiber;
 
               {
@@ -10036,7 +10047,7 @@ to return true:wantsResponderID|                            |
 
                 var _existing = useFiber(child, element.props);
 
-                _existing.ref = coerceRef(returnFiber, child, element);
+                coerceRef(returnFiber, child, _existing, element);
                 _existing.return = returnFiber;
 
                 {
@@ -10078,7 +10089,7 @@ to return true:wantsResponderID|                            |
             lanes
           );
 
-          _created4.ref = coerceRef(returnFiber, currentFirstChild, element);
+          coerceRef(returnFiber, currentFirstChild, _created4, element);
           _created4.return = returnFiber;
 
           {
@@ -27735,7 +27746,7 @@ to return true:wantsResponderID|                            |
       return root;
     }
 
-    var ReactVersion = "18.3.0-canary-232f2dc2";
+    var ReactVersion = "18.3.0-canary-11955a0b";
 
     function createPortal$1(
       children,
