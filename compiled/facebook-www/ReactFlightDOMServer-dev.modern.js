@@ -1172,7 +1172,7 @@ if (__DEV__) {
 
       {
         request.environmentName =
-          environmentName === undefined ? "server" : environmentName;
+          environmentName === undefined ? "Server" : environmentName;
       }
 
       var rootTask = createTask(request, model, null, false, abortSet);
