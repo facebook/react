@@ -198,7 +198,7 @@ export function listenToFormSubmissionsForReplaying() {
     // where we preserve sequencing and where we'll pick it up from during hydration.
     // In practice, this is just the same as document but we might support shadow trees
     // in the future.
-    const root = form.getRootNode();
+    const root = form.ownerDocument;
     (root['$$reactFormReplay'] = root['$$reactFormReplay'] || []).push(
       form,
       submitter,
