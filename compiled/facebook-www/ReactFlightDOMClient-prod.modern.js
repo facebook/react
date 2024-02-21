@@ -257,10 +257,9 @@ function parseModelString(response, parentObject, key, value) {
           { $$typeof: REACT_LAZY_TYPE, _payload: response, _init: readChunk }
         );
       case "@":
-        return (
-          (parentObject = parseInt(value.slice(2), 16)),
-          getChunk(response, parentObject)
-        );
+        if (2 === value.length) return new Promise(function () {});
+        parentObject = parseInt(value.slice(2), 16);
+        return getChunk(response, parentObject);
       case "S":
         return Symbol.for(value.slice(2));
       case "F":
@@ -507,6 +506,7 @@ function startReadingFromStream(response, stream) {
               );
               break;
             case 68:
+            case 87:
               throw Error(
                 "Failed to read a RSC payload created by a development version of React on the server while using a production version on the client. Always use matching versions on the server and the client."
               );

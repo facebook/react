@@ -16,8 +16,8 @@ if (__DEV__) {
   (function () {
     "use strict";
 
-    var ReactDOM = require("react-dom");
     var React = require("react");
+    var ReactDOM = require("react-dom");
 
     // eslint-disable-next-line no-unused-vars
     // eslint-disable-next-line no-unused-vars
@@ -413,6 +413,9 @@ if (__DEV__) {
     function createHints() {
   return new Set();
 }
+
+    var supportsRequestStorage = false;
+    var requestStorage = null;
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -1097,6 +1100,85 @@ if (__DEV__) {
       );
     }
 
+    function patchConsole(consoleInst, methodName) {
+      var descriptor = Object.getOwnPropertyDescriptor(consoleInst, methodName);
+
+      if (
+        descriptor &&
+        (descriptor.configurable || descriptor.writable) &&
+        typeof descriptor.value === "function"
+      ) {
+        var originalMethod = descriptor.value;
+        var originalName = Object.getOwnPropertyDescriptor(
+          // $FlowFixMe[incompatible-call]: We should be able to get descriptors from any function.
+          originalMethod,
+          "name"
+        );
+
+        var wrapperMethod = function () {
+          var request = resolveRequest();
+
+          if (methodName === "assert" && arguments[0]);
+          else if (request !== null) {
+            // Extract the stack. Not all console logs print the full stack but they have at
+            // least the line it was called from. We could optimize transfer by keeping just
+            // one stack frame but keeping it simple for now and include all frames.
+            var stack = new Error().stack;
+
+            if (stack.startsWith("Error: \n")) {
+              stack = stack.slice(8);
+            }
+
+            var firstLine = stack.indexOf("\n");
+
+            if (firstLine === -1) {
+              stack = "";
+            } else {
+              // Skip the console wrapper itself.
+              stack = stack.slice(firstLine + 1);
+            }
+
+            request.pendingChunks++; // We don't currently use this id for anything but we emit it so that we can later
+            // refer to previous logs in debug info to associate them with a component.
+
+            var id = request.nextChunkId++;
+            emitConsoleChunk(request, id, methodName, stack, arguments);
+          } // $FlowFixMe[prop-missing]
+
+          return originalMethod.apply(this, arguments);
+        };
+
+        if (originalName) {
+          Object.defineProperty(
+            wrapperMethod, // $FlowFixMe[cannot-write] yes it is
+            "name",
+            originalName
+          );
+        }
+
+        Object.defineProperty(consoleInst, methodName, {
+          value: wrapperMethod
+        });
+      }
+    }
+
+    if (typeof console === "object" && console !== null) {
+      // Instrument console to capture logs for replaying on the client.
+      patchConsole(console, "assert");
+      patchConsole(console, "debug");
+      patchConsole(console, "dir");
+      patchConsole(console, "dirxml");
+      patchConsole(console, "error");
+      patchConsole(console, "group");
+      patchConsole(console, "groupCollapsed");
+      patchConsole(console, "groupEnd");
+      patchConsole(console, "info");
+      patchConsole(console, "log");
+      patchConsole(console, "table");
+      patchConsole(console, "trace");
+      patchConsole(console, "warn");
+    }
+
     var ObjectPrototype = Object.prototype;
     var stringify = JSON.stringify; // Serializable values
     // Thenable<ReactClientValue>
@@ -1702,6 +1784,10 @@ if (__DEV__) {
 
     function serializeLazyID(id) {
       return "$L" + id.toString(16);
+    }
+
+    function serializeInfinitePromise() {
+      return "$@";
     }
 
     function serializePromiseID(id) {
@@ -2341,8 +2427,20 @@ if (__DEV__) {
     }
 
     function logRecoverableError(request, error) {
-      var onError = request.onError;
-      var errorDigest = onError(error);
+      var prevRequest = currentRequest;
+      currentRequest = null;
+      var errorDigest;
+
+      try {
+        var onError = request.onError;
+
+        if (supportsRequestStorage);
+        else {
+          errorDigest = onError(error);
+        }
+      } finally {
+        currentRequest = prevRequest;
+      }
 
       if (errorDigest != null && typeof errorDigest !== "string") {
         // eslint-disable-next-line react-internal/prod-error-codes
@@ -2433,6 +2531,234 @@ if (__DEV__) {
     function emitDebugChunk(request, id, debugInfo) {
       var json = stringify(debugInfo);
       var row = serializeRowHeader("D", id) + json + "\n";
+      var processedChunk = stringToChunk(row);
+      request.completedRegularChunks.push(processedChunk);
+    }
+
+    function serializeEval(source) {
+      return "$E" + source;
+    } // This is a forked version of renderModel which should never error, never suspend and is limited
+    // in the depth it can encode.
+
+    function renderConsoleValue(
+      request,
+      counter,
+      parent,
+      parentPropertyName,
+      value
+    ) {
+      // Make sure that `parent[parentPropertyName]` wasn't JSONified before `value` was passed to us
+      // $FlowFixMe[incompatible-use]
+      var originalValue = parent[parentPropertyName];
+
+      if (value === null) {
+        return null;
+      }
+
+      if (typeof value === "object") {
+        if (isClientReference(value)) {
+          // We actually have this value on the client so we could import it.
+          // This might be confusing though because on the Server it won't actually
+          // be this value, so if you're debugging client references maybe you'd be
+          // better with a place holder.
+          return serializeClientReference(
+            request,
+            parent,
+            parentPropertyName,
+            value
+          );
+        }
+
+        if (counter.objectCount > 20) {
+          // We've reached our max number of objects to serialize across the wire so we serialize this
+          // object but no properties inside of it, as a place holder.
+          return Array.isArray(value) ? [] : {};
+        }
+
+        counter.objectCount++;
+        var writtenObjects = request.writtenObjects;
+        var existingId = writtenObjects.get(value); // $FlowFixMe[method-unbinding]
+
+        if (typeof value.then === "function") {
+          if (existingId !== undefined) {
+            // We've seen this promise before, so we can just refer to the same result.
+            return serializePromiseID(existingId);
+          }
+
+          var thenable = value;
+
+          switch (thenable.status) {
+            case "fulfilled": {
+              return serializePromiseID(
+                outlineConsoleValue(request, counter, thenable.value)
+              );
+            }
+
+            case "rejected": {
+              var x = thenable.reason;
+              request.pendingChunks++;
+              var errorId = request.nextChunkId++;
+
+              {
+                // We don't log these errors since they didn't actually throw into Flight.
+                var digest = "";
+                emitErrorChunk(request, errorId, digest, x);
+              }
+
+              return serializePromiseID(errorId);
+            }
+          } // If it hasn't already resolved (and been instrumented) we just encode an infinite
+          // promise that will never resolve.
+
+          return serializeInfinitePromise();
+        }
+
+        if (existingId !== undefined && existingId !== -1) {
+          // We've already emitted this as a real object, so we can
+          // just refer to that by its existing ID.
+          return serializeByValueID(existingId);
+        }
+
+        if (isArray(value)) {
+          return value;
+        }
+
+        if (value instanceof Map) {
+          return serializeMap(request, value);
+        }
+
+        if (value instanceof Set) {
+          return serializeSet(request, value);
+        }
+
+        var iteratorFn = getIteratorFn(value);
+
+        if (iteratorFn) {
+          return Array.from(value);
+        } // $FlowFixMe[incompatible-return]
+
+        return value;
+      }
+
+      if (typeof value === "string") {
+        if (value[value.length - 1] === "Z") {
+          // Possibly a Date, whose toJSON automatically calls toISOString
+          if (originalValue instanceof Date) {
+            return serializeDateFromDateJSON(value);
+          }
+        }
+
+        if (value.length >= 1024) {
+          // For large strings, we encode them outside the JSON payload so that we
+          // don't have to double encode and double parse the strings. This can also
+          // be more compact in case the string has a lot of escaped characters.
+          return serializeLargeTextString(request, value);
+        }
+
+        return escapeStringValue(value);
+      }
+
+      if (typeof value === "boolean") {
+        return value;
+      }
+
+      if (typeof value === "number") {
+        return serializeNumber(value);
+      }
+
+      if (typeof value === "undefined") {
+        return serializeUndefined();
+      }
+
+      if (typeof value === "function") {
+        if (isClientReference(value)) {
+          return serializeClientReference(
+            request,
+            parent,
+            parentPropertyName,
+            value
+          );
+        } // Serialize the body of the function as an eval so it can be printed.
+        // $FlowFixMe[method-unbinding]
+
+        return serializeEval(
+          "(" + Function.prototype.toString.call(value) + ")"
+        );
+      }
+
+      if (typeof value === "symbol") {
+        var writtenSymbols = request.writtenSymbols;
+
+        var _existingId3 = writtenSymbols.get(value);
+
+        if (_existingId3 !== undefined) {
+          return serializeByValueID(_existingId3);
+        } // $FlowFixMe[incompatible-type] `description` might be undefined
+
+        var name = value.description; // We use the Symbol.for version if it's not a global symbol. Close enough.
+
+        request.pendingChunks++;
+        var symbolId = request.nextChunkId++;
+        emitSymbolChunk(request, symbolId, name);
+        return serializeByValueID(symbolId);
+      }
+
+      if (typeof value === "bigint") {
+        return serializeBigInt(value);
+      }
+
+      return "unknown type " + typeof value;
+    }
+
+    function outlineConsoleValue(request, counter, model) {
+      function replacer(parentPropertyName, value) {
+        try {
+          return renderConsoleValue(
+            request,
+            counter,
+            this,
+            parentPropertyName,
+            value
+          );
+        } catch (x) {
+          return "unknown value";
+        }
+      } // $FlowFixMe[incompatible-type] stringify can return null
+
+      var json = stringify(model, replacer);
+      request.pendingChunks++;
+      var id = request.nextChunkId++;
+      var row = id.toString(16) + ":" + json + "\n";
+      var processedChunk = stringToChunk(row);
+      request.completedRegularChunks.push(processedChunk);
+      return id;
+    }
+
+    function emitConsoleChunk(request, id, methodName, stackTrace, args) {
+      var counter = {
+        objectCount: 0
+      };
+
+      function replacer(parentPropertyName, value) {
+        try {
+          return renderConsoleValue(
+            request,
+            counter,
+            this,
+            parentPropertyName,
+            value
+          );
+        } catch (x) {
+          return "unknown value";
+        }
+      }
+
+      var payload = [methodName, stackTrace]; // $FlowFixMe[method-unbinding]
+
+      payload.push.apply(payload, args); // $FlowFixMe[incompatible-type] stringify can return null
+
+      var json = stringify(payload, replacer);
+      var row = serializeRowHeader("W", id) + json + "\n";
       var processedChunk = stringToChunk(row);
       request.completedRegularChunks.push(processedChunk);
     }

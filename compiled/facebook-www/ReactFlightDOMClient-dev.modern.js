@@ -699,6 +699,11 @@ if (__DEV__) {
 
           case "@": {
             // Promise
+            if (value.length === 2) {
+              // Infinite promise that never resolves.
+              return new Promise(function () {});
+            }
+
             var _id = parseInt(value.slice(2), 16);
 
             var _chunk = getChunk(response, _id);
@@ -769,6 +774,21 @@ if (__DEV__) {
           case "n": {
             // BigInt
             return BigInt(value.slice(2));
+          }
+
+          case "E": {
+            {
+              // In DEV mode we allow indirect eval to produce functions for logging.
+              // This should not compile to eval() because then it has local scope access.
+              try {
+                // eslint-disable-next-line no-eval
+                return (0, eval)(value.slice(2));
+              } catch (x) {
+                // We currently use this to express functions so we fail parsing it,
+                // let's just return a blank function as a place holder.
+                return function () {};
+              }
+            } // Fallthrough
           }
 
           default: {
@@ -987,6 +1007,16 @@ if (__DEV__) {
       chunkDebugInfo.push(debugInfo);
     }
 
+    function resolveConsoleEntry(response, value) {
+      var payload = parseModel(response, value);
+      var methodName = payload[0]; // TODO: Restore the fake stack before logging.
+      // const stackTrace = payload[1];
+
+      var args = payload.slice(2); // eslint-disable-next-line react-internal/no-production-logging
+
+      console[methodName].apply(console, args);
+    }
+
     function processFullRow(response, id, tag, buffer, chunk) {
       var stringDecoder = response._stringDecoder;
       var row = "";
@@ -1039,6 +1069,14 @@ if (__DEV__) {
           {
             var debugInfo = JSON.parse(row);
             resolveDebugInfo(response, id, debugInfo);
+            return;
+          } // Fallthrough to share the error with Console entries.
+        }
+
+        case 87: /* "W" */
+        {
+          {
+            resolveConsoleEntry(response, row);
             return;
           }
         }

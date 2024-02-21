@@ -11,8 +11,8 @@
  */
 
 "use strict";
-var ReactDOM = require("react-dom"),
-  React = require("react"),
+var React = require("react"),
+  ReactDOM = require("react-dom"),
   requestedClientReferencesKeys = new Set(),
   checkIsClientReference;
 function isClientReference(reference) {
@@ -950,15 +950,21 @@ function renderModelDestructive(
   );
 }
 function logRecoverableError(request, error) {
-  request = request.onError;
-  error = request(error);
-  if (null != error && "string" !== typeof error)
+  var prevRequest = currentRequest;
+  currentRequest = null;
+  try {
+    var onError = request.onError;
+    var errorDigest = onError(error);
+  } finally {
+    currentRequest = prevRequest;
+  }
+  if (null != errorDigest && "string" !== typeof errorDigest)
     throw Error(
       'onError returned something with a type other than "string". onError should return a string and may return null or undefined but must not return anything else. It received something of type "' +
-        typeof error +
+        typeof errorDigest +
         '" instead'
     );
-  return error || "";
+  return errorDigest || "";
 }
 function fatalError(request, error) {
   null !== request.destination
