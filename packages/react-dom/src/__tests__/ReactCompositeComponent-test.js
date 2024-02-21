@@ -278,26 +278,48 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
+    function refFn1(ref) {
+      instance1 = ref;
+    }
+
+    function refFn2(ref) {
+      instance2 = ref;
+    }
+
+    function refFn3(ref) {
+      instance3 = ref;
+    }
+
     let instance1;
     let instance2;
     let instance3;
     const root = ReactDOMClient.createRoot(document.createElement('div'));
     await act(() => {
-      root.render(<Component ref={ref => (instance1 = ref)} />);
+      root.render(<Component ref={refFn1} />);
     });
-    expect(instance1.props).toEqual({prop: 'testKey'});
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(instance1.props).toEqual({prop: 'testKey', ref: refFn1});
+    } else {
+      expect(instance1.props).toEqual({prop: 'testKey'});
+    }
 
     await act(() => {
-      root.render(
-        <Component ref={ref => (instance2 = ref)} prop={undefined} />,
-      );
+      root.render(<Component ref={refFn2} prop={undefined} />);
     });
-    expect(instance2.props).toEqual({prop: 'testKey'});
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(instance2.props).toEqual({prop: 'testKey', ref: refFn2});
+    } else {
+      expect(instance2.props).toEqual({prop: 'testKey'});
+    }
 
     await act(() => {
-      root.render(<Component ref={ref => (instance3 = ref)} prop={null} />);
+      root.render(<Component ref={refFn3} prop={null} />);
     });
-    expect(instance3.props).toEqual({prop: null});
+    if (gate(flags => flags.enableRefAsProp)) {
+      expect(instance3.props).toEqual({prop: null, ref: refFn3});
+    } else {
+      expect(instance3.props).toEqual({prop: null});
+    }
   });
 
   it('should not mutate passed-in props object', async () => {

@@ -197,7 +197,7 @@ describe('ReactFlight', () => {
       const rootModel = await ReactNoopFlightClient.read(transport);
       const greeting = rootModel.greeting;
       expect(greeting._debugInfo).toEqual(
-        __DEV__ ? [{name: 'Greeting', env: 'server'}] : undefined,
+        __DEV__ ? [{name: 'Greeting', env: 'Server'}] : undefined,
       );
       ReactNoop.render(greeting);
     });
@@ -224,7 +224,7 @@ describe('ReactFlight', () => {
     await act(async () => {
       const promise = ReactNoopFlightClient.read(transport);
       expect(promise._debugInfo).toEqual(
-        __DEV__ ? [{name: 'Greeting', env: 'server'}] : undefined,
+        __DEV__ ? [{name: 'Greeting', env: 'Server'}] : undefined,
       );
       ReactNoop.render(await promise);
     });
@@ -689,7 +689,7 @@ describe('ReactFlight', () => {
       );
     }
     function FunctionProp() {
-      return <div>{() => {}}</div>;
+      return <div>{function fn() {}}</div>;
     }
     function SymbolProp() {
       return <div foo={Symbol('foo')} />;
@@ -707,8 +707,11 @@ describe('ReactFlight', () => {
         </Client>
       );
     }
+    function FunctionChildrenClient() {
+      return <Client>{function Component() {}}</Client>;
+    }
     function FunctionPropClient() {
-      return <Client>{() => {}}</Client>;
+      return <Client foo={() => {}} />;
     }
     function SymbolPropClient() {
       return <Client foo={Symbol('foo')} />;
@@ -729,6 +732,10 @@ describe('ReactFlight', () => {
     const refs = ReactNoopFlightServer.render(<RefProp />, options);
     const eventClient = ReactNoopFlightServer.render(
       <EventHandlerPropClient />,
+      options,
+    );
+    const fnChildrenClient = ReactNoopFlightServer.render(
+      <FunctionChildrenClient />,
       options,
     );
     const fnClient = ReactNoopFlightServer.render(
@@ -754,7 +761,9 @@ describe('ReactFlight', () => {
             </ErrorBoundary>
             <ErrorBoundary
               expectedMessage={
-                'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
+                __DEV__
+                  ? 'Functions are not valid as a child of Client Components. This may happen if you return fn instead of <fn /> from render. Or maybe you meant to call this function rather than return it.'
+                  : 'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
               }>
               <Render promise={ReactNoopFlightClient.read(fn)} />
             </ErrorBoundary>
@@ -766,6 +775,14 @@ describe('ReactFlight', () => {
             </ErrorBoundary>
             <ErrorBoundary expectedMessage="Event handlers cannot be passed to Client Component props.">
               <Render promise={ReactNoopFlightClient.read(eventClient)} />
+            </ErrorBoundary>
+            <ErrorBoundary
+              expectedMessage={
+                __DEV__
+                  ? 'Functions are not valid as a child of Client Components. This may happen if you return Component instead of <Component /> from render. Or maybe you meant to call this function rather than return it.'
+                  : 'Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server".'
+              }>
+              <Render promise={ReactNoopFlightClient.read(fnChildrenClient)} />
             </ErrorBoundary>
             <ErrorBoundary
               expectedMessage={
@@ -945,8 +962,8 @@ describe('ReactFlight', () => {
       'Only plain objects can be passed to Client Components from Server Components. ' +
         'Objects with toJSON methods are not supported. ' +
         'Convert it manually to a simple value before passing it to props.\n' +
-        '  <input value={{toJSON: function}}>\n' +
-        '               ^^^^^^^^^^^^^^^^^^^^',
+        '  <input value={{toJSON: ...}}>\n' +
+        '               ^^^^^^^^^^^^^^^',
       {withoutStack: true},
     );
   });
@@ -1035,8 +1052,8 @@ describe('ReactFlight', () => {
       'Only plain objects can be passed to Client Components from Server Components. ' +
         'Objects with toJSON methods are not supported. ' +
         'Convert it manually to a simple value before passing it to props.\n' +
-        '  <>Current date: {{toJSON: function}}</>\n' +
-        '                  ^^^^^^^^^^^^^^^^^^^^',
+        '  <>Current date: {{toJSON: ...}}</>\n' +
+        '                  ^^^^^^^^^^^^^^^',
       {withoutStack: true},
     );
   });
@@ -1953,7 +1970,7 @@ describe('ReactFlight', () => {
     await act(async () => {
       const promise = ReactNoopFlightClient.read(transport);
       expect(promise._debugInfo).toEqual(
-        __DEV__ ? [{name: 'ServerComponent', env: 'server'}] : undefined,
+        __DEV__ ? [{name: 'ServerComponent', env: 'Server'}] : undefined,
       );
       const result = await promise;
       const thirdPartyChildren = await result.props.children[1];
@@ -1977,5 +1994,46 @@ describe('ReactFlight', () => {
         <span>!</span>
       </div>,
     );
+  });
+
+  // @gate enableServerComponentLogs && __DEV__
+  it('replays logs, but not onError logs', async () => {
+    function foo() {
+      return 'hello';
+    }
+    function ServerComponent() {
+      console.log('hi', {prop: 123, fn: foo});
+      throw new Error('err');
+    }
+
+    let transport;
+    expect(() => {
+      // Reset the modules so that we get a new overridden console on top of the
+      // one installed by expect. This ensures that we still emit console.error
+      // calls.
+      jest.resetModules();
+      jest.mock('react', () => require('react/react.react-server'));
+      ReactServer = require('react');
+      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+      transport = ReactNoopFlightServer.render({root: <ServerComponent />});
+    }).toErrorDev('err');
+
+    const log = console.log;
+    try {
+      console.log = jest.fn();
+      // The error should not actually get logged because we're not awaiting the root
+      // so it's not thrown but the server log also shouldn't be replayed.
+      await ReactNoopFlightClient.read(transport);
+
+      expect(console.log).toHaveBeenCalledTimes(1);
+      expect(console.log.mock.calls[0][0]).toBe('hi');
+      expect(console.log.mock.calls[0][1].prop).toBe(123);
+      const loggedFn = console.log.mock.calls[0][1].fn;
+      expect(typeof loggedFn).toBe('function');
+      expect(loggedFn).not.toBe(foo);
+      expect(loggedFn.toString()).toBe(foo.toString());
+    } finally {
+      console.log = log;
+    }
   });
 });

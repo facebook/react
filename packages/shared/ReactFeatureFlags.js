@@ -123,6 +123,8 @@ export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 
 export const enableRenderableContext = false;
 
+export const enableServerComponentLogs = __EXPERIMENTAL__;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */
@@ -177,6 +179,13 @@ export const enableServerComponentKeys = __NEXT_MAJOR__;
  * by setState or similar outside of the component owning the state.
  */
 export const enableInfiniteRenderLoopDetection = true;
+
+// Subtle breaking changes to JSX runtime to make it faster, like passing `ref`
+// as a normal prop instead of stripping it from the props object.
+
+// Passes `ref` as a normal prop instead of stripping it from the props object
+// during element creation.
+export const enableRefAsProp = __NEXT_MAJOR__;
 
 // -----------------------------------------------------------------------------
 // Chopping Block

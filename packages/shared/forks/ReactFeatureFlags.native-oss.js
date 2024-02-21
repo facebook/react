@@ -88,6 +88,10 @@ export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
+export const enableServerComponentLogs = true;
+
+// TODO: Should turn this on in next "major" RN release.
+export const enableRefAsProp = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

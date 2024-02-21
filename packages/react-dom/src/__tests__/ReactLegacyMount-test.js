@@ -71,8 +71,9 @@ describe('ReactMount', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(Component)).toErrorDev(
       'Functions are not valid as a React child. ' +
-        'This may happen if you return a Component instead of <Component /> from render. ' +
-        'Or maybe you meant to call this function rather than return it.',
+        'This may happen if you return Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.\n' +
+        '  root.render(Component)',
       {withoutStack: true},
     );
   });

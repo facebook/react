@@ -22,7 +22,11 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_DEBUG_TRACING_MODE_TYPE,
 } from 'shared/ReactSymbols';
-import {cloneElement, createElement, isValidElement} from './ReactElement';
+import {
+  cloneElement,
+  createElement,
+  isValidElement,
+} from './jsx/ReactJSXElement';
 import {createRef} from './ReactCreateRef';
 import {
   use,

@@ -24,7 +24,7 @@ import {
 } from 'shared/ReactSymbols';
 import {checkKeyStringCoercion} from 'shared/CheckStringCoercion';
 
-import {isValidElement, cloneAndReplaceKey} from './ReactElement';
+import {isValidElement, cloneAndReplaceKey} from './jsx/ReactJSXElement';
 
 const SEPARATOR = '.';
 const SUBSEPARATOR = ':';
