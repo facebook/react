@@ -10,7 +10,6 @@
 'use strict';
 
 let act;
-let PropTypes;
 let React;
 let ReactDOMClient;
 
@@ -22,7 +21,6 @@ describe('ReactElementClone', () => {
 
     act = require('internal-test-utils').act;
 
-    PropTypes = require('prop-types');
     React = require('react');
     ReactDOMClient = require('react-dom/client');
 
@@ -333,41 +331,6 @@ describe('ReactElementClone', () => {
 
   it('does not warn when the array contains a non-element', () => {
     React.cloneElement(<div />, null, [{}, {}]);
-  });
-
-  it('should check declared prop types after clone', async () => {
-    class Component extends React.Component {
-      static propTypes = {
-        color: PropTypes.string.isRequired,
-      };
-      render() {
-        return React.createElement('div', null, 'My color is ' + this.color);
-      }
-    }
-    class Parent extends React.Component {
-      render() {
-        return React.cloneElement(this.props.child, {color: 123});
-      }
-    }
-    class GrandParent extends React.Component {
-      render() {
-        return React.createElement(Parent, {
-          child: React.createElement(Component, {color: 'red'}),
-        });
-      }
-    }
-    const root = ReactDOMClient.createRoot(document.createElement('div'));
-    await expect(
-      async () =>
-        await act(() => root.render(React.createElement(GrandParent))),
-    ).toErrorDev(
-      'Warning: Failed prop type: ' +
-        'Invalid prop `color` of type `number` supplied to `Component`, ' +
-        'expected `string`.\n' +
-        '    in Component (at **)\n' +
-        '    in Parent (at **)\n' +
-        '    in GrandParent',
-    );
   });
 
   it('should ignore key and ref warning getters', () => {

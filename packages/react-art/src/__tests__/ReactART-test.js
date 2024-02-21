@@ -456,18 +456,6 @@ describe('ReactARTComponents', () => {
     expect(circle.toJSON()).toMatchSnapshot();
   });
 
-  it('should warn if radius is missing on a Circle component', () => {
-    expect(() =>
-      ReactTestRenderer.create(
-        <Circle stroke="green" strokeWidth={3} fill="blue" />,
-      ),
-    ).toErrorDev(
-      'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Circle (at **)',
-    );
-  });
-
   it('should generate a <Shape> with props for drawing the Rectangle', () => {
     const rectangle = ReactTestRenderer.create(
       <Rectangle width={50} height={50} stroke="green" fill="blue" />,
@@ -529,19 +517,6 @@ describe('ReactARTComponents', () => {
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
-  it('should warn if width/height is missing on a Rectangle component', () => {
-    expect(() =>
-      ReactTestRenderer.create(<Rectangle stroke="green" fill="blue" />),
-    ).toErrorDev([
-      'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Rectangle (at **)',
-      'Warning: Failed prop type: The prop `height` is marked as required in `Rectangle`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Rectangle (at **)',
-    ]);
-  });
-
   it('should generate a <Shape> with props for drawing the Wedge', () => {
     const wedge = ReactTestRenderer.create(
       <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
@@ -554,19 +529,5 @@ describe('ReactARTComponents', () => {
       <Wedge outerRadius={50} startAngle={0} endAngle={0} fill="blue" />,
     );
     expect(wedge.toJSON()).toBeNull();
-  });
-
-  it('should warn if outerRadius/startAngle/endAngle is missing on a Wedge component', () => {
-    expect(() => ReactTestRenderer.create(<Wedge fill="blue" />)).toErrorDev([
-      'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Wedge (at **)',
-      'Warning: Failed prop type: The prop `startAngle` is marked as required in `Wedge`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Wedge (at **)',
-      'Warning: Failed prop type: The prop `endAngle` is marked as required in `Wedge`, ' +
-        'but its value is `undefined`.' +
-        '\n    in Wedge (at **)',
-    ]);
   });
 });
