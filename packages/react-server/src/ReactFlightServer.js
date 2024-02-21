@@ -305,7 +305,7 @@ export function createRequest(
   }: any);
   if (__DEV__) {
     request.environmentName =
-      environmentName === undefined ? 'server' : environmentName;
+      environmentName === undefined ? 'Server' : environmentName;
   }
   const rootTask = createTask(request, model, null, false, abortSet);
   pingedTasks.push(rootTask);
