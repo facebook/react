@@ -35,6 +35,45 @@ if (__DEV__) {
       return decoder.decode(buffer);
     }
 
+    var badgeFormat = "[%s] ";
+    var pad = " ";
+    function printToConsole(methodName, args, badgeName) {
+      var offset = 0;
+
+      switch (methodName) {
+        case "dir":
+        case "dirxml":
+        case "groupEnd":
+        case "table": {
+          // These methods cannot be colorized because they don't take a formatting string.
+          // eslint-disable-next-line react-internal/no-production-logging
+          console[methodName].apply(console, args);
+          return;
+        }
+
+        case "assert": {
+          // assert takes formatting options as the second argument.
+          offset = 1;
+        }
+      }
+
+      var newArgs = args.slice(0);
+
+      if (typeof newArgs[offset] === "string") {
+        newArgs.splice(
+          offset,
+          1,
+          badgeFormat + newArgs[offset],
+          pad + badgeName + pad
+        );
+      } else {
+        newArgs.splice(offset, 0, badgeFormat, pad + badgeName + pad);
+      } // eslint-disable-next-line react-internal/no-production-logging
+
+      console[methodName].apply(console, newArgs);
+      return;
+    }
+
     var ReactDOMSharedInternals =
       ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
@@ -1012,9 +1051,9 @@ if (__DEV__) {
       var methodName = payload[0]; // TODO: Restore the fake stack before logging.
       // const stackTrace = payload[1];
 
-      var args = payload.slice(2); // eslint-disable-next-line react-internal/no-production-logging
-
-      console[methodName].apply(console, args);
+      var env = payload[2];
+      var args = payload.slice(3);
+      printToConsole(methodName, args, env);
     }
 
     function processFullRow(response, id, tag, buffer, chunk) {

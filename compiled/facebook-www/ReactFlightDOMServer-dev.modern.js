@@ -2751,9 +2751,10 @@ if (__DEV__) {
         } catch (x) {
           return "unknown value";
         }
-      }
+      } // TODO: Don't double badge if this log came from another Flight Client.
 
-      var payload = [methodName, stackTrace]; // $FlowFixMe[method-unbinding]
+      var env = request.environmentName;
+      var payload = [methodName, stackTrace, env]; // $FlowFixMe[method-unbinding]
 
       payload.push.apply(payload, args); // $FlowFixMe[incompatible-type] stringify can return null
 
