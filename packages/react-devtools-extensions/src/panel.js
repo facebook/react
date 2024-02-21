@@ -19,7 +19,8 @@ window.injectStyles = getLinkTags => {
 };
 
 // Remove the banner if the user has closed the banner before
-chrome.storage.local.get(["bannerClosed"]).then((result) => {
+// eslint-disable-next-line no-undef
+chrome.storage.local.get(['bannerClosed']).then(result => {
   if (result.bannerClosed) {
     const banner = document.querySelector('.dismissable-banner');
     banner.remove();
@@ -42,5 +43,6 @@ closeButton.addEventListener('click', () => {
   const banner = closeButton.parentElement;
   banner.remove();
   // Save the state to local storage
-  chrome.storage.local.set({ "bannerClosed": true });
+  // eslint-disable-next-line no-undef
+  chrome.storage.local.set({bannerClosed: true});
 });
