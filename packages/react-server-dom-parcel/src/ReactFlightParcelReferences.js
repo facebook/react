@@ -12,14 +12,15 @@ import type {ReactClientValue} from 'react-server/src/ReactFlightServer';
 export type ServerReference<T: Function> = T & {
   $$typeof: symbol,
   $$id: string,
+  $$name: string,
   $$bound: null | Array<ReactClientValue>,
 };
 
 // eslint-disable-next-line no-unused-vars
 export type ClientReference<T> = {
   $$typeof: symbol,
-  id: string,
-  name: string,
+  $$id: string,
+  $$name: string,
 };
 
 const CLIENT_REFERENCE_TAG = Symbol.for('react.client.reference');

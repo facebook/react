@@ -18,7 +18,7 @@ import type {
 export type {ClientReference, ServerReference};
 
 export type ClientManifest = null;
-export type ServerReferenceId = string;
+export type ServerReferenceId = ImportMetadata;
 export type ClientReferenceMetadata = ImportMetadata;
 export type ClientReferenceKey = string;
 
@@ -30,21 +30,21 @@ export {
 export function getClientReferenceKey(
   reference: ClientReference<any>,
 ): ClientReferenceKey {
-  return reference.id + '#' + reference.name;
+  return reference.$$id + '#' + reference.$$name;
 }
 
 export function resolveClientReferenceMetadata<T>(
   config: ClientManifest,
   clientReference: ClientReference<T>,
 ): ClientReferenceMetadata {
-  return [clientReference.id, clientReference.name];
+  return [clientReference.$$id, clientReference.$$name];
 }
 
 export function getServerReferenceId<T>(
   config: ClientManifest,
   serverReference: ServerReference<T>,
 ): ServerReferenceId {
-  return serverReference.$$id;
+  return [serverReference.$$id, serverReference.$$name];
 }
 
 export function getServerReferenceBoundArguments<T>(
