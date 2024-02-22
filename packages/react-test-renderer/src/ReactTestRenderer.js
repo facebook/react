@@ -474,7 +474,10 @@ function create(
   unstable_flushSync: typeof flushSync,
 } {
   if (__DEV__) {
-    if (enableReactTestRendererWarning === true) {
+    if (
+      enableReactTestRendererWarning === true &&
+      global.IS_REACT_NATIVE_TEST_ENVIRONMENT !== true
+    ) {
       console.warn(
         'react-test-renderer is deprecated. See https://react.dev/warnings/react-test-renderer',
       );

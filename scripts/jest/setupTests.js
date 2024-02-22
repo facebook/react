@@ -3,6 +3,7 @@
 const chalk = require('chalk');
 const util = require('util');
 const shouldIgnoreConsoleError = require('./shouldIgnoreConsoleError');
+const shouldIgnoreConsoleWarn = require('./shouldIgnoreConsoleWarn');
 const {getTestFlags} = require('./TestFlags');
 
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
@@ -68,6 +69,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       // Ignore uncaught errors reported by jsdom
       // and React addendums because they're too noisy.
       if (methodName === 'error' && shouldIgnoreConsoleError(format, args)) {
+        return;
+      }
+
+      // Ignore certain React warnings causing test failures
+      if (methodName === 'warn' && shouldIgnoreConsoleWarn(format)) {
         return;
       }
 
