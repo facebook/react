@@ -98,6 +98,7 @@ export const enableReactTestRendererWarning = false;
 
 export const enableBigIntSupport = false;
 export const disableLegacyMode = false;
+export const disablePropFilteringInViewConfigs = false;
 
 // Flow magic to verify the exports of this file match the original version.
 ((((null: any): ExportsType): FeatureFlagsType): ExportsType);

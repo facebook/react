@@ -19,6 +19,7 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
+  disablePropFilteringInViewConfigs,
   enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask,
   enableUseRefAccessWarning,

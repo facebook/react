@@ -125,6 +125,8 @@ export const enableRenderableContext = false;
 
 export const enableServerComponentLogs = __EXPERIMENTAL__;
 
+export const disablePropFilteringInViewConfigs = false;
+
 /**
  * Enables an expiration time for retry lanes to avoid starvation.
  */

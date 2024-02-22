@@ -14,6 +14,8 @@ import {
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 import isArray from 'shared/isArray';
 
+import {disablePropFilteringInViewConfigs} from 'shared/ReactFeatureFlags';
+
 import type {AttributeConfiguration} from './ReactNativeTypes';
 
 const emptyObject = {};
@@ -277,9 +279,11 @@ function diffProperties(
   let prevProp;
 
   for (const propKey in nextProps) {
-    attributeConfig = validAttributes[propKey];
-    if (!attributeConfig) {
-      continue; // not a valid native prop
+    if (!disablePropFilteringInViewConfigs) {
+      attributeConfig = validAttributes[propKey];
+      if (!attributeConfig) {
+        continue; // not a valid native prop
+      }
     }
 
     prevProp = prevProps[propKey];
@@ -340,8 +344,14 @@ function diffProperties(
     // Pattern match on: attributeConfig
     if (typeof attributeConfig !== 'object') {
       // case: !Object is the default case
-      if (defaultDiffer(prevProp, nextProp)) {
-        // a normal leaf has changed
+      if (!disablePropFilteringInViewConfigs) {
+        if (defaultDiffer(prevProp, nextProp)) {
+          // a normal leaf has changed
+          (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
+            propKey
+          ] = nextProp;
+        }
+      } else {
         (updatePayload || (updatePayload = ({}: {[string]: $FlowFixMe})))[
           propKey
         ] = nextProp;
@@ -351,11 +361,14 @@ function diffProperties(
       typeof attributeConfig.process === 'function'
     ) {
       // case: CustomAttributeConfiguration
-      const shouldUpdate =
-        prevProp === undefined ||
-        (typeof attributeConfig.diff === 'function'
-          ? attributeConfig.diff(prevProp, nextProp)
-          : defaultDiffer(prevProp, nextProp));
+      let shouldUpdate = true;
+      if (!disablePropFilteringInViewConfigs) {
+        shouldUpdate =
+          prevProp === undefined ||
+          (typeof attributeConfig.diff === 'function'
+            ? attributeConfig.diff(prevProp, nextProp)
+            : defaultDiffer(prevProp, nextProp));
+      }
       if (shouldUpdate) {
         const nextValue =
           typeof attributeConfig.process === 'function'
@@ -397,8 +410,10 @@ function diffProperties(
       continue; // we've already covered this key in the previous pass
     }
     attributeConfig = validAttributes[propKey];
-    if (!attributeConfig) {
-      continue; // not a valid native prop
+    if (!disablePropFilteringInViewConfigs) {
+      if (!attributeConfig) {
+        continue; // not a valid native prop
+      }
     }
 
     if (updatePayload && updatePayload[propKey] !== undefined) {
