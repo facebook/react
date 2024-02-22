@@ -16,6 +16,7 @@ import type {
 import type {RootTag} from './ReactRootTags';
 import type {Cache} from './ReactFiberCacheComponent';
 import type {Container} from './ReactFiberConfig';
+import type {Fiber} from './ReactInternalTypes';
 
 import {noTimeout} from './ReactFiberConfig';
 import {createHostRootFiber} from './ReactFiber';
@@ -166,7 +167,7 @@ export function createFiberRoot(
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber: Fiber = createHostRootFiber(
+  const uninitializedFiber = createHostRootFiber(
     tag,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -175,7 +176,7 @@ export function createFiberRoot(
   uninitializedFiber.stateNode = root;
 
   if (enableCache) {
-    const initialCache: Cache = createCache();
+    const initialCache = createCache();
     retainCache(initialCache);
 
     // The pooledCache is a fresh cache instance that is used temporarily
