@@ -36518,7 +36518,7 @@ if (__DEV__) {
       return root;
     }
 
-    var ReactVersion = "18.3.0-www-classic-9dbcb358";
+    var ReactVersion = "18.3.0-www-classic-8284b06d";
 
     function createPortal$1(
       children,
@@ -43494,7 +43494,7 @@ if (__DEV__) {
     // as a shared module for that reason.
 
     var EXPECTED_FORM_ACTION_URL = // eslint-disable-next-line no-script-url
-      "javascript:throw new Error('A React form was unexpectedly submitted.')";
+      "javascript:throw new Error('React form unexpectedly submitted.')";
 
     function diffHydratedGenericElement(
       domElement,
@@ -48266,7 +48266,8 @@ if (__DEV__) {
 
       {
         // Check the document if there are any queued form actions.
-        var root = unblocked.getRootNode();
+        // If there's no ownerDocument, then this is the document.
+        var root = unblocked.ownerDocument || unblocked;
         var formReplayingQueue = root.$$reactFormReplay;
 
         if (formReplayingQueue != null) {

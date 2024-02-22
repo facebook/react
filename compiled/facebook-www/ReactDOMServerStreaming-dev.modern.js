@@ -2338,7 +2338,7 @@ if (__DEV__) {
     var completeSegment =
       "$RS=function(a,b){a=document.getElementById(a);b=document.getElementById(b);for(a.parentNode.removeChild(a);a.firstChild;)b.parentNode.insertBefore(a.firstChild,b);b.parentNode.removeChild(b)};";
     var formReplaying =
-      'addEventListener("submit",function(a){if(!a.defaultPrevented){var c=a.target,d=a.submitter,e=c.action,b=d;if(d){var f=d.getAttribute("formAction");null!=f&&(e=f,b=null)}"javascript:throw new Error(\'A React form was unexpectedly submitted.\')"===e&&(a.preventDefault(),b?(a=document.createElement("input"),a.name=b.name,a.value=b.value,b.parentNode.insertBefore(a,b),b=new FormData(c),a.parentNode.removeChild(a)):b=new FormData(c),a=c.getRootNode(),(a.$$reactFormReplay=a.$$reactFormReplay||[]).push(c,\nd,b))}});';
+      'addEventListener("submit",function(a){if(!a.defaultPrevented){var c=a.target,d=a.submitter,e=c.action,b=d;if(d){var f=d.getAttribute("formAction");null!=f&&(e=f,b=null)}"javascript:throw new Error(\'React form unexpectedly submitted.\')"===e&&(a.preventDefault(),b?(a=document.createElement("input"),a.name=b.name,a.value=b.value,b.parentNode.insertBefore(a,b),b=new FormData(c),a.parentNode.removeChild(a)):b=new FormData(c),a=c.ownerDocument||c,(a.$$reactFormReplay=a.$$reactFormReplay||[]).push(c,d,b))}});';
 
     function getValueDescriptorExpectingObjectForWarning(thing) {
       return thing === null
@@ -3115,7 +3115,7 @@ if (__DEV__) {
     var actionJavaScriptURL = stringToPrecomputedChunk(
       escapeTextForBrowser(
         // eslint-disable-next-line no-script-url
-        "javascript:throw new Error('A React form was unexpectedly submitted.')"
+        "javascript:throw new Error('React form unexpectedly submitted.')"
       )
     );
     var startHiddenInputChunk = stringToPrecomputedChunk(

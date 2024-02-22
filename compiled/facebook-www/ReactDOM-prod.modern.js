@@ -12986,7 +12986,7 @@ function retryIfBlockedOn(unblocked) {
   )
     attemptExplicitHydrationTarget(i),
       null === i.blockedOn && queuedExplicitHydrationTargets.shift();
-  i = unblocked.getRootNode().$$reactFormReplay;
+  i = (unblocked.ownerDocument || unblocked).$$reactFormReplay;
   if (null != i)
     for (queuedTarget = 0; queuedTarget < i.length; queuedTarget += 3) {
       var form = i[queuedTarget],
@@ -16677,7 +16677,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1778 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-5cad22af",
+  version: "18.3.0-www-modern-e062351c",
   rendererPackageName: "react-dom"
 };
 var internals$jscomp$inline_2143 = {
@@ -16708,7 +16708,7 @@ var internals$jscomp$inline_2143 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-5cad22af"
+  reconcilerVersion: "18.3.0-www-modern-e062351c"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_2144 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
@@ -16979,4 +16979,4 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-5cad22af";
+exports.version = "18.3.0-www-modern-e062351c";

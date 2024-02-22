@@ -407,7 +407,7 @@ function makeFormFieldPrefix(resumableState) {
   return resumableState.idPrefix + id;
 }
 var actionJavaScriptURL = escapeTextForBrowser(
-  "javascript:throw new Error('A React form was unexpectedly submitted.')"
+  "javascript:throw new Error('React form unexpectedly submitted.')"
 );
 function pushAdditionalFormField(value, key) {
   this.push('<input type="hidden"');
@@ -643,7 +643,7 @@ function injectFormReplayingRuntime(resumableState, renderState) {
     ((resumableState.instructions |= 16),
     renderState.bootstrapChunks.unshift(
       renderState.startInlineScript,
-      'addEventListener("submit",function(a){if(!a.defaultPrevented){var c=a.target,d=a.submitter,e=c.action,b=d;if(d){var f=d.getAttribute("formAction");null!=f&&(e=f,b=null)}"javascript:throw new Error(\'A React form was unexpectedly submitted.\')"===e&&(a.preventDefault(),b?(a=document.createElement("input"),a.name=b.name,a.value=b.value,b.parentNode.insertBefore(a,b),b=new FormData(c),a.parentNode.removeChild(a)):b=new FormData(c),a=c.getRootNode(),(a.$$reactFormReplay=a.$$reactFormReplay||[]).push(c,\nd,b))}});',
+      'addEventListener("submit",function(a){if(!a.defaultPrevented){var c=a.target,d=a.submitter,e=c.action,b=d;if(d){var f=d.getAttribute("formAction");null!=f&&(e=f,b=null)}"javascript:throw new Error(\'React form unexpectedly submitted.\')"===e&&(a.preventDefault(),b?(a=document.createElement("input"),a.name=b.name,a.value=b.value,b.parentNode.insertBefore(a,b),b=new FormData(c),a.parentNode.removeChild(a)):b=new FormData(c),a=c.ownerDocument||c,(a.$$reactFormReplay=a.$$reactFormReplay||[]).push(c,d,b))}});',
       "\x3c/script>"
     ));
 }

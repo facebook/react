@@ -13749,7 +13749,7 @@ function retryIfBlockedOn(unblocked) {
   )
     attemptExplicitHydrationTarget(i),
       null === i.blockedOn && queuedExplicitHydrationTargets.shift();
-  i = unblocked.getRootNode().$$reactFormReplay;
+  i = (unblocked.ownerDocument || unblocked).$$reactFormReplay;
   if (null != i)
     for (queuedTarget = 0; queuedTarget < i.length; queuedTarget += 3) {
       var form = i[queuedTarget],
@@ -17440,7 +17440,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1863 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-modern-40531e1c",
+  version: "18.3.0-www-modern-e9e265be",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17485,7 +17485,7 @@ var devToolsConfig$jscomp$inline_1863 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-modern-40531e1c"
+  reconcilerVersion: "18.3.0-www-modern-e9e265be"
 });
 exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = Internals;
 exports.createPortal = function (children, container) {
@@ -17743,7 +17743,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-modern-40531e1c";
+exports.version = "18.3.0-www-modern-e9e265be";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
