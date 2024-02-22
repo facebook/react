@@ -82,6 +82,13 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useImperativeHandle(undefined, () => null);
       Dispatcher.useDebugValue(null);
       Dispatcher.useCallback(() => {});
+      Dispatcher.useTransition();
+      Dispatcher.useSyncExternalStore(
+        () => () => {},
+        () => null,
+        () => null,
+      );
+      Dispatcher.useDeferredValue(null);
       Dispatcher.useMemo(() => null);
       if (typeof Dispatcher.useMemoCache === 'function') {
         // This type check is for Flow only.
