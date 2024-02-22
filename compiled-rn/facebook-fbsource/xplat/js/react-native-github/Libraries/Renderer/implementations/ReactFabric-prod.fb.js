@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<752d9bfb239e2381d7f48dd5633002ac>>
+ * @generated SignedSource<<2a3d0aa946faed7a858417c14fa324c6>>
  */
 
 "use strict";
@@ -940,7 +940,7 @@ eventPluginOrder = Array.prototype.slice.call([
   "ReactNativeBridgeEventPlugin"
 ]);
 recomputePluginOrdering();
-var injectedNamesToPlugins$jscomp$inline_238 = {
+var injectedNamesToPlugins$jscomp$inline_240 = {
     ResponderEventPlugin: ResponderEventPlugin,
     ReactNativeBridgeEventPlugin: {
       eventTypes: {},
@@ -986,32 +986,32 @@ var injectedNamesToPlugins$jscomp$inline_238 = {
       }
     }
   },
-  isOrderingDirty$jscomp$inline_239 = !1,
-  pluginName$jscomp$inline_240;
-for (pluginName$jscomp$inline_240 in injectedNamesToPlugins$jscomp$inline_238)
+  isOrderingDirty$jscomp$inline_241 = !1,
+  pluginName$jscomp$inline_242;
+for (pluginName$jscomp$inline_242 in injectedNamesToPlugins$jscomp$inline_240)
   if (
-    injectedNamesToPlugins$jscomp$inline_238.hasOwnProperty(
-      pluginName$jscomp$inline_240
+    injectedNamesToPlugins$jscomp$inline_240.hasOwnProperty(
+      pluginName$jscomp$inline_242
     )
   ) {
-    var pluginModule$jscomp$inline_241 =
-      injectedNamesToPlugins$jscomp$inline_238[pluginName$jscomp$inline_240];
+    var pluginModule$jscomp$inline_243 =
+      injectedNamesToPlugins$jscomp$inline_240[pluginName$jscomp$inline_242];
     if (
-      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_240) ||
-      namesToPlugins[pluginName$jscomp$inline_240] !==
-        pluginModule$jscomp$inline_241
+      !namesToPlugins.hasOwnProperty(pluginName$jscomp$inline_242) ||
+      namesToPlugins[pluginName$jscomp$inline_242] !==
+        pluginModule$jscomp$inline_243
     ) {
-      if (namesToPlugins[pluginName$jscomp$inline_240])
+      if (namesToPlugins[pluginName$jscomp$inline_242])
         throw Error(
           "EventPluginRegistry: Cannot inject two different event plugins using the same name, `" +
-            (pluginName$jscomp$inline_240 + "`.")
+            (pluginName$jscomp$inline_242 + "`.")
         );
-      namesToPlugins[pluginName$jscomp$inline_240] =
-        pluginModule$jscomp$inline_241;
-      isOrderingDirty$jscomp$inline_239 = !0;
+      namesToPlugins[pluginName$jscomp$inline_242] =
+        pluginModule$jscomp$inline_243;
+      isOrderingDirty$jscomp$inline_241 = !0;
     }
   }
-isOrderingDirty$jscomp$inline_239 && recomputePluginOrdering();
+isOrderingDirty$jscomp$inline_241 && recomputePluginOrdering();
 var emptyObject$1 = {},
   removedKeys = null,
   removedKeyCount = 0,
@@ -1315,6 +1315,7 @@ function dispatchEvent(target, topLevelType, nativeEvent) {
   });
 }
 var alwaysThrottleRetries = dynamicFlags.alwaysThrottleRetries,
+  enableComponentStackLocations = dynamicFlags.enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask =
     dynamicFlags.enableDeferRootSchedulingToMicrotask,
   enableUseRefAccessWarning = dynamicFlags.enableUseRefAccessWarning,
@@ -2600,13 +2601,161 @@ function shallowEqual(objA, objB) {
   }
   return !0;
 }
+var prefix;
+function describeBuiltInComponentFrame(name) {
+  if (enableComponentStackLocations) {
+    if (void 0 === prefix)
+      try {
+        throw Error();
+      } catch (x) {
+        var match = x.stack.trim().match(/\n( *(at )?)/);
+        prefix = (match && match[1]) || "";
+      }
+    return "\n" + prefix + name;
+  }
+  return describeComponentFrame(name, null);
+}
+var reentry = !1;
+function describeNativeComponentFrame(fn, construct) {
+  if (!fn || reentry) return "";
+  reentry = !0;
+  var previousPrepareStackTrace = Error.prepareStackTrace;
+  Error.prepareStackTrace = void 0;
+  var RunInRootFrame = {
+    DetermineComponentFrameRoot: function () {
+      try {
+        if (construct) {
+          var Fake = function () {
+            throw Error();
+          };
+          Object.defineProperty(Fake.prototype, "props", {
+            set: function () {
+              throw Error();
+            }
+          });
+          if ("object" === typeof Reflect && Reflect.construct) {
+            try {
+              Reflect.construct(Fake, []);
+            } catch (x) {
+              var control = x;
+            }
+            Reflect.construct(fn, [], Fake);
+          } else {
+            try {
+              Fake.call();
+            } catch (x$15) {
+              control = x$15;
+            }
+            fn.call(Fake.prototype);
+          }
+        } else {
+          try {
+            throw Error();
+          } catch (x$16) {
+            control = x$16;
+          }
+          (Fake = fn()) &&
+            "function" === typeof Fake.catch &&
+            Fake.catch(function () {});
+        }
+      } catch (sample) {
+        if (sample && control && "string" === typeof sample.stack)
+          return [sample.stack, control.stack];
+      }
+      return [null, null];
+    }
+  };
+  RunInRootFrame.DetermineComponentFrameRoot.displayName =
+    "DetermineComponentFrameRoot";
+  var namePropDescriptor = Object.getOwnPropertyDescriptor(
+    RunInRootFrame.DetermineComponentFrameRoot,
+    "name"
+  );
+  namePropDescriptor &&
+    namePropDescriptor.configurable &&
+    Object.defineProperty(RunInRootFrame.DetermineComponentFrameRoot, "name", {
+      value: "DetermineComponentFrameRoot"
+    });
+  try {
+    var _RunInRootFrame$Deter = RunInRootFrame.DetermineComponentFrameRoot(),
+      sampleStack = _RunInRootFrame$Deter[0],
+      controlStack = _RunInRootFrame$Deter[1];
+    if (sampleStack && controlStack) {
+      var sampleLines = sampleStack.split("\n"),
+        controlLines = controlStack.split("\n");
+      for (
+        namePropDescriptor = RunInRootFrame = 0;
+        RunInRootFrame < sampleLines.length &&
+        !sampleLines[RunInRootFrame].includes("DetermineComponentFrameRoot");
+
+      )
+        RunInRootFrame++;
+      for (
+        ;
+        namePropDescriptor < controlLines.length &&
+        !controlLines[namePropDescriptor].includes(
+          "DetermineComponentFrameRoot"
+        );
+
+      )
+        namePropDescriptor++;
+      if (
+        RunInRootFrame === sampleLines.length ||
+        namePropDescriptor === controlLines.length
+      )
+        for (
+          RunInRootFrame = sampleLines.length - 1,
+            namePropDescriptor = controlLines.length - 1;
+          1 <= RunInRootFrame &&
+          0 <= namePropDescriptor &&
+          sampleLines[RunInRootFrame] !== controlLines[namePropDescriptor];
+
+        )
+          namePropDescriptor--;
+      for (
+        ;
+        1 <= RunInRootFrame && 0 <= namePropDescriptor;
+        RunInRootFrame--, namePropDescriptor--
+      )
+        if (sampleLines[RunInRootFrame] !== controlLines[namePropDescriptor]) {
+          if (1 !== RunInRootFrame || 1 !== namePropDescriptor) {
+            do
+              if (
+                (RunInRootFrame--,
+                namePropDescriptor--,
+                0 > namePropDescriptor ||
+                  sampleLines[RunInRootFrame] !==
+                    controlLines[namePropDescriptor])
+              ) {
+                var frame =
+                  "\n" +
+                  sampleLines[RunInRootFrame].replace(" at new ", " at ");
+                fn.displayName &&
+                  frame.includes("<anonymous>") &&
+                  (frame = frame.replace("<anonymous>", fn.displayName));
+                return frame;
+              }
+            while (1 <= RunInRootFrame && 0 <= namePropDescriptor);
+          }
+          break;
+        }
+    }
+  } finally {
+    (reentry = !1), (Error.prepareStackTrace = previousPrepareStackTrace);
+  }
+  return (previousPrepareStackTrace = fn ? fn.displayName || fn.name : "")
+    ? describeBuiltInComponentFrame(previousPrepareStackTrace)
+    : "";
+}
 function describeComponentFrame(name, ownerName) {
   var sourceInfo = "";
   ownerName && (sourceInfo = " (created by " + ownerName + ")");
   return "\n    in " + (name || "Unknown") + sourceInfo;
 }
 function describeFunctionComponentFrame(fn) {
-  return fn
+  return enableComponentStackLocations
+    ? describeNativeComponentFrame(fn, !1)
+    : fn
     ? describeComponentFrame(fn.displayName || fn.name || null, null)
     : "";
 }
@@ -2615,13 +2764,13 @@ function describeFiber(fiber) {
     case 26:
     case 27:
     case 5:
-      return describeComponentFrame(fiber.type, null);
+      return describeBuiltInComponentFrame(fiber.type);
     case 16:
-      return describeComponentFrame("Lazy", null);
+      return describeBuiltInComponentFrame("Lazy");
     case 13:
-      return describeComponentFrame("Suspense", null);
+      return describeBuiltInComponentFrame("Suspense");
     case 19:
-      return describeComponentFrame("SuspenseList", null);
+      return describeBuiltInComponentFrame("SuspenseList");
     case 0:
     case 2:
     case 15:
@@ -2629,7 +2778,13 @@ function describeFiber(fiber) {
     case 11:
       return describeFunctionComponentFrame(fiber.type.render);
     case 1:
-      return (fiber = describeFunctionComponentFrame(fiber.type)), fiber;
+      return (
+        (fiber = fiber.type),
+        (fiber = enableComponentStackLocations
+          ? describeNativeComponentFrame(fiber, !0)
+          : describeFunctionComponentFrame(fiber)),
+        fiber
+      );
     default:
       return "";
   }
@@ -6084,14 +6239,14 @@ function cutOffTailIfNeeded(renderState, hasRenderedATailFallback) {
       break;
     case "collapsed":
       lastTailNode = renderState.tail;
-      for (var lastTailNode$64 = null; null !== lastTailNode; )
-        null !== lastTailNode.alternate && (lastTailNode$64 = lastTailNode),
+      for (var lastTailNode$66 = null; null !== lastTailNode; )
+        null !== lastTailNode.alternate && (lastTailNode$66 = lastTailNode),
           (lastTailNode = lastTailNode.sibling);
-      null === lastTailNode$64
+      null === lastTailNode$66
         ? hasRenderedATailFallback || null === renderState.tail
           ? (renderState.tail = null)
           : (renderState.tail.sibling = null)
-        : (lastTailNode$64.sibling = null);
+        : (lastTailNode$66.sibling = null);
   }
 }
 function bubbleProperties(completedWork) {
@@ -6101,19 +6256,19 @@ function bubbleProperties(completedWork) {
     newChildLanes = 0,
     subtreeFlags = 0;
   if (didBailout)
-    for (var child$65 = completedWork.child; null !== child$65; )
-      (newChildLanes |= child$65.lanes | child$65.childLanes),
-        (subtreeFlags |= child$65.subtreeFlags & 31457280),
-        (subtreeFlags |= child$65.flags & 31457280),
-        (child$65.return = completedWork),
-        (child$65 = child$65.sibling);
+    for (var child$67 = completedWork.child; null !== child$67; )
+      (newChildLanes |= child$67.lanes | child$67.childLanes),
+        (subtreeFlags |= child$67.subtreeFlags & 31457280),
+        (subtreeFlags |= child$67.flags & 31457280),
+        (child$67.return = completedWork),
+        (child$67 = child$67.sibling);
   else
-    for (child$65 = completedWork.child; null !== child$65; )
-      (newChildLanes |= child$65.lanes | child$65.childLanes),
-        (subtreeFlags |= child$65.subtreeFlags),
-        (subtreeFlags |= child$65.flags),
-        (child$65.return = completedWork),
-        (child$65 = child$65.sibling);
+    for (child$67 = completedWork.child; null !== child$67; )
+      (newChildLanes |= child$67.lanes | child$67.childLanes),
+        (subtreeFlags |= child$67.subtreeFlags),
+        (subtreeFlags |= child$67.flags),
+        (child$67.return = completedWork),
+        (child$67 = child$67.sibling);
   completedWork.subtreeFlags |= subtreeFlags;
   completedWork.childLanes = newChildLanes;
   return didBailout;
@@ -6602,8 +6757,8 @@ function safelyDetachRef(current, nearestMountedAncestor) {
     else if ("function" === typeof ref)
       try {
         ref(null);
-      } catch (error$80) {
-        captureCommitPhaseError(current, nearestMountedAncestor, error$80);
+      } catch (error$82) {
+        captureCommitPhaseError(current, nearestMountedAncestor, error$82);
       }
     else ref.current = null;
 }
@@ -6707,10 +6862,10 @@ function commitHookEffectListMount(flags, finishedWork) {
     var effect = (finishedWork = finishedWork.next);
     do {
       if ((effect.tag & flags) === flags) {
-        var create$81 = effect.create,
+        var create$83 = effect.create,
           inst = effect.inst;
-        create$81 = create$81();
-        inst.destroy = create$81;
+        create$83 = create$83();
+        inst.destroy = create$83;
       }
       effect = effect.next;
     } while (effect !== finishedWork);
@@ -6773,11 +6928,11 @@ function commitLayoutEffectOnFiber(finishedRoot, current, finishedWork) {
               current,
               finishedRoot.__reactInternalSnapshotBeforeUpdate
             );
-          } catch (error$82) {
+          } catch (error$84) {
             captureCommitPhaseError(
               finishedWork,
               finishedWork.return,
-              error$82
+              error$84
             );
           }
         }
@@ -7071,8 +7226,8 @@ function commitMutationEffectsOnFiber(finishedWork, root) {
         }
         try {
           commitHookEffectListUnmount(5, finishedWork, finishedWork.return);
-        } catch (error$84) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error$84);
+        } catch (error$86) {
+          captureCommitPhaseError(finishedWork, finishedWork.return, error$86);
         }
       }
       break;
@@ -8066,8 +8221,8 @@ function renderRootSync(root, lanes) {
       }
       workLoopSync();
       break;
-    } catch (thrownValue$92) {
-      handleThrow(root, thrownValue$92);
+    } catch (thrownValue$94) {
+      handleThrow(root, thrownValue$94);
     }
   while (1);
   lanes && root.shellSuspendCounter++;
@@ -8173,8 +8328,8 @@ function renderRootConcurrent(root, lanes) {
       }
       workLoopConcurrent();
       break;
-    } catch (thrownValue$94) {
-      handleThrow(root, thrownValue$94);
+    } catch (thrownValue$96) {
+      handleThrow(root, thrownValue$96);
     }
   while (1);
   resetContextDependencies();
@@ -9529,10 +9684,10 @@ batchedUpdatesImpl = function (fn, a) {
   }
 };
 var roots = new Map(),
-  devToolsConfig$jscomp$inline_1067 = {
+  devToolsConfig$jscomp$inline_1069 = {
     findFiberByHostInstance: getInstanceFromNode,
     bundleType: 0,
-    version: "18.3.0-canary-9cb0e0fc",
+    version: "18.3.0-canary-b37c113f",
     rendererPackageName: "react-native-renderer",
     rendererConfig: {
       getInspectorDataForInstance: getInspectorDataForInstance,
@@ -9548,11 +9703,11 @@ var roots = new Map(),
       }.bind(null, findNodeHandle)
     }
   };
-var internals$jscomp$inline_1292 = {
-  bundleType: devToolsConfig$jscomp$inline_1067.bundleType,
-  version: devToolsConfig$jscomp$inline_1067.version,
-  rendererPackageName: devToolsConfig$jscomp$inline_1067.rendererPackageName,
-  rendererConfig: devToolsConfig$jscomp$inline_1067.rendererConfig,
+var internals$jscomp$inline_1294 = {
+  bundleType: devToolsConfig$jscomp$inline_1069.bundleType,
+  version: devToolsConfig$jscomp$inline_1069.version,
+  rendererPackageName: devToolsConfig$jscomp$inline_1069.rendererPackageName,
+  rendererConfig: devToolsConfig$jscomp$inline_1069.rendererConfig,
   overrideHookState: null,
   overrideHookStateDeletePath: null,
   overrideHookStateRenamePath: null,
@@ -9568,26 +9723,26 @@ var internals$jscomp$inline_1292 = {
     return null === fiber ? null : fiber.stateNode;
   },
   findFiberByHostInstance:
-    devToolsConfig$jscomp$inline_1067.findFiberByHostInstance ||
+    devToolsConfig$jscomp$inline_1069.findFiberByHostInstance ||
     emptyFindFiberByHostInstance,
   findHostInstancesForRefresh: null,
   scheduleRefresh: null,
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-canary-9cb0e0fc"
+  reconcilerVersion: "18.3.0-canary-b37c113f"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
-  var hook$jscomp$inline_1293 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var hook$jscomp$inline_1295 = __REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (
-    !hook$jscomp$inline_1293.isDisabled &&
-    hook$jscomp$inline_1293.supportsFiber
+    !hook$jscomp$inline_1295.isDisabled &&
+    hook$jscomp$inline_1295.supportsFiber
   )
     try {
-      (rendererID = hook$jscomp$inline_1293.inject(
-        internals$jscomp$inline_1292
+      (rendererID = hook$jscomp$inline_1295.inject(
+        internals$jscomp$inline_1294
       )),
-        (injectedHook = hook$jscomp$inline_1293);
+        (injectedHook = hook$jscomp$inline_1295);
     } catch (err) {}
 }
 exports.createPortal = function (children, containerTag) {
