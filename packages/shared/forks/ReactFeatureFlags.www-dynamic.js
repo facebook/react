@@ -29,6 +29,7 @@ export const enableDO_NOT_USE_disableStrictPassiveEffect = __VARIANT__;
 export const enableUseDeferredValueInitialArg = __VARIANT__;
 export const enableRenderableContext = __VARIANT__;
 export const useModernStrictMode = __VARIANT__;
+export const enableRefAsProp = __VARIANT__;
 
 export const enableRetryLaneExpiration = __VARIANT__;
 export const retryLaneExpirationMs = 5000;
