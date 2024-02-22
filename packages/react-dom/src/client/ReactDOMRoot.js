@@ -217,7 +217,7 @@ export function createRoot(
     }
   }
 
-  const root: FiberRoot  = createContainer(
+  const root: FiberRoot = createContainer(
     container,
     ConcurrentRoot,
     null,
@@ -308,7 +308,7 @@ export function hydrateRoot(
     }
   }
 
-  const root = createHydrationContainer(
+  const root: FiberRoot = createHydrationContainer(
     initialChildren,
     null,
     container,
