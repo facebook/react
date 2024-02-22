@@ -112,8 +112,6 @@ export {
 } from './ReactTestSelectors';
 export {startHostTransition} from './ReactFiberHooks';
 
-type OpaqueRoot = FiberRoot;
-
 // 0 is PROD, 1 is DEV.
 // Might add PROFILE later.
 type BundleType = 0 | 1;
@@ -251,7 +249,7 @@ export function createContainer(
   identifierPrefix: string,
   onRecoverableError: (error: mixed) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
-): OpaqueRoot {
+): FiberRoot {
   const hydrate = false;
   const initialChildren = null;
   return createFiberRoot(
@@ -282,7 +280,7 @@ export function createHydrationContainer(
   onRecoverableError: (error: mixed) => void,
   transitionCallbacks: null | TransitionTracingCallbacks,
   formState: ReactFormState<any, any> | null,
-): OpaqueRoot {
+): FiberRoot {
   const hydrate = true;
   const root = createFiberRoot(
     containerInfo,
@@ -320,7 +318,7 @@ export function createHydrationContainer(
 
 export function updateContainer(
   element: ReactNodeList,
-  container: OpaqueRoot,
+  container: FiberRoot,
   parentComponent: ?React$Component<any, any>,
   callback: ?Function,
 ): Lane {
@@ -396,7 +394,7 @@ export {
 };
 
 export function getPublicRootInstance(
-  container: OpaqueRoot,
+  container: FiberRoot,
 ): React$Component<any, any> | PublicInstance | null {
   const containerFiber = container.current;
   if (!containerFiber.child) {

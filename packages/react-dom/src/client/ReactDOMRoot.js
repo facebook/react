@@ -217,7 +217,7 @@ export function createRoot(
     }
   }
 
-  const root = createContainer(
+  const root: FiberRoot  = createContainer(
     container,
     ConcurrentRoot,
     null,
