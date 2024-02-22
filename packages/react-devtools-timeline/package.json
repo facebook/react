@@ -9,7 +9,7 @@
     "memoize-one": "^5.1.1",
     "nullthrows": "^1.1.1",
     "pretty-ms": "^7.0.0",
-    "react-virtualized-auto-sizer": "^1.0.6",
+    "react-virtualized-auto-sizer": "^1.0.23",
     "regenerator-runtime": "^0.13.7"
   },
   "devDependencies": {
