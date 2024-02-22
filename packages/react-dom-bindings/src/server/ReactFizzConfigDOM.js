@@ -1015,7 +1015,7 @@ function makeFormFieldPrefix(resumableState: ResumableState): string {
 const actionJavaScriptURL = stringToPrecomputedChunk(
   escapeTextForBrowser(
     // eslint-disable-next-line no-script-url
-    "javascript:throw new Error('A React form was unexpectedly submitted.')",
+    "javascript:throw new Error('React form unexpectedly submitted.')",
   ),
 );
 
