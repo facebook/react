@@ -19,11 +19,16 @@ import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
 // the exports object every time a flag is read.
 export const {
   alwaysThrottleRetries,
+  consoleManagedByDevToolsDuringStrictMode,
+  enableAsyncActions,
   enableComponentStackLocations,
   enableDeferRootSchedulingToMicrotask,
+  enableInfiniteRenderLoopDetection,
+  enableRenderableContext,
   enableUseRefAccessWarning,
   passChildrenWhenCloningPersistedNodes,
   useMicrotasksForSchedulingInFabric,
+  useModernStrictMode,
 } = dynamicFlags;
 
 // The rest of the flags are static for better dead code elimination.
@@ -36,7 +41,7 @@ export const enableProfilerCommitHooks = __PROFILE__;
 export const enableProfilerNestedUpdatePhase = __PROFILE__;
 export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableUpdaterTracking = __PROFILE__;
-export const enableCache = false;
+export const enableCache = true;
 export const enableLegacyCache = false;
 export const enableCacheElement = true;
 export const enableFetchInstrumentation = false;
@@ -66,7 +71,6 @@ export const enableClientRenderFallbackOnTextMismatch = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = true;
 export const enableGetInspectorDataForInstanceInProduction = true;
-export const enableRenderableContext = false;
 
 export const enableRetryLaneExpiration = false;
 export const retryLaneExpirationMs = 5000;
@@ -78,25 +82,20 @@ export const enableLazyContextPropagation = false;
 export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const allowConcurrentByDefault = false;
-export const enableCustomElementPropertySupport = false;
-
-export const consoleManagedByDevToolsDuringStrictMode = false;
+export const enableCustomElementPropertySupport = true;
 
 export const enableTransitionTracing = false;
 
 export const enableFloat = true;
 
-export const useModernStrictMode = false;
 export const enableDO_NOT_USE_disableStrictPassiveEffect = false;
 export const enableFizzExternalRuntime = true;
 
-export const enableAsyncActions = false;
-export const enableUseDeferredValueInitialArg = true;
+export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
 export const enableServerComponentLogs = true;
-export const enableInfiniteRenderLoopDetection = false;
 
 // TODO: Roll out with GK. Don't keep as dynamic flag for too long, though,
 // because JSX is an extremely hot path.

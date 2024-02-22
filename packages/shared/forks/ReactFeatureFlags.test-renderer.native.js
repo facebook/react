@@ -13,7 +13,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
 export const enableAsyncDebugInfo = false;
-export const enableSchedulingProfiler = false;
+export const enableSchedulingProfiler = __PROFILE__;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
@@ -64,6 +64,7 @@ export const enableLegacyHidden = false;
 export const forceConcurrentByDefaultForTesting = false;
 export const enableUnifiedSyncLane = true;
 export const allowConcurrentByDefault = true;
+export const enableCustomElementPropertySupport = true;
 
 export const consoleManagedByDevToolsDuringStrictMode = false;
 
