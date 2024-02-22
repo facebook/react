@@ -196,9 +196,7 @@ export function listenToFormSubmissionsForReplaying() {
     // javascript: URL placeholder value. So we might not be the first to declare it.
     // We attach it to the form's root node, which is the shared environment context
     // where we preserve sequencing and where we'll pick it up from during hydration.
-    // In practice, this is just the same as document but we might support shadow trees
-    // in the future.
-    const root = form.ownerDocument;
+    const root = form === document ? form : form.ownerDocument;
     (root['$$reactFormReplay'] = root['$$reactFormReplay'] || []).push(
       form,
       submitter,
