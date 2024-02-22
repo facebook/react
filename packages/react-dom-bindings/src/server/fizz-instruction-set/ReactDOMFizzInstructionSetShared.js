@@ -131,7 +131,7 @@ export function completeSegment(containerID, placeholderID) {
 // as a shared module for that reason.
 const EXPECTED_FORM_ACTION_URL =
   // eslint-disable-next-line no-script-url
-  "javascript:throw new Error('A React form was unexpectedly submitted.')";
+  "javascript:throw new Error('React form unexpectedly submitted.')";
 
 export function listenToFormSubmissionsForReplaying() {
   // A global replay queue ensures actions are replayed in order.
