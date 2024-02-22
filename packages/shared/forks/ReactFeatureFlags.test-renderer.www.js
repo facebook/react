@@ -87,6 +87,7 @@ export const enableUseDeferredValueInitialArg = true;
 export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
+export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
 export const enableRefAsProp = false;

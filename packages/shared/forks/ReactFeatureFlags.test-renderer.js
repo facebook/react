@@ -87,6 +87,7 @@ export const enableUseDeferredValueInitialArg = __EXPERIMENTAL__;
 export const disableClientCache = true;
 
 export const enableServerComponentKeys = true;
+export const enableServerComponentLogs = true;
 export const enableInfiniteRenderLoopDetection = false;
 
 // TODO: This must be in sync with the main ReactFeatureFlags file because

@@ -1995,4 +1995,45 @@ describe('ReactFlight', () => {
       </div>,
     );
   });
+
+  // @gate enableServerComponentLogs && __DEV__
+  it('replays logs, but not onError logs', async () => {
+    function foo() {
+      return 'hello';
+    }
+    function ServerComponent() {
+      console.log('hi', {prop: 123, fn: foo});
+      throw new Error('err');
+    }
+
+    let transport;
+    expect(() => {
+      // Reset the modules so that we get a new overridden console on top of the
+      // one installed by expect. This ensures that we still emit console.error
+      // calls.
+      jest.resetModules();
+      jest.mock('react', () => require('react/react.react-server'));
+      ReactServer = require('react');
+      ReactNoopFlightServer = require('react-noop-renderer/flight-server');
+      transport = ReactNoopFlightServer.render({root: <ServerComponent />});
+    }).toErrorDev('err');
+
+    const log = console.log;
+    try {
+      console.log = jest.fn();
+      // The error should not actually get logged because we're not awaiting the root
+      // so it's not thrown but the server log also shouldn't be replayed.
+      await ReactNoopFlightClient.read(transport);
+
+      expect(console.log).toHaveBeenCalledTimes(1);
+      expect(console.log.mock.calls[0][0]).toBe('hi');
+      expect(console.log.mock.calls[0][1].prop).toBe(123);
+      const loggedFn = console.log.mock.calls[0][1].fn;
+      expect(typeof loggedFn).toBe('function');
+      expect(loggedFn).not.toBe(foo);
+      expect(loggedFn.toString()).toBe(foo.toString());
+    } finally {
+      console.log = log;
+    }
+  });
 });

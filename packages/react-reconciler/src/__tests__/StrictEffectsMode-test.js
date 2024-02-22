@@ -10,7 +10,7 @@
 'use strict';
 
 let React;
-let ReactTestRenderer;
+let ReactNoop;
 let Scheduler;
 let act;
 let assertLog;
@@ -18,13 +18,13 @@ let assertLog;
 describe('StrictEffectsMode', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('react');
-    ReactTestRenderer = require('react-test-renderer');
-    Scheduler = require('scheduler');
     act = require('internal-test-utils').act;
-
     const InternalTestUtils = require('internal-test-utils');
     assertLog = InternalTestUtils.assertLog;
+
+    React = require('react');
+    Scheduler = require('scheduler');
+    ReactNoop = require('react-noop-renderer');
   });
 
   it('should not double invoke effects in legacy mode', async () => {
@@ -42,8 +42,9 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
+    const root = ReactNoop.createLegacyRoot();
     await act(() => {
-      ReactTestRenderer.create(
+      root.render(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
@@ -68,15 +69,12 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        {
-          isConcurrent: true,
-        },
+        'root',
       );
     });
 
@@ -94,10 +92,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -109,7 +108,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useLayoutEffect unmount', 'useEffect unmount']);
@@ -130,15 +129,12 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        {
-          isConcurrent: true,
-        },
+        'root',
       );
     });
 
@@ -156,10 +152,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -171,7 +168,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount(null);
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useEffect One unmount', 'useEffect Two unmount']);
@@ -192,15 +189,12 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        {
-          isConcurrent: true,
-        },
+        'root',
       );
     });
 
@@ -218,10 +212,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -233,7 +228,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['useLayoutEffect One unmount', 'useLayoutEffect Two unmount']);
@@ -252,15 +247,11 @@ describe('StrictEffectsMode', () => {
       return text;
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        {
-          isConcurrent: true,
-        },
       );
     });
 
@@ -276,7 +267,7 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
@@ -286,7 +277,7 @@ describe('StrictEffectsMode', () => {
     assertLog(['useLayoutEffect mount', 'useEffect mount']);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([]);
@@ -317,11 +308,10 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App />
         </React.StrictMode>,
-        {isConcurrent: true},
       );
     });
 
@@ -355,15 +345,12 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        {
-          isConcurrent: true,
-        },
+        'root',
       );
     });
 
@@ -378,17 +365,18 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
     assertLog(['componentDidUpdate']);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['componentWillUnmount']);
@@ -409,15 +397,12 @@ describe('StrictEffectsMode', () => {
       }
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        {
-          isConcurrent: true,
-        },
+        'root',
       );
     });
 
@@ -428,17 +413,18 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'update'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
     assertLog(['componentDidUpdate']);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog(['componentWillUnmount']);
@@ -463,8 +449,9 @@ describe('StrictEffectsMode', () => {
       }
     }
 
+    const root = ReactNoop.createLegacyRoot();
     await act(() => {
-      ReactTestRenderer.create(
+      root.render(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
@@ -495,13 +482,10 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        {
-          isConcurrent: true,
-        },
       );
     });
 
@@ -565,11 +549,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App />
         </React.StrictMode>,
-        {isConcurrent: true},
+        'root',
       );
     });
 
@@ -651,15 +635,12 @@ describe('StrictEffectsMode', () => {
       );
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        {
-          isConcurrent: true,
-        },
+        'root',
       );
     });
 
@@ -684,10 +665,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -699,7 +681,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([
@@ -741,15 +723,12 @@ describe('StrictEffectsMode', () => {
       );
     }
 
-    let renderer;
     await act(() => {
-      renderer = ReactTestRenderer.create(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
-        {
-          isConcurrent: true,
-        },
+        'root',
       );
     });
 
@@ -768,10 +747,11 @@ describe('StrictEffectsMode', () => {
     }
 
     await act(() => {
-      renderer.update(
+      ReactNoop.renderToRootWithID(
         <React.StrictMode>
           <App text={'mount'} />
         </React.StrictMode>,
+        'root',
       );
     });
 
@@ -783,7 +763,7 @@ describe('StrictEffectsMode', () => {
     ]);
 
     await act(() => {
-      renderer.unmount();
+      ReactNoop.unmountRootWithID('root');
     });
 
     assertLog([
