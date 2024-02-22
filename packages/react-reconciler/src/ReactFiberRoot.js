@@ -166,7 +166,7 @@ export function createFiberRoot(
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostRootFiber(
+  const uninitializedFiber: Fiber = createHostRootFiber(
     tag,
     isStrictMode,
     concurrentUpdatesByDefaultOverride,
@@ -175,7 +175,7 @@ export function createFiberRoot(
   uninitializedFiber.stateNode = root;
 
   if (enableCache) {
-    const initialCache = createCache();
+    const initialCache: Cache = createCache();
     retainCache(initialCache);
 
     // The pooledCache is a fresh cache instance that is used temporarily
