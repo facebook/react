@@ -84,6 +84,7 @@ var ReactSharedInternals =
   enableInfiniteRenderLoopDetection =
     dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+  enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   REACT_ELEMENT_TYPE = Symbol.for("react.element"),
   REACT_PORTAL_TYPE = Symbol.for("react.portal"),
   REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"),
@@ -1864,13 +1865,24 @@ function convertStringRefToCallbackRef(
   return ref;
 }
 function coerceRef(returnFiber, current, workInProgress, element) {
-  var mixedRef = element.ref;
-  returnFiber =
-    null !== mixedRef &&
-    "function" !== typeof mixedRef &&
-    "object" !== typeof mixedRef
-      ? convertStringRefToCallbackRef(returnFiber, current, element, mixedRef)
-      : mixedRef;
+  if (enableRefAsProp) {
+    var mixedRef = element.props.ref;
+    mixedRef = void 0 !== mixedRef ? mixedRef : null;
+  } else mixedRef = element.ref;
+  null !== mixedRef &&
+  "function" !== typeof mixedRef &&
+  "object" !== typeof mixedRef
+    ? ((returnFiber = convertStringRefToCallbackRef(
+        returnFiber,
+        current,
+        element,
+        mixedRef
+      )),
+      enableRefAsProp &&
+        ((current = assign({}, workInProgress.pendingProps)),
+        (current.ref = returnFiber),
+        (workInProgress.pendingProps = current)))
+    : (returnFiber = mixedRef);
   workInProgress.ref = returnFiber;
 }
 function throwOnInvalidObjectType(returnFiber, newChild) {
@@ -4378,12 +4390,17 @@ function updateForwardRef(
 ) {
   Component = Component.render;
   var ref = workInProgress.ref;
+  if (enableRefAsProp && "ref" in nextProps) {
+    var propsWithoutRef = {};
+    for (var key in nextProps)
+      "ref" !== key && (propsWithoutRef[key] = nextProps[key]);
+  } else propsWithoutRef = nextProps;
   prepareToReadContext(workInProgress, renderLanes);
   nextProps = renderWithHooks(
     current,
     workInProgress,
     Component,
-    nextProps,
+    propsWithoutRef,
     ref,
     renderLanes
   );
@@ -10577,7 +10594,7 @@ var slice = Array.prototype.slice,
       return null;
     },
     bundleType: 0,
-    version: "18.3.0-www-classic-ca1292bb",
+    version: "18.3.0-www-classic-36516bcc",
     rendererPackageName: "react-art"
   };
 var internals$jscomp$inline_1320 = {
@@ -10608,7 +10625,7 @@ var internals$jscomp$inline_1320 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-ca1292bb"
+  reconcilerVersion: "18.3.0-www-classic-36516bcc"
 };
 if ("undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__) {
   var hook$jscomp$inline_1321 = __REACT_DEVTOOLS_GLOBAL_HOOK__;

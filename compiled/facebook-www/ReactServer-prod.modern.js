@@ -12,8 +12,9 @@
 
 "use strict";
 var assign = Object.assign,
-  enableTransitionTracing =
-    require("ReactFeatureFlags").enableTransitionTracing,
+  dynamicFeatureFlags = require("ReactFeatureFlags"),
+  enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
+  enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   ReactCurrentCache = { current: null },
   ReactCurrentDispatcher = { current: null },
   ReactSharedInternals = {
@@ -57,6 +58,8 @@ function getIteratorFn(maybeIterable) {
 var hasOwnProperty = Object.prototype.hasOwnProperty,
   ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 function ReactElement(type, key, _ref, self, source, owner, props) {
+  enableRefAsProp &&
+    ((_ref = props.ref), (_ref = void 0 !== _ref ? _ref : null));
   return {
     $$typeof: REACT_ELEMENT_TYPE,
     type: type,
@@ -73,11 +76,11 @@ function jsxProd(type, config, maybeKey) {
     ref = null;
   void 0 !== maybeKey && (key = "" + maybeKey);
   void 0 !== config.key && (key = "" + config.key);
-  void 0 !== config.ref && (ref = config.ref);
+  void 0 === config.ref || enableRefAsProp || (ref = config.ref);
   for (propName in config)
     hasOwnProperty.call(config, propName) &&
       "key" !== propName &&
-      "ref" !== propName &&
+      (enableRefAsProp || "ref" !== propName) &&
       (props[propName] = config[propName]);
   if (type && type.defaultProps)
     for (propName in ((config = type.defaultProps), config))
@@ -96,7 +99,7 @@ function cloneAndReplaceKey(oldElement, newKey) {
   return ReactElement(
     oldElement.type,
     newKey,
-    oldElement.ref,
+    enableRefAsProp ? null : oldElement.ref,
     void 0,
     void 0,
     oldElement._owner,
@@ -391,20 +394,22 @@ exports.cloneElement = function (element, config, children) {
     throw Error(formatProdErrorMessage(267, element));
   var props = assign({}, element.props),
     key = element.key,
-    ref = element.ref,
+    ref = enableRefAsProp ? null : element.ref,
     owner = element._owner;
   if (null != config) {
     void 0 !== config.ref &&
-      ((ref = config.ref), (owner = ReactCurrentOwner.current));
+      (enableRefAsProp || (ref = config.ref),
+      (owner = ReactCurrentOwner.current));
     void 0 !== config.key && (key = "" + config.key);
     if (element.type && element.type.defaultProps)
       var defaultProps = element.type.defaultProps;
     for (propName in config)
-      hasOwnProperty.call(config, propName) &&
-        "key" !== propName &&
-        "ref" !== propName &&
-        "__self" !== propName &&
-        "__source" !== propName &&
+      !hasOwnProperty.call(config, propName) ||
+        "key" === propName ||
+        (!enableRefAsProp && "ref" === propName) ||
+        "__self" === propName ||
+        "__source" === propName ||
+        (enableRefAsProp && "ref" === propName && void 0 === config.ref) ||
         (props[propName] =
           void 0 === config[propName] && void 0 !== defaultProps
             ? defaultProps[propName]
@@ -425,12 +430,14 @@ exports.createElement = function (type, config, children) {
     key = null,
     ref = null;
   if (null != config)
-    for (propName in (void 0 !== config.ref && (ref = config.ref),
+    for (propName in (void 0 === config.ref ||
+      enableRefAsProp ||
+      (ref = config.ref),
     void 0 !== config.key && (key = "" + config.key),
     config))
       hasOwnProperty.call(config, propName) &&
         "key" !== propName &&
-        "ref" !== propName &&
+        (enableRefAsProp || "ref" !== propName) &&
         "__self" !== propName &&
         "__source" !== propName &&
         (props[propName] = config[propName]);
@@ -517,4 +524,4 @@ exports.useId = function () {
 exports.useMemo = function (create, deps) {
   return ReactCurrentDispatcher.current.useMemo(create, deps);
 };
-exports.version = "18.3.0-www-modern-bd59da2c";
+exports.version = "18.3.0-www-modern-e6d37b19";

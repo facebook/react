@@ -20,8 +20,8 @@ function isClientReference(reference) {
     throw Error("Expected implementation for checkIsClientReference.");
   return checkIsClientReference(reference);
 }
-require("ReactFeatureFlags");
-var byteLengthImpl = null;
+var enableRefAsProp = require("ReactFeatureFlags").enableRefAsProp,
+  byteLengthImpl = null;
 function writeChunkAndReturn(destination, chunk) {
   destination.write(chunk);
   return !0;
@@ -795,13 +795,19 @@ function renderModelDestructive(
                   serializeByValueID(request))
                 : serializeByValueID(parentPropertyName);
         } else parent.set(value, -1);
+        parent = value.props;
+        enableRefAsProp
+          ? ((parentPropertyName = parent.ref),
+            (parentPropertyName =
+              void 0 !== parentPropertyName ? parentPropertyName : null))
+          : (parentPropertyName = value.ref);
         return renderElement(
           request,
           task,
           value.type,
           value.key,
-          value.ref,
-          value.props
+          parentPropertyName,
+          parent
         );
       case REACT_LAZY_TYPE:
         return (

@@ -106,7 +106,9 @@ if (__DEV__) {
     }
 
     // Re-export dynamic flags from the www version.
-    require("ReactFeatureFlags");
+    var dynamicFeatureFlags = require("ReactFeatureFlags");
+
+    var enableRefAsProp = dynamicFeatureFlags.enableRefAsProp; // On WWW, true is used for a new modern build.
 
     function stringToChunk(content) {
       return content;
@@ -2138,7 +2140,13 @@ if (__DEV__) {
             var props = element.props;
             var ref;
 
-            {
+            if (enableRefAsProp) {
+              // TODO: This is a temporary, intermediate step. Once the feature
+              // flag is removed, we should get the ref off the props object right
+              // before using it.
+              var refProp = props.ref;
+              ref = refProp !== undefined ? refProp : null;
+            } else {
               ref = element.ref;
             } // Attempt to render the Server Component.
 

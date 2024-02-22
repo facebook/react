@@ -66,7 +66,7 @@ if (__DEV__) {
       return self;
     }
 
-    var ReactVersion = "18.3.0-www-classic-cbef9601";
+    var ReactVersion = "18.3.0-www-classic-2f254d96";
 
     var LegacyRoot = 0;
     var ConcurrentRoot = 1;
@@ -188,7 +188,8 @@ if (__DEV__) {
       enableInfiniteRenderLoopDetection =
         dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
       enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
-      useModernStrictMode = dynamicFeatureFlags.useModernStrictMode; // On WWW, false is used for a new modern build.
+      useModernStrictMode = dynamicFeatureFlags.useModernStrictMode,
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp; // On WWW, false is used for a new modern build.
     var enableProfilerTimer = true;
     var enableProfilerCommitHooks = true;
     var enableProfilerNestedUpdatePhase = true;
@@ -6458,7 +6459,13 @@ if (__DEV__) {
     function coerceRef(returnFiber, current, workInProgress, element) {
       var mixedRef;
 
-      {
+      if (enableRefAsProp) {
+        // TODO: This is a temporary, intermediate step. When enableRefAsProp is on,
+        // we should resolve the `ref` prop during the begin phase of the component
+        // it's attached to (HostComponent, ClassComponent, etc).
+        var refProp = element.props.ref;
+        mixedRef = refProp !== undefined ? refProp : null;
+      } else {
         // Old behavior.
         mixedRef = element.ref;
       }
@@ -6478,6 +6485,31 @@ if (__DEV__) {
           element,
           mixedRef
         );
+
+        if (enableRefAsProp) {
+          // When enableRefAsProp is on, we should always use the props as the
+          // source of truth for refs. Not a field on the fiber.
+          //
+          // In the case of string refs, this presents a problem, because string
+          // refs are not passed around internally as strings; they are converted to
+          // callback refs. The ref used by the reconciler is not the same as the
+          // one the user provided.
+          //
+          // But since this is a deprecated feature anyway, what we can do is clone
+          // the props object and replace it with the internal callback ref. Then we
+          // can continue to use the props object as the source of truth.
+          //
+          // This means the internal callback ref will leak into userspace. The
+          // receiving component will receive a callback ref even though the parent
+          // passed a string. Which is weird, but again, this is a deprecated
+          // feature, and we're only leaving it around behind a flag so that Meta
+          // can keep using string refs temporarily while they finish migrating
+          // their codebase.
+          var userProvidedProps = workInProgress.pendingProps;
+          var propsWithInternalCallbackRef = assign({}, userProvidedProps);
+          propsWithInternalCallbackRef.ref = coercedRef;
+          workInProgress.pendingProps = propsWithInternalCallbackRef;
+        }
       } else {
         coercedRef = mixedRef;
       } // TODO: If enableRefAsProp is on, we shouldn't use the `ref` field. We
@@ -14678,7 +14710,21 @@ if (__DEV__) {
       var ref = workInProgress.ref;
       var propsWithoutRef;
 
-      {
+      if (enableRefAsProp && "ref" in nextProps) {
+        // `ref` is just a prop now, but `forwardRef` expects it to not appear in
+        // the props object. This used to happen in the JSX runtime, but now we do
+        // it here.
+        propsWithoutRef = {};
+
+        for (var key in nextProps) {
+          // Since `ref` should only appear in props via the JSX transform, we can
+          // assume that this is a plain object. So we don't need a
+          // hasOwnProperty check.
+          if (key !== "ref") {
+            propsWithoutRef[key] = nextProps[key];
+          }
+        }
+      } else {
         propsWithoutRef = nextProps;
       } // The rest is a fork of updateFunctionComponent
 
@@ -16005,7 +16051,7 @@ if (__DEV__) {
           }
         }
 
-        if (workInProgress.ref !== null) {
+        if (!enableRefAsProp && workInProgress.ref !== null) {
           var info = "";
           var componentName = getComponentNameFromType(Component) || "Unknown";
           var ownerName = getCurrentFiberOwnerNameInDevOrNull();

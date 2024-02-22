@@ -19,7 +19,7 @@ if (__DEV__) {
     var React = require("react");
     var ReactDOM = require("react-dom");
 
-    var ReactVersion = "18.3.0-www-classic-1805c8f4";
+    var ReactVersion = "18.3.0-www-classic-53767808";
 
     // This refers to a WWW module.
     var warningWWW = require("warning");
@@ -681,8 +681,8 @@ if (__DEV__) {
     var enableTransitionTracing = dynamicFeatureFlags.enableTransitionTracing,
       enableUseDeferredValueInitialArg =
         dynamicFeatureFlags.enableUseDeferredValueInitialArg,
-      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext;
-    // On WWW, false is used for a new modern build.
+      enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+      enableRefAsProp = dynamicFeatureFlags.enableRefAsProp; // On WWW, false is used for a new modern build.
     var enableFloat = true;
 
     // $FlowFixMe[method-unbinding]
@@ -12173,7 +12173,21 @@ if (__DEV__) {
       task.componentStack = createFunctionComponentStack(task, type.render);
       var propsWithoutRef;
 
-      {
+      if (enableRefAsProp && "ref" in props) {
+        // `ref` is just a prop now, but `forwardRef` expects it to not appear in
+        // the props object. This used to happen in the JSX runtime, but now we do
+        // it here.
+        propsWithoutRef = {};
+
+        for (var key in props) {
+          // Since `ref` should only appear in props via the JSX transform, we can
+          // assume that this is a plain object. So we don't need a
+          // hasOwnProperty check.
+          if (key !== "ref") {
+            propsWithoutRef[key] = props[key];
+          }
+        }
+      } else {
         propsWithoutRef = props;
       }
 
@@ -12687,7 +12701,13 @@ if (__DEV__) {
             var props = element.props;
             var ref;
 
-            {
+            if (enableRefAsProp) {
+              // TODO: This is a temporary, intermediate step. Once the feature
+              // flag is removed, we should get the ref off the props object right
+              // before using it.
+              var refProp = props.ref;
+              ref = refProp !== undefined ? refProp : null;
+            } else {
               ref = element.ref;
             }
 

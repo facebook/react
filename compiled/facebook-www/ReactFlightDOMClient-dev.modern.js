@@ -19,7 +19,9 @@ if (__DEV__) {
     var ReactDOM = require("react-dom");
 
     // Re-export dynamic flags from the www version.
-    require("ReactFeatureFlags");
+    var dynamicFeatureFlags = require("ReactFeatureFlags");
+
+    var enableRefAsProp = dynamicFeatureFlags.enableRefAsProp; // On WWW, true is used for a new modern build.
     var enableBinaryFlight = false;
 
     function createStringDecoder() {
@@ -557,10 +559,29 @@ if (__DEV__) {
       });
     }
 
+    function nullRefGetter() {
+      {
+        return null;
+      }
+    }
+
     function createElement(type, key, props) {
       var element;
 
-      {
+      if (enableRefAsProp) {
+        // `ref` is non-enumerable in dev
+        element = {
+          $$typeof: REACT_ELEMENT_TYPE,
+          type: type,
+          key: key,
+          props: props,
+          _owner: null
+        };
+        Object.defineProperty(element, "ref", {
+          enumerable: false,
+          get: nullRefGetter
+        });
+      } else {
         element = {
           // This tag allows us to uniquely identify this as a React Element
           $$typeof: REACT_ELEMENT_TYPE,

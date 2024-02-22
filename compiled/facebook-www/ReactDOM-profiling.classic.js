@@ -67,6 +67,7 @@ var ReactSharedInternals =
   enableInfiniteRenderLoopDetection =
     dynamicFeatureFlags.enableInfiniteRenderLoopDetection,
   enableRenderableContext = dynamicFeatureFlags.enableRenderableContext,
+  enableRefAsProp = dynamicFeatureFlags.enableRefAsProp,
   enableProfilerNestedUpdateScheduledHook =
     dynamicFeatureFlags.enableProfilerNestedUpdateScheduledHook,
   enableSchedulingProfiler = dynamicFeatureFlags.enableSchedulingProfiler,
@@ -2735,13 +2736,24 @@ function convertStringRefToCallbackRef(
   return ref;
 }
 function coerceRef(returnFiber, current, workInProgress, element) {
-  var mixedRef = element.ref;
-  returnFiber =
-    null !== mixedRef &&
-    "function" !== typeof mixedRef &&
-    "object" !== typeof mixedRef
-      ? convertStringRefToCallbackRef(returnFiber, current, element, mixedRef)
-      : mixedRef;
+  if (enableRefAsProp) {
+    var mixedRef = element.props.ref;
+    mixedRef = void 0 !== mixedRef ? mixedRef : null;
+  } else mixedRef = element.ref;
+  null !== mixedRef &&
+  "function" !== typeof mixedRef &&
+  "object" !== typeof mixedRef
+    ? ((returnFiber = convertStringRefToCallbackRef(
+        returnFiber,
+        current,
+        element,
+        mixedRef
+      )),
+      enableRefAsProp &&
+        ((current = assign({}, workInProgress.pendingProps)),
+        (current.ref = returnFiber),
+        (workInProgress.pendingProps = current)))
+    : (returnFiber = mixedRef);
   workInProgress.ref = returnFiber;
 }
 function throwOnInvalidObjectType(returnFiber, newChild) {
@@ -5499,24 +5511,29 @@ function updateForwardRef(
 ) {
   Component = Component.render;
   var ref = workInProgress.ref;
+  if (enableRefAsProp && "ref" in nextProps) {
+    var propsWithoutRef = {};
+    for (var key in nextProps)
+      "ref" !== key && (propsWithoutRef[key] = nextProps[key]);
+  } else propsWithoutRef = nextProps;
   prepareToReadContext(workInProgress, renderLanes);
   enableSchedulingProfiler && markComponentRenderStarted(workInProgress);
   nextProps = renderWithHooks(
     current,
     workInProgress,
     Component,
-    nextProps,
+    propsWithoutRef,
     ref,
     renderLanes
   );
-  Component = checkDidRenderIdHook();
+  key = checkDidRenderIdHook();
   enableSchedulingProfiler && markComponentRenderStopped();
   if (null !== current && !didReceiveUpdate)
     return (
       bailoutHooks(current, workInProgress, renderLanes),
       bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes)
     );
-  isHydrating && Component && pushMaterializedTreeId(workInProgress);
+  isHydrating && key && pushMaterializedTreeId(workInProgress);
   workInProgress.flags |= 1;
   reconcileChildren(current, workInProgress, nextProps, renderLanes);
   return workInProgress.child;
@@ -17930,7 +17947,7 @@ Internals.Events = [
 var devToolsConfig$jscomp$inline_1904 = {
   findFiberByHostInstance: getClosestInstanceFromNode,
   bundleType: 0,
-  version: "18.3.0-www-classic-e2f0d381",
+  version: "18.3.0-www-classic-86040999",
   rendererPackageName: "react-dom"
 };
 (function (internals) {
@@ -17974,7 +17991,7 @@ var devToolsConfig$jscomp$inline_1904 = {
   scheduleRoot: null,
   setRefreshHandler: null,
   getCurrentFiber: null,
-  reconcilerVersion: "18.3.0-www-classic-e2f0d381"
+  reconcilerVersion: "18.3.0-www-classic-86040999"
 });
 assign(Internals, {
   ReactBrowserEventEmitter: {
@@ -18304,7 +18321,7 @@ exports.useFormState = function (action, initialState, permalink) {
 exports.useFormStatus = function () {
   return ReactCurrentDispatcher$2.current.useHostTransitionStatus();
 };
-exports.version = "18.3.0-www-classic-e2f0d381";
+exports.version = "18.3.0-www-classic-86040999";
 "undefined" !== typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ &&
   "function" ===
     typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.registerInternalModuleStop &&
