@@ -154,8 +154,7 @@ describe('ReactFunctionComponent', () => {
         root.render(<FunctionComponentWithChildContext name="A" />);
       });
     }).toErrorDev(
-      'FunctionComponentWithChildContext(...): childContextTypes cannot ' +
-        'be defined on a function component.',
+      'childContextTypes cannot ' + 'be defined on a function component.',
     );
   });
 

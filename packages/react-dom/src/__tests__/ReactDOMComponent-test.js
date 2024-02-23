@@ -2188,7 +2188,7 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev([
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+        'Warning: <tr> cannot appear as a child of ' +
           '<div>.' +
           '\n    in tr (at **)' +
           '\n    in div (at **)',
@@ -2208,7 +2208,7 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev(
-        'Warning: validateDOMNesting(...): <p> cannot appear as a descendant ' +
+        'Warning: <p> cannot appear as a descendant ' +
           'of <p>.' +
           // There is no outer `p` here because root container is not part of the stack.
           '\n    in p (at **)' +
@@ -2241,20 +2241,20 @@ describe('ReactDOMComponent', () => {
           root.render(<Foo />);
         });
       }).toErrorDev([
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+        'Warning: <tr> cannot appear as a child of ' +
           '<table>. Add a <tbody>, <thead> or <tfoot> to your code to match the DOM tree generated ' +
           'by the browser.' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
-        'Warning: validateDOMNesting(...): Text nodes cannot appear as a ' +
+        'Warning: Text nodes cannot appear as a ' +
           'child of <tr>.' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +
           '\n    in table (at **)' +
           '\n    in Foo (at **)',
-        'Warning: validateDOMNesting(...): Whitespace text nodes cannot ' +
+        'Warning: Whitespace text nodes cannot ' +
           "appear as a child of <table>. Make sure you don't have any extra " +
           'whitespace between tags on each line of your source code.' +
           '\n    in table (at **)' +
@@ -2283,7 +2283,7 @@ describe('ReactDOMComponent', () => {
           root.render(<Foo> </Foo>);
         });
       }).toErrorDev([
-        'Warning: validateDOMNesting(...): Whitespace text nodes cannot ' +
+        'Warning: Whitespace text nodes cannot ' +
           "appear as a child of <table>. Make sure you don't have any extra " +
           'whitespace between tags on each line of your source code.' +
           '\n    in table (at **)' +
@@ -2311,7 +2311,7 @@ describe('ReactDOMComponent', () => {
           );
         });
       }).toErrorDev([
-        'Warning: validateDOMNesting(...): Text nodes cannot appear as a ' +
+        'Warning: Text nodes cannot appear as a ' +
           'child of <tr>.' +
           '\n    in tr (at **)' +
           '\n    in Row (at **)' +

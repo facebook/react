@@ -57,7 +57,7 @@ if (__DEV__) {
       if (hostInstance) {
         if (hostInstance.parentNode !== container) {
           console.error(
-            'render(...): It looks like the React-rendered content of this ' +
+            'It looks like the React-rendered content of this ' +
               'container was removed without using React. This is not ' +
               'supported and will cause errors. Instead, call ' +
               'ReactDOM.unmountComponentAtNode to empty a container.',
@@ -72,7 +72,7 @@ if (__DEV__) {
 
     if (hasNonRootReactChild && !isRootRenderedBySomeReact) {
       console.error(
-        'render(...): Replacing React-rendered children with a new root ' +
+        'Replacing React-rendered children with a new root ' +
           'component. If you intended to update the children of this node, ' +
           'you should instead have the existing children update their state ' +
           'and render the new components instead of calling ReactDOM.render.',
@@ -177,13 +177,12 @@ function legacyCreateRootFromDOMContainer(
   }
 }
 
-function warnOnInvalidCallback(callback: mixed, callerName: string): void {
+function warnOnInvalidCallback(callback: mixed): void {
   if (__DEV__) {
     if (callback !== null && typeof callback !== 'function') {
       console.error(
-        '%s(...): Expected the last optional `callback` argument to be a ' +
+        'Expected the last optional `callback` argument to be a ' +
           'function. Instead received: %s.',
-        callerName,
         callback,
       );
     }
@@ -199,7 +198,7 @@ function legacyRenderSubtreeIntoContainer(
 ): React$Component<any, any> | PublicInstance | null {
   if (__DEV__) {
     topLevelUpdateWarnings(container);
-    warnOnInvalidCallback(callback === undefined ? null : callback, 'render');
+    warnOnInvalidCallback(callback === undefined ? null : callback);
   }
 
   const maybeRoot = container._reactRootContainer;
@@ -373,9 +372,7 @@ export function unstable_renderSubtreeIntoContainer(
 
 export function unmountComponentAtNode(container: Container): boolean {
   if (!isValidContainerLegacy(container)) {
-    throw new Error(
-      'unmountComponentAtNode(...): Target container is not a DOM element.',
-    );
+    throw new Error('Target container is not a DOM element.');
   }
 
   if (__DEV__) {

@@ -678,7 +678,7 @@ describe('ReactLazy', () => {
     expect(() => {
       LazyText.defaultProps = {outer: 'Bye'};
     }).toErrorDev(
-      'React.lazy(...): It is not supported to assign `defaultProps` to ' +
+      'It is not supported to assign `defaultProps` to ' +
         'a lazy component import. Either specify them where the component ' +
         'is defined, or create a wrapping component around it.',
       {withoutStack: true},

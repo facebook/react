@@ -118,18 +118,18 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-function warnOnInvalidCallback(callback: mixed, callerName: string) {
+function warnOnInvalidCallback(callback: mixed) {
   if (__DEV__) {
     if (callback === null || typeof callback === 'function') {
       return;
     }
-    const key = callerName + '_' + (callback: any);
+    // eslint-disable-next-line react-internal/safe-string-coercion
+    const key = String(callback);
     if (!didWarnOnInvalidCallback.has(key)) {
       didWarnOnInvalidCallback.add(key);
       console.error(
-        '%s(...): Expected the last optional `callback` argument to be a ' +
+        'Expected the last optional `callback` argument to be a ' +
           'function. Instead received: %s.',
-        callerName,
         callback,
       );
     }
@@ -202,7 +202,7 @@ const classComponentUpdater = {
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
-        warnOnInvalidCallback(callback, 'setState');
+        warnOnInvalidCallback(callback);
       }
       update.callback = callback;
     }
@@ -236,7 +236,7 @@ const classComponentUpdater = {
 
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
-        warnOnInvalidCallback(callback, 'replaceState');
+        warnOnInvalidCallback(callback);
       }
       update.callback = callback;
     }
@@ -270,7 +270,7 @@ const classComponentUpdater = {
 
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
-        warnOnInvalidCallback(callback, 'forceUpdate');
+        warnOnInvalidCallback(callback);
       }
       update.callback = callback;
     }
@@ -359,13 +359,13 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     if (!renderPresent) {
       if (ctor.prototype && typeof ctor.prototype.render === 'function') {
         console.error(
-          '%s(...): No `render` method found on the returned component ' +
+          'No `render` method found on the %s ' +
             'instance: did you accidentally return an object from the constructor?',
           name,
         );
       } else {
         console.error(
-          '%s(...): No `render` method found on the returned component ' +
+          'No `render` method found on the %s ' +
             'instance: you may have forgotten to define `render`.',
           name,
         );
@@ -504,9 +504,8 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
     const hasMutatedProps = instance.props !== newProps;
     if (instance.props !== undefined && hasMutatedProps) {
       console.error(
-        '%s(...): When calling super() in `%s`, make sure to pass ' +
+        'When calling super() in `%s`, make sure to pass ' +
           "up the same props that your component's constructor was passed.",
-        name,
         name,
       );
     }
