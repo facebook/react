@@ -7,7 +7,7 @@
  * @noflow
  * @nolint
  * @preventMunge
- * @generated SignedSource<<9822eaee5afe3b1d507e431443913bd4>>
+ * @generated SignedSource<<0ecfa00d9e6316d213c0fcd6bd2fed34>>
  */
 
 "use strict";
@@ -26,7 +26,7 @@ if (__DEV__) {
     }
     var dynamicFlags = require("ReactNativeInternalFeatureFlags");
 
-    var ReactVersion = "18.3.0-canary-98b8359f6-20240223";
+    var ReactVersion = "18.3.0-canary-66c834640-20240223";
 
     // ATTENTION
     // When adding new symbols to this file,
@@ -577,7 +577,7 @@ if (__DEV__) {
     var enableTransitionTracing = false;
     // because JSX is an extremely hot path.
 
-    var enableRefAsProp = false; // Flow magic to verify the exports of this file match the original version.
+    var enableRefAsProp = false;
 
     function getWrappedName(outerType, innerType, wrapperName) {
       var displayName = outerType.displayName;
