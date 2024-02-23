@@ -425,13 +425,6 @@ export function jsxDEV(type, config, maybeKey, isStaticChildren, source, self) {
           "it's defined in, or you might have mixed up default and named imports.";
       }
 
-      const sourceInfo = getSourceInfoErrorAddendum(source);
-      if (sourceInfo) {
-        info += sourceInfo;
-      } else {
-        info += getDeclarationErrorAddendum();
-      }
-
       let typeString;
       if (type === null) {
         typeString = 'null';
@@ -620,13 +613,6 @@ export function createElement(type, config, children) {
         info +=
           ' You likely forgot to export your component from the file ' +
           "it's defined in, or you might have mixed up default and named imports.";
-      }
-
-      const sourceInfo = getSourceInfoErrorAddendumForProps(config);
-      if (sourceInfo) {
-        info += sourceInfo;
-      } else {
-        info += getDeclarationErrorAddendum();
       }
 
       let typeString;
@@ -934,24 +920,6 @@ function getDeclarationErrorAddendum() {
       if (name) {
         return '\n\nCheck the render method of `' + name + '`.';
       }
-    }
-    return '';
-  }
-}
-
-function getSourceInfoErrorAddendumForProps(elementProps) {
-  if (elementProps !== null && elementProps !== undefined) {
-    return getSourceInfoErrorAddendum(elementProps.__source);
-  }
-  return '';
-}
-
-function getSourceInfoErrorAddendum(source) {
-  if (__DEV__) {
-    if (source !== undefined) {
-      const fileName = source.fileName.replace(/^.*[\\\/]/, '');
-      const lineNumber = source.lineNumber;
-      return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
     }
     return '';
   }
