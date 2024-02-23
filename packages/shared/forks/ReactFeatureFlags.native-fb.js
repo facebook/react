@@ -9,11 +9,12 @@
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
+import typeof * as DynamicExportsType from './ReactFeatureFlags.native-fb-dynamic';
 
-// NOTE: There are no flags, currently. Uncomment the stuff below if we add one.
-// Re-export dynamic flags from the internal module. Intentionally using *
-// because this import is compiled to a `require` call.
-import * as dynamicFlags from 'ReactNativeInternalFeatureFlags';
+// Re-export dynamic flags from the internal module.
+// Intentionally using * because this import is compiled to a `require` call.
+import * as dynamicFlagsUntyped from 'ReactNativeInternalFeatureFlags';
+const dynamicFlags: DynamicExportsType = (dynamicFlagsUntyped: any);
 
 // We destructure each value before re-exporting to avoid a dynamic look-up on
 // the exports object every time a flag is read.
